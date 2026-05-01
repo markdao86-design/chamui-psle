@@ -244,17 +244,11 @@ const LISTENING_RESOURCES = [
     src: 'https://playerservices.streamtheworld.com/api/livestream-redirect/938NOW_PREM.aac',
     fallbackUrl: 'https://www.melisten.sg/radio/cna938'
   },
-  // === 1) PSLE 直接相关 ===
-  {
-    type: 'link',
-    title: '🇸🇬 SEAB / MOE PSLE 官方信息',
-    desc: '新加坡考试局 PSLE 科目信息 — 看英语考试结构 + 听力题型',
-    url: 'https://www.seab.gov.sg/home/examinations/psle/psle-subject-information'
-  },
+  // === 1) PSLE 真题录音(YouTube 嵌入直接播)===
   {
     type: 'youtube',
     title: '🎬 PSLE 2025 English Listening (Text 1-7)',
-    desc: '官方真题录音 11:25 — 直接点击播放,无需新标签',
+    desc: '官方真题录音 11:25 — 直接点击播放',
     videoId: 'rrqzKUGXdnw'
   },
   {
@@ -269,31 +263,37 @@ const LISTENING_RESOURCES = [
     desc: '历年真题录音 35:28 — 老题型对比',
     videoId: 'YEna-0IhkU8'
   },
-  // === 2) 儿童故事 (语速 + 词汇与 PSLE 接近) ===
+  // === 2) 英语故事/听力练习(YouTube,语速 + 词汇 PSLE 适配)===
   {
-    type: 'link',
-    title: '📚 BBC Learning English: Stories for Children',
-    desc: '童话 / 短故事改编,英式英语,P5/P6 起步首选',
-    url: 'https://www.bbc.co.uk/learningenglish/english/features/childrens-stories'
+    type: 'youtube',
+    title: '📚 English Story: The Bear Who Hates Honey',
+    desc: '27 min 英语故事 + 听力练习,B1 级,适合 P5/P6 起步',
+    videoId: '4wsuhpePDeA'
   },
   {
-    type: 'link',
-    title: '📖 Storynory — Free Audio Stories for Kids',
-    desc: '免费儿童有声故事,清晰英式发音,每集 5-15 min',
-    url: 'https://www.storynory.com/'
-  },
-  // === 3) 儿童科普播客 (同步 PSLE 科学考点) ===
-  {
-    type: 'link',
-    title: '🔬 Brains On! Science Podcast for Kids',
-    desc: 'APM 出品,儿童科学问答 — 主题贴 PSLE 科学(动植物/物质/能量/电)',
-    url: 'https://www.brainson.org/'
+    type: 'youtube',
+    title: '📚 English Story: Nothing is Impossible (B1)',
+    desc: '17 min 英语故事 + 词汇练习,清晰发音',
+    videoId: '6ZN7Hy6HKCE'
   },
   {
-    type: 'link',
-    title: '🌍 But Why: A Podcast for Curious Kids',
-    desc: 'Vermont Public 出品,孩子提问 → 专家答,15-25 min 生活/科学/社会',
-    url: 'https://www.vermontpublic.org/programs/but-why'
+    type: 'youtube',
+    title: '📖 Storynory: The Gingerbread Man',
+    desc: '8 min 经典童话动画,儿童英式发音首选',
+    videoId: '0z7Mp3sg8eA'
+  },
+  // === 3) 儿童科普(同步 PSLE 科学考点)===
+  {
+    type: 'youtube',
+    title: '🔬 Brains On!: Do dogs know they\'re dogs?',
+    desc: 'APM 儿童科学播客全集 25 min — 主题贴 PSLE 科学',
+    videoId: 'BCu3JhAn-x0'
+  },
+  {
+    type: 'youtube',
+    title: '🌍 But Why Bites: Why do body parts fall asleep?',
+    desc: 'Vermont Public 儿童 Q&A 短集 1:40 — 生活科学',
+    videoId: '5CAQKiUNLuM'
   },
 ];
 
