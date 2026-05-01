@@ -236,9 +236,150 @@ function renderDashboard() {
 
   renderIronRule();
   renderWowCard();  // v17.1
+  renderMysteryBoxCard();  // v17.5
   renderWeeklyCoach();
   renderMasterTipCard();
   renderEquipment();
+}
+
+// ============ v17.5 Phase 2: 神秘宝箱 ============
+function renderMysteryBoxCard() {
+  const card = document.getElementById('mysteryBoxCard');
+  if (!card) return;
+  const mb = state.mysteryBoxes || { available: 0, opened: 0, history: [] };
+  const total = window.countTotalCompletedSlots ? window.countTotalCompletedSlots(state) : 0;
+  const nextAt = (Math.floor(total / 10) + 1) * 10;
+  const toNext = nextAt - total;
+  card.innerHTML = `
+    <div class="mb-card-row">
+      <div class="mb-icon">🎁</div>
+      <div class="mb-info">
+        <div class="mb-title">神秘宝箱 · ${mb.available} 个可开</div>
+        <div class="mb-sub">每 10 个项目 +1 个 · 还差 <b>${toNext}</b> 项目下一个 · 已开 ${mb.opened}</div>
+      </div>
+      <button class="btn btn-warn mb-open-btn" onclick="openMysteryBoxModal()" ${mb.available <= 0 ? 'disabled' : ''}>
+        ${mb.available > 0 ? '🔓 开盒' : '🔒 没盒'}
+      </button>
+    </div>
+  `;
+}
+
+function openMysteryBoxModal() {
+  const mb = state.mysteryBoxes;
+  if (!mb || mb.available <= 0) {
+    showToast('没盒可开!继续打卡赚宝箱', 'sad');
+    return;
+  }
+  const result = window.openMysteryBoxOnce(state);
+  if (!result) return;
+  state.totalPoints += result.points;
+  state.logs.push({
+    reason: `🎁 开宝箱 ${result.tier === 'common' ? '(普通)' : result.tier === 'wow' ? '(惊喜!)' : '(神级!)'}`,
+    points: result.points,
+    week: state.currentWeek,
+    timestamp: Date.now()
+  });
+  saveState(state);
+  _renderMysteryBoxResult(result);
+  renderAll();
+}
+
+function _renderMysteryBoxResult(r) {
+  const modal = document.getElementById('mysteryBoxResultModal');
+  if (!modal) return;
+  let title, body, color;
+  if (r.tier === 'common') {
+    title = `🎁 你开出了 +${r.points} 分!`;
+    body = '普通奖励 — 继续打卡, 下次说不定开出惊喜!';
+    color = '#FFE066';
+  } else if (r.tier === 'wow') {
+    title = `🎉 惊喜! +${r.points} 分 + 知识彩蛋`;
+    body = `<div class="mb-wow-fact"><div class="mb-wow-hook">${escapeHtml(r.wow.hook)}</div><div class="mb-wow-body">${escapeHtml(r.wow.body)}</div></div>`;
+    color = '#A788E0';
+  } else {
+    title = `🌟🌟 神级! 解锁 ${r.equipIcon || '✨'} ${escapeHtml(r.equipName || '神秘装备')}`;
+    body = `<div class="mb-rare">补 +${r.points} 分让你跨越 ${escapeHtml(r.equipName || '此装备')} 阈值!</div>`;
+    color = '#FF5757';
+  }
+  modal.innerHTML = `
+    <div class="mb-result-inner" style="border-color:${color}">
+      <div class="mb-result-icon">${r.tier === 'common' ? '🎁' : r.tier === 'wow' ? '🎉' : '🌟'}</div>
+      <div class="mb-result-title">${title}</div>
+      <div class="mb-result-body">${body}</div>
+      <button class="btn btn-primary" onclick="closeMysteryBoxResult()">太棒了!</button>
+    </div>
+  `;
+  modal.classList.add('show');
+  if (r.tier !== 'common') {
+    spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, r.tier === 'rare' ? 80 : 50);
+  }
+}
+
+function closeMysteryBoxResult() {
+  const modal = document.getElementById('mysteryBoxResultModal');
+  if (modal) modal.classList.remove('show');
+}
+
+// ============ v17.5 Phase 2: 反直觉思考题 (打卡页顶部) ============
+function renderThinkPuzzleCard(week) {
+  const card = document.getElementById('thinkPuzzleCard');
+  if (!card) return;
+  const data = window.getThinkPuzzleForWeek ? window.getThinkPuzzleForWeek(state, week) : null;
+  if (!data) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = '';
+  const { puzzle, answer } = data;
+  if (!answer) {
+    // 还没答 — 显示题 + 4 个按钮
+    card.classList.add('think-unanswered');
+    card.classList.remove('think-answered');
+    card.innerHTML = `
+      <div class="think-header">
+        <span class="think-tag">💭 W${puzzle.week} 思考题 · 必先猜!</span>
+        <span class="think-subject">${puzzle.subject}</span>
+      </div>
+      <div class="think-question">${escapeHtml(puzzle.question)}</div>
+      <div class="think-options">
+        ${puzzle.options.map(opt => {
+          const letter = opt.charAt(0);
+          return `<button class="think-opt-btn" onclick="submitThinkAnswer(${puzzle.week}, '${letter}')">${escapeHtml(opt)}</button>`;
+        }).join('')}
+      </div>
+      <div class="think-tip">🧠 答错也加 5 分 — 思考过程比答对更重要</div>
+    `;
+  } else {
+    // 已答 — 显示结果 + 解释
+    card.classList.remove('think-unanswered');
+    card.classList.add('think-answered');
+    card.innerHTML = `
+      <div class="think-header">
+        <span class="think-tag">${answer.correct ? '✅ 答对了!' : '🤔 答错没关系'} W${puzzle.week} 思考题</span>
+        <span class="think-subject">${puzzle.subject}</span>
+      </div>
+      <div class="think-question">${escapeHtml(puzzle.question)}</div>
+      <div class="think-result">
+        你选了 <b>${answer.answer}</b> · 正确答案 <b>${puzzle.correct}</b>
+        <span class="think-points">${answer.correct ? '+10 分' : '+5 分'}</span>
+      </div>
+      <div class="think-explanation">${escapeHtml(puzzle.explanation)}</div>
+    `;
+  }
+}
+
+function submitThinkAnswer(weekN, userAnswer) {
+  const result = window.submitThinkPuzzleAnswer(state, weekN, userAnswer);
+  if (!result) return;
+  recalcTotalPoints(state);
+  saveState(state);
+  if (result.correct) {
+    showToast(`✅ 答对!+10 分`, 'happy');
+    spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 30);
+  } else {
+    showToast(`🤔 思考题 +5 分 — 看下面的解释吧`, 'success');
+  }
+  renderAll();
 }
 
 // v17.3: 每日 Wow 事实卡 — 默认展开 + 大字 + 高亮(英语/科学按日轮换)
@@ -591,6 +732,8 @@ function renderCheckinPage() {
   document.getElementById('prevWeekBtn').disabled = week <= 1;
   document.getElementById('nextWeekBtn').disabled = week >= 73;
 
+  renderThinkPuzzleCard(week);
+
   // 整个 checkinList 区域我们整体重渲(含日期 tab + slot 列表 + 周汇总)
   const list = document.getElementById('checkinList');
 
@@ -843,6 +986,11 @@ function toggleDailyCheck(week, day, slot, evt) {
   if (!wasChecked && window.bumpDailyStreak) {
     streakBump = window.bumpDailyStreak(state);
   }
+  // v17.5 Phase 2: 每 10 个 slot 完成 → +1 神秘宝箱
+  let newBoxes = 0;
+  if (!wasChecked && window.awardMysteryBoxesIfDue) {
+    newBoxes = window.awardMysteryBoxesIfDue(state);
+  }
   saveState(state);
 
   const newDayComplete = isDayComplete(state, week, day);
@@ -854,6 +1002,11 @@ function toggleDailyCheck(week, day, slot, evt) {
     spawnFloatPoints(`+${pts}`, evt, pts >= 3);
     // 大分数块脉动
     pulseScoreBlock();
+    // v17.5 Phase 2: 新宝箱提示 (在 streak 庆祝之前)
+    if (newBoxes > 0) {
+      showToast(`🎁 你赢了 ${newBoxes} 个神秘宝箱! 主页可开盒`, 'happy');
+      spawnConfetti(window.innerWidth / 2, window.innerHeight / 2, 30);
+    }
     // v17.1: streak 庆祝 (新加 streak 天才显示, 不是每个 slot 都弹)
     if (streakBump && streakBump.added) {
       if (streakBump.brokenInfo && !streakBump.brokenInfo.usedFreeze) {
@@ -2041,6 +2194,10 @@ window.unlockListeningToday = unlockListeningToday;
 window.toggleEquipment = toggleEquipment;
 // v17.1
 window.renderStreakBlock = renderStreakBlock;
+// v17.5 Phase 2
+window.openMysteryBoxModal = openMysteryBoxModal;
+window.closeMysteryBoxResult = closeMysteryBoxResult;
+window.submitThinkAnswer = submitThinkAnswer;
 window.requireAdminAuth = requireAdminAuth;
 window.resetAdminPassword = resetAdminPassword;
 window.clearAdminAuth = clearAdminAuth;

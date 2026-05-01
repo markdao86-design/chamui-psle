@@ -575,6 +575,220 @@ function parentRestoreStreak(state, daysToRestore) {
   state.dailyStreak.brokenAt = null;
 }
 
+// ============= v17.5 Phase 2: 神秘宝箱 (Skinner 变量奖励) =============
+const MYSTERY_BOX_SLOTS_PER_BOX = 10;  // 每 10 个 slot 完成 → +1 box
+
+// 计算总完成 slot 数 (从 state.daily 数据所有 true 计数)
+function countTotalCompletedSlots(state) {
+  if (!state.daily) return 0;
+  let n = 0;
+  for (const wk of Object.values(state.daily)) {
+    for (const day of Object.values(wk || {})) {
+      for (const v of Object.values(day || {})) {
+        if (v === true) n++;
+      }
+    }
+  }
+  return n;
+}
+
+// 检查是否该发新 box (在每次打卡后调用) — 返回新发的盒子数
+function awardMysteryBoxesIfDue(state) {
+  if (!state.mysteryBoxes) {
+    state.mysteryBoxes = { available: 0, opened: 0, totalSlotsAtLastEarn: 0, history: [] };
+  }
+  const total = countTotalCompletedSlots(state);
+  const last = state.mysteryBoxes.totalSlotsAtLastEarn || 0;
+  const newBoxes = Math.floor(total / MYSTERY_BOX_SLOTS_PER_BOX) - Math.floor(last / MYSTERY_BOX_SLOTS_PER_BOX);
+  if (newBoxes > 0) {
+    state.mysteryBoxes.available += newBoxes;
+    state.mysteryBoxes.totalSlotsAtLastEarn = total;
+  }
+  return newBoxes;
+}
+
+// 开 1 个宝箱 — 返回 {tier:'common'|'wow'|'rare', points, wowFact?, equipId?}
+// 概率: 70% common (+5 分) / 25% wow (+15 + wow 卡片) / 5% rare (随机解锁未到阈值的高分装备)
+function openMysteryBoxOnce(state) {
+  if (!state.mysteryBoxes || state.mysteryBoxes.available <= 0) return null;
+  state.mysteryBoxes.available -= 1;
+  state.mysteryBoxes.opened += 1;
+  const r = Math.random();
+  let tier, result;
+  if (r < 0.70) {
+    tier = 'common';
+    result = { tier, points: 5 };
+  } else if (r < 0.95) {
+    tier = 'wow';
+    // 随机选 1 条英语 wow 事实(科学的跟本周关联,这里给"惊喜"用英语池)
+    const pool = ENGLISH_WOW_FACTS;
+    const wow = pool[Math.floor(Math.random() * pool.length)];
+    result = { tier, points: 15, wow };
+  } else {
+    tier = 'rare';
+    // 选 1 件未解锁的高分装备(points 类),让 state 立刻解锁(通过提分到阈值)
+    if (window.CHAMUI) {
+      const candidates = window.CHAMUI.equipment.filter(e =>
+        e.condition === 'points' && state.totalPoints < e.value
+      ).sort((a, b) => a.value - b.value);  // 先解锁最容易够到的
+      const eq = candidates[0];
+      if (eq) {
+        const needed = eq.value - state.totalPoints;
+        result = { tier, points: needed, equipId: eq.id, equipName: eq.name, equipIcon: eq.icon };
+      } else {
+        // 都解锁了 → 给大额积分
+        result = { tier, points: 50 };
+      }
+    } else {
+      result = { tier, points: 50 };
+    }
+  }
+  // 记录历史(只保留最近 10 条)
+  state.mysteryBoxes.history.unshift({
+    tier: result.tier,
+    points: result.points,
+    wow: result.wow ? result.wow.hook : null,
+    equipId: result.equipId || null,
+    ts: Date.now()
+  });
+  if (state.mysteryBoxes.history.length > 10) {
+    state.mysteryBoxes.history = state.mysteryBoxes.history.slice(0, 10);
+  }
+  return result;
+}
+
+// ============= v17.5 Phase 2: 反直觉谜题(14 道, 1 题/难章周) =============
+// Loewenstein 信息缺口 + Schultz 预测奖赏 — 必须先猜后看
+const THINK_PUZZLES = [
+  {
+    week: 5, subject: '🔬 P4 Plant Transport ⭐',
+    question: '把一棵小树苗的所有叶子都摘光, 树根继续吸水, 树会发生什么?',
+    options: ['A. 树长得更快(节省叶子的能耗)', 'B. 树停止吸水, 几天后枯死', 'C. 树继续生长但变形', 'D. 树马上倒下'],
+    correct: 'B',
+    explanation: '叶子是"吸水的发动机"!没有叶子蒸腾, 就没有 suction 把水从根抬到顶 — 树根能吸水但水送不上去, xylem 干涸, 几天就死。这证明 xylem 的水流靠叶子蒸腾驱动, 不是根"压"上去的。'
+  },
+  {
+    week: 6, subject: '🔬 P4 Plant Transport ⭐',
+    question: '阳光强度增加 1 倍, 植物的蒸腾速度大约会增加多少?',
+    options: ['A. 不变(蒸腾不靠阳光)', 'B. 增加约 1 倍', 'C. 增加约 5 倍', 'D. 反而减少'],
+    correct: 'C',
+    explanation: '不是 1 倍! 阳光让叶面温度升, 气孔开更大, 蒸腾速度大约增 5 倍。所以同样一棵树, 中午跟早晨的蒸腾速度差很多。这是 PSLE OE 题"为什么夏天树需要更多水"的原理。'
+  },
+  {
+    week: 7, subject: '🔬 P4 Digestive ⭐⭐',
+    question: '为什么小肠绒毛(villi)长得密密麻麻?',
+    options: ['A. 让小肠看起来更大', 'B. 增加表面积加速吸收营养', 'C. 防止细菌入侵', 'D. 帮助食物移动'],
+    correct: 'B',
+    explanation: '小肠 6 米长, 加上绒毛 + 微绒毛, 表面积可达 250 m²(一个网球场!)。表面积越大 = 吸收越快越完全。这是 PSLE 高频题"小肠为什么这么长", 答案核心是"surface area for absorption"。'
+  },
+  {
+    week: 8, subject: '🔬 P4 Digestive ⭐⭐',
+    question: '胃里 pH=1 的强酸, 为什么不会把胃壁本身消化掉?',
+    options: ['A. 胃壁是金属', 'B. 胃壁分泌黏液 + 每 3-4 天换新细胞', 'C. 胃酸只消化食物不消化人体', 'D. 胃酸不是真的酸'],
+    correct: 'B',
+    explanation: '胃壁会被消化, 所以才需要持续保护! 黏液层中和酸 + 上皮细胞每 3-4 天全部更新一遍。 PSLE 高频题"为什么胃酸不溶解胃" — 答案是"protective mucus + cell renewal"。'
+  },
+  {
+    week: 10, subject: '🔬 P4 Light & Shadow ⭐',
+    question: '同一只手电筒, 离墙更近, 影子会:',
+    options: ['A. 变小变清晰', 'B. 变大变模糊', 'C. 大小不变', 'D. 完全消失'],
+    correct: 'B',
+    explanation: '光源越近, 物体相对光源越大, 挡的光越多 → 影子变大。同时光从多角度射来, 边缘模糊。 PSLE 高频反直觉: 直觉以为"近 = 小", 其实"近 = 大"。这跟太阳投影相反原理一样。'
+  },
+  {
+    week: 11, subject: '🔬 P4 Light & Shadow ⭐',
+    question: '一只白色物体放在红光下, 你看到它是什么颜色?',
+    options: ['A. 白色(物体本身是白)', 'B. 红色', 'C. 看不见(变透明)', 'D. 黑色'],
+    correct: 'B',
+    explanation: '"白色" 是物体反射所有颜色光的结果。 红光下只有红光可反射 → 你看到红色。 PSLE 高频题"物体颜色取决于什么": 取决于光源 + 物体反射特性, 不是物体"自带颜色"。'
+  },
+  {
+    week: 12, subject: '🔬 P4 Heat ⭐⭐',
+    question: '两块同样大小的方块, 金属一块木头一块, 都在 100°C 烤箱 1 小时取出。你光手摸 — 哪块烫?',
+    options: ['A. 金属烫', 'B. 木头烫', 'C. 一样烫(温度相同)', 'D. 都不烫'],
+    correct: 'A',
+    explanation: '虽然温度一样, 但金属导热快 — 把你手指的热抢走得快, 大脑感觉"凉/烫"剧烈; 木头导热慢, 你的手感觉相对温和。 PSLE 经典反直觉题: 温度 vs 热感是两回事!'
+  },
+  {
+    week: 13, subject: '🔬 P4 Heat ⭐⭐',
+    question: '100°C 的水蒸汽 vs 100°C 的开水 — 哪个烫到手更狠?',
+    options: ['A. 开水(液体直接接触面积大)', 'B. 蒸汽(温度一样所以一样)', 'C. 蒸汽(释放汽化潜热多 6 倍)', 'D. 都不烫(100°C 而已)'],
+    correct: 'C',
+    explanation: '蒸汽接触皮肤先凝结成水(释放 2260 J/g 汽化潜热)再降温, 比 100°C 水多放约 6 倍热。 这就是为什么蒸汽烫伤特别严重。 PSLE 高频区分: 相同温度 ≠ 相同热量。'
+  },
+  {
+    week: 16, subject: '🔬 P5 Cells + Food',
+    question: '食物链上, 老鹰吃蛇, 蛇吃青蛙, 青蛙吃虫, 虫吃草。如果草大量减少, 谁的数量会先暴跌?',
+    options: ['A. 虫(直接吃草)', 'B. 老鹰(顶层最敏感)', 'C. 蛇(中间环节)', 'D. 一起减少'],
+    correct: 'A',
+    explanation: '虫直接吃草 — 草少 → 虫先饿死。然后青蛙因虫少饿, 蛇因蛙少饿, 鹰最后受影响。 PSLE 食物链高频题: 影响从底层向上传递, 时间差几天到几周。'
+  },
+  {
+    week: 17, subject: '🔬 P5 Water + Air',
+    question: '一杯水放阳光下蒸发完了, 水分子去了哪里?',
+    options: ['A. 消失了(变成空气)', 'B. 变成水蒸气分散到空气中', 'C. 变成氢和氧气', 'D. 沉到杯底了'],
+    correct: 'B',
+    explanation: '蒸发 = 水分子从液态进入气态, 分散到周围空气中。 不是"消失", 也不是分解(那是电解才会分成 H 和 O)。 PSLE 高频陷阱区分 evaporation(物理变化) vs 化学反应。'
+  },
+  {
+    week: 20, subject: '⚡ P5 Electricity ⭐',
+    question: '你家圣诞树上 20 个小灯泡串联, 1 个坏了:',
+    options: ['A. 只有那 1 个不亮, 其他 19 个正常', 'B. 全部 20 个都不亮', 'C. 旁边 2 个不亮, 其余正常', 'D. 整个房间停电'],
+    correct: 'B',
+    explanation: '串联 = 1 个 path, 1 个断开 = 全断 → 全黑。 这就是为什么家里其他电器都用并联(其中 1 个坏不影响其他)。 PSLE 经典电路题。'
+  },
+  {
+    week: 21, subject: '⚡ P5 Series & Parallel ⭐',
+    question: '为什么家里的电灯/电视/电冰箱必须用并联, 不能串联?',
+    options: ['A. 并联便宜', 'B. 1 个设备坏不影响其他, 且每个都有完整电压', 'C. 串联会爆炸', 'D. 并联省电'],
+    correct: 'B',
+    explanation: '并联两大优势: ① 1 个设备坏其他正常 ② 每个设备都拿到完整 220V (串联会被分压)。 设备需要的电压不同 — 并联让每个独立工作。 PSLE Paper 2 高频应用题。'
+  },
+  {
+    week: 23, subject: '⚡ 综合 — Energy & Electricity',
+    question: '一个 100W 的灯泡 vs 10W 的 LED 灯, 同等照明亮度, LED 多省了多少能源?',
+    options: ['A. 节省 50%', 'B. 节省 90% (浪费的热量大幅减少)', 'C. 节省 100%', 'D. LED 反而更耗电'],
+    correct: 'B',
+    explanation: 'LED 把 90% 电变光, 10% 变热; 白炽灯只 5% 变光, 95% 变热!所以同样亮度 LED 用电仅 1/10。 PSLE Energy 高频"useful vs wasted energy"题。'
+  },
+  {
+    week: 25, subject: '🎯 P5 整体串讲',
+    question: 'PSLE Listening 题目里, 90% 的答案藏在哪个词后面?',
+    options: ['A. "first" 后面', 'B. "but / however / although" 后面', 'C. "and" 后面', 'D. "the" 后面'],
+    correct: 'B',
+    explanation: '转折词后才是真正的信息! 听到 "but / however / although" 立刻竖耳朵 — 题目要问的内容 95% 在转折后, 不是前半句。 这是 PSLE Listening 必杀技。'
+  }
+];
+
+// 取本周思考题(无则 null) + 是否已答
+function getThinkPuzzleForWeek(state, weekN) {
+  const puzzle = THINK_PUZZLES.find(p => p.week === weekN);
+  if (!puzzle) return null;
+  const answer = (state.thinkPuzzleAnswers && state.thinkPuzzleAnswers[weekN]) || null;
+  return { puzzle, answer };
+}
+
+// 提交答案 — 返回 { correct: bool, points: int }
+function submitThinkPuzzleAnswer(state, weekN, userAnswer) {
+  const puzzle = THINK_PUZZLES.find(p => p.week === weekN);
+  if (!puzzle) return null;
+  if (!state.thinkPuzzleAnswers) state.thinkPuzzleAnswers = {};
+  // 已答过不重复加分
+  if (state.thinkPuzzleAnswers[weekN]) return state.thinkPuzzleAnswers[weekN];
+  const correct = userAnswer === puzzle.correct;
+  const record = { answer: userAnswer, correct, ts: Date.now() };
+  state.thinkPuzzleAnswers[weekN] = record;
+  // 答对答错都给分, 重点是思考过程; 答对 +10, 答错 +5
+  state.totalPoints += correct ? 10 : 5;
+  state.logs.push({
+    reason: `🤔 思考题 W${weekN} ${correct ? '答对' : '思考奖励'}`,
+    points: correct ? 10 : 5,
+    week: weekN,
+    timestamp: Date.now()
+  });
+  return record;
+}
+
 // 给 weekN (1..73) 返回该周对应的词表 ({subject, subjectIcon, section, weekRange}).
 // W1-W7 → math (按 section 索引顺序); W8-W17 → sci; 其它周 → null
 function getVocabForWeek(weekN) {
@@ -646,7 +860,18 @@ function getDefaultState() {
       bestEver: 0,         // 历史最高(墓碑)
       freezeTokens: 0,     // 🧊 救命券(每 14 天 +1, 上限 3, 自动消耗保 1 天)
       brokenAt: null       // 上次断点时间戳(用于 24h 灰烬效果)
-    }
+    },
+
+    // v17.5 Phase 2: 神秘宝箱 — Skinner 变量奖励(每 10 个 slot +1 box)
+    mysteryBoxes: {
+      available: 0,                // 可开数量
+      opened: 0,                   // 已开总数
+      totalSlotsAtLastEarn: 0,     // 上次得 box 时的累计完成 slot 数(用于增量计算)
+      history: []                  // 最近 10 次开盒 [{tier, points, wow, equipId, ts}]
+    },
+
+    // v17.5 Phase 2: 反直觉谜题答题记录 — { weekN: { answer, correct, ts } }
+    thinkPuzzleAnswers: {}
   };
 }
 
@@ -1771,3 +1996,11 @@ window.getWeeklyWowFact = getWeeklyWowFact;
 // v17.2
 window.ENGLISH_WOW_FACTS = ENGLISH_WOW_FACTS;
 window.getTodayWowFact = getTodayWowFact;
+// v17.5 Phase 2
+window.MYSTERY_BOX_SLOTS_PER_BOX = MYSTERY_BOX_SLOTS_PER_BOX;
+window.countTotalCompletedSlots = countTotalCompletedSlots;
+window.awardMysteryBoxesIfDue = awardMysteryBoxesIfDue;
+window.openMysteryBoxOnce = openMysteryBoxOnce;
+window.THINK_PUZZLES = THINK_PUZZLES;
+window.getThinkPuzzleForWeek = getThinkPuzzleForWeek;
+window.submitThinkPuzzleAnswer = submitThinkPuzzleAnswer;

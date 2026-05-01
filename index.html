@@ -1975,6 +1975,153 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .streak-broken-penalty { font-size: 13px; color: var(--color-warn); margin-bottom: 14px; padding: 6px; background: #FFF8E7; border-radius: 6px; }
 .streak-broken-inner button { width: 100%; padding: 10px; }
 
+/* ===== v17.5 Phase 2: 神秘宝箱卡 ===== */
+.mystery-box-card {
+  background: linear-gradient(135deg, #FFE066 0%, #FF9F45 100%);
+  border-width: 4px;
+  border-color: var(--color-text);
+}
+.mb-card-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.mb-icon {
+  font-size: 48px;
+  flex-shrink: 0;
+  animation: mb-bounce 1.5s ease-in-out infinite;
+}
+@keyframes mb-bounce {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-4px) rotate(3deg); }
+}
+.mb-info { flex: 1; }
+.mb-title { font-size: 17px; font-weight: 900; color: var(--color-text); }
+.mb-sub { font-size: 13px; color: var(--color-text); margin-top: 2px; }
+.mb-open-btn { padding: 10px 18px; font-size: 16px; font-weight: 900; }
+.mb-open-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* 神秘宝箱开盒结果 modal */
+.mb-result-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 48, 71, 0.92);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.mb-result-modal.show { display: flex; animation: fadeInOverlay 0.3s ease; }
+.mb-result-inner {
+  background: white;
+  border: 5px solid var(--color-text);
+  border-radius: var(--radius-bubble);
+  padding: 30px 32px;
+  text-align: center;
+  max-width: 420px;
+  box-shadow: var(--shadow-pop);
+  animation: mb-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mb-pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.mb-result-icon { font-size: 80px; margin-bottom: 10px; }
+.mb-result-title { font-size: 20px; font-weight: 900; color: var(--color-text); margin-bottom: 12px; }
+.mb-result-body { font-size: 14px; color: var(--color-text); line-height: 1.6; margin-bottom: 16px; }
+.mb-wow-fact {
+  background: linear-gradient(135deg, #FFE6F0 0%, #E0F4F1 100%);
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 2px dashed #A788E0;
+  text-align: left;
+}
+.mb-wow-hook { font-size: 16px; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }
+.mb-wow-body { font-size: 13px; color: var(--color-text); line-height: 1.6; }
+.mb-rare {
+  background: linear-gradient(135deg, #FFF8E7 0%, #FFE066 100%);
+  padding: 14px;
+  border-radius: 12px;
+  border: 2px dashed var(--color-warn);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* ===== v17.5 Phase 2: 反直觉思考题卡 ===== */
+.think-puzzle-card {
+  background: linear-gradient(135deg, #E0F4F1 0%, #FFE6F0 100%);
+  border-left: 8px solid #4ECDC4;
+  border-width: 4px;
+  padding: 16px 18px;
+}
+.think-puzzle-card.think-unanswered { animation: think-glow 2s ease-in-out infinite; }
+@keyframes think-glow {
+  0%, 100% { box-shadow: 0 4px 0 var(--color-text); }
+  50% { box-shadow: 0 4px 0 var(--color-text), 0 0 16px 4px rgba(78, 205, 196, 0.5); }
+}
+.think-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.think-tag {
+  font-size: 14px;
+  font-weight: 900;
+  color: #4ECDC4;
+  background: white;
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: 2px solid #4ECDC4;
+}
+.think-subject { font-size: 12px; color: var(--color-text-light); }
+.think-question {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.think-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.think-opt-btn {
+  background: white;
+  border: 3px solid var(--color-text);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.15s, background 0.15s;
+  font-family: inherit;
+  color: var(--color-text);
+}
+.think-opt-btn:hover { background: var(--color-accent); transform: translateY(-2px); box-shadow: 0 3px 0 var(--color-text); }
+.think-tip { font-size: 12px; color: var(--color-text-light); margin-top: 4px; font-style: italic; }
+.think-result {
+  background: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 2px solid var(--color-text);
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+.think-points { float: right; font-weight: 900; color: var(--color-success, #4ECDC4); }
+.think-explanation {
+  background: rgba(255,255,255,0.7);
+  padding: 12px 14px;
+  border-radius: 10px;
+  border-left: 4px solid var(--color-primary);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--color-text);
+}
+
 /* ===== v17.3: 每日 Wow 事实卡 (大字 + 高亮 + 默认展开) ===== */
 .wow-card-big {
   background: linear-gradient(135deg, #FFE6F0 0%, #FFF8E7 50%, #E0F4F1 100%);
@@ -2336,6 +2483,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
       </div>
     </div>
 
+    <!-- v17.5 Phase 2: 神秘宝箱卡 -->
+    <div class="card mystery-box-card" id="mysteryBoxCard"></div>
+
     <!-- v16: 6 条铁律 mini-card,每天换 1 条 -->
     <div class="card iron-rule-card" id="ironRuleCard">
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -2413,6 +2563,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
         <button class="week-nav-btn" id="nextWeekBtn">下周 ▶</button>
       </div>
     </div>
+
+    <!-- v17.5 Phase 2: 反直觉思考题 (难章周才显示) -->
+    <div class="card think-puzzle-card" id="thinkPuzzleCard" style="display:none"></div>
 
     <div class="card">
       <div class="card-title">✏️ 本周任务清单</div>
@@ -2650,6 +2803,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 <!-- v17.1: Streak 断点 modal — 不能背景点击关闭, 必须按按钮 -->
 <div id="streakBrokenModal" class="streak-broken-modal"></div>
+
+<!-- v17.5 Phase 2: 神秘宝箱开盒结果 modal -->
+<div id="mysteryBoxResultModal" class="mb-result-modal" onclick="if(event.target===this) closeMysteryBoxResult()"></div>
 
 <!-- ===== Firebase 同步配置(填了 firebaseConfig 才启用云同步,留空则纯本地)===== -->
 <script>
