@@ -1744,13 +1744,24 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   background: white;
   border: 2px solid var(--color-text);
   border-radius: 12px;
-  padding: 12px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 .lis-item.lis-live { background: linear-gradient(135deg, #FFE6F0 0%, #E0F4F1 100%); border-width: 3px; }
 .lis-item.lis-youtube { background: #FFF8E7; border-width: 3px; }
+
+/* v16.7: 听力 modal 紧凑 2 列网格(audio 第 1 项跨满全宽) */
+.lis-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.lis-grid > .lis-live { grid-column: 1 / -1; }
+@media (max-width: 500px) {
+  .lis-grid { grid-template-columns: 1fr; }
+}
 .lis-yt-wrap {
   position: relative;
   width: 100%;
@@ -1766,8 +1777,8 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   width: 100%; height: 100%;
   border: 0;
 }
-.lis-title { font-weight: 700; font-size: 14px; }
-.lis-desc { font-size: 12px; color: var(--color-text-light); line-height: 1.5; }
+.lis-title { font-weight: 700; font-size: 13px; }
+.lis-desc { font-size: 11px; color: var(--color-text-light); line-height: 1.4; }
 .lis-link { font-size: 12px; padding: 6px 12px; align-self: flex-start; margin-top: 6px; text-decoration: none; }
 .lis-fallback { font-size: 11px; color: var(--color-text-light); margin-top: 4px; text-decoration: underline; }
 .lis-item audio { height: 36px; }
@@ -1798,7 +1809,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 14px 18px;
+  padding: 10px 14px;
   border-bottom: 3px solid var(--color-text);
   background: var(--color-accent);
   border-radius: 14px 14px 0 0;
@@ -1815,7 +1826,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   line-height: 1;
 }
 .vocab-modal-body {
-  padding: 16px 18px;
+  padding: 10px 12px;
   overflow-y: auto;
   display: flex;
   flex-wrap: wrap;
@@ -1830,11 +1841,11 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   font-family: 'Fredoka', sans-serif;
 }
 .vocab-modal-footer {
-  padding: 12px 18px;
+  padding: 10px 14px;
   border-top: 2px dashed var(--color-text-light);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--color-text-light);
-  line-height: 1.5;
+  line-height: 1.4;
   background: #FAFAFA;
   border-radius: 0 0 14px 14px;
 }

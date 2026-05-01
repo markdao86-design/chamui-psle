@@ -955,6 +955,23 @@ function openListeningModal(week) {
         </div>
       `;
     }
+    if (r.type === 'youtube-playlist') {
+      // 频道 uploads 播放列表 — 自动连播,无限内容
+      return `
+        <div class="lis-item lis-youtube">
+          <div class="lis-title">${r.title}</div>
+          <div class="lis-desc">${escapeHtml(r.desc)}</div>
+          <div class="lis-yt-wrap">
+            <iframe src="https://www.youtube-nocookie.com/embed/videoseries?list=${r.playlistId}&rel=0"
+                    title="${escapeHtml(r.title)}"
+                    frameborder="0"
+                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                    loading="lazy"></iframe>
+          </div>
+        </div>
+      `;
+    }
     return `
       <div class="lis-item">
         <div class="lis-title">${r.title}</div>
@@ -972,7 +989,7 @@ function openListeningModal(week) {
         </div>
         <button class="vocab-modal-close" onclick="closeListeningModal()">×</button>
       </div>
-      <div class="vocab-modal-body" style="display:flex;flex-direction:column;gap:12px">${items}</div>
+      <div class="vocab-modal-body lis-grid">${items}</div>
       <div class="vocab-modal-footer">
         💡 PSLE Listening 真题录音不公开,需要用 SAP《PSLE Listening Comprehension》配套 CD。
         听力陷阱:数字 / 否定词 / 转折(although / however)。<br>

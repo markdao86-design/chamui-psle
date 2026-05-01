@@ -236,65 +236,43 @@ const VOCAB_500 = {
 // 选材原则: P5/P6 PSLE listening 实际语速 120-140 wpm + 儿童词汇,所以用儿童故事/儿童科普
 // CNA938 直播降级到末尾 + 标"进阶 W15+"(成人语速 ~180 wpm 太快)
 const LISTENING_RESOURCES = [
-  // === 0) 直播首选 — CNA938 24h 真实英语暴露 ===
+  // === 1) 直播首选(无限内容)===
   {
     type: 'live-audio',
     title: '🎙️ CNA938 新加坡新闻直播',
-    desc: '24h 直播 — 新加坡英语新闻台,真实环境暴露(语速 ~180 wpm 偏快,可作背景泛听)',
+    desc: '24h 直播 — 新加坡英语新闻台,真实环境暴露',
     src: 'https://playerservices.streamtheworld.com/api/livestream-redirect/938NOW_PREM.aac',
     fallbackUrl: 'https://www.melisten.sg/radio/cna938'
   },
-  // === 1) PSLE 真题录音(YouTube 嵌入直接播)===
+  // === 2) PSLE 真题录音(年份固定,单视频)===
+  { type: 'youtube',  title: '🎬 PSLE 2025 English Listening', desc: '官方真题 11:25', videoId: 'rrqzKUGXdnw' },
+  { type: 'youtube',  title: '🎬 PSLE 2024 English Listening', desc: '官方真题 30:04', videoId: '8ePjsfutd8E' },
+  { type: 'youtube',  title: '🎬 PSLE 2020 English Listening', desc: '历年真题 35:28', videoId: 'YEna-0IhkU8' },
+  // === 3) 频道连播 (uploads playlist,无限内容)===
   {
-    type: 'youtube',
-    title: '🎬 PSLE 2025 English Listening (Text 1-7)',
-    desc: '官方真题录音 11:25 — 直接点击播放',
-    videoId: 'rrqzKUGXdnw'
+    type: 'youtube-playlist',
+    title: '📖 英语童话故事(频道连播)',
+    desc: 'English Fairy Tales 频道 100+ 集童话动画,自动连播',
+    playlistId: 'UU53qnQM3rSPxiyInxP0TGnA'
   },
   {
-    type: 'youtube',
-    title: '🎬 PSLE 2024 English Listening Comprehension',
-    desc: '官方真题录音 30:04 — 完整 7 段对话',
-    videoId: '8ePjsfutd8E'
+    type: 'youtube-playlist',
+    title: '📚 ESL 英语听力故事(频道连播)',
+    desc: 'StoryStudies 频道 50+ 集 B1 级英语故事 + 听力练习',
+    playlistId: 'UUAHBOA5B6WboGHTCwSj9nig'
   },
   {
-    type: 'youtube',
-    title: '🎬 PSLE 2020 English Listening Comprehension',
-    desc: '历年真题录音 35:28 — 老题型对比',
-    videoId: 'YEna-0IhkU8'
-  },
-  // === 2) 英语故事/听力练习(YouTube,语速 + 词汇 PSLE 适配)===
-  {
-    type: 'youtube',
-    title: '📚 English Story: The Bear Who Hates Honey',
-    desc: '27 min 英语故事 + 听力练习,B1 级,适合 P5/P6 起步',
-    videoId: '4wsuhpePDeA'
+    type: 'youtube-playlist',
+    title: '🔬 Brains On!: 儿童科学(频道连播)',
+    desc: 'APM 出品,200+ 集,主题贴 PSLE 科学(动植物/物质/能量/电)',
+    playlistId: 'UUHWOq5gBWXZ4OcI8asZoVTQ'
   },
   {
-    type: 'youtube',
-    title: '📚 English Story: Nothing is Impossible (B1)',
-    desc: '17 min 英语故事 + 词汇练习,清晰发音',
-    videoId: '6ZN7Hy6HKCE'
-  },
-  {
-    type: 'youtube',
-    title: '📖 Storynory: The Gingerbread Man',
-    desc: '8 min 经典童话动画,儿童英式发音首选',
-    videoId: '0z7Mp3sg8eA'
-  },
-  // === 3) 儿童科普(同步 PSLE 科学考点)===
-  {
-    type: 'youtube',
-    title: '🔬 Brains On!: Do dogs know they\'re dogs?',
-    desc: 'APM 儿童科学播客全集 25 min — 主题贴 PSLE 科学',
-    videoId: 'BCu3JhAn-x0'
-  },
-  {
-    type: 'youtube',
-    title: '🌍 But Why Bites: Why do body parts fall asleep?',
-    desc: 'Vermont Public 儿童 Q&A 短集 1:40 — 生活科学',
-    videoId: '5CAQKiUNLuM'
-  },
+    type: 'youtube-playlist',
+    title: '🌍 But Why: 儿童 Q&A(频道连播)',
+    desc: 'Vermont Public 出品,250+ 集,孩子提问 → 专家答',
+    playlistId: 'UUScNpHQtpf008q9MITg3ABg'
+  }
 ];
 
 // 给 weekN (1..73) 返回该周对应的词表 ({subject, subjectIcon, section, weekRange}).
