@@ -17,18 +17,36 @@ const CHAMUI = {
     { lv: 8, name: '王者佑子', title: 'PSLE 王者',    minPoints: 840, color: '#FFE4ED' }
   ],
 
-  // 装备系统(独立解锁) — points 类阈值同步 ×2
+  // 装备系统(独立解锁) — 22 件,密集解锁高潮
+  // 整个 0-1000 分区间几乎每 50-100 分就有一次新装备弹出
   equipment: [
-    { id: 'hat',     icon: '🎓', name: '学士帽',   condition: 'points',     value: 60,  hint: '累积 60 分' },
-    { id: 'sword',   icon: '✏️', name: '铅笔剑',   condition: 'points',     value: 140, hint: '累积 140 分' },
-    { id: 'bag',     icon: '🎒', name: '书包',     condition: 'points',     value: 240, hint: '累积 240 分' },
+    // ===== 早期点数(让 W1-W4 就有 4-5 次解锁高潮)=====
+    { id: 'note',    icon: '📒', name: '笔记本',   condition: 'points',     value: 20,  hint: '累积 20 分(第一周努力下就有)' },
+    { id: 'apple',   icon: '🍎', name: '健康苹果', condition: 'points',     value: 50,  hint: '累积 50 分' },
+    { id: 'hat',     icon: '🎓', name: '学士帽',   condition: 'points',     value: 80,  hint: '累积 80 分' },
+    { id: 'cup',     icon: '🥤', name: '能量水杯', condition: 'points',     value: 120, hint: '累积 120 分' },
+    { id: 'sword',   icon: '✏️', name: '铅笔剑',   condition: 'points',     value: 160, hint: '累积 160 分' },
+    { id: 'cookie',  icon: '🍪', name: '幸运饼干', condition: 'points',     value: 210, hint: '累积 210 分' },
+    { id: 'bag',     icon: '🎒', name: '书包',     condition: 'points',     value: 260, hint: '累积 260 分' },
+    // ===== 中期点数 =====
+    { id: 'sock',    icon: '🧦', name: '幸运袜',   condition: 'points',     value: 320, hint: '累积 320 分' },
+    { id: 'glasses', icon: '👓', name: '聪明眼镜', condition: 'points',     value: 400, hint: '累积 400 分' },
+    { id: 'watch',   icon: '⌚', name: '时间手表', condition: 'points',     value: 480, hint: '累积 480 分' },
+    { id: 'headphone',icon:'🎧', name: '听力耳机', condition: 'points',     value: 580, hint: '累积 580 分' },
+    // ===== 高级点数 =====
+    { id: 'phone',   icon: '📱', name: '智能手机', condition: 'points',     value: 700, hint: '累积 700 分(冲刺奖)' },
+    { id: 'rocket',  icon: '🚀', name: '冲刺火箭', condition: 'points',     value: 850, hint: '累积 850 分' },
+    { id: 'diamond', icon: '💎', name: '智慧钻石', condition: 'points',     value: 1000,hint: '累积 1000 分(传说级)' },
+    { id: 'galaxy',  icon: '🌌', name: '银河披风', condition: 'points',     value: 1200,hint: '累积 1200 分(神级)' },
+    // ===== 里程碑(原 6 件保留)=====
     { id: 'tube',    icon: '🔬', name: '试管',     condition: 'milestone',  value: 'W14', hint: '完成 W14 中期模拟' },
     { id: 'shield',  icon: '🛡️', name: '盾牌',    condition: 'streak',     value: 1,   hint: '4 周无问题反馈' },
     { id: 'cape',    icon: '🦸', name: '披风',     condition: 'monthly3',   value: 3,   hint: '月小测连续 3 次达标' },
-    { id: 'glasses', icon: '👓', name: '眼镜',     condition: 'points',     value: 400, hint: '累积 400 分' },
     { id: 'trophy',  icon: '🏆', name: '奖杯',     condition: 'milestone',  value: 'W20', hint: '完成 W20 P5 综合' },
     { id: 'crown',   icon: '👑', name: '皇冠',     condition: 'milestone',  value: 'W26', hint: 'W26 总模考达标' },
-    { id: 'fire',    icon: '🔥', name: '火焰特效', condition: 'milestone',  value: 'any-key', hint: '任一大节点达标' }
+    { id: 'fire',    icon: '🔥', name: '火焰特效', condition: 'milestone',  value: 'any-key', hint: '任一大节点达标' },
+    // ===== 月度成就(用现有 monthlyTestPass 计数)=====
+    { id: 'monthking',icon:'🎯', name: '月度王',   condition: 'monthly3',   value: 6,   hint: '累积 6 次月度小测达标(全程王者)' }
   ],
 
   // 根据等级获取角色信息
