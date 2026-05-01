@@ -231,45 +231,57 @@ const VOCAB_500 = {
   }
 };
 
-// ============= v16.3: 听力资源 (CNA938 直播 + 推荐播客 + BBC 外链) =============
-// 孩子在打卡页 listening slot 点 🔊 按钮唤出
+// ============= v16.4: 听力资源 (PSLE-aligned: 儿童故事 + 儿童科普) =============
+// 孩子在打卡页 listening 项目点 🔊 按钮唤出
+// 选材原则: P5/P6 PSLE listening 实际语速 120-140 wpm + 儿童词汇,所以用儿童故事/儿童科普
+// CNA938 直播降级到末尾 + 标"进阶 W15+"(成人语速 ~180 wpm 太快)
 const LISTENING_RESOURCES = [
+  // === 1) PSLE 直接相关 ===
   {
-    type: 'live-audio',
-    title: '🎙️ CNA938 新加坡新闻直播',
-    desc: '24h 直播 — 新加坡英语新闻台,真实环境暴露(语速偏快,适合 W15+ 进阶)',
-    src: 'https://playerservices.streamtheworld.com/api/livestream-redirect/938NOW_PREM.aac',
-    fallbackUrl: 'https://www.melisten.sg/radio/cna938'
+    type: 'link',
+    title: '🇸🇬 SEAB / MOE PSLE 官方信息',
+    desc: '新加坡考试局 PSLE 科目信息 — 看英语考试结构 + 听力题型',
+    url: 'https://www.seab.gov.sg/home/examinations/psle/psle-subject-information'
   },
   {
     type: 'link',
-    title: '🎧 CNA Asia First (播客)',
-    desc: '每集 ~6 min,亚洲早晨头条,适合早晨/路上听',
-    url: 'https://www.channelnewsasia.com/podcasts/asia-first-1003696'
+    title: '🎬 YouTube: PSLE Listening 真题练习',
+    desc: '搜各年份 PSLE 听力真题 — 学校老师/教培机构上传,免费',
+    url: 'https://www.youtube.com/results?search_query=PSLE+English+Listening+Comprehension+2024'
   },
+  // === 2) 儿童故事 (语速 + 词汇与 PSLE 接近) ===
   {
     type: 'link',
-    title: '🎧 CNA Daily Cuts (播客)',
-    desc: '每集 ~10 min,新加坡当日新闻深度解读',
-    url: 'https://www.channelnewsasia.com/podcasts/daily-cuts'
-  },
-  {
-    type: 'link',
-    title: '📻 BBC 6 Minute English',
-    desc: '英国学英语经典节目,每集 6 min,有逐字稿对照',
-    url: 'https://www.bbc.co.uk/learningenglish/english/features/6-minute-english'
-  },
-  {
-    type: 'link',
-    title: '📻 BBC Learning English: Stories for Children',
-    desc: '童话/短故事改编,适合小学英语听力起步',
+    title: '📚 BBC Learning English: Stories for Children',
+    desc: '童话 / 短故事改编,英式英语,P5/P6 起步首选',
     url: 'https://www.bbc.co.uk/learningenglish/english/features/childrens-stories'
   },
   {
     type: 'link',
-    title: '🎵 Spotify: PSLE English Listening (搜索)',
-    desc: '在 Spotify/YouTube 搜 "PSLE listening practice" 找练习集',
-    url: 'https://open.spotify.com/search/psle%20english%20listening'
+    title: '📖 Storynory — Free Audio Stories for Kids',
+    desc: '免费儿童有声故事,清晰英式发音,每集 5-15 min',
+    url: 'https://www.storynory.com/'
+  },
+  // === 3) 儿童科普播客 (同步 PSLE 科学考点) ===
+  {
+    type: 'link',
+    title: '🔬 Brains On! Science Podcast for Kids',
+    desc: 'APM 出品,儿童科学问答 — 主题贴 PSLE 科学(动植物/物质/能量/电)',
+    url: 'https://www.brainson.org/'
+  },
+  {
+    type: 'link',
+    title: '🌍 But Why: A Podcast for Curious Kids',
+    desc: 'Vermont Public 出品,孩子提问 → 专家答,15-25 min 生活/科学/社会',
+    url: 'https://www.vermontpublic.org/programs/but-why'
+  },
+  // === 4) 进阶: CNA938 直播(标"P6 高阶")===
+  {
+    type: 'live-audio',
+    title: '🎙️ CNA938 新加坡新闻直播(进阶)',
+    desc: '⚠️ 语速偏快(~180 wpm),适合 W30+ 进阶或保留作真实英语暴露',
+    src: 'https://playerservices.streamtheworld.com/api/livestream-redirect/938NOW_PREM.aac',
+    fallbackUrl: 'https://www.melisten.sg/radio/cna938'
   }
 ];
 

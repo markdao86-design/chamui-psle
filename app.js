@@ -509,7 +509,7 @@ function renderCheckinPage() {
       const listenBtn = isListenTask
         ? `<button class="listen-btn" onclick="event.stopPropagation(); openListeningModal(${week})" title="听力资源(CNA938 直播 + 播客)">🔊</button>`
         : '';
-      const keyChip = isKey ? `<span class="key-chip" title="必做关键 slot,影响周复盘奖">🎯 必做</span>` : '';
+      const keyChip = isKey ? `<span class="key-chip" title="必做关键项目,影响周复盘奖">🎯 必做</span>` : '';
       const tipLine = tip ? `<div class="checkin-tip">${escapeHtml(tip)}</div>` : '';
       return `
         <div class="checkin-item ${checked ? 'checked' : ''} ${isKey ? 'key-slot' : ''}" data-slot="${t.slot}"
@@ -957,7 +957,8 @@ function openListeningModal(week) {
       <div class="vocab-modal-body" style="display:flex;flex-direction:column;gap:12px">${items}</div>
       <div class="vocab-modal-footer">
         💡 PSLE Listening 真题录音不公开,需要用 SAP《PSLE Listening Comprehension》配套 CD。
-        听力陷阱:数字 / 否定词 / 转折(although / however)。
+        听力陷阱:数字 / 否定词 / 转折(although / however)。<br>
+        🎯 语速建议: <b>W1-W14</b> 用儿童故事 → <b>W15-W26</b> 加科学播客 → <b>W27+</b> 才挑战 CNA938。
       </div>
     </div>
   `;
@@ -1121,7 +1122,7 @@ function renderScoreTracking() {
   if (!container) return;
   const agg = aggregateScores(state);
   if (agg.items.length === 0) {
-    container.innerHTML = `<p style="color: var(--color-text-light); font-style: italic; padding: 16px; text-align: center;">📭 还没记录任何分数。在 ✅ 打卡页每个 slot 卡片上点 📊 输入分数</p>`;
+    container.innerHTML = `<p style="color: var(--color-text-light); font-style: italic; padding: 16px; text-align: center;">📭 还没记录任何分数。在 ✅ 打卡页每个项目卡片上点 📊 输入分数</p>`;
     return;
   }
 

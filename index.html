@@ -2154,7 +2154,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
     <div class="card">
       <div class="card-title">📊 各科分数追踪</div>
       <p style="color: var(--color-text-light); font-size: 13px; margin-bottom: 12px;">
-        在 ✅ 打卡页每个 slot 卡片上点 📊 输入老师评分。这里自动按 周/月/科目/类型 统计提升趋势,标出弱项。
+        在 ✅ 打卡页每个项目卡片上点 📊 输入老师评分。这里自动按 周/月/科目/类型 统计提升趋势,标出弱项。
       </p>
       <div id="scoreTracking"></div>
     </div>
@@ -2216,11 +2216,54 @@ body.shake { animation: screen-shake 0.45s ease-out; }
       </div>
 
       <div class="admin-grid">
+        <!-- ===== 高频日常(每天/每周多次)— 排最前 ===== -->
+        <div class="admin-action" style="border-color: var(--color-success); background: #F0FFF8;">
+          <h4>🍽️ 按时吃完饭(不磨蹭)</h4>
+          <p>三餐按时吃完,不拖拉,1 餐 +1 分</p>
+          <div class="admin-buttons">
+            <button class="btn btn-success" onclick="addPoints('按时吃完饭', 1)">＋1 分</button>
+            <button class="btn btn-success" onclick="addPoints('一日三餐都按时(全勤)', 5)">三餐全勤＋5 分</button>
+          </div>
+        </div>
+
+        <div class="admin-action" style="border-color: #A788E0; background: #F8F4FF;">
+          <h4>🌟 良好作息(整体)</h4>
+          <p>当天:按时起床/睡觉 + 完成所有作息任务</p>
+          <div class="admin-buttons">
+            <button class="btn btn-success" onclick="addPoints('良好作息一整天', 3)">＋3 分</button>
+          </div>
+        </div>
+
+        <div class="admin-action" style="border-color: #4ECDC4; background: #ECFFFC;">
+          <h4>🏊 游泳运动</h4>
+          <p>1 次游泳运动(≥30 min)+5 分,有助专注力</p>
+          <div class="admin-buttons">
+            <button class="btn btn-success" onclick="addPoints('游泳运动', 5)">＋5 分</button>
+          </div>
+        </div>
+
+        <div class="admin-action" style="border-color: #FFB6D9; background: #FFF0F8;">
+          <h4>🏸 羽毛球运动</h4>
+          <p>1 次羽毛球运动(≥30 min)+5 分,缓解久坐</p>
+          <div class="admin-buttons">
+            <button class="btn btn-success" onclick="addPoints('羽毛球运动', 5)">＋5 分</button>
+          </div>
+        </div>
+
         <div class="admin-action">
           <h4>📝 英语作文 30+ 分</h4>
           <p>每篇作文得分超过 30 分加 5 分</p>
           <div class="admin-buttons">
             <button class="btn btn-success" onclick="addPoints('作文 30+ 分', 5)">＋5 分</button>
+          </div>
+        </div>
+
+        <div class="admin-action" style="border-color: #4ECDC4; background: #ECFFFC;">
+          <h4>📋 每周学校测验达标</h4>
+          <p>学校单元测验 / 周测达标(≥80%)+5 分;优秀(≥90%)+10 分</p>
+          <div class="admin-buttons">
+            <button class="btn btn-success" onclick="addPoints('学校测验达标(≥80%)', 5)">达标 ＋5 分</button>
+            <button class="btn btn-success" onclick="addPoints('学校测验优秀(≥90%)', 10)">优秀 ＋10 分</button>
           </div>
         </div>
 
@@ -2232,6 +2275,15 @@ body.shake { animation: screen-shake 0.45s ease-out; }
           </div>
         </div>
 
+        <div class="admin-action">
+          <h4>🛡️ 4 周无老师反馈</h4>
+          <p>滚动 4 周内无老师反馈学习问题</p>
+          <div class="admin-buttons">
+            <button class="btn btn-success" onclick="addPoints('4 周无问题奖励', 15)">＋15 分</button>
+          </div>
+        </div>
+
+        <!-- ===== 中频里程碑 ===== -->
         <div class="admin-action">
           <h4>🎯 月小测达标</h4>
           <p>W4 / W8 / W12 月模考分数达标</p>
@@ -2264,72 +2316,21 @@ body.shake { animation: screen-shake 0.45s ease-out; }
           </div>
         </div>
 
-        <div class="admin-action">
-          <h4>🛡️ 4 周无老师反馈</h4>
-          <p>滚动 4 周内无老师反馈学习问题</p>
-          <div class="admin-buttons">
-            <button class="btn btn-success" onclick="addPoints('4 周无问题奖励', 15)">＋15 分</button>
-          </div>
-        </div>
-
-        <div class="admin-action" style="border-color: var(--color-danger); border-width: 4px;">
-          <h4>⚠️ 老师反馈学习问题</h4>
-          <p>不交作业 / 课堂走神 / 作业敷衍等</p>
-          <div class="admin-buttons">
-            <button class="btn btn-danger" onclick="addPoints('老师反馈学习问题', -10)">－10 分</button>
-          </div>
-        </div>
-
-        <!-- v16: 日常作息 + 运动加分 -->
-        <div class="admin-action" style="border-color: var(--color-success); background: #F0FFF8;">
-          <h4>🍽️ 按时吃完饭(不磨蹭)</h4>
-          <p>三餐按时吃完,不拖拉,1 餐 +1 分</p>
-          <div class="admin-buttons">
-            <button class="btn btn-success" onclick="addPoints('按时吃完饭', 1)">＋1 分</button>
-            <button class="btn btn-success" onclick="addPoints('一日三餐都按时(全勤)', 5)">三餐全勤＋5 分</button>
-          </div>
-        </div>
-
-        <div class="admin-action" style="border-color: #4ECDC4; background: #ECFFFC;">
-          <h4>🏊 游泳运动</h4>
-          <p>1 次游泳运动(≥30 min)+5 分,有助专注力</p>
-          <div class="admin-buttons">
-            <button class="btn btn-success" onclick="addPoints('游泳运动', 5)">＋5 分</button>
-          </div>
-        </div>
-
-        <div class="admin-action" style="border-color: #FFB6D9; background: #FFF0F8;">
-          <h4>🏸 羽毛球运动</h4>
-          <p>1 次羽毛球运动(≥30 min)+5 分,缓解久坐</p>
-          <div class="admin-buttons">
-            <button class="btn btn-success" onclick="addPoints('羽毛球运动', 5)">＋5 分</button>
-          </div>
-        </div>
-
-        <div class="admin-action" style="border-color: #A788E0; background: #F8F4FF;">
-          <h4>🌟 良好作息(整体)</h4>
-          <p>当天:按时起床/睡觉 + 完成所有作息任务</p>
-          <div class="admin-buttons">
-            <button class="btn btn-success" onclick="addPoints('良好作息一整天', 3)">＋3 分</button>
-          </div>
-        </div>
-
-        <!-- v16.2: 学校测验 + 期中期末考试 -->
-        <div class="admin-action" style="border-color: #4ECDC4; background: #ECFFFC;">
-          <h4>📋 每周学校测验达标</h4>
-          <p>学校单元测验 / 周测达标(≥80%)+5 分;优秀(≥90%)+10 分</p>
-          <div class="admin-buttons">
-            <button class="btn btn-success" onclick="addPoints('学校测验达标(≥80%)', 5)">达标 ＋5 分</button>
-            <button class="btn btn-success" onclick="addPoints('学校测验优秀(≥90%)', 10)">优秀 ＋10 分</button>
-          </div>
-        </div>
-
         <div class="admin-action" style="border-color: var(--color-warn); background: #FFF8E7; border-width: 4px;">
           <h4>🎓 期中/期末考试优异</h4>
           <p>4 科平均 90+ 才算优异。期中 +30,期末 +50。</p>
           <div class="admin-buttons">
             <button class="btn btn-warn" onclick="addPoints('期中考试优异(4 科 90+)', 30)">期中 ＋30 分</button>
             <button class="btn btn-warn" onclick="addPoints('期末考试优异(4 科 90+)', 50)">期末 ＋50 分</button>
+          </div>
+        </div>
+
+        <!-- ===== 负向(永远末尾)===== -->
+        <div class="admin-action" style="border-color: var(--color-danger); border-width: 4px;">
+          <h4>⚠️ 老师反馈学习问题</h4>
+          <p>不交作业 / 课堂走神 / 作业敷衍等</p>
+          <div class="admin-buttons">
+            <button class="btn btn-danger" onclick="addPoints('老师反馈学习问题', -10)">－10 分</button>
           </div>
         </div>
       </div>
@@ -2352,7 +2353,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
     <div class="card">
       <div class="card-title">📸 本周作业照片(防虚假打卡)</div>
       <p style="color: var(--color-text-light); font-size: 13px; margin-bottom: 12px;">
-        孩子上传的作业照存在浏览器本地。点击查看大图。可在打卡页每个 slot 卡片上点 📷 上传或 📸 查看。
+        孩子上传的作业照存在浏览器本地。点击查看大图。可在打卡页每个项目卡片上点 📷 上传或 📸 查看。
       </p>
       <div id="photoGallery"></div>
     </div>
