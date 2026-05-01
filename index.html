@@ -2300,6 +2300,18 @@ body.shake { animation: screen-shake 0.45s ease-out; }
           <div class="streak-num">🔥 0</div>
           <div class="streak-label">今天打 1 个项目, 点燃火焰</div>
         </div>
+        <!-- v17.4: 火焰规则 紧贴 streak block 下方 -->
+        <div class="streak-rules-card" id="streakRulesCard">
+          <div class="rules-title">🔥 连续打卡规则</div>
+          <ul class="rules-list">
+            <li>每天打 <b>1 个项目</b> = 火焰 +1 天</li>
+            <li>断 1 天:火焰熄灭, <b>从 0 开始</b></li>
+            <li>满 7 天:解锁 🛡️ 7 天勇者 + 🧊 救命券 ×1</li>
+            <li>满 30 天:🔥 30 天战士火焰光环</li>
+            <li>满 100 天:👑 百日王金光特效</li>
+            <li>🧊 救命券:断 1 天自动救回(每 14 天 +1 张)</li>
+          </ul>
+        </div>
         <!-- 大字总分 -->
         <div class="big-score-block">
           <div class="big-score-num" id="bigScoreNum">0</div>
@@ -2316,26 +2328,13 @@ body.shake { animation: screen-shake 0.45s ease-out; }
       </div>
       
       <div class="hero-right-column">
-        <!-- v17.3: 火焰规则说明 (替代之前的升级进度,放显眼处让孩子知道为啥要 streak) -->
-        <div class="streak-rules-card" id="streakRulesCard">
-          <div class="rules-title">🔥 连续打卡规则</div>
-          <ul class="rules-list">
-            <li>每天打 <b>1 个项目</b> = 火焰 +1 天</li>
-            <li>断 1 天:火焰熄灭, <b>从 0 开始</b></li>
-            <li>满 7 天:解锁 🛡️ 7 天勇者 + 🧊 救命券 ×1</li>
-            <li>满 30 天:🔥 30 天战士火焰光环</li>
-            <li>满 100 天:👑 百日王金光特效</li>
-            <li>🧊 救命券:断 1 天自动救回(每 14 天 +1 张)</li>
-          </ul>
-        </div>
+        <!-- v17.4: Wow 卡 移到 hero 右栏 (代替原 streak-rules 位置) — 第一屏右侧大卡 -->
+        <div class="card wow-card-big" id="wowCard" style="display:none"></div>
 
-        <!-- 名师秘诀 (从智慧教练里抽出来,跟升级进度同一列) -->
+        <!-- 名师秘诀 -->
         <div class="master-tip-card" id="masterTipCard"></div>
       </div>
     </div>
-
-    <!-- v17.3: 每日 Wow 事实卡(默认展开,字体放大,首屏第一眼)-->
-    <div class="card wow-card-big" id="wowCard" style="display:none"></div>
 
     <!-- v16: 6 条铁律 mini-card,每天换 1 条 -->
     <div class="card iron-rule-card" id="ironRuleCard">
