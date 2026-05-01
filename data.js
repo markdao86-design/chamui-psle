@@ -653,7 +653,7 @@ const ACHIEVEMENTS = [
   { id: 'streak_30',  icon:'🔥', name:'坚持 30 天',   desc:'连续打卡 30 天',  cat:'坚持', cond:s=>(s.dailyStreak&&s.dailyStreak.bestEver||0)>=30 },
   { id: 'streak_100', icon:'👑', name:'百日王',       desc:'连续打卡 100 天', cat:'坚持', cond:s=>(s.dailyStreak&&s.dailyStreak.bestEver||0)>=100 },
   { id: 'day_5slot',  icon:'⚡', name:'单日 5 项',    desc:'1 天完成 5 个项目', cat:'坚持', cond:s=>_countDay5Slot(s) },
-  { id: 'no_break_30',icon:'🌟', name:'无断 30 天',  desc:'当前 streak ≥30',  cat:'坚持', cond:s=>(s.dailyStreak&&s.dailyStreak.days||0)>=30 },
+  { id: 'no_break_30',icon:'🌟', name:'无断 30 天',  desc:'当前连续打卡 ≥30 天',  cat:'坚持', cond:s=>(s.dailyStreak&&s.dailyStreak.days||0)>=30 },
   // 知识探索 (5)
   { id: 'wow_10',     icon:'🤯', name:'好奇宝宝',     desc:'看 10 条 Wow 事实', cat:'探索', cond:s=>(s.wowSeenCount||0)>=10 },
   { id: 'think_5',    icon:'🧠', name:'思考者',       desc:'答 5 道思考题',     cat:'探索', cond:s=>Object.keys(s.thinkPuzzleAnswers||{}).length>=5 },

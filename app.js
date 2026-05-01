@@ -152,7 +152,7 @@ function _renderStreakBrokenModal(prevDays) {
     '明天再点起来吧',
     `${prevDays} 天的火焰断了, 重新开始`,
     `你曾经连续 ${prevDays} 天每天打卡, 今天断了 — 历史最高记录已存档`,
-    `${prevDays} 天的努力 — 别灰心, 再 7 天就能重获 streak 装备`,
+    `${prevDays} 天的努力 — 别灰心, 再 7 天就能重获连续打卡装备`,
     `${prevDays} 天的连击碎了 — 还要扣 50 分(损失成本). 重新开始, 你能再做到`
   ][sev];
   // 严重程度决定关闭按钮延迟
@@ -902,10 +902,10 @@ function renderCheckinPage() {
     }).join('');
     // Day combo banner
     if (allDoneToday) {
-      slotsHtml += `<div class="combo-banner">🔥 当日全勾!额外 +${DAY_COMBO_POINTS} combo!</div>`;
+      slotsHtml += `<div class="combo-banner">🔥 当日全勾!额外 +${DAY_COMBO_POINTS} 分全勤奖!</div>`;
     } else {
       const left = dayTasks.length - dayTasks.filter(t => getDailyCheck(state, week, selectedDay, t.slot)).length;
-      slotsHtml += `<div class="combo-hint">💡 还差 <b>${left}</b> 个,全勾再拿 <b>+${DAY_COMBO_POINTS}</b> combo</div>`;
+      slotsHtml += `<div class="combo-hint">💡 还差 <b>${left}</b> 个,全勾再拿 <b>+${DAY_COMBO_POINTS}</b> 分全勤奖</div>`;
     }
   }
 
@@ -1110,7 +1110,7 @@ function toggleDailyCheck(week, day, slot, evt) {
         // 之前有 streak 但断了 — 必须显示损失感
         _renderStreakBrokenModal(streakBump.brokenInfo.prevDays);
       } else if (streakBump.brokenInfo && streakBump.brokenInfo.usedFreeze) {
-        showToast(`🧊 用了 1 张保护券,救回了 ${streakBump.brokenInfo.prevDays} 天 streak!`, 'happy');
+        showToast(`🧊 用了 1 张保护券,救回了 ${streakBump.brokenInfo.prevDays} 天连续打卡!`, 'happy');
       } else if (streakBump.isMilestone) {
         showToast(`🔥🔥 第 ${streakBump.isMilestone} 天里程碑!${streakBump.gainedFreeze ? '+ 1 张 🧊 保护券' : ''}`, 'happy');
         spawnConfetti(window.innerWidth / 2, window.innerHeight / 2, 50);
@@ -1121,12 +1121,12 @@ function toggleDailyCheck(week, day, slot, evt) {
     }
     // 当日 combo 触发(撒花 + 震屏 + 大数字)
     if (newDayComplete && !oldDayComplete) {
-      showToast(`🔥 当日全勾!combo +${DAY_COMBO_POINTS}`, 'success');
+      showToast(`🔥 当日全勾!全勤奖 +${DAY_COMBO_POINTS}`, 'success');
       shakeScreen();
       const cx = (evt && evt.clientX) || window.innerWidth / 2;
       const cy = (evt && evt.clientY) || window.innerHeight / 2;
       spawnConfetti(cx, cy, 35);
-      setTimeout(() => spawnFloatPoints(`COMBO +${DAY_COMBO_POINTS}!`, evt, true), 200);
+      setTimeout(() => spawnFloatPoints(`全勤 +${DAY_COMBO_POINTS}!`, evt, true), 200);
     }
     // 周复盘达标(撒花 + 中央大字 + 震屏)
     if (newOnTrack && !oldOnTrack) {
@@ -1551,7 +1551,7 @@ function openPetModal() {
     const isCurrent = f.idx === form.idx;
     return `<div class="pet-form-item ${unlocked ? 'unlocked' : 'locked'} ${isCurrent ? 'current' : ''}">
       <div class="pet-form-emoji">${f.emoji}</div>
-      <div class="pet-form-meta">${f.name} (streak ≥${f.minStreak} 天)${isCurrent ? ' ← 你在这' : ''}</div>
+      <div class="pet-form-meta">${f.name} (连续打卡 ≥${f.minStreak} 天)${isCurrent ? ' ← 你在这' : ''}</div>
     </div>`;
   }).join('');
   modal.innerHTML = `
@@ -1563,7 +1563,7 @@ function openPetModal() {
       <div class="pet-modal-body">
         <div class="pet-current">${form.emoji}<br>${form.name} · 心情 ${state.pet.happiness}/100</div>
         <div class="pet-desc">${escapeHtml(form.desc)}</div>
-        ${nextForm ? `<div class="pet-next">下一形态: ${nextForm.emoji} ${nextForm.name} (streak ≥ ${nextForm.minStreak} 天 · 还差 ${Math.max(0, nextForm.minStreak - streak)} 天)</div>` : '<div class="pet-next">已最高形态! 🎉</div>'}
+        ${nextForm ? `<div class="pet-next">下一形态: ${nextForm.emoji} ${nextForm.name} (连续打卡 ≥ ${nextForm.minStreak} 天 · 还差 ${Math.max(0, nextForm.minStreak - streak)} 天)</div>` : '<div class="pet-next">已最高形态! 🎉</div>'}
         <div class="pet-rename">
           <button class="btn btn-secondary" onclick="renamePet()">✏️ 改名</button>
         </div>
