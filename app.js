@@ -619,7 +619,7 @@ function renderWeekSummary(week) {
       <span class="pts-piece">项目分 ${dp.slot}</span>
       <span class="pts-piece">全勤 ${dp.combo}</span>
       <span class="pts-piece">复盘 ${dp.review}</span>
-      <span class="pts-piece pts-hint">${isHard ? '⭐ 难章周 全 +1' : '短任务=1 主时段=2 周末=3'}</span>
+      <span class="pts-piece pts-hint" title="勾对一个项目得多少分,按时长分档:短任务(10-30min)+1 / 主科 1h(E1/S2)+2 / 周末整块(上午/下午)+3。难章周全部 +1">${isHard ? '⭐ 难章周 每项 +1' : '勾对加分:短+1 · 主科+2 · 周末+3'}</span>
     </div>
   `;
 
