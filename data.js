@@ -142,7 +142,10 @@ function getDefaultState() {
     logs: [],
 
     // 兑换记录
-    exchanges: []
+    exchanges: [],
+
+    // 各科作业分数 (v4):scores['week_day_slot'] = { score, max, note, savedAt }
+    scores: {}
   };
 }
 
@@ -195,6 +198,160 @@ function getWeeklyCheckinTemplate(weekNum) {
   }
 
   return items;
+}
+
+// ============= 各科作业分数(v4 新增) =============
+// state.scores['week_day_slot'] = { score, max, note, savedAt }
+function scoreKey(week, day, slot) { return `${week}_${day}_${slot}`; }
+
+function getScore(state, week, day, slot) {
+  return state.scores && state.scores[scoreKey(week, day, slot)];
+}
+
+// 设置/删除分数。score=null 删除
+function setScore(state, week, day, slot, score, max, note) {
+  if (!state.scores) state.scores = {};
+  const k = scoreKey(week, day, slot);
+  if (score == null || score === '') {
+    delete state.scores[k];
+  } else {
+    state.scores[k] = {
+      score: Number(score),
+      max: Number(max) || 100,
+      note: note || '',
+      savedAt: Date.now()
+    };
+  }
+}
+
+// 任务文本 → 大科目分组(用于聚合)
+function subjectGroup(task) {
+  const t = task || '';
+  if (t.startsWith('🔬')) return '🔬 科学';
+  if (t.startsWith('📖') || t.startsWith('📚')) return '📖 英语阅读/词汇';
+  if (t.startsWith('✏️') || t.startsWith('✍️')) return '✏️ 英语写作/语法';
+  if (t.startsWith('🗣')) return '🗣️ 听力口试';
+  if (t.startsWith('➗')) return '➗ 数学';
+  if (t.startsWith('🇨🇳')) return '🇨🇳 华文';
+  return '其他';
+}
+
+// 任务文本 → 子项类型(更细的统计 — 区分作文/Cloze/Comp/Editing 等)
+function taskSubtype(task) {
+  const t = task || '';
+  if (/作文/.test(t)) return '作文';
+  if (/Cloze|完形/.test(t)) return 'Cloze 完形';
+  if (/Comp|阅读 Comprehension/.test(t)) return 'Comp 阅读';
+  if (/Editing|改错/.test(t)) return 'Editing 改错';
+  if (/Grammar|语法/.test(t)) return 'Grammar 语法';
+  if (/Vocab|词汇/.test(t)) return 'Vocab 词汇';
+  if (/听力|口试/.test(t)) return '听力/口试';
+  if (/Visual Text|看图答题/.test(t)) return 'Visual Text';
+  if (t.startsWith('🔬') && /综合|模拟|总模考/.test(t)) return '科学综合卷';
+  if (t.startsWith('🔬') && /章节小测|配套/.test(t)) return '科学章节测';
+  if (t.startsWith('🔬')) return '科学其他';
+  if (t.startsWith('➗') && /模考|真题|综合/.test(t)) return '数学模考';
+  if (t.startsWith('➗')) return '数学其他';
+  if (t.startsWith('🇨🇳') && /模考|真题/.test(t)) return '华文模考';
+  if (t.startsWith('🇨🇳') && /作文/.test(t)) return '华文作文';
+  if (t.startsWith('🇨🇳')) return '华文其他';
+  return '其他';
+}
+
+// 聚合所有分数 → 按 (week, subject, subtype) 分组
+// 返回 { byWeekSubject: { week: { subject: {sum, max, count, avgPct, items: [...]} } },
+//        bySubtype: { subtype: { sum, max, count, avgPct, latest, weeks: [...] } },
+//        bySubject: { subject: { sum, max, count, avgPct, weekly: [...] } },
+//        byMonth: { month: { subject: {sum, max, count, avgPct} } }   月份 = ceil(week/4)
+//        weakest: subtype }
+function aggregateScores(state) {
+  const out = {
+    byWeekSubject: {},
+    bySubtype: {},
+    bySubject: {},
+    byMonth: {},
+    weakest: null,
+    items: []  // flat list for table
+  };
+  if (!state.scores) return out;
+  const entries = Object.entries(state.scores);
+
+  for (const [key, sc] of entries) {
+    const [w, day, slot] = key.split('_');
+    const week = parseInt(w);
+    const wt = WEEK_TASKS[week - 1];
+    if (!wt) continue;
+    const task = wt.days[day] && wt.days[day][slot];
+    if (!task) continue;
+    const subject = subjectGroup(task);
+    const subtype = taskSubtype(task);
+    const month = Math.ceil(week / 4);
+    const item = { week, day, slot, task, subject, subtype, score: sc.score, max: sc.max, pct: Math.round(sc.score / sc.max * 100), note: sc.note, savedAt: sc.savedAt };
+    out.items.push(item);
+
+    // byWeekSubject
+    if (!out.byWeekSubject[week]) out.byWeekSubject[week] = {};
+    if (!out.byWeekSubject[week][subject]) out.byWeekSubject[week][subject] = { sum: 0, max: 0, count: 0, items: [] };
+    out.byWeekSubject[week][subject].sum += sc.score;
+    out.byWeekSubject[week][subject].max += sc.max;
+    out.byWeekSubject[week][subject].count++;
+    out.byWeekSubject[week][subject].items.push(item);
+
+    // bySubtype
+    if (!out.bySubtype[subtype]) out.bySubtype[subtype] = { sum: 0, max: 0, count: 0, latest: null };
+    out.bySubtype[subtype].sum += sc.score;
+    out.bySubtype[subtype].max += sc.max;
+    out.bySubtype[subtype].count++;
+    if (!out.bySubtype[subtype].latest || sc.savedAt > out.bySubtype[subtype].latest.savedAt) {
+      out.bySubtype[subtype].latest = item;
+    }
+
+    // bySubject
+    if (!out.bySubject[subject]) out.bySubject[subject] = { sum: 0, max: 0, count: 0 };
+    out.bySubject[subject].sum += sc.score;
+    out.bySubject[subject].max += sc.max;
+    out.bySubject[subject].count++;
+
+    // byMonth
+    if (!out.byMonth[month]) out.byMonth[month] = {};
+    if (!out.byMonth[month][subject]) out.byMonth[month][subject] = { sum: 0, max: 0, count: 0 };
+    out.byMonth[month][subject].sum += sc.score;
+    out.byMonth[month][subject].max += sc.max;
+    out.byMonth[month][subject].count++;
+  }
+
+  // compute avg %
+  for (const w in out.byWeekSubject) {
+    for (const s in out.byWeekSubject[w]) {
+      const x = out.byWeekSubject[w][s];
+      x.avgPct = Math.round(x.sum / x.max * 100);
+    }
+  }
+  for (const k in out.bySubtype) {
+    out.bySubtype[k].avgPct = Math.round(out.bySubtype[k].sum / out.bySubtype[k].max * 100);
+  }
+  for (const k in out.bySubject) {
+    out.bySubject[k].avgPct = Math.round(out.bySubject[k].sum / out.bySubject[k].max * 100);
+  }
+  for (const m in out.byMonth) {
+    for (const s in out.byMonth[m]) {
+      const x = out.byMonth[m][s];
+      x.avgPct = Math.round(x.sum / x.max * 100);
+    }
+  }
+
+  // weakest subtype:最少 2 次记录,找最低 avgPct
+  let weakest = null, minPct = 101;
+  for (const k in out.bySubtype) {
+    const s = out.bySubtype[k];
+    if (s.count >= 2 && s.avgPct < minPct) {
+      minPct = s.avgPct;
+      weakest = { subtype: k, avgPct: s.avgPct, count: s.count };
+    }
+  }
+  out.weakest = weakest;
+
+  return out;
 }
 
 // ============= 任务"怎么做" + PSLE 答题技巧(从手册 v9 + PSLE rubrics 提炼) =============
@@ -454,6 +611,7 @@ async function loadStateAsync() {
       if (snap.exists) {
         const merged = Object.assign(getDefaultState(), snap.data());
         if (!merged.daily) merged.daily = {};
+        if (!merged.scores) merged.scores = {};
         merged.version = 2;
         // 同时更新本地缓存
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch (e) {}
@@ -481,6 +639,7 @@ function loadState() {
       const merged = Object.assign(getDefaultState(), data);
       // v1 → v2 迁移:老数据没有 daily 字段,加一个空对象
       if (!merged.daily) merged.daily = {};
+      if (!merged.scores) merged.scores = {};  // v3 → v4 迁移
       // 老 weekly[].checkin.review 在新模型里被淘汰(改为完成率自动判定)
       // 不删除老数据,但 recalc 时会忽略 review 字段
       merged.version = 2;
@@ -695,6 +854,11 @@ window.allKeySlotsDone = allKeySlotsDone;
 window.isDayComplete = isDayComplete;
 window.calcWeekDailyPoints = calcWeekDailyPoints;
 window.getTaskTip = getTaskTip;
+window.getScore = getScore;
+window.setScore = setScore;
+window.subjectGroup = subjectGroup;
+window.taskSubtype = taskSubtype;
+window.aggregateScores = aggregateScores;
 window.loadStateAsync = loadStateAsync;
 window.subscribeFirestore = subscribeFirestore;
 window.initFirebase = initFirebase;

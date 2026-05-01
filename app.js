@@ -36,6 +36,7 @@ async function init() {
     subscribeFirestore(remoteData => {
       state = Object.assign(getDefaultState(), remoteData);
       if (!state.daily) state.daily = {};
+      if (!state.scores) state.scores = {};
       recalcTotalPoints(state);
       renderAll();
       showToast('☁️ 已收到远程更新', 'success');
@@ -238,9 +239,13 @@ function renderCheckinPage() {
       const isKey = isKeySlot(week, selectedDay, t.slot);
       const pts = slotPoints(week, t.slot);
       const tip = getTaskTip(t.task);
+      const sc = getScore(state, week, selectedDay, t.slot);
       const photoBtn = hasPhoto
         ? `<button class="photo-btn has-photo" onclick="event.stopPropagation(); viewPhoto(${week}, '${selectedDay}', '${t.slot}')" title="看作业照">📸</button>`
         : `<button class="photo-btn" onclick="event.stopPropagation(); pickPhotoForSlot(${week}, '${selectedDay}', '${t.slot}')" title="传作业照">📷</button>`;
+      const scoreBtn = sc
+        ? `<button class="score-btn has-score" onclick="event.stopPropagation(); openScoreModal(${week}, '${selectedDay}', '${t.slot}')" title="${escapeAttr(sc.note || '')}">📊 ${sc.score}/${sc.max}</button>`
+        : `<button class="score-btn" onclick="event.stopPropagation(); openScoreModal(${week}, '${selectedDay}', '${t.slot}')" title="记分数">📊</button>`;
       const keyChip = isKey ? `<span class="key-chip" title="必做关键 slot,影响周复盘奖">🎯 必做</span>` : '';
       const tipLine = tip ? `<div class="checkin-tip">${escapeHtml(tip)}</div>` : '';
       return `
@@ -254,6 +259,7 @@ function renderCheckinPage() {
               ${tipLine}
             </div>
           </div>
+          ${scoreBtn}
           ${photoBtn}
           <div class="checkin-points">+${pts}</div>
         </div>
@@ -556,6 +562,86 @@ async function deletePhoto(week, day, slot) {
   renderAll();
 }
 
+// ============ 作业分数(v4) ============
+function openScoreModal(week, day, slot) {
+  const tasks = getDailyTasks(week, day);
+  const t = tasks.find(x => x.slot === slot);
+  const taskText = t ? t.task : slot;
+  const sc = getScore(state, week, day, slot);
+
+  // 根据任务类型预设满分
+  const subtype = taskSubtype(taskText);
+  const presetMax = (subtype === '作文') ? 40 :
+                    (subtype === 'Cloze 完形') ? 15 :
+                    (subtype === 'Comp 阅读') ? 28 :
+                    (subtype === 'Editing 改错') ? 12 :
+                    (subtype === 'Grammar 语法') ? 10 :
+                    (subtype === '科学综合卷' || subtype === '数学模考' || subtype === '华文模考') ? 100 :
+                    20;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'score-modal';
+  overlay.innerHTML = `
+    <div class="score-modal-card">
+      <div class="score-modal-header">
+        <div>
+          <div class="score-modal-title">${escapeHtml(taskText)}</div>
+          <div class="score-modal-meta">W${week} · ${DAY_LABELS[day]} · ${slot} · ${subtype}</div>
+        </div>
+        <button class="photo-modal-close" onclick="this.closest('.score-modal').remove()">✕</button>
+      </div>
+      <div class="score-modal-body">
+        <div class="score-row">
+          <label>得分 <input type="number" id="scoreInput" min="0" step="0.5" value="${sc ? sc.score : ''}" autofocus></label>
+          <span class="score-divider">/</span>
+          <label>满分 <input type="number" id="scoreMaxInput" min="1" step="1" value="${sc ? sc.max : presetMax}"></label>
+        </div>
+        <div class="score-row">
+          <label class="score-note-label">备注 <input type="text" id="scoreNoteInput" placeholder="如:作文 Lesson from Nature 老师评语..." value="${sc ? escapeAttr(sc.note) : ''}"></label>
+        </div>
+        <div class="score-quick-tips">
+          <span>常见满分:作文 40 / Cloze 15 / Comp 28 / Editing 12 / Grammar 10 / 综合卷 100</span>
+        </div>
+      </div>
+      <div class="score-modal-actions">
+        ${sc ? `<button class="btn btn-danger" onclick="deleteScore(${week}, '${day}', '${slot}')">🗑️ 删除</button>` : ''}
+        <button class="btn btn-secondary" onclick="this.closest('.score-modal').remove()">取消</button>
+        <button class="btn btn-primary" onclick="saveScoreFromModal(${week}, '${day}', '${slot}')">💾 保存</button>
+      </div>
+    </div>
+  `;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('scoreInput')?.focus(), 50);
+}
+
+function saveScoreFromModal(week, day, slot) {
+  const score = document.getElementById('scoreInput').value;
+  const max = document.getElementById('scoreMaxInput').value;
+  const note = document.getElementById('scoreNoteInput').value;
+  if (score === '' || isNaN(Number(score))) {
+    showToast('❌ 请输入分数', 'danger');
+    return;
+  }
+  if (Number(score) > Number(max)) {
+    if (!confirm(`得分 ${score} 超过满分 ${max},确定?`)) return;
+  }
+  setScore(state, week, day, slot, score, max, note);
+  saveState(state);
+  document.querySelector('.score-modal')?.remove();
+  showToast(`📊 已记录 ${score}/${max}`, 'success');
+  renderAll();
+}
+
+function deleteScore(week, day, slot) {
+  if (!confirm('删除这条分数?')) return;
+  setScore(state, week, day, slot, null);
+  saveState(state);
+  document.querySelector('.score-modal')?.remove();
+  showToast('🗑️ 分数已删除', 'warn');
+  renderAll();
+}
+
 // HTML 转义工具
 function escapeHtml(s) {
   if (s == null) return '';
@@ -616,6 +702,104 @@ function renderHistoryPage() {
   }
 
   drawChart();
+  renderScoreTracking();
+}
+
+// ============ 各科分数追踪(v4 历史页新增)============
+function renderScoreTracking() {
+  const container = document.getElementById('scoreTracking');
+  if (!container) return;
+  const agg = aggregateScores(state);
+  if (agg.items.length === 0) {
+    container.innerHTML = `<p style="color: var(--color-text-light); font-style: italic; padding: 16px; text-align: center;">📭 还没记录任何分数。在 ✅ 打卡页每个 slot 卡片上点 📊 输入分数</p>`;
+    return;
+  }
+
+  // 1) 各科累计平均
+  const subjectsOrdered = ['🔬 科学', '📖 英语阅读/词汇', '✏️ 英语写作/语法', '🗣️ 听力口试', '➗ 数学', '🇨🇳 华文'];
+  const subjectCards = subjectsOrdered
+    .filter(s => agg.bySubject[s])
+    .map(s => {
+      const x = agg.bySubject[s];
+      const color = x.avgPct >= 85 ? 'var(--color-success)' : x.avgPct >= 70 ? 'var(--color-warn)' : 'var(--color-danger)';
+      return `
+        <div class="score-subj-card">
+          <div class="score-subj-name">${escapeHtml(s)}</div>
+          <div class="score-subj-avg" style="color:${color}">${x.avgPct}%</div>
+          <div class="score-subj-frac">${x.count} 项 · ${x.sum}/${x.max}</div>
+        </div>
+      `;
+    }).join('');
+
+  // 2) 弱项警示
+  const weakHtml = agg.weakest
+    ? `<div class="score-weak-banner">⚠️ 当前弱项: <b>${escapeHtml(agg.weakest.subtype)}</b> 平均 ${agg.weakest.avgPct}% (${agg.weakest.count} 次记录)。建议重点补漏</div>`
+    : '';
+
+  // 3) 各项明细 (按子类型)
+  const subtypes = Object.keys(agg.bySubtype).sort((a, b) => agg.bySubtype[a].avgPct - agg.bySubtype[b].avgPct);
+  const subtypeRows = subtypes.map(st => {
+    const x = agg.bySubtype[st];
+    const color = x.avgPct >= 85 ? 'var(--color-success)' : x.avgPct >= 70 ? 'var(--color-warn)' : 'var(--color-danger)';
+    const latest = x.latest;
+    return `
+      <tr>
+        <td><b>${escapeHtml(st)}</b></td>
+        <td>${x.count} 次</td>
+        <td style="color:${color};font-weight:700">${x.avgPct}%</td>
+        <td>${x.sum}/${x.max}</td>
+        <td style="font-size:11px;color:var(--color-text-light)">最近 W${latest.week} ${latest.score}/${latest.max}</td>
+      </tr>
+    `;
+  }).join('');
+
+  // 4) 周趋势(各科按周平均%)
+  const weeksWithScores = Object.keys(agg.byWeekSubject).map(Number).sort((a, b) => a - b);
+  const weeklyTrend = weeksWithScores.map(w => {
+    const cells = subjectsOrdered.map(s => {
+      const x = agg.byWeekSubject[w][s];
+      if (!x) return '<td>-</td>';
+      const color = x.avgPct >= 85 ? '#6BCB77' : x.avgPct >= 70 ? '#FF9F45' : '#FF5757';
+      return `<td style="background:${color};color:white;font-weight:700">${x.avgPct}%</td>`;
+    }).join('');
+    return `<tr><td><b>W${w}</b></td>${cells}</tr>`;
+  }).join('');
+  const weeklyHeader = subjectsOrdered.map(s => `<th>${escapeHtml(s.split(' ')[0])}</th>`).join('');
+
+  // 5) 月度统计(每 4 周一组)
+  const monthsWithScores = Object.keys(agg.byMonth).map(Number).sort((a, b) => a - b);
+  const monthlyHtml = monthsWithScores.map(m => {
+    const startW = (m - 1) * 4 + 1, endW = m * 4;
+    const cells = subjectsOrdered.map(s => {
+      const x = agg.byMonth[m][s];
+      if (!x) return '-';
+      return `${escapeHtml(s.split(' ')[1] || s)} ${x.avgPct}%`;
+    }).filter(c => c !== '-').join(' / ');
+    return `<div class="month-row"><b>第 ${m} 月 (W${startW}-W${endW})</b>: ${cells || '无记录'}</div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="score-overview">${subjectCards}</div>
+    ${weakHtml}
+    <div class="card-title" style="font-size:14px;margin-top:12px">📑 各项类型表现 (按薄弱排序)</div>
+    <div style="overflow-x:auto">
+      <table class="history-table">
+        <thead><tr><th>类型</th><th>次数</th><th>平均</th><th>累计</th><th>最近</th></tr></thead>
+        <tbody>${subtypeRows}</tbody>
+      </table>
+    </div>
+    ${weeksWithScores.length > 0 ? `
+      <div class="card-title" style="font-size:14px;margin-top:12px">📅 各周分科平均 %</div>
+      <div style="overflow-x:auto">
+        <table class="history-table">
+          <thead><tr><th>周</th>${weeklyHeader}</tr></thead>
+          <tbody>${weeklyTrend}</tbody>
+        </table>
+      </div>` : ''}
+    ${monthsWithScores.length > 0 ? `
+      <div class="card-title" style="font-size:14px;margin-top:12px">📈 月度提升趋势</div>
+      <div class="month-trend">${monthlyHtml}</div>` : ''}
+  `;
 }
 
 function drawChart() {
@@ -939,6 +1123,7 @@ function importData(event) {
       if (!confirm('导入会覆盖当前数据,确定继续吗?')) return;
       state = Object.assign(getDefaultState(), imported);
       if (!state.daily) state.daily = {};
+      if (!state.scores) state.scores = {};
       recalcTotalPoints(state);
       saveState(state);
       renderAll();
@@ -1023,6 +1208,9 @@ window.pickPhotoForSlot = pickPhotoForSlot;
 window.viewPhoto = viewPhoto;
 window.replacePhoto = replacePhoto;
 window.deletePhoto = deletePhoto;
+window.openScoreModal = openScoreModal;
+window.saveScoreFromModal = saveScoreFromModal;
+window.deleteScore = deleteScore;
 window.showAdminHint = showAdminHint;
 window.addPoints = addPoints;
 window.deleteLog = deleteLog;
