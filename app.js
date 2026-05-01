@@ -257,37 +257,6 @@ function printReport() {
   window.print();
 }
 
-// ============ Claude AI 答疑(v4 半集成 — 复制 prompt + 跳 claude.ai)============
-async function askClaudeAI() {
-  const userQuestion = prompt('🤖 想问 Claude 什么?贴一道题或写一段问题:\n\n(填了我会自动加上你的备考上下文一起复制)', '');
-  if (userQuestion === null) return;
-  const promptText = buildClaudePrompt(state, userQuestion.trim() || null);
-  try {
-    await navigator.clipboard.writeText(promptText);
-    showToast('📋 prompt 已复制!正在打开 Claude...', 'success');
-    setTimeout(() => {
-      window.open('https://claude.ai/new', '_blank');
-    }, 500);
-  } catch (e) {
-    // 降级:显示给用户手动复制
-    const overlay = document.createElement('div');
-    overlay.className = 'photo-modal';
-    overlay.innerHTML = `
-      <div class="photo-modal-card" style="max-width:600px">
-        <div class="photo-modal-header">
-          <div class="photo-modal-title">📋 复制下面这段贴到 Claude.ai</div>
-          <button class="photo-modal-close" onclick="this.closest('.photo-modal').remove()">✕</button>
-        </div>
-        <textarea readonly style="width:100%;min-height:300px;padding:12px;font-size:12px;border:none;font-family:monospace">${escapeHtml(promptText)}</textarea>
-        <div class="photo-modal-actions">
-          <a href="https://claude.ai/new" target="_blank" class="btn btn-primary">🚀 打开 Claude.ai</a>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-  }
-}
-
 // ============ 智慧教练(v4 主页新模块)============
 function renderWeeklyCoach() {
   const container = document.getElementById('coachContent');
@@ -1476,7 +1445,6 @@ window.shakeScreen = shakeScreen;
 window.pulseScoreBlock = pulseScoreBlock;
 window.openReportModal = openReportModal;
 window.printReport = printReport;
-window.askClaudeAI = askClaudeAI;
 window.pickPhotoForSlot = pickPhotoForSlot;
 window.viewPhoto = viewPhoto;
 window.replacePhoto = replacePhoto;

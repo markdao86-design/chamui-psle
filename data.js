@@ -423,38 +423,6 @@ function generateWeeklyReport(state, weekNum) {
   };
 }
 
-// 生成给 Claude AI 的"问答上下文"prompt(供一键复制粘贴到 claude.ai)
-function buildClaudePrompt(state, userQuestion) {
-  const week = state.currentWeek;
-  const wt = WEEK_TASKS[week - 1];
-  const c = calcWeekCompletion(week, state);
-  const agg = aggregateScores(state);
-  const subjectAvgs = Object.entries(agg.bySubject)
-    .map(([s, v]) => `${s.split(' ')[1] || s}: ${v.avgPct}%`)
-    .join(' / ') || '(暂无分数记录)';
-  const weakLine = agg.weakest ? `${agg.weakest.subtype} 平均 ${agg.weakest.avgPct}% (${agg.weakest.count} 次)` : '(尚无明显弱项)';
-
-  return `你好 Claude!我是新加坡 P5 学生(2027 年 PSLE 备考),需要你帮我答疑。
-
-【我的当前情况】
-- 本周:第 ${week} 周 ${wt ? '— ' + wt.theme : ''}
-- 完成率:${c ? `${c.done}/${c.total} (${c.percent}%)` : '(本周还没打卡)'}
-- 各科累计平均:${subjectAvgs}
-- 弱项:${weakLine}
-- PSLE 目标:总 AL 9-12 分(英 72+/科 88+/数 90+/华 88+)
-
-【我的问题】
-${userQuestion || '[在这里写你的问题或贴一道题]'}
-
-请按以下格式回答:
-1. **解题思路**(分步骤,适合 P5 理解)
-2. **涉及的知识点**(PSLE syllabus 哪一章)
-3. **PSLE 答题套路**(怎么写答案才能拿满分,如关键词、答题格式)
-4. **类似题型提示**(如果还会考类似的怎么办)
-
-谢谢!`;
-}
-
 // ============= 击败全新加坡 P5 同学百分比(虚拟激励指标) =============
 // 新加坡每年 P5 学生约 50,000 人。曲线设计:
 // 0 分:0% / 30 分(W1 起步):20% / 100 分:43% / 250 分:71% / 500 分:91% / 1000 分:99% / 1500+:99.5%
@@ -1134,7 +1102,6 @@ window.WEEK_FOCUS_TIPS = WEEK_FOCUS_TIPS;
 window.MASTER_TIPS = MASTER_TIPS;
 window.adviceForWeakness = adviceForWeakness;
 window.generateWeeklyReport = generateWeeklyReport;
-window.buildClaudePrompt = buildClaudePrompt;
 window.studentBeatCount = studentBeatCount;
 window.SG_P5_TOTAL = SG_P5_TOTAL;
 window.loadStateAsync = loadStateAsync;
