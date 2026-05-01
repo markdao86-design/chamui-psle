@@ -2941,26 +2941,20 @@ p { font-size: 14px; line-height: 1.6; }
 
         <!-- 名师秘诀 -->
         <div class="master-tip-card" id="masterTipCard"></div>
-      </div>
-    </div>
 
-    <!-- v17.7: 神秘宝箱已移到 tab 栏 -->
-
-    <!-- v18 Phase 5.3: 间隔重复复习卡 (有 due 才显示) -->
-    <div class="card review-card" id="reviewCard" style="display:none"></div>
-
-    <!-- v17.7 Phase 3: 每日特别任务卡 -->
-    <div class="card daily-quest-card" id="dailyQuestCard"></div>
-
-    <!-- v18 Phase 5.4: mini-game 大厅入口卡 -->
-    <div class="card mini-game-hub-card">
-      <div class="mgh-row">
-        <div class="mgh-icon">🎮</div>
-        <div class="mgh-info">
-          <div class="mgh-title">Mini-game 大厅</div>
-          <div class="mgh-sub">4 个 5 min 小游戏 — 词汇 / 数学 / Editing / 听写</div>
+        <!-- v18.5: 间隔重复 + 每日任务 + mini-game 大厅 全部移到右栏 (填充空白) -->
+        <div class="card review-card" id="reviewCard" style="display:none"></div>
+        <div class="card daily-quest-card" id="dailyQuestCard"></div>
+        <div class="card mini-game-hub-card">
+          <div class="mgh-row">
+            <div class="mgh-icon">🎮</div>
+            <div class="mgh-info">
+              <div class="mgh-title">Mini-game 大厅</div>
+              <div class="mgh-sub">4 个游戏 — 词汇/数学/Editing/听写</div>
+            </div>
+            <button class="btn btn-primary" onclick="openMiniGameHub()">🎮 玩</button>
+          </div>
         </div>
-        <button class="btn btn-primary" onclick="openMiniGameHub()">🎮 玩</button>
       </div>
     </div>
 
