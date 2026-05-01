@@ -1014,7 +1014,7 @@ function calcWeekCompletion(weekNum, state) {
   const bySubject = {};
   subjects.forEach(s => bySubject[s] = { total: 0, done: 0 });
   const byDayPart = {
-    weekday: { total: 0, done: 0, label: '工作日(段1+2+3)' },
+    weekday: { total: 0, done: 0, label: '工作日(全部时段)' },
     weekend: { total: 0, done: 0, label: '周末(上午/下午)' }
   };
   const byDay = {};
@@ -1022,10 +1022,12 @@ function calcWeekCompletion(weekNum, state) {
   const missed = [];
   let total = 0, done = 0;
 
+  // v14/v16: 9 个 slot — AM/PM(周末)+ E1/OR/VC/LS/ED/S2/VB(平日 7 个)
+  const ALL_SLOTS = ['AM', 'PM', 'E1', 'OR', 'VC', 'LS', 'ED', 'S2', 'VB'];
   for (const day of DAY_KEYS) {
     const daySlots = w.days[day] || {};
     const isWeekend = day === 'Sat' || day === 'Sun';
-    for (const slot of ['AM', 'PM', 'S1', 'S2', 'S3']) {
+    for (const slot of ALL_SLOTS) {
       if (!(slot in daySlots)) continue;
       const task = daySlots[slot];
       const subj = subjectKey(task);
