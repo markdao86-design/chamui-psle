@@ -1086,10 +1086,7 @@ function openListeningModal(week) {
                     allowfullscreen
                     loading="lazy"></iframe>
           </div>
-          <div class="lis-tip">
-            ▶ 自动连播下一集 · 想跳集:点视频底部控件最右 <b>▶▶</b> 按钮
-            <a href="https://www.youtube.com/playlist?list=${r.playlistId}" target="_blank" rel="noopener" style="margin-left:6px;color:var(--color-primary);text-decoration:underline">📋 看全部集</a>
-          </div>
+          <div class="lis-tip">▶ 自动连播下一集 · 想跳集:点视频底部控件最右 <b>▶▶</b> 按钮</div>
         </div>
       `;
     }
