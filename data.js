@@ -236,6 +236,14 @@ const VOCAB_500 = {
 // 选材原则: P5/P6 PSLE listening 实际语速 120-140 wpm + 儿童词汇,所以用儿童故事/儿童科普
 // CNA938 直播降级到末尾 + 标"进阶 W15+"(成人语速 ~180 wpm 太快)
 const LISTENING_RESOURCES = [
+  // === 0) 直播首选 — CNA938 24h 真实英语暴露 ===
+  {
+    type: 'live-audio',
+    title: '🎙️ CNA938 新加坡新闻直播',
+    desc: '24h 直播 — 新加坡英语新闻台,真实环境暴露(语速 ~180 wpm 偏快,可作背景泛听)',
+    src: 'https://playerservices.streamtheworld.com/api/livestream-redirect/938NOW_PREM.aac',
+    fallbackUrl: 'https://www.melisten.sg/radio/cna938'
+  },
   // === 1) PSLE 直接相关 ===
   {
     type: 'link',
@@ -287,14 +295,6 @@ const LISTENING_RESOURCES = [
     desc: 'Vermont Public 出品,孩子提问 → 专家答,15-25 min 生活/科学/社会',
     url: 'https://www.vermontpublic.org/programs/but-why'
   },
-  // === 4) 进阶: CNA938 直播(标"P6 高阶")===
-  {
-    type: 'live-audio',
-    title: '🎙️ CNA938 新加坡新闻直播(进阶)',
-    desc: '⚠️ 语速偏快(~180 wpm),适合 W30+ 进阶或保留作真实英语暴露',
-    src: 'https://playerservices.streamtheworld.com/api/livestream-redirect/938NOW_PREM.aac',
-    fallbackUrl: 'https://www.melisten.sg/radio/cna938'
-  }
 ];
 
 // 给 weekN (1..73) 返回该周对应的词表 ({subject, subjectIcon, section, weekRange}).
