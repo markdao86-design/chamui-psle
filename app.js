@@ -387,17 +387,43 @@ function calcMonthPoints(weekNum) {
 
 function renderEquipment() {
   const grid = document.getElementById('equipmentGrid');
+  const disabled = new Set(state.equipmentDisabled || []);
   grid.innerHTML = CHAMUI.equipment.map(eq => {
     const unlocked = CHAMUI.checkEquipmentUnlocked(eq.id, state);
+    const equipped = unlocked && !disabled.has(eq.id);
+    const cls = !unlocked ? 'locked' : (equipped ? 'unlocked equipped' : 'unlocked unequipped');
+    const click = unlocked ? `onclick="toggleEquipment('${eq.id}')"` : '';
+    const cursor = unlocked ? 'cursor:pointer' : 'cursor:default';
+    const status = !unlocked ? eq.hint
+      : equipped ? '✓ 穿戴中(点击卸下)'
+      : '👜 已收藏(点击穿戴)';
     return `
-      <div class="equipment-item ${unlocked ? 'unlocked' : 'locked'}">
+      <div class="equipment-item ${cls}" style="${cursor}" ${click} title="${unlocked ? (equipped ? '点击卸下' : '点击穿戴') : '未解锁'}">
         <span class="equipment-icon">${eq.icon}</span>
         <div class="equipment-name">${eq.name}</div>
-        <div class="equipment-condition">${unlocked ? '✓ 已解锁' : eq.hint}</div>
+        <div class="equipment-condition">${status}</div>
       </div>
     `;
   }).join('');
   renderSkinGrid();
+}
+
+// v16.8: 点击装备 → 切换穿戴/卸下 (state.equipmentDisabled 数组里有 = 卸下)
+function toggleEquipment(equipId) {
+  const unlocked = CHAMUI.checkEquipmentUnlocked(equipId, state);
+  if (!unlocked) { showToast('该装备还没解锁哦', 'sad'); return; }
+  if (!state.equipmentDisabled) state.equipmentDisabled = [];
+  const idx = state.equipmentDisabled.indexOf(equipId);
+  const eq = CHAMUI.equipment.find(e => e.id === equipId);
+  if (idx >= 0) {
+    state.equipmentDisabled.splice(idx, 1);
+    showToast(`已穿戴 ${eq ? eq.name : equipId}`, 'happy');
+  } else {
+    state.equipmentDisabled.push(equipId);
+    showToast(`已卸下 ${eq ? eq.name : equipId}`, 'success');
+  }
+  saveState(state);
+  renderAll();
 }
 
 function renderSkinGrid() {
@@ -1766,6 +1792,7 @@ window.openVocabModal = openVocabModal;
 window.closeVocabModal = closeVocabModal;
 window.openListeningModal = openListeningModal;
 window.closeListeningModal = closeListeningModal;
+window.toggleEquipment = toggleEquipment;
 window.requireAdminAuth = requireAdminAuth;
 window.resetAdminPassword = resetAdminPassword;
 window.clearAdminAuth = clearAdminAuth;

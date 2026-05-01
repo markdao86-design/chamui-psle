@@ -217,10 +217,11 @@ const CHAMUI = {
     const level = this.getLevelInfo(points);
     const sad = state.sadUntil && Date.now() < state.sadUntil;
 
-    // 判定装备显示
+    // 判定装备显示 — 已解锁 且 不在 disabled 列表才显示在角色身上
+    const disabled = new Set(state.equipmentDisabled || []);
     const has = {};
     this.equipment.forEach(eq => {
-      has[eq.id] = this.checkEquipmentUnlocked(eq.id, state);
+      has[eq.id] = this.checkEquipmentUnlocked(eq.id, state) && !disabled.has(eq.id);
     });
 
     // v5: 皮肤系统主导颜色;default 皮肤的 shirtColor='auto' 走老逻辑(等级递进)
@@ -644,11 +645,36 @@ const CHAMUI = {
       }
     })();
 
-    const floatingItems = `
-      ${has.note ? `<text x="3" y="78" font-size="20"><animate attributeName="y" values="78;74;78" dur="2.5s" repeatCount="indefinite"/>📒</text>` : ''}
-      ${has.cookie ? `<text x="195" y="78" font-size="18"><animate attributeName="y" values="78;74;78" dur="2.2s" repeatCount="indefinite"/>🍪</text>` : ''}
-      ${has.apple ? `<text x="3" y="135" font-size="18"><animate attributeName="y" values="135;131;135" dur="2.8s" repeatCount="indefinite"/>🍎</text>` : ''}
-      ${has.cup ? `<text x="195" y="135" font-size="18"><animate attributeName="y" values="135;131;135" dur="2.4s" repeatCount="indefinite"/>🥤</text>` : ''}
+    // v16.8: 4 个原"漂浮"道具改为戴在身上(在手 / 在腰带)
+    // 左手 (~58, 195)、右手 (~162, 180)、腰带 (~85-135, 178)
+    const onBodyItems = `
+      ${has.note ? `<!-- 笔记本: 左手抱 -->
+        <g transform="translate(54, 188)">
+          <rect x="-9" y="-12" width="18" height="14" fill="#FFF8E7" stroke="#2D3047" stroke-width="2" rx="2"/>
+          <line x1="-7" y1="-8" x2="7" y2="-8" stroke="#FF6B6B" stroke-width="1"/>
+          <line x1="-7" y1="-4" x2="5" y2="-4" stroke="#999" stroke-width="0.8"/>
+          <line x1="-7" y1="-1" x2="6" y2="-1" stroke="#999" stroke-width="0.8"/>
+        </g>` : ''}
+      ${has.cup ? `<!-- 水杯: 腰带右侧 -->
+        <g transform="translate(140, 175)">
+          <rect x="-5" y="-7" width="10" height="13" fill="#4ECDC4" stroke="#2D3047" stroke-width="2" rx="2"/>
+          <ellipse cx="0" cy="-7" rx="5" ry="1.5" fill="#fff" stroke="#2D3047" stroke-width="1.5"/>
+          <line x1="-5" y1="-3" x2="-7" y2="-3" stroke="#2D3047" stroke-width="1.5"/>
+          <path d="M -7 -3 Q -8 0 -7 3" fill="none" stroke="#2D3047" stroke-width="1.5"/>
+        </g>` : ''}
+      ${has.apple ? `<!-- 苹果: 腰带左侧 -->
+        <g transform="translate(80, 178)">
+          <circle cx="0" cy="2" r="6" fill="#FF6B6B" stroke="#2D3047" stroke-width="2"/>
+          <path d="M 0 -4 L -1 -7 L 1 -8 Z" fill="#6BCB77" stroke="#2D3047" stroke-width="1"/>
+          <line x1="0" y1="-4" x2="0" y2="-2" stroke="#2D3047" stroke-width="1"/>
+        </g>` : ''}
+      ${has.cookie ? `<!-- 饼干: 腰带中间 -->
+        <g transform="translate(110, 178)">
+          <circle cx="0" cy="0" r="5" fill="#D4A574" stroke="#2D3047" stroke-width="2"/>
+          <circle cx="-2" cy="-1" r="0.8" fill="#5D3A1A"/>
+          <circle cx="2" cy="0" r="0.8" fill="#5D3A1A"/>
+          <circle cx="0" cy="2" r="0.8" fill="#5D3A1A"/>
+        </g>` : ''}
     `;
 
     return `
@@ -672,7 +698,7 @@ const CHAMUI = {
         ${medal}
         ${trophy}
         ${skinAccessory}
-        ${floatingItems}
+        ${onBodyItems}
       </svg>
     `;
   }

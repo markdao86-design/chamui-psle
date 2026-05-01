@@ -330,7 +330,10 @@ function getDefaultState() {
     activeSkin: 'default',
 
     // v16: 家长密码 — null = 首次使用未设置(addPoints/deleteLog 触发设置流程)
-    adminPassword: null
+    adminPassword: null,
+
+    // v16.8: 已解锁但用户主动隐藏的装备 id 列表(默认全显示;点击装备图鉴可切换)
+    equipmentDisabled: []
   };
 }
 
