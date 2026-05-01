@@ -149,7 +149,34 @@ function renderDashboard() {
   document.getElementById('streakWeeks').textContent = state.streakBonusCount;
 
   renderWeeklyCoach();
+  renderMasterTipCard();
   renderEquipment();
+}
+
+// ============ 名师秘诀 (右栏卡,跟升级进度对齐) ============
+function renderMasterTipCard() {
+  const el = document.getElementById('masterTipCard');
+  if (!el) return;
+  const c = getWeeklyCoaching(state);
+  const tip = c.masterTip;
+  if (!tip) {
+    el.innerHTML = '';
+    return;
+  }
+  // tip.title 形如 "🔬 P4 Plant Transport ⭐ — 芹菜染色实验答题模板"
+  // 拆成 subject 和 title 两段更好看
+  let subject = '', title = tip.title;
+  const dashIdx = tip.title.indexOf(' — ');
+  if (dashIdx > 0) {
+    subject = tip.title.substring(0, dashIdx);
+    title = tip.title.substring(dashIdx + 3);
+  }
+  el.innerHTML = `
+    <div class="master-tip-header">🌟 本周名师秘诀</div>
+    ${subject ? `<div class="master-tip-subject">${escapeHtml(subject)}</div>` : ''}
+    <div class="master-tip-title">${escapeHtml(title)}</div>
+    <div class="master-tip-content">${escapeHtml(tip.content)}</div>
+  `;
 }
 
 // ============ 周末报告(v4 可打印 PDF)============
@@ -293,17 +320,8 @@ function renderWeeklyCoach() {
     </div>
   ` : '';
 
-  const masterHtml = c.masterTip ? `
-    <div class="coach-section">
-      <div class="coach-section-title">🌟 本周名师秘诀</div>
-      <div class="coach-master">
-        <div class="coach-master-title">${escapeHtml(c.masterTip.title)}</div>
-        <div class="coach-master-content">${escapeHtml(c.masterTip.content)}</div>
-      </div>
-    </div>
-  ` : '';
-
-  container.innerHTML = diagHtml + focusHtml + weakHtml + masterHtml;
+  // 名师秘诀已移到右栏独立卡(renderMasterTipCard),这里不再重复渲染
+  container.innerHTML = diagHtml + focusHtml + weakHtml;
 }
 
 // 计算某周拿到的总分(里程碑 + 每日打卡分 + 周复盘 + 当日 combo)
