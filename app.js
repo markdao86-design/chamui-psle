@@ -241,7 +241,7 @@ function renderDashboard() {
   renderEquipment();
 }
 
-// v17.2: 每日 Wow 事实卡 — 英语/科学按日轮换
+// v17.3: 每日 Wow 事实卡 — 默认展开 + 大字 + 高亮(英语/科学按日轮换)
 function renderWowCard() {
   const card = document.getElementById('wowCard');
   if (!card || !window.getTodayWowFact) return;
@@ -251,15 +251,18 @@ function renderWowCard() {
     return;
   }
   card.style.display = '';
-  // 根据 subject 改变左 border 颜色
   card.style.borderLeftColor = wow.subjectColor || '#A788E0';
+  // v17.3: 默认展开 (孩子第一眼就看到完整解释), 用户可点击收起
+  if (card.dataset.expanded === undefined || card.dataset.expanded === '') {
+    card.dataset.expanded = '1';
+  }
   const expanded = card.dataset.expanded === '1';
   card.innerHTML = `
     <div class="wow-header">
       <span class="wow-tag" style="color:${wow.subjectColor};border-color:${wow.subjectColor}">
         🤯 ${wow.subjectIcon} ${wow.subject} · ${wow.tag}
       </span>
-      <span class="wow-toggle">${expanded ? '收起 ▲' : '展开 ▼'}</span>
+      <span class="wow-toggle">${expanded ? '收起 ▲' : '点击展开 ▼'}</span>
     </div>
     <div class="wow-hook">${escapeHtml(wow.hook)}</div>
     ${expanded ? `<div class="wow-body">${escapeHtml(wow.body)}</div>` : ''}
