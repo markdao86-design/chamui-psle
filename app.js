@@ -365,6 +365,41 @@ function renderEquipment() {
       </div>
     `;
   }).join('');
+  renderSkinGrid();
+}
+
+function renderSkinGrid() {
+  const grid = document.getElementById('skinGrid');
+  if (!grid) return;
+  const activeId = (state.activeSkin || 'default');
+  grid.innerHTML = (CHAMUI.skins || []).map(sk => {
+    const unlocked = CHAMUI.checkSkinUnlocked(sk.id, state);
+    const isActive = unlocked && sk.id === activeId;
+    const swatchBg = sk.shirtColor && sk.shirtColor !== 'auto' ? sk.shirtColor : '#FFE066';
+    const onclick = unlocked
+      ? `setActiveSkin('${sk.id}')`
+      : `showToast('${(sk.hint || '未解锁').replace(/'/g, "\\'")}','sad')`;
+    return `
+      <div class="skin-item ${unlocked ? '' : 'locked'} ${isActive ? 'active' : ''}" onclick="${onclick}">
+        <div class="skin-swatch" style="background:${swatchBg}">${unlocked ? '👤' : '🔒'}</div>
+        <div class="skin-name">${sk.name}</div>
+        <div class="skin-desc">${unlocked ? sk.desc : sk.hint}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function setActiveSkin(skinId) {
+  if (!CHAMUI.checkSkinUnlocked(skinId, state)) {
+    showToast('该皮肤还没有解锁哦', 'sad');
+    return;
+  }
+  if (state.activeSkin === skinId) return;
+  state.activeSkin = skinId;
+  saveState(state);
+  renderAll();
+  const sk = CHAMUI.skins.find(s => s.id === skinId);
+  showToast(`已换上 ${sk ? sk.name : skinId}!`, 'happy');
 }
 
 // ============ 打卡页 (v2 — 每日) ============
@@ -1240,9 +1275,17 @@ function addPoints(reason, points) {
   if (reason === '月小测达标') {
     state.monthlyTestPass = (state.monthlyTestPass || 0) + 1;
   }
+  if (!state.milestones) state.milestones = {};
   if (reason.includes('W14')) state.milestones.W14 = true;
   if (reason.includes('W20')) state.milestones.W20 = true;
   if (reason.includes('W26')) state.milestones.W26 = true;
+  // v5: 新增二三阶段 + PSLE 三大考
+  if (reason.includes('W42')) state.milestones.W42 = true;
+  if (reason.includes('W52')) state.milestones.W52 = true;
+  if (reason.includes('W65')) state.milestones.W65 = true;
+  if (reason.includes('W68')) state.milestones.W68 = true;
+  if (reason.includes('W72')) state.milestones.W72 = true;
+  if (reason.includes('W73')) state.milestones.W73 = true;
 
   recalcTotalPoints(state);
   saveState(state);
@@ -1479,3 +1522,5 @@ window.exportData = exportData;
 window.importData = importData;
 window.manualWeekChange = manualWeekChange;
 window.resetData = resetData;
+window.setActiveSkin = setActiveSkin;
+window.showToast = showToast;

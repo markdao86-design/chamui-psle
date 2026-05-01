@@ -5,48 +5,77 @@
  */
 
 const CHAMUI = {
-  // 8 级配置 (v3 阈值 ×2,匹配上头版加分速率)
+  // 12 级配置 (v5 — 73 周拉伸,Lv12 = 满级 PSLE 王者)
   levels: [
-    { lv: 1, name: '萌新佑子', title: '刚入门的勇士', minPoints: 0,   color: '#FFB6D9' },
-    { lv: 2, name: '学徒佑子', title: '戴上学士帽',   minPoints: 60,  color: '#FFB6D9' },
-    { lv: 3, name: '笔尖佑子', title: '挥舞铅笔剑',   minPoints: 140, color: '#FFC4DD' },
-    { lv: 4, name: '书童佑子', title: '背起书包',     minPoints: 240, color: '#FFC4DD' },
-    { lv: 5, name: '研究佑子', title: '科学探险家',   minPoints: 360, color: '#FFD4E5' },
-    { lv: 6, name: '战士佑子', title: '披上披风',     minPoints: 500, color: '#FFD4E5' },
-    { lv: 7, name: '学霸佑子', title: '智慧加身',     minPoints: 660, color: '#FFE4ED' },
-    { lv: 8, name: '王者佑子', title: 'PSLE 王者',    minPoints: 840, color: '#FFE4ED' }
+    { lv: 1,  name: '萌新佑子',   title: '刚入门的勇士',     minPoints: 0,    color: '#FFB6D9' },
+    { lv: 2,  name: '学徒佑子',   title: '戴上学士帽',       minPoints: 60,   color: '#FFB6D9' },
+    { lv: 3,  name: '笔尖佑子',   title: '挥舞铅笔剑',       minPoints: 140,  color: '#FFC4DD' },
+    { lv: 4,  name: '书童佑子',   title: '背起书包',         minPoints: 240,  color: '#FFC4DD' },
+    { lv: 5,  name: '研究佑子',   title: '科学探险家',       minPoints: 360,  color: '#FFD4E5' },
+    { lv: 6,  name: '战士佑子',   title: '披上披风',         minPoints: 500,  color: '#FFD4E5' },
+    { lv: 7,  name: '学霸佑子',   title: '智慧加身',         minPoints: 660,  color: '#FFE4ED' },
+    { lv: 8,  name: '王者佑子',   title: 'P5 王者',          minPoints: 840,  color: '#FFE4ED' },
+    { lv: 9,  name: '🌟 神级佑子',title: 'P6 突破者',         minPoints: 1100, color: '#FFD96B' },
+    { lv: 10, name: '🚀 火箭佑子',title: '冲刺王',           minPoints: 1500, color: '#FFA500' },
+    { lv: 11, name: '💎 钻石佑子',title: 'PSLE 顶尖',        minPoints: 2200, color: '#4ECDC4' },
+    { lv: 12, name: '👑 PSLE 大师',title: 'PSLE 满级满分',   minPoints: 3500, color: '#FFD700' }
   ],
 
-  // 装备系统(独立解锁) — 22 件,密集解锁高潮
-  // 整个 0-1000 分区间几乎每 50-100 分就有一次新装备弹出
+  // 装备系统(v5 — 42 件,密集解锁覆盖 0-5000 分 + 73 周里程碑)
   equipment: [
-    // ===== 早期点数(让 W1-W4 就有 4-5 次解锁高潮)=====
-    { id: 'note',    icon: '📒', name: '笔记本',   condition: 'points',     value: 20,  hint: '累积 20 分(第一周努力下就有)' },
-    { id: 'apple',   icon: '🍎', name: '健康苹果', condition: 'points',     value: 50,  hint: '累积 50 分' },
-    { id: 'hat',     icon: '🎓', name: '学士帽',   condition: 'points',     value: 80,  hint: '累积 80 分' },
-    { id: 'cup',     icon: '🥤', name: '能量水杯', condition: 'points',     value: 120, hint: '累积 120 分' },
-    { id: 'sword',   icon: '✏️', name: '铅笔剑',   condition: 'points',     value: 160, hint: '累积 160 分' },
-    { id: 'cookie',  icon: '🍪', name: '幸运饼干', condition: 'points',     value: 210, hint: '累积 210 分' },
-    { id: 'bag',     icon: '🎒', name: '书包',     condition: 'points',     value: 260, hint: '累积 260 分' },
-    // ===== 中期点数 =====
-    { id: 'sock',    icon: '🧦', name: '幸运袜',   condition: 'points',     value: 320, hint: '累积 320 分' },
-    { id: 'glasses', icon: '👓', name: '聪明眼镜', condition: 'points',     value: 400, hint: '累积 400 分' },
-    { id: 'watch',   icon: '⌚', name: '时间手表', condition: 'points',     value: 480, hint: '累积 480 分' },
-    { id: 'headphone',icon:'🎧', name: '听力耳机', condition: 'points',     value: 580, hint: '累积 580 分' },
-    // ===== 高级点数 =====
-    { id: 'phone',   icon: '📱', name: '智能手机', condition: 'points',     value: 700, hint: '累积 700 分(冲刺奖)' },
-    { id: 'rocket',  icon: '🚀', name: '冲刺火箭', condition: 'points',     value: 850, hint: '累积 850 分' },
-    { id: 'diamond', icon: '💎', name: '智慧钻石', condition: 'points',     value: 1000,hint: '累积 1000 分(传说级)' },
-    { id: 'galaxy',  icon: '🌌', name: '银河披风', condition: 'points',     value: 1200,hint: '累积 1200 分(神级)' },
-    // ===== 里程碑(原 6 件保留)=====
-    { id: 'tube',    icon: '🔬', name: '试管',     condition: 'milestone',  value: 'W14', hint: '完成 W14 中期模拟' },
-    { id: 'shield',  icon: '🛡️', name: '盾牌',    condition: 'streak',     value: 1,   hint: '4 周无问题反馈' },
-    { id: 'cape',    icon: '🦸', name: '披风',     condition: 'monthly3',   value: 3,   hint: '月小测连续 3 次达标' },
-    { id: 'trophy',  icon: '🏆', name: '奖杯',     condition: 'milestone',  value: 'W20', hint: '完成 W20 P5 综合' },
-    { id: 'crown',   icon: '👑', name: '皇冠',     condition: 'milestone',  value: 'W26', hint: 'W26 总模考达标' },
-    { id: 'fire',    icon: '🔥', name: '火焰特效', condition: 'milestone',  value: 'any-key', hint: '任一大节点达标' },
-    // ===== 月度成就(用现有 monthlyTestPass 计数)=====
-    { id: 'monthking',icon:'🎯', name: '月度王',   condition: 'monthly3',   value: 6,   hint: '累积 6 次月度小测达标(全程王者)' }
+    // ===== 早期点数 (0-300):W1-W6 第一波集邮高潮 =====
+    { id: 'note',     icon: '📒', name: '笔记本',     condition: 'points',    value: 20,   hint: '累积 20 分(第一周轻松到手)' },
+    { id: 'apple',    icon: '🍎', name: '健康苹果',   condition: 'points',    value: 50,   hint: '累积 50 分' },
+    { id: 'hat',      icon: '🎓', name: '学士帽',     condition: 'points',    value: 80,   hint: '累积 80 分' },
+    { id: 'cup',      icon: '🥤', name: '能量水杯',   condition: 'points',    value: 120,  hint: '累积 120 分' },
+    { id: 'sword',    icon: '✏️', name: '铅笔剑',     condition: 'points',    value: 160,  hint: '累积 160 分' },
+    { id: 'cookie',   icon: '🍪', name: '幸运饼干',   condition: 'points',    value: 210,  hint: '累积 210 分' },
+    { id: 'bag',      icon: '🎒', name: '书包',       condition: 'points',    value: 260,  hint: '累积 260 分' },
+    // ===== 中期点数 (300-700):W7-W14 =====
+    { id: 'sock',     icon: '🧦', name: '幸运袜',     condition: 'points',    value: 320,  hint: '累积 320 分' },
+    { id: 'glasses',  icon: '👓', name: '聪明眼镜',   condition: 'points',    value: 400,  hint: '累积 400 分' },
+    { id: 'watch',    icon: '⌚', name: '时间手表',   condition: 'points',    value: 480,  hint: '累积 480 分' },
+    { id: 'headphone',icon: '🎧', name: '听力耳机',   condition: 'points',    value: 580,  hint: '累积 580 分' },
+    { id: 'phone',    icon: '📱', name: '智能手机',   condition: 'points',    value: 700,  hint: '累积 700 分' },
+    // ===== 高级点数 (850-1500):W15-W26 =====
+    { id: 'rocket',   icon: '🚀', name: '冲刺火箭',   condition: 'points',    value: 850,  hint: '累积 850 分' },
+    { id: 'diamond',  icon: '💎', name: '智慧钻石',   condition: 'points',    value: 1000, hint: '累积 1000 分(传说级)' },
+    { id: 'galaxy',   icon: '🌌', name: '银河披风',   condition: 'points',    value: 1200, hint: '累积 1200 分(神级)' },
+    { id: 'lightning',icon: '⚡', name: '闪电袖标',   condition: 'points',    value: 1500, hint: '累积 1500 分' },
+    // ===== 二阶段 (1800-2700):W27-W42 =====
+    { id: 'star',     icon: '⭐', name: '星辰勋章',   condition: 'points',    value: 1800, hint: '累积 1800 分(P6 学者)' },
+    { id: 'sun',      icon: '☀️', name: '太阳皇冠',   condition: 'points',    value: 2200, hint: '累积 2200 分' },
+    { id: 'rainbow',  icon: '🌈', name: '彩虹光环',   condition: 'points',    value: 2700, hint: '累积 2700 分' },
+    // ===== 三阶段冲刺 (3200-4500):W43-W65 =====
+    { id: 'volcano',  icon: '🌋', name: '火山战靴',   condition: 'points',    value: 3200, hint: '累积 3200 分(刷题狂魔)' },
+    { id: 'comet',    icon: '☄️', name: '彗星轨迹',   condition: 'points',    value: 3800, hint: '累积 3800 分' },
+    { id: 'unicorn',  icon: '🦄', name: '独角兽伙伴', condition: 'points',    value: 4500, hint: '累积 4500 分(神兽级)' },
+    // ===== PSLE 终极 (5000+):W66-W73 =====
+    { id: 'medal',    icon: '🥇', name: '金牌得主',   condition: 'points',    value: 5000, hint: '累积 5000 分(冲刺王)' },
+    { id: 'dragon',   icon: '🐉', name: '神龙伙伴',   condition: 'points',    value: 6000, hint: '累积 6000 分(满分挑战)' },
+    // ===== W14/20/26 第一阶段里程碑 =====
+    { id: 'tube',     icon: '🔬', name: '试管',       condition: 'milestone', value: 'W14', hint: '完成 W14 P3-P4 综合模拟' },
+    { id: 'trophy',   icon: '🏆', name: '奖杯',       condition: 'milestone', value: 'W20', hint: '完成 W20 P5 综合' },
+    { id: 'crown',    icon: '👑', name: '皇冠',       condition: 'milestone', value: 'W26', hint: 'W26 第一阶段总模考' },
+    // ===== W42/52/65 二三阶段里程碑(v5 新)=====
+    { id: 'badge_p6', icon: '🎖️', name: 'P6 通关勋章',condition: 'milestone', value: 'W42', hint: 'W42 P6 Adaptations 月模考 3' },
+    { id: 'badge_2',  icon: '🏵️', name: '二阶段勋章', condition: 'milestone', value: 'W52', hint: 'W52 第二阶段总收官' },
+    { id: 'badge_3',  icon: '🎗️', name: '冲刺勋章',   condition: 'milestone', value: 'W65', hint: 'W65 最后完整模考' },
+    // ===== PSLE 三大考(v5 新)=====
+    { id: 'mic',      icon: '🎤', name: '口试金话筒', condition: 'milestone', value: 'W68', hint: 'W68 PSLE 口试 (8.12-13)' },
+    { id: 'ear',      icon: '🎵', name: '听力金耳麦', condition: 'milestone', value: 'W72', hint: 'W72 PSLE 听力 (9.15)' },
+    { id: 'cert',     icon: '📜', name: 'PSLE 证书',  condition: 'milestone', value: 'W73', hint: 'W73 PSLE 笔试 (9.24-30)🎯🎯' },
+    // ===== 行为成就 =====
+    { id: 'shield',   icon: '🛡️', name: '盾牌',      condition: 'streak',    value: 1,    hint: '4 周无问题反馈' },
+    { id: 'cape',     icon: '🦸', name: '披风',       condition: 'monthly3',  value: 3,    hint: '月小测连续 3 次达标' },
+    { id: 'fire',     icon: '🔥', name: '火焰特效',   condition: 'milestone', value: 'any-key', hint: '任一大节点达标' },
+    { id: 'monthking',icon: '🎯', name: '月度王',     condition: 'monthly3',  value: 6,    hint: '累积 6 次月度小测达标' },
+    // ===== 收藏向(可玩可收集)=====
+    { id: 'cake',     icon: '🎂', name: '生日蛋糕',   condition: 'points',    value: 365,  hint: '累积 365 分(每天 1 分坚持)' },
+    { id: 'crystal',  icon: '🔮', name: '水晶球',     condition: 'points',    value: 666,  hint: '累积 666 分' },
+    { id: 'magic',    icon: '🪄', name: '魔法棒',     condition: 'points',    value: 999,  hint: '累积 999 分(差 1 上 1000)' },
+    { id: 'planet',   icon: '🪐', name: '土星之环',   condition: 'points',    value: 1666, hint: '累积 1666 分' },
+    { id: 'phoenix',  icon: '🦅', name: '凤凰羽',     condition: 'points',    value: 2500, hint: '累积 2500 分(浴火重生)' }
   ],
 
   // 根据等级获取角色信息
@@ -79,9 +108,14 @@ const CHAMUI = {
         return state.totalPoints >= eq.value;
       case 'milestone':
         if (eq.value === 'any-key') {
-          return state.milestones.W14 || state.milestones.W20 || state.milestones.W26;
+          // 任一里程碑达标(v5: 扩展到所有 6 个 PSLE 节点)
+          return state.milestones && (
+            state.milestones.W14 || state.milestones.W20 || state.milestones.W26 ||
+            state.milestones.W42 || state.milestones.W52 || state.milestones.W65 ||
+            state.milestones.W68 || state.milestones.W72 || state.milestones.W73
+          );
         }
-        return !!state.milestones[eq.value];
+        return !!(state.milestones && state.milestones[eq.value]);
       case 'streak':
         return state.streakBonusCount >= eq.value;
       case 'monthly3':
@@ -93,6 +127,90 @@ const CHAMUI = {
 
   // ========== SVG 角色绘制(核心) ==========
   // 这个函数根据等级和装备生成 SVG
+  // 皮肤系统 v5 — 6 套全身造型(颜色调色板 + 可选配件层)
+  skins: [
+    {
+      id: 'default', name: '🎒 校服(默认)', desc: '黄 T 黑发,佑子原生造型',
+      shirtColor: 'auto',  // 'auto' = 用 level 颜色递进
+      pantsColor: '#5A4632',
+      hairColor: '#2D3047',
+      skinColor: '#FFE0BD',
+      condition: 'always'
+    },
+    {
+      id: 'scholar', name: '📘 学者袍', desc: '蓝学袍 + 灰长裤,好学少年',
+      shirtColor: '#5B8DEF',  // 蓝
+      pantsColor: '#454F66',  // 深灰
+      hairColor: '#2D3047',
+      skinColor: '#FFE0BD',
+      accessory: 'scholarSash',  // 额外加学士绶带
+      condition: { type: 'level', value: 5 },
+      hint: 'Lv5 解锁(累计 360 分)'
+    },
+    {
+      id: 'scientist', name: '🥼 科学家', desc: '白大褂 + 护目镜,实验家',
+      shirtColor: '#F0F0F0',  // 白
+      pantsColor: '#404040',
+      hairColor: '#2D3047',
+      skinColor: '#FFE0BD',
+      accessory: 'labGoggles',
+      condition: { type: 'milestone', value: 'W14' },
+      hint: 'W14 P3-P4 综合模拟达标解锁'
+    },
+    {
+      id: 'explorer', name: '🧭 探险家', desc: '卡其 + 望远镜,Boyfriend',
+      shirtColor: '#9A8B5B',  // 卡其
+      pantsColor: '#6B5D3F',
+      hairColor: '#3B2E20',
+      skinColor: '#F5C9A0',
+      accessory: 'explorerCap',
+      condition: { type: 'points', value: 1500 },
+      hint: '累积 1500 分解锁'
+    },
+    {
+      id: 'hero', name: '🦸 超级英雄', desc: '红披风+面具+蓝衣,救世主',
+      shirtColor: '#3B5BA9',  // 蓝
+      pantsColor: '#1F2D5C',
+      hairColor: '#2D3047',
+      skinColor: '#FFE0BD',
+      accessory: 'heroMask',
+      condition: { type: 'points', value: 3000 },
+      hint: '累积 3000 分解锁'
+    },
+    {
+      id: 'master', name: '👑 PSLE 大师', desc: '金衣+皇冠+证书,终极满级',
+      shirtColor: '#FFD700',  // 金
+      pantsColor: '#9B7300',
+      hairColor: '#2D3047',
+      skinColor: '#FFE0BD',
+      accessory: 'masterCrown',
+      condition: { type: 'milestone', value: 'W73' },
+      hint: 'W73 PSLE 笔试完成解锁(终极)'
+    }
+  ],
+
+  // 检查皮肤是否解锁
+  checkSkinUnlocked(skinId, state) {
+    const skin = this.skins.find(s => s.id === skinId);
+    if (!skin) return false;
+    if (skin.condition === 'always') return true;
+    const cond = skin.condition;
+    if (cond.type === 'level') return this.getLevelInfo(state.totalPoints).lv >= cond.value;
+    if (cond.type === 'points') return state.totalPoints >= cond.value;
+    if (cond.type === 'milestone') return !!(state.milestones && state.milestones[cond.value]);
+    return false;
+  },
+
+  // 取当前激活皮肤,如果没选/选的没解锁,默认 default
+  getActiveSkin(state) {
+    const id = state.activeSkin || 'default';
+    const skin = this.skins.find(s => s.id === id);
+    if (!skin || !this.checkSkinUnlocked(id, state)) {
+      return this.skins[0];  // default
+    }
+    return skin;
+  },
+
   renderCharacter(state) {
     const points = state.totalPoints;
     const level = this.getLevelInfo(points);
@@ -104,11 +222,13 @@ const CHAMUI = {
       has[eq.id] = this.checkEquipmentUnlocked(eq.id, state);
     });
 
-    // 等级影响衣服颜色:Lv1-2 黄,Lv3-4 橙,Lv5-6 紫,Lv7-8 红
-    const shirtColor = level.lv <= 2 ? '#FFE066' : level.lv <= 4 ? '#FF9F45' : level.lv <= 6 ? '#A788E0' : '#FF6B6B';
-    const skinColor = '#FFE0BD';
-    const hairColor = '#2D3047';
-    const pantsColor = '#5A4632';
+    // v5: 皮肤系统主导颜色;default 皮肤的 shirtColor='auto' 走老逻辑(等级递进)
+    const skin = this.getActiveSkin(state);
+    const autoShirt = level.lv <= 2 ? '#FFE066' : level.lv <= 4 ? '#FF9F45' : level.lv <= 6 ? '#A788E0' : '#FF6B6B';
+    const shirtColor = (skin.shirtColor === 'auto') ? autoShirt : skin.shirtColor;
+    const skinColor = skin.skinColor;
+    const hairColor = skin.hairColor;
+    const pantsColor = skin.pantsColor;
 
     // 表情:开心(大黑眼+张嘴笑)或沮丧
     const eyes = sad ? `
@@ -467,6 +587,62 @@ const CHAMUI = {
 
     // 围绕角色的小道具浮动(用 emoji text,简单)
     // 位置:左上 笔记本 / 右上 饼干 / 中左 苹果 / 中右 水杯
+    // v5: 皮肤配件层
+    const skinAccessory = (() => {
+      switch (skin.accessory) {
+        case 'scholarSash': return `
+          <!-- 学者绶带(从肩膀斜挎到腰) -->
+          <path d="M 75 130 L 145 175 L 152 188 L 82 143 Z" fill="#FFD700" stroke="#2D3047" stroke-width="2" opacity="0.85"/>
+          <text x="105" y="160" font-size="10" fill="#2D3047">学</text>`;
+        case 'labGoggles': return `
+          <!-- 护目镜(在头顶,正常眼睛后面) -->
+          <g opacity="0.9">
+            <ellipse cx="90" cy="50" rx="14" ry="10" fill="#4ECDC4" stroke="#2D3047" stroke-width="2.5" opacity="0.7"/>
+            <ellipse cx="130" cy="50" rx="14" ry="10" fill="#4ECDC4" stroke="#2D3047" stroke-width="2.5" opacity="0.7"/>
+            <line x1="104" y1="50" x2="116" y2="50" stroke="#2D3047" stroke-width="3"/>
+          </g>`;
+        case 'explorerCap': return `
+          <!-- 探险帽 -->
+          <g>
+            <ellipse cx="110" cy="38" rx="58" ry="6" fill="#8B7355" stroke="#2D3047" stroke-width="3"/>
+            <path d="M 75 38 Q 75 18 110 16 Q 145 18 145 38 Z" fill="#8B7355" stroke="#2D3047" stroke-width="3"/>
+            <rect x="75" y="32" width="70" height="6" fill="#5A4632"/>
+          </g>`;
+        case 'heroMask': return `
+          <!-- 英雄面具(蒙眼) -->
+          <path d="M 65 70 Q 110 60 155 70 Q 155 88 110 90 Q 65 88 65 70 Z"
+                fill="#FF6B6B" stroke="#2D3047" stroke-width="3" opacity="0.92"/>
+          <ellipse cx="90" cy="78" rx="9" ry="9" fill="white"/>
+          <ellipse cx="130" cy="78" rx="9" ry="9" fill="white"/>
+          <ellipse cx="90" cy="78" rx="6" ry="8" fill="#2D3047"/>
+          <ellipse cx="130" cy="78" rx="6" ry="8" fill="#2D3047"/>`;
+        case 'masterCrown': return `
+          <!-- PSLE 大师皇冠(更华丽) -->
+          <g>
+            <polygon points="60,55 72,28 90,46 110,18 130,46 148,28 160,55"
+                     fill="#FFD700" stroke="#2D3047" stroke-width="3"/>
+            <circle cx="72" cy="34" r="5" fill="#FF6B6B" stroke="#2D3047" stroke-width="2"/>
+            <circle cx="110" cy="24" r="6" fill="#4ECDC4" stroke="#2D3047" stroke-width="2"/>
+            <circle cx="148" cy="34" r="5" fill="#FF6B6B" stroke="#2D3047" stroke-width="2"/>
+            <rect x="60" y="55" width="100" height="9" fill="#FFA500" stroke="#2D3047" stroke-width="2"/>
+            <text x="100" y="20" font-size="14" fill="#FFE66D">
+              <animate attributeName="opacity" values="1;0.4;1" dur="1.2s" repeatCount="indefinite"/>
+              ✨
+            </text>
+            <text x="120" y="22" font-size="12" fill="#FFE66D">
+              <animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite"/>
+              ✨
+            </text>
+          </g>
+          <!-- 证书 在手 -->
+          <g transform="translate(58, 195)">
+            <rect x="-10" y="-15" width="20" height="14" fill="#FFFAF0" stroke="#2D3047" stroke-width="2"/>
+            <text x="-7" y="-5" font-size="8" fill="#2D3047">📜</text>
+          </g>`;
+        default: return '';
+      }
+    })();
+
     const floatingItems = `
       ${has.note ? `<text x="3" y="78" font-size="20"><animate attributeName="y" values="78;74;78" dur="2.5s" repeatCount="indefinite"/>📒</text>` : ''}
       ${has.cookie ? `<text x="195" y="78" font-size="18"><animate attributeName="y" values="78;74;78" dur="2.2s" repeatCount="indefinite"/>🍪</text>` : ''}
@@ -494,6 +670,7 @@ const CHAMUI = {
         ${socks}
         ${medal}
         ${trophy}
+        ${skinAccessory}
         ${floatingItems}
       </svg>
     `;
