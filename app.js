@@ -31,6 +31,11 @@ async function init() {
   updateSyncBadge(typeof getFbStatus === 'function' ? getFbStatus() : 'local');
   // 异步拉照片 key cache,完了再 rerender
   refreshPhotoKeyCache().then(() => renderAll()).catch(() => {});
+  // v18 Phase 5.1: 每日抽奖检查 + 成就 init 检查
+  setTimeout(() => {
+    _checkDailyDrawOnInit();
+    _checkAndUnlockAch();
+  }, 800);
   // 订阅 Firestore 远端变化
   if (typeof subscribeFirestore === 'function' && isFbReady && isFbReady()) {
     subscribeFirestore(remoteData => {
@@ -240,6 +245,9 @@ function renderDashboard() {
   renderWowCard();  // v17.1
   renderMysteryBoxCard();  // v17.5
   renderDailyQuestCard();  // v17.7 Phase 3
+  renderPetWidget();  // v18 Phase 5.1
+  renderAchievementWall();  // v18 Phase 5.1
+  renderReviewCard();  // v18 Phase 5.3
   renderWeeklyCoach();
   renderMasterTipCard();
   renderEquipment();
@@ -279,8 +287,12 @@ function openMysteryBoxModal() {
   });
   // v17.7 quest: 开 box 算 1 次
   _trackQuest('box-open', 1);
+  // v18 sound + rare counter + ach
+  playSound('slot');
+  if (result.tier === 'rare') state.rareBoxesCount = (state.rareBoxesCount || 0) + 1;
   saveState(state);
   _renderMysteryBoxResult(result);
+  _checkAndUnlockAch();
   renderAll();
 }
 
@@ -429,13 +441,18 @@ function submitThinkAnswer(weekN, userAnswer) {
   recalcTotalPoints(state);
   // v17.7 quest: 答 1 道 think
   _trackQuest('think-1', 1);
+  // v18 Phase 5.3: enqueue 复习
+  if (window.enqueueReview) window.enqueueReview(state, 'think', weekN);
   saveState(state);
   if (result.correct) {
     showToast(`✅ 答对!+10 分`, 'happy');
     spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 30);
+    playSound('tada');
   } else {
     showToast(`🤔 思考题 +5 分 — 看下面的解释吧`, 'success');
+    playSound('sad');
   }
+  _checkAndUnlockAch();
   renderAll();
 }
 
@@ -469,7 +486,19 @@ function renderWowCard() {
     card.dataset.expanded = expanded ? '0' : '1';
     renderWowCard();
     // v17.7 quest: 看 wow 算 1 次
-    if (card.dataset.expanded === '1') _trackQuest('wow-1', 1);
+    if (card.dataset.expanded === '1') {
+      _trackQuest('wow-1', 1);
+      // v18 Phase 5.3: enqueue 复习(类型 wow)
+      if (window.enqueueReview) {
+        const wow = window.getTodayWowFact(state.currentWeek);
+        const id = wow.subjectKey === 'science' ? 'w' + wow.week : (wow.tag + '_' + (window.ENGLISH_WOW_FACTS.indexOf(window.ENGLISH_WOW_FACTS.find(w => w.hook === wow.hook))));
+        window.enqueueReview(state, 'wow', id);
+      }
+      // v18 wowSeenCount 累加
+      state.wowSeenCount = (state.wowSeenCount || 0) + 1;
+      saveState(state);
+      _checkAndUnlockAch();
+    }
   };
 }
 
@@ -1049,7 +1078,17 @@ function toggleDailyCheck(week, day, slot, evt) {
     _trackQuest('slot-3', 1);
     _trackQuest('slot-5', 1);
   }
+  // v18 Phase 5.1: 喂宠物 + 检查时段成就
+  if (!wasChecked) {
+    if (window.feedPet) window.feedPet(state);
+    const hr = new Date().getHours();
+    if (hr >= 22 || hr < 2) state._lateNightChecked = true;
+    if (hr < 6) state._earlyMorningChecked = true;
+    playSound('ding');
+  }
   saveState(state);
+  // v18 Phase 5.1: 检查成就(在保存后调,避免新成就改 state 没存)
+  if (!wasChecked) _checkAndUnlockAch();
 
   const newDayComplete = isDayComplete(state, week, day);
   const newOnTrack = (calcWeekCompletion(week, state) || {}).onTrack;
@@ -1405,8 +1444,12 @@ function _checkVocabPair() {
         reason: `🎮 词汇连连看 W${g.weekN} 全对(${g.wrong} 错)`,
         points: 10, week: state.currentWeek, timestamp: Date.now()
       });
+      // v18 vocabPerfectRuns 用于成就
+      if (g.wrong === 0) state.vocabPerfectRuns = (state.vocabPerfectRuns || 0) + 1;
       saveState(state);
       spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 60);
+      playSound('tada');
+      _checkAndUnlockAch();
       setTimeout(() => renderAll(), 300);
     }
   } else {
@@ -1425,6 +1468,588 @@ function closeVocabGame() {
   const modal = document.getElementById('vocabGameModal');
   if (modal) modal.classList.remove('show');
   _vocabGameState = null;
+}
+
+// ============ v18 Phase 5.4: 🔊 音效 (Web Audio API 程序合成) ============
+let _audioCtx = null;
+function _getAudioCtx() {
+  if (!_audioCtx) {
+    try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+  }
+  return _audioCtx;
+}
+function playSound(type) {
+  if (state.soundEnabled === false) return;
+  const ctx = _getAudioCtx();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    switch (type) {
+      case 'ding': _playTone(ctx, 880, 0.15, 'sine', 0.18); break;
+      case 'fanfare':
+        _playTone(ctx, 523, 0.12, 'triangle', 0.2, 0);    // C
+        _playTone(ctx, 659, 0.12, 'triangle', 0.2, 0.12); // E
+        _playTone(ctx, 784, 0.25, 'triangle', 0.2, 0.24); // G
+        break;
+      case 'slot':
+        for (let i = 0; i < 6; i++) _playTone(ctx, 200 + i * 80, 0.08, 'square', 0.1, i * 0.06);
+        break;
+      case 'tada':
+        _playTone(ctx, 523, 0.12, 'triangle', 0.2, 0);
+        _playTone(ctx, 784, 0.12, 'triangle', 0.2, 0.10);
+        _playTone(ctx, 1047, 0.4, 'triangle', 0.2, 0.20);
+        break;
+      case 'sad':
+        _playTone(ctx, 440, 0.15, 'sawtooth', 0.15, 0);
+        _playTone(ctx, 330, 0.3, 'sawtooth', 0.15, 0.12);
+        break;
+      case 'pop':
+        _playTone(ctx, 660, 0.08, 'sine', 0.2, 0);
+        _playTone(ctx, 990, 0.12, 'sine', 0.2, 0.06);
+        break;
+    }
+  } catch (e) {}
+}
+function _playTone(ctx, freq, dur, wave, vol, delay) {
+  const t = ctx.currentTime + (delay || 0);
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = wave || 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(vol || 0.2, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + dur);
+}
+
+// ============ v18 Phase 5.1: 🐣 宠物 widget ============
+function renderPetWidget() {
+  const w = document.getElementById('petWidget');
+  if (!w || !window.getCurrentPetForm) return;
+  if (!state.pet) state.pet = { name: '小蛋蛋', formIdx: 0, spawnedAt: Date.now(), feedCount: 0, happiness: 100, lastFedDate: null };
+  const form = window.getCurrentPetForm(state);
+  state.pet.formIdx = form.idx;
+  const happy = state.pet.happiness || 0;
+  const isSad = happy < 30;
+  const inAshes = window.isStreakInAshes && window.isStreakInAshes(state);
+  w.innerHTML = `
+    <div class="pet-emoji ${isSad || inAshes ? 'pet-sad' : ''}">${form.emoji}</div>
+    <div class="pet-name">${escapeHtml(state.pet.name || '小蛋蛋')}</div>
+    <div class="pet-form-name">${form.name} · ${happy}/100 ${isSad ? '😢' : '😊'}</div>
+  `;
+  w.onclick = openPetModal;
+}
+function openPetModal() {
+  const modal = document.getElementById('petModal');
+  if (!modal) return;
+  const form = window.getCurrentPetForm(state);
+  const nextForm = window.PET_FORMS.find(f => f.idx === form.idx + 1);
+  const streak = (state.dailyStreak && state.dailyStreak.bestEver) || 0;
+  const formsList = window.PET_FORMS.map(f => {
+    const unlocked = streak >= f.minStreak;
+    const isCurrent = f.idx === form.idx;
+    return `<div class="pet-form-item ${unlocked ? 'unlocked' : 'locked'} ${isCurrent ? 'current' : ''}">
+      <div class="pet-form-emoji">${f.emoji}</div>
+      <div class="pet-form-meta">${f.name} (streak ≥${f.minStreak} 天)${isCurrent ? ' ← 你在这' : ''}</div>
+    </div>`;
+  }).join('');
+  modal.innerHTML = `
+    <div class="pet-modal-inner">
+      <div class="pet-modal-header">
+        <span class="pet-modal-title">🐣 宠物 ${escapeHtml(state.pet.name || '')}</span>
+        <button class="vocab-modal-close" onclick="closePetModal()">×</button>
+      </div>
+      <div class="pet-modal-body">
+        <div class="pet-current">${form.emoji}<br>${form.name} · 心情 ${state.pet.happiness}/100</div>
+        <div class="pet-desc">${escapeHtml(form.desc)}</div>
+        ${nextForm ? `<div class="pet-next">下一形态: ${nextForm.emoji} ${nextForm.name} (streak ≥ ${nextForm.minStreak} 天 · 还差 ${Math.max(0, nextForm.minStreak - streak)} 天)</div>` : '<div class="pet-next">已最高形态! 🎉</div>'}
+        <div class="pet-rename">
+          <button class="btn btn-secondary" onclick="renamePet()">✏️ 改名</button>
+        </div>
+        <div class="pet-forms-list">${formsList}</div>
+      </div>
+    </div>
+  `;
+  modal.classList.add('show');
+}
+function closePetModal() {
+  const m = document.getElementById('petModal');
+  if (m) m.classList.remove('show');
+}
+function renamePet() {
+  const newName = prompt('给宠物起个新名字:', state.pet.name || '小蛋蛋');
+  if (!newName || newName.length > 12) return;
+  state.pet.name = newName;
+  saveState(state);
+  showToast(`✅ 宠物已改名 ${newName}`, 'happy');
+  openPetModal();
+}
+
+// ============ v18 Phase 5.1: 🏆 成就墙 ============
+function renderAchievementWall() {
+  const card = document.getElementById('achievementWallCard');
+  if (!card || !window.ACHIEVEMENTS) return;
+  const unlocked = (state.achievements && state.achievements.unlocked) || [];
+  const total = window.ACHIEVEMENTS.length;
+  card.innerHTML = `
+    <div class="ach-header">
+      <span class="ach-title">🏆 成就墙</span>
+      <span class="ach-count">${unlocked.length} / ${total}</span>
+      <button class="btn btn-secondary ach-toggle" onclick="toggleAchWallExpanded()">${card.dataset.expanded === '1' ? '收起 ▲' : '展开 ▼'}</button>
+    </div>
+    ${card.dataset.expanded === '1' ? `
+      <div class="ach-grid">
+        ${window.ACHIEVEMENTS.map(a => {
+          const isU = unlocked.indexOf(a.id) >= 0;
+          return `<div class="ach-item ${isU ? 'unlocked' : 'locked'}" title="${escapeHtml(a.desc)}">
+            <div class="ach-icon">${a.icon}</div>
+            <div class="ach-name">${a.name}</div>
+            <div class="ach-cat">${a.cat}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    ` : ''}
+  `;
+}
+function toggleAchWallExpanded() {
+  const card = document.getElementById('achievementWallCard');
+  card.dataset.expanded = card.dataset.expanded === '1' ? '0' : '1';
+  renderAchievementWall();
+}
+function _showAchievementUnlock(a) {
+  const modal = document.getElementById('achievementUnlockModal');
+  if (!modal) return;
+  modal.innerHTML = `
+    <div class="ach-unlock-inner">
+      <div class="ach-unlock-icon">${a.icon}</div>
+      <div class="ach-unlock-title">🎉 解锁成就</div>
+      <div class="ach-unlock-name">${escapeHtml(a.name)}</div>
+      <div class="ach-unlock-desc">${escapeHtml(a.desc)}</div>
+      <button class="btn btn-primary" onclick="closeAchievementUnlock()">太棒了!</button>
+    </div>
+  `;
+  modal.classList.add('show');
+  playSound('pop');
+  spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 50);
+}
+function closeAchievementUnlock() {
+  document.getElementById('achievementUnlockModal').classList.remove('show');
+}
+
+// 全局触发: 在任意 state 改后调
+function _checkAndUnlockAch() {
+  if (!window.checkAchievements) return;
+  const newly = window.checkAchievements(state);
+  if (newly.length > 0) {
+    saveState(state);
+    // 一个一个弹(避免堆叠) — 显示第 1 个,用户关掉自动弹下一个
+    const queue = [...newly];
+    const showNext = () => {
+      if (queue.length === 0) return;
+      const a = queue.shift();
+      _showAchievementUnlock(a);
+      // 监听关闭
+      const watcher = setInterval(() => {
+        if (!document.getElementById('achievementUnlockModal').classList.contains('show')) {
+          clearInterval(watcher);
+          if (queue.length > 0) setTimeout(showNext, 500);
+        }
+      }, 200);
+    };
+    showNext();
+  }
+}
+
+// ============ v18 Phase 5.1: 🎁 每日抽奖 ============
+function _checkDailyDrawOnInit() {
+  if (!window.checkDailyDraw) return;
+  const result = window.checkDailyDraw(state);
+  if (!result) return;
+  saveState(state);
+  // 弹抽奖 modal
+  const modal = document.getElementById('dailyDrawModal');
+  if (!modal) return;
+  let bonusHtml = '';
+  if (result.bonus === 'wow') bonusHtml = `<div class="dd-bonus">🎁 连登 ${result.consecutive} 天 — 加送 wow 卡!</div>`;
+  if (result.bonus === 'rare-hint') bonusHtml = `<div class="dd-bonus">🌟 连登 ${result.consecutive} 天 — 下次开盒必中稀有装备!</div>`;
+  modal.innerHTML = `
+    <div class="dd-inner">
+      <div class="dd-icon">🎁</div>
+      <div class="dd-title">今日登录奖励!</div>
+      <div class="dd-frags">+${result.fragments} 个宝箱碎片</div>
+      <div class="dd-progress">当前碎片: ${result.totalFragments}/7 · 满 7 自动合成 1 完整宝箱</div>
+      ${result.newBoxes > 0 ? `<div class="dd-newbox">🎉 合成了 ${result.newBoxes} 个完整宝箱! tab 栏 🎁</div>` : ''}
+      <div class="dd-streak">📅 连续登录 ${result.consecutive} 天</div>
+      ${bonusHtml}
+      <button class="btn btn-primary" onclick="closeDailyDraw()">谢谢!</button>
+    </div>
+  `;
+  modal.classList.add('show');
+  playSound('slot');
+  if (result.newBoxes > 0) spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40);
+}
+function closeDailyDraw() {
+  document.getElementById('dailyDrawModal').classList.remove('show');
+  renderAll();
+}
+
+// ============ v18 Phase 5.3: 🔁 间隔重复复习卡 ============
+function renderReviewCard() {
+  const card = document.getElementById('reviewCard');
+  if (!card) return;
+  const due = window.getDueReviews ? window.getDueReviews(state) : [];
+  if (due.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = '';
+  // 显示第 1 个 due review
+  const r = due[0];
+  const [type, id] = r.key.split(':');
+  let qText = '', explainText = '';
+  if (type === 'wow') {
+    // 找 wow 内容
+    const wow = (window.ENGLISH_WOW_FACTS || []).find(w => w.tag + '_' + (window.ENGLISH_WOW_FACTS.indexOf(w)) === id) ||
+                (window.WEEKLY_WOW_FACTS || []).find(w => 'w' + w.week === id);
+    if (wow) { qText = wow.hook; explainText = wow.body; }
+  } else if (type === 'think') {
+    const t = (window.THINK_PUZZLES || []).find(p => p.week == id);
+    if (t) { qText = t.question; explainText = t.explanation; }
+  }
+  if (!qText) {
+    card.style.display = 'none';
+    return;
+  }
+  card.innerHTML = `
+    <div class="rev-header">
+      <span class="rev-tag">🔁 复习提醒 · ${due.length} 个待复习</span>
+    </div>
+    <div class="rev-question">${escapeHtml(qText)}</div>
+    <div class="rev-prompt">还记得吗?</div>
+    <div class="rev-options">
+      <button class="btn btn-success" onclick="submitReviewAnswer('${r.key}', true)">✅ 记得</button>
+      <button class="btn btn-warn" onclick="submitReviewAnswer('${r.key}', false)">🤔 忘了</button>
+    </div>
+    <div class="rev-explain" style="display:none">${escapeHtml(explainText)}</div>
+  `;
+}
+function submitReviewAnswer(key, correct) {
+  if (window.submitReview) window.submitReview(state, key, correct);
+  if (correct) {
+    showToast('✅ 记得! +3 分 · 间隔翻倍', 'happy');
+    playSound('ding');
+  } else {
+    const explain = document.querySelector('#reviewCard .rev-explain');
+    if (explain) explain.style.display = '';
+    showToast('🤔 没事, 看一下解释 · 间隔重置 3 天', 'success');
+    playSound('sad');
+  }
+  saveState(state);
+  setTimeout(() => renderAll(), correct ? 500 : 3000);
+}
+
+// ============ v18 Phase 5.3: 🌅 未来自我预览 ============
+function showFutureSelfModal() {
+  const modal = document.getElementById('futureSelfModal');
+  if (!modal || !window.predictFutureSelf) return;
+  const p = window.predictFutureSelf(state);
+  modal.innerHTML = `
+    <div class="fs-inner">
+      <div class="fs-header">
+        <span class="fs-title">🌅 看看 W73 PSLE 时的我</span>
+        <button class="vocab-modal-close" onclick="closeFutureSelf()">×</button>
+      </div>
+      <div class="fs-body">
+        <div class="fs-stat-row">
+          <div class="fs-stat-col">
+            <div class="fs-label">今天</div>
+            <div class="fs-num">${state.totalPoints}</div>
+            <div class="fs-sub">总分 · Lv ${window.CHAMUI ? window.CHAMUI.getLevelInfo(state.totalPoints).lv : '?'}</div>
+          </div>
+          <div class="fs-arrow">→</div>
+          <div class="fs-stat-col fs-future">
+            <div class="fs-label">W73 预测</div>
+            <div class="fs-num">${p.predictedTotal}</div>
+            <div class="fs-sub">总分 · Lv ${p.predLv.lv}</div>
+          </div>
+        </div>
+        <div class="fs-summary">
+          <div>📊 预测 PSLE 成绩 ≈ <b>AL ${p.predAL}</b></div>
+          <div>⚔️ 预测装备 <b>${p.predEqCount}/45</b></div>
+          <div>📅 还有 <b>${p.daysLeft}</b> 天 · 平均日加分 <b>${p.avgDaily}</b></div>
+        </div>
+        <div class="fs-tip">💡 当前 streak: ${(state.dailyStreak && state.dailyStreak.days) || 0} 天 — streak 保持率 ${Math.round(p.breakRate * 100)}%. streak 越稳, 预测越准!</div>
+      </div>
+    </div>
+  `;
+  modal.classList.add('show');
+}
+function closeFutureSelf() {
+  document.getElementById('futureSelfModal').classList.remove('show');
+}
+
+// ============ v18 Phase 5.4: 🧪 mini-game 大厅 ============
+function openMiniGameHub() {
+  const modal = document.getElementById('miniGameHubModal');
+  if (!modal) return;
+  modal.innerHTML = `
+    <div class="mgh-inner">
+      <div class="mgh-header">
+        <span class="mgh-title">🎮 Mini-game 大厅</span>
+        <button class="vocab-modal-close" onclick="closeMiniGameHub()">×</button>
+      </div>
+      <div class="mgh-grid">
+        <button class="mgh-game" onclick="closeMiniGameHub(); openVocabGame(${state.currentWeek})">
+          📚<br><b>词汇连连看</b><br><small>6×6 配对, 全对 +10 + 1 宝箱</small>
+        </button>
+        <button class="mgh-game" onclick="closeMiniGameHub(); openMathGame()">
+          ➗<br><b>数学速算</b><br><small>30 秒答 10 题</small>
+        </button>
+        <button class="mgh-game" onclick="closeMiniGameHub(); openEditingGame()">
+          ✏️<br><b>Editing 找错</b><br><small>50 词找 5 错</small>
+        </button>
+        <button class="mgh-game" onclick="closeMiniGameHub(); openListenGame()">
+          🎧<br><b>听写练习</b><br><small>听 1 段填 5 词</small>
+        </button>
+      </div>
+    </div>
+  `;
+  modal.classList.add('show');
+}
+function closeMiniGameHub() {
+  document.getElementById('miniGameHubModal').classList.remove('show');
+}
+
+// 数学速算
+let _mathGameState = null;
+function openMathGame() {
+  const qs = [...window.MATH_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10);
+  _mathGameState = { qs, idx: 0, correct: 0, wrong: 0, startedAt: Date.now(), userAns: '', timeLeft: 30 };
+  _renderMathGame();
+  // 计时
+  const timer = setInterval(() => {
+    if (!_mathGameState) { clearInterval(timer); return; }
+    _mathGameState.timeLeft -= 1;
+    if (_mathGameState.timeLeft <= 0 || _mathGameState.idx >= _mathGameState.qs.length) {
+      clearInterval(timer);
+      _finishMathGame();
+    } else {
+      _renderMathGame();
+    }
+  }, 1000);
+}
+function _renderMathGame() {
+  const modal = document.getElementById('mathGameModal');
+  if (!modal || !_mathGameState) return;
+  const g = _mathGameState;
+  if (g.idx >= g.qs.length) {
+    _finishMathGame();
+    return;
+  }
+  const q = g.qs[g.idx];
+  modal.innerHTML = `
+    <div class="mg-inner">
+      <div class="mg-stats">⏱️ ${g.timeLeft}s · ✅ ${g.correct} · ❌ ${g.wrong} · ${g.idx + 1}/10</div>
+      <div class="mg-q">${q.q} = ?</div>
+      <input type="number" id="mgInput" value="${g.userAns}" autofocus class="mg-input" onkeydown="if(event.key==='Enter') submitMathAnswer()">
+      <button class="btn btn-primary mg-submit" onclick="submitMathAnswer()">提交</button>
+      <button class="vocab-modal-close mg-close" onclick="closeMathGame()">×</button>
+    </div>
+  `;
+  modal.classList.add('show');
+  setTimeout(() => document.getElementById('mgInput')?.focus(), 50);
+}
+function submitMathAnswer() {
+  const g = _mathGameState;
+  if (!g) return;
+  const input = document.getElementById('mgInput');
+  const val = parseInt(input.value);
+  const q = g.qs[g.idx];
+  if (val === q.ans) { g.correct++; playSound('ding'); }
+  else { g.wrong++; playSound('sad'); }
+  g.idx++;
+  g.userAns = '';
+  _renderMathGame();
+}
+function _finishMathGame() {
+  const g = _mathGameState;
+  if (!g) return;
+  let reward = 0;
+  if (g.correct >= 10) reward = 8;
+  else if (g.correct >= 7) reward = 5;
+  if (reward > 0) {
+    state.totalPoints += reward;
+    state.logs.push({ reason: `🎮 数学速算 ${g.correct}/10`, points: reward, week: state.currentWeek, timestamp: Date.now() });
+    saveState(state);
+  }
+  const modal = document.getElementById('mathGameModal');
+  modal.innerHTML = `
+    <div class="mg-inner">
+      <div class="mg-result-icon">${g.correct >= 10 ? '🎉' : g.correct >= 7 ? '👍' : '🤔'}</div>
+      <div class="mg-result-title">${g.correct >= 10 ? '全对!' : '完成!'}</div>
+      <div class="mg-result-stats">${g.correct}/10 对 · ${g.wrong} 错 · ${30 - g.timeLeft}s 用时</div>
+      <div class="mg-result-reward">+${reward} 分</div>
+      <button class="btn btn-primary" onclick="closeMathGame()">知道了!</button>
+    </div>
+  `;
+  if (g.correct >= 10) { spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40); playSound('tada'); }
+  _mathGameState = null;
+}
+function closeMathGame() {
+  document.getElementById('mathGameModal').classList.remove('show');
+  _mathGameState = null;
+  renderAll();
+}
+
+// Editing 找错
+let _editingGameState = null;
+function openEditingGame() {
+  const para = window.EDITING_PARAGRAPHS[Math.floor(Math.random() * window.EDITING_PARAGRAPHS.length)];
+  _editingGameState = { para, found: new Set(), wrong: 0, startedAt: Date.now() };
+  _renderEditingGame();
+}
+function _renderEditingGame() {
+  const modal = document.getElementById('editingGameModal');
+  if (!modal || !_editingGameState) return;
+  const g = _editingGameState;
+  // 把段落渲染为可点击的词
+  const words = g.para.text.split(/\s+/);
+  const errWords = g.para.errors.map(e => e.word.split(' ')[0]);  // 简化:用第一个词识别
+  const wordHtml = words.map((w, i) => {
+    const stripped = w.replace(/[.,!?]$/, '');
+    const isErr = errWords.includes(stripped);
+    const isFound = g.found.has(stripped);
+    return `<span class="eg-word ${isFound ? 'eg-found' : ''}" onclick="clickEditingWord('${stripped.replace(/'/g, "\\'")}')">${w}</span>`;
+  }).join(' ');
+  modal.innerHTML = `
+    <div class="eg-inner">
+      <div class="eg-header">
+        <span class="eg-title">✏️ Editing 找错 · ${g.found.size}/5 · ❌ ${g.wrong}</span>
+        <button class="vocab-modal-close" onclick="closeEditingGame()">×</button>
+      </div>
+      <div class="eg-instr">📋 段落里有 5 个错(主谓/时态/拼写/介词/冠词). 点击错词标红.</div>
+      <div class="eg-text">${wordHtml}</div>
+      ${g.found.size >= 5 ? `<div class="eg-victory">🎉 全找到! +10 分 + 1 宝箱<br><button class="btn btn-primary" onclick="closeEditingGame()">太棒了!</button></div>` : ''}
+    </div>
+  `;
+  modal.classList.add('show');
+}
+function clickEditingWord(word) {
+  const g = _editingGameState;
+  if (!g) return;
+  const errWords = g.para.errors.map(e => e.word.split(' ')[0]);
+  if (g.found.has(word)) return;
+  if (errWords.includes(word)) {
+    g.found.add(word);
+    playSound('ding');
+    if (g.found.size >= 5) {
+      // 全对
+      state.totalPoints += 10;
+      if (!state.mysteryBoxes) state.mysteryBoxes = { available: 0, opened: 0, totalSlotsAtLastEarn: 0, history: [] };
+      state.mysteryBoxes.available += 1;
+      state.logs.push({ reason: '🎮 Editing 找错全对', points: 10, week: state.currentWeek, timestamp: Date.now() });
+      saveState(state);
+      spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40);
+      playSound('tada');
+    }
+  } else {
+    g.wrong++;
+    playSound('sad');
+  }
+  _renderEditingGame();
+}
+function closeEditingGame() {
+  document.getElementById('editingGameModal').classList.remove('show');
+  _editingGameState = null;
+  renderAll();
+}
+
+// 听写
+let _listenGameState = null;
+function openListenGame() {
+  const item = window.LISTEN_DICTATIONS[Math.floor(Math.random() * window.LISTEN_DICTATIONS.length)];
+  _listenGameState = { item, answers: ['', '', '', '', ''], played: false };
+  _renderListenGame();
+}
+function _renderListenGame() {
+  const modal = document.getElementById('listenGameModal');
+  if (!modal || !_listenGameState) return;
+  const g = _listenGameState;
+  modal.innerHTML = `
+    <div class="lg-inner">
+      <div class="lg-header">
+        <span class="lg-title">🎧 听写练习</span>
+        <button class="vocab-modal-close" onclick="closeListenGame()">×</button>
+      </div>
+      <div class="lg-instr">📋 点 ▶ 播放 1 段英语 (可重听), 然后填 5 个关键词</div>
+      <button class="btn btn-primary lg-play" onclick="speakListenText()">▶ ${g.played ? '重听' : '播放'}</button>
+      ${g.played ? `
+        <div class="lg-blanks">
+          ${g.item.blanks.map((b, i) => `
+            <div class="lg-blank">
+              <span class="lg-blank-label">${i + 1}.</span>
+              <input type="text" class="lg-input" id="lgInput${i}" oninput="_listenGameState.answers[${i}]=this.value" value="${g.answers[i] || ''}" placeholder="...">
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn btn-success lg-submit" onclick="submitListenAnswers()">提交</button>
+      ` : `<div class="lg-tip">先播放, 听完再填空</div>`}
+    </div>
+  `;
+  modal.classList.add('show');
+}
+function speakListenText() {
+  const g = _listenGameState;
+  if (!g) return;
+  if ('speechSynthesis' in window) {
+    const u = new SpeechSynthesisUtterance(g.item.text);
+    u.lang = g.item.voice || 'en-GB';
+    u.rate = 0.9;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+    g.played = true;
+    _renderListenGame();
+  } else {
+    showToast('浏览器不支持语音合成', 'sad');
+  }
+}
+function submitListenAnswers() {
+  const g = _listenGameState;
+  if (!g) return;
+  let correct = 0;
+  for (let i = 0; i < g.item.blanks.length; i++) {
+    const expected = g.item.blanks[i].toLowerCase().trim();
+    const got = (g.answers[i] || '').toLowerCase().trim();
+    if (expected === got) correct++;
+  }
+  let reward = 0;
+  if (correct >= 5) reward = 10;
+  else if (correct >= 3) reward = 5;
+  if (reward > 0) {
+    state.totalPoints += reward;
+    if (correct >= 5 && state.mysteryBoxes) state.mysteryBoxes.available += 1;
+    state.logs.push({ reason: `🎮 听写 ${correct}/5`, points: reward, week: state.currentWeek, timestamp: Date.now() });
+    saveState(state);
+  }
+  const modal = document.getElementById('listenGameModal');
+  modal.innerHTML = `
+    <div class="lg-inner">
+      <div class="lg-result-icon">${correct >= 5 ? '🎉' : correct >= 3 ? '👍' : '🤔'}</div>
+      <div class="lg-result-title">${correct}/5 对</div>
+      <div class="lg-result-text">原文: ${escapeHtml(g.item.text)}</div>
+      <div class="lg-result-reward">+${reward} 分${correct >= 5 ? ' + 1 宝箱' : ''}</div>
+      <button class="btn btn-primary" onclick="closeListenGame()">知道了!</button>
+    </div>
+  `;
+  if (correct >= 5) { spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40); playSound('tada'); }
+  _listenGameState = null;
+}
+function closeListenGame() {
+  document.getElementById('listenGameModal').classList.remove('show');
+  _listenGameState = null;
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  renderAll();
 }
 
 // ============ v16.3: 听力资源 modal (CNA938 直播 + 推荐播客 + BBC 外链) ============
@@ -2322,6 +2947,10 @@ function bindEvents() {
       }
       if (page === 'admin') {
         renderPhotoGallery(state.currentWeek).catch(() => {});
+        // v18: 累加 admin 打开次数 (隐藏成就 hidden_admin)
+        state.adminPageOpens = (state.adminPageOpens || 0) + 1;
+        saveState(state);
+        _checkAndUnlockAch();
       }
     });
   });
@@ -2393,6 +3022,31 @@ window.openVocabGame = openVocabGame;
 window.closeVocabGame = closeVocabGame;
 window.vocabGameClickEn = vocabGameClickEn;
 window.vocabGameClickZh = vocabGameClickZh;
+// v18 Phase 5.1
+window.openPetModal = openPetModal;
+window.closePetModal = closePetModal;
+window.renamePet = renamePet;
+window.toggleAchWallExpanded = toggleAchWallExpanded;
+window.closeAchievementUnlock = closeAchievementUnlock;
+window.closeDailyDraw = closeDailyDraw;
+// v18 Phase 5.3
+window.submitReviewAnswer = submitReviewAnswer;
+window.showFutureSelfModal = showFutureSelfModal;
+window.closeFutureSelf = closeFutureSelf;
+// v18 Phase 5.4
+window.playSound = playSound;
+window.openMiniGameHub = openMiniGameHub;
+window.closeMiniGameHub = closeMiniGameHub;
+window.openMathGame = openMathGame;
+window.submitMathAnswer = submitMathAnswer;
+window.closeMathGame = closeMathGame;
+window.openEditingGame = openEditingGame;
+window.clickEditingWord = clickEditingWord;
+window.closeEditingGame = closeEditingGame;
+window.openListenGame = openListenGame;
+window.speakListenText = speakListenText;
+window.submitListenAnswers = submitListenAnswers;
+window.closeListenGame = closeListenGame;
 // v17.6: Streak rules modal
 window.showStreakRulesModal = function() {
   const m = document.getElementById('streakRulesModal');

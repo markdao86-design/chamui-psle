@@ -2166,6 +2166,152 @@ p { font-size: 14px; line-height: 1.6; }
 }
 .vg-victory button { margin-top: 10px; }
 
+/* ===== v18 Phase 5.1: 🐣 宠物 widget ===== */
+.pet-widget {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: white;
+  border: 3px solid var(--color-text);
+  border-radius: 14px;
+  padding: 6px 10px;
+  text-align: center;
+  cursor: pointer;
+  font-family: 'PingFang SC', sans-serif;
+  box-shadow: 0 3px 0 var(--color-text);
+  transition: transform 0.15s;
+  z-index: 5;
+  min-width: 70px;
+}
+.pet-widget:hover { transform: translateY(-2px); }
+.pet-widget .pet-emoji { font-size: 32px; line-height: 1; animation: pet-wobble 3s ease-in-out infinite; }
+.pet-widget .pet-emoji.pet-sad { filter: grayscale(0.7); animation: none; }
+.pet-widget .pet-name { font-size: 11px; font-weight: 700; margin-top: 2px; }
+.pet-widget .pet-form-name { font-size: 9px; color: var(--color-text-light); }
+@keyframes pet-wobble {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+#page-dashboard .character-card { position: relative; }
+
+/* 宠物 modal */
+.pet-modal-inner { background: white; border: 4px solid var(--color-text); border-radius: var(--radius-bubble); max-width: 480px; padding: 20px; box-shadow: var(--shadow-pop); }
+.pet-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.pet-modal-title { font-size: 18px; font-weight: 900; }
+.pet-current { font-size: 80px; text-align: center; line-height: 1.2; }
+.pet-desc { font-size: 13px; text-align: center; color: var(--color-text-light); margin: 8px 0; }
+.pet-next { background: #FFF8E7; padding: 8px; border-radius: 8px; font-size: 13px; text-align: center; margin: 8px 0; }
+.pet-rename { text-align: center; margin: 10px 0; }
+.pet-forms-list { display: flex; flex-direction: column; gap: 4px; }
+.pet-form-item { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 2px solid var(--color-text); border-radius: 8px; background: white; }
+.pet-form-item.locked { opacity: 0.5; filter: grayscale(0.6); }
+.pet-form-item.current { background: #FFE066; border-width: 3px; }
+.pet-form-emoji { font-size: 28px; }
+.pet-form-meta { font-size: 13px; }
+
+/* ===== v18 Phase 5.1: 🏆 成就墙 ===== */
+.achievement-wall-card { background: linear-gradient(135deg, #FFE6F0 0%, #E0F4F1 100%); }
+.ach-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.ach-title { font-size: 17px; font-weight: 900; flex: 1; }
+.ach-count { font-size: 14px; font-weight: 700; color: var(--color-primary); }
+.ach-toggle { font-size: 12px !important; padding: 4px 10px !important; }
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 10px; }
+.ach-item { background: white; border: 2px solid var(--color-text); border-radius: 10px; padding: 8px; text-align: center; }
+.ach-item.locked { opacity: 0.4; filter: grayscale(0.7); }
+.ach-item.unlocked { background: var(--color-accent); animation: equipment-pulse 2s ease-in-out infinite; }
+.ach-icon { font-size: 28px; }
+.ach-name { font-size: 12px; font-weight: 700; margin-top: 2px; }
+.ach-cat { font-size: 10px; color: var(--color-text-light); }
+
+/* 成就解锁全屏 */
+.ach-unlock-inner { background: white; border: 5px solid #FFD700; border-radius: var(--radius-bubble); padding: 30px; text-align: center; max-width: 360px; box-shadow: 0 0 30px 5px rgba(255, 215, 0, 0.6); animation: mb-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.ach-unlock-icon { font-size: 80px; margin-bottom: 8px; }
+.ach-unlock-title { font-size: 18px; font-weight: 900; color: var(--color-primary); margin-bottom: 10px; }
+.ach-unlock-name { font-size: 22px; font-weight: 900; margin-bottom: 8px; }
+.ach-unlock-desc { font-size: 14px; color: var(--color-text-light); margin-bottom: 16px; }
+
+/* 每日抽奖 modal */
+.dd-inner { background: white; border: 5px solid #FFD700; border-radius: var(--radius-bubble); padding: 30px; text-align: center; max-width: 380px; box-shadow: var(--shadow-pop); animation: mb-pop 0.4s; }
+.dd-icon { font-size: 80px; animation: mb-bounce 1s ease-in-out infinite; }
+.dd-title { font-size: 22px; font-weight: 900; margin: 8px 0; }
+.dd-frags { font-size: 28px; font-weight: 900; color: var(--color-warn); margin: 6px 0; }
+.dd-progress { font-size: 13px; color: var(--color-text); margin: 6px 0; padding: 6px; background: #FFF8E7; border-radius: 6px; }
+.dd-streak { font-size: 14px; margin: 8px 0; }
+.dd-newbox { font-size: 14px; color: var(--color-success, #4ECDC4); font-weight: 700; }
+.dd-bonus { font-size: 13px; padding: 8px; background: linear-gradient(135deg, #FFE066 0%, #FF9F45 100%); border-radius: 8px; margin: 8px 0; font-weight: 700; }
+
+/* ===== v18 Phase 5.3: 🔁 复习卡 ===== */
+.review-card { background: linear-gradient(135deg, #E0F4F1 0%, #FFE6F0 100%); border-left: 6px solid #4ECDC4; }
+.rev-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.rev-tag { font-size: 14px; font-weight: 900; color: #4ECDC4; }
+.rev-question { font-size: 16px; font-weight: 700; line-height: 1.4; margin: 8px 0; }
+.rev-prompt { font-size: 13px; color: var(--color-text-light); margin-bottom: 8px; }
+.rev-options { display: flex; gap: 8px; }
+.rev-options .btn { flex: 1; padding: 10px !important; font-size: 14px !important; }
+.rev-explain { background: white; padding: 10px 12px; border-radius: 8px; margin-top: 8px; font-size: 13px; line-height: 1.6; border-left: 3px solid var(--color-primary); }
+
+/* ===== v18 Phase 5.3: 🌅 future-self modal ===== */
+.fs-inner { background: white; border: 4px solid var(--color-text); border-radius: var(--radius-bubble); max-width: 500px; padding: 20px; box-shadow: var(--shadow-pop); }
+.fs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.fs-title { font-size: 18px; font-weight: 900; }
+.fs-stat-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 16px 0; }
+.fs-stat-col { flex: 1; text-align: center; padding: 12px; border: 2px solid var(--color-text); border-radius: 12px; background: white; }
+.fs-stat-col.fs-future { background: linear-gradient(135deg, #FFE066 0%, #FF9F45 100%); }
+.fs-label { font-size: 13px; color: var(--color-text-light); margin-bottom: 4px; }
+.fs-num { font-size: 32px; font-weight: 900; color: var(--color-primary); }
+.fs-sub { font-size: 12px; margin-top: 4px; }
+.fs-arrow { font-size: 30px; font-weight: 900; color: var(--color-text-light); }
+.fs-summary { background: #FFF8E7; padding: 12px; border-radius: 10px; line-height: 1.8; font-size: 14px; }
+.fs-tip { font-size: 12px; color: var(--color-text-light); margin-top: 10px; font-style: italic; }
+
+/* ===== v18 Phase 5.4: mini-game hub + games ===== */
+.mini-game-hub-card { background: linear-gradient(135deg, #FFE6F0 0%, #FFF8E7 100%); border-left: 6px solid #A788E0; }
+.mgh-row { display: flex; align-items: center; gap: 10px; }
+.mgh-icon { font-size: 36px; }
+.mgh-info { flex: 1; }
+.mgh-title { font-size: 16px; font-weight: 900; }
+.mgh-sub { font-size: 12px; color: var(--color-text-light); margin-top: 2px; }
+
+.mgh-inner, .mg-inner, .lg-inner, .eg-inner { background: white; border: 4px solid var(--color-text); border-radius: var(--radius-bubble); max-width: 600px; padding: 20px; box-shadow: var(--shadow-pop); width: 100%; }
+.mgh-header, .lg-header, .eg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.mgh-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mgh-game { background: white; border: 3px solid var(--color-text); border-radius: 14px; padding: 18px 12px; cursor: pointer; font-family: inherit; font-size: 14px; line-height: 1.5; }
+.mgh-game:hover { transform: translateY(-3px); box-shadow: 0 5px 0 var(--color-text); }
+
+/* 数学速算 */
+.mg-stats { font-size: 13px; color: var(--color-text-light); text-align: center; margin-bottom: 12px; }
+.mg-q { font-size: 36px; font-weight: 900; text-align: center; margin: 16px 0; color: var(--color-primary); }
+.mg-input { width: 100%; padding: 12px; font-size: 24px; text-align: center; border: 3px solid var(--color-text); border-radius: 10px; box-sizing: border-box; }
+.mg-submit { width: 100%; margin-top: 12px; padding: 12px !important; font-size: 16px !important; }
+.mg-close { position: absolute; top: 16px; right: 16px; }
+.mg-result-icon { font-size: 60px; text-align: center; }
+.mg-result-title { font-size: 22px; font-weight: 900; text-align: center; margin: 8px 0; }
+.mg-result-stats { font-size: 14px; text-align: center; color: var(--color-text-light); }
+.mg-result-reward { font-size: 18px; font-weight: 900; color: var(--color-success, #4ECDC4); text-align: center; margin: 12px 0; }
+
+/* Editing 找错 */
+.eg-instr { background: #FFF8E7; padding: 8px 12px; border-radius: 8px; font-size: 12px; margin-bottom: 12px; }
+.eg-text { font-size: 17px; line-height: 1.9; padding: 14px; background: white; border: 2px solid var(--color-text); border-radius: 10px; }
+.eg-word { cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: background 0.15s; }
+.eg-word:hover { background: var(--color-accent); }
+.eg-word.eg-found { background: #6BCB77; color: white; font-weight: 700; }
+.eg-victory { background: linear-gradient(135deg, #FFE066 0%, #6BCB77 100%); padding: 20px; border-radius: 14px; text-align: center; font-size: 18px; font-weight: 900; margin-top: 12px; border: 3px solid var(--color-text); }
+
+/* 听写 */
+.lg-instr { background: #FFF8E7; padding: 8px 12px; border-radius: 8px; font-size: 12px; margin-bottom: 12px; }
+.lg-play { width: 100%; padding: 14px !important; font-size: 18px !important; margin-bottom: 12px; }
+.lg-blanks { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.lg-blank { display: flex; align-items: center; gap: 8px; }
+.lg-blank-label { font-weight: 900; min-width: 24px; }
+.lg-input { flex: 1; padding: 8px 10px; font-size: 15px; border: 2px solid var(--color-text); border-radius: 8px; }
+.lg-submit { width: 100%; padding: 12px !important; font-size: 16px !important; }
+.lg-tip { text-align: center; color: var(--color-text-light); font-size: 13px; padding: 20px; }
+.lg-result-icon { font-size: 60px; text-align: center; }
+.lg-result-title { font-size: 24px; font-weight: 900; text-align: center; margin: 8px 0; }
+.lg-result-text { background: #FFF8E7; padding: 10px; border-radius: 8px; font-size: 13px; margin: 12px 0; line-height: 1.6; }
+.lg-result-reward { font-size: 18px; font-weight: 900; color: var(--color-success, #4ECDC4); text-align: center; margin: 12px 0; }
+
 /* ===== v17.7 Phase 3: 每日特别任务卡 ===== */
 .daily-quest-card {
   background: linear-gradient(135deg, #FFE6F0 0%, #FFE066 100%);
@@ -2682,6 +2828,9 @@ p { font-size: 14px; line-height: 1.6; }
         <div class="character-name" id="characterName">萌新佑子</div>
         <div class="character-title-big" id="characterTitle">刚入门的勇士</div>
         <span class="level-badge">LV <span id="charLevelDisplay">1</span></span>
+        <!-- v18 Phase 5.1: 🐣 宠物 widget (角色右下角浮窗) -->
+        <div class="pet-widget" id="petWidget"></div>
+
         <!-- v17.6: Streak block — 悬浮/点击看规则 -->
         <div class="streak-block streak-warm" id="streakBlock"
              title="🔥 连续打卡规则:&#10;• 每天打 1 个项目 = 火焰 +1 天&#10;• 断 1 天:火焰熄灭, 从 0 开始&#10;• 满 7 天:🛡️ 7 天勇者 + 🧊 救命券&#10;• 满 30 天:🔥 30 天战士火焰光环&#10;• 满 100 天:👑 百日王金光特效&#10;• 🧊 救命券:断 1 天自动救回(每 14 天 +1)"
@@ -2716,8 +2865,26 @@ p { font-size: 14px; line-height: 1.6; }
 
     <!-- v17.7: 神秘宝箱已移到 tab 栏 -->
 
+    <!-- v18 Phase 5.3: 间隔重复复习卡 (有 due 才显示) -->
+    <div class="card review-card" id="reviewCard" style="display:none"></div>
+
     <!-- v17.7 Phase 3: 每日特别任务卡 -->
     <div class="card daily-quest-card" id="dailyQuestCard"></div>
+
+    <!-- v18 Phase 5.4: mini-game 大厅入口卡 -->
+    <div class="card mini-game-hub-card">
+      <div class="mgh-row">
+        <div class="mgh-icon">🎮</div>
+        <div class="mgh-info">
+          <div class="mgh-title">Mini-game 大厅</div>
+          <div class="mgh-sub">4 个 5 min 小游戏 — 词汇 / 数学 / Editing / 听写</div>
+        </div>
+        <button class="btn btn-primary" onclick="openMiniGameHub()">🎮 玩</button>
+      </div>
+    </div>
+
+    <!-- v18 Phase 5.1: 🏆 成就墙 -->
+    <div class="card achievement-wall-card" id="achievementWallCard"></div>
 
     <!-- v17.6: 今日铁律已删除 (用户反馈) -->
 
@@ -2735,7 +2902,7 @@ p { font-size: 14px; line-height: 1.6; }
 
     <!-- v17.3: 升级进度 (从顶部移到第二屏) -->
     <div class="card progress-card-section">
-      <div class="card-title">📈 升级进度 + 周月统计</div>
+      <div class="card-title">📈 升级进度 + 周月统计 <button class="btn btn-secondary" style="float:right;font-size:13px;padding:4px 10px" onclick="showFutureSelfModal()">🌅 看 W73 的我</button></div>
       <div class="progress-section">
         <div class="progress-header">
           <div class="progress-label">距下一级</div>
@@ -2866,6 +3033,7 @@ p { font-size: 14px; line-height: 1.6; }
         <button class="btn btn-secondary" style="font-size:11px;padding:3px 8px" onclick="resetAdminPassword()">🔑 重置家长密码</button>
         <button class="btn btn-secondary" style="font-size:11px;padding:3px 8px" onclick="clearAdminAuth(); showToast('已锁定,下次操作要重输密码','warn')">🔒 立即锁定</button>
         <button class="btn btn-secondary" style="font-size:11px;padding:3px 8px" onclick="unlockListeningToday()">🎧 解锁今日听力</button>
+        <button class="btn btn-secondary" style="font-size:11px;padding:3px 8px" onclick="state.soundEnabled = !state.soundEnabled; saveState(state); showToast(state.soundEnabled ? '🔊 音效已开' : '🔇 音效已关', 'success'); playSound('ding');">🔊 音效开关</button>
       </div>
 
       <div class="admin-grid">
@@ -3034,6 +3202,24 @@ p { font-size: 14px; line-height: 1.6; }
 
 <!-- v17.7 Phase 4: 词汇连连看 mini-game modal -->
 <div id="vocabGameModal" class="vg-modal" onclick="if(event.target===this) closeVocabGame()"></div>
+
+<!-- v18 Phase 5.1: 🐣 宠物 modal -->
+<div id="petModal" class="vocab-modal" onclick="if(event.target===this) closePetModal()"></div>
+
+<!-- v18 Phase 5.1: 🏆 成就解锁全屏 modal -->
+<div id="achievementUnlockModal" class="streak-broken-modal"></div>
+
+<!-- v18 Phase 5.1: 🎁 每日抽奖 modal -->
+<div id="dailyDrawModal" class="streak-broken-modal"></div>
+
+<!-- v18 Phase 5.3: 🌅 future-self modal -->
+<div id="futureSelfModal" class="vocab-modal" onclick="if(event.target===this) closeFutureSelf()"></div>
+
+<!-- v18 Phase 5.4: mini-game hub + 3 game modals -->
+<div id="miniGameHubModal" class="vocab-modal" onclick="if(event.target===this) closeMiniGameHub()"></div>
+<div id="mathGameModal" class="vocab-modal" onclick="if(event.target===this) closeMathGame()"></div>
+<div id="editingGameModal" class="vocab-modal" onclick="if(event.target===this) closeEditingGame()"></div>
+<div id="listenGameModal" class="vocab-modal" onclick="if(event.target===this) closeListenGame()"></div>
 
 <!-- v17.6: Streak 规则 modal (点 streak 块时显示) -->
 <div id="streakRulesModal" class="mb-result-modal" onclick="if(event.target===this) closeStreakRulesModal()">

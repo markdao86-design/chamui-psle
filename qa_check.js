@@ -295,6 +295,56 @@ assert(W.VOCAB_MEANINGS && Object.keys(W.VOCAB_MEANINGS).length >= 80, `v17.7: V
 assert(W.getVocabMeaning('xylem') === '木质部', 'v17.7: xylem → 木质部');
 assert(W.getVocabMeaning('photosynthesis') === '光合作用', 'v17.7: photosynthesis → 光合作用');
 
+// ===== v18 Phase 5.1: 宠物 + 成就 + 每日抽奖 =====
+const def8 = W.getDefaultState();
+assert(def8.pet && def8.pet.formIdx === 0, 'v18: 默认 pet.formIdx=0');
+assert(def8.achievements && Array.isArray(def8.achievements.unlocked), 'v18: achievements.unlocked array');
+assert(def8.dailyDraws && def8.dailyDraws.fragments === 0, 'v18: dailyDraws.fragments=0');
+assert(W.PET_FORMS && W.PET_FORMS.length === 7, `v18: PET_FORMS 7 形态 (实际 ${W.PET_FORMS && W.PET_FORMS.length})`);
+const ts8 = W.getDefaultState();
+ts8.dailyStreak = { days: 7, bestEver: 7, freezeTokens: 0, lastDate: null, brokenAt: null };
+const form7 = W.getCurrentPetForm(ts8);
+assert(form7 && form7.idx === 2, `v18: streak 7 → 形态 2 小鸟 (实际 ${form7 && form7.idx})`);
+ts8.dailyStreak.bestEver = 100;
+const form100 = W.getCurrentPetForm(ts8);
+assert(form100 && form100.idx === 6, 'v18: streak 100 → 形态 6 神龙');
+assert(W.ACHIEVEMENTS && W.ACHIEVEMENTS.length >= 28, `v18: ACHIEVEMENTS ≥28 (实际 ${W.ACHIEVEMENTS && W.ACHIEVEMENTS.length})`);
+// 模拟解锁 streak_7
+const ts9 = W.getDefaultState();
+ts9.dailyStreak = { days: 7, bestEver: 7, freezeTokens: 0, lastDate: null, brokenAt: null };
+const newAch = W.checkAchievements(ts9);
+const hasStreak7 = newAch.find(a => a.id === 'streak_7');
+assert(!!hasStreak7, 'v18: streak=7 → 解锁 streak_7 成就');
+// 每日抽奖
+const ts10 = W.getDefaultState();
+const draw1 = W.checkDailyDraw(ts10);
+assert(draw1 && draw1.fragments >= 1 && draw1.fragments <= 3, `v18: 第 1 次抽奖给 1-3 片 (实际 ${draw1 && draw1.fragments})`);
+const draw2 = W.checkDailyDraw(ts10);
+assert(draw2 === null, 'v18: 同一天再抽 = null');
+
+// ===== v18 Phase 5.3: 间隔重复 + 未来自我 =====
+const ts11 = W.getDefaultState();
+W.enqueueReview(ts11, 'wow', 'test_1');
+assert(ts11.spacedRepetition.reviews['wow:test_1'], 'v18: enqueueReview 写入 reviews');
+const due0 = W.getDueReviews(ts11);
+assert(due0.length === 0, 'v18: 刚 enqueue 的 review 不到期');
+const ts12 = W.getDefaultState();
+ts12.totalPoints = 1000;
+ts12.currentWeek = 10;
+const fut = W.predictFutureSelf(ts12);
+assert(fut && fut.predictedTotal > 0, 'v18: predictFutureSelf 返回预测分');
+
+// ===== v18 Phase 5.4: mini-game 数据 =====
+assert(W.MATH_QUESTIONS && W.MATH_QUESTIONS.length >= 100, `v18: MATH_QUESTIONS ≥100 (实际 ${W.MATH_QUESTIONS && W.MATH_QUESTIONS.length})`);
+assert(W.EDITING_PARAGRAPHS && W.EDITING_PARAGRAPHS.length >= 3, `v18: EDITING_PARAGRAPHS ≥3 (实际 ${W.EDITING_PARAGRAPHS && W.EDITING_PARAGRAPHS.length})`);
+assert(W.LISTEN_DICTATIONS && W.LISTEN_DICTATIONS.length >= 3, `v18: LISTEN_DICTATIONS ≥3 (实际 ${W.LISTEN_DICTATIONS && W.LISTEN_DICTATIONS.length})`);
+const mq0 = W.MATH_QUESTIONS[0];
+assert(mq0.q && typeof mq0.ans === 'number', 'v18: math question 有 q 和 ans');
+const ep0 = W.EDITING_PARAGRAPHS[0];
+assert(ep0.text && Array.isArray(ep0.errors), 'v18: editing paragraph 有 text 和 errors');
+const ld0 = W.LISTEN_DICTATIONS[0];
+assert(ld0.text && Array.isArray(ld0.blanks), 'v18: listen dict 有 text 和 blanks');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));

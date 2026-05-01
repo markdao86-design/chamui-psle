@@ -567,6 +567,331 @@ function getTodayWowFact(weekN, dateOverride) {
   return { subject: '科学/策略', subjectIcon: '🔬', subjectColor: '#A788E0', subjectKey: 'science', tag: `W${sci.week}`, hook: sci.hook, body: sci.body, week: sci.week };
 }
 
+// ============= v18 Phase 5.1: 宠物 =============
+const PET_FORMS = [
+  { idx: 0, emoji: '🥚', name: '蛋',     minStreak: 0,   desc: '一颗温暖的蛋, 等待孵化' },
+  { idx: 1, emoji: '🐣', name: '雏鸟',   minStreak: 3,   desc: '刚破壳, 好奇地看着你' },
+  { idx: 2, emoji: '🐤', name: '小鸟',   minStreak: 7,   desc: '会扑腾翅膀了' },
+  { idx: 3, emoji: '🦅', name: '雄鹰',   minStreak: 14,  desc: '展翅高飞, 视野开阔' },
+  { idx: 4, emoji: '🦜', name: '彩凤',   minStreak: 30,  desc: '羽毛绚烂, 群鸟之首' },
+  { idx: 5, emoji: '🦩', name: '火凤',   minStreak: 60,  desc: '浴火涅槃, 烈焰守护' },
+  { idx: 6, emoji: '🐉', name: '神龙',   minStreak: 100, desc: 'PSLE 终极守护神兽' }
+];
+
+function getCurrentPetForm(state) {
+  const streak = (state.dailyStreak && state.dailyStreak.bestEver) || 0;
+  let form = PET_FORMS[0];
+  for (const f of PET_FORMS) if (streak >= f.minStreak) form = f;
+  return form;
+}
+
+function feedPet(state) {
+  if (!state.pet) state.pet = { name: '小蛋蛋', formIdx: 0, spawnedAt: Date.now(), feedCount: 0, happiness: 100, lastFedDate: null };
+  state.pet.feedCount += 1;
+  state.pet.happiness = Math.min(100, (state.pet.happiness || 0) + 5);
+  state.pet.lastFedDate = streakTodayKey();
+  // 进化检查
+  const form = getCurrentPetForm(state);
+  state.pet.formIdx = form.idx;
+}
+
+function petBreaksHappiness(state) {
+  if (!state.pet) return;
+  state.pet.happiness = Math.max(0, (state.pet.happiness || 100) - 50);
+}
+
+// ============= v18 Phase 5.1: 🏆 隐藏成就 =============
+function _countDay5Slot(s) {
+  if (!s.daily) return false;
+  for (const wk of Object.values(s.daily)) {
+    for (const day of Object.values(wk || {})) {
+      let n = 0;
+      for (const v of Object.values(day || {})) if (v === true) n++;
+      if (n >= 5) return true;
+    }
+  }
+  return false;
+}
+function _countSundaySlots(s) {
+  if (!s.daily) return false;
+  for (const wk of Object.values(s.daily)) {
+    if (!wk.Sun) continue;
+    let n = 0;
+    for (const v of Object.values(wk.Sun)) if (v === true) n++;
+    if (n >= 5) return true;
+  }
+  return false;
+}
+function _countConsecCorrect(s) {
+  if (!s.thinkPuzzleAnswers) return 0;
+  const sorted = Object.entries(s.thinkPuzzleAnswers).sort((a, b) => (a[1].ts || 0) - (b[1].ts || 0));
+  let max = 0, cur = 0;
+  for (const [, ans] of sorted) {
+    if (ans.correct) { cur++; if (cur > max) max = cur; }
+    else cur = 0;
+  }
+  return max;
+}
+function _totalListenSec(s) {
+  if (!s.listeningUsage) return 0;
+  let n = 0;
+  for (const k of Object.values(s.listeningUsage)) n += (k.seconds || 0);
+  return n;
+}
+function _countUnlockedEq(s) {
+  if (!window.CHAMUI) return 0;
+  return window.CHAMUI.equipment.filter(e => window.CHAMUI.checkEquipmentUnlocked(e.id, s)).length;
+}
+function _countUnlockedSkins(s) {
+  if (!window.CHAMUI) return 0;
+  return window.CHAMUI.skins.filter(sk => window.CHAMUI.checkSkinUnlocked(sk.id, s)).length;
+}
+
+const ACHIEVEMENTS = [
+  // 学习坚持 (5)
+  { id: 'streak_7',   icon:'🛡️', name:'坚持 7 天',   desc:'连续打卡 7 天',   cat:'坚持', cond:s=>(s.dailyStreak&&s.dailyStreak.bestEver||0)>=7 },
+  { id: 'streak_30',  icon:'🔥', name:'坚持 30 天',   desc:'连续打卡 30 天',  cat:'坚持', cond:s=>(s.dailyStreak&&s.dailyStreak.bestEver||0)>=30 },
+  { id: 'streak_100', icon:'👑', name:'百日王',       desc:'连续打卡 100 天', cat:'坚持', cond:s=>(s.dailyStreak&&s.dailyStreak.bestEver||0)>=100 },
+  { id: 'day_5slot',  icon:'⚡', name:'单日 5 项',    desc:'1 天完成 5 个项目', cat:'坚持', cond:s=>_countDay5Slot(s) },
+  { id: 'no_break_30',icon:'🌟', name:'无断 30 天',  desc:'当前 streak ≥30',  cat:'坚持', cond:s=>(s.dailyStreak&&s.dailyStreak.days||0)>=30 },
+  // 知识探索 (5)
+  { id: 'wow_10',     icon:'🤯', name:'好奇宝宝',     desc:'看 10 条 Wow 事实', cat:'探索', cond:s=>(s.wowSeenCount||0)>=10 },
+  { id: 'think_5',    icon:'🧠', name:'思考者',       desc:'答 5 道思考题',     cat:'探索', cond:s=>Object.keys(s.thinkPuzzleAnswers||{}).length>=5 },
+  { id: 'think_correct_3', icon:'💡', name:'反直觉征服者', desc:'连答对 3 题', cat:'探索', cond:s=>_countConsecCorrect(s)>=3 },
+  { id: 'vocab_perfect',   icon:'📚', name:'词汇大师', desc:'词汇游戏 0 错通关', cat:'探索', cond:s=>(s.vocabPerfectRuns||0)>=1 },
+  { id: 'listen_300', icon:'🎧', name:'听力 5h',     desc:'累计听力 300 分钟',  cat:'探索', cond:s=>_totalListenSec(s)>=18000 },
+  // 收藏家 (4)
+  { id: 'eq_20',      icon:'⚔️', name:'装备 20 件',  desc:'解锁 20 件装备',     cat:'收藏', cond:s=>_countUnlockedEq(s)>=20 },
+  { id: 'eq_35',      icon:'🛡️', name:'装备 35 件', desc:'解锁 35 件装备',     cat:'收藏', cond:s=>_countUnlockedEq(s)>=35 },
+  { id: 'eq_all',     icon:'🏆', name:'装备全集齐',   desc:'解锁全部 45 件',     cat:'收藏', cond:s=>_countUnlockedEq(s)>=45 },
+  { id: 'skin_all',   icon:'👕', name:'6 皮肤集齐',   desc:'解锁全部 6 皮肤',    cat:'收藏', cond:s=>_countUnlockedSkins(s)>=6 },
+  // 宝箱大师 (4)
+  { id: 'box_10',     icon:'🎁', name:'开盒 10 个',  desc:'累计开 10 个宝箱',   cat:'宝箱', cond:s=>(s.mysteryBoxes&&s.mysteryBoxes.opened||0)>=10 },
+  { id: 'box_50',     icon:'🎉', name:'开盒 50 个',  desc:'累计开 50 个宝箱',   cat:'宝箱', cond:s=>(s.mysteryBoxes&&s.mysteryBoxes.opened||0)>=50 },
+  { id: 'box_100',    icon:'✨', name:'开盒 100 个', desc:'累计开 100 个宝箱',  cat:'宝箱', cond:s=>(s.mysteryBoxes&&s.mysteryBoxes.opened||0)>=100 },
+  { id: 'box_rare',   icon:'🌟', name:'抽到稀有',    desc:'抽到 5 个 rare',    cat:'宝箱', cond:s=>(s.rareBoxesCount||0)>=5 },
+  // PSLE 里程碑 (6)
+  { id: 'm_w14',      icon:'🎯', name:'P3-P4 收官',  desc:'W14 综合卷达标',     cat:'PSLE', cond:s=>!!(s.milestones&&s.milestones.W14) },
+  { id: 'm_w26',      icon:'🏆', name:'第一阶段毕业',desc:'W26 总模考达标',     cat:'PSLE', cond:s=>!!(s.milestones&&s.milestones.W26) },
+  { id: 'm_w42',      icon:'🎖️', name:'P6 通关',    desc:'W42 P6 月模考',     cat:'PSLE', cond:s=>!!(s.milestones&&s.milestones.W42) },
+  { id: 'm_w52',      icon:'🏵️', name:'第二阶段毕业',desc:'W52 总收官',        cat:'PSLE', cond:s=>!!(s.milestones&&s.milestones.W52) },
+  { id: 'm_w65',      icon:'🎗️', name:'冲刺完成',   desc:'W65 最后模考',       cat:'PSLE', cond:s=>!!(s.milestones&&s.milestones.W65) },
+  { id: 'm_psle',     icon:'📜', name:'PSLE 通关',   desc:'W73 笔试完成',       cat:'PSLE', cond:s=>!!(s.milestones&&s.milestones.W73) },
+  // 隐藏 / 趣味 (6)
+  { id: 'hidden_admin',    icon:'🤫', name:'好奇者', desc:'打开管理页 10 次',   cat:'隐藏', cond:s=>(s.adminPageOpens||0)>=10 },
+  { id: 'hidden_midnight', icon:'🌙', name:'夜猫子', desc:'晚 22:00 后打卡',    cat:'隐藏', cond:s=>!!s._lateNightChecked },
+  { id: 'hidden_dawn',     icon:'🌅', name:'早起鸟', desc:'早 6:00 前打卡',     cat:'隐藏', cond:s=>!!s._earlyMorningChecked },
+  { id: 'hidden_sunday',   icon:'🛌', name:'周日奉献',desc:'周日完成 5 项',     cat:'隐藏', cond:s=>_countSundaySlots(s) },
+  { id: 'hidden_marathon', icon:'🏃', name:'马拉松', desc:'连续答对 10 题',     cat:'隐藏', cond:s=>(s.marathonStreak||0)>=10 },
+  { id: 'hidden_pet_dragon',icon:'🐉', name:'神龙伙伴',desc:'宠物进化到神龙',  cat:'隐藏', cond:s=>(s.pet&&s.pet.formIdx||0)>=6 }
+];
+
+// 检查并解锁新成就 — 返回新解锁的成就数组
+function checkAchievements(state) {
+  if (!state.achievements) state.achievements = { unlocked: [], unlockedAt: {} };
+  const newly = [];
+  for (const a of ACHIEVEMENTS) {
+    if (state.achievements.unlocked.indexOf(a.id) >= 0) continue;
+    if (a.cond(state)) {
+      state.achievements.unlocked.push(a.id);
+      state.achievements.unlockedAt[a.id] = Date.now();
+      newly.push(a);
+    }
+  }
+  return newly;
+}
+
+// ============= v18 Phase 5.1: 🎁 每日抽奖 =============
+function checkDailyDraw(state) {
+  if (!state.dailyDraws) state.dailyDraws = { fragments: 0, consecutive: 0, lastDrawDate: null };
+  const today = streakTodayKey();
+  if (state.dailyDraws.lastDrawDate === today) return null;
+  // 计算 consecutive
+  const yesterday = streakDateAdd(today, -1);
+  if (state.dailyDraws.lastDrawDate === yesterday) {
+    state.dailyDraws.consecutive += 1;
+  } else if (state.dailyDraws.lastDrawDate) {
+    state.dailyDraws.consecutive = 1;  // 断了, 重新算
+  } else {
+    state.dailyDraws.consecutive = 1;  // 第一次
+  }
+  state.dailyDraws.lastDrawDate = today;
+  // 普通抽 1-3 片
+  let frags = 1 + Math.floor(Math.random() * 3);
+  let bonus = null;
+  // 7 天必中 1 整盒(7 片直接给), 14 天 +1 wow, 30 天 +1 rare 提示
+  if (state.dailyDraws.consecutive % 30 === 0) {
+    bonus = 'rare-hint';
+  } else if (state.dailyDraws.consecutive % 14 === 0) {
+    bonus = 'wow';
+  } else if (state.dailyDraws.consecutive % 7 === 0) {
+    frags += 7;
+  }
+  state.dailyDraws.fragments += frags;
+  // 7 片自动合 1 完整 box
+  let newBoxes = 0;
+  while (state.dailyDraws.fragments >= 7) {
+    state.dailyDraws.fragments -= 7;
+    if (!state.mysteryBoxes) state.mysteryBoxes = { available: 0, opened: 0, totalSlotsAtLastEarn: 0, history: [] };
+    state.mysteryBoxes.available += 1;
+    newBoxes += 1;
+  }
+  return { fragments: frags, totalFragments: state.dailyDraws.fragments, consecutive: state.dailyDraws.consecutive, bonus, newBoxes };
+}
+
+// ============= v18 Phase 5.3: 🔁 间隔重复 =============
+function enqueueReview(state, type, id) {
+  if (!state.spacedRepetition) state.spacedRepetition = { reviews: {} };
+  const key = `${type}:${id}`;
+  if (state.spacedRepetition.reviews[key]) return;  // 已加
+  state.spacedRepetition.reviews[key] = {
+    firstSeen: Date.now(),
+    lastReviewed: Date.now(),
+    intervalDays: 3,
+    correctStreak: 0
+  };
+}
+
+function getDueReviews(state) {
+  if (!state.spacedRepetition || !state.spacedRepetition.reviews) return [];
+  const now = Date.now();
+  const due = [];
+  for (const [key, r] of Object.entries(state.spacedRepetition.reviews)) {
+    const dueTs = r.lastReviewed + r.intervalDays * 86400000;
+    if (now >= dueTs) {
+      due.push({ key, ...r });
+    }
+  }
+  return due;
+}
+
+function submitReview(state, key, correct) {
+  if (!state.spacedRepetition || !state.spacedRepetition.reviews[key]) return;
+  const r = state.spacedRepetition.reviews[key];
+  r.lastReviewed = Date.now();
+  if (correct) {
+    r.correctStreak += 1;
+    r.intervalDays = Math.min(60, r.intervalDays * 2);
+    state.totalPoints += 3;
+  } else {
+    r.correctStreak = 0;
+    r.intervalDays = 3;
+  }
+}
+
+// ============= v18 Phase 5.3: 🌅 未来自我预览 =============
+function predictFutureSelf(state) {
+  // 算: avgDailyPoints / daysToW73 / 预测 totalPoints / 装备数 / Lv
+  const today = new Date();
+  // 假设当前 currentWeek 对应 W1-W73, 简化为按 currentWeek 推算
+  const weeksLeft = Math.max(0, 73 - (state.currentWeek || 1));
+  const daysLeft = weeksLeft * 7;
+  // 平均日加分: 用 totalPoints / 已过天数 (粗算)
+  const startedWeek = state.currentWeek || 1;
+  const daysPassed = Math.max(7, startedWeek * 7);
+  const avgDaily = (state.totalPoints || 0) / daysPassed;
+  // 预测累加(按当前 streak 不断率)
+  const breakRate = (state.dailyStreak && state.dailyStreak.days > 0) ? 0.85 : 0.50;  // 当前在 streak 中 → 85% 不断
+  const predictedTotal = Math.round((state.totalPoints || 0) + avgDaily * daysLeft * breakRate);
+  // 预测 Lv (CHAMUI.getLevelInfo)
+  const predLv = window.CHAMUI ? window.CHAMUI.getLevelInfo(predictedTotal) : { lv: '?' };
+  // 预测装备数
+  const predEqCount = window.CHAMUI ? window.CHAMUI.equipment.filter(e =>
+    e.condition === 'points' && e.value <= predictedTotal
+  ).length : 0;
+  // 预测 PSLE 成绩 — 粗估: 总分越高 AL 越低(更好)
+  // 4 科 AL 总分 = 总分映射 (假设 6000 分 = AL 6, 3000 分 = AL 12, 1000 分 = AL 20)
+  let predAL = 24;
+  if (predictedTotal >= 5500) predAL = 6;
+  else if (predictedTotal >= 4500) predAL = 8;
+  else if (predictedTotal >= 3500) predAL = 10;
+  else if (predictedTotal >= 2500) predAL = 12;
+  else if (predictedTotal >= 1500) predAL = 16;
+  else predAL = 20;
+  return { predictedTotal, predLv, predEqCount, predAL, daysLeft, avgDaily: Math.round(avgDaily * 10) / 10, breakRate };
+}
+
+// ============= v18 Phase 5.4: 🧪 mini-game 数据 =============
+const MATH_QUESTIONS = (() => {
+  const arr = [];
+  // 加法: 50 题
+  for (let i = 0; i < 30; i++) {
+    const a = Math.floor(Math.random() * 80) + 10;
+    const b = Math.floor(Math.random() * 80) + 10;
+    arr.push({ q: `${a} + ${b}`, ans: a + b });
+  }
+  // 减法
+  for (let i = 0; i < 25; i++) {
+    const a = Math.floor(Math.random() * 80) + 30;
+    const b = Math.floor(Math.random() * a);
+    arr.push({ q: `${a} - ${b}`, ans: a - b });
+  }
+  // 乘法
+  for (let i = 0; i < 25; i++) {
+    const a = Math.floor(Math.random() * 11) + 2;
+    const b = Math.floor(Math.random() * 11) + 2;
+    arr.push({ q: `${a} × ${b}`, ans: a * b });
+  }
+  // 除法
+  for (let i = 0; i < 20; i++) {
+    const b = Math.floor(Math.random() * 10) + 2;
+    const ans = Math.floor(Math.random() * 11) + 2;
+    arr.push({ q: `${b * ans} ÷ ${b}`, ans });
+  }
+  return arr;
+})();
+
+const EDITING_PARAGRAPHS = [
+  {
+    text: 'Yesterday I goes to school. The teacher tells us a interesting story. We listen carefully and asked many question. After class, I and my friend played football in the park.',
+    errors: [
+      { word: 'goes', should: 'went', reason: '过去时' },
+      { word: 'tells', should: 'told', reason: '过去时' },
+      { word: 'a interesting', should: 'an interesting', reason: '元音前用 an' },
+      { word: 'question', should: 'questions', reason: '复数' },
+      { word: 'I and my friend', should: 'my friend and I', reason: '语序' }
+    ]
+  },
+  {
+    text: 'My mother is a teacher. She teach English in a primary school. She love her students very much. Every morning, she wake up at six and prepare breakfast for me and my brother.',
+    errors: [
+      { word: 'teach', should: 'teaches', reason: '主谓一致' },
+      { word: 'love', should: 'loves', reason: '主谓一致' },
+      { word: 'wake', should: 'wakes', reason: '主谓一致' },
+      { word: 'prepare', should: 'prepares', reason: '主谓一致' },
+      { word: 'me and my brother', should: 'my brother and me', reason: '语序' }
+    ]
+  },
+  {
+    text: 'Last weekend, we visit the zoo. There were many different kind of animals. The lion roared loudly when we passed it cage. My sister was scare of the snake but she enjoyed seeing the monkeys.',
+    errors: [
+      { word: 'visit', should: 'visited', reason: '过去时' },
+      { word: 'kind', should: 'kinds', reason: '复数' },
+      { word: 'it cage', should: 'its cage', reason: '所有格' },
+      { word: 'scare', should: 'scared', reason: '形容词' },
+      { word: 'enjoyed', should: 'enjoyed', reason: '(此句 enjoyed 实际无错, 备用)' }
+    ]
+  }
+];
+
+const LISTEN_DICTATIONS = [
+  {
+    text: 'Last Sunday, my family went to the beach. We had a wonderful picnic and played in the sand all afternoon.',
+    blanks: ['Sunday', 'beach', 'wonderful', 'picnic', 'afternoon'],
+    voice: 'en-GB'
+  },
+  {
+    text: 'The science teacher explained how plants get water through their roots and transport it to the leaves.',
+    blanks: ['science', 'plants', 'water', 'roots', 'leaves'],
+    voice: 'en-GB'
+  },
+  {
+    text: 'PSLE listening exam will test your understanding of conversations and short news reports in English.',
+    blanks: ['PSLE', 'listening', 'conversations', 'news', 'English'],
+    voice: 'en-GB'
+  }
+];
+
 // 父母解锁(管理页): 强制重置 streak 到指定天数 (默认上次最高的一半,鼓励)
 function parentRestoreStreak(state, daysToRestore) {
   if (!state.dailyStreak) state.dailyStreak = { days: 0, lastDate: null, bestEver: 0, freezeTokens: 0, brokenAt: null };
@@ -941,7 +1266,36 @@ function getDefaultState() {
     thinkPuzzleAnswers: {},
 
     // v17.7 Phase 3: 每日特别任务 — { dateKey: { questId, progress, target, completed, claimedAt } }
-    dailyQuests: {}
+    dailyQuests: {},
+
+    // v18 Phase 5.1: 🐣 宠物 (跟 streak 联动进化, IKEA effect 自定义名)
+    pet: {
+      name: '小蛋蛋',
+      formIdx: 0,
+      spawnedAt: Date.now(),
+      feedCount: 0,
+      happiness: 100,
+      lastFedDate: null
+    },
+
+    // v18 Phase 5.1: 🏆 隐藏成就 — { unlocked: [id], unlockedAt: { id: ts } }
+    achievements: { unlocked: [], unlockedAt: {} },
+
+    // v18 Phase 5.1: 🎁 每日登录抽奖
+    dailyDraws: { fragments: 0, consecutive: 0, lastDrawDate: null },
+
+    // v18 Phase 5.3: 🔁 间隔重复 — { 'wow:eng_5': { firstSeen, lastReviewed, intervalDays, correctStreak } }
+    spacedRepetition: { reviews: {} },
+
+    // v18 Phase 5.4: 🔊 音效开关
+    soundEnabled: true,
+
+    // v18 misc tracking (用于成就)
+    wowSeenCount: 0,
+    vocabPerfectRuns: 0,
+    adminPageOpens: 0,
+    marathonStreak: 0,
+    rareBoxesCount: 0
   };
 }
 
@@ -2326,3 +2680,20 @@ window.dailyQuestTodayKey = dailyQuestTodayKey;
 // v17.7 Phase 4
 window.VOCAB_MEANINGS = VOCAB_MEANINGS;
 window.getVocabMeaning = getVocabMeaning;
+// v18 Phase 5.1
+window.PET_FORMS = PET_FORMS;
+window.getCurrentPetForm = getCurrentPetForm;
+window.feedPet = feedPet;
+window.petBreaksHappiness = petBreaksHappiness;
+window.ACHIEVEMENTS = ACHIEVEMENTS;
+window.checkAchievements = checkAchievements;
+window.checkDailyDraw = checkDailyDraw;
+// v18 Phase 5.3
+window.enqueueReview = enqueueReview;
+window.getDueReviews = getDueReviews;
+window.submitReview = submitReview;
+window.predictFutureSelf = predictFutureSelf;
+// v18 Phase 5.4
+window.MATH_QUESTIONS = MATH_QUESTIONS;
+window.EDITING_PARAGRAPHS = EDITING_PARAGRAPHS;
+window.LISTEN_DICTATIONS = LISTEN_DICTATIONS;
