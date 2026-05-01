@@ -152,6 +152,142 @@ function renderDashboard() {
   renderEquipment();
 }
 
+// ============ 周末报告(v4 可打印 PDF)============
+function openReportModal() {
+  const r = generateWeeklyReport(state);
+  const overlay = document.createElement('div');
+  overlay.className = 'report-modal';
+  overlay.innerHTML = `
+    <div class="report-modal-card">
+      <div class="report-toolbar no-print">
+        <div class="report-toolbar-title">📋 W${r.week} 周报告 · ${escapeHtml(r.dateRange)}</div>
+        <div>
+          <button class="btn btn-primary" onclick="printReport()">🖨️ 打印 / 保存为 PDF</button>
+          <button class="btn btn-secondary" onclick="this.closest('.report-modal').remove()">关闭</button>
+        </div>
+      </div>
+      <div class="report-content" id="reportContent">${renderReportHtml(r)}</div>
+    </div>
+  `;
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.remove();
+  });
+  document.body.appendChild(overlay);
+}
+
+function renderReportHtml(r) {
+  const subjScores = Object.entries(r.overallScores || {})
+    .map(([s, v]) => `<li><b>${escapeHtml(s)}</b> — 累计 ${v.avgPct}% (${v.count} 项 · ${v.sum}/${v.max})</li>`)
+    .join('') || '<li>(暂无累计分数)</li>';
+  const weekScoreRows = (r.weekScores || []).map(it => `
+    <tr><td>${DAY_LABELS[it.day]} ${it.slot}</td><td>${escapeHtml(it.task)}</td><td><b>${it.score}/${it.max}</b> (${it.pct}%)</td></tr>
+  `).join('');
+  const missedRows = r.missed.map(m => `
+    <li>${m.dayLabel} ${m.slot} <span style="color:#666">— ${escapeHtml(m.task)}</span></li>
+  `).join('');
+  const keyMissingRows = r.keySlotsMissing.map(k => `
+    <li><b style="color:#FF9F45">🎯 必做</b> ${DAY_LABELS[k.day]} ${k.slot} — ${escapeHtml(k.task)}</li>
+  `).join('');
+  const diagnosisHtml = r.coachDiagnosis.map(d => `<li>${escapeHtml(d)}</li>`).join('');
+  const focusList = r.coachFocus && r.coachFocus.points.length
+    ? `<ul>${r.coachFocus.points.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>` : '';
+  const weakHtml = r.coachWeakAdvice
+    ? `<p><b>弱项:${escapeHtml(r.coachWeakAdvice.subject)}</b> 平均 ${r.coachWeakAdvice.avgPct}%</p><p>${escapeHtml(r.coachWeakAdvice.advice)}</p>`
+    : '<p style="color:#666">暂无明显弱项;继续保持各科均衡</p>';
+  const nextHtml = r.nextWeek ? `
+    <p><b>W${r.nextWeek.week} ${escapeHtml(r.nextWeek.dateRange)} — ${escapeHtml(r.nextWeek.theme)}${r.nextWeek.isHard ? ' ⭐ 难章周' : ''}</b></p>
+    ${r.nextWeek.focus.length ? `<ul>${r.nextWeek.focus.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>` : ''}
+  ` : '<p style="color:#666">已是最后一周</p>';
+
+  return `
+    <div class="report-doc">
+      <div class="report-head">
+        <h1>📋 佑子 PSLE 备考 — 第 ${r.week} 周报告</h1>
+        <div class="report-sub">${escapeHtml(r.theme)}${r.isHard ? ' ⭐ 难章周' : ''} · ${escapeHtml(r.dateRange)} · 生成于 ${escapeHtml(r.generatedAt)}</div>
+      </div>
+
+      <h2>1️⃣ 本周完成情况</h2>
+      <div class="report-grid">
+        <div><b>完成率</b><div style="font-size:36px">${r.completion.percent}%</div><div style="color:#666">${r.completion.done}/${r.completion.total} 个 slot</div></div>
+        <div><b>本周得分</b><div style="font-size:36px;color:#FF6B6B">${r.points.weekTotal}</div><div style="color:#666">slot ${r.points.slot} + combo ${r.points.combo} + 复盘 ${r.points.review}</div></div>
+        <div><b>累计 / 等级</b><div style="font-size:24px">⭐ ${r.points.grandTotal}</div><div style="color:#666">Lv${r.level.lv} ${escapeHtml(r.level.name)}</div></div>
+        <div><b>击败同岛同学</b><div style="font-size:24px;color:#A788E0">${r.beat.pct}%</div><div style="color:#666">约 ${r.beat.count.toLocaleString('en-US')} 名</div></div>
+      </div>
+
+      <h2>2️⃣ 教练诊断</h2>
+      <ul class="report-diag">${diagnosisHtml}</ul>
+
+      ${r.coachFocus ? `<h2>3️⃣ 本周重点 — ${escapeHtml(r.coachFocus.title)}</h2>${focusList}` : ''}
+
+      <h2>4️⃣ 提升建议</h2>
+      ${weakHtml}
+
+      ${r.coachMasterTip ? `<div class="report-master">
+        <b>🌟 ${escapeHtml(r.coachMasterTip.title)}</b><br>
+        ${escapeHtml(r.coachMasterTip.content)}
+      </div>` : ''}
+
+      <h2>5️⃣ 各科累计分数</h2>
+      <ul>${subjScores}</ul>
+
+      ${weekScoreRows ? `<h2>6️⃣ 本周各项分数</h2>
+        <table class="report-table">
+          <thead><tr><th>时段</th><th>任务</th><th>分数</th></tr></thead>
+          <tbody>${weekScoreRows}</tbody>
+        </table>` : ''}
+
+      ${keyMissingRows ? `<h2>⚠️ 本周必做未完成 (影响 +5 复盘奖)</h2>
+        <ul>${keyMissingRows}</ul>` : ''}
+
+      ${missedRows ? `<h2>📝 本周漏掉的 slot</h2>
+        <ul>${missedRows}</ul>` : ''}
+
+      <h2>7️⃣ 下周预告</h2>
+      ${nextHtml}
+
+      <hr>
+      <div style="font-size:11px;color:#999;text-align:center;margin-top:20px">
+        佑子的 PSLE 备考冒险 · chamui-psle.web.app · 数据本地 + Firebase 同步
+      </div>
+    </div>
+  `;
+}
+
+function printReport() {
+  window.print();
+}
+
+// ============ Claude AI 答疑(v4 半集成 — 复制 prompt + 跳 claude.ai)============
+async function askClaudeAI() {
+  const userQuestion = prompt('🤖 想问 Claude 什么?贴一道题或写一段问题:\n\n(填了我会自动加上你的备考上下文一起复制)', '');
+  if (userQuestion === null) return;
+  const promptText = buildClaudePrompt(state, userQuestion.trim() || null);
+  try {
+    await navigator.clipboard.writeText(promptText);
+    showToast('📋 prompt 已复制!正在打开 Claude...', 'success');
+    setTimeout(() => {
+      window.open('https://claude.ai/new', '_blank');
+    }, 500);
+  } catch (e) {
+    // 降级:显示给用户手动复制
+    const overlay = document.createElement('div');
+    overlay.className = 'photo-modal';
+    overlay.innerHTML = `
+      <div class="photo-modal-card" style="max-width:600px">
+        <div class="photo-modal-header">
+          <div class="photo-modal-title">📋 复制下面这段贴到 Claude.ai</div>
+          <button class="photo-modal-close" onclick="this.closest('.photo-modal').remove()">✕</button>
+        </div>
+        <textarea readonly style="width:100%;min-height:300px;padding:12px;font-size:12px;border:none;font-family:monospace">${escapeHtml(promptText)}</textarea>
+        <div class="photo-modal-actions">
+          <a href="https://claude.ai/new" target="_blank" class="btn btn-primary">🚀 打开 Claude.ai</a>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  }
+}
+
 // ============ 智慧教练(v4 主页新模块)============
 function renderWeeklyCoach() {
   const container = document.getElementById('coachContent');
@@ -1338,6 +1474,9 @@ window.spawnFloatPoints = spawnFloatPoints;
 window.spawnConfetti = spawnConfetti;
 window.shakeScreen = shakeScreen;
 window.pulseScoreBlock = pulseScoreBlock;
+window.openReportModal = openReportModal;
+window.printReport = printReport;
+window.askClaudeAI = askClaudeAI;
 window.pickPhotoForSlot = pickPhotoForSlot;
 window.viewPhoto = viewPhoto;
 window.replacePhoto = replacePhoto;
