@@ -24,7 +24,7 @@ const CHAMUI = {
   // 装备系统(v6 — 42 件,前 100 分密集 4 件,顶配 dragon 6000 = SGD 1500 终极大奖)
   equipment: [
     // ===== 极速集邮 (0-100):W1 第一周就能拿 4 件 =====
-    { id: 'note',     icon: '📒', name: '笔记本',     condition: 'points',    value: 5,    hint: '累积 5 分(第一天打 1 个 slot 就拿)' },
+    { id: 'note',     icon: '📒', name: '笔记本',     condition: 'points',    value: 5,    hint: '累积 5 分(第一天打 1 个项目就拿)' },
     { id: 'apple',    icon: '🍎', name: '健康苹果',   condition: 'points',    value: 15,   hint: '累积 15 分(第一天 2-3 slot)' },
     { id: 'hat',      icon: '🎓', name: '学士帽',     condition: 'points',    value: 30,   hint: '累积 30 分(W1 周三)' },
     { id: 'cup',      icon: '🥤', name: '能量水杯',   condition: 'points',    value: 50,   hint: '累积 50 分(W1 周末)' },

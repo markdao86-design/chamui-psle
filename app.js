@@ -254,8 +254,8 @@ function renderReportHtml(r) {
 
       <h2>1️⃣ 本周完成情况</h2>
       <div class="report-grid">
-        <div><b>完成率</b><div style="font-size:36px">${r.completion.percent}%</div><div style="color:#666">${r.completion.done}/${r.completion.total} 个 slot</div></div>
-        <div><b>本周得分</b><div style="font-size:36px;color:#FF6B6B">${r.points.weekTotal}</div><div style="color:#666">slot ${r.points.slot} + combo ${r.points.combo} + 复盘 ${r.points.review}</div></div>
+        <div><b>完成率</b><div style="font-size:36px">${r.completion.percent}%</div><div style="color:#666">${r.completion.done}/${r.completion.total} 个项目</div></div>
+        <div><b>本周得分</b><div style="font-size:36px;color:#FF6B6B">${r.points.weekTotal}</div><div style="color:#666">项目分 ${r.points.slot} + 全勤 ${r.points.combo} + 复盘 ${r.points.review}</div></div>
         <div><b>累计 / 等级</b><div style="font-size:24px">⭐ ${r.points.grandTotal}</div><div style="color:#666">Lv${r.level.lv} ${escapeHtml(r.level.name)}</div></div>
         <div><b>击败同岛同学</b><div style="font-size:24px;color:#A788E0">${r.beat.pct}%</div><div style="color:#666">约 ${r.beat.count.toLocaleString('en-US')} 名</div></div>
       </div>
@@ -285,7 +285,7 @@ function renderReportHtml(r) {
       ${keyMissingRows ? `<h2>⚠️ 本周必做未完成 (影响 +5 复盘奖)</h2>
         <ul>${keyMissingRows}</ul>` : ''}
 
-      ${missedRows ? `<h2>📝 本周漏掉的 slot</h2>
+      ${missedRows ? `<h2>📝 本周漏掉的项目</h2>
         <ul>${missedRows}</ul>` : ''}
 
       <h2>7️⃣ 下周预告</h2>
@@ -598,7 +598,7 @@ function renderWeekSummary(week) {
     status = `🟠 完成率够了,但还有 <b>${dp.missingKeySlots.length}</b> 个 🎯 必做没做,拿不到周复盘 +${WEEKLY_REVIEW_POINTS}`;
   } else {
     const need = Math.max(0, Math.ceil(c.total * WEEKLY_REVIEW_THRESHOLD) - c.done);
-    status = `🟡 还差 ${need} 个 slot 达 ${Math.round(WEEKLY_REVIEW_THRESHOLD * 100)}% — 拿 +${WEEKLY_REVIEW_POINTS} 复盘奖`;
+    status = `🟡 还差 ${need} 个项目达 ${Math.round(WEEKLY_REVIEW_THRESHOLD * 100)}% — 拿 +${WEEKLY_REVIEW_POINTS} 复盘奖`;
   }
 
   // 必做 slot 区块
@@ -616,10 +616,10 @@ function renderWeekSummary(week) {
   const ptsBreakdown = `
     <div class="pts-breakdown">
       本周已得 <b style="font-size:18px;color:var(--color-primary)">${dp.total}</b> 分
-      <span class="pts-piece">slot ${dp.slot}</span>
-      <span class="pts-piece">combo ${dp.combo}</span>
+      <span class="pts-piece">项目分 ${dp.slot}</span>
+      <span class="pts-piece">全勤 ${dp.combo}</span>
       <span class="pts-piece">复盘 ${dp.review}</span>
-      <span class="pts-piece pts-hint">${isHard ? '⭐ 难章周 全 +1' : '段3=1 段1/2=2 周末=3'}</span>
+      <span class="pts-piece pts-hint">${isHard ? '⭐ 难章周 全 +1' : '短任务=1 主时段=2 周末=3'}</span>
     </div>
   `;
 
