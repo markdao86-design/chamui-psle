@@ -377,7 +377,7 @@ function renderCheckinPage() {
   titleEl.textContent = `第 ${week} 周 (${WEEK_DATES[week - 1]}) — ${WEEK_THEMES[week - 1]}`;
 
   document.getElementById('prevWeekBtn').disabled = week <= 1;
-  document.getElementById('nextWeekBtn').disabled = week >= 26;
+  document.getElementById('nextWeekBtn').disabled = week >= 73;
 
   // 整个 checkinList 区域我们整体重渲(含日期 tab + slot 列表 + 周汇总)
   const list = document.getElementById('checkinList');
@@ -1062,7 +1062,7 @@ function drawChart() {
 
   const dataPoints = [];
   let acc = 0;
-  for (let week = 1; week <= 26; week++) {
+  for (let week = 1; week <= 73; week++) {
     acc += calcWeekPoints(week);
     if (week <= state.currentWeek) {
       dataPoints.push(acc);
@@ -1102,7 +1102,7 @@ function drawChart() {
   ctx.setLineDash([4, 4]);
   ctx.lineWidth = 2;
   KEY_WEEKS.forEach(week => {
-    const x = padding.left + (chartW * (week - 1) / 25);
+    const x = padding.left + (chartW * (week - 1) / 72);
     ctx.beginPath();
     ctx.moveTo(x, padding.top);
     ctx.lineTo(x, h - padding.bottom);
@@ -1119,7 +1119,7 @@ function drawChart() {
     ctx.lineWidth = 3;
     ctx.beginPath();
     dataPoints.forEach((pt, idx) => {
-      const x = padding.left + (chartW * idx / 25);
+      const x = padding.left + (chartW * idx / 72);
       const y = padding.top + chartH * (1 - (pt - minPts) / (maxPts - minPts));
       if (idx === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
@@ -1127,7 +1127,7 @@ function drawChart() {
     ctx.stroke();
 
     dataPoints.forEach((pt, idx) => {
-      const x = padding.left + (chartW * idx / 25);
+      const x = padding.left + (chartW * idx / 72);
       const y = padding.top + chartH * (1 - (pt - minPts) / (maxPts - minPts));
       ctx.fillStyle = '#FF6B6B';
       ctx.beginPath();
@@ -1391,9 +1391,9 @@ function importData(event) {
 }
 
 function manualWeekChange() {
-  const w = prompt('切换到第几周?(1-26)', state.currentWeek);
+  const w = prompt('切换到第几周?(1-73)', state.currentWeek);
   const week = parseInt(w);
-  if (isNaN(week) || week < 1 || week > 26) {
+  if (isNaN(week) || week < 1 || week > 73) {
     showToast('❌ 周数无效', 'danger');
     return;
   }
@@ -1442,7 +1442,7 @@ function bindEvents() {
     }
   });
   document.getElementById('nextWeekBtn').addEventListener('click', () => {
-    if (state.currentWeek < 26) {
+    if (state.currentWeek < 73) {
       state.currentWeek++;
       selectedDay = todayDayKeyForWeek(state.currentWeek) || 'Mon';
       saveState(state);
