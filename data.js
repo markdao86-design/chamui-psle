@@ -233,38 +233,86 @@ const WEEK_FOCUS_TIPS = [
   { theme: '🎯 第一阶段总模考', points: ['🎯 严格 PSLE 时长完整模拟 4 科', '对照目标:英 72+ / 科 88+ / 数 90+ / 华 88+', 'W27 第二阶段启动准备'] },
 ];
 
-// 名师秘诀池(15 条精华,按周轮转)
-const MASTER_TIPS = [
-  { id: 'pomodoro', title: '🧠 番茄工作法',
-    content: '25 分钟专注 + 5 分钟起立喝水。手机/平板放房间外。3 个番茄钟 = 一个 1.5h 学习段。' },
-  { id: 'errbook', title: '📓 错题本三步法',
-    content: '抄题 → 写错的原因(粗心/概念/题型)→ 写正确解法。每题 3 行,周末翻一遍。' },
-  { id: 'sci8', title: '🎯 PSLE 科学高频 8 章',
-    content: 'Plant Transport / Digestive / Light / Heat / Reproduction / Cells / Energy / Electricity 占 70% 分。' },
-  { id: 'comp40', title: '✏️ 作文 40 分套路',
-    content: '4 段(开场→矛盾→高潮→反思)+ 对话 + 心理 + 感官描写 + 全文过去时 + 150-180 词。' },
-  { id: 'compoe', title: '📖 Comp OE 答题铁律',
-    content: '定位法(先看题找关键词)+ 答案含原文核心词 + 完整句子 + 3 分题答 3 个点。' },
-  { id: 'cloze', title: '✍️ Cloze 错题攻略',
-    content: '每错查 3 件事:同义词 / 词性 / 固定搭配。建词汇错题本按主题分(travel/school/nature)。' },
-  { id: 'math4', title: '🔢 数学 4 大 Heuristics',
-    content: 'Model Drawing(线段图)/ Make a Table / Work Backwards / Show ALL Working — 4 大武器选用。' },
-  { id: 'cnzw', title: '🇨🇳 华文作文模板',
-    content: '5 类开头(描景/引句/反问/排比/对话)+ 5 个成语 + 心理描写。结尾点题升华。' },
-  { id: 'oral3', title: '🎤 口试 3 句扩展法',
-    content: '看图说话:① 描述看到什么 ② 联想到什么 ③ 个人经历。每点延伸 2-3 句。' },
-  { id: 'sleep', title: '🛌 睡眠是金',
-    content: '21:30 必睡。睡眠不足 7h,大脑信息整合下降 40%,白天多刷 2h 也补不回。' },
-  { id: 'sciexp', title: '🧪 PSLE 实验题 4 要素',
-    content: '答题必含:① Independent var(改变啥)② Dependent var(测啥)③ Controlled vars(保持不变)④ Hypothesis 假设。' },
-  { id: 'vocab', title: '📚 单词记忆法',
-    content: '主题分类:travel/school/nature/emotion/sports 五大类。每周 2 单元,每天 5 个,连记带用。' },
-  { id: 'rest', title: '⚠️ 周日下午雷打不动',
-    content: '周日 14:00-18:00 完全不学习。这是大脑整合一周输入的关键期,休息出来效率更高。' },
-  { id: 'rewrite', title: '🔁 作文重写不能省',
-    content: '老师改完必须照标的地方重写一次。不重写 = 白改。重写时换更好的词、更紧的句。' },
-  { id: 'sundayreview', title: '📋 周日复盘 5 件事',
-    content: '① 本周打钩 ② 错题入册 ③ 看下周卡片 ④ 教材摆桌 ⑤ 作文题确定。19:30-21:00 完成。' },
+// 名师秘诀池(26 条,每周一对一,与本周主题学科匹配的 PSLE 答题模板/技巧)
+const WEEK_MASTER_TIPS = [
+  // W1 P3 Diversity
+  { subject: '🔬 P3 Diversity', title: '动物 5 类 + 植物 2 类 关键词',
+    content: '脊椎 5 类:fish(鳃+鳞)/ amphibian(湿皮+变态)/ reptile(干鳞+蛋)/ bird(羽+喙+卵生)/ mammal(毛+乳+胎生)。植物:flowering vs non-flowering。PSLE 题"why classified as X" → 答关键特征词。' },
+  // W2 P3 Plant Life Cycle
+  { subject: '🔬 P3 Plant Life Cycle', title: '萌发 3 条件答题',
+    content: '种子萌发必需:water + air + warmth(注意 PSLE 不要写 sunlight/soil — 萌发不需要,只是后续生长用)。题"为什么 seed 没发芽?"→ 检查缺哪个条件就答哪个。' },
+  // W3 P3 Animal Life Cycle
+  { subject: '🔬 P3 Animal Life Cycle', title: '完全 vs 不完全变态对比',
+    content: '完全变态(complete):egg → larva → pupa → adult(蝴蝶/苍蝇/甲虫)。不完全(incomplete):egg → nymph → adult,无 pupa 阶段(蟑螂/蚊子/蜻蜓)。鸡(no metamorphosis)直接 egg → chick → adult。阶段名英文必背。' },
+  // W4 P3 Plant Parts
+  { subject: '🔬 P3 Plant Parts', title: '各部位功能英文术语',
+    content: 'roots = absorb water + anchor / stem = transport water+nutrients + support / leaves = photosynthesis(光合) + transpiration(蒸腾) / flower = reproduction / fruit = protect seeds。题"切掉茎/叶会怎样" → 用对应功能反推后果。' },
+  // W5 P4 Plant Transport (1/2)
+  { subject: '🔬 P4 Plant Transport ⭐', title: '芹菜染色实验答题模板',
+    content: 'Q: Why coloured water moves up celery? A: Water travels up the stem THROUGH the XYLEM BY transpiration. Water evaporates from leaves, creating SUCTION that pulls more water up. 关键词必含:xylem(木质部) / transpiration(蒸腾) / suction.' },
+  // W6 P4 Plant Transport (2/2)
+  { subject: '🔬 P4 Plant Transport ⭐', title: '为什么植物枯萎 / 凋零开放题',
+    content: 'Q: Why does the plant wilt? A: Leaves lose water faster than roots can absorb. Cells lose turgor pressure, plant wilts. Q: Why is xylem important? A: Transports water from roots to leaves for photosynthesis.' },
+  // W7 P4 Digestive (1/2)
+  { subject: '🔬 P4 Digestive ⭐⭐', title: '完整消化路径必背',
+    content: 'Mouth(saliva 含 amylase 消化淀粉)→ Esophagus(传送)→ Stomach(胃酸 + pepsin 消化蛋白)→ Small intestine(消化完成 + 吸收 nutrients to blood)→ Large intestine(吸水 + 形成 feces)→ Anus。每个器官的 function 一句话答清楚。' },
+  // W8 P4 Digestive (2/2)
+  { subject: '🔬 P4 Digestive ⭐⭐', title: '营养素 + 消化酶对应',
+    content: '淀粉 starch → amylase(口腔/胰腺)→ glucose / 蛋白 protein → pepsin(胃)→ amino acids / 脂肪 fat → bile(肝制) + lipase(胰腺/小肠)→ fatty acids。PSLE Q: enzyme 在哪个器官最活跃?→ 看 pH 和温度。' },
+  // W9 P4 Matter
+  { subject: '🔬 P4 Matter + Mass/Volume', title: '三态特征 + 测量工具',
+    content: 'Solid(固定形状+体积) / Liquid(体积固定但形状随容器) / Gas(都不固定)。Mass(kg)= 质量,不变,用 balance 称。Volume(L/cm³)= 体积,可变,用 measuring cylinder 量。Mass ≠ Weight(weight 受重力影响)。' },
+  // W10 P4 Light & Shadow (1/2)
+  { subject: '🔬 P4 Light & Shadow ⭐', title: '影子大小 vs 光源距离',
+    content: 'Q: Why bigger shadow when light is closer? A: As light source moves CLOSER to the object, MORE light is BLOCKED by the object, so shadow becomes LARGER. 反之 → 越远越小。注意答案要说"more light blocked",不能只说"shadow bigger"。' },
+  // W11 P4 Light & Shadow (2/2)
+  { subject: '🔬 P4 Light & Shadow ⭐', title: '影子方向 + 透光分类',
+    content: '影子永远在光源对面(opposite side)。Opaque(不透)→ dark shadow / Translucent(半透,如磨砂玻璃)→ light shadow / Transparent(透,如玻璃)→ no shadow。PSLE 实验题:控制光源位置 + 物体距离。' },
+  // W12 P4 Heat (1/2)
+  { subject: '🔬 P4 Heat ⭐⭐', title: '三种热传递区分模板',
+    content: 'Conduction(传导):solid 直接接触(金属勺烫)。Convection(对流):fluid(液/气)流动循环(暖气片在地面 — 热气上升)。Radiation(辐射):无介质,可穿真空(太阳到地球)。Q "为什么 X 是 Y 传递" → 答介质 + 方向。' },
+  // W13 P4 Heat (2/2)
+  { subject: '🔬 P4 Heat ⭐⭐', title: '温度 vs 热 + 热膨胀',
+    content: '温度 temperature(°C)= 热的程度(状态量)。热 heat(J)= 能量(总量)。同 100°C 的水 1 杯 vs 1 桶,温度一样但热量不同。热膨胀:遇热体积↑,遇冷体积↓ — 题"为什么夏天电线下垂?" → expansion。' },
+  // W14 P4 Magnets + 综合
+  { subject: '🔬 P4 Magnets + 🎯 综合卷', title: '磁体规律 + 综合卷应试策略',
+    content: '同极 repel,异极 attract。磁性材料:iron / cobalt / nickel(铁钴镍)。磁化:同极擦或电流。综合卷策略:严格 1h45min,先做有把握的题,标记不确定的;MCQ 先 50min,OE 50min,检查 5min。' },
+  // W15 P5 Reproduction
+  { subject: '🔬 P5 Reproduction', title: '花结构 + 受精流程英文',
+    content: '花的结构 stamen(雄)= anther(花药)+ filament / pistil(雌)= stigma(柱头)+ style + ovary(子房)。Pollination(传粉)= 花粉 anther → stigma。Fertilisation(受精)= 花粉 + ovule → seed。Methods of pollination: insect / wind / water。' },
+  // W16 P5 Cells + Food
+  { subject: '🔬 P5 Cells + Food Chain', title: '细胞结构 + 食物链顺序',
+    content: '动物细胞:cell membrane + cytoplasm + nucleus。植物多 2 个:cell wall + chloroplast(叶绿体)。Food chain:producer(植物 — make food)→ primary consumer(草食)→ secondary consumer(肉食)→ tertiary consumer / decomposer(分解)。箭头方向 = energy flow。' },
+  // W17 P5 Water + Air
+  { subject: '🔬 P5 Water + Air & Weather', title: '水循环 4 步 + Air 组成',
+    content: '水循环:evaporation(蒸发,液→气)→ condensation(凝结,气→液成云)→ precipitation(降水,雨/雪)→ collection(汇集回海)。Air 组成 = 78% nitrogen + 21% oxygen + 1% other(包括 CO₂ 和 noble gases)。Weather 工具:thermometer / anemometer / rain gauge。' },
+  // W18 P5 Forms of Energy
+  { subject: '🔬 P5 Forms of Energy', title: '能量形态对应表 + 例子',
+    content: 'Kinetic(动能 — 移动物体)/ Potential(势能 — 高度 / 拉伸的弹簧)/ Sound 声 / Light 光 / Electrical 电 / Heat 热 / Chemical 化学(电池/食物)。题"骑车上山时哪种能量在变" → kinetic ↑↓ + potential ↑。' },
+  // W19 P5 Energy Conversions
+  { subject: '🔬 P5 Energy Conversions', title: '能量转换链答题',
+    content: '灯泡:electrical → light(useful) + heat(wasted)。风扇:electrical → kinetic。太阳能板:light → electrical。化石燃料发电:chemical → heat → kinetic → electrical。答题用 → 箭头,标 useful/wasted energy。' },
+  // W20 P5 Electricity
+  { subject: '⚡ P5 Electricity ⭐', title: '电路 + 用电安全模板',
+    content: '电路 = battery(power source)+ wires + component(灯/电机)+ switch。必须 closed circuit 闭合才有电流。Conductor(导体)= metals。Insulator(绝缘体)= plastic / wood / rubber / dry skin。湿手不能碰电器(湿水是导体)。' },
+  // W21 P5 Series & Parallel
+  { subject: '⚡ P5 Series & Parallel ⭐', title: '串并联高频题型',
+    content: 'Series 串联:1 个 path,电流相同(same current),电压分配(voltage shared)。一灯坏 → 全灭。Parallel 并联:多 path,电压相同,电流分配。一灯坏 → 其他正常。Q"为什么家里用并联?" → 一灯坏不影响其他 + 各设备独立电压。' },
+  // W22 P5 综合复习 1
+  { subject: '🔬 综合复习 — Cycles & Systems', title: 'PSLE OE 三大题型答题模板',
+    content: '"Compare A and B" → 用 unlike / whereas 对比两者关键差异。"Why" → because + 机制因果链。"Predict what will happen" → 因果推理 + 量化变化(more/less/no change)。所有 OE 答案必含原文核心词。' },
+  // W23 P5 综合复习 2
+  { subject: '⚡ 综合复习 — Energy & Electricity', title: 'PSLE 实验题 4 要素练熟',
+    content: '答题每次都要写:① Independent variable(改变啥 — 1 个) ② Dependent variable(测啥 — 1 个)③ Controlled variables(保持不变 — 至少 2 个)④ Hypothesis(预测 + 理由)。少 1 项扣 1 分。' },
+  // W24 P5 综合卷模拟
+  { subject: '🎯 综合卷模拟 + 弱项回填', title: '综合卷应试时间分配',
+    content: '严格 PSLE 时长(1h45min)。MCQ 50min(2min/题,快做不纠结)→ OE 50min(慢做仔细审题)→ 检查 5min。不会的 MCQ 标记跳过最后回头。OE 没思路就先写关键词不留空白。' },
+  // W25 P5 整体串讲 + Visual Text
+  { subject: '📖 串讲 + Visual Text', title: 'Visual Text 答题模板',
+    content: 'Visual Text(海报/广告/通知)看图答题。必看:① 大字标题(主题)② 数字(日期/时间/价格)③ 图片暗示 ④ 联系方式 ⑤ 排版强调(粗体/颜色)。题型:Who / What / When / Where / Why / How much。答案直接从图找,不要自己推断。' },
+  // W26 总模考
+  { subject: '🎯 第一阶段总模考', title: '4 科模考全面策略',
+    content: '严格 PSLE 时长完整 4 科。建议顺序:① 数学(精神最好)② 科学 ③ 英语 Paper 1(作文)④ 英语 Paper 2 ⑤ 华文。每科考完不立刻对答案,等全考完再分析错题分类(粗心/概念/题型)。目标:英 72+/科 88+/数 90+/华 88+ → 总 AL 9-12。' },
 ];
 
 // 弱项 → 针对性建议(基于 taskSubtype 关键字)
@@ -341,30 +389,13 @@ function getWeeklyCoaching(state) {
     };
   }
 
-  // 4) 名师秘诀(按周轮转 + 弱项相关时优先匹配)
-  let tipIdx = (week - 1) % MASTER_TIPS.length;
-  // 弱项联动:Cloze 弱 → cloze tip;作文弱 → comp40
-  if (agg.weakest) {
-    const map = {
-      'Cloze 完形': 'cloze',
-      '作文': 'comp40',
-      'Comp 阅读': 'compoe',
-      '科学综合卷': 'sci8',
-      '科学章节测': 'sciexp',
-      '数学模考': 'math4',
-      '数学其他': 'math4',
-      '华文作文': 'cnzw',
-      '听力/口试': 'oral3',
-      'Vocab 词汇': 'vocab',
-      'Editing 改错': 'errbook'
-    };
-    const targetId = map[agg.weakest.subtype];
-    if (targetId) {
-      const found = MASTER_TIPS.findIndex(t => t.id === targetId);
-      if (found >= 0) tipIdx = found;
-    }
-  }
-  const masterTip = MASTER_TIPS[tipIdx];
+  // 4) 名师秘诀:本周主题学科对应的 PSLE 答题模板(每周 1 条专项)
+  //    弱项的针对性建议在 weakAdvice 里单独显示,这里不重复
+  const weekTip = WEEK_MASTER_TIPS[week - 1];
+  const masterTip = weekTip ? {
+    title: `${weekTip.subject} — ${weekTip.title}`,
+    content: weekTip.content
+  } : null;
 
   return { phase, weekTheme: wt ? wt.theme : '', isHard, diagnosis, focus, weakAdvice, masterTip };
 }
@@ -1099,7 +1130,7 @@ window.aggregateScores = aggregateScores;
 window.studentBeatPercent = studentBeatPercent;
 window.getWeeklyCoaching = getWeeklyCoaching;
 window.WEEK_FOCUS_TIPS = WEEK_FOCUS_TIPS;
-window.MASTER_TIPS = MASTER_TIPS;
+window.WEEK_MASTER_TIPS = WEEK_MASTER_TIPS;
 window.adviceForWeakness = adviceForWeakness;
 window.generateWeeklyReport = generateWeeklyReport;
 window.studentBeatCount = studentBeatCount;
