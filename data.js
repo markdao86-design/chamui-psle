@@ -237,9 +237,9 @@ const LISTENING_RESOURCES = [
   {
     type: 'live-audio',
     title: '🎙️ CNA938 新加坡新闻直播',
-    desc: '24h 直播 — 新加坡英语新闻台,语速接近 PSLE 听力,真实环境暴露',
-    src: 'https://playerservices.streamtheworld.com/api/livestream-redirect/CNA_938.mp3',
-    fallbackUrl: 'https://www.channelnewsasia.com/listen/cna938'
+    desc: '24h 直播 — 新加坡英语新闻台,真实环境暴露(语速偏快,适合 W15+ 进阶)',
+    src: 'https://playerservices.streamtheworld.com/api/livestream-redirect/938NOW_PREM.aac',
+    fallbackUrl: 'https://www.melisten.sg/radio/cna938'
   },
   {
     type: 'link',
