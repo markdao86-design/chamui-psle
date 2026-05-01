@@ -293,6 +293,41 @@ const LISTENING_RESOURCES = [
   }
 ];
 
+// ============= v16.10: 防沉迷 — 每日听力时间限制 =============
+const LISTENING_DAILY_LIMIT_MIN = 30;  // 每天 30 分钟,达到自动关 modal 当天不能再开
+
+function listeningTodayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function getListeningSecondsToday(state) {
+  if (!state || !state.listeningUsage) return 0;
+  const k = listeningTodayKey();
+  return (state.listeningUsage[k] && state.listeningUsage[k].seconds) || 0;
+}
+
+// 增量记录听力时长(秒);返回今日累计
+function addListeningSeconds(state, secs) {
+  if (!state.listeningUsage) state.listeningUsage = {};
+  const k = listeningTodayKey();
+  if (!state.listeningUsage[k]) state.listeningUsage[k] = { seconds: 0 };
+  state.listeningUsage[k].seconds += secs;
+  return state.listeningUsage[k].seconds;
+}
+
+// 是否今日已达上限(锁定状态)
+function isListeningLocked(state) {
+  return getListeningSecondsToday(state) >= LISTENING_DAILY_LIMIT_MIN * 60;
+}
+
+// 父母重置今日听力额度(在管理页通过密码后调用)
+function resetListeningToday(state) {
+  if (!state.listeningUsage) state.listeningUsage = {};
+  const k = listeningTodayKey();
+  state.listeningUsage[k] = { seconds: 0 };
+}
+
 // 给 weekN (1..73) 返回该周对应的词表 ({subject, subjectIcon, section, weekRange}).
 // W1-W7 → math (按 section 索引顺序); W8-W17 → sci; 其它周 → null
 function getVocabForWeek(weekN) {
@@ -351,7 +386,11 @@ function getDefaultState() {
     adminPassword: null,
 
     // v16.8: 已解锁但用户主动隐藏的装备 id 列表(默认全显示;点击装备图鉴可切换)
-    equipmentDisabled: []
+    equipmentDisabled: [],
+
+    // v16.10: 防沉迷 — 每日听力时间记录 { 'YYYY-MM-DD': { seconds: int } }
+    // 每日上限到了自动关闭 modal,当天不能再开
+    listeningUsage: {}
   };
 }
 
@@ -1458,3 +1497,10 @@ window.SUNDAY_REVIEW_STEPS = SUNDAY_REVIEW_STEPS;
 window.VOCAB_500 = VOCAB_500;
 window.getVocabForWeek = getVocabForWeek;
 window.LISTENING_RESOURCES = LISTENING_RESOURCES;
+// v16.10: 防沉迷
+window.LISTENING_DAILY_LIMIT_MIN = LISTENING_DAILY_LIMIT_MIN;
+window.listeningTodayKey = listeningTodayKey;
+window.getListeningSecondsToday = getListeningSecondsToday;
+window.addListeningSeconds = addListeningSeconds;
+window.isListeningLocked = isListeningLocked;
+window.resetListeningToday = resetListeningToday;

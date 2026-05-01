@@ -949,9 +949,91 @@ function closeVocabModal() {
 }
 
 // ============ v16.3: 听力资源 modal (CNA938 直播 + 推荐播客 + BBC 外链) ============
+// v16.10: 防沉迷 — 听力 modal 计时器(模块级)
+let _listeningTickInterval = null;
+const LISTENING_TICK_SEC = 10;  // 每 10 秒累加并保存
+
+function _stopListeningTimer() {
+  if (_listeningTickInterval) {
+    clearInterval(_listeningTickInterval);
+    _listeningTickInterval = null;
+  }
+}
+
+function _startListeningTimer() {
+  _stopListeningTimer();
+  _listeningTickInterval = setInterval(() => {
+    const total = window.addListeningSeconds(state, LISTENING_TICK_SEC);
+    saveState(state);
+    const limit = window.LISTENING_DAILY_LIMIT_MIN * 60;
+    const remaining = Math.max(0, limit - total);
+    // 更新顶部剩余时间显示
+    const el = document.getElementById('listeningRemaining');
+    if (el) {
+      const min = Math.floor(remaining / 60);
+      const sec = remaining % 60;
+      el.textContent = `今日剩余 ${min}:${String(sec).padStart(2, '0')}`;
+      el.style.color = remaining < 300 ? 'var(--color-danger)' : 'var(--color-text-light)';
+    }
+    if (total >= limit) {
+      _stopListeningTimer();
+      showToast(`🔒 今日听力 ${window.LISTENING_DAILY_LIMIT_MIN} 分钟用完,明天再来!家长可解锁`, 'warn');
+      closeListeningModal();
+      // 立即重开会显示锁屏
+      setTimeout(() => openListeningModal(state.currentWeek), 500);
+    }
+  }, LISTENING_TICK_SEC * 1000);
+}
+
+// 渲染锁屏(今日额度用完)
+function _renderListeningLockedScreen(modal) {
+  const used = window.getListeningSecondsToday(state);
+  const min = Math.floor(used / 60);
+  const sec = used % 60;
+  modal.innerHTML = `
+    <div class="vocab-modal-inner">
+      <div class="vocab-modal-header">
+        <div>
+          <span class="vocab-modal-title">🔒 今日听力时间已用完</span>
+          <span class="vocab-modal-meta">每日上限 ${window.LISTENING_DAILY_LIMIT_MIN} 分钟,防沉迷自动锁定</span>
+        </div>
+        <button class="vocab-modal-close" onclick="closeListeningModal()">×</button>
+      </div>
+      <div class="vocab-modal-body" style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:32px 24px;text-align:center">
+        <div style="font-size:64px">🔒</div>
+        <div style="font-size:18px;font-weight:700">今天已经听了 ${min} 分 ${sec} 秒</div>
+        <div style="color:var(--color-text-light);font-size:13px;line-height:1.6">
+          每日上限 ${window.LISTENING_DAILY_LIMIT_MIN} 分钟,保护视力 + 避免沉迷。<br>
+          明天 0:00 自动重置,可继续听。
+        </div>
+        <button class="btn btn-warn" onclick="unlockListeningToday()" style="margin-top:8px">🔓 家长解锁(需要密码)</button>
+      </div>
+      <div class="vocab-modal-footer">
+        💡 防沉迷由佑子的备考冒险 v16.10 自动管理。家长解锁后会重置今日额度,可再听 ${window.LISTENING_DAILY_LIMIT_MIN} 分钟。
+      </div>
+    </div>
+  `;
+  modal.classList.add('show');
+}
+
+// 家长解锁今日听力(需要管理密码)
+function unlockListeningToday() {
+  if (!window.requireAdminAuth()) return;
+  window.resetListeningToday(state);
+  saveState(state);
+  showToast(`✅ 已解锁,今日可再听 ${window.LISTENING_DAILY_LIMIT_MIN} 分钟`, 'happy');
+  closeListeningModal();
+  setTimeout(() => openListeningModal(state.currentWeek), 300);
+}
+
 function openListeningModal(week) {
   const modal = document.getElementById('listeningModal');
   if (!modal || !window.LISTENING_RESOURCES) return;
+  // v16.10: 防沉迷锁定检查
+  if (window.isListeningLocked(state)) {
+    _renderListeningLockedScreen(modal);
+    return;
+  }
   // v16.9: 难度徽章 + 集数信息 + (playlist) 选集提示
   const meta = (r) => `
     <div class="lis-meta">
@@ -1016,12 +1098,21 @@ function openListeningModal(week) {
       </div>
     `;
   }).join('');
+  // v16.10: 计算剩余时间
+  const usedSec = window.getListeningSecondsToday(state);
+  const limitSec = window.LISTENING_DAILY_LIMIT_MIN * 60;
+  const remainSec = Math.max(0, limitSec - usedSec);
+  const remainMin = Math.floor(remainSec / 60);
+  const remainSecOnly = remainSec % 60;
+  const remainColor = remainSec < 300 ? 'var(--color-danger)' : 'var(--color-text-light)';
+
   modal.innerHTML = `
     <div class="vocab-modal-inner">
       <div class="vocab-modal-header">
         <div>
           <span class="vocab-modal-title">🎧 听力资源(W${week})</span>
           <span class="vocab-modal-meta">每天 10-15 min · 精听 → 不查字典先全听一遍 → 第二遍记 3-5 个新词</span>
+          <span id="listeningRemaining" style="display:block;font-size:11px;font-weight:700;margin-top:4px;color:${remainColor}">⏳ 今日剩余 ${remainMin}:${String(remainSecOnly).padStart(2,'0')} (上限 ${window.LISTENING_DAILY_LIMIT_MIN} 分钟)</span>
         </div>
         <button class="vocab-modal-close" onclick="closeListeningModal()">×</button>
       </div>
@@ -1034,8 +1125,12 @@ function openListeningModal(week) {
     </div>
   `;
   modal.classList.add('show');
+  // v16.10: 启动防沉迷计时器
+  _startListeningTimer();
 }
 function closeListeningModal() {
+  // v16.10: 停止防沉迷计时器
+  _stopListeningTimer();
   const modal = document.getElementById('listeningModal');
   if (modal) {
     modal.classList.remove('show');
@@ -1802,6 +1897,7 @@ window.openVocabModal = openVocabModal;
 window.closeVocabModal = closeVocabModal;
 window.openListeningModal = openListeningModal;
 window.closeListeningModal = closeListeningModal;
+window.unlockListeningToday = unlockListeningToday;
 window.toggleEquipment = toggleEquipment;
 window.requireAdminAuth = requireAdminAuth;
 window.resetAdminPassword = resetAdminPassword;
