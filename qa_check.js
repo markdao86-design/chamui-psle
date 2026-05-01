@@ -68,7 +68,7 @@ assert(def.activeSkin === 'default', `默认 activeSkin = 'default' (实际 ${de
 
 // ===== 4. character.js 装备 42 件 =====
 const C = ctx.window.CHAMUI;
-assert(C.equipment.length === 42, `equipment 数量 42 (实际 ${C.equipment.length})`);
+assert(C.equipment.length === 45, `equipment 数量 45 (v17 加 3 streak 装备) (实际 ${C.equipment.length})`);
 
 // 装备 id 唯一
 const eqIds = C.equipment.map(e => e.id);
@@ -168,6 +168,44 @@ assert(w60Slots > 0, `v16: W60 应有 daily 任务 (实际 slot 数 ${w60Slots})
 const w73 = W.WEEK_TASKS[72];
 const w73Slots = w73 && w73.days ? Object.values(w73.days).reduce((a,b) => a + Object.keys(b).length, 0) : 0;
 assert(w73Slots > 0, `v16: W73 (PSLE 笔试周) 应有 daily 任务 (实际 slot 数 ${w73Slots})`);
+
+// ===== 11. v17.1: Daily Streak state + helpers + 3 streak 装备 =====
+const def2 = W.getDefaultState();
+assert(def2.dailyStreak && def2.dailyStreak.days === 0, 'v17: 默认 dailyStreak.days = 0');
+assert(def2.dailyStreak.bestEver === 0, 'v17: 默认 dailyStreak.bestEver = 0');
+assert(def2.dailyStreak.freezeTokens === 0, 'v17: 默认 dailyStreak.freezeTokens = 0');
+assert(typeof W.bumpDailyStreak === 'function', 'v17: bumpDailyStreak 函数存在');
+assert(typeof W.streakSeverity === 'function', 'v17: streakSeverity 函数存在');
+// streak 装备
+const streakEqs = C.equipment.filter(e => e.condition === 'streak-days');
+assert(streakEqs.length === 3, `v17: 有 3 件 streak 装备 (实际 ${streakEqs.length})`);
+const streakValues = streakEqs.map(e => e.value).sort((a, b) => a - b);
+assert(JSON.stringify(streakValues) === '[7,30,100]', `v17: streak 装备阈值 [7,30,100] (实际 ${JSON.stringify(streakValues)})`);
+// streak severity 边界
+assert(W.streakSeverity(1) === 0, 'v17: 1 天 severity = 0');
+assert(W.streakSeverity(7) === 2, 'v17: 7 天 severity = 2');
+assert(W.streakSeverity(100) === 4, 'v17: 100 天 severity = 4');
+// bumpDailyStreak 测试 (in-memory, 测后还原)
+const ts = W.getDefaultState();
+const r1 = W.bumpDailyStreak(ts);
+assert(r1.added === true && r1.days === 1, 'v17: 第 1 次 bump 加到 days=1');
+const r2 = W.bumpDailyStreak(ts);
+assert(r2.added === false, 'v17: 同日第 2 次 bump no-op');
+
+// ===== 12. v17.1: WEEKLY_WOW_FACTS 73 条 =====
+assert(Array.isArray(W.WEEKLY_WOW_FACTS) && W.WEEKLY_WOW_FACTS.length === 73,
+  `v17: WEEKLY_WOW_FACTS 长度 73 (实际 ${W.WEEKLY_WOW_FACTS && W.WEEKLY_WOW_FACTS.length})`);
+// 每条都有 hook 和 body
+const wowMissing = W.WEEKLY_WOW_FACTS.filter(w => !w.hook || !w.body || !w.week);
+assert(wowMissing.length === 0, `v17: 所有 wow 事实都有 week/hook/body (缺 ${wowMissing.length} 条)`);
+// week 1-73 都覆盖
+const wowWeeks = new Set(W.WEEKLY_WOW_FACTS.map(w => w.week));
+const missingWowWeeks = [];
+for (let i = 1; i <= 73; i++) if (!wowWeeks.has(i)) missingWowWeeks.push(i);
+assert(missingWowWeeks.length === 0, `v17: 73 周 wow 全覆盖 (缺周: ${JSON.stringify(missingWowWeeks)})`);
+assert(typeof W.getWeeklyWowFact === 'function', 'v17: getWeeklyWowFact 函数存在');
+const w1 = W.getWeeklyWowFact(1);
+assert(w1 && w1.week === 1, 'v17: getWeeklyWowFact(1) 返回 week=1');
 
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');

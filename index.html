@@ -1902,6 +1902,117 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   border-radius: 0 0 14px 14px;
 }
 
+/* ===== v17.1: Daily Streak block ===== */
+.streak-block {
+  margin: 8px auto 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 3px solid var(--color-text);
+  text-align: center;
+  font-family: 'Fredoka', sans-serif;
+  box-shadow: 0 3px 0 var(--color-text);
+  max-width: 240px;
+}
+.streak-block .streak-num {
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+.streak-block .streak-label {
+  font-size: 12px;
+  color: var(--color-text);
+  margin-top: 2px;
+}
+.streak-block .streak-meta {
+  font-size: 11px;
+  color: var(--color-text-light);
+  margin-top: 4px;
+}
+.streak-block .streak-best { font-size: 12px; color: var(--color-text-light); margin-top: 2px; }
+.streak-block .streak-freeze { background: white; border: 1.5px solid var(--color-text); padding: 1px 6px; border-radius: 8px; margin-left: 6px; }
+.streak-block.streak-warm { background: #FFF8E7; }
+.streak-block.streak-active { background: linear-gradient(135deg, #FFE066 0%, #FFB347 100%); animation: streak-pulse 2s ease-in-out infinite; }
+.streak-block.streak-fire { background: linear-gradient(135deg, #FF6B6B 0%, #FF9F45 100%); color: white; animation: streak-pulse 1.5s ease-in-out infinite; }
+.streak-block.streak-fire .streak-label, .streak-block.streak-fire .streak-meta { color: rgba(255,255,255,0.95); }
+.streak-block.streak-gold {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B6B 100%);
+  color: var(--color-text);
+  animation: streak-pulse 1.2s ease-in-out infinite;
+  box-shadow: 0 0 16px 4px rgba(255, 215, 0, 0.6), 0 4px 0 var(--color-text);
+}
+.streak-block.streak-ashes { background: #E8E8E8; opacity: 0.85; }
+.streak-block.streak-ashes .streak-num, .streak-block.streak-ashes .streak-label { color: #888; }
+@keyframes streak-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+/* Streak 断点 modal — 全屏强迫确认 */
+.streak-broken-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 48, 71, 0.92);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.streak-broken-modal.show { display: flex; animation: fadeInOverlay 0.3s ease; }
+.streak-broken-inner {
+  background: white;
+  border: 4px solid var(--color-text);
+  border-radius: var(--radius-bubble);
+  padding: 28px 32px;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: var(--shadow-pop);
+}
+.streak-broken-icon { font-size: 72px; margin-bottom: 8px; }
+.streak-broken-headline { font-size: 22px; font-weight: 900; color: var(--color-danger); margin-bottom: 10px; }
+.streak-broken-sub { font-size: 14px; color: var(--color-text); line-height: 1.6; margin-bottom: 14px; }
+.streak-broken-penalty { font-size: 13px; color: var(--color-warn); margin-bottom: 14px; padding: 6px; background: #FFF8E7; border-radius: 6px; }
+.streak-broken-inner button { width: 100%; padding: 10px; }
+
+/* ===== v17.1: 每日 Wow 事实卡 ===== */
+.wow-card {
+  background: linear-gradient(135deg, #FFE6F0 0%, #FFF8E7 50%, #E0F4F1 100%);
+  border-left: 6px solid #A788E0;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.wow-card:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--color-text); }
+.wow-card .wow-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.wow-card .wow-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #A788E0;
+  background: white;
+  padding: 2px 8px;
+  border-radius: 8px;
+  border: 1.5px solid #A788E0;
+}
+.wow-card .wow-toggle { font-size: 11px; color: var(--color-text-light); }
+.wow-card .wow-hook {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+.wow-card .wow-body {
+  font-size: 13px;
+  color: var(--color-text);
+  line-height: 1.7;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 2px dashed var(--color-text-light);
+}
+
 /* ===== v16: 6 条铁律 mini-card ===== */
 .iron-rule-card {
   background: linear-gradient(135deg, #FFFAEC 0%, #FFE6F0 100%);
@@ -2123,6 +2234,11 @@ body.shake { animation: screen-shake 0.45s ease-out; }
         <div class="character-name" id="characterName">萌新佑子</div>
         <div class="character-title-big" id="characterTitle">刚入门的勇士</div>
         <span class="level-badge">LV <span id="charLevelDisplay">1</span></span>
+        <!-- v17.1: Daily Streak block -->
+        <div class="streak-block streak-warm" id="streakBlock">
+          <div class="streak-num">🔥 0</div>
+          <div class="streak-label">今天打 1 个项目, 点燃火焰</div>
+        </div>
         <!-- 大字总分 -->
         <div class="big-score-block">
           <div class="big-score-num" id="bigScoreNum">0</div>
@@ -2169,6 +2285,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
         <div class="master-tip-card" id="masterTipCard"></div>
       </div>
     </div>
+
+    <!-- v17.1: 每日 Wow 事实卡(可点击展开) -->
+    <div class="card wow-card" id="wowCard" style="display:none"></div>
 
     <!-- v16: 6 条铁律 mini-card,每天换 1 条 -->
     <div class="card iron-rule-card" id="ironRuleCard">
@@ -2452,6 +2571,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 <!-- v16.3: 听力资源 modal (动态填充) -->
 <div id="listeningModal" class="vocab-modal" onclick="if(event.target===this) closeListeningModal()"></div>
+
+<!-- v17.1: Streak 断点 modal — 不能背景点击关闭, 必须按按钮 -->
+<div id="streakBrokenModal" class="streak-broken-modal"></div>
 
 <!-- ===== Firebase 同步配置(填了 firebaseConfig 才启用云同步,留空则纯本地)===== -->
 <script>

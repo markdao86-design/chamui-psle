@@ -100,6 +100,92 @@ function renderHeader() {
   document.getElementById('totalPoints').textContent = state.totalPoints;
   document.getElementById('currentLevel').textContent = CHAMUI.getLevelInfo(state.totalPoints).lv;
   document.getElementById('currentWeek').textContent = state.currentWeek;
+  renderStreakBlock();  // v17.1
+}
+
+// v17.1: Daily Streak 显示块(主页角色卡顶部)
+function renderStreakBlock() {
+  const block = document.getElementById('streakBlock');
+  if (!block) return;
+  const s = state.dailyStreak || { days: 0, bestEver: 0, freezeTokens: 0 };
+  const inAshes = window.isStreakInAshes && window.isStreakInAshes(state);
+  const days = s.days || 0;
+  const best = s.bestEver || 0;
+  const freezes = s.freezeTokens || 0;
+  if (inAshes) {
+    block.className = 'streak-block streak-ashes';
+    block.innerHTML = `
+      <div class="streak-num">🪦</div>
+      <div class="streak-label">火焰熄了 — 今天打 1 个项目重新点燃</div>
+      ${best > 0 ? `<div class="streak-best">📜 历史最高 ${best} 天</div>` : ''}
+    `;
+    return;
+  }
+  block.className = 'streak-block ' + (days >= 100 ? 'streak-gold' : days >= 30 ? 'streak-fire' : days >= 7 ? 'streak-active' : 'streak-warm');
+  block.innerHTML = `
+    <div class="streak-num">🔥 ${days}</div>
+    <div class="streak-label">${days === 0 ? '今天打 1 个项目, 点燃火焰' : '连续打卡天数 — 别断!'}</div>
+    ${(best > days || freezes > 0) ? `
+      <div class="streak-meta">
+        ${best > days ? `📜 历史最高 ${best} 天` : ''}
+        ${freezes > 0 ? `<span class="streak-freeze">🧊 ×${freezes}</span>` : ''}
+      </div>
+    ` : ''}
+  `;
+}
+
+// v17.1: Streak 断点 modal — 损失厌恶强化
+function _renderStreakBrokenModal(prevDays) {
+  const sev = window.streakSeverity ? window.streakSeverity(prevDays) : 0;
+  const modal = document.getElementById('streakBrokenModal');
+  if (!modal) return;
+  const headlines = ['🔥 火苗灭了', '💔 连击断了', '💔💔 你失去了 X 天连击', '💔💔💔 你曾经 X 天连续打卡!现在重头', '🪦 X 天的旅程碎了'];
+  const headline = headlines[sev].replace('X', prevDays);
+  const subtext = [
+    '明天再点起来吧',
+    `${prevDays} 天的火焰断了, 重新开始`,
+    `你曾经连续 ${prevDays} 天每天打卡, 今天断了 — 历史最高记录已存档`,
+    `${prevDays} 天的努力 — 别灰心, 再 7 天就能重获 streak 装备`,
+    `${prevDays} 天的连击碎了 — 还要扣 50 分(损失成本). 重新开始, 你能再做到`
+  ][sev];
+  // 严重程度决定关闭按钮延迟
+  const closeDelay = [0, 0, 0, 3, 5][sev];
+  const penaltyPoints = sev === 4 ? 50 : 0;
+  if (penaltyPoints > 0) {
+    state.totalPoints = Math.max(0, state.totalPoints - penaltyPoints);
+    state.logs.push({ reason: `streak 断点惩罚(${prevDays} 天)`, points: -penaltyPoints, week: state.currentWeek, timestamp: Date.now() });
+  }
+  modal.innerHTML = `
+    <div class="streak-broken-inner">
+      <div class="streak-broken-icon">${sev >= 3 ? '🪦' : '💔'}</div>
+      <div class="streak-broken-headline">${headline}</div>
+      <div class="streak-broken-sub">${subtext}</div>
+      ${penaltyPoints > 0 ? `<div class="streak-broken-penalty">⚠️ 当前扣 ${penaltyPoints} 分</div>` : ''}
+      <button id="streakBrokenCloseBtn" class="btn btn-warn" disabled>${closeDelay > 0 ? `等 ${closeDelay} 秒...` : '我知道了, 重新开始'}</button>
+    </div>
+  `;
+  modal.classList.add('show');
+  // 强制延迟关闭按钮
+  const btn = document.getElementById('streakBrokenCloseBtn');
+  if (closeDelay > 0) {
+    let remaining = closeDelay;
+    const timer = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(timer);
+        btn.disabled = false;
+        btn.textContent = '我知道了, 重新开始';
+      } else {
+        btn.textContent = `等 ${remaining} 秒...`;
+      }
+    }, 1000);
+  } else {
+    btn.disabled = false;
+  }
+  btn.onclick = () => {
+    modal.classList.remove('show');
+    renderAll();
+  };
 }
 
 // ============ Dashboard ============
@@ -149,9 +235,36 @@ function renderDashboard() {
   document.getElementById('streakWeeks').textContent = state.streakBonusCount;
 
   renderIronRule();
+  renderWowCard();  // v17.1
   renderWeeklyCoach();
   renderMasterTipCard();
   renderEquipment();
+}
+
+// v17.1: 每日 Wow 事实卡(主页)
+function renderWowCard() {
+  const card = document.getElementById('wowCard');
+  if (!card || !window.getWeeklyWowFact) return;
+  const wow = window.getWeeklyWowFact(state.currentWeek);
+  if (!wow) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = '';
+  // 默认收起,只显示 hook;点击展开 body
+  const expanded = card.dataset.expanded === '1';
+  card.innerHTML = `
+    <div class="wow-header">
+      <span class="wow-tag">🤯 今日 Wow · W${wow.week}</span>
+      <span class="wow-toggle">${expanded ? '收起 ▲' : '展开 ▼'}</span>
+    </div>
+    <div class="wow-hook">${escapeHtml(wow.hook)}</div>
+    ${expanded ? `<div class="wow-body">${escapeHtml(wow.body)}</div>` : ''}
+  `;
+  card.onclick = () => {
+    card.dataset.expanded = expanded ? '0' : '1';
+    renderWowCard();
+  };
 }
 
 // ============ v16: 6 条铁律(每天换一条) ============
@@ -718,6 +831,12 @@ function toggleDailyCheck(week, day, slot, evt) {
 
   setDailyCheck(state, week, day, slot, !wasChecked);
   recalcTotalPoints(state);
+
+  // v17.1: 打勾(非取消)时累加 daily streak
+  let streakBump = null;
+  if (!wasChecked && window.bumpDailyStreak) {
+    streakBump = window.bumpDailyStreak(state);
+  }
   saveState(state);
 
   const newDayComplete = isDayComplete(state, week, day);
@@ -729,6 +848,21 @@ function toggleDailyCheck(week, day, slot, evt) {
     spawnFloatPoints(`+${pts}`, evt, pts >= 3);
     // 大分数块脉动
     pulseScoreBlock();
+    // v17.1: streak 庆祝 (新加 streak 天才显示, 不是每个 slot 都弹)
+    if (streakBump && streakBump.added) {
+      if (streakBump.brokenInfo && !streakBump.brokenInfo.usedFreeze) {
+        // 之前有 streak 但断了 — 必须显示损失感
+        _renderStreakBrokenModal(streakBump.brokenInfo.prevDays);
+      } else if (streakBump.brokenInfo && streakBump.brokenInfo.usedFreeze) {
+        showToast(`🧊 用了 1 张保护券,救回了 ${streakBump.brokenInfo.prevDays} 天 streak!`, 'happy');
+      } else if (streakBump.isMilestone) {
+        showToast(`🔥🔥 第 ${streakBump.isMilestone} 天里程碑!${streakBump.gainedFreeze ? '+ 1 张 🧊 保护券' : ''}`, 'happy');
+        spawnConfetti(window.innerWidth / 2, window.innerHeight / 2, 50);
+      } else {
+        // 普通累计
+        showToast(`🔥 连续 ${streakBump.days} 天 — 不能断!`, 'happy');
+      }
+    }
     // 当日 combo 触发(撒花 + 震屏 + 大数字)
     if (newDayComplete && !oldDayComplete) {
       showToast(`🔥 当日全勾!combo +${DAY_COMBO_POINTS}`, 'success');
@@ -1899,6 +2033,8 @@ window.openListeningModal = openListeningModal;
 window.closeListeningModal = closeListeningModal;
 window.unlockListeningToday = unlockListeningToday;
 window.toggleEquipment = toggleEquipment;
+// v17.1
+window.renderStreakBlock = renderStreakBlock;
 window.requireAdminAuth = requireAdminAuth;
 window.resetAdminPassword = resetAdminPassword;
 window.clearAdminAuth = clearAdminAuth;

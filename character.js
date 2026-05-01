@@ -76,7 +76,11 @@ const CHAMUI = {
     { id: 'shield',   icon: '🛡️', name: '盾牌',      condition: 'streak',    value: 1,    hint: '4 周无问题反馈' },
     { id: 'cape',     icon: '🦸', name: '披风',       condition: 'monthly3',  value: 3,    hint: '月小测连续 3 次达标' },
     { id: 'fire',     icon: '🔥', name: '火焰特效',   condition: 'milestone', value: 'any-key', hint: '任一大节点达标' },
-    { id: 'monthking',icon: '🎯', name: '月度王',     condition: 'monthly3',  value: 6,    hint: '累积 6 次月度小测达标' }
+    { id: 'monthking',icon: '🎯', name: '月度王',     condition: 'monthly3',  value: 6,    hint: '累积 6 次月度小测达标' },
+    // v17.1: Daily Streak 3 件 (Kahneman 损失厌恶 — 断了会暂时变灰)
+    { id: 'streak7',  icon: '🛡️', name: '7 天勇者',  condition: 'streak-days', value: 7,   hint: '连续打卡 7 天解锁' },
+    { id: 'streak30', icon: '🔥', name: '30 天战士', condition: 'streak-days', value: 30,  hint: '连续打卡 30 天解锁(火焰光环)' },
+    { id: 'streak100',icon: '👑', name: '百日王',    condition: 'streak-days', value: 100, hint: '连续打卡 100 天解锁(永久金光特效)' }
   ],
 
   // 根据等级获取角色信息
@@ -121,6 +125,9 @@ const CHAMUI = {
         return state.streakBonusCount >= eq.value;
       case 'monthly3':
         return state.monthlyTestPass >= eq.value;
+      case 'streak-days':
+        // v17.1: daily streak >= value 解锁;断点 24h 灰烬期内显示但 disabled
+        return !!(state.dailyStreak && (state.dailyStreak.bestEver || 0) >= eq.value);
       default:
         return false;
     }

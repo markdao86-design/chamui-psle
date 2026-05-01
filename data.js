@@ -339,6 +339,188 @@ function resetListeningToday(state) {
   state.listeningUsage[k] = { seconds: 0 };
 }
 
+// ============= v17.1: Daily Streak — Kahneman 损失厌恶 =============
+// streak 阶梯:1-3 (轻);4-6 (轻+);7-29 (高);30-99 (高高);100+ (高高高)
+function streakTodayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function streakDateAdd(dateStr, days) {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// 给 streak 严重等级 0-4(对应惩罚强度 toast/小 modal/全屏/全屏延迟/全屏倒计时)
+function streakSeverity(days) {
+  if (days <= 3) return 0;
+  if (days <= 6) return 1;
+  if (days <= 29) return 2;
+  if (days <= 99) return 3;
+  return 4;
+}
+
+// 调用时机:孩子今天打了 ≥1 个 slot. 如果今天已计过则 no-op.
+// 返回 { added: bool, days: N, isMilestone: 7|14|30|50|100|null, gainedFreeze: bool, brokenInfo: null|{prevDays} }
+function bumpDailyStreak(state) {
+  if (!state.dailyStreak) {
+    state.dailyStreak = { days: 0, lastDate: null, bestEver: 0, freezeTokens: 0, brokenAt: null };
+  }
+  const s = state.dailyStreak;
+  const today = streakTodayKey();
+  if (s.lastDate === today) {
+    return { added: false, days: s.days, isMilestone: null, gainedFreeze: false, brokenInfo: null };
+  }
+  // 算"昨天"
+  const yesterday = streakDateAdd(today, -1);
+  let brokenInfo = null;
+  if (!s.lastDate) {
+    // 全新用户: 第一天打卡
+    s.days = 1;
+  } else if (s.lastDate === yesterday) {
+    // 连续: 累加
+    s.days += 1;
+  } else {
+    // 断了 — 检查保护券
+    if ((s.freezeTokens || 0) > 0) {
+      s.freezeTokens -= 1;
+      s.days += 1;  // 用券保住 streak
+      brokenInfo = { usedFreeze: true, prevDays: s.days - 1 };
+    } else {
+      // 真断了: 记录历史最高,清零重新算
+      const prev = s.days;
+      if (prev > (s.bestEver || 0)) s.bestEver = prev;
+      s.brokenAt = Date.now();
+      s.days = 1;
+      brokenInfo = { usedFreeze: false, prevDays: prev };
+    }
+  }
+  s.lastDate = today;
+  if (s.days > (s.bestEver || 0)) s.bestEver = s.days;
+  // 里程碑: 7/14/30/50/100 给奖励
+  let isMilestone = null;
+  let gainedFreeze = false;
+  if (s.days === 7) { isMilestone = 7; s.freezeTokens = Math.min(3, (s.freezeTokens || 0) + 1); gainedFreeze = true; }
+  else if (s.days === 14) { isMilestone = 14; }
+  else if (s.days === 30) { isMilestone = 30; s.freezeTokens = Math.min(3, (s.freezeTokens || 0) + 1); gainedFreeze = true; }
+  else if (s.days === 50) { isMilestone = 50; }
+  else if (s.days === 100) { isMilestone = 100; }
+  // 之后每 14 天 +1 freeze (上限 3)
+  if (s.days >= 14 && s.days % 14 === 0 && !isMilestone) {
+    if ((s.freezeTokens || 0) < 3) { s.freezeTokens += 1; gainedFreeze = true; }
+  }
+  return { added: true, days: s.days, isMilestone, gainedFreeze, brokenInfo };
+}
+
+// 检查"是否当前正在 streak 断点 24h 灰烬期"
+function isStreakInAshes(state) {
+  const s = state.dailyStreak;
+  if (!s || !s.brokenAt) return false;
+  return (Date.now() - s.brokenAt) < 24 * 60 * 60 * 1000;
+}
+
+// ============= v17.1: 73 周每日 Wow 事实 =============
+// 每周 1 条颠覆认知 + 与本周 PSLE 主题挂钩的事实
+// 格式: { week, hook (短句钩子), body (80-150 字解释) }
+// 主页卡显示 hook;点击展开 body
+const WEEKLY_WOW_FACTS = [
+  // ===== Phase 1 P3-P4 (W1-W14) =====
+  { week:1, hook:'🦋 蝴蝶用脚尝味道, 不是用嘴!', body:'蝴蝶的味觉感受器在前足上 — 它停在花上"踩"几下, 就知道这朵花的花蜜值不值得喝。这就是为什么 PSLE P3 Diversity 章节里, 动物分类时要看"感官在身体哪部分"。' },
+  { week:2, hook:'🌱 种子在土里能"听"到水', body:'种子萌发只需要 3 件事: 水 + 空气 + 温度 — 不需要阳光! 种子里的胚胎能感知周围水分子, 一旦水到位就开始膨胀破壳。这就是为什么干种子能存几十年, 一遇水就活。' },
+  { week:3, hook:'🐞 蜻蜓飞行时眼睛能看到 360°', body:'蜻蜓的复眼有 30000 个小眼, 能 360° 全方位捕捉移动物体。这就是 P3 Animal Life Cycle 章节强调"成虫的感官 vs 幼虫"的差异 — 完全变态变出全新生物。' },
+  { week:4, hook:'🌳 一棵大树 50% 的重量是空气', body:'树木的木质部主要是碳, 而碳来自空气中的 CO₂(光合作用!) — 不是来自土壤。所以你"看"到的树, 一半是从空中"长出来"的。P3 Plant Parts 章节核心。' },
+  { week:5, hook:'🌳 30 米高的树没有泵, 怎么把水提到顶?', body:'靠叶子的"蒸腾"产生 suction(吸力)— 水在 xylem 里像一根连续的"水链"被叶子拽上去, 每天能输送 200 升。比工业水泵省能源 1000 倍。这是 P4 Plant Transport 难章核心。' },
+  { week:6, hook:'🥀 植物为什么会"喝醉"?', body:'砍倒的木头放置时, xylem 里残留的水会被微生物发酵成酒精 — 古人就是这么发现"酒"的! Plant Transport 难章第 2 周, 注意 xylem 不只是"水管", 还是植物的"血管系统"。' },
+  { week:7, hook:'🍔 你的胃酸 pH=1, 跟电池液一样腐蚀', body:'pH=1 的胃酸能溶解金属, 但胃壁每 3-4 天就换一层新细胞, 所以不被自己消化掉。 P4 Digestive 难章: 消化路径口→食道→胃→小肠→大肠, 每个器官都靠这种"自我修复"工作。' },
+  { week:8, hook:'🧠 小肠是身体里"第二个大脑"', body:'小肠有 1 亿个神经元, 比脊髓还多 — 它能独立"判断"该分泌什么酶。这就是 PSLE 高频题"为什么小肠这么长(6 米)?" — 因为表面积大才能吸收完所有营养。' },
+  { week:9, hook:'⚖️ 1 吨铁 vs 1 吨棉花, 哪个重?', body:'一样重! 但棉花体积是铁的 1000 倍。这就是 P4 Matter 章节区分 mass(质量, 不变)和 volume(体积, 可变)— PSLE 高频陷阱题: "重量"用 balance 称, "体积"用 measuring cylinder 量。' },
+  { week:10, hook:'🌑 月亮上的影子可以保留几亿年', body:'地球上的影子风一吹就变, 但月球没大气没风 — 阿波罗 11 号宇航员 1969 年踩的脚印, 今天还在! P4 Light & Shadow 难章: 影子需要 光源 + 不透明物 + 屏 — 月球都满足。' },
+  { week:11, hook:'🌅 为什么夕阳红, 中午太阳白?', body:'阳光经过大气层会"散射" — 蓝光散得多, 红光散得少。中午太阳直射穿过的大气薄, 各种光都到; 夕阳斜射穿过厚大气, 只剩红光能穿透。 PSLE Light 高频难题。' },
+  { week:12, hook:'🥶 冬天的铁门比木门"冷", 其实温度一样', body:'金属导热快 — 你手指的热被铁门快速抢走, 大脑感觉"凉"。木门导热慢, 你手的热散不出去, 感觉"温"。P4 Heat 难章: 温度 vs 热感是两回事! PSLE 高频反直觉题。' },
+  { week:13, hook:'💨 100°C 蒸汽烫伤比 100°C 水严重 100 倍', body:'蒸汽变回水时释放大量"汽化潜热"(2260 J/g) — 100°C 蒸汽接触皮肤先凝结再降温, 比 100°C 水多放 6 倍热。这就是 P4 Heat 章节区分 "热的形式" vs "温度"的关键。' },
+  { week:14, hook:'🧲 磁铁切两半, 不是一个 N + 一个 S, 而是两个完整磁铁', body:'磁铁里每个原子都是小磁铁, 切开只是把大集合切成两个小集合 — 每块仍然有 N 和 S 极。 P4 Magnets + W14 综合: PSLE 必考"为什么磁铁不能分解为单极"。' },
+
+  // ===== Phase 2 P5 (W15-W26) =====
+  { week:15, hook:'🌸 花是植物的"性器官"', body:'花的真正功能是繁殖 — stamen(雄)产生花粉, pistil(雌)接受花粉。我们觉得花漂亮, 其实是植物为了吸引昆虫帮它传粉的"广告". P5 Reproduction 章节核心。' },
+  { week:16, hook:'🦠 你身上的细菌细胞 比 你自己的细胞还多', body:'人体约 30 万亿细胞, 但身上微生物有 39 万亿个! 你不是"一个人", 是"一个生态系统"。 P5 Cells 章节: 细胞结构 + 食物链 — 你也是某条食物链的一环。' },
+  { week:17, hook:'💧 你今天喝的水, 恐龙也喝过', body:'水循环 40 亿年没新增过水分子, 全靠 evaporation→condensation→precipitation 循环。你早上那杯水里, 真的有恐龙喝过的同样水分子。 P5 Water + Air 章节。' },
+  { week:18, hook:'⚡ 你身上每秒 100 万个电信号', body:'每个神经元每秒触发几百次电脉冲, 你的大脑就是个"生物电脑"。 P5 Forms of Energy: 电能不只是发电厂的, 你身上时刻都在用电。' },
+  { week:19, hook:'🔋 一节 AA 电池, 能让人体亮 1 灯泡 5 分钟', body:'人体新陈代谢每天产生 2000 大卡 ≈ 2.3 kWh — 远超一节电池(0.003 kWh)。 但你 5 分钟产的能量已超过 1 节电池, 这就是 P5 Energy Conversions: 化学→热→机械→电的转换。' },
+  { week:20, hook:'⚡ 闪电的温度比太阳表面还高', body:'闪电核心 30000°C, 太阳表面才 5500°C。但闪电太"短"(0.001 秒)所以不会煮熟空气。 P5 Electricity 难章: 电流 + 电压 + 电阻关系, PSLE 必考。' },
+  { week:21, hook:'💡 串联电路 vs 并联电路: 家里用哪种?', body:'家里全是并联! 因为串联一个灯坏全部黑, 而并联一个坏其他正常。这就是为什么圣诞老灯串(串联)一个坏全黑, 而家里厨房客厅独立。 P5 Series & Parallel 难章。' },
+  { week:22, hook:'🔄 综合复习: 万物皆"循环"', body:'P5 学了水循环、物质循环、生命循环 — 它们的共通点是: 物质守恒 + 能量驱动循环。 W22-W23 综合复习把这些线索串起来 — PSLE OE 题就考你能不能"看到 systems"。' },
+  { week:23, hook:'🌞 阳光是地球所有能量的源头', body:'吃食物 = 间接吃太阳能(植物光合 → 你)。烧煤 = 烧古生物吸收的远古太阳能。风/水循环 = 太阳加热不均匀驱动的。 P5 Energy 综合复习: 一切能量归一。' },
+  { week:24, hook:'📝 综合卷模拟 — 每错 1 题节省考试 5 分', body:'考前 1 个错题深度分析 = 实际 PSLE 多 5 分。研究: 错题分析的学生平均比"刷新题"的高 1 个 AL。 W24 综合卷模拟 + 弱项回填的科学依据。' },
+  { week:25, hook:'🖼️ Visual Text 题: 75% 信息在图里, 不在题干', body:'PSLE Visual Text(海报/广告/通知)— 多数考生只看题干跳过图。但答案隐藏在: ① 大字标题 ② 数字 ③ 小图暗示 ④ 联系方式。 W25 整体串讲 + Visual Text 启动。' },
+  { week:26, hook:'🎯 W26 总模考 — 不是终点, 是新起点', body:'第一阶段完成 = P3-P5 知识地图全亮。从 W27 开始进入"系统提升期", 引入 P6 + 真题前移。 W26 总模考的目标不是分数, 是发现"哪些章节我以为会其实没真懂"。' },
+
+  // ===== Phase 2 W27-W52 =====
+  { week:27, hook:'🚀 第二阶段启动 — P6 是"挑战", 不是"难"', body:'P6 内容比 P5 难 30%, 但你 P5 已经熟了 — 所以感觉是"挑战"而不是"听不懂"。 W27 第二阶段开始, 重点是把 P6 新概念跟 P3-P5 已学过的串起来。' },
+  { week:28, hook:'🌍 PSLE Science 8 大高频章占考试 70%', body:'Plant Transport / Digestive / Light / Heat / Reproduction / Cells / Energy / Electricity — 这 8 章占 PSLE Science 70% 题量。复习抓这 8 章 = 抓 70% 分。' },
+  { week:29, hook:'📚 阅读速度: 240 wpm 是 PSLE 临界', body:'240 词/分钟是 PSLE Comprehension 不慌的速度。低于这个 → 题做不完。每天 5 min 计时阅读练 = 一个月内提到 240 wpm。' },
+  { week:30, hook:'🔁 Vocabulary 5 完成 — 200 高频词到手', body:'PSLE 高频词 200 个 W30 完成 100, W52 完成 200。研究: 知道这 200 个词 = Comprehension 多读懂 80% 内容。 这是 v14 加的关键资产。' },
+  { week:31, hook:'🌊 真题里的"海洋"主题占 15%', body:'PSLE Science 真题里, 涉及水/海洋/生态的题占 15%。新加坡是岛国, 出题特别偏爱海洋生态系统。 W31 起特别注意 ecosystem / food chain / adaptation。' },
+  { week:32, hook:'🐢 适应(Adaptation)的本质是"长期"', body:'乌龟的硬壳、骆驼的驼峰、北极熊的白毛 — 都是百万年自然选择的结果, 不是"出生后选择的"。 PSLE 易混: adaptation(物种变化)vs response(个体反应)。' },
+  { week:33, hook:'🪴 同一片叶子能既"产氧"又"耗氧"', body:'白天叶子光合 → 产氧, 但同时也呼吸 → 耗氧。净结果是产 > 耗。晚上没光合, 只剩呼吸 → 净耗氧。 PSLE 高频陷阱: 别说"植物白天产氧晚上产 CO₂"— 太简化。' },
+  { week:34, hook:'🌡️ 热膨胀让铁桥每年伸长 30 cm', body:'伦敦塔桥每天热胀冷缩, 全年累计伸缩 30 cm — 所以桥都有"伸缩缝"。 PSLE Heat: 温度变化 → 体积变化, 这是工程师每天对抗的物理。' },
+  { week:35, hook:'⚡ Series Circuits 在烟雾报警里救命', body:'家里所有烟雾报警器是串联的 — 任何一个房间冒烟, 全屋报警。这就是 PSLE Electricity 高级题: "为什么有的设备故意用串联?"' },
+  { week:36, hook:'🌐 Energy Conversions 链不是直线', body:'灯泡: 电 → 光(useful)+ 热(wasted, 95%!)。LED 不是"省电", 是少浪费成热。 PSLE 实验题专问 "useful energy %"。' },
+  { week:37, hook:'🦠 微生物分解器 = 生态系统的"清道夫"', body:'没有 decomposers, 整个地球会被尸体和落叶填满! 它们把死物质变回 CO₂ 让植物再用。 PSLE 食物链题 95% 漏 decomposer — 别忘了它。' },
+  { week:38, hook:'🧬 P6 Adaptations: 仙人掌没"叶子", 它的"刺"就是叶', body:'仙人掌的"刺"是退化的叶 — 减少蒸腾。它的"绿色枝干"才是光合主力。 PSLE 适应题最爱考: "为什么仙人掌长这样?"' },
+  { week:39, hook:'🔬 实验题 4 要素少 1 个扣 1 分', body:'PSLE 实验题必含: ① Independent var ② Dependent var ③ Controlled vars ④ Hypothesis. 少哪个扣哪个 — 不是 partial credit, 是直接 0。' },
+  { week:40, hook:'⏱️ PSLE 数学时间分配: 7-8 道大题 ≈ 5 min/题', body:'PSLE Math Paper 2 一共 1h45min, 17 道大题 → 平均 6 min/题。最后 4 道难题留 30 min, 检查 5 min。 W40 真题前移期开始, 严格按时间。' },
+  { week:41, hook:'📊 Bar graph 题: PSLE 必看 axis label', body:'多数学生跳过 y 轴单位 — 然后答出 "10 个" 而不是 "10 千克"。 PSLE 数据题 30% 错在没读单位。' },
+  { week:42, hook:'🎯 P6 Adaptations + 月模考 3 — 关键节点', body:'W42 是第二阶段中点, P6 难章全部过完。这次模考的成绩 = PSLE 预估的 70% 准确度。 重点不是分数, 是"哪些章节再也不能丢分"。' },
+  { week:43, hook:'📖 真题前移: 越早做越好', body:'考前 6 个月开始做真题 vs 考前 1 个月: 前者 PSLE 平均高 1 个 AL。 W43 进入真题密集期, 不要"留到最后".' },
+  { week:44, hook:'🇸🇬 SG 真题里的"地理梗"占 10%', body:'PSLE 出题特爱新加坡场景 — 圣淘沙、组屋、CBD、武吉知马自然保护区。 听到"Bukit Timah" 就知道考森林生态。 SG 本地知识 = 隐藏分。' },
+  { week:45, hook:'✏️ Cloze 一空一词: 70% 是介词或冠词', body:'PSLE Cloze 最难的题 = 介词搭配(look at/depend on)和冠词(a/an/the)。其它词类反而好猜。 W45 真题刷题专攻这 2 类。' },
+  { week:46, hook:'📦 Practice Package 6 = 模考"实弹演习"', body:'Package 6 是 SG 老师圈认证的 PSLE 最接近真题的练习包。 做完一套 = 模拟一次完整 PSLE 体验。' },
+  { week:47, hook:'📝 PSLE 作文 30 分: 1 句"金句"加 5 分', body:'PSLE Composition 评分: 内容 + 语言 + 结构. 一个高级表达(crestfallen / ecstatic / dawned upon me)单独可以加 2-5 分. 每篇作文背 3 句金句 = 持续高分。' },
+  { week:48, hook:'🌊 听力陷阱 #1: 转折词后才是答案', body:'PSLE Listening 90% 答案在 "but / however / although" 后面。 听到这 3 个词立刻竖耳朵 — 题目要问的是后半句, 不是前半句。' },
+  { week:49, hook:'📐 数学 Heuristics 4 大法', body:'Model Drawing(线段图)/ Make a Table / Work Backwards / Show ALL Working — PSLE 数学 4 大解题套路。 不会用任一种 = 难题肯定丢分。' },
+  { week:50, hook:'🇨🇳 华文作文: 5 类开头任选其一', body:'描景 / 引句 / 反问 / 排比 / 对话 — PSLE 华文作文 90% 用这 5 种开头之一。背 5 个固定开头 = 永远写得出第一段。' },
+  { week:51, hook:'🔀 真题做错的题, 要重做 3 次才入脑', body:'1 次错 → 知道; 2 次重做 → 记住; 3 次重做(隔 1 周)→ 自动化。 W51 真题冲刺期, 错题本翻 3 次比刷新题强 5 倍。' },
+  { week:52, hook:'🎯 第二阶段总收官 — 模拟 PSLE 全套', body:'W52 完整模拟 4 科 = PSLE 真实预演。 之后 21 周冲刺, 重点是"已知弱项专项突破", 不再"广撒网"。' },
+
+  // ===== Phase 3 W53-W65 (刷题冲刺) =====
+  { week:53, hook:'🚀 三阶段启动 — 速度比知识重要', body:'到这阶段你已知道 95% PSLE 知识, 缺的是"考场速度"。 W53-W65 训练: 严格计时 + 题海熟练度 + 心理稳定。' },
+  { week:54, hook:'🧠 大脑在 18-22°C 时表现最好', body:'PSLE 考场室温通常 22°C — 太冷或太热都影响发挥。 W54 起每天在 22°C 下做题 1h 习惯环境。' },
+  { week:55, hook:'🎯 弱项攻关: 找你"经常错"的 3 类题', body:'统计你 W14-W52 错题分类 — 你最频繁错的 3 类(可能是 OE / 实验题 / 串联电路)。 W55 起 70% 时间花在这 3 类。' },
+  { week:56, hook:'📊 月度模考: 看分数变化趋势, 不是绝对分', body:'第 1 次月模考 75 → 第 2 次 78 → 第 3 次 82 = 趋势 OK。 别被某次"突然 70" 吓到 — 看 3 次平均。' },
+  { week:57, hook:'🌅 早晨记忆比晚上好 30%', body:'人脑早晨 6-9 点记忆效率最高(皮质醇唤醒)。 W57 起把"背单词 / 复习公式"挪到早晨, 晚上做题。' },
+  { week:58, hook:'⏰ 全科模考: 模拟 PSLE 心理疲劳', body:'PSLE 一天连考多科, 心理疲劳是主因之一。 W58 模拟"半天 4 科连续"训练抗疲劳, 不只是单科水平。' },
+  { week:59, hook:'📓 错题本电子版 + 纸版双备份', body:'电子版方便搜索, 纸版方便涂画 — 两个都要。 W59 起每天翻 2 个版本错题各 10 min。' },
+  { week:60, hook:'🎮 限时刷题 = 把考场恐惧变肌肉记忆', body:'前 30 次限时做题最痛苦, 之后大脑习惯 "看到题就开始答" 节奏。 W60 起每天 1 套真题严格计时, 1 个月后考场反应自动化。' },
+  { week:61, hook:'🌗 7 月暑期: 别一天学 8 小时', body:'连续学 4h+ 大脑记忆效率掉 50%。 W61 暑期最佳: 上午 3h + 下午 2h + 晚上 1h(分散记忆)。' },
+  { week:62, hook:'🧊 大脑也要"凉"下来', body:'每学 50 min 休息 10 min(番茄钟)— 大脑前额叶皮质恢复。 W62 起严格执行: 50/10 节奏比连续 2h 提分高 30%。' },
+  { week:63, hook:'📚 近 3 年真题 = 出题趋势风向标', body:'PSLE 出题官 5 年换一次组, 近 3 年题型最接近你 2027 年要考的。 W63 倒数 4 周, 把近 3 年精做一遍。' },
+  { week:64, hook:'⚖️ 第 4 次月模考 = PSLE 预测最准的一次', body:'W64 月模考的成绩, 跟你 8 个月后的 PSLE 实际成绩相关性 90%。 这次成绩 ≈ 你 PSLE 真实预估。' },
+  { week:65, hook:'🏆 三阶段最后完整模考 — 信心收官', body:'W65 (7.31 收题)是最后一次模考。 重点不是分数, 是"我考完不慌, 知道每科都能答"的信心建立。' },
+
+  // ===== Phase 4 W66-W73 (考前冲刺) =====
+  { week:66, hook:'🗣️ 8 月口试: PSLE Oral 占英语 15 分', body:'Oral = Reading Aloud(15 分) + Stimulus 看图说话(15 分). W66-W67 口试密集期, 录音回听是关键 — 听自己听 10 次发现的问题最多。' },
+  { week:67, hook:'🎤 8.12-13 PSLE 口试: 流畅 > 完美', body:'考官评分: 流畅(stops 少)> 完美词汇。 卡壳 1 次 -1 分, 用错 1 词 -0.5 分。 宁可用简单词流畅说, 不要纠结高级词卡 5 秒。' },
+  { week:68, hook:'🎧 听力专项: 不是"听清楚"是"边听边记"', body:'PSLE Listening 1 段听 1 次 → 4 选 1。 边听边在草稿上记关键数字/否定/转折。 W68 听力专项, 每天 1 套限时。' },
+  { week:69, hook:'🔁 错题第 N 轮: 第 3 轮才真正记牢', body:'神经科学: 同一题做对 3 次, 大脑才把它从"短期记忆"挪到"长期"。 W69 错题本第 2 轮 — 别跳过, 这是稳定 AL 的核心。' },
+  { week:70, hook:'📅 9 月: 距 PSLE 笔试 4 周', body:'W70 是冲刺最关键 4 周 — 不学新东西, 只刷旧错题 + 真题 + 心理调整。 新知识来不及消化反而扰乱。' },
+  { week:71, hook:'🛌 考前 1 周睡眠 = 多 1 个 AL', body:'考前 1 周每天睡足 9 小时的学生, PSLE 平均比"熬夜复习"的高 1 个 AL。 大脑在睡眠中整理记忆, 比临时抱佛脚强。' },
+  { week:72, hook:'🎯 9.15 PSLE 听力考试: 一次定胜负', body:'PSLE Listening 是 1 次性考试 — 听不清就丢分, 不能重听。 W72 当周每天上午同时间做听力, 让大脑形成"上午 9 点听英语"反射。' },
+  { week:73, hook:'🏆 9.24-30 PSLE 笔试周 — 你已准备好', body:'73 周努力到这一刻。 你已经做了 ~2855 个 task, 看了 16000+ 集听力, 答了 14 道反直觉题。 现在就做你已经会的事 — 你比你想的更强。 加油!🌟' }
+];
+
+function getWeeklyWowFact(weekN) {
+  return WEEKLY_WOW_FACTS.find(w => w.week === weekN) || null;
+}
+
+// 父母解锁(管理页): 强制重置 streak 到指定天数 (默认上次最高的一半,鼓励)
+function parentRestoreStreak(state, daysToRestore) {
+  if (!state.dailyStreak) state.dailyStreak = { days: 0, lastDate: null, bestEver: 0, freezeTokens: 0, brokenAt: null };
+  state.dailyStreak.days = daysToRestore || Math.floor((state.dailyStreak.bestEver || 0) / 2) || 1;
+  state.dailyStreak.lastDate = streakTodayKey();
+  state.dailyStreak.brokenAt = null;
+}
+
 // 给 weekN (1..73) 返回该周对应的词表 ({subject, subjectIcon, section, weekRange}).
 // W1-W7 → math (按 section 索引顺序); W8-W17 → sci; 其它周 → null
 function getVocabForWeek(weekN) {
@@ -401,7 +583,16 @@ function getDefaultState() {
 
     // v16.10: 防沉迷 — 每日听力时间记录 { 'YYYY-MM-DD': { seconds: int } }
     // 每日上限到了自动关闭 modal,当天不能再开
-    listeningUsage: {}
+    listeningUsage: {},
+
+    // v17.1: Daily Streak — Kahneman 损失厌恶(失去 100 块痛 > 得 100 块爽 2:1)
+    dailyStreak: {
+      days: 0,             // 当前连击天数
+      lastDate: null,      // 'YYYY-MM-DD' 最近成功打卡日
+      bestEver: 0,         // 历史最高(墓碑)
+      freezeTokens: 0,     // 🧊 救命券(每 14 天 +1, 上限 3, 自动消耗保 1 天)
+      brokenAt: null       // 上次断点时间戳(用于 24h 灰烬效果)
+    }
   };
 }
 
@@ -1515,3 +1706,11 @@ window.getListeningSecondsToday = getListeningSecondsToday;
 window.addListeningSeconds = addListeningSeconds;
 window.isListeningLocked = isListeningLocked;
 window.resetListeningToday = resetListeningToday;
+// v17.1: streak + wow facts
+window.bumpDailyStreak = bumpDailyStreak;
+window.streakSeverity = streakSeverity;
+window.isStreakInAshes = isStreakInAshes;
+window.parentRestoreStreak = parentRestoreStreak;
+window.streakTodayKey = streakTodayKey;
+window.WEEKLY_WOW_FACTS = WEEKLY_WOW_FACTS;
+window.getWeeklyWowFact = getWeeklyWowFact;
