@@ -1982,6 +1982,61 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .streak-broken-penalty { font-size: 13px; color: var(--color-warn); margin-bottom: 14px; padding: 6px; background: #FFF8E7; border-radius: 6px; }
 .streak-broken-inner button { width: 100%; padding: 10px; }
 
+/* ===== v17.7: 神秘宝箱 tab 按钮 + 全局卡片紧凑化 ===== */
+.tab-btn.mystery-tab {
+  background: linear-gradient(135deg, #FFE066 0%, #FF9F45 100%);
+  font-weight: 900;
+  border-color: var(--color-text);
+  position: relative;
+}
+.tab-btn.mystery-tab.mystery-has {
+  animation: mystery-tab-bounce 1.2s ease-in-out infinite;
+  box-shadow: 0 0 12px 2px rgba(255, 159, 69, 0.6), 0 4px 0 var(--color-text);
+}
+.tab-btn.mystery-tab.mystery-empty {
+  opacity: 0.55;
+  filter: grayscale(0.4);
+}
+@keyframes mystery-tab-bounce {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-3px) rotate(3deg); }
+}
+.tab-btn.mystery-tab #mysteryTabCount {
+  background: white;
+  color: var(--color-text);
+  border: 2px solid var(--color-text);
+  border-radius: 12px;
+  padding: 1px 8px;
+  font-size: 13px;
+  margin-left: 4px;
+  font-weight: 900;
+}
+
+/* v17.7: 全局卡片紧凑化 — padding/gap 减小 */
+.card { padding: 14px 16px !important; margin-bottom: 12px !important; }
+.main-container { gap: 12px; }
+.hero-section { gap: 12px !important; margin-bottom: 12px !important; }
+.wow-card-big { padding: 14px 16px !important; }
+.wow-card-big .wow-hook { font-size: 18px !important; margin: 4px 0 !important; line-height: 1.3 !important; }
+.wow-card-big .wow-body { font-size: 14px !important; line-height: 1.6 !important; padding: 10px 12px !important; margin-top: 8px !important; }
+.master-tip-card { padding: 12px 14px !important; }
+.master-tip-card .master-tip-header { font-size: 14px !important; }
+.master-tip-card .master-tip-title { font-size: 15px !important; margin: 4px 0 !important; }
+.master-tip-card .master-tip-content { font-size: 13px !important; line-height: 1.6 !important; }
+.streak-block { padding: 8px 12px !important; margin: 4px auto 8px !important; max-width: 200px !important; }
+.streak-block .streak-num { font-size: 30px !important; }
+.streak-block .streak-label { font-size: 13px !important; margin-top: 2px !important; }
+.streak-block .streak-hover-hint { font-size: 10px !important; margin-top: 2px !important; }
+
+/* v17.7: 角色卡更紧凑 */
+#page-dashboard .character-card { padding: 12px 14px !important; }
+#page-dashboard .character-svg { width: 150px !important; height: 150px !important; }
+#page-dashboard .big-score-block { padding: 8px 12px !important; margin-top: 6px !important; }
+#page-dashboard .big-score-num { font-size: 32px !important; }
+#page-dashboard .beat-block { padding: 6px 10px !important; margin-top: 6px !important; font-size: 12px !important; }
+#page-dashboard .character-name { font-size: 18px !important; margin: 4px 0 0 !important; }
+#page-dashboard .character-title-big { font-size: 14px !important; margin: 2px 0 !important; }
+
 /* ===== v17.6: 全局放大 + 角色卡缩短 + streak hover hint ===== */
 /* 角色卡缩短: SVG 缩小, padding 减少 */
 #page-dashboard .character-svg { width: 180px !important; height: 180px !important; }
@@ -2010,6 +2065,151 @@ p { font-size: 14px; line-height: 1.6; }
   font-style: italic;
 }
 .streak-block:hover { transform: translateY(-2px); transition: transform 0.15s; }
+
+/* ===== v17.7 Phase 4: 词汇连连看 mini-game ===== */
+.vocab-game-btn {
+  background: #A788E0;
+  color: white;
+  border: 2px solid var(--color-text);
+  border-radius: 50%;
+  width: 32px; height: 32px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+  box-shadow: 0 2px 0 var(--color-text);
+  margin-left: 4px;
+}
+.vocab-game-btn:hover { transform: scale(1.15) rotate(8deg); }
+
+.vg-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 48, 71, 0.92);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.vg-modal.show { display: flex; animation: fadeInOverlay 0.3s ease; }
+.vg-inner {
+  background: white;
+  border: 5px solid var(--color-text);
+  border-radius: var(--radius-bubble);
+  padding: 16px 18px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-pop);
+}
+.vg-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px; gap: 8px;
+}
+.vg-title { font-size: 18px; font-weight: 900; color: var(--color-text); }
+.vg-stats { font-size: 13px; color: var(--color-text-light); }
+.vg-close-btn {
+  background: white; border: 2px solid var(--color-text); border-radius: 50%;
+  width: 32px; height: 32px; font-size: 18px; cursor: pointer; line-height: 1;
+}
+.vg-instr {
+  background: #FFF8E7;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  margin-bottom: 12px;
+  border: 2px dashed var(--color-text-light);
+}
+.vg-board { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.vg-col { display: flex; flex-direction: column; gap: 8px; }
+.vg-tile {
+  background: white;
+  border: 2.5px solid var(--color-text);
+  border-radius: 10px;
+  padding: 12px 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+  font-family: inherit;
+  color: var(--color-text);
+}
+.vg-tile.vg-en { background: #E0F4F1; }
+.vg-tile.vg-zh { background: #FFE6F0; }
+.vg-tile:hover:not(:disabled):not(.matched) { transform: scale(1.04); box-shadow: 0 3px 0 var(--color-text); }
+.vg-tile.selected {
+  background: #FFE066 !important;
+  border-color: var(--color-warn);
+  transform: scale(1.05);
+  box-shadow: 0 0 12px 2px rgba(255, 159, 69, 0.6);
+}
+.vg-tile.matched {
+  background: #6BCB77 !important;
+  color: white;
+  opacity: 0.6;
+  cursor: default;
+}
+.vg-victory {
+  background: linear-gradient(135deg, #FFE066 0%, #6BCB77 100%);
+  color: var(--color-text);
+  font-size: 18px;
+  font-weight: 900;
+  text-align: center;
+  padding: 20px;
+  border-radius: 14px;
+  margin-top: 12px;
+  border: 3px solid var(--color-text);
+}
+.vg-victory button { margin-top: 10px; }
+
+/* ===== v17.7 Phase 3: 每日特别任务卡 ===== */
+.daily-quest-card {
+  background: linear-gradient(135deg, #FFE6F0 0%, #FFE066 100%);
+  border-left: 6px solid #FF9F45;
+  border-width: 3px;
+}
+.dq-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.dq-icon { font-size: 32px; flex-shrink: 0; }
+.dq-info { flex: 1; min-width: 0; }
+.dq-title { font-size: 15px; font-weight: 900; color: var(--color-text); }
+.dq-desc { font-size: 12px; color: var(--color-text); margin-top: 2px; }
+.dq-done { font-size: 14px; font-weight: 900; color: var(--color-success, #4ECDC4); }
+.dq-claim-btn { padding: 6px 12px !important; font-size: 13px !important; }
+.dq-progress-bar {
+  position: relative;
+  background: white;
+  border: 2px solid var(--color-text);
+  border-radius: 10px;
+  height: 22px;
+  overflow: hidden;
+}
+.dq-progress-fill {
+  background: linear-gradient(90deg, #6BCB77 0%, #4ECDC4 100%);
+  height: 100%;
+  transition: width 0.3s;
+}
+.dq-progress-text {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.dq-hint { font-size: 11px; color: var(--color-text-light); margin-top: 6px; font-style: italic; }
+.dq-celebration {
+  background: white;
+  padding: 8px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--color-success, #4ECDC4);
+  margin-top: 6px;
+}
 
 /* ===== v17.5 Phase 2: 神秘宝箱卡 ===== */
 .mystery-box-card {
@@ -2465,6 +2665,10 @@ p { font-size: 14px; line-height: 1.6; }
   <button class="tab-btn" data-page="checkin">✅ 打卡</button>
   <button class="tab-btn" data-page="history">📊 分数</button>
   <button class="tab-btn" data-page="admin">⚙️ 管理</button>
+  <!-- v17.7: 宝箱按钮(action 不是 tab, 直接弹 modal) -->
+  <button class="tab-btn tab-action mystery-tab" id="mysteryTabBtn" onclick="openMysteryBoxModal()">
+    🎁 <span id="mysteryTabCount">0</span>
+  </button>
 </nav>
 
 <main class="main-container">
@@ -2510,8 +2714,10 @@ p { font-size: 14px; line-height: 1.6; }
       </div>
     </div>
 
-    <!-- v17.5 Phase 2: 神秘宝箱卡 -->
-    <div class="card mystery-box-card" id="mysteryBoxCard"></div>
+    <!-- v17.7: 神秘宝箱已移到 tab 栏 -->
+
+    <!-- v17.7 Phase 3: 每日特别任务卡 -->
+    <div class="card daily-quest-card" id="dailyQuestCard"></div>
 
     <!-- v17.6: 今日铁律已删除 (用户反馈) -->
 
@@ -2825,6 +3031,9 @@ p { font-size: 14px; line-height: 1.6; }
 
 <!-- v17.5 Phase 2: 神秘宝箱开盒结果 modal -->
 <div id="mysteryBoxResultModal" class="mb-result-modal" onclick="if(event.target===this) closeMysteryBoxResult()"></div>
+
+<!-- v17.7 Phase 4: 词汇连连看 mini-game modal -->
+<div id="vocabGameModal" class="vg-modal" onclick="if(event.target===this) closeVocabGame()"></div>
 
 <!-- v17.6: Streak 规则 modal (点 streak 块时显示) -->
 <div id="streakRulesModal" class="mb-result-modal" onclick="if(event.target===this) closeStreakRulesModal()">

@@ -789,6 +789,73 @@ function submitThinkPuzzleAnswer(state, weekN, userAnswer) {
   return record;
 }
 
+// v17.7 Phase 4: 词汇连连看中文翻译 — 用于 mini-game 配对
+// 只覆盖最常考的 ~80 词(从 VOCAB_500 各 section 抽);其他词 fallback "未翻译"
+const VOCAB_MEANINGS = {
+  // 数学几何
+  'perimeter':'周长','area':'面积','volume':'体积','length':'长','breadth':'宽','height':'高','width':'宽','depth':'深',
+  'edge':'棱','vertex':'顶点','face':'面','side':'边','base':'底','apex':'顶','surface':'表面',
+  'square':'正方形','rectangle':'长方形','triangle':'三角形','circle':'圆','oval':'椭圆','polygon':'多边形','pentagon':'五边形','hexagon':'六边形','octagon':'八边形',
+  'parallel':'平行','perpendicular':'垂直','equilateral':'等边','right-angled':'直角','acute':'锐角','obtuse':'钝角','reflex':'优角','straight':'平角',
+  'circumference':'圆周','radius':'半径','diameter':'直径',
+  'cuboid':'长方体','cube':'立方体','cylinder':'圆柱','cone':'圆锥','sphere':'球体','prism':'棱柱','pyramid':'棱锥',
+  // 数与运算
+  'quotient':'商','remainder':'余数','dividend':'被除数','divisor':'除数','numerator':'分子','denominator':'分母',
+  'mixed number':'带分数','improper fraction':'假分数','equivalent fraction':'等值分数','simplest form':'最简形式',
+  'decimal':'小数','digit':'数字','factor':'因数','multiple':'倍数','prime':'质数','composite':'合数',
+  'product':'积','sum':'和','difference':'差','multiply':'乘','divide':'除','add':'加','subtract':'减',
+  'estimate':'估算','approximate':'近似','round off':'四舍五入',
+  // 比例
+  'ratio':'比','proportion':'比例','percentage':'百分比','scale':'比例尺','rate':'比率','speed':'速度','distance':'距离','time':'时间','average speed':'平均速度',
+  'discount':'折扣','profit':'利润','loss':'亏损','GST':'消费税',
+  // 数据
+  'ascending':'升序','descending':'降序','median':'中位数','mean':'平均数','mode':'众数','range':'范围',
+  'graph':'图','bar graph':'条形图','line graph':'折线图','pie chart':'饼图','frequency':'频率','data':'数据','table':'表',
+  // 科学物质
+  'matter':'物质','mass':'质量','density':'密度','weight':'重量',
+  'solid':'固体','liquid':'液体','gas':'气体','particle':'粒子',
+  'melt':'熔化','freeze':'凝固','evaporate':'蒸发','condense':'凝结','sublime':'升华','boil':'沸腾',
+  'melting point':'熔点','freezing point':'凝固点','boiling point':'沸点','evaporation':'蒸发','condensation':'凝结','sublimation':'升华',
+  // 力
+  'force':'力','friction':'摩擦力','gravity':'重力','magnetic force':'磁力','elastic force':'弹力','contact force':'接触力',
+  'inertia':'惯性','motion':'运动','acceleration':'加速度','balance':'平衡','spring':'弹簧',
+  'push':'推','pull':'拉','attract':'吸引','repel':'排斥','lift':'举','support':'支撑',
+  // 热
+  'heat':'热','temperature':'温度','conductor':'导体','insulator':'绝缘体','heat gain':'吸热','heat loss':'放热','heat transfer':'热传递','contraction':'收缩','expansion':'膨胀',
+  'Celsius':'摄氏度','thermometer':'温度计','degree':'度',
+  // 光
+  'light':'光','shadow':'影子','reflection':'反射','refraction':'折射','absorption':'吸收',
+  'transparent':'透明','translucent':'半透明','opaque':'不透明','mirror':'镜子','lens':'透镜',
+  'source of light':'光源','ray':'光线','beam':'光束','focus':'焦点','image':'影像',
+  // 电
+  'circuit':'电路','series circuit':'串联电路','parallel circuit':'并联电路','complete circuit':'完整电路','open circuit':'开路',
+  'battery':'电池','bulb':'灯泡','switch':'开关','wire':'电线','cell':'电池单元',
+  'current':'电流','voltage':'电压','resistance':'电阻','electricity':'电',
+  // 生命科学植物
+  'photosynthesis':'光合作用','respiration':'呼吸','transpiration':'蒸腾','germination':'萌发','reproduction':'繁殖',
+  'root':'根','stem':'茎','leaf':'叶','flower':'花','fruit':'果实','seed':'种子','pollen':'花粉',
+  'xylem':'木质部','phloem':'韧皮部','chlorophyll':'叶绿素','stomata':'气孔',
+  // 动物人体
+  'digestion':'消化','circulation':'循环','excretion':'排泄',
+  'heart':'心','lung':'肺','kidney':'肾','stomach':'胃','intestine':'肠','liver':'肝',
+  'skeleton':'骨骼','muscle':'肌肉','joint':'关节','nerve':'神经','blood vessel':'血管',
+  'mammal':'哺乳动物','reptile':'爬行动物','amphibian':'两栖动物','bird':'鸟','fish':'鱼','insect':'昆虫',
+  // 生态
+  'ecosystem':'生态系统','habitat':'栖息地','environment':'环境','food chain':'食物链','food web':'食物网',
+  'producer':'生产者','consumer':'消费者','decomposer':'分解者','predator':'捕食者','prey':'猎物',
+  'adaptation':'适应','camouflage':'伪装','hibernation':'冬眠','migration':'迁徙',
+  'water cycle':'水循环','carbon cycle':'碳循环','precipitation':'降水',
+  // 实验
+  'experiment':'实验','observation':'观察','hypothesis':'假设','conclusion':'结论','variable':'变量',
+  'control':'对照','fair test':'公平实验','prediction':'预测',
+  'apparatus':'仪器','beaker':'烧杯','flask':'烧瓶','test tube':'试管','measuring cylinder':'量筒'
+};
+
+// 给一个英文词返回中文 (找不到返回 word 本身)
+function getVocabMeaning(word) {
+  return VOCAB_MEANINGS[word] || word;
+}
+
 // 给 weekN (1..73) 返回该周对应的词表 ({subject, subjectIcon, section, weekRange}).
 // W1-W7 → math (按 section 索引顺序); W8-W17 → sci; 其它周 → null
 function getVocabForWeek(weekN) {
@@ -871,7 +938,10 @@ function getDefaultState() {
     },
 
     // v17.5 Phase 2: 反直觉谜题答题记录 — { weekN: { answer, correct, ts } }
-    thinkPuzzleAnswers: {}
+    thinkPuzzleAnswers: {},
+
+    // v17.7 Phase 3: 每日特别任务 — { dateKey: { questId, progress, target, completed, claimedAt } }
+    dailyQuests: {}
   };
 }
 
@@ -1195,6 +1265,95 @@ const CHINESE_MASTER_TIPS = [
   { subject:'🇨🇳 华文作文老师', title:'每周 1 篇必交',
     content:'华文作文每周 1 篇必交老师改. 改完照标重写一次 — 不重写 = 白改. 30-50 SGD/篇, 这是最不该省的钱。' },
 ];
+
+// ============= v17.7 Phase 3: 每日特别任务 (Daily Quest) =============
+// 8 个模板, 每天上午随机选 1 个, 24h 内完成
+const DAILY_QUEST_POOL = [
+  {
+    id: 'wow-1', icon: '🤯', title: '看 1 条今日 Wow 事实',
+    desc: '点开主页 Wow 卡, 至少看完 1 条', target: 1, reward: 5,
+    hintWhere: '主页 → 🤯 Wow 卡(右上)'
+  },
+  {
+    id: 'think-1', icon: '🤔', title: '答 1 道反直觉思考题',
+    desc: '打卡页顶部, 任意一题', target: 1, reward: 10,
+    hintWhere: '打卡页 → 💭 思考题(只在难章周有)'
+  },
+  {
+    id: 'listen-15', icon: '🎧', title: '听 15 分钟英语',
+    desc: '听力 modal 累计 15 分钟(任意源)', target: 900, reward: 10, unit: 'sec',
+    hintWhere: '打卡页 → 🔊 按钮(LS 时段旁)'
+  },
+  {
+    id: 'slot-3', icon: '✅', title: '打 3 个项目',
+    desc: '任意 slot 完成 3 个', target: 3, reward: 5,
+    hintWhere: '打卡页 → 任意 7 个时段勾选'
+  },
+  {
+    id: 'slot-5', icon: '🔥', title: '打 5 个项目(挑战)',
+    desc: '今天连打 5 个 slot', target: 5, reward: 12,
+    hintWhere: '打卡页 → 一天打满 5 个'
+  },
+  {
+    id: 'box-open', icon: '🎁', title: '开 1 个神秘宝箱',
+    desc: 'tab 栏点 🎁 开盒(没盒就先攒)', target: 1, reward: 3,
+    hintWhere: 'Tab 栏 → 🎁 按钮'
+  },
+  {
+    id: 'vocab-1', icon: '📚', title: '看 1 个学科词汇本',
+    desc: '打卡页词汇 slot → 📚 按钮看 30 词', target: 1, reward: 5,
+    hintWhere: '打卡页 → 📚 按钮(W1-W17 词汇 slot 旁)'
+  },
+  {
+    id: 'feynman', icon: '🗣️', title: '教家人 1 个新单词/概念',
+    desc: '用 30 秒讲给家人听 — 自评 +8 分', target: 1, reward: 8,
+    hintWhere: '本任务靠诚实点击, 不能作弊!'
+  }
+];
+
+function dailyQuestTodayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// 取今日任务 — 如果没有则从 pool 选 1 个 (按 day-of-year 哈希, 同一天稳定)
+function getTodayQuest(state) {
+  if (!state.dailyQuests) state.dailyQuests = {};
+  const key = dailyQuestTodayKey();
+  if (!state.dailyQuests[key]) {
+    const epochDay = Math.floor(Date.now() / 86400000);
+    const idx = ((epochDay % DAILY_QUEST_POOL.length) + DAILY_QUEST_POOL.length) % DAILY_QUEST_POOL.length;
+    const tmpl = DAILY_QUEST_POOL[idx];
+    state.dailyQuests[key] = {
+      questId: tmpl.id, progress: 0, target: tmpl.target,
+      completed: false, claimedAt: null
+    };
+  }
+  const record = state.dailyQuests[key];
+  const tmpl = DAILY_QUEST_POOL.find(q => q.id === record.questId);
+  return { ...tmpl, ...record };
+}
+
+// 进度增量 — type 跟 quest.id 对应; 例: bumpQuestProgress(state, 'wow-1', 1)
+// 返回是否首次达成
+function bumpQuestProgress(state, questId, amount) {
+  const today = getTodayQuest(state);
+  if (today.questId !== questId) return { matched: false };
+  if (today.completed) return { matched: true, alreadyDone: true };
+  const key = dailyQuestTodayKey();
+  state.dailyQuests[key].progress = Math.min(today.target, (state.dailyQuests[key].progress || 0) + amount);
+  if (state.dailyQuests[key].progress >= today.target) {
+    state.dailyQuests[key].completed = true;
+    state.dailyQuests[key].claimedAt = Date.now();
+    state.totalPoints += today.reward;
+    state.logs.push({
+      reason: `⭐ 每日任务: ${today.title} (+${today.reward})`,
+      points: today.reward, week: state.currentWeek, timestamp: Date.now()
+    });
+    return { matched: true, justCompleted: true, reward: today.reward };
+  }
+  return { matched: true, progress: state.dailyQuests[key].progress, target: today.target };
+}
 
 // 按日轮换名师秘诀: 周一/三/五 = 英语 (3); 周二/四 = 科学 (2); 周六 = 数学 (1); 周日 = 华文 (1)
 function getTodayMasterTip(weekN, dateOverride) {
@@ -2159,3 +2318,11 @@ window.SCIENCE_MASTER_TIPS = SCIENCE_MASTER_TIPS;
 window.MATH_MASTER_TIPS = MATH_MASTER_TIPS;
 window.CHINESE_MASTER_TIPS = CHINESE_MASTER_TIPS;
 window.getTodayMasterTip = getTodayMasterTip;
+// v17.7 Phase 3
+window.DAILY_QUEST_POOL = DAILY_QUEST_POOL;
+window.getTodayQuest = getTodayQuest;
+window.bumpQuestProgress = bumpQuestProgress;
+window.dailyQuestTodayKey = dailyQuestTodayKey;
+// v17.7 Phase 4
+window.VOCAB_MEANINGS = VOCAB_MEANINGS;
+window.getVocabMeaning = getVocabMeaning;

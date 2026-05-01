@@ -267,6 +267,34 @@ for (let i = 0; i < 100; i++) {
 }
 assert(counts.common > 50 && counts.common < 90, `v17.5: common 概率 50-90 (实际 ${counts.common})`);
 
+// ===== v17.6: 多科 master tips =====
+assert(W.ENGLISH_MASTER_TIPS && W.ENGLISH_MASTER_TIPS.length >= 20, `v17.6: ENGLISH_MASTER_TIPS ≥20 (实际 ${W.ENGLISH_MASTER_TIPS && W.ENGLISH_MASTER_TIPS.length})`);
+assert(W.SCIENCE_MASTER_TIPS && W.SCIENCE_MASTER_TIPS.length >= 15, `v17.6: SCIENCE_MASTER_TIPS ≥15 (实际 ${W.SCIENCE_MASTER_TIPS && W.SCIENCE_MASTER_TIPS.length})`);
+assert(W.MATH_MASTER_TIPS && W.MATH_MASTER_TIPS.length >= 5, `v17.6: MATH_MASTER_TIPS ≥5 (实际 ${W.MATH_MASTER_TIPS && W.MATH_MASTER_TIPS.length})`);
+assert(W.CHINESE_MASTER_TIPS && W.CHINESE_MASTER_TIPS.length >= 5, `v17.6: CHINESE_MASTER_TIPS ≥5 (实际 ${W.CHINESE_MASTER_TIPS && W.CHINESE_MASTER_TIPS.length})`);
+assert(typeof W.getTodayMasterTip === 'function', 'v17.6: getTodayMasterTip 存在');
+const monMt = W.getTodayMasterTip(1, new Date('2026-05-04'));  // 周一
+assert(monMt && monMt.dailySubject === '英语', `v17.6: 周一 master tip = 英语 (实际 ${monMt && monMt.dailySubject})`);
+const tueMt = W.getTodayMasterTip(1, new Date('2026-05-05'));
+assert(tueMt && tueMt.dailySubject === '科学', `v17.6: 周二 master tip = 科学`);
+const satMt = W.getTodayMasterTip(1, new Date('2026-05-09'));
+assert(satMt && satMt.dailySubject === '数学', `v17.6: 周六 master tip = 数学`);
+
+// ===== v17.7 Phase 3: 每日任务 =====
+const def4 = W.getDefaultState();
+assert(typeof def4.dailyQuests === 'object', 'v17.7: 默认 dailyQuests 是对象');
+assert(W.DAILY_QUEST_POOL && W.DAILY_QUEST_POOL.length >= 6, `v17.7: DAILY_QUEST_POOL ≥6 (实际 ${W.DAILY_QUEST_POOL && W.DAILY_QUEST_POOL.length})`);
+const ts7 = W.getDefaultState();
+const todayQ = W.getTodayQuest(ts7);
+assert(todayQ && todayQ.title, 'v17.7: getTodayQuest 返回当天任务');
+const sameQ = W.getTodayQuest(ts7);
+assert(sameQ.questId === todayQ.questId, 'v17.7: 同日多次取相同任务');
+
+// ===== v17.7 Phase 4: VOCAB_MEANINGS =====
+assert(W.VOCAB_MEANINGS && Object.keys(W.VOCAB_MEANINGS).length >= 80, `v17.7: VOCAB_MEANINGS ≥80 (实际 ${W.VOCAB_MEANINGS && Object.keys(W.VOCAB_MEANINGS).length})`);
+assert(W.getVocabMeaning('xylem') === '木质部', 'v17.7: xylem → 木质部');
+assert(W.getVocabMeaning('photosynthesis') === '光合作用', 'v17.7: photosynthesis → 光合作用');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));

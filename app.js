@@ -239,37 +239,33 @@ function renderDashboard() {
   // v17.6: renderIronRule() 已移除
   renderWowCard();  // v17.1
   renderMysteryBoxCard();  // v17.5
+  renderDailyQuestCard();  // v17.7 Phase 3
   renderWeeklyCoach();
   renderMasterTipCard();
   renderEquipment();
 }
 
-// ============ v17.5 Phase 2: 神秘宝箱 ============
+// ============ v17.5 Phase 2 / v17.7: 神秘宝箱 — 移到 tab 栏按钮 ============
 function renderMysteryBoxCard() {
-  const card = document.getElementById('mysteryBoxCard');
-  if (!card) return;
-  const mb = state.mysteryBoxes || { available: 0, opened: 0, history: [] };
-  const total = window.countTotalCompletedSlots ? window.countTotalCompletedSlots(state) : 0;
-  const nextAt = (Math.floor(total / 10) + 1) * 10;
-  const toNext = nextAt - total;
-  card.innerHTML = `
-    <div class="mb-card-row">
-      <div class="mb-icon">🎁</div>
-      <div class="mb-info">
-        <div class="mb-title">神秘宝箱 · ${mb.available} 个可开</div>
-        <div class="mb-sub">每 10 个项目 +1 个 · 还差 <b>${toNext}</b> 项目下一个 · 已开 ${mb.opened}</div>
-      </div>
-      <button class="btn btn-warn mb-open-btn" onclick="openMysteryBoxModal()" ${mb.available <= 0 ? 'disabled' : ''}>
-        ${mb.available > 0 ? '🔓 开盒' : '🔒 没盒'}
-      </button>
-    </div>
-  `;
+  // 老 dashboard card 已删除, 改在 tab 栏渲染计数
+  const tabBtn = document.getElementById('mysteryTabBtn');
+  const cnt = document.getElementById('mysteryTabCount');
+  const mb = state.mysteryBoxes || { available: 0 };
+  if (cnt) cnt.textContent = mb.available;
+  if (tabBtn) {
+    tabBtn.classList.toggle('mystery-has', mb.available > 0);
+    tabBtn.classList.toggle('mystery-empty', mb.available <= 0);
+  }
 }
 
 function openMysteryBoxModal() {
   const mb = state.mysteryBoxes;
   if (!mb || mb.available <= 0) {
-    showToast('没盒可开!继续打卡赚宝箱', 'sad');
+    // v17.7: 没盒时显示进度提示 (而非简单 toast)
+    const total = window.countTotalCompletedSlots ? window.countTotalCompletedSlots(state) : 0;
+    const nextAt = (Math.floor(total / 10) + 1) * 10;
+    const toNext = nextAt - total;
+    showToast(`🔒 没盒可开 — 还差 ${toNext} 个项目就 +1 宝箱`, 'sad');
     return;
   }
   const result = window.openMysteryBoxOnce(state);
@@ -281,6 +277,8 @@ function openMysteryBoxModal() {
     week: state.currentWeek,
     timestamp: Date.now()
   });
+  // v17.7 quest: 开 box 算 1 次
+  _trackQuest('box-open', 1);
   saveState(state);
   _renderMysteryBoxResult(result);
   renderAll();
@@ -320,6 +318,61 @@ function _renderMysteryBoxResult(r) {
 function closeMysteryBoxResult() {
   const modal = document.getElementById('mysteryBoxResultModal');
   if (modal) modal.classList.remove('show');
+}
+
+// ============ v17.7 Phase 3: 每日特别任务 (Daily Quest) ============
+function renderDailyQuestCard() {
+  const card = document.getElementById('dailyQuestCard');
+  if (!card || !window.getTodayQuest) return;
+  const q = window.getTodayQuest(state);
+  const pct = Math.min(100, Math.round((q.progress / q.target) * 100));
+  const isVocab = q.unit === 'sec';
+  const progDisp = isVocab ? `${Math.floor(q.progress / 60)} 分 / ${Math.floor(q.target / 60)} 分` : `${q.progress} / ${q.target}`;
+  card.innerHTML = `
+    <div class="dq-header">
+      <span class="dq-icon">${q.icon}</span>
+      <div class="dq-info">
+        <div class="dq-title">⭐ 今日特别任务: ${escapeHtml(q.title)}</div>
+        <div class="dq-desc">${escapeHtml(q.desc)} · 完成 +${q.reward} 分</div>
+      </div>
+      ${q.completed ? `<span class="dq-done">✅ 已完成</span>` : `<button class="btn dq-claim-btn" onclick="claimDailyQuest()" ${q.id !== 'feynman' ? 'disabled' : ''}>${q.id === 'feynman' ? '👍 完成' : '⏳ 进行中'}</button>`}
+    </div>
+    ${!q.completed ? `
+      <div class="dq-progress-bar">
+        <div class="dq-progress-fill" style="width:${pct}%"></div>
+        <span class="dq-progress-text">${progDisp}</span>
+      </div>
+      <div class="dq-hint">💡 ${escapeHtml(q.hintWhere)}</div>
+    ` : `<div class="dq-celebration">🎉 +${q.reward} 分已发放, 明天换新任务</div>`}
+  `;
+}
+
+// Feynman 任务靠按钮 — 其它自动 hook
+function claimDailyQuest() {
+  const q = window.getTodayQuest(state);
+  if (q.id !== 'feynman') {
+    showToast('这个任务自动追踪进度, 不需要点按钮', 'sad');
+    return;
+  }
+  if (q.completed) return;
+  const r = window.bumpQuestProgress(state, q.id, q.target);
+  if (r.justCompleted) {
+    saveState(state);
+    showToast(`⭐ 每日任务完成! +${r.reward} 分`, 'happy');
+    spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40);
+    renderAll();
+  }
+}
+
+// 内部: 全局自动追踪 — 在相应动作里 call
+function _trackQuest(questId, amount) {
+  if (!window.bumpQuestProgress) return;
+  const r = window.bumpQuestProgress(state, questId, amount);
+  if (r && r.justCompleted) {
+    showToast(`⭐ 每日任务完成! +${r.reward} 分`, 'happy');
+    spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40);
+    saveState(state);
+  }
 }
 
 // ============ v17.5 Phase 2: 反直觉思考题 (打卡页顶部) ============
@@ -374,6 +427,8 @@ function submitThinkAnswer(weekN, userAnswer) {
   const result = window.submitThinkPuzzleAnswer(state, weekN, userAnswer);
   if (!result) return;
   recalcTotalPoints(state);
+  // v17.7 quest: 答 1 道 think
+  _trackQuest('think-1', 1);
   saveState(state);
   if (result.correct) {
     showToast(`✅ 答对!+10 分`, 'happy');
@@ -413,6 +468,8 @@ function renderWowCard() {
   card.onclick = () => {
     card.dataset.expanded = expanded ? '0' : '1';
     renderWowCard();
+    // v17.7 quest: 看 wow 算 1 次
+    if (card.dataset.expanded === '1') _trackQuest('wow-1', 1);
   };
 }
 
@@ -785,7 +842,8 @@ function renderCheckinPage() {
       const isVocabTask = /30 词|DeepSeek 词汇|Vocabulary U|拼写 \+ 用法测|学科词汇/.test(t.task);
       const vocabAvailable = window.getVocabForWeek && window.getVocabForWeek(week) !== null;
       const vocabBtn = (isVocabTask && vocabAvailable)
-        ? `<button class="vocab-btn" onclick="event.stopPropagation(); openVocabModal(${week})" title="本周学科词表">📚</button>`
+        ? `<button class="vocab-btn" onclick="event.stopPropagation(); openVocabModal(${week})" title="本周学科词表">📚</button>
+           <button class="vocab-game-btn" onclick="event.stopPropagation(); openVocabGame(${week})" title="🎮 词汇连连看 (赢 +10 + 1 宝箱)">🎮</button>`
         : '';
       // v16.3: 听力资源按钮 — 任务含 CNA938 / okto / Listening / 听力 时出现
       const isListenTask = /CNA938|okto|Listening|听力|🎧/.test(t.task);
@@ -985,6 +1043,11 @@ function toggleDailyCheck(week, day, slot, evt) {
   let newBoxes = 0;
   if (!wasChecked && window.awardMysteryBoxesIfDue) {
     newBoxes = window.awardMysteryBoxesIfDue(state);
+  }
+  // v17.7 Phase 3: 追踪每日任务 (slot-3/slot-5)
+  if (!wasChecked) {
+    _trackQuest('slot-3', 1);
+    _trackQuest('slot-5', 1);
   }
   saveState(state);
 
@@ -1210,6 +1273,8 @@ async function deletePhoto(week, day, slot) {
 function openVocabModal(week) {
   const v = window.getVocabForWeek ? window.getVocabForWeek(week) : null;
   if (!v) { showToast('本周没有专门的学科词汇', 'sad'); return; }
+  // v17.7 quest: 看 vocab 算 1 次
+  _trackQuest('vocab-1', 1);
   const modal = document.getElementById('vocabModal');
   if (!modal) return;
   const wordsHtml = v.section.words.map(w => `<span class="vocab-word">${escapeHtml(w)}</span>`).join('');
@@ -1236,6 +1301,132 @@ function closeVocabModal() {
   if (modal) modal.classList.remove('show');
 }
 
+// ============ v17.7 Phase 4: 词汇连连看 mini-game ============
+let _vocabGameState = null;
+
+function openVocabGame(weekN) {
+  const v = window.getVocabForWeek ? window.getVocabForWeek(weekN) : null;
+  if (!v) {
+    showToast('本周没有学科词汇游戏可玩', 'sad');
+    return;
+  }
+  // 从 section 中随机取 6 个有翻译的词
+  const allWords = (v.section.words || []).filter(w => window.VOCAB_MEANINGS && window.VOCAB_MEANINGS[w]);
+  if (allWords.length < 6) {
+    showToast(`本周词汇翻译数据不足(只有 ${allWords.length} 个), 暂不能玩`, 'sad');
+    return;
+  }
+  // 洗牌选 6 个
+  const shuffled = [...allWords].sort(() => Math.random() - 0.5).slice(0, 6);
+  const pairs = shuffled.map(w => ({ en: w, zh: window.getVocabMeaning(w) }));
+  // 中文列另独立洗牌
+  const zhShuffled = [...pairs].sort(() => Math.random() - 0.5);
+  _vocabGameState = {
+    pairs, zhShuffled,
+    selectedEn: null, selectedZh: null,
+    matched: new Set(),
+    wrong: 0,
+    startedAt: Date.now(),
+    weekN
+  };
+  _renderVocabGame();
+}
+
+function _renderVocabGame() {
+  const modal = document.getElementById('vocabGameModal');
+  if (!modal || !_vocabGameState) return;
+  const g = _vocabGameState;
+  const total = g.pairs.length;
+  const done = g.matched.size;
+  const elapsed = Math.floor((Date.now() - g.startedAt) / 1000);
+  modal.innerHTML = `
+    <div class="vg-inner">
+      <div class="vg-header">
+        <span class="vg-title">🎮 词汇连连看 · W${g.weekN}</span>
+        <span class="vg-stats">${done}/${total} · ⏱️ ${elapsed}s · ❌ ${g.wrong}</span>
+        <button class="vg-close-btn" onclick="closeVocabGame()">×</button>
+      </div>
+      <div class="vg-instr">点选 1 个英文 + 1 个中文配对 — 全配对完获 <b>+10 分 + 1 个宝箱</b></div>
+      <div class="vg-board">
+        <div class="vg-col">
+          ${g.pairs.map((p, i) => {
+            const isSelected = g.selectedEn === i;
+            const isMatched = g.matched.has(p.en);
+            return `<button class="vg-tile vg-en ${isSelected ? 'selected' : ''} ${isMatched ? 'matched' : ''}"
+              onclick="vocabGameClickEn(${i})" ${isMatched ? 'disabled' : ''}>${escapeHtml(p.en)}</button>`;
+          }).join('')}
+        </div>
+        <div class="vg-col">
+          ${g.zhShuffled.map((p, i) => {
+            const isSelected = g.selectedZh === i;
+            const isMatched = g.matched.has(p.en);
+            return `<button class="vg-tile vg-zh ${isSelected ? 'selected' : ''} ${isMatched ? 'matched' : ''}"
+              onclick="vocabGameClickZh(${i})" ${isMatched ? 'disabled' : ''}>${escapeHtml(p.zh)}</button>`;
+          }).join('')}
+        </div>
+      </div>
+      ${done >= total ? `
+        <div class="vg-victory">🎉 全部配对完成! +10 分 + 1 个宝箱<br><button class="btn btn-primary" onclick="closeVocabGame()">太棒了!</button></div>
+      ` : ''}
+    </div>
+  `;
+  modal.classList.add('show');
+}
+
+function vocabGameClickEn(idx) {
+  if (!_vocabGameState) return;
+  _vocabGameState.selectedEn = idx;
+  _checkVocabPair();
+  _renderVocabGame();
+}
+function vocabGameClickZh(idx) {
+  if (!_vocabGameState) return;
+  _vocabGameState.selectedZh = idx;
+  _checkVocabPair();
+  _renderVocabGame();
+}
+
+function _checkVocabPair() {
+  const g = _vocabGameState;
+  if (g.selectedEn == null || g.selectedZh == null) return;
+  const en = g.pairs[g.selectedEn];
+  const zh = g.zhShuffled[g.selectedZh];
+  if (en.en === zh.en) {
+    // 配对成功
+    g.matched.add(en.en);
+    g.selectedEn = null;
+    g.selectedZh = null;
+    if (g.matched.size >= g.pairs.length) {
+      // 全完成 — 给奖励
+      state.totalPoints += 10;
+      if (!state.mysteryBoxes) state.mysteryBoxes = { available: 0, opened: 0, totalSlotsAtLastEarn: 0, history: [] };
+      state.mysteryBoxes.available += 1;
+      state.logs.push({
+        reason: `🎮 词汇连连看 W${g.weekN} 全对(${g.wrong} 错)`,
+        points: 10, week: state.currentWeek, timestamp: Date.now()
+      });
+      saveState(state);
+      spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 60);
+      setTimeout(() => renderAll(), 300);
+    }
+  } else {
+    g.wrong += 1;
+    setTimeout(() => {
+      if (_vocabGameState) {
+        _vocabGameState.selectedEn = null;
+        _vocabGameState.selectedZh = null;
+        _renderVocabGame();
+      }
+    }, 600);
+  }
+}
+
+function closeVocabGame() {
+  const modal = document.getElementById('vocabGameModal');
+  if (modal) modal.classList.remove('show');
+  _vocabGameState = null;
+}
+
 // ============ v16.3: 听力资源 modal (CNA938 直播 + 推荐播客 + BBC 外链) ============
 // v16.10: 防沉迷 — 听力 modal 计时器(模块级)
 let _listeningTickInterval = null;
@@ -1252,6 +1443,8 @@ function _startListeningTimer() {
   _stopListeningTimer();
   _listeningTickInterval = setInterval(() => {
     const total = window.addListeningSeconds(state, LISTENING_TICK_SEC);
+    // v17.7 quest: listen-15 (累计秒数)
+    _trackQuest('listen-15', LISTENING_TICK_SEC);
     saveState(state);
     const limit = window.LISTENING_DAILY_LIMIT_MIN * 60;
     const remaining = Math.max(0, limit - total);
@@ -2193,6 +2386,13 @@ window.renderStreakBlock = renderStreakBlock;
 window.openMysteryBoxModal = openMysteryBoxModal;
 window.closeMysteryBoxResult = closeMysteryBoxResult;
 window.submitThinkAnswer = submitThinkAnswer;
+// v17.7 Phase 3
+window.claimDailyQuest = claimDailyQuest;
+// v17.7 Phase 4
+window.openVocabGame = openVocabGame;
+window.closeVocabGame = closeVocabGame;
+window.vocabGameClickEn = vocabGameClickEn;
+window.vocabGameClickZh = vocabGameClickZh;
 // v17.6: Streak rules modal
 window.showStreakRulesModal = function() {
   const m = document.getElementById('streakRulesModal');
