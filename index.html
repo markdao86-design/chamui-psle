@@ -290,6 +290,125 @@ body::before {
   letter-spacing: 1px;
 }
 
+/* ===== 大字总分 + 称号 + 击败比例 ===== */
+.character-title-big {
+  font-family: 'ZCOOL KuaiLe', cursive;
+  font-size: 22px;
+  color: var(--color-primary);
+  margin: 6px 0 8px;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.06);
+}
+.big-score-block {
+  margin-top: 16px;
+  background: linear-gradient(135deg, #FFE66D, #FF9F45);
+  border: 4px solid var(--color-text);
+  border-radius: var(--radius-bubble);
+  padding: 16px 24px;
+  text-align: center;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 12px 24px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+.big-score-block.pulse {
+  animation: score-pulse 0.6s ease;
+}
+@keyframes score-pulse {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.18); box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 16px 36px rgba(255,107,107,0.6); }
+  100% { transform: scale(1); }
+}
+.big-score-num {
+  font-family: 'ZCOOL KuaiLe', cursive;
+  font-size: 56px;
+  line-height: 1;
+  color: var(--color-text);
+  text-shadow: 0 3px 0 white, 0 4px 0 var(--color-text);
+}
+.big-score-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-top: 4px;
+  letter-spacing: 1px;
+}
+
+.beat-block {
+  margin-top: 12px;
+  background: white;
+  border: 3px solid var(--color-text);
+  border-radius: var(--radius-tight);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 3px 0 var(--color-text);
+}
+.beat-rocket {
+  font-size: 32px;
+  animation: rocket-fly 2.4s ease-in-out infinite;
+}
+@keyframes rocket-fly {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50%      { transform: translateY(-6px) rotate(5deg); }
+}
+.beat-text {
+  flex: 1;
+  font-size: 14px;
+  color: var(--color-text);
+}
+.beat-text b {
+  color: var(--color-primary);
+  font-family: 'Fredoka', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+}
+.beat-count {
+  font-size: 11px;
+  color: var(--color-text-light);
+  margin-top: 2px;
+}
+
+/* ===== 屏幕震动 ===== */
+@keyframes screen-shake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-6px, -3px); }
+  20% { transform: translate(6px, -3px); }
+  30% { transform: translate(-6px, 3px); }
+  40% { transform: translate(6px, 3px); }
+  50% { transform: translate(-3px, -1px); }
+  60% { transform: translate(3px, -1px); }
+  70% { transform: translate(-2px, 1px); }
+  80% { transform: translate(2px, 1px); }
+  90% { transform: translate(-1px, 0); }
+}
+body.shake { animation: screen-shake 0.45s ease-out; }
+
+/* ===== 角色脉动 ===== */
+.character-display.glow {
+  animation: char-glow 0.8s ease;
+}
+@keyframes char-glow {
+  0%   { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,107,107,0)); }
+  40%  { transform: scale(1.08); filter: drop-shadow(0 0 25px rgba(255,107,107,0.7)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,107,107,0)); }
+}
+
+/* ===== 撒花粒子 ===== */
+.confetti-piece {
+  position: fixed;
+  z-index: 9997;
+  pointer-events: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  animation: confetti-fly 1.6s cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
+}
+@keyframes confetti-fly {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(0.4); opacity: 1; }
+  20%  { transform: translate(var(--cx, 0px), var(--cy, -120px)) rotate(180deg) scale(1); opacity: 1; }
+  100% { transform: translate(var(--cx, 0px), 240px) rotate(720deg) scale(0.6); opacity: 0; }
+}
+
 /* ===== 进度条 ===== */
 .progress-section {
   background: linear-gradient(135deg, #E8F8F5 0%, #F0FFFE 100%);
@@ -1477,8 +1596,21 @@ body::before {
           <div class="character-svg" id="characterSvg"></div>
         </div>
         <div class="character-name" id="characterName">萌新佑子</div>
-        <div class="character-title" id="characterTitle">刚入门的勇士</div>
+        <div class="character-title-big" id="characterTitle">刚入门的勇士</div>
         <span class="level-badge">LV <span id="charLevelDisplay">1</span></span>
+        <!-- 大字总分 -->
+        <div class="big-score-block">
+          <div class="big-score-num" id="bigScoreNum">0</div>
+          <div class="big-score-label">⭐ 总积分</div>
+        </div>
+        <!-- 击败比例 -->
+        <div class="beat-block" id="beatBlock">
+          <div class="beat-rocket">🚀</div>
+          <div class="beat-text">
+            打败了全新加坡 <b id="beatPct">0</b><span style="font-size:14px;">%</span> 同年级同学
+            <div class="beat-count">约 <b id="beatCount">0</b> 名小学生(共 <span id="beatTotal">50000</span> 名)</div>
+          </div>
+        </div>
       </div>
       
       <div class="progress-section">

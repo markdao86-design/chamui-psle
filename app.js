@@ -113,6 +113,18 @@ function renderDashboard() {
   document.getElementById('characterTitle').textContent = levelInfo.title;
   document.getElementById('charLevelDisplay').textContent = levelInfo.lv;
 
+  // 大字总分 + 击败比例
+  const bigScoreEl = document.getElementById('bigScoreNum');
+  if (bigScoreEl) bigScoreEl.textContent = points;
+  const beatPct = studentBeatPercent(points);
+  const beatCnt = studentBeatCount(points);
+  const beatPctEl = document.getElementById('beatPct');
+  const beatCntEl = document.getElementById('beatCount');
+  const beatTotEl = document.getElementById('beatTotal');
+  if (beatPctEl) beatPctEl.textContent = beatPct;
+  if (beatCntEl) beatCntEl.textContent = beatCnt.toLocaleString('en-US');
+  if (beatTotEl) beatTotEl.textContent = SG_P5_TOTAL.toLocaleString('en-US');
+
   // 进度条
   let progressPercent = 0;
   let progressText = '';
@@ -434,17 +446,27 @@ function toggleDailyCheck(week, day, slot, evt) {
   const pts = slotPoints(week, slot);
 
   if (!wasChecked) {
-    // 浮动 +N 动画(跟着鼠标)
-    spawnFloatPoints(`+${pts}`, evt);
-    // 当日 combo 触发
+    // 浮动 +N 动画(高分 slot 用大字)
+    spawnFloatPoints(`+${pts}`, evt, pts >= 3);
+    // 大分数块脉动
+    pulseScoreBlock();
+    // 当日 combo 触发(撒花 + 震屏 + 大数字)
     if (newDayComplete && !oldDayComplete) {
       showToast(`🔥 当日全勾!combo +${DAY_COMBO_POINTS}`, 'success');
-      // 给 combo 一个更大的浮动数字
-      setTimeout(() => spawnFloatPoints(`combo +${DAY_COMBO_POINTS}!`, evt, true), 300);
+      shakeScreen();
+      const cx = (evt && evt.clientX) || window.innerWidth / 2;
+      const cy = (evt && evt.clientY) || window.innerHeight / 2;
+      spawnConfetti(cx, cy, 35);
+      setTimeout(() => spawnFloatPoints(`COMBO +${DAY_COMBO_POINTS}!`, evt, true), 200);
     }
-    // 周复盘达标
+    // 周复盘达标(撒花 + 中央大字 + 震屏)
     if (newOnTrack && !oldOnTrack) {
-      setTimeout(() => showToast(`🎉 周完成率达标!周复盘 +${WEEKLY_REVIEW_POINTS}`, 'success'), 600);
+      setTimeout(() => {
+        showToast(`🎉 周完成率达标!周复盘 +${WEEKLY_REVIEW_POINTS}`, 'success');
+        shakeScreen();
+        spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 50);
+        spawnFloatPoints(`周复盘 +${WEEKLY_REVIEW_POINTS}!`, null, true);
+      }, 400);
     }
     checkLevelUp(oldPoints, state.totalPoints);
   } else {
@@ -478,6 +500,60 @@ function spawnFloatPoints(text, evt, big) {
   el.style.top = y + 'px';
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 1400);
+}
+
+// 撒花粒子 (combo / 升级 / 周复盘达标 触发)
+function spawnConfetti(centerX, centerY, count) {
+  const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A788E0', '#FFB6D9', '#6BCB77', '#FF9F45'];
+  const cx = centerX || window.innerWidth / 2;
+  const cy = centerY || window.innerHeight / 3;
+  const n = count || 30;
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = cx + 'px';
+    p.style.top = cy + 'px';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    // 随机方向(360度)+ 随机距离 80-220 px
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 80 + Math.random() * 140;
+    p.style.setProperty('--cx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--cy', Math.sin(angle) * dist - 60 + 'px');  // 偏上飞
+    // 随机大小 + 旋转
+    const size = 8 + Math.random() * 10;
+    p.style.width = size + 'px';
+    p.style.height = size + 'px';
+    p.style.animationDelay = (Math.random() * 0.15) + 's';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1900);
+  }
+}
+
+// 屏幕震动(combo / 升级)
+function shakeScreen() {
+  document.body.classList.remove('shake');
+  // force reflow
+  void document.body.offsetWidth;
+  document.body.classList.add('shake');
+  setTimeout(() => document.body.classList.remove('shake'), 500);
+}
+
+// 角色脉动 + 大分数块脉动(每次得分都触发,小高潮)
+function pulseScoreBlock() {
+  const block = document.getElementById('bigScoreBlock') || document.querySelector('.big-score-block');
+  if (block) {
+    block.classList.remove('pulse');
+    void block.offsetWidth;
+    block.classList.add('pulse');
+    setTimeout(() => block.classList.remove('pulse'), 700);
+  }
+  const charDisp = document.querySelector('.character-display');
+  if (charDisp) {
+    charDisp.classList.remove('glow');
+    void charDisp.offsetWidth;
+    charDisp.classList.add('glow');
+    setTimeout(() => charDisp.classList.remove('glow'), 900);
+  }
 }
 
 function showAdminHint(label) {
@@ -1080,6 +1156,11 @@ function showLevelUpAnimation(newLevel) {
     </div>
   `;
   document.body.appendChild(overlay);
+  // 升级 = 最大高潮:震屏 + 100 撒花 + 大 +N
+  shakeScreen();
+  spawnConfetti(window.innerWidth / 2, window.innerHeight / 2, 100);
+  setTimeout(() => spawnConfetti(window.innerWidth / 4, window.innerHeight / 2, 40), 200);
+  setTimeout(() => spawnConfetti(window.innerWidth * 3 / 4, window.innerHeight / 2, 40), 400);
   setTimeout(() => {
     overlay.style.opacity = '0';
     overlay.style.transition = 'opacity 0.4s';
@@ -1204,6 +1285,9 @@ init().catch(e => console.error('init 失败:', e));
 window.selectDay = selectDay;
 window.toggleDailyCheck = toggleDailyCheck;
 window.spawnFloatPoints = spawnFloatPoints;
+window.spawnConfetti = spawnConfetti;
+window.shakeScreen = shakeScreen;
+window.pulseScoreBlock = pulseScoreBlock;
 window.pickPhotoForSlot = pickPhotoForSlot;
 window.viewPhoto = viewPhoto;
 window.replacePhoto = replacePhoto;

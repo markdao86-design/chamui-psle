@@ -200,6 +200,20 @@ function getWeeklyCheckinTemplate(weekNum) {
   return items;
 }
 
+// ============= 击败全新加坡 P5 同学百分比(虚拟激励指标) =============
+// 新加坡每年 P5 学生约 50,000 人。曲线设计:
+// 0 分:0% / 30 分(W1 起步):20% / 100 分:43% / 250 分:71% / 500 分:91% / 1000 分:99% / 1500+:99.5%
+const SG_P5_TOTAL = 50000;
+function studentBeatPercent(pts) {
+  if (pts <= 0) return 0;
+  // 平滑曲线:1 - exp(-pts / 200 * 0.9),最高 99.5%
+  const raw = 100 * (1 - Math.exp(-pts / 200 * 0.9));
+  return Math.min(99.5, Math.round(raw * 10) / 10);
+}
+function studentBeatCount(pts) {
+  return Math.round(SG_P5_TOTAL * studentBeatPercent(pts) / 100);
+}
+
 // ============= 各科作业分数(v4 新增) =============
 // state.scores['week_day_slot'] = { score, max, note, savedAt }
 function scoreKey(week, day, slot) { return `${week}_${day}_${slot}`; }
@@ -859,6 +873,9 @@ window.setScore = setScore;
 window.subjectGroup = subjectGroup;
 window.taskSubtype = taskSubtype;
 window.aggregateScores = aggregateScores;
+window.studentBeatPercent = studentBeatPercent;
+window.studentBeatCount = studentBeatCount;
+window.SG_P5_TOTAL = SG_P5_TOTAL;
 window.loadStateAsync = loadStateAsync;
 window.subscribeFirestore = subscribeFirestore;
 window.initFirebase = initFirebase;
