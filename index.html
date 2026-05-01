@@ -215,8 +215,8 @@ body::before {
 .hero-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  /* v18.4: 改 align-items start, 右栏不再被左卡撑高 */
-  align-items: start;
+  /* v18.6: 恢复 stretch, 让两栏高度对齐;但只让 mini-game hub 填空(下面规则) */
+  align-items: stretch;
   gap: 14px;
   margin-bottom: 12px;
 }
@@ -225,7 +225,16 @@ body::before {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  /* v18.4: 不再 stretch */
+  height: 100%;
+}
+/* v18.6: 只让 mini-game hub 卡 flex grow 填充剩余空间, 其它卡保持自然高度 */
+.hero-right-column .mini-game-hub-card {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+}
+.hero-right-column .mini-game-hub-card .mgh-row {
+  flex: 1;
 }
 .master-tip-card {
   background: linear-gradient(135deg, var(--color-accent), #FFB6D9);

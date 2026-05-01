@@ -259,10 +259,17 @@ function renderMysteryBoxCard() {
   const tabBtn = document.getElementById('mysteryTabBtn');
   const cnt = document.getElementById('mysteryTabCount');
   const mb = state.mysteryBoxes || { available: 0 };
-  if (cnt) cnt.textContent = mb.available;
+  const frags = (state.dailyDraws && state.dailyDraws.fragments) || 0;
+  if (cnt) {
+    // v18.6: 同时显示 完整盒数 + 碎片数 (X/7)
+    cnt.innerHTML = frags > 0
+      ? `${mb.available} <span style="opacity:0.7;font-size:11px">·🧩${frags}/7</span>`
+      : mb.available;
+  }
   if (tabBtn) {
     tabBtn.classList.toggle('mystery-has', mb.available > 0);
     tabBtn.classList.toggle('mystery-empty', mb.available <= 0);
+    tabBtn.title = `🎁 神秘宝箱: ${mb.available} 个可开\n🧩 抽奖碎片: ${frags}/7 (满 7 自动合 1 完整宝箱)\n每完成 10 个项目 +1 宝箱; 每天首次打开 App 抽 1-3 片`;
   }
 }
 
@@ -273,7 +280,8 @@ function openMysteryBoxModal() {
     const total = window.countTotalCompletedSlots ? window.countTotalCompletedSlots(state) : 0;
     const nextAt = (Math.floor(total / 10) + 1) * 10;
     const toNext = nextAt - total;
-    showToast(`🔒 没盒可开 — 还差 ${toNext} 个项目就 +1 宝箱`, 'sad');
+    const frags = (state.dailyDraws && state.dailyDraws.fragments) || 0;
+    showToast(`🔒 没盒可开 — 还差 ${toNext} 个项目 +1 宝箱;另有 🧩 ${frags}/7 抽奖碎片`, 'sad');
     return;
   }
   const result = window.openMysteryBoxOnce(state);
