@@ -241,21 +241,24 @@ function renderDashboard() {
   renderEquipment();
 }
 
-// v17.1: 每日 Wow 事实卡(主页)
+// v17.2: 每日 Wow 事实卡 — 英语/科学按日轮换
 function renderWowCard() {
   const card = document.getElementById('wowCard');
-  if (!card || !window.getWeeklyWowFact) return;
-  const wow = window.getWeeklyWowFact(state.currentWeek);
+  if (!card || !window.getTodayWowFact) return;
+  const wow = window.getTodayWowFact(state.currentWeek);
   if (!wow) {
     card.style.display = 'none';
     return;
   }
   card.style.display = '';
-  // 默认收起,只显示 hook;点击展开 body
+  // 根据 subject 改变左 border 颜色
+  card.style.borderLeftColor = wow.subjectColor || '#A788E0';
   const expanded = card.dataset.expanded === '1';
   card.innerHTML = `
     <div class="wow-header">
-      <span class="wow-tag">🤯 今日 Wow · W${wow.week}</span>
+      <span class="wow-tag" style="color:${wow.subjectColor};border-color:${wow.subjectColor}">
+        🤯 ${wow.subjectIcon} ${wow.subject} · ${wow.tag}
+      </span>
       <span class="wow-toggle">${expanded ? '收起 ▲' : '展开 ▼'}</span>
     </div>
     <div class="wow-hook">${escapeHtml(wow.hook)}</div>

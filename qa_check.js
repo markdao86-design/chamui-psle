@@ -207,6 +207,24 @@ assert(typeof W.getWeeklyWowFact === 'function', 'v17: getWeeklyWowFact 函数�
 const w1 = W.getWeeklyWowFact(1);
 assert(w1 && w1.week === 1, 'v17: getWeeklyWowFact(1) 返回 week=1');
 
+// v17.2: ENGLISH_WOW_FACTS pool + 按日轮换
+assert(Array.isArray(W.ENGLISH_WOW_FACTS) && W.ENGLISH_WOW_FACTS.length >= 25,
+  `v17.2: ENGLISH_WOW_FACTS 至少 25 条 (实际 ${W.ENGLISH_WOW_FACTS && W.ENGLISH_WOW_FACTS.length})`);
+const enMissing = W.ENGLISH_WOW_FACTS.filter(f => !f.hook || !f.body || !f.tag);
+assert(enMissing.length === 0, `v17.2: 所有英语 wow 都有 tag/hook/body (缺 ${enMissing.length})`);
+assert(typeof W.getTodayWowFact === 'function', 'v17.2: getTodayWowFact 函数存在');
+// Mon (dow=1) 应是 English
+const monDate = new Date('2026-05-04');  // 周一
+const monWow = W.getTodayWowFact(1, monDate);
+assert(monWow && monWow.subjectKey === 'english', `v17.2: 周一 wow = 英语 (实际 ${monWow && monWow.subjectKey})`);
+// Tue (dow=2) 应是 Science
+const tueDate = new Date('2026-05-05');
+const tueWow = W.getTodayWowFact(1, tueDate);
+assert(tueWow && tueWow.subjectKey === 'science', `v17.2: 周二 wow = 科学 (实际 ${tueWow && tueWow.subjectKey})`);
+// 同一日多次调用稳定返回同一条
+const monWow2 = W.getTodayWowFact(1, monDate);
+assert(monWow.hook === monWow2.hook, 'v17.2: 同日多次调 wow 稳定');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));

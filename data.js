@@ -513,6 +513,60 @@ function getWeeklyWowFact(weekN) {
   return WEEKLY_WOW_FACTS.find(w => w.week === weekN) || null;
 }
 
+// ============= v17.2: 英语 Wow 池 (独立 30 条, 按日轮换) =============
+// 涵盖: 词汇趣闻 / 语法陷阱 / 习语 / 词源 / 听力技巧 / 写作 / PSLE 高频错点
+const ENGLISH_WOW_FACTS = [
+  { tag:'词源', hook:'🍝 "Spaghetti" 字面意思是"小绳子"', body:'spaghetti 来自意大利语 spago(绳子)+ 小型后缀 -etti, 字面就是 "tiny strings"。意大利面条几乎所有名字都是形状描述: penne(笔尖)/ farfalle(蝴蝶结)/ rigatoni(条纹)。背单词从词源切入, 印象深 5x。' },
+  { tag:'词源', hook:'🐶 "Salary" 来自盐 — 古罗马军人发"盐工资"', body:'拉丁语 sal(盐)→ salarium(发盐的钱)→ salary。古罗马时盐是奢侈品, 军饷一部分发盐。下次想"赚 salary" 想想盐 — 词义就刻进脑子。' },
+  { tag:'语法', hook:'❗ "He doesn\'t go" vs "He don\'t go" — 后者错在哪?', body:'第三人称单数(he/she/it)动词必须 +s。does 已含 -s 信息所以后面跟原形 go。"He don\'t" 是非正式英语听起来 OK, 但 PSLE 严格扣分。 主谓一致是 PSLE Editing 5 大错之一。' },
+  { tag:'语法', hook:'⚖️ "Less" vs "Fewer" — 90% 母语者也用错', body:'fewer 用于可数名词(fewer apples), less 用于不可数(less water). 但超市经常写 "10 items or less" — 严格来说是错的, 应该是 "10 items or fewer". PSLE 这点会考。' },
+  { tag:'语法', hook:'🔄 "I\'m going to school" vs "I\'m going to the school" 不一样', body:'前者 = 我去上学(目的); 后者 = 我去那栋校舍(地点). 类似: hospital(就医) vs the hospital(去那栋楼). PSLE 高频陷阱: 缺/加 the 改变意思。' },
+  { tag:'习语', hook:'🐱 "It\'s raining cats and dogs" 哪里来?', body:'17 世纪伦敦下大雨时, 街上经常冲出死猫死狗(脏排水沟堆的)。所以"下猫下狗"= 极大暴雨。 PSLE 看图作文 / Comp 经常出现这种 idiom — 知道来源就忘不了。' },
+  { tag:'习语', hook:'🥚 "Walk on eggshells" 字面 vs 真意', body:'字面: 在蛋壳上走(踩破就炸)= 真意: 跟某人说话特别小心怕惹他生气。 PSLE Comp 常见 figurative language — 不能字面理解。' },
+  { tag:'词汇', hook:'📚 英语 1 个词平均有 3 个意思 — "set" 有 464 个', body:'OED 里 "set" 有 464 个不同含义/用法 — 是英语最多义词。"run" 紧随其后 645 个。所以 PSLE Cloze 一空一词难, 要看上下文判断哪个意思。' },
+  { tag:'词汇', hook:'🌊 PSLE 200 高频词 = 80% Comp 文章覆盖', body:'PSLE 阅读题里 80% 单词来自最高频 200 词。 背完这 200 个 = 任何文章都能读懂大意, 不卡壳。 v14 词汇表里就是这 200 个。' },
+  { tag:'词汇', hook:'🇸🇬 "Lah" 在 PSLE 作文里能用吗?', body:'❌ 绝对不能。Singlish(lah/lor/leh)在日常 OK, 但 PSLE 用 Standard English 评分。"Eat already lah" 写成"I have already eaten" — 这是 PSLE 写作高频丢分点。' },
+  { tag:'写作', hook:'✍️ PSLE 作文 1 个高级词加 2-5 分', body:'crestfallen(沮丧) / jubilant(欢欣) / dawned upon me(突然意识到) — 每篇作文用 3 个就比平均高 5 分。 背 30 个高级词, PSLE 作文从 25 → 32 分。' },
+  { tag:'写作', hook:'📖 开头 3 句决定整篇作文分数', body:'PSLE 评卷老师 1 篇作文给 4-6 分钟。前 3 句就定调 — 平淡开头 → 整篇 25 分天花板。 用感官描写(声音/气味)开头 → 起评 30 分。' },
+  { tag:'写作', hook:'🎭 对话引语让作文活起来 — 但要正确', body:'"What a beautiful day!" she exclaimed. — 引号内首字母大写, 引号外动词小写, 句末标点在引号内。 PSLE 高频扣分: 标点放错位置。' },
+  { tag:'阅读', hook:'🎯 Comp 答案 90% 在原文找得到, 不是猜的', body:'PSLE Comprehension OE 题: 答案直接在文章里, 找到关键词附近的句子, 摘下来稍改即可。 别"自己想"原创答案 — 评卷只看你有没有抓到原文核心词。' },
+  { tag:'阅读', hook:'⏱️ Comp 速度 240 wpm 是 PSLE 临界线', body:'低于 240 词/分钟 = 题做不完。每天 5 min 计时阅读练 1 个月 → 速度提到 240+。这是 v16 手册强调的。' },
+  { tag:'听力', hook:'🎧 PSLE Listening 答案 90% 在转折后', body:'听到 "but / however / although" → 立刻竖耳朵, 答案 95% 在后半句, 不是前半句。 听力题最大陷阱: 听了前半句就抢答。' },
+  { tag:'听力', hook:'🔢 数字陷阱: 听 "fifteen" 还是 "fifty"?', body:'fifteen [fɪfˈtiːn] vs fifty [ˈfɪfti] — 重音不同。 PSLE Listening 数字题常考: 13/30, 14/40, 15/50, 16/60, 17/70, 18/80, 19/90 这 7 对。' },
+  { tag:'听力', hook:'🇸🇬 PSLE 听力是新加坡口音 — 不是英美', body:'PSLE Listening 用新加坡 standard English 录音, 不是 BBC / NPR。 平时多听 CNA938 / CNA Insider 适应 SG 口音, 比听 BBC 帮助大。' },
+  { tag:'Cloze', hook:'🧩 Cloze "一空一词" 70% 是介词或冠词', body:'PSLE Cloze 最难空多是: in/on/at/of/for/with(介词)和 a/an/the(冠词)。 这两类没规律, 全靠搭配感 — 读多遇多次自然会。' },
+  { tag:'Cloze', hook:'⚠️ "Look at" vs "Look after" 意思天差地别', body:'介词搭配换一个词意思全变: look at(看)/ look after(照顾)/ look for(找)/ look up(查字典)/ look out(小心). PSLE Cloze 必考动词短语。' },
+  { tag:'Editing', hook:'✏️ Editing 5 类错占 95% 题目', body:'主谓一致 / 时态 / 拼写 / 介词 / 冠词 — PSLE Editing 95% 错都在这 5 类。建一个 Editing 错题本按这 5 类记, 1 个月内错率减半。' },
+  { tag:'Editing', hook:'⏰ "Yesterday I am hungry" — 时态错', body:'yesterday 是过去时间 → 必须用 was, 不是 am。 PSLE Editing 高频: 时间词跟动词时态不匹配(yesterday/last week → 过去式; tomorrow → 将来时)。' },
+  { tag:'Grammar', hook:'🔀 if 句 vs unless 句 — 90% 学生混了', body:'"unless = if not". "Unless you study, you will fail" = "If you do not study, you will fail". PSLE Grammar 高频: unless 后用肯定句, 因为本身就含否定。' },
+  { tag:'Grammar', hook:'⏳ "since" vs "for" — 都表"持续多久"', body:'since + 时间点(since 2020 / since I was 5). for + 时间段(for 5 years / for 10 minutes). PSLE 高频, 别混。' },
+  { tag:'Oral', hook:'🗣️ Reading Aloud: 句号停 1.5 秒 = 多 2 分', body:'PSLE Oral Reading Aloud 评 15 分。 句末停顿 1.5 秒 + 重读关键词 = 流畅感觉。 平淡读完就 8-10 分; 有节奏 13-15 分。' },
+  { tag:'Oral', hook:'🖼️ Stimulus 看图: 描述→联想→个人 3 步答', body:'PSLE Oral 看图说话: ① 描述场景 ② 联想问题/感受 ③ 个人经历呼应。 每点 2-3 句即可。 缺哪一步扣 1-2 分。' },
+  { tag:'Synthesis', hook:'🔗 PSLE Paper 2 顶端 10 分: Synthesis', body:'把 2 个简单句合并成 1 个复杂句, 或换句型不变意 — Synthesis & Transformation 占 10 分。 W15 起每周 1h 专项练习。' },
+  { tag:'词汇', hook:'🌍 PSLE Vocab 6 完成 = AL2 起步线', body:'Vocabulary 6 这本完成 = 词汇量到 PSLE AL2 标准。 v14 计划 W16 完成 Vocab 5, W52 前完成 Vocab 6 — 严格执行 = 英语稳 AL2。' },
+  { tag:'写作', hook:'🌧️ 描写下雨用 5 个不同动词 — 都比 "rain" 好', body:'drizzle(细雨)/ shower(短雨)/ pour(倾盆)/ pelt(打)/ patter(嗒嗒). PSLE 作文用一个就比 "It rained" 高级 3 倍。' },
+  { tag:'PSLE', hook:'🎯 PSLE 英语 Paper 1 = 作文 + Editing — 70 min', body:'Paper 1 = Composition(50 分, 50 min)+ Situational Writing(15 分, 20 min). 时间紧, 必须留 5 min 检查拼写。' }
+];
+
+// 按日轮换: Sun/Mon/Wed/Fri = 英语 (4 天), Tue/Thu/Sat = 科学 (3 天)
+// 每日同一天稳定显示同一条 (用 dayOfYear*12345 哈希避免连续相同)
+function getTodayWowFact(weekN, dateOverride) {
+  const d = dateOverride || new Date();
+  const dow = d.getDay();  // 0=Sun, 1=Mon, ..., 6=Sat
+  const englishDays = new Set([0, 1, 3, 5]);  // Sun/Mon/Wed/Fri
+  if (englishDays.has(dow)) {
+    // 英语 — 按 epoch day 索引,每天 +1, 30 天循环一遍
+    const epochDay = Math.floor(d.getTime() / 86400000);
+    const idx = ((epochDay % ENGLISH_WOW_FACTS.length) + ENGLISH_WOW_FACTS.length) % ENGLISH_WOW_FACTS.length;
+    const fact = ENGLISH_WOW_FACTS[idx];
+    return { subject: '英语', subjectIcon: '📚', subjectColor: '#4ECDC4', subjectKey: 'english', tag: fact.tag, hook: fact.hook, body: fact.body, week: null };
+  }
+  // 科学(本周对应 wow)
+  const sci = WEEKLY_WOW_FACTS.find(w => w.week === weekN);
+  if (!sci) return null;
+  return { subject: '科学/策略', subjectIcon: '🔬', subjectColor: '#A788E0', subjectKey: 'science', tag: `W${sci.week}`, hook: sci.hook, body: sci.body, week: sci.week };
+}
+
 // 父母解锁(管理页): 强制重置 streak 到指定天数 (默认上次最高的一半,鼓励)
 function parentRestoreStreak(state, daysToRestore) {
   if (!state.dailyStreak) state.dailyStreak = { days: 0, lastDate: null, bestEver: 0, freezeTokens: 0, brokenAt: null };
@@ -1714,3 +1768,6 @@ window.parentRestoreStreak = parentRestoreStreak;
 window.streakTodayKey = streakTodayKey;
 window.WEEKLY_WOW_FACTS = WEEKLY_WOW_FACTS;
 window.getWeeklyWowFact = getWeeklyWowFact;
+// v17.2
+window.ENGLISH_WOW_FACTS = ENGLISH_WOW_FACTS;
+window.getTodayWowFact = getTodayWowFact;
