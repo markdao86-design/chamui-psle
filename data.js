@@ -290,6 +290,52 @@ const LISTENING_RESOURCES = [
     level: 'P3-P5 启蒙',
     levelColor: '#6BCB77',
     episodeInfo: '291 集 · 自动连播'
+  },
+  // === 4) 中高级 (B2-C1) — PSLE 后期 + 中学衔接,词汇/语速明显升一档 ===
+  {
+    type: 'youtube-playlist',
+    title: '🎓 TED-Ed 教育动画(频道连播)',
+    desc: '5-15 min 动画课 — 科学/历史/数学/语言学,B2 中高级,词汇深化',
+    playlistId: 'UUsooa4yRKGN_zEE8iknghZA',
+    level: 'B2 中高级',
+    levelColor: '#FF9F45',
+    episodeInfo: '2350 集 · 自动连播'
+  },
+  {
+    type: 'youtube-playlist',
+    title: '📺 BBC Learning English(频道连播)',
+    desc: '英式新闻 + 词汇 + 6 Minute English + News Review,B2-C1 系统提升',
+    playlistId: 'UUHaHD477h-FeBbVh9Sh7syA',
+    level: 'B2-C1 进阶',
+    levelColor: '#FF9F45',
+    episodeInfo: '4314 集 · 自动连播'
+  },
+  {
+    type: 'youtube-playlist',
+    title: '🇸🇬 CNA Insider 新加坡深度(频道连播)',
+    desc: '本地长篇新闻调查 — 5-30 min,C1 高级,真实新加坡英语听感',
+    playlistId: 'UU_Lnb8ZHqqgLbp-7hltuT9w',
+    level: 'C1 高级',
+    levelColor: '#FF5757',
+    episodeInfo: '6227 集 · 自动连播'
+  },
+  {
+    type: 'youtube-playlist',
+    title: '📚 Crash Course 学术速成(频道连播)',
+    desc: 'PBS 学术系列 — 文学/历史/生物/化学/物理,B2-C1,语速快但板书清晰',
+    playlistId: 'UUX6b17PVsYBQ0ip5gyeme-Q',
+    level: 'B2-C1 学术',
+    levelColor: '#FF9F45',
+    episodeInfo: '1685 集 · 自动连播'
+  },
+  {
+    type: 'youtube-playlist',
+    title: '🔬 60-Second Science(频道连播)',
+    desc: 'Scientific American 出品 — 每集 60-90 秒科普短讯,B2-C1,适合泛听',
+    playlistId: 'UU_xYMXx_-mAzheKyEtwtCAQ',
+    level: 'B2-C1 科普',
+    levelColor: '#FF9F45',
+    episodeInfo: '1040 集 · 自动连播'
   }
 ];
 
