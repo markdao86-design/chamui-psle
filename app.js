@@ -1826,7 +1826,8 @@ function closeMiniGameHub() {
 // 数学速算
 let _mathGameState = null;
 function openMathGame() {
-  const qs = [...window.MATH_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10);
+  // v18.3: 按今日轮换 (同一天稳定 10 题, 跨天换)
+  const qs = window.getDailyMathQuestions ? window.getDailyMathQuestions(10) : [...window.MATH_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10);
   _mathGameState = { qs, idx: 0, correct: 0, wrong: 0, startedAt: Date.now(), userAns: '', timeLeft: 30 };
   _renderMathGame();
   // 计时
@@ -1908,7 +1909,8 @@ function closeMathGame() {
 // Editing 找错
 let _editingGameState = null;
 function openEditingGame() {
-  const para = window.EDITING_PARAGRAPHS[Math.floor(Math.random() * window.EDITING_PARAGRAPHS.length)];
+  // v18.3: 按今日轮换
+  const para = window.getDailyEditingParagraph ? window.getDailyEditingParagraph() : window.EDITING_PARAGRAPHS[0];
   _editingGameState = { para, found: new Set(), wrong: 0, startedAt: Date.now() };
   _renderEditingGame();
 }
@@ -1941,7 +1943,8 @@ function _renderEditingGame() {
 function clickEditingWord(word) {
   const g = _editingGameState;
   if (!g) return;
-  const errWords = g.para.errors.map(e => e.word.split(' ')[0]);
+  // v18.3: errors[].word 可能是单词或短语, 取首词作为可点击 key
+  const errWords = g.para.errors.map(e => (e.word || '').split(' ')[0]);
   if (g.found.has(word)) return;
   if (errWords.includes(word)) {
     g.found.add(word);
@@ -1972,7 +1975,8 @@ function closeEditingGame() {
 // 听写
 let _listenGameState = null;
 function openListenGame() {
-  const item = window.LISTEN_DICTATIONS[Math.floor(Math.random() * window.LISTEN_DICTATIONS.length)];
+  // v18.3: 按今日轮换
+  const item = window.getDailyListenDictation ? window.getDailyListenDictation() : window.LISTEN_DICTATIONS[0];
   _listenGameState = { item, answers: ['', '', '', '', ''], played: false };
   _renderListenGame();
 }

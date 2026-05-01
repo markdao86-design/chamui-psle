@@ -811,86 +811,206 @@ function predictFutureSelf(state) {
   return { predictedTotal, predLv, predEqCount, predAL, daysLeft, avgDaily: Math.round(avgDaily * 10) / 10, breakRate };
 }
 
-// ============= v18 Phase 5.4: 🧪 mini-game 数据 =============
-const MATH_QUESTIONS = (() => {
-  const arr = [];
-  // 加法: 50 题
-  for (let i = 0; i < 30; i++) {
-    const a = Math.floor(Math.random() * 80) + 10;
-    const b = Math.floor(Math.random() * 80) + 10;
-    arr.push({ q: `${a} + ${b}`, ans: a + b });
-  }
-  // 减法
-  for (let i = 0; i < 25; i++) {
-    const a = Math.floor(Math.random() * 80) + 30;
-    const b = Math.floor(Math.random() * a);
-    arr.push({ q: `${a} - ${b}`, ans: a - b });
-  }
-  // 乘法
-  for (let i = 0; i < 25; i++) {
-    const a = Math.floor(Math.random() * 11) + 2;
-    const b = Math.floor(Math.random() * 11) + 2;
-    arr.push({ q: `${a} × ${b}`, ans: a * b });
-  }
-  // 除法
-  for (let i = 0; i < 20; i++) {
-    const b = Math.floor(Math.random() * 10) + 2;
-    const ans = Math.floor(Math.random() * 11) + 2;
-    arr.push({ q: `${b * ans} ÷ ${b}`, ans });
-  }
-  return arr;
-})();
+// ============= v18 Phase 5.4: 🧪 mini-game 数据 (v18.3 升级 P5/P6 PSLE 难度) =============
+// 60+ 题 PSLE 级别, 涵盖 分数 / 比例 / 速度 / 百分比 / 平均数 / 周长面积 / 小数 / 整数四则
+// 都设计为答案是整数(便于输入), 30 秒答 10 题
+const MATH_QUESTIONS = [
+  // === 分数 (P5/P6 高频) ===
+  { q: '3/4 + 1/4', ans: 1 },
+  { q: '1/2 + 1/4 = ?/4', ans: 3 },
+  { q: '5/6 - 1/3 = ?/2', ans: 1 },
+  { q: '2/3 of 18', ans: 12 },
+  { q: '3/5 of 25', ans: 15 },
+  { q: '5/8 of 24', ans: 15 },
+  { q: '7/10 of 50', ans: 35 },
+  { q: '1/4 of 60', ans: 15 },
+  { q: '4/5 of 30', ans: 24 },
+  { q: '2/7 of 49', ans: 14 },
+  // === 百分比 (P5/P6 重点) ===
+  { q: '50% of 80', ans: 40 },
+  { q: '25% of 60', ans: 15 },
+  { q: '10% of 250', ans: 25 },
+  { q: '20% of 45', ans: 9 },
+  { q: '75% of 80', ans: 60 },
+  { q: '40% of 150', ans: 60 },
+  { q: '60% of 50', ans: 30 },
+  { q: '15% of 200', ans: 30 },
+  { q: '30% of 90', ans: 27 },
+  { q: '5% of 400', ans: 20 },
+  // === 速度 (PSLE 高频, distance/time) ===
+  { q: '60 km in 2h, speed (km/h)', ans: 30 },
+  { q: '120 km at 40 km/h, time (h)', ans: 3 },
+  { q: '45 km/h × 2h = ? km', ans: 90 },
+  { q: '180 km in 3h, speed', ans: 60 },
+  { q: '20 km/h × 4h = ? km', ans: 80 },
+  { q: '100 km at 25 km/h, time (h)', ans: 4 },
+  { q: '50 km/h × 5h = ? km', ans: 250 },
+  { q: '90 km in 1.5h, speed', ans: 60 },
+  { q: '300 km at 60 km/h, time (h)', ans: 5 },
+  // === 比例 ratio (P5 重点) ===
+  { q: 'Ratio 2:3, total 25, larger', ans: 15 },
+  { q: 'Ratio 1:4, total 30, larger', ans: 24 },
+  { q: 'Ratio 3:5, smaller is 15, larger', ans: 25 },
+  { q: 'Ratio 4:5, total 36, smaller', ans: 16 },
+  { q: 'Ratio 2:7, total 27, smaller', ans: 6 },
+  { q: 'Ratio 3:4 = 9:?', ans: 12 },
+  { q: 'Ratio 5:2 = ?:6', ans: 15 },
+  { q: 'A:B = 3:5, A=12, B', ans: 20 },
+  { q: 'Ratio 2:3:5, total 50, biggest', ans: 25 },
+  // === 平均数 ===
+  { q: 'Avg of 4, 6, 8', ans: 6 },
+  { q: 'Avg of 10, 20, 30, 40', ans: 25 },
+  { q: 'Avg of 5, 7, 9, 11', ans: 8 },
+  { q: 'Avg of 12, 15, 18', ans: 15 },
+  { q: 'Sum 100, count 4, avg', ans: 25 },
+  { q: '3 numbers avg 10, sum', ans: 30 },
+  { q: '5 numbers avg 12, sum', ans: 60 },
+  { q: 'Avg of 50, 60, 70, 80', ans: 65 },
+  // === 周长 / 面积 ===
+  { q: 'Square side 7, perimeter', ans: 28 },
+  { q: 'Square side 9, area', ans: 81 },
+  { q: 'Rectangle 5×8, area', ans: 40 },
+  { q: 'Rectangle 6×4, perimeter', ans: 20 },
+  { q: 'Square area 64, side', ans: 8 },
+  { q: 'Square area 144, side', ans: 12 },
+  { q: 'Rectangle 12×7, area', ans: 84 },
+  { q: 'Square side 11, perimeter', ans: 44 },
+  { q: 'Rectangle 15×4, perimeter', ans: 38 },
+  // === 小数 ===
+  { q: '0.5 × 0.4 (×100)', ans: 20 },
+  { q: '0.25 + 0.75 (×100)', ans: 100 },
+  { q: '1.5 × 4', ans: 6 },
+  { q: '2.5 × 4', ans: 10 },
+  { q: '0.1 × 100', ans: 10 },
+  { q: '12.5 × 8', ans: 100 },
+  { q: '0.6 × 50', ans: 30 },
+  // === 整数四则(快速心算)===
+  { q: '125 + 75', ans: 200 },
+  { q: '300 - 175', ans: 125 },
+  { q: '12 × 25', ans: 300 },
+  { q: '15 × 15', ans: 225 },
+  { q: '450 ÷ 9', ans: 50 },
+  { q: '720 ÷ 8', ans: 90 },
+  { q: '13 × 7', ans: 91 },
+  { q: '17 × 6', ans: 102 },
+  { q: '24 × 25', ans: 600 },
+  { q: '999 + 1', ans: 1000 },
+  // === 余数除法 ===
+  { q: '47 ÷ 6, remainder', ans: 5 },
+  { q: '100 ÷ 7, remainder', ans: 2 },
+  { q: '85 ÷ 9, remainder', ans: 4 },
+  // === GST / 折扣 (Singapore PSLE 高频) ===
+  { q: 'Item $100, 9% GST, total ($)', ans: 109 },
+  { q: 'Item $200, 10% off, pay ($)', ans: 180 },
+  { q: 'Item $50, 20% off, pay ($)', ans: 40 },
+  { q: 'Item $80, 25% discount, pay ($)', ans: 60 }
+];
 
+// v18.3: 25 段 PSLE Editing 5 类错(主谓/时态/拼写/介词/冠词), 每段 ~50 词 5 错
 const EDITING_PARAGRAPHS = [
-  {
-    text: 'Yesterday I goes to school. The teacher tells us a interesting story. We listen carefully and asked many question. After class, I and my friend played football in the park.',
-    errors: [
-      { word: 'goes', should: 'went', reason: '过去时' },
-      { word: 'tells', should: 'told', reason: '过去时' },
-      { word: 'a interesting', should: 'an interesting', reason: '元音前用 an' },
-      { word: 'question', should: 'questions', reason: '复数' },
-      { word: 'I and my friend', should: 'my friend and I', reason: '语序' }
-    ]
-  },
-  {
-    text: 'My mother is a teacher. She teach English in a primary school. She love her students very much. Every morning, she wake up at six and prepare breakfast for me and my brother.',
-    errors: [
-      { word: 'teach', should: 'teaches', reason: '主谓一致' },
-      { word: 'love', should: 'loves', reason: '主谓一致' },
-      { word: 'wake', should: 'wakes', reason: '主谓一致' },
-      { word: 'prepare', should: 'prepares', reason: '主谓一致' },
-      { word: 'me and my brother', should: 'my brother and me', reason: '语序' }
-    ]
-  },
-  {
-    text: 'Last weekend, we visit the zoo. There were many different kind of animals. The lion roared loudly when we passed it cage. My sister was scare of the snake but she enjoyed seeing the monkeys.',
-    errors: [
-      { word: 'visit', should: 'visited', reason: '过去时' },
-      { word: 'kind', should: 'kinds', reason: '复数' },
-      { word: 'it cage', should: 'its cage', reason: '所有格' },
-      { word: 'scare', should: 'scared', reason: '形容词' },
-      { word: 'enjoyed', should: 'enjoyed', reason: '(此句 enjoyed 实际无错, 备用)' }
-    ]
-  }
+  { text: 'Yesterday I goes to school. The teacher tells us a interesting story. We listen carefully and asked many question. After class, I and my friend played football.',
+    errors: [{word:'goes',reason:'过去时→went'},{word:'tells',reason:'过去时→told'},{word:'a',reason:'元音前→an'},{word:'question',reason:'复数→questions'},{word:'listen',reason:'过去时→listened'}] },
+  { text: 'My mother teach English in a school. She love her students. Every morning, she wake up at six and prepare breakfast for me and my brother. We are very lucky.',
+    errors: [{word:'teach',reason:'主谓一致→teaches'},{word:'love',reason:'主谓一致→loves'},{word:'wake',reason:'主谓一致→wakes'},{word:'prepare',reason:'主谓一致→prepares'},{word:'me',reason:'语序→my brother and me'}] },
+  { text: 'Last weekend, we visit the zoo. There were many different kind of animals. The lion roared loudly when we passed it cage. My sister was scare of the snake.',
+    errors: [{word:'visit',reason:'过去时→visited'},{word:'kind',reason:'复数→kinds'},{word:'it',reason:'所有格→its'},{word:'scare',reason:'形容词→scared'},{word:'roared',reason:'(此句无错备用)'}] },
+  { text: 'I have a pet dog. He name is Buddy. Buddy love to play with me everyday. Last Sunday, we taked him to the beach. He runned in the sand and chasing seagulls.',
+    errors: [{word:'He',reason:'所有格→His'},{word:'love',reason:'主谓一致→loves'},{word:'taked',reason:'过去时→took'},{word:'runned',reason:'过去时→ran'},{word:'chasing',reason:'平行结构→chased'}] },
+  { text: 'My brother and me went to the library yesterday. We borrow three book each. The librarian were very friendly. She help us find a book on dinosaur. We was so happy.',
+    errors: [{word:'me',reason:'主格→I'},{word:'borrow',reason:'过去时→borrowed'},{word:'book',reason:'复数→books'},{word:'were',reason:'主谓一致→was'},{word:'was',reason:'主谓一致→were'}] },
+  { text: 'On Monday, my class go on a trip to Sentosa. The bus arrive at school at 8am. We sing songs in the bus. When we reach there, the sun were shining brightly. It was a wonderful day.',
+    errors: [{word:'go',reason:'过去时→went'},{word:'arrive',reason:'过去时→arrived'},{word:'sing',reason:'过去时→sang'},{word:'reach',reason:'过去时→reached'},{word:'were',reason:'主谓一致→was'}] },
+  { text: 'I love eat chicken rice. It is a popular food in Singapore. The rice are cooked with chicken broth. Many peoples like to add chili sauce. My favourite stall is in a food court near my house.',
+    errors: [{word:'eat',reason:'eat→eating'},{word:'are',reason:'主谓一致→is'},{word:'peoples',reason:'people 不可数'},{word:'favourite',reason:'(此句无错备用)'},{word:'a food court',reason:'冠词→the food court'}] },
+  { text: 'My father usually drive me to school. But today, his car was broke down. So we have to take the MRT. The train was very crowded. I almost couldnt breathe in the carriage.',
+    errors: [{word:'drive',reason:'主谓一致→drives'},{word:'was',reason:'多余 was'},{word:'have',reason:'过去时→had'},{word:'couldnt',reason:'拼写→couldn\'t'},{word:'crowded',reason:'(无错备用)'}] },
+  { text: 'During the school holidays, we went to Malaysia. We stayed at a beach resort for five day. My sister learned how to swim. The food there was delicious. We enjoy ourselves very much.',
+    errors: [{word:'day',reason:'复数→days'},{word:'enjoy',reason:'过去时→enjoyed'},{word:'a beach resort',reason:'(无错备用)'},{word:'learned',reason:'(无错备用)'},{word:'delicious',reason:'(无错备用)'}] },
+  { text: 'When I were young, I lived in a village. The houses there was made of wood. Children played outside until evening. I have many happy memory of that place. Now everything are different.',
+    errors: [{word:'were',reason:'主谓一致→was'},{word:'was',reason:'主谓一致→were'},{word:'have',reason:'时态→had'},{word:'memory',reason:'复数→memories'},{word:'are',reason:'主谓一致→is'}] },
+  { text: 'My best friend is name Sarah. She and I has known each other since kindergarten. We always play together at recess. Last week, she got a award for being the top student. I was so prouded of her.',
+    errors: [{word:'is name',reason:'is named/her name is'},{word:'has',reason:'主谓一致→have'},{word:'a award',reason:'冠词→an award'},{word:'prouded',reason:'拼写→proud'},{word:'recess',reason:'(无错备用)'}] },
+  { text: 'I have been play badminton for three years. Every Saturday, I goes to the sports hall to train. My coach are very strict. She makes us run laps and do exercise. But I really enjoys it.',
+    errors: [{word:'play',reason:'play→playing'},{word:'goes',reason:'主谓一致→go'},{word:'are',reason:'主谓一致→is'},{word:'exercise',reason:'复数→exercises'},{word:'enjoys',reason:'主谓一致→enjoy'}] },
+  { text: 'The fire in the kitchen was started by a candle. My mother quickly put out it with a wet towel. Luckly, no one was hurt. We learnt a important lesson that day. Always blow off candle before sleeping.',
+    errors: [{word:'put out it',reason:'词序→put it out'},{word:'Luckly',reason:'拼写→Luckily'},{word:'a important',reason:'冠词→an important'},{word:'learnt',reason:'(无错备用)'},{word:'candle',reason:'复数→candles'}] },
+  { text: 'My grandmother live in a small flat near the seaside. She always cook delicious food when we visit her. She know many old stories. Last weekend, she telled us about her childhood in China. It were so interesting.',
+    errors: [{word:'live',reason:'主谓一致→lives'},{word:'cook',reason:'主谓一致→cooks'},{word:'know',reason:'主谓一致→knows'},{word:'telled',reason:'过去时→told'},{word:'were',reason:'主谓一致→was'}] },
+  { text: 'On rainy day, I love to read books at home. My favourite is the Harry Potter series. I has read all seven book. The story are exciting. I wish I could go to a magic school like Hogwarts.',
+    errors: [{word:'rainy day',reason:'冠词→rainy days'},{word:'has',reason:'主谓一致→have'},{word:'book',reason:'复数→books'},{word:'are',reason:'主谓一致→is'},{word:'a magic',reason:'(无错备用)'}] },
+  { text: 'During PE lesson, I sprained my ankle while playing soccer. The teacher take me to the school clinic. The nurse put a ice pack on it. My ankle was very pain. I limped to the bus stop after school.',
+    errors: [{word:'PE lesson',reason:'冠词→a PE lesson'},{word:'take',reason:'过去时→took'},{word:'a ice',reason:'冠词→an ice'},{word:'pain',reason:'形容词→painful'},{word:'limped',reason:'(无错备用)'}] },
+  { text: 'My family decided to went on a holiday. We choosed to visit Japan. The flight take seven hour. When we arrived, it was raining. We checked into the hotel and goed to sleep early.',
+    errors: [{word:'went',reason:'to+原形→go'},{word:'choosed',reason:'过去时→chose'},{word:'take',reason:'过去时→took'},{word:'hour',reason:'复数→hours'},{word:'goed',reason:'过去时→went'}] },
+  { text: 'There are five member in my family. My father is engineer. My mother work in a bank. I have one elder sister and a younger brother. We loves spending time together on weekends.',
+    errors: [{word:'member',reason:'复数→members'},{word:'is engineer',reason:'冠词→is an engineer'},{word:'work',reason:'主谓一致→works'},{word:'a younger',reason:'(无错备用)'},{word:'loves',reason:'主谓一致→love'}] },
+  { text: 'Singapore is a island country in Southeast Asia. It have a population of about 6 million. The country are very clean and safe. People here speaks four official languages. I am proud to be a Singaporean.',
+    errors: [{word:'a island',reason:'冠词→an island'},{word:'have',reason:'主谓一致→has'},{word:'are',reason:'主谓一致→is'},{word:'speaks',reason:'主谓一致→speak'},{word:'a Singaporean',reason:'(无错备用)'}] },
+  { text: 'Last night, I had a strange dream. I was flying over a mountain. Suddenly, a big bird appears in front of me. It taked me to a magical land. There were many talking animal there. Then I woke up.',
+    errors: [{word:'appears',reason:'过去时→appeared'},{word:'taked',reason:'过去时→took'},{word:'a magical',reason:'(无错备用)'},{word:'animal',reason:'复数→animals'},{word:'were',reason:'(无错备用)'}] },
+  { text: 'My favourite hobby are reading books. I usually borrows books from the school library. Last month, I read a interesting book about space. The author write in a very lively way. I learnt many new fact.',
+    errors: [{word:'are',reason:'主谓一致→is'},{word:'borrows',reason:'主谓一致→borrow'},{word:'a interesting',reason:'冠词→an interesting'},{word:'write',reason:'过去时→wrote'},{word:'fact',reason:'复数→facts'}] },
+  { text: 'The boy was running very fastly when he tripped. He hurt his knee badly. His friend helped him to stand up. They walks slowly to the bench. The boy mother soon came to fetch him home.',
+    errors: [{word:'fastly',reason:'副词→fast'},{word:'badly',reason:'(无错备用)'},{word:'walks',reason:'过去时→walked'},{word:'boy mother',reason:'所有格→boy\'s mother'},{word:'fetch him home',reason:'冗余→take him home'}] },
+  { text: 'Every Sunday, my whole family go to church together. We listens to the pastor preach. After the service, we usually have lunch in a nearby restaurant. The food there is always tasty. We loves these Sunday outings.',
+    errors: [{word:'go',reason:'主谓一致→goes'},{word:'listens',reason:'主谓一致→listen'},{word:'a nearby',reason:'(无错备用)'},{word:'is',reason:'(无错备用)'},{word:'loves',reason:'主谓一致→love'}] },
+  { text: 'I has a beautiful garden at home. There is many flowers and plants. My father water them every morning. The bees come to drink the nectar. Sometimes butterfly fly in to lay egg.',
+    errors: [{word:'has',reason:'主谓一致→have'},{word:'is',reason:'主谓一致→are'},{word:'water',reason:'主谓一致→waters'},{word:'butterfly',reason:'复数→butterflies'},{word:'egg',reason:'复数→eggs'}] },
+  { text: 'My class went on a learning journey to a museum yesterday. The guide explain everything in detail. We see many old artefacts. After the tour, we wrote a report on what we have learn. The teacher was please with our work.',
+    errors: [{word:'explain',reason:'过去时→explained'},{word:'see',reason:'过去时→saw'},{word:'have learn',reason:'过去分词→had learnt'},{word:'please',reason:'形容词→pleased'},{word:'a museum',reason:'(无错备用)'}] }
 ];
 
+// v18.3: 12 段 PSLE 风格听写, 涵盖科学/社会/校园/家庭/旅行 等主题
 const LISTEN_DICTATIONS = [
-  {
-    text: 'Last Sunday, my family went to the beach. We had a wonderful picnic and played in the sand all afternoon.',
-    blanks: ['Sunday', 'beach', 'wonderful', 'picnic', 'afternoon'],
-    voice: 'en-GB'
-  },
-  {
-    text: 'The science teacher explained how plants get water through their roots and transport it to the leaves.',
-    blanks: ['science', 'plants', 'water', 'roots', 'leaves'],
-    voice: 'en-GB'
-  },
-  {
-    text: 'PSLE listening exam will test your understanding of conversations and short news reports in English.',
-    blanks: ['PSLE', 'listening', 'conversations', 'news', 'English'],
-    voice: 'en-GB'
-  }
+  { text: 'Last Sunday, my family went to the beach. We had a wonderful picnic and played in the sand all afternoon.',
+    blanks: ['Sunday','beach','wonderful','picnic','afternoon'], voice:'en-GB' },
+  { text: 'The science teacher explained how plants get water through their roots and transport it to the leaves.',
+    blanks: ['science','plants','water','roots','leaves'], voice:'en-GB' },
+  { text: 'PSLE listening exam will test your understanding of conversations and short news reports in English.',
+    blanks: ['PSLE','listening','conversations','news','English'], voice:'en-GB' },
+  { text: 'Singapore is a small island country with a population of about six million people from many cultures.',
+    blanks: ['Singapore','island','population','million','cultures'], voice:'en-GB' },
+  { text: 'My favourite subject in school is mathematics because I enjoy solving difficult problems and puzzles.',
+    blanks: ['favourite','school','mathematics','solving','puzzles'], voice:'en-GB' },
+  { text: 'The library opens at nine in the morning and closes at six in the evening on weekdays.',
+    blanks: ['library','nine','morning','six','weekdays'], voice:'en-GB' },
+  { text: 'During the holiday, we visited the zoo and saw many animals including lions tigers and elephants.',
+    blanks: ['holiday','visited','animals','tigers','elephants'], voice:'en-GB' },
+  { text: 'Recycling helps protect our environment by reducing waste and saving valuable natural resources.',
+    blanks: ['Recycling','protect','environment','waste','resources'], voice:'en-GB' },
+  { text: 'The PSLE exam will be held in September and consists of four main subjects English Math Science and Mother Tongue.',
+    blanks: ['PSLE','September','English','Science','Tongue'], voice:'en-GB' },
+  { text: 'My grandmother taught me how to cook traditional dishes using fresh vegetables from her own garden.',
+    blanks: ['grandmother','traditional','dishes','vegetables','garden'], voice:'en-GB' },
+  { text: 'The water cycle includes evaporation condensation and precipitation which keeps water moving around the earth.',
+    blanks: ['water','evaporation','condensation','precipitation','earth'], voice:'en-GB' },
+  { text: 'Reading books helps you learn new words improve your vocabulary and develop a strong imagination.',
+    blanks: ['Reading','words','improve','vocabulary','imagination'], voice:'en-GB' }
 ];
+
+// v18.3: 按今日 epochDay 哈希选 mini-game 内容(同一天稳定,跨天换)
+function _epochDay() { return Math.floor(Date.now() / 86400000); }
+function getDailyMathQuestions(count) {
+  // 用日期作为种子洗牌, 取前 N 题; 同一天调多次返回同一组
+  const seed = _epochDay();
+  const arr = [...MATH_QUESTIONS];
+  // 简单确定性 shuffle (Fisher-Yates with seeded RNG)
+  let s = seed;
+  for (let i = arr.length - 1; i > 0; i--) {
+    s = (s * 9301 + 49297) % 233280;
+    const j = Math.floor((s / 233280) * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr.slice(0, count || 10);
+}
+function getDailyEditingParagraph() {
+  const idx = _epochDay() % EDITING_PARAGRAPHS.length;
+  return EDITING_PARAGRAPHS[idx];
+}
+function getDailyListenDictation() {
+  const idx = _epochDay() % LISTEN_DICTATIONS.length;
+  return LISTEN_DICTATIONS[idx];
+}
 
 // 父母解锁(管理页): 强制重置 streak 到指定天数 (默认上次最高的一半,鼓励)
 function parentRestoreStreak(state, daysToRestore) {
@@ -2702,3 +2822,7 @@ window.predictFutureSelf = predictFutureSelf;
 window.MATH_QUESTIONS = MATH_QUESTIONS;
 window.EDITING_PARAGRAPHS = EDITING_PARAGRAPHS;
 window.LISTEN_DICTATIONS = LISTEN_DICTATIONS;
+// v18.3: 按日轮换
+window.getDailyMathQuestions = getDailyMathQuestions;
+window.getDailyEditingParagraph = getDailyEditingParagraph;
+window.getDailyListenDictation = getDailyListenDictation;

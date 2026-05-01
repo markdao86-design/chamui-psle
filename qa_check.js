@@ -334,10 +334,29 @@ ts12.currentWeek = 10;
 const fut = W.predictFutureSelf(ts12);
 assert(fut && fut.predictedTotal > 0, 'v18: predictFutureSelf 返回预测分');
 
-// ===== v18 Phase 5.4: mini-game 数据 =====
-assert(W.MATH_QUESTIONS && W.MATH_QUESTIONS.length >= 100, `v18: MATH_QUESTIONS ≥100 (实际 ${W.MATH_QUESTIONS && W.MATH_QUESTIONS.length})`);
-assert(W.EDITING_PARAGRAPHS && W.EDITING_PARAGRAPHS.length >= 3, `v18: EDITING_PARAGRAPHS ≥3 (实际 ${W.EDITING_PARAGRAPHS && W.EDITING_PARAGRAPHS.length})`);
-assert(W.LISTEN_DICTATIONS && W.LISTEN_DICTATIONS.length >= 3, `v18: LISTEN_DICTATIONS ≥3 (实际 ${W.LISTEN_DICTATIONS && W.LISTEN_DICTATIONS.length})`);
+// ===== v18.3: mini-game 数据 — P5/P6 PSLE 难度 + 按日轮换 =====
+assert(W.MATH_QUESTIONS && W.MATH_QUESTIONS.length >= 60, `v18.3: MATH_QUESTIONS ≥60 P5/P6 题 (实际 ${W.MATH_QUESTIONS && W.MATH_QUESTIONS.length})`);
+assert(W.EDITING_PARAGRAPHS && W.EDITING_PARAGRAPHS.length >= 25, `v18.3: EDITING_PARAGRAPHS ≥25 段 (实际 ${W.EDITING_PARAGRAPHS && W.EDITING_PARAGRAPHS.length})`);
+assert(W.LISTEN_DICTATIONS && W.LISTEN_DICTATIONS.length >= 12, `v18.3: LISTEN_DICTATIONS ≥12 段 (实际 ${W.LISTEN_DICTATIONS && W.LISTEN_DICTATIONS.length})`);
+// 按日轮换函数存在 + 同一天稳定
+assert(typeof W.getDailyMathQuestions === 'function', 'v18.3: getDailyMathQuestions 存在');
+const m1 = W.getDailyMathQuestions(10);
+const m2 = W.getDailyMathQuestions(10);
+assert(m1.length === 10 && m1[0].q === m2[0].q, 'v18.3: 同一天 math 稳定');
+assert(typeof W.getDailyEditingParagraph === 'function', 'v18.3: getDailyEditingParagraph 存在');
+const e1 = W.getDailyEditingParagraph();
+const e2 = W.getDailyEditingParagraph();
+assert(e1.text === e2.text, 'v18.3: 同一天 editing 稳定');
+assert(typeof W.getDailyListenDictation === 'function', 'v18.3: getDailyListenDictation 存在');
+// P5/P6 题包含分数/比例/速度关键词
+const hasFrac = W.MATH_QUESTIONS.some(q => /\d+\/\d+/.test(q.q));
+const hasSpeed = W.MATH_QUESTIONS.some(q => /km\/h|speed/i.test(q.q));
+const hasRatio = W.MATH_QUESTIONS.some(q => /[Rr]atio|:/.test(q.q));
+const hasPercent = W.MATH_QUESTIONS.some(q => /%/.test(q.q));
+assert(hasFrac, 'v18.3: 有分数题');
+assert(hasSpeed, 'v18.3: 有速度题');
+assert(hasRatio, 'v18.3: 有比例题');
+assert(hasPercent, 'v18.3: 有百分比题');
 const mq0 = W.MATH_QUESTIONS[0];
 assert(mq0.q && typeof mq0.ans === 'number', 'v18: math question 有 q 和 ans');
 const ep0 = W.EDITING_PARAGRAPHS[0];
