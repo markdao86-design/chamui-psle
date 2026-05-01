@@ -1725,6 +1725,37 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 .vocab-btn:hover { transform: scale(1.12) rotate(-6deg); }
 
+/* v16.3: 听力按钮 + 听力 item */
+.listen-btn {
+  background: #A788E0;
+  color: white;
+  border: 2px solid var(--color-text);
+  border-radius: 50%;
+  width: 32px; height: 32px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+  box-shadow: 0 2px 0 var(--color-text);
+}
+.listen-btn:hover { transform: scale(1.12) rotate(6deg); }
+.lis-item {
+  background: white;
+  border: 2px solid var(--color-text);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.lis-item.lis-live { background: linear-gradient(135deg, #FFE6F0 0%, #E0F4F1 100%); border-width: 3px; }
+.lis-title { font-weight: 700; font-size: 14px; }
+.lis-desc { font-size: 12px; color: var(--color-text-light); line-height: 1.5; }
+.lis-link { font-size: 12px; padding: 6px 12px; align-self: flex-start; margin-top: 6px; text-decoration: none; }
+.lis-fallback { font-size: 11px; color: var(--color-text-light); margin-top: 4px; text-decoration: underline; }
+.lis-item audio { height: 36px; }
+
 .vocab-modal {
   position: fixed;
   inset: 0;
@@ -2337,6 +2368,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 <!-- v16: 学科词汇 modal (动态填充) -->
 <div id="vocabModal" class="vocab-modal" onclick="if(event.target===this) closeVocabModal()"></div>
+
+<!-- v16.3: 听力资源 modal (动态填充) -->
+<div id="listeningModal" class="vocab-modal" onclick="if(event.target===this) closeListeningModal()"></div>
 
 <!-- ===== Firebase 同步配置(填了 firebaseConfig 才启用云同步,留空则纯本地)===== -->
 <script>

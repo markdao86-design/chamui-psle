@@ -231,6 +231,48 @@ const VOCAB_500 = {
   }
 };
 
+// ============= v16.3: 听力资源 (CNA938 直播 + 推荐播客 + BBC 外链) =============
+// 孩子在打卡页 listening slot 点 🔊 按钮唤出
+const LISTENING_RESOURCES = [
+  {
+    type: 'live-audio',
+    title: '🎙️ CNA938 新加坡新闻直播',
+    desc: '24h 直播 — 新加坡英语新闻台,语速接近 PSLE 听力,真实环境暴露',
+    src: 'https://playerservices.streamtheworld.com/api/livestream-redirect/CNA_938.mp3',
+    fallbackUrl: 'https://www.channelnewsasia.com/listen/cna938'
+  },
+  {
+    type: 'link',
+    title: '🎧 CNA Asia First (播客)',
+    desc: '每集 ~6 min,亚洲早晨头条,适合早晨/路上听',
+    url: 'https://www.channelnewsasia.com/podcasts/asia-first-1003696'
+  },
+  {
+    type: 'link',
+    title: '🎧 CNA Daily Cuts (播客)',
+    desc: '每集 ~10 min,新加坡当日新闻深度解读',
+    url: 'https://www.channelnewsasia.com/podcasts/daily-cuts'
+  },
+  {
+    type: 'link',
+    title: '📻 BBC 6 Minute English',
+    desc: '英国学英语经典节目,每集 6 min,有逐字稿对照',
+    url: 'https://www.bbc.co.uk/learningenglish/english/features/6-minute-english'
+  },
+  {
+    type: 'link',
+    title: '📻 BBC Learning English: Stories for Children',
+    desc: '童话/短故事改编,适合小学英语听力起步',
+    url: 'https://www.bbc.co.uk/learningenglish/english/features/childrens-stories'
+  },
+  {
+    type: 'link',
+    title: '🎵 Spotify: PSLE English Listening (搜索)',
+    desc: '在 Spotify/YouTube 搜 "PSLE listening practice" 找练习集',
+    url: 'https://open.spotify.com/search/psle%20english%20listening'
+  }
+];
+
 // 给 weekN (1..73) 返回该周对应的词表 ({subject, subjectIcon, section, weekRange}).
 // W1-W7 → math (按 section 索引顺序); W8-W17 → sci; 其它周 → null
 function getVocabForWeek(weekN) {
@@ -1389,3 +1431,4 @@ window.IRON_RULES = IRON_RULES;
 window.SUNDAY_REVIEW_STEPS = SUNDAY_REVIEW_STEPS;
 window.VOCAB_500 = VOCAB_500;
 window.getVocabForWeek = getVocabForWeek;
+window.LISTENING_RESOURCES = LISTENING_RESOURCES;

@@ -504,6 +504,11 @@ function renderCheckinPage() {
       const vocabBtn = (isVocabTask && vocabAvailable)
         ? `<button class="vocab-btn" onclick="event.stopPropagation(); openVocabModal(${week})" title="本周学科词表">📚</button>`
         : '';
+      // v16.3: 听力资源按钮 — 任务含 CNA938 / okto / Listening / 听力 时出现
+      const isListenTask = /CNA938|okto|Listening|听力|🎧/.test(t.task);
+      const listenBtn = isListenTask
+        ? `<button class="listen-btn" onclick="event.stopPropagation(); openListeningModal(${week})" title="听力资源(CNA938 直播 + 播客)">🔊</button>`
+        : '';
       const keyChip = isKey ? `<span class="key-chip" title="必做关键 slot,影响周复盘奖">🎯 必做</span>` : '';
       const tipLine = tip ? `<div class="checkin-tip">${escapeHtml(tip)}</div>` : '';
       return `
@@ -519,6 +524,7 @@ function renderCheckinPage() {
           </div>
           ${scoreBtn}
           ${vocabBtn}
+          ${listenBtn}
           ${photoBtn}
           <div class="checkin-points">+${pts}</div>
         </div>
@@ -914,6 +920,57 @@ function openVocabModal(week) {
 function closeVocabModal() {
   const modal = document.getElementById('vocabModal');
   if (modal) modal.classList.remove('show');
+}
+
+// ============ v16.3: 听力资源 modal (CNA938 直播 + 推荐播客 + BBC 外链) ============
+function openListeningModal(week) {
+  const modal = document.getElementById('listeningModal');
+  if (!modal || !window.LISTENING_RESOURCES) return;
+  const items = window.LISTENING_RESOURCES.map(r => {
+    if (r.type === 'live-audio') {
+      return `
+        <div class="lis-item lis-live">
+          <div class="lis-title">${r.title}</div>
+          <div class="lis-desc">${escapeHtml(r.desc)}</div>
+          <audio controls preload="none" src="${r.src}" style="width:100%;margin-top:8px"></audio>
+          <a href="${r.fallbackUrl}" target="_blank" rel="noopener" class="lis-fallback">无法播放? 打开 CNA938 官网 →</a>
+        </div>
+      `;
+    }
+    return `
+      <div class="lis-item">
+        <div class="lis-title">${r.title}</div>
+        <div class="lis-desc">${escapeHtml(r.desc)}</div>
+        <a href="${r.url}" target="_blank" rel="noopener" class="btn btn-primary lis-link">▶ 在新标签打开播放</a>
+      </div>
+    `;
+  }).join('');
+  modal.innerHTML = `
+    <div class="vocab-modal-inner">
+      <div class="vocab-modal-header">
+        <div>
+          <span class="vocab-modal-title">🎧 听力资源(W${week})</span>
+          <span class="vocab-modal-meta">每天 10-15 min · 精听 → 不查字典先全听一遍 → 第二遍记 3-5 个新词</span>
+        </div>
+        <button class="vocab-modal-close" onclick="closeListeningModal()">×</button>
+      </div>
+      <div class="vocab-modal-body" style="display:flex;flex-direction:column;gap:12px">${items}</div>
+      <div class="vocab-modal-footer">
+        💡 PSLE Listening 真题录音不公开,需要用 SAP《PSLE Listening Comprehension》配套 CD。
+        听力陷阱:数字 / 否定词 / 转折(although / however)。
+      </div>
+    </div>
+  `;
+  modal.classList.add('show');
+}
+function closeListeningModal() {
+  const modal = document.getElementById('listeningModal');
+  if (modal) {
+    modal.classList.remove('show');
+    // 停掉 audio 播放(避免关 modal 后还在响)
+    const a = modal.querySelector('audio');
+    if (a) { try { a.pause(); a.currentTime = 0; } catch (e) {} }
+  }
 }
 
 function openScoreModal(week, day, slot) {
@@ -1667,6 +1724,8 @@ window.setActiveSkin = setActiveSkin;
 window.showToast = showToast;
 window.openVocabModal = openVocabModal;
 window.closeVocabModal = closeVocabModal;
+window.openListeningModal = openListeningModal;
+window.closeListeningModal = closeListeningModal;
 window.requireAdminAuth = requireAdminAuth;
 window.resetAdminPassword = resetAdminPassword;
 window.clearAdminAuth = clearAdminAuth;
