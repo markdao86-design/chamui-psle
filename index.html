@@ -2175,10 +2175,15 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   <div class="page" id="page-admin">
     <div class="card">
       <div class="card-title">⚙️ 父母管理面板</div>
-      <p style="color: var(--color-text-light); margin-bottom: 16px;">
-        老师反馈、特别表扬、月小测达标等需要在这里手动添加。
+      <p style="color: var(--color-text-light); margin-bottom: 8px;">
+        老师反馈、特别表扬、月小测达标、日常作息和运动加分都在这里。
       </p>
-      
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;padding:8px 10px;background:#FFF8E7;border:2px dashed var(--color-text);border-radius:8px;font-size:12px;align-items:center">
+        <span>🔐 所有加/减/删需要家长密码(15 分钟内免重输)</span>
+        <button class="btn btn-secondary" style="font-size:11px;padding:3px 8px" onclick="resetAdminPassword()">🔑 重置家长密码</button>
+        <button class="btn btn-secondary" style="font-size:11px;padding:3px 8px" onclick="clearAdminAuth(); showToast('已锁定,下次操作要重输密码','warn')">🔒 立即锁定</button>
+      </div>
+
       <div class="admin-grid">
         <div class="admin-action">
           <h4>📝 英语作文 30+ 分</h4>
@@ -2241,6 +2246,40 @@ body.shake { animation: screen-shake 0.45s ease-out; }
           <p>不交作业 / 课堂走神 / 作业敷衍等</p>
           <div class="admin-buttons">
             <button class="btn btn-danger" onclick="addPoints('老师反馈学习问题', -10)">－10 分</button>
+          </div>
+        </div>
+
+        <!-- v16: 日常作息 + 运动加分 -->
+        <div class="admin-action" style="border-color: var(--color-success); background: #F0FFF8;">
+          <h4>🍽️ 按时吃完饭(不磨蹭)</h4>
+          <p>三餐按时吃完,不拖拉,1 餐 +1 分</p>
+          <div class="admin-buttons">
+            <button class="btn btn-success" onclick="addPoints('按时吃完饭', 1)">＋1 分</button>
+            <button class="btn btn-success" onclick="addPoints('一日三餐都按时(全勤)', 5)">三餐全勤＋5 分</button>
+          </div>
+        </div>
+
+        <div class="admin-action" style="border-color: #4ECDC4; background: #ECFFFC;">
+          <h4>🏊 游泳运动</h4>
+          <p>1 次游泳运动(≥30 min)+5 分,有助专注力</p>
+          <div class="admin-buttons">
+            <button class="btn btn-success" onclick="addPoints('游泳运动', 5)">＋5 分</button>
+          </div>
+        </div>
+
+        <div class="admin-action" style="border-color: #FFB6D9; background: #FFF0F8;">
+          <h4>🏸 羽毛球运动</h4>
+          <p>1 次羽毛球运动(≥30 min)+5 分,缓解久坐</p>
+          <div class="admin-buttons">
+            <button class="btn btn-success" onclick="addPoints('羽毛球运动', 5)">＋5 分</button>
+          </div>
+        </div>
+
+        <div class="admin-action" style="border-color: #A788E0; background: #F8F4FF;">
+          <h4>🌟 良好作息(整体)</h4>
+          <p>当天:按时起床/睡觉 + 完成所有作息任务</p>
+          <div class="admin-buttons">
+            <button class="btn btn-success" onclick="addPoints('良好作息一整天', 3)">＋3 分</button>
           </div>
         </div>
       </div>

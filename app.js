@@ -1325,7 +1325,70 @@ function renderAdminPage() {
   }).join('');
 }
 
+// ============ v16: 家长密码门控 ============
+// 父母管理页所有 加/减/删 操作前调用 requireAdminAuth()
+// 首次使用提示设置密码; 通过后 sessionStorage 缓存 15 分钟免重输
+const ADMIN_AUTH_KEY = 'chamui_admin_auth_until';
+const ADMIN_AUTH_TTL_MS = 15 * 60 * 1000;  // 15 分钟
+
+function isAdminAuthed() {
+  const until = parseInt(sessionStorage.getItem(ADMIN_AUTH_KEY) || '0', 10);
+  return until > Date.now();
+}
+
+function clearAdminAuth() {
+  sessionStorage.removeItem(ADMIN_AUTH_KEY);
+}
+
+// 返回 true 如果通过(已认证 / 输入正确 / 首次设置成功)
+function requireAdminAuth() {
+  if (isAdminAuthed()) return true;
+  // 首次使用 — 没设密码,要求设置一个
+  if (!state.adminPassword) {
+    const pw1 = prompt('🔐 首次使用 — 请设置家长密码(用来保护加分/减分/删除操作):');
+    if (!pw1 || pw1.length < 4) {
+      showToast('密码至少 4 位,操作取消', 'sad');
+      return false;
+    }
+    const pw2 = prompt('再输一次确认:');
+    if (pw1 !== pw2) {
+      showToast('两次密码不一致,操作取消', 'sad');
+      return false;
+    }
+    state.adminPassword = pw1;
+    saveState(state);
+    sessionStorage.setItem(ADMIN_AUTH_KEY, String(Date.now() + ADMIN_AUTH_TTL_MS));
+    showToast('✅ 家长密码已设置,15 分钟内免重输', 'happy');
+    return true;
+  }
+  // 已设密码 — 提示输入
+  const pw = prompt('🔐 请输入家长密码(15 分钟内免重输):');
+  if (pw === null) return false;  // 用户取消
+  if (pw !== state.adminPassword) {
+    showToast('密码错误', 'sad');
+    return false;
+  }
+  sessionStorage.setItem(ADMIN_AUTH_KEY, String(Date.now() + ADMIN_AUTH_TTL_MS));
+  showToast('✅ 已认证,15 分钟内免重输', 'happy');
+  return true;
+}
+
+function resetAdminPassword() {
+  // 必须先用旧密码认证
+  if (!requireAdminAuth()) return;
+  const pw1 = prompt('🔐 新家长密码(至少 4 位):');
+  if (!pw1 || pw1.length < 4) { showToast('密码至少 4 位,取消', 'sad'); return; }
+  const pw2 = prompt('再输一次确认:');
+  if (pw1 !== pw2) { showToast('两次不一致,取消', 'sad'); return; }
+  state.adminPassword = pw1;
+  saveState(state);
+  clearAdminAuth();  // 强制下次重输,确保新密码生效
+  showToast('✅ 家长密码已更新', 'happy');
+}
+
 function addPoints(reason, points) {
+  // v16: 家长密码门控
+  if (!requireAdminAuth()) return;
   const oldPoints = state.totalPoints;
 
   state.logs.push({
@@ -1370,6 +1433,8 @@ function addPoints(reason, points) {
 }
 
 function deleteLog(idx) {
+  // v16: 家长密码门控
+  if (!requireAdminAuth()) return;
   if (!confirm('确定删除这条加分记录?')) return;
   state.logs.splice(idx, 1);
   recalcTotalPoints(state);
@@ -1602,3 +1667,7 @@ window.setActiveSkin = setActiveSkin;
 window.showToast = showToast;
 window.openVocabModal = openVocabModal;
 window.closeVocabModal = closeVocabModal;
+window.requireAdminAuth = requireAdminAuth;
+window.resetAdminPassword = resetAdminPassword;
+window.clearAdminAuth = clearAdminAuth;
+window.isAdminAuthed = isAdminAuthed;

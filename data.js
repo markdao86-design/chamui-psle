@@ -283,7 +283,10 @@ function getDefaultState() {
     scores: {},
 
     // v5: 当前激活的皮肤 id(default | scholar | scientist | explorer | hero | master)
-    activeSkin: 'default'
+    activeSkin: 'default',
+
+    // v16: 家长密码 — null = 首次使用未设置(addPoints/deleteLog 触发设置流程)
+    adminPassword: null
   };
 }
 
