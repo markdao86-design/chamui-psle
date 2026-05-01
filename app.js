@@ -1072,21 +1072,24 @@ function openListeningModal(week) {
     }
     if (r.type === 'youtube-playlist') {
       // 频道 uploads 播放列表 — 自动连播,无限内容
-      // 用户在 iframe 内点视频右上角 ☰ 图标可以选集
+      // 想换集:点视频底部"▶▶"按钮 OR 开 YouTube 全列表挑
       return `
         <div class="lis-item lis-youtube">
           <div class="lis-title">${r.title}</div>
           ${meta(r)}
           <div class="lis-desc">${escapeHtml(r.desc)}</div>
           <div class="lis-yt-wrap">
-            <iframe src="https://www.youtube-nocookie.com/embed/videoseries?list=${r.playlistId}&rel=0"
+            <iframe src="https://www.youtube-nocookie.com/embed/videoseries?list=${r.playlistId}&rel=0&playsinline=1"
                     title="${escapeHtml(r.title)}"
                     frameborder="0"
                     allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowfullscreen
                     loading="lazy"></iframe>
           </div>
-          <div class="lis-tip">📋 点视频右上角 <b>☰</b> 选集 / 自动连播下一集 / 双击全屏</div>
+          <div class="lis-tip">
+            ▶ 自动连播下一集 · 想跳集:点视频底部控件最右 <b>▶▶</b> 按钮
+            <a href="https://www.youtube.com/playlist?list=${r.playlistId}" target="_blank" rel="noopener" style="margin-left:6px;color:var(--color-primary);text-decoration:underline">📋 看全部集</a>
+          </div>
         </div>
       `;
     }
