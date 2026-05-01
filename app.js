@@ -1528,7 +1528,7 @@ function _playTone(ctx, freq, dur, wave, vol, delay) {
 function renderPetWidget() {
   const w = document.getElementById('petWidget');
   if (!w || !window.getCurrentPetForm) return;
-  if (!state.pet) state.pet = { name: '小蛋蛋', formIdx: 0, spawnedAt: Date.now(), feedCount: 0, happiness: 100, lastFedDate: null };
+  if (!state.pet) state.pet = { name: '球球', formIdx: 0, spawnedAt: Date.now(), feedCount: 0, happiness: 100, lastFedDate: null };
   const form = window.getCurrentPetForm(state);
   state.pet.formIdx = form.idx;
   const happy = state.pet.happiness || 0;
@@ -1538,8 +1538,8 @@ function renderPetWidget() {
     <div class="pet-emoji ${isSad || inAshes ? 'pet-sad' : ''}">${form.emoji}</div>
   `;
   // v18.2: 用 data-name 属性显示宠物名 + 形态(CSS ::after 渲染小标签)
-  w.setAttribute('data-name', `${state.pet.name || '小蛋蛋'} · ${form.name} ${isSad ? '😢' : ''}`);
-  w.title = `${state.pet.name || '小蛋蛋'} (${form.name})\n心情 ${happy}/100\n点击查看详情/改名`;
+  w.setAttribute('data-name', `${state.pet.name || '球球'} · ${form.name} ${isSad ? '😢' : ''}`);
+  w.title = `${state.pet.name || '球球'} (${form.name})\n心情 ${happy}/100\n点击查看详情/改名`;
   w.onclick = openPetModal;
 }
 function openPetModal() {
@@ -1559,7 +1559,7 @@ function openPetModal() {
   modal.innerHTML = `
     <div class="pet-modal-inner">
       <div class="pet-modal-header">
-        <span class="pet-modal-title">🐣 宠物 ${escapeHtml(state.pet.name || '')}</span>
+        <span class="pet-modal-title">🐹 宠物 ${escapeHtml(state.pet.name || '')}</span>
         <button class="vocab-modal-close" onclick="closePetModal()">×</button>
       </div>
       <div class="pet-modal-body">
@@ -1580,7 +1580,7 @@ function closePetModal() {
   if (m) m.classList.remove('show');
 }
 function renamePet() {
-  const newName = prompt('给宠物起个新名字:', state.pet.name || '小蛋蛋');
+  const newName = prompt('给宠物起个新名字:', state.pet.name || '球球');
   if (!newName || newName.length > 12) return;
   state.pet.name = newName;
   saveState(state);

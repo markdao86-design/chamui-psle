@@ -567,15 +567,15 @@ function getTodayWowFact(weekN, dateOverride) {
   return { subject: '科学/策略', subjectIcon: '🔬', subjectColor: '#A788E0', subjectKey: 'science', tag: `W${sci.week}`, hook: sci.hook, body: sci.body, week: sci.week };
 }
 
-// ============= v18 Phase 5.1: 宠物 =============
+// ============= v18 Phase 5.1: 宠物 (v18.4 改小仓鼠主题) =============
 const PET_FORMS = [
-  { idx: 0, emoji: '🥚', name: '蛋',     minStreak: 0,   desc: '一颗温暖的蛋, 等待孵化' },
-  { idx: 1, emoji: '🐣', name: '雏鸟',   minStreak: 3,   desc: '刚破壳, 好奇地看着你' },
-  { idx: 2, emoji: '🐤', name: '小鸟',   minStreak: 7,   desc: '会扑腾翅膀了' },
-  { idx: 3, emoji: '🦅', name: '雄鹰',   minStreak: 14,  desc: '展翅高飞, 视野开阔' },
-  { idx: 4, emoji: '🦜', name: '彩凤',   minStreak: 30,  desc: '羽毛绚烂, 群鸟之首' },
-  { idx: 5, emoji: '🦩', name: '火凤',   minStreak: 60,  desc: '浴火涅槃, 烈焰守护' },
-  { idx: 6, emoji: '🐉', name: '神龙',   minStreak: 100, desc: 'PSLE 终极守护神兽' }
+  { idx: 0, emoji: '🥚', name: '仓鼠蛋',   minStreak: 0,   desc: '里面有只小仓鼠在等着孵化' },
+  { idx: 1, emoji: '🐹', name: '仓鼠宝宝', minStreak: 3,   desc: '刚出生的小仓鼠, 软软的好可爱' },
+  { idx: 2, emoji: '🐹', name: '小仓鼠',   minStreak: 7,   desc: '会塞食物到腮帮子了' },
+  { idx: 3, emoji: '🐹', name: '学习仓鼠', minStreak: 14,  desc: '戴上眼镜, 很爱读书' },
+  { idx: 4, emoji: '🐹', name: '智慧仓鼠', minStreak: 30,  desc: '腮帮子塞满知识, 智力满分' },
+  { idx: 5, emoji: '🐹', name: '战神仓鼠', minStreak: 60,  desc: '披上斗篷, PSLE 战无不胜' },
+  { idx: 6, emoji: '🐹', name: '仓鼠王者', minStreak: 100, desc: 'PSLE 终极守护神兽 — 戴上王冠' }
 ];
 
 function getCurrentPetForm(state) {
@@ -1388,9 +1388,9 @@ function getDefaultState() {
     // v17.7 Phase 3: 每日特别任务 — { dateKey: { questId, progress, target, completed, claimedAt } }
     dailyQuests: {},
 
-    // v18 Phase 5.1: 🐣 宠物 (跟 streak 联动进化, IKEA effect 自定义名)
+    // v18 Phase 5.1 (v18.4: 改仓鼠主题): 🐹 宠物 (跟连续打卡联动进化, IKEA effect 自定义名)
     pet: {
-      name: '小蛋蛋',
+      name: '球球',         // 默认名(可改)
       formIdx: 0,
       spawnedAt: Date.now(),
       feedCount: 0,
