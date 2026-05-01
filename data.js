@@ -242,36 +242,54 @@ const LISTENING_RESOURCES = [
     title: '🎙️ CNA938 新加坡新闻直播',
     desc: '24h 直播 — 新加坡英语新闻台,真实环境暴露',
     src: 'https://playerservices.streamtheworld.com/api/livestream-redirect/938NOW_PREM.aac',
-    fallbackUrl: 'https://www.melisten.sg/radio/cna938'
+    fallbackUrl: 'https://www.melisten.sg/radio/cna938',
+    level: '成人级',
+    levelColor: '#FF5757',
+    episodeInfo: '24h 直播'
   },
   // === 2) PSLE 真题录音(年份固定,单视频)===
-  { type: 'youtube',  title: '🎬 PSLE 2025 English Listening', desc: '官方真题 11:25', videoId: 'rrqzKUGXdnw' },
-  { type: 'youtube',  title: '🎬 PSLE 2024 English Listening', desc: '官方真题 30:04', videoId: '8ePjsfutd8E' },
-  { type: 'youtube',  title: '🎬 PSLE 2020 English Listening', desc: '历年真题 35:28', videoId: 'YEna-0IhkU8' },
+  { type: 'youtube', title: '🎬 PSLE 2025 English Listening', desc: '官方真题 Text 1-7 完整音频', videoId: 'rrqzKUGXdnw',
+    level: 'PSLE 真题', levelColor: '#FF9F45', episodeInfo: '11:25 · 1 个视频' },
+  { type: 'youtube', title: '🎬 PSLE 2024 English Listening', desc: '官方真题 Text 1-7 完整音频', videoId: '8ePjsfutd8E',
+    level: 'PSLE 真题', levelColor: '#FF9F45', episodeInfo: '30:04 · 1 个视频' },
+  { type: 'youtube', title: '🎬 PSLE 2020 English Listening', desc: '历年真题(老题型对比)', videoId: 'YEna-0IhkU8',
+    level: 'PSLE 真题', levelColor: '#FF9F45', episodeInfo: '35:28 · 1 个视频' },
   // === 3) 频道连播 (uploads playlist,无限内容)===
   {
     type: 'youtube-playlist',
     title: '📖 英语童话故事(频道连播)',
-    desc: 'English Fairy Tales 频道 100+ 集童话动画,自动连播',
-    playlistId: 'UU53qnQM3rSPxiyInxP0TGnA'
+    desc: 'English Fairy Tales 频道童话动画 — 适合 P3-P5 起步',
+    playlistId: 'UU53qnQM3rSPxiyInxP0TGnA',
+    level: 'P3-P5 入门',
+    levelColor: '#6BCB77',
+    episodeInfo: '38 集 · 自动连播'
   },
   {
     type: 'youtube-playlist',
     title: '📚 ESL 英语听力故事(频道连播)',
-    desc: 'StoryStudies 频道 50+ 集 B1 级英语故事 + 听力练习',
-    playlistId: 'UUAHBOA5B6WboGHTCwSj9nig'
+    desc: 'StoryStudies 频道 B1 级英语故事 + 听力练习',
+    playlistId: 'UUAHBOA5B6WboGHTCwSj9nig',
+    level: 'P5-P6 (B1)',
+    levelColor: '#4ECDC4',
+    episodeInfo: '50 集 · 自动连播'
   },
   {
     type: 'youtube-playlist',
     title: '🔬 Brains On!: 儿童科学(频道连播)',
-    desc: 'APM 出品,200+ 集,主题贴 PSLE 科学(动植物/物质/能量/电)',
-    playlistId: 'UUHWOq5gBWXZ4OcI8asZoVTQ'
+    desc: 'APM 出品,主题贴 PSLE 科学(动植物/物质/能量/电)',
+    playlistId: 'UUHWOq5gBWXZ4OcI8asZoVTQ',
+    level: 'P5-P6 科学',
+    levelColor: '#A788E0',
+    episodeInfo: '204 集 · 自动连播'
   },
   {
     type: 'youtube-playlist',
     title: '🌍 But Why: 儿童 Q&A(频道连播)',
-    desc: 'Vermont Public 出品,250+ 集,孩子提问 → 专家答',
-    playlistId: 'UUScNpHQtpf008q9MITg3ABg'
+    desc: 'Vermont Public 出品 — 孩子提问 → 专家答(15-25 min)',
+    playlistId: 'UUScNpHQtpf008q9MITg3ABg',
+    level: 'P3-P5 启蒙',
+    levelColor: '#6BCB77',
+    episodeInfo: '291 集 · 自动连播'
   }
 ];
 

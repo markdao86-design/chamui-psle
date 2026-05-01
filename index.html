@@ -1806,6 +1806,35 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .lis-fallback { font-size: 11px; color: var(--color-text-light); margin-top: 4px; text-decoration: underline; }
 .lis-item audio { height: 36px; }
 
+/* v16.9: 难度徽章 + 集数 + 选集提示 */
+.lis-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 2px 0 4px; }
+.lis-level {
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  padding: 2px 7px;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-text);
+  letter-spacing: 0.3px;
+}
+.lis-eps {
+  font-size: 10px;
+  color: var(--color-text-light);
+  background: white;
+  border: 1.5px solid var(--color-text-light);
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+.lis-tip {
+  font-size: 10px;
+  color: var(--color-text-light);
+  margin-top: 6px;
+  padding: 4px 6px;
+  background: rgba(167, 136, 224, 0.08);
+  border-left: 2px solid #A788E0;
+  border-radius: 4px;
+}
+
 .vocab-modal {
   position: fixed;
   inset: 0;

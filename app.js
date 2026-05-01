@@ -952,11 +952,19 @@ function closeVocabModal() {
 function openListeningModal(week) {
   const modal = document.getElementById('listeningModal');
   if (!modal || !window.LISTENING_RESOURCES) return;
+  // v16.9: 难度徽章 + 集数信息 + (playlist) 选集提示
+  const meta = (r) => `
+    <div class="lis-meta">
+      ${r.level ? `<span class="lis-level" style="background:${r.levelColor || '#999'}">${escapeHtml(r.level)}</span>` : ''}
+      ${r.episodeInfo ? `<span class="lis-eps">${escapeHtml(r.episodeInfo)}</span>` : ''}
+    </div>
+  `;
   const items = window.LISTENING_RESOURCES.map(r => {
     if (r.type === 'live-audio') {
       return `
         <div class="lis-item lis-live">
           <div class="lis-title">${r.title}</div>
+          ${meta(r)}
           <div class="lis-desc">${escapeHtml(r.desc)}</div>
           <audio controls preload="none" src="${r.src}" style="width:100%;margin-top:8px"></audio>
           <a href="${r.fallbackUrl}" target="_blank" rel="noopener" class="lis-fallback">无法播放? 打开 CNA938 官网 →</a>
@@ -964,11 +972,10 @@ function openListeningModal(week) {
       `;
     }
     if (r.type === 'youtube') {
-      // 用 youtube-nocookie 域名 (隐私优化, 一些网络下也更稳)
-      // 不写 autoplay — 孩子手动点 YouTube 自带的播放按钮
       return `
         <div class="lis-item lis-youtube">
           <div class="lis-title">${r.title}</div>
+          ${meta(r)}
           <div class="lis-desc">${escapeHtml(r.desc)}</div>
           <div class="lis-yt-wrap">
             <iframe src="https://www.youtube-nocookie.com/embed/${r.videoId}?rel=0"
@@ -983,9 +990,11 @@ function openListeningModal(week) {
     }
     if (r.type === 'youtube-playlist') {
       // 频道 uploads 播放列表 — 自动连播,无限内容
+      // 用户在 iframe 内点视频右上角 ☰ 图标可以选集
       return `
         <div class="lis-item lis-youtube">
           <div class="lis-title">${r.title}</div>
+          ${meta(r)}
           <div class="lis-desc">${escapeHtml(r.desc)}</div>
           <div class="lis-yt-wrap">
             <iframe src="https://www.youtube-nocookie.com/embed/videoseries?list=${r.playlistId}&rel=0"
@@ -995,6 +1004,7 @@ function openListeningModal(week) {
                     allowfullscreen
                     loading="lazy"></iframe>
           </div>
+          <div class="lis-tip">📋 点视频右上角 <b>☰</b> 选集 / 自动连播下一集 / 双击全屏</div>
         </div>
       `;
     }
