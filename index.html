@@ -1707,6 +1707,116 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   color: white;
 }
 
+/* ===== v16: 学科词汇 modal ===== */
+.vocab-btn {
+  background: #FFE066;
+  border: 2px solid var(--color-text);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+  box-shadow: 0 2px 0 var(--color-text);
+}
+.vocab-btn:hover { transform: scale(1.12) rotate(-6deg); }
+
+.vocab-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 48, 71, 0.85);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.vocab-modal.show { display: flex; animation: fadeInOverlay 0.2s ease; }
+.vocab-modal-inner {
+  background: white;
+  border: 4px solid var(--color-text);
+  border-radius: var(--radius-bubble);
+  max-width: 720px;
+  width: 100%;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-pop);
+}
+.vocab-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px 18px;
+  border-bottom: 3px solid var(--color-text);
+  background: var(--color-accent);
+  border-radius: 14px 14px 0 0;
+}
+.vocab-modal-title { display: block; font-weight: 700; font-size: 16px; color: var(--color-text); }
+.vocab-modal-meta  { display: block; font-size: 11px; color: var(--color-text-light); margin-top: 4px; }
+.vocab-modal-close {
+  background: white;
+  border: 2px solid var(--color-text);
+  border-radius: 50%;
+  width: 32px; height: 32px;
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+}
+.vocab-modal-body {
+  padding: 16px 18px;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.vocab-word {
+  background: #FFF8E7;
+  border: 2px solid var(--color-text);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-family: 'Fredoka', sans-serif;
+}
+.vocab-modal-footer {
+  padding: 12px 18px;
+  border-top: 2px dashed var(--color-text-light);
+  font-size: 12px;
+  color: var(--color-text-light);
+  line-height: 1.5;
+  background: #FAFAFA;
+  border-radius: 0 0 14px 14px;
+}
+
+/* ===== v16: 6 条铁律 mini-card ===== */
+.iron-rule-card {
+  background: linear-gradient(135deg, #FFFAEC 0%, #FFE6F0 100%);
+  border-left: 6px solid var(--color-primary);
+}
+.iron-rule-card #irTitle::before { content: '⚖️ '; }
+
+/* ===== v16: 周日复盘 section ===== */
+.sunday-review-section {
+  background: linear-gradient(135deg, #FFE6F0 0%, #E0F4F1 100%);
+  padding: 12px;
+  border-radius: 10px;
+  border: 2px dashed var(--color-primary);
+  margin-bottom: 12px;
+}
+
+/* ===== v16: 兑换 card 顶部价目说明 ===== */
+.exchange-tip {
+  background: var(--color-accent);
+  border: 2px solid var(--color-text);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
 .score-modal {
   position: fixed; inset: 0;
   background: rgba(45, 48, 71, 0.85);
@@ -1950,6 +2060,16 @@ body.shake { animation: screen-shake 0.45s ease-out; }
       </div>
     </div>
 
+    <!-- v16: 6 条铁律 mini-card,每天换 1 条 -->
+    <div class="card iron-rule-card" id="ironRuleCard">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:700">📜 今日铁律 #<span id="irNum">1</span></span>
+        <span style="font-size:11px;color:#888">v16 · 6 条核心</span>
+      </div>
+      <div id="irTitle" style="font-size:16px;font-weight:700;color:var(--color-primary);margin:6px 0"></div>
+      <div id="irBody" style="font-size:13px;line-height:1.5;color:var(--color-text)"></div>
+    </div>
+
     <!-- 智慧教练:本周诊断 + 重点 + 提升建议 + 名师秘诀 -->
     <div class="card coach-card">
       <div class="coach-header">
@@ -2036,6 +2156,14 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
     <div class="card">
       <div class="card-title">🎁 兑换记录</div>
+      <div class="exchange-tip">
+        <div style="font-weight:700;margin-bottom:4px">💱 兑换汇率:1 积分 = SGD 0.25</div>
+        <div style="font-size:12px;line-height:1.7;color:var(--color-text-light)">
+          🏆 终极大奖封顶 SGD 1500(= 6000 积分,刚好对齐 🐉 神龙伙伴)<br>
+          ✅ 可买:LEGO / 机器人 / 玩具 / 文具 / 书 / 衣服<br>
+          ❌ 不可买:游戏类一切(Switch / Roblox / 手游充值)
+        </div>
+      </div>
       <div id="exchangeList" style="display: flex; flex-direction: column; gap: 8px;">
         <p style="color: var(--color-text-light); font-style: italic;">暂无兑换记录</p>
       </div>
@@ -2148,6 +2276,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 </main>
 
 <div id="toastContainer"></div>
+
+<!-- v16: 学科词汇 modal (动态填充) -->
+<div id="vocabModal" class="vocab-modal" onclick="if(event.target===this) closeVocabModal()"></div>
 
 <!-- ===== Firebase 同步配置(填了 firebaseConfig 才启用云同步,留空则纯本地)===== -->
 <script>

@@ -21,38 +21,45 @@ const CHAMUI = {
     { lv: 12, name: '👑 PSLE 大师',title: 'PSLE 满级满分',   minPoints: 3500, color: '#FFD700' }
   ],
 
-  // 装备系统(v5 — 42 件,密集解锁覆盖 0-5000 分 + 73 周里程碑)
+  // 装备系统(v6 — 42 件,前 100 分密集 4 件,顶配 dragon 6000 = SGD 1500 终极大奖)
   equipment: [
-    // ===== 早期点数 (0-300):W1-W6 第一波集邮高潮 =====
-    { id: 'note',     icon: '📒', name: '笔记本',     condition: 'points',    value: 20,   hint: '累积 20 分(第一周轻松到手)' },
-    { id: 'apple',    icon: '🍎', name: '健康苹果',   condition: 'points',    value: 50,   hint: '累积 50 分' },
-    { id: 'hat',      icon: '🎓', name: '学士帽',     condition: 'points',    value: 80,   hint: '累积 80 分' },
-    { id: 'cup',      icon: '🥤', name: '能量水杯',   condition: 'points',    value: 120,  hint: '累积 120 分' },
-    { id: 'sword',    icon: '✏️', name: '铅笔剑',     condition: 'points',    value: 160,  hint: '累积 160 分' },
-    { id: 'cookie',   icon: '🍪', name: '幸运饼干',   condition: 'points',    value: 210,  hint: '累积 210 分' },
-    { id: 'bag',      icon: '🎒', name: '书包',       condition: 'points',    value: 260,  hint: '累积 260 分' },
-    // ===== 中期点数 (300-700):W7-W14 =====
-    { id: 'sock',     icon: '🧦', name: '幸运袜',     condition: 'points',    value: 320,  hint: '累积 320 分' },
-    { id: 'glasses',  icon: '👓', name: '聪明眼镜',   condition: 'points',    value: 400,  hint: '累积 400 分' },
-    { id: 'watch',    icon: '⌚', name: '时间手表',   condition: 'points',    value: 480,  hint: '累积 480 分' },
-    { id: 'headphone',icon: '🎧', name: '听力耳机',   condition: 'points',    value: 580,  hint: '累积 580 分' },
-    { id: 'phone',    icon: '📱', name: '智能手机',   condition: 'points',    value: 700,  hint: '累积 700 分' },
-    // ===== 高级点数 (850-1500):W15-W26 =====
-    { id: 'rocket',   icon: '🚀', name: '冲刺火箭',   condition: 'points',    value: 850,  hint: '累积 850 分' },
-    { id: 'diamond',  icon: '💎', name: '智慧钻石',   condition: 'points',    value: 1000, hint: '累积 1000 分(传说级)' },
-    { id: 'galaxy',   icon: '🌌', name: '银河披风',   condition: 'points',    value: 1200, hint: '累积 1200 分(神级)' },
-    { id: 'lightning',icon: '⚡', name: '闪电袖标',   condition: 'points',    value: 1500, hint: '累积 1500 分' },
-    // ===== 二阶段 (1800-2700):W27-W42 =====
-    { id: 'star',     icon: '⭐', name: '星辰勋章',   condition: 'points',    value: 1800, hint: '累积 1800 分(P6 学者)' },
-    { id: 'sun',      icon: '☀️', name: '太阳皇冠',   condition: 'points',    value: 2200, hint: '累积 2200 分' },
-    { id: 'rainbow',  icon: '🌈', name: '彩虹光环',   condition: 'points',    value: 2700, hint: '累积 2700 分' },
-    // ===== 三阶段冲刺 (3200-4500):W43-W65 =====
-    { id: 'volcano',  icon: '🌋', name: '火山战靴',   condition: 'points',    value: 3200, hint: '累积 3200 分(刷题狂魔)' },
-    { id: 'comet',    icon: '☄️', name: '彗星轨迹',   condition: 'points',    value: 3800, hint: '累积 3800 分' },
-    { id: 'unicorn',  icon: '🦄', name: '独角兽伙伴', condition: 'points',    value: 4500, hint: '累积 4500 分(神兽级)' },
-    // ===== PSLE 终极 (5000+):W66-W73 =====
-    { id: 'medal',    icon: '🥇', name: '金牌得主',   condition: 'points',    value: 5000, hint: '累积 5000 分(冲刺王)' },
-    { id: 'dragon',   icon: '🐉', name: '神龙伙伴',   condition: 'points',    value: 6000, hint: '累积 6000 分(满分挑战)' },
+    // ===== 极速集邮 (0-100):W1 第一周就能拿 4 件 =====
+    { id: 'note',     icon: '📒', name: '笔记本',     condition: 'points',    value: 5,    hint: '累积 5 分(第一天打 1 个 slot 就拿)' },
+    { id: 'apple',    icon: '🍎', name: '健康苹果',   condition: 'points',    value: 15,   hint: '累积 15 分(第一天 2-3 slot)' },
+    { id: 'hat',      icon: '🎓', name: '学士帽',     condition: 'points',    value: 30,   hint: '累积 30 分(W1 周三)' },
+    { id: 'cup',      icon: '🥤', name: '能量水杯',   condition: 'points',    value: 50,   hint: '累积 50 分(W1 周末)' },
+    // ===== 早期 (75-220):W2-W4 =====
+    { id: 'sword',    icon: '✏️', name: '铅笔剑',     condition: 'points',    value: 75,   hint: '累积 75 分' },
+    { id: 'cookie',   icon: '🍪', name: '幸运饼干',   condition: 'points',    value: 110,  hint: '累积 110 分' },
+    { id: 'bag',      icon: '🎒', name: '书包',       condition: 'points',    value: 160,  hint: '累积 160 分' },
+    { id: 'sock',     icon: '🧦', name: '幸运袜',     condition: 'points',    value: 220,  hint: '累积 220 分' },
+    // ===== 中早期 (290-560):W5-W8 =====
+    { id: 'glasses',  icon: '👓', name: '聪明眼镜',   condition: 'points',    value: 290,  hint: '累积 290 分' },
+    { id: 'watch',    icon: '⌚', name: '时间手表',   condition: 'points',    value: 370,  hint: '累积 370 分' },
+    { id: 'headphone',icon: '🎧', name: '听力耳机',   condition: 'points',    value: 460,  hint: '累积 460 分' },
+    { id: 'phone',    icon: '📱', name: '智能手机',   condition: 'points',    value: 560,  hint: '累积 560 分' },
+    // ===== 中期 (680-1180):W9-W15 =====
+    { id: 'cake',     icon: '🎂', name: '生日蛋糕',   condition: 'points',    value: 680,  hint: '累积 680 分' },
+    { id: 'rocket',   icon: '🚀', name: '冲刺火箭',   condition: 'points',    value: 820,  hint: '累积 820 分' },
+    { id: 'crystal',  icon: '🔮', name: '水晶球',     condition: 'points',    value: 980,  hint: '累积 980 分' },
+    { id: 'diamond',  icon: '💎', name: '智慧钻石',   condition: 'points',    value: 1180, hint: '累积 1180 分(传说级)' },
+    // ===== 中后期 (1400-2200):W17-W24 =====
+    { id: 'galaxy',   icon: '🌌', name: '银河披风',   condition: 'points',    value: 1400, hint: '累积 1400 分(神级)' },
+    { id: 'magic',    icon: '🪄', name: '魔法棒',     condition: 'points',    value: 1650, hint: '累积 1650 分' },
+    { id: 'lightning',icon: '⚡', name: '闪电袖标',   condition: 'points',    value: 1900, hint: '累积 1900 分' },
+    { id: 'star',     icon: '⭐', name: '星辰勋章',   condition: 'points',    value: 2200, hint: '累积 2200 分(P6 学者)' },
+    // ===== 二阶段 (2500-3550):W27-W38 =====
+    { id: 'planet',   icon: '🪐', name: '土星之环',   condition: 'points',    value: 2500, hint: '累积 2500 分' },
+    { id: 'sun',      icon: '☀️', name: '太阳皇冠',   condition: 'points',    value: 2850, hint: '累积 2850 分' },
+    { id: 'phoenix',  icon: '🦅', name: '凤凰羽',     condition: 'points',    value: 3200, hint: '累积 3200 分(浴火重生)' },
+    { id: 'rainbow',  icon: '🌈', name: '彩虹光环',   condition: 'points',    value: 3550, hint: '累积 3550 分' },
+    // ===== 三阶段冲刺 (3950-4750):W43-W53 =====
+    { id: 'volcano',  icon: '🌋', name: '火山战靴',   condition: 'points',    value: 3950, hint: '累积 3950 分(刷题狂魔)' },
+    { id: 'comet',    icon: '☄️', name: '彗星轨迹',   condition: 'points',    value: 4350, hint: '累积 4350 分' },
+    { id: 'unicorn',  icon: '🦄', name: '独角兽伙伴', condition: 'points',    value: 4750, hint: '累积 4750 分(神兽级)' },
+    // ===== PSLE 终极 (5300-6000):W60-W73 =====
+    { id: 'medal',    icon: '🥇', name: '金牌得主',   condition: 'points',    value: 5300, hint: '累积 5300 分(冲刺王)' },
+    { id: 'dragon',   icon: '🐉', name: '神龙伙伴',   condition: 'points',    value: 6000, hint: '累积 6000 分 = SGD 1500 终极大奖等价🐲' },
     // ===== W14/20/26 第一阶段里程碑 =====
     { id: 'tube',     icon: '🔬', name: '试管',       condition: 'milestone', value: 'W14', hint: '完成 W14 P3-P4 综合模拟' },
     { id: 'trophy',   icon: '🏆', name: '奖杯',       condition: 'milestone', value: 'W20', hint: '完成 W20 P5 综合' },
@@ -69,13 +76,7 @@ const CHAMUI = {
     { id: 'shield',   icon: '🛡️', name: '盾牌',      condition: 'streak',    value: 1,    hint: '4 周无问题反馈' },
     { id: 'cape',     icon: '🦸', name: '披风',       condition: 'monthly3',  value: 3,    hint: '月小测连续 3 次达标' },
     { id: 'fire',     icon: '🔥', name: '火焰特效',   condition: 'milestone', value: 'any-key', hint: '任一大节点达标' },
-    { id: 'monthking',icon: '🎯', name: '月度王',     condition: 'monthly3',  value: 6,    hint: '累积 6 次月度小测达标' },
-    // ===== 收藏向(可玩可收集)=====
-    { id: 'cake',     icon: '🎂', name: '生日蛋糕',   condition: 'points',    value: 365,  hint: '累积 365 分(每天 1 分坚持)' },
-    { id: 'crystal',  icon: '🔮', name: '水晶球',     condition: 'points',    value: 666,  hint: '累积 666 分' },
-    { id: 'magic',    icon: '🪄', name: '魔法棒',     condition: 'points',    value: 999,  hint: '累积 999 分(差 1 上 1000)' },
-    { id: 'planet',   icon: '🪐', name: '土星之环',   condition: 'points',    value: 1666, hint: '累积 1666 分' },
-    { id: 'phoenix',  icon: '🦅', name: '凤凰羽',     condition: 'points',    value: 2500, hint: '累积 2500 分(浴火重生)' }
+    { id: 'monthking',icon: '🎯', name: '月度王',     condition: 'monthly3',  value: 6,    hint: '累积 6 次月度小测达标' }
   ],
 
   // 根据等级获取角色信息
@@ -174,7 +175,7 @@ const CHAMUI = {
       hairColor: '#2D3047',
       skinColor: '#FFE0BD',
       accessory: 'heroMask',
-      condition: { type: 'points', value: 3000 },
+      condition: { type: 'points', value: 3200 },
       hint: '累积 3000 分解锁'
     },
     {

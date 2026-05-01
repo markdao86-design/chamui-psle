@@ -35,31 +35,25 @@ function warn(cond, msg) { if (!cond) warns.push(msg); }
 assert(Array.isArray(W.WEEK_TASKS) && W.WEEK_TASKS.length === 73,
   `WEEK_TASKS 长度 73 (实际 ${W.WEEK_TASKS && W.WEEK_TASKS.length})`);
 
-// W1-W52 必须有任务,W53-W73 应该为空 placeholder
-let nonEmpty = 0, emptyCount = 0;
+// v16: 全部 73 周都必须有任务
+let nonEmpty = 0;
 for (let i = 0; i < W.WEEK_TASKS.length; i++) {
   const w = W.WEEK_TASKS[i];
   let slotCount = 0;
   if (w && w.days) {
     for (const d of Object.keys(w.days)) slotCount += Object.keys(w.days[d] || {}).length;
   }
-  if (i < 52) {
-    if (slotCount > 0) nonEmpty++;
-    else warns.push(`W${i+1} 应该有任务但是空的`);
-  } else {
-    if (slotCount === 0) emptyCount++;
-    else warns.push(`W${i+1} 应该是空 placeholder 但有 ${slotCount} 个 slot`);
-  }
+  if (slotCount > 0) nonEmpty++;
+  else warns.push(`W${i+1} 应该有任务但是空的`);
 }
-assert(nonEmpty >= 50, `W1-W52 至少 50 周有任务 (实际 ${nonEmpty})`);
-assert(emptyCount === 21, `W53-W73 全部为空 placeholder (实际 ${emptyCount}/21)`);
+assert(nonEmpty === 73, `v16: W1-W73 全部 73 周都有任务 (实际 ${nonEmpty})`);
 
-// 总 task 数
+// 总 task 数 — v16 应有 ~2855
 let totalTasks = 0;
 W.WEEK_TASKS.forEach(w => {
   if (w && w.days) for (const d of Object.keys(w.days)) totalTasks += Object.keys(w.days[d] || {}).length;
 });
-assert(totalTasks >= 1000, `总任务数 ≥ 1000 (实际 ${totalTasks})`);
+assert(totalTasks >= 2500, `v16 总任务数 ≥ 2500 (实际 ${totalTasks})`);
 
 // ===== 2. SLOT_TIME 9 keys =====
 const slotKeys = Object.keys(W.SLOT_TIME || {});
@@ -110,7 +104,18 @@ fullState.totalPoints = 5000;
 ['W14','W20','W26','W42','W52','W65','W68','W72','W73'].forEach(m => fullState.milestones[m] = true);
 assert(C.checkSkinUnlocked('master', fullState) === true, '满分+全里程碑用户解锁 master');
 assert(C.checkSkinUnlocked('explorer', fullState) === true, '5000 分解锁 explorer (1500)');
-assert(C.checkSkinUnlocked('hero', fullState) === true, '5000 分解锁 hero (3000)');
+assert(C.checkSkinUnlocked('hero', fullState) === true, '5000 分解锁 hero (3200)');
+
+// v16: hero 阈值改 3200
+const hero = C.skins.find(s => s.id === 'hero');
+assert(hero && hero.condition && hero.condition.value === 3200, `v16: hero skin 阈值 = 3200 (实际 ${hero && hero.condition && hero.condition.value})`);
+
+// 边界: 3199 不解锁 hero, 3200 解锁
+const heroState = W.getDefaultState();
+heroState.totalPoints = 3199;
+assert(!C.checkSkinUnlocked('hero', heroState), 'v16: 3199 分不解锁 hero');
+heroState.totalPoints = 3200;
+assert(C.checkSkinUnlocked('hero', heroState), 'v16: 3200 分解锁 hero');
 
 // getActiveSkin 兜底:选未解锁的回退到 default
 const trickState = W.getDefaultState();
@@ -132,6 +137,37 @@ assert(fallback.id === 'default', '未解锁皮肤回退 default');
 // ===== 7. WEEK_MASTER_TIPS 长度 =====
 const tips = W.WEEK_MASTER_TIPS || [];
 warn(tips.length === 26 || tips.length === 73, `WEEK_MASTER_TIPS 长度 ${tips.length} (期望 26 或 73)`);
+
+// ===== 8. v16 新增: 装备前 100 分密集 (≥4 件) =====
+const ptsLow = C.equipment.filter(e => e.condition === 'points' && e.value <= 100);
+assert(ptsLow.length >= 4, `v16: 0-100 分内 ≥4 件装备 (实际 ${ptsLow.length})`);
+const minPts = Math.min(...C.equipment.filter(e => e.condition === 'points').map(e => e.value));
+const maxPts = Math.max(...C.equipment.filter(e => e.condition === 'points').map(e => e.value));
+assert(minPts === 5, `v16: 装备最小阈值 = 5 (实际 ${minPts})`);
+assert(maxPts === 6000, `v16: 装备最大阈值 = 6000 (= SGD 1500 终极) (实际 ${maxPts})`);
+
+// ===== 9. v16 新增: 6 条铁律 / 周日复盘 / 词汇 500 / 汇率 =====
+assert(W.IRON_RULES && W.IRON_RULES.length === 6, `v16: IRON_RULES 长度 6 (实际 ${W.IRON_RULES && W.IRON_RULES.length})`);
+assert(W.SUNDAY_REVIEW_STEPS && W.SUNDAY_REVIEW_STEPS.length === 5, `v16: SUNDAY_REVIEW_STEPS 长度 5 (实际 ${W.SUNDAY_REVIEW_STEPS && W.SUNDAY_REVIEW_STEPS.length})`);
+assert(W.SGD_PER_POINT === 0.25, `v16: SGD_PER_POINT = 0.25 (实际 ${W.SGD_PER_POINT})`);
+assert(W.ULTIMATE_PRIZE_SGD === 1500, `v16: ULTIMATE_PRIZE_SGD = 1500 (实际 ${W.ULTIMATE_PRIZE_SGD})`);
+assert(W.ULTIMATE_PRIZE_POINTS === 6000, `v16: ULTIMATE_PRIZE_POINTS = 6000 (实际 ${W.ULTIMATE_PRIZE_POINTS})`);
+const vTotal = (W.VOCAB_500.math.total || 0) + (W.VOCAB_500.sci.total || 0);
+assert(vTotal === 500, `v16: VOCAB_500 总词数 500 (实际 ${vTotal})`);
+const v1 = W.getVocabForWeek(1);
+assert(v1 && v1.subject === '数学', `v16: W1 词汇 = 数学 (实际 ${v1 && v1.subject})`);
+const v8 = W.getVocabForWeek(8);
+assert(v8 && v8.subject === '科学', `v16: W8 词汇 = 科学 (实际 ${v8 && v8.subject})`);
+const v18 = W.getVocabForWeek(18);
+assert(v18 === null, `v16: W18 词汇 = null (实际 ${JSON.stringify(v18)})`);
+
+// ===== 10. v16: WEEK_TASKS W53-W73 不再为空 =====
+const w60 = W.WEEK_TASKS[59];
+const w60Slots = w60 && w60.days ? Object.values(w60.days).reduce((a,b) => a + Object.keys(b).length, 0) : 0;
+assert(w60Slots > 0, `v16: W60 应有 daily 任务 (实际 slot 数 ${w60Slots})`);
+const w73 = W.WEEK_TASKS[72];
+const w73Slots = w73 && w73.days ? Object.values(w73.days).reduce((a,b) => a + Object.keys(b).length, 0) : 0;
+assert(w73Slots > 0, `v16: W73 (PSLE 笔试周) 应有 daily 任务 (实际 slot 数 ${w73Slots})`);
 
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');

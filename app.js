@@ -148,9 +148,28 @@ function renderDashboard() {
   document.getElementById('monthPoints').textContent = monthPoints;
   document.getElementById('streakWeeks').textContent = state.streakBonusCount;
 
+  renderIronRule();
   renderWeeklyCoach();
   renderMasterTipCard();
   renderEquipment();
+}
+
+// ============ v16: 6 条铁律(每天换一条) ============
+function renderIronRule() {
+  const card = document.getElementById('ironRuleCard');
+  if (!card || !window.IRON_RULES) return;
+  const rules = window.IRON_RULES;
+  // 按 (currentWeek*7 + 周内日序) 轮换,确保每天换一条
+  const today = new Date();
+  const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+  const idx = ((state.currentWeek || 1) * 7 + dayOfYear) % rules.length;
+  const r = rules[idx];
+  const numEl = document.getElementById('irNum');
+  const titleEl = document.getElementById('irTitle');
+  const bodyEl = document.getElementById('irBody');
+  if (numEl) numEl.textContent = r.n;
+  if (titleEl) titleEl.textContent = r.title;
+  if (bodyEl) bodyEl.textContent = r.body;
 }
 
 // ============ 名师秘诀 (右栏卡,跟升级进度对齐) ============
@@ -320,8 +339,21 @@ function renderWeeklyCoach() {
     </div>
   ` : '';
 
+  // v16: 周日 19:30 复盘 5 步 (只有今天是周日才显示)
+  let sundayHtml = '';
+  if (new Date().getDay() === 0 && window.SUNDAY_REVIEW_STEPS) {
+    sundayHtml = `
+      <div class="coach-section sunday-review-section">
+        <div class="coach-section-title">🗓️ 今天周日 19:30-21:00 复盘时间(1.5h)</div>
+        <ol style="margin:6px 0 0 18px;padding:0;font-size:13px;line-height:1.7">
+          ${window.SUNDAY_REVIEW_STEPS.map(s => `<li>${escapeHtml(s.replace(/^[①②③④⑤]\s?/, ''))}</li>`).join('')}
+        </ol>
+      </div>
+    `;
+  }
+
   // 名师秘诀已移到右栏独立卡(renderMasterTipCard),这里不再重复渲染
-  container.innerHTML = diagHtml + focusHtml + weakHtml;
+  container.innerHTML = sundayHtml + diagHtml + focusHtml + weakHtml;
 }
 
 // 计算某周拿到的总分(里程碑 + 每日打卡分 + 周复盘 + 当日 combo)
@@ -466,6 +498,12 @@ function renderCheckinPage() {
       const scoreBtn = sc
         ? `<button class="score-btn has-score" onclick="event.stopPropagation(); openScoreModal(${week}, '${selectedDay}', '${t.slot}')" title="${escapeAttr(sc.note || '')}">📊 ${sc.score}/${sc.max}</button>`
         : `<button class="score-btn" onclick="event.stopPropagation(); openScoreModal(${week}, '${selectedDay}', '${t.slot}')" title="记分数">📊</button>`;
+      // v16: 学科词汇按钮 — 任务内含 "30 词" / "DeepSeek 词汇" / "Vocabulary U" / "拼写" / "用法测" 时出现
+      const isVocabTask = /30 词|DeepSeek 词汇|Vocabulary U|拼写 \+ 用法测|学科词汇/.test(t.task);
+      const vocabAvailable = window.getVocabForWeek && window.getVocabForWeek(week) !== null;
+      const vocabBtn = (isVocabTask && vocabAvailable)
+        ? `<button class="vocab-btn" onclick="event.stopPropagation(); openVocabModal(${week})" title="本周学科词表">📚</button>`
+        : '';
       const keyChip = isKey ? `<span class="key-chip" title="必做关键 slot,影响周复盘奖">🎯 必做</span>` : '';
       const tipLine = tip ? `<div class="checkin-tip">${escapeHtml(tip)}</div>` : '';
       return `
@@ -480,6 +518,7 @@ function renderCheckinPage() {
             </div>
           </div>
           ${scoreBtn}
+          ${vocabBtn}
           ${photoBtn}
           <div class="checkin-points">+${pts}</div>
         </div>
@@ -847,6 +886,36 @@ async function deletePhoto(week, day, slot) {
 }
 
 // ============ 作业分数(v4) ============
+// ============ v16: 学科词汇 500 词 modal ============
+function openVocabModal(week) {
+  const v = window.getVocabForWeek ? window.getVocabForWeek(week) : null;
+  if (!v) { showToast('本周没有专门的学科词汇', 'sad'); return; }
+  const modal = document.getElementById('vocabModal');
+  if (!modal) return;
+  const wordsHtml = v.section.words.map(w => `<span class="vocab-word">${escapeHtml(w)}</span>`).join('');
+  modal.innerHTML = `
+    <div class="vocab-modal-inner">
+      <div class="vocab-modal-header">
+        <div>
+          <span class="vocab-modal-title">${v.subjectIcon} ${v.subject}词汇 — ${escapeHtml(v.section.title)}</span>
+          <span class="vocab-modal-meta">W${week} · 共 ${v.section.words.length} 词 · ${v.weekRange}</span>
+        </div>
+        <button class="vocab-modal-close" onclick="closeVocabModal()">×</button>
+      </div>
+      <div class="vocab-modal-body">${wordsHtml}</div>
+      <div class="vocab-modal-footer">
+        💡 v16 用法:周一 18:00-18:15 领读 30 词,周三拼写 + 用法测,周五迷你诊断含 5 题。
+        DeepSeek 词汇复习每天 10min:① 中→英翻译当天词 ② 用每词造 1 句 ③ 错的入错题词汇本。
+      </div>
+    </div>
+  `;
+  modal.classList.add('show');
+}
+function closeVocabModal() {
+  const modal = document.getElementById('vocabModal');
+  if (modal) modal.classList.remove('show');
+}
+
 function openScoreModal(week, day, slot) {
   const tasks = getDailyTasks(week, day);
   const t = tasks.find(x => x.slot === slot);
@@ -978,7 +1047,7 @@ function renderHistoryPage() {
       <div style="background: white; border: 2px solid var(--color-text); border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
         <div>
           <b>${escapeHtml(ex.item)}</b><br>
-          <span style="font-size: 12px; color: var(--color-text-light);">${ex.date} · ${ex.points} 分 = SGD ${(ex.points * 0.5).toFixed(1)}</span>
+          <span style="font-size: 12px; color: var(--color-text-light);">${ex.date} · ${ex.points} 分 = SGD ${(ex.points * (window.SGD_PER_POINT || 0.25)).toFixed(2)}</span>
         </div>
         <button class="btn btn-secondary" style="font-size: 12px; padding: 4px 8px;" onclick="deleteExchange(${idx})">删除</button>
       </div>
@@ -1318,6 +1387,13 @@ function addExchange() {
   if (points > state.totalPoints) {
     if (!confirm(`积分不够(当前 ${state.totalPoints} 分),仍要记录吗?`)) return;
   }
+  // v16: 单次终极大奖封顶 SGD 1500 (= 6000 积分 @ 0.25/分)
+  const SGD = points * (window.SGD_PER_POINT || 0.25);
+  const CAP = window.ULTIMATE_PRIZE_SGD || 1500;
+  const CAP_PTS = window.ULTIMATE_PRIZE_POINTS || 6000;
+  if (SGD > CAP) {
+    if (!confirm(`这次兑换 SGD ${SGD.toFixed(0)} 超过单次终极大奖封顶 SGD ${CAP} (=${CAP_PTS} 积分)。建议拆成多次。仍要继续?`)) return;
+  }
 
   state.exchanges.push({
     item,
@@ -1524,3 +1600,5 @@ window.manualWeekChange = manualWeekChange;
 window.resetData = resetData;
 window.setActiveSkin = setActiveSkin;
 window.showToast = showToast;
+window.openVocabModal = openVocabModal;
+window.closeVocabModal = closeVocabModal;
