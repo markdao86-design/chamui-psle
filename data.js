@@ -235,35 +235,9 @@ const VOCAB_500 = {
 // 孩子在打卡页 listening 项目点 🔊 按钮唤出
 // 选材原则: P5/P6 PSLE listening 实际语速 120-140 wpm + 儿童词汇,所以用儿童故事/儿童科普
 // CNA938 直播降级到末尾 + 标"进阶 W15+"(成人语速 ~180 wpm 太快)
+// v16.12: 按难度从低到高排序;删 2 个 P3-P5 启蒙/入门项(对 P5/P6 PSLE 备考太简单)
 const LISTENING_RESOURCES = [
-  // === 1) 直播首选(无限内容)===
-  {
-    type: 'live-audio',
-    title: '🎙️ CNA938 新加坡新闻直播',
-    desc: '24h 直播 — 新加坡英语新闻台,真实环境暴露',
-    src: 'https://playerservices.streamtheworld.com/api/livestream-redirect/938NOW_PREM.aac',
-    fallbackUrl: 'https://www.melisten.sg/radio/cna938',
-    level: '成人级',
-    levelColor: '#FF5757',
-    episodeInfo: '24h 直播'
-  },
-  // === 2) PSLE 真题录音(年份固定,单视频)===
-  { type: 'youtube', title: '🎬 PSLE 2025 English Listening', desc: '官方真题 Text 1-7 完整音频', videoId: 'rrqzKUGXdnw',
-    level: 'PSLE 真题', levelColor: '#FF9F45', episodeInfo: '11:25 · 1 个视频' },
-  { type: 'youtube', title: '🎬 PSLE 2024 English Listening', desc: '官方真题 Text 1-7 完整音频', videoId: '8ePjsfutd8E',
-    level: 'PSLE 真题', levelColor: '#FF9F45', episodeInfo: '30:04 · 1 个视频' },
-  { type: 'youtube', title: '🎬 PSLE 2020 English Listening', desc: '历年真题(老题型对比)', videoId: 'YEna-0IhkU8',
-    level: 'PSLE 真题', levelColor: '#FF9F45', episodeInfo: '35:28 · 1 个视频' },
-  // === 3) 频道连播 (uploads playlist,无限内容)===
-  {
-    type: 'youtube-playlist',
-    title: '📖 英语童话故事(频道连播)',
-    desc: 'English Fairy Tales 频道童话动画 — 适合 P3-P5 起步',
-    playlistId: 'UU53qnQM3rSPxiyInxP0TGnA',
-    level: 'P3-P5 入门',
-    levelColor: '#6BCB77',
-    episodeInfo: '38 集 · 自动连播'
-  },
+  // === 1) 入门:P5-P6 / B1 ===
   {
     type: 'youtube-playlist',
     title: '📚 ESL 英语听力故事(频道连播)',
@@ -282,16 +256,14 @@ const LISTENING_RESOURCES = [
     levelColor: '#A788E0',
     episodeInfo: '204 集 · 自动连播'
   },
-  {
-    type: 'youtube-playlist',
-    title: '🌍 But Why: 儿童 Q&A(频道连播)',
-    desc: 'Vermont Public 出品 — 孩子提问 → 专家答(15-25 min)',
-    playlistId: 'UUScNpHQtpf008q9MITg3ABg',
-    level: 'P3-P5 启蒙',
-    levelColor: '#6BCB77',
-    episodeInfo: '291 集 · 自动连播'
-  },
-  // === 4) 中高级 (B2-C1) — PSLE 后期 + 中学衔接,词汇/语速明显升一档 ===
+  // === 2) PSLE 真题(目标级别)===
+  { type: 'youtube', title: '🎬 PSLE 2020 English Listening', desc: '历年真题(老题型对比)', videoId: 'YEna-0IhkU8',
+    level: 'PSLE 真题', levelColor: '#FF9F45', episodeInfo: '35:28 · 1 个视频' },
+  { type: 'youtube', title: '🎬 PSLE 2024 English Listening', desc: '官方真题 Text 1-7 完整音频', videoId: '8ePjsfutd8E',
+    level: 'PSLE 真题', levelColor: '#FF9F45', episodeInfo: '30:04 · 1 个视频' },
+  { type: 'youtube', title: '🎬 PSLE 2025 English Listening', desc: '官方真题 Text 1-7 完整音频', videoId: 'rrqzKUGXdnw',
+    level: 'PSLE 真题', levelColor: '#FF9F45', episodeInfo: '11:25 · 1 个视频' },
+  // === 3) 中高级 B2 — 词汇/语速升一档 ===
   {
     type: 'youtube-playlist',
     title: '🎓 TED-Ed 教育动画(频道连播)',
@@ -303,21 +275,22 @@ const LISTENING_RESOURCES = [
   },
   {
     type: 'youtube-playlist',
+    title: '🔬 60-Second Science(频道连播)',
+    desc: 'Scientific American 出品 — 每集 60-90 秒科普短讯,B2-C1,适合泛听',
+    playlistId: 'UU_xYMXx_-mAzheKyEtwtCAQ',
+    level: 'B2-C1 科普',
+    levelColor: '#FF9F45',
+    episodeInfo: '1040 集 · 自动连播'
+  },
+  // === 4) 进阶 B2-C1 ===
+  {
+    type: 'youtube-playlist',
     title: '📺 BBC Learning English(频道连播)',
     desc: '英式新闻 + 词汇 + 6 Minute English + News Review,B2-C1 系统提升',
     playlistId: 'UUHaHD477h-FeBbVh9Sh7syA',
     level: 'B2-C1 进阶',
     levelColor: '#FF9F45',
     episodeInfo: '4314 集 · 自动连播'
-  },
-  {
-    type: 'youtube-playlist',
-    title: '🇸🇬 CNA Insider 新加坡深度(频道连播)',
-    desc: '本地长篇新闻调查 — 5-30 min,C1 高级,真实新加坡英语听感',
-    playlistId: 'UU_Lnb8ZHqqgLbp-7hltuT9w',
-    level: 'C1 高级',
-    levelColor: '#FF5757',
-    episodeInfo: '6227 集 · 自动连播'
   },
   {
     type: 'youtube-playlist',
@@ -328,14 +301,26 @@ const LISTENING_RESOURCES = [
     levelColor: '#FF9F45',
     episodeInfo: '1685 集 · 自动连播'
   },
+  // === 5) 高级 C1 ===
   {
     type: 'youtube-playlist',
-    title: '🔬 60-Second Science(频道连播)',
-    desc: 'Scientific American 出品 — 每集 60-90 秒科普短讯,B2-C1,适合泛听',
-    playlistId: 'UU_xYMXx_-mAzheKyEtwtCAQ',
-    level: 'B2-C1 科普',
-    levelColor: '#FF9F45',
-    episodeInfo: '1040 集 · 自动连播'
+    title: '🇸🇬 CNA Insider 新加坡深度(频道连播)',
+    desc: '本地长篇新闻调查 — 5-30 min,C1 高级,真实新加坡英语听感',
+    playlistId: 'UU_Lnb8ZHqqgLbp-7hltuT9w',
+    level: 'C1 高级',
+    levelColor: '#FF5757',
+    episodeInfo: '6227 集 · 自动连播'
+  },
+  // === 6) 成人级(背景泛听)===
+  {
+    type: 'live-audio',
+    title: '🎙️ CNA938 新加坡新闻直播',
+    desc: '24h 直播 — 新加坡英语新闻台,真实环境暴露',
+    src: 'https://playerservices.streamtheworld.com/api/livestream-redirect/938NOW_PREM.aac',
+    fallbackUrl: 'https://www.melisten.sg/radio/cna938',
+    level: '成人级',
+    levelColor: '#FF5757',
+    episodeInfo: '24h 直播'
   }
 ];
 
