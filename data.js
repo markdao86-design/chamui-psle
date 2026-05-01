@@ -235,73 +235,72 @@ const VOCAB_500 = {
 // 孩子在打卡页 listening 项目点 🔊 按钮唤出
 // 选材原则: P5/P6 PSLE listening 实际语速 120-140 wpm + 儿童词汇,所以用儿童故事/儿童科普
 // CNA938 直播降级到末尾 + 标"进阶 W15+"(成人语速 ~180 wpm 太快)
-// v16.13: 只保留 PSLE 真题及以上;趣味性高的(TED-Ed / Crash Course / 60-Sec)排前面
+// v16.14: SG 本地 3 项置顶(PSLE 必须熟悉新加坡口音);其后国际趣味 → 英式
 const LISTENING_RESOURCES = [
-  // === 1) PSLE 真题(目标级别 — 起点)===
-  { type: 'youtube', title: '🎬 PSLE 2020 English Listening', desc: '历年真题(老题型对比)', videoId: 'YEna-0IhkU8',
-    level: 'PSLE 真题', levelColor: '#FF9F45', episodeInfo: '35:28 · 1 个视频' },
-  { type: 'youtube', title: '🎬 PSLE 2024 English Listening', desc: '官方真题 Text 1-7 完整音频', videoId: '8ePjsfutd8E',
-    level: 'PSLE 真题', levelColor: '#FF9F45', episodeInfo: '30:04 · 1 个视频' },
-  { type: 'youtube', title: '🎬 PSLE 2025 English Listening', desc: '官方真题 Text 1-7 完整音频', videoId: 'rrqzKUGXdnw',
-    level: 'PSLE 真题', levelColor: '#FF9F45', episodeInfo: '11:25 · 1 个视频' },
-  // === 2) 中高级 + 趣味性高(优先放 PSLE 真题正后面)===
+  // === 1) 🇸🇬 PSLE 真题(SG 口音 · 目标级别 · 起点)===
+  { type: 'youtube', title: '🎬 PSLE 2020 English Listening', desc: '🇸🇬 历年真题(老题型对比)', videoId: 'YEna-0IhkU8',
+    level: '🇸🇬 PSLE 真题', levelColor: '#FF9F45', episodeInfo: '35:28 · 1 个视频' },
+  { type: 'youtube', title: '🎬 PSLE 2024 English Listening', desc: '🇸🇬 官方真题 Text 1-7 完整音频', videoId: '8ePjsfutd8E',
+    level: '🇸🇬 PSLE 真题', levelColor: '#FF9F45', episodeInfo: '30:04 · 1 个视频' },
+  { type: 'youtube', title: '🎬 PSLE 2025 English Listening', desc: '🇸🇬 官方真题 Text 1-7 完整音频', videoId: 'rrqzKUGXdnw',
+    level: '🇸🇬 PSLE 真题', levelColor: '#FF9F45', episodeInfo: '11:25 · 1 个视频' },
+  // === 2) 🇸🇬 SG 本地深度 + 直播(熟悉新加坡口音的核心)===
+  {
+    type: 'youtube-playlist',
+    title: '🇸🇬 CNA Insider 新加坡深度(频道连播)',
+    desc: '🇸🇬 本地长篇新闻调查 5-30 min · 真实 SG 口音听感,贴 PSLE',
+    playlistId: 'UU_Lnb8ZHqqgLbp-7hltuT9w',
+    level: '🇸🇬 SG · C1 高级',
+    levelColor: '#FF5757',
+    episodeInfo: '6227 集 · 自动连播'
+  },
+  {
+    type: 'live-audio',
+    title: '🎙️ CNA938 新加坡新闻直播',
+    desc: '🇸🇬 24h 直播 — Mediacorp 新闻台,新加坡口音泛听首选',
+    src: 'https://playerservices.streamtheworld.com/api/livestream-redirect/938NOW_PREM.aac',
+    fallbackUrl: 'https://www.melisten.sg/radio/cna938',
+    level: '🇸🇬 SG · 成人级',
+    levelColor: '#FF5757',
+    episodeInfo: '24h 直播'
+  },
+  // === 3) 🌎 国际趣味(美式 — 词汇/知识深化,但不强化 SG 口音)===
   {
     type: 'youtube-playlist',
     title: '🎓 TED-Ed 教育动画(频道连播)',
-    desc: '5-15 min 动画课 — 科学/历史/数学/语言学,B2 中高级,趣味性高',
+    desc: '🌎 5-15 min 动画课 — 科学/历史/数学/语言学,B2 中高级',
     playlistId: 'UUsooa4yRKGN_zEE8iknghZA',
-    level: 'B2 中高级 ⭐ 有趣',
+    level: '🌎 B2 中高级 ⭐ 有趣',
     levelColor: '#FF9F45',
     episodeInfo: '2350 集 · 自动连播'
   },
   {
     type: 'youtube-playlist',
     title: '📚 Crash Course 学术速成(频道连播)',
-    desc: 'PBS 学术系列 — 文学/历史/生物/化学/物理,B2-C1,讲师生动',
+    desc: '🌎 PBS 学术系列 — 文学/历史/生物/化学/物理,讲师生动',
     playlistId: 'UUX6b17PVsYBQ0ip5gyeme-Q',
-    level: 'B2-C1 学术 ⭐ 有趣',
+    level: '🌎 B2-C1 学术 ⭐ 有趣',
     levelColor: '#FF9F45',
     episodeInfo: '1685 集 · 自动连播'
   },
   {
     type: 'youtube-playlist',
     title: '🔬 60-Second Science(频道连播)',
-    desc: 'Scientific American — 每集 60-90 秒科普短讯,B2-C1,适合泛听',
+    desc: '🌎 Scientific American — 每集 60-90 秒科普短讯,适合泛听',
     playlistId: 'UU_xYMXx_-mAzheKyEtwtCAQ',
-    level: 'B2-C1 科普 ⭐ 短小',
+    level: '🌎 B2-C1 科普 ⭐ 短小',
     levelColor: '#FF9F45',
     episodeInfo: '1040 集 · 自动连播'
   },
-  // === 3) 进阶 B2-C1(略偏严肃)===
+  // === 4) 🇬🇧 英式(BBC 标准,跟 PSLE 略不同口音)===
   {
     type: 'youtube-playlist',
     title: '📺 BBC Learning English(频道连播)',
-    desc: '英式新闻 + 词汇 + 6 Minute English + News Review,B2-C1 系统提升',
+    desc: '🇬🇧 英式新闻 + 词汇 + 6 Minute English + News Review',
     playlistId: 'UUHaHD477h-FeBbVh9Sh7syA',
-    level: 'B2-C1 进阶',
+    level: '🇬🇧 B2-C1 进阶',
     levelColor: '#FF9F45',
     episodeInfo: '4314 集 · 自动连播'
-  },
-  // === 4) 高级 C1(深度阅读型)===
-  {
-    type: 'youtube-playlist',
-    title: '🇸🇬 CNA Insider 新加坡深度(频道连播)',
-    desc: '本地长篇新闻调查 — 5-30 min,C1 高级,真实新加坡英语听感',
-    playlistId: 'UU_Lnb8ZHqqgLbp-7hltuT9w',
-    level: 'C1 高级',
-    levelColor: '#FF5757',
-    episodeInfo: '6227 集 · 自动连播'
-  },
-  // === 5) 成人级(背景泛听)===
-  {
-    type: 'live-audio',
-    title: '🎙️ CNA938 新加坡新闻直播',
-    desc: '24h 直播 — 新加坡英语新闻台,真实环境暴露',
-    src: 'https://playerservices.streamtheworld.com/api/livestream-redirect/938NOW_PREM.aac',
-    fallbackUrl: 'https://www.melisten.sg/radio/cna938',
-    level: '成人级',
-    levelColor: '#FF5757',
-    episodeInfo: '24h 直播'
   }
 ];
 
