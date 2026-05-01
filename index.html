@@ -1464,7 +1464,7 @@ body::before {
 <nav class="tabs">
   <button class="tab-btn active" data-page="dashboard">🏠 主页</button>
   <button class="tab-btn" data-page="checkin">✅ 打卡</button>
-  <button class="tab-btn" data-page="history">📊 历史</button>
+  <button class="tab-btn" data-page="history">📊 分数</button>
   <button class="tab-btn" data-page="admin">⚙️ 管理</button>
 </nav>
 
@@ -1539,6 +1539,14 @@ body::before {
   <!-- 历史页 -->
   <div class="page" id="page-history">
     <div class="card">
+      <div class="card-title">📊 各科分数追踪</div>
+      <p style="color: var(--color-text-light); font-size: 13px; margin-bottom: 12px;">
+        在 ✅ 打卡页每个 slot 卡片上点 📊 输入老师评分。这里自动按 周/月/科目/类型 统计提升趋势,标出弱项。
+      </p>
+      <div id="scoreTracking"></div>
+    </div>
+
+    <div class="card">
       <div class="card-title">📊 26 周积分曲线</div>
       <div class="chart-container">
         <canvas id="pointsChart"></canvas>
@@ -1562,14 +1570,6 @@ body::before {
           <tbody id="historyTableBody"></tbody>
         </table>
       </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">📊 各科分数追踪</div>
-      <p style="color: var(--color-text-light); font-size: 13px; margin-bottom: 12px;">
-        在 ✅ 打卡页每个 slot 卡片上点 📊 输入老师评分。这里自动按 周/月/科目/类型 统计提升趋势,标出弱项。
-      </p>
-      <div id="scoreTracking"></div>
     </div>
 
     <div class="card">
