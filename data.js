@@ -244,10 +244,22 @@ const LISTENING_RESOURCES = [
     url: 'https://www.seab.gov.sg/home/examinations/psle/psle-subject-information'
   },
   {
-    type: 'link',
-    title: '🎬 YouTube: PSLE Listening 真题练习',
-    desc: '搜各年份 PSLE 听力真题 — 学校老师/教培机构上传,免费',
-    url: 'https://www.youtube.com/results?search_query=PSLE+English+Listening+Comprehension+2024'
+    type: 'youtube',
+    title: '🎬 PSLE 2025 English Listening (Text 1-7)',
+    desc: '官方真题录音 11:25 — 直接点击播放,无需新标签',
+    videoId: 'rrqzKUGXdnw'
+  },
+  {
+    type: 'youtube',
+    title: '🎬 PSLE 2024 English Listening Comprehension',
+    desc: '官方真题录音 30:04 — 完整 7 段对话',
+    videoId: '8ePjsfutd8E'
+  },
+  {
+    type: 'youtube',
+    title: '🎬 PSLE 2020 English Listening Comprehension',
+    desc: '历年真题录音 35:28 — 老题型对比',
+    videoId: 'YEna-0IhkU8'
   },
   // === 2) 儿童故事 (语速 + 词汇与 PSLE 接近) ===
   {

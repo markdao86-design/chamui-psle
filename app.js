@@ -937,6 +937,24 @@ function openListeningModal(week) {
         </div>
       `;
     }
+    if (r.type === 'youtube') {
+      // 用 youtube-nocookie 域名 (隐私优化, 一些网络下也更稳)
+      // 不写 autoplay — 孩子手动点 YouTube 自带的播放按钮
+      return `
+        <div class="lis-item lis-youtube">
+          <div class="lis-title">${r.title}</div>
+          <div class="lis-desc">${escapeHtml(r.desc)}</div>
+          <div class="lis-yt-wrap">
+            <iframe src="https://www.youtube-nocookie.com/embed/${r.videoId}?rel=0"
+                    title="${escapeHtml(r.title)}"
+                    frameborder="0"
+                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                    loading="lazy"></iframe>
+          </div>
+        </div>
+      `;
+    }
     return `
       <div class="lis-item">
         <div class="lis-title">${r.title}</div>
@@ -971,6 +989,10 @@ function closeListeningModal() {
     // 停掉 audio 播放(避免关 modal 后还在响)
     const a = modal.querySelector('audio');
     if (a) { try { a.pause(); a.currentTime = 0; } catch (e) {} }
+    // 停掉所有 YouTube iframe (清空 src 让它彻底卸载)
+    modal.querySelectorAll('iframe').forEach(ifr => {
+      try { ifr.src = 'about:blank'; } catch (e) {}
+    });
   }
 }
 
