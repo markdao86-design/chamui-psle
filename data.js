@@ -709,9 +709,10 @@ function subjectGroup(task) {
   if (t.startsWith('🔬')) return '🔬 科学';
   if (t.startsWith('📖') || t.startsWith('📚')) return '📖 英语阅读/词汇';
   if (t.startsWith('✏️') || t.startsWith('✍️')) return '✏️ 英语写作/语法';
-  if (t.startsWith('🗣')) return '🗣️ 听力口试';
+  if (t.startsWith('🗣') || t.startsWith('🎧')) return '🗣️ 听力口试';  // v16: 🎧 听力归入此类
   if (t.startsWith('➗')) return '➗ 数学';
   if (t.startsWith('🇨🇳')) return '🇨🇳 华文';
+  if (t.startsWith('📓') || t.startsWith('📋') || t.startsWith('🎯')) return '📓 复盘/里程碑';
   return '其他';
 }
 
@@ -724,7 +725,7 @@ function taskSubtype(task) {
   if (/Editing|改错/.test(t)) return 'Editing 改错';
   if (/Grammar|语法/.test(t)) return 'Grammar 语法';
   if (/Vocab|词汇/.test(t)) return 'Vocab 词汇';
-  if (/听力|口试/.test(t)) return '听力/口试';
+  if (/听力|口试/.test(t) || t.startsWith('🎧') || t.startsWith('🗣')) return '听力/口试';
   if (/Visual Text|看图答题/.test(t)) return 'Visual Text';
   if (t.startsWith('🔬') && /综合|模拟|总模考/.test(t)) return '科学综合卷';
   if (t.startsWith('🔬') && /章节小测|配套/.test(t)) return '科学章节测';
@@ -1005,7 +1006,7 @@ function calcWeekCompletion(weekNum, state) {
     if (task.startsWith('📖')) return '📖 英语阅读';
     if (task.startsWith('✏️')) return '✏️ 英语写作/作文';
     if (task.startsWith('📚')) return '📚 词汇';
-    if (task.startsWith('🗣')) return '🗣️ 听力口试';
+    if (task.startsWith('🗣') || task.startsWith('🎧')) return '🗣️ 听力口试';  // v16: 🎧 听力归入此类
     if (task.startsWith('➗')) return '➗ 数学';
     if (task.startsWith('🇨🇳')) return '🇨🇳 华文';
     return '📓 复盘其他';

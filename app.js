@@ -1165,8 +1165,8 @@ function renderScoreTracking() {
     return;
   }
 
-  // 1) 各科累计平均
-  const subjectsOrdered = ['🔬 科学', '📖 英语阅读/词汇', '✏️ 英语写作/语法', '🗣️ 听力口试', '➗ 数学', '🇨🇳 华文'];
+  // 1) 各科累计平均(7 类,涵盖 v14/v16 全 73 周内容)
+  const subjectsOrdered = ['🔬 科学', '📖 英语阅读/词汇', '✏️ 英语写作/语法', '🗣️ 听力口试', '➗ 数学', '🇨🇳 华文', '📓 复盘/里程碑'];
   const subjectCards = subjectsOrdered
     .filter(s => agg.bySubject[s])
     .map(s => {
