@@ -38,13 +38,22 @@ python -m http.server 8000
 
 ## 🛠️ 开发流程
 
-```bash
-# 1. 改 index.html / character.js / data.js / app.js 任意一个
-# 2. 合并:
-python build.py
+改完 `index.html` / `character.js` / `data.js` / `app.js` 任意一个后,**双击 `deploy.bat`** 就完事(Windows)。
 
-# 3. 部署到 Firebase Hosting
-npx firebase deploy --only hosting
+`deploy.bat` 自动做这 3 件事:
+1. `python build.py` 合并单文件
+2. `git commit + push` → 触发 GitHub Pages 1-2 min 更新
+3. `firebase deploy` → 立即更新 Firebase Hosting
+
+非 Windows 用 `./deploy.sh "你的 commit 消息"`。
+
+---
+
+手动单独部署(需要时):
+```bash
+python build.py                        # 合并单文件
+git add -A && git commit -m "..." && git push   # 推 GitHub (Pages 自动更新)
+npx firebase deploy --only hosting     # 推 Firebase Hosting
 ```
 
 ## 📜 关键约束(改前必读)

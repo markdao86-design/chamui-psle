@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """把 4 个拆分文件合并成单文件 chamui_app_single.html(部署用)。"""
 import os
+import sys
+import io
+
+# Windows 控制台默认 GBK 编码,强制 UTF-8 输出避免 emoji 乱码
+if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
