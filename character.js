@@ -327,19 +327,174 @@ const CHAMUI = {
     // 试管已经是左手的装备,如果同时有盾牌和试管,只显示盾牌
     const showTube = has.tube && !has.shield;
 
+    // ===== 新增 12 件装备的 SVG =====
+
+    // 🎧 耳机(头戴式,带状跨过头顶)
+    const headphone = has.headphone ? `
+      <g>
+        <!-- 头带 -->
+        <path d="M 60 55 Q 110 22 160 55" stroke="#2D3047" stroke-width="6" fill="none"/>
+        <path d="M 60 55 Q 110 25 160 55" stroke="#FF6B6B" stroke-width="3" fill="none"/>
+        <!-- 左耳罩 -->
+        <ellipse cx="58" cy="80" rx="9" ry="13" fill="#FF6B6B" stroke="#2D3047" stroke-width="2.5"/>
+        <ellipse cx="58" cy="80" rx="5" ry="9" fill="#2D3047" opacity="0.6"/>
+        <!-- 右耳罩 -->
+        <ellipse cx="162" cy="80" rx="9" ry="13" fill="#FF6B6B" stroke="#2D3047" stroke-width="2.5"/>
+        <ellipse cx="162" cy="80" rx="5" ry="9" fill="#2D3047" opacity="0.6"/>
+      </g>
+    ` : '';
+
+    // ⌚ 手表(右手腕上)
+    const watch = has.watch ? `
+      <g>
+        <rect x="156" y="171" width="14" height="10" rx="2" fill="#4ECDC4" stroke="#2D3047" stroke-width="2"/>
+        <rect x="158" y="173" width="10" height="6" rx="1" fill="#2D3047"/>
+        <text x="159" y="178" font-size="6" fill="#FFE66D" font-weight="bold">12</text>
+        <!-- 表带左 -->
+        <line x1="156" y1="172" x2="153" y2="170" stroke="#2D3047" stroke-width="2"/>
+        <line x1="156" y1="180" x2="153" y2="182" stroke="#2D3047" stroke-width="2"/>
+        <!-- 表带右 -->
+        <line x1="170" y1="172" x2="173" y2="170" stroke="#2D3047" stroke-width="2"/>
+        <line x1="170" y1="180" x2="173" y2="182" stroke="#2D3047" stroke-width="2"/>
+      </g>
+    ` : '';
+
+    // 🧦 袜子(腿和鞋之间)
+    const socks = has.sock ? `
+      <g>
+        <rect x="80" y="218" width="22" height="12" rx="2" fill="#FFB6D9" stroke="#2D3047" stroke-width="2"/>
+        <rect x="118" y="218" width="22" height="12" rx="2" fill="#FFB6D9" stroke="#2D3047" stroke-width="2"/>
+        <!-- 条纹 -->
+        <line x1="82" y1="222" x2="100" y2="222" stroke="#FF6B6B" stroke-width="2"/>
+        <line x1="120" y1="222" x2="138" y2="222" stroke="#FF6B6B" stroke-width="2"/>
+        <line x1="82" y1="226" x2="100" y2="226" stroke="#FFE66D" stroke-width="2"/>
+        <line x1="120" y1="226" x2="138" y2="226" stroke="#FFE66D" stroke-width="2"/>
+      </g>
+    ` : '';
+
+    // 🌌 银河披风(替代普通披风)
+    const galaxyCape = has.galaxy ? `
+      <g>
+        <path d="M 70 132 Q 30 180 15 232 L 80 232 Q 90 180 88 138 Z"
+              fill="url(#galaxyGrad)" stroke="#2D3047" stroke-width="3" opacity="0.95">
+          <animateTransform attributeName="transform" type="rotate" values="-2 80 130;2 80 130;-2 80 130" dur="3s" repeatCount="indefinite"/>
+        </path>
+        <path d="M 150 132 Q 190 180 205 232 L 140 232 Q 130 180 132 138 Z"
+              fill="url(#galaxyGrad)" stroke="#2D3047" stroke-width="3" opacity="0.95">
+          <animateTransform attributeName="transform" type="rotate" values="2 140 130;-2 140 130;2 140 130" dur="3s" repeatCount="indefinite"/>
+        </path>
+        <!-- 星星散布 -->
+        <text x="40" y="170" font-size="10" fill="#FFE66D">✦</text>
+        <text x="60" y="200" font-size="8" fill="white">★</text>
+        <text x="170" y="180" font-size="10" fill="#FFE66D">✦</text>
+        <text x="180" y="210" font-size="8" fill="white">★</text>
+      </g>
+      <defs>
+        <linearGradient id="galaxyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#A788E0"/>
+          <stop offset="50%" stop-color="#4338a0"/>
+          <stop offset="100%" stop-color="#1a0d40"/>
+        </linearGradient>
+      </defs>
+    ` : '';
+
+    // 📱 手机(右手另一面,如果没有铅笔剑,或者作为额外装饰)
+    const phone = has.phone ? `
+      <g transform="translate(165, 175) rotate(10)">
+        <rect x="-6" y="-12" width="12" height="22" rx="2.5" fill="#2D3047" stroke="#2D3047" stroke-width="1.5"/>
+        <rect x="-5" y="-10" width="10" height="16" rx="1" fill="#4ECDC4"/>
+        <text x="-3" y="2" font-size="8" fill="white">📚</text>
+        <circle cx="0" cy="8" r="1" fill="#666"/>
+      </g>
+    ` : '';
+
+    // 🚀 火箭(在角色左上方飞,带轨迹)
+    const rocket = has.rocket ? `
+      <g>
+        <g transform="translate(25, 30)">
+          <animateTransform attributeName="transform" type="translate" values="25,30;30,25;25,30" dur="2s" repeatCount="indefinite"/>
+          <!-- 主体 -->
+          <ellipse cx="0" cy="0" rx="6" ry="14" fill="#FF6B6B" stroke="#2D3047" stroke-width="2"/>
+          <!-- 火箭头(顶) -->
+          <polygon points="-6,-8 6,-8 0,-18" fill="#FFE66D" stroke="#2D3047" stroke-width="2"/>
+          <!-- 窗口 -->
+          <circle cx="0" cy="-2" r="3" fill="#4ECDC4" stroke="#2D3047" stroke-width="1.5"/>
+          <!-- 鳍 -->
+          <polygon points="-6,8 -10,16 -3,12" fill="#FF6B6B" stroke="#2D3047" stroke-width="1.5"/>
+          <polygon points="6,8 10,16 3,12" fill="#FF6B6B" stroke="#2D3047" stroke-width="1.5"/>
+          <!-- 火焰 -->
+          <ellipse cx="0" cy="18" rx="4" ry="8" fill="#FFE66D">
+            <animate attributeName="ry" values="8;5;8" dur="0.4s" repeatCount="indefinite"/>
+          </ellipse>
+          <ellipse cx="0" cy="20" rx="2" ry="5" fill="#FF6B6B">
+            <animate attributeName="ry" values="5;3;5" dur="0.4s" repeatCount="indefinite"/>
+          </ellipse>
+        </g>
+      </g>
+    ` : '';
+
+    // 💎 钻石(头顶上方飘,带闪光)
+    const diamond = has.diamond ? `
+      <g transform="translate(110, 8)">
+        <animateTransform attributeName="transform" type="translate" values="110,8;110,4;110,8" dur="1.6s" repeatCount="indefinite"/>
+        <!-- 钻石本体 -->
+        <polygon points="0,-8 -10,-2 -6,8 6,8 10,-2" fill="#4ECDC4" stroke="#2D3047" stroke-width="1.5"/>
+        <polygon points="0,-8 -6,-2 0,2 6,-2" fill="#A0E8F0"/>
+        <line x1="-10" y1="-2" x2="10" y2="-2" stroke="#2D3047" stroke-width="1"/>
+        <!-- 闪光 -->
+        <text x="-15" y="-10" font-size="8" fill="#FFE66D">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1s" repeatCount="indefinite"/>
+          ✨
+        </text>
+        <text x="10" y="-10" font-size="8" fill="#FFE66D">
+          <animate attributeName="opacity" values="0.3;1;0.3" dur="1s" repeatCount="indefinite"/>
+          ✨
+        </text>
+      </g>
+    ` : '';
+
+    // 🎯 月度王徽章(胸前)
+    const medal = has.monthking ? `
+      <g transform="translate(110, 165)">
+        <circle cx="0" cy="0" r="10" fill="#FFE66D" stroke="#2D3047" stroke-width="2"/>
+        <circle cx="0" cy="0" r="6" fill="#FF6B6B" stroke="#2D3047" stroke-width="1.5"/>
+        <text x="-3" y="3" font-size="9" font-weight="bold" fill="white">王</text>
+        <!-- 飘带 -->
+        <polygon points="-7,7 -10,18 -4,14" fill="#FF6B6B" stroke="#2D3047" stroke-width="1"/>
+        <polygon points="7,7 10,18 4,14" fill="#FF6B6B" stroke="#2D3047" stroke-width="1"/>
+      </g>
+    ` : '';
+
+    // 围绕角色的小道具浮动(用 emoji text,简单)
+    // 位置:左上 笔记本 / 右上 饼干 / 中左 苹果 / 中右 水杯
+    const floatingItems = `
+      ${has.note ? `<text x="3" y="78" font-size="20"><animate attributeName="y" values="78;74;78" dur="2.5s" repeatCount="indefinite"/>📒</text>` : ''}
+      ${has.cookie ? `<text x="195" y="78" font-size="18"><animate attributeName="y" values="78;74;78" dur="2.2s" repeatCount="indefinite"/>🍪</text>` : ''}
+      ${has.apple ? `<text x="3" y="135" font-size="18"><animate attributeName="y" values="135;131;135" dur="2.8s" repeatCount="indefinite"/>🍎</text>` : ''}
+      ${has.cup ? `<text x="195" y="135" font-size="18"><animate attributeName="y" values="135;131;135" dur="2.4s" repeatCount="indefinite"/>🥤</text>` : ''}
+    `;
+
     return `
       <svg viewBox="0 0 220 240" xmlns="http://www.w3.org/2000/svg">
         ${fireBackground}
-        ${cape}
+        ${rocket}
+        ${has.galaxy ? galaxyCape : cape}
         ${bag}
         ${body}
         ${hat}
         ${crown}
+        ${headphone}
         ${glasses}
+        ${diamond}
         ${sword}
+        ${phone}
         ${showTube ? tube : ''}
         ${shield}
+        ${watch}
+        ${socks}
+        ${medal}
         ${trophy}
+        ${floatingItems}
       </svg>
     `;
   }
