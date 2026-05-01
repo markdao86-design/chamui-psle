@@ -9,6 +9,12 @@
       "*.md",
       "*.py",
       "*.docx",
+      "*.bat",
+      "*.sh",
+      "*.cmd",
+      "*.ps1",
+      "package.json",
+      "package-lock.json",
       "chamui_app_single.html"
     ]
   }
