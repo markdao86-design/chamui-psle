@@ -26,9 +26,16 @@
   --shadow-pop: 0 6px 0 rgba(0,0,0,0.15), 0 12px 32px rgba(0,0,0,0.12);
   --radius-bubble: 24px;
   --radius-tight: 12px;
-  --font-display: 'ZCOOL KuaiLe', 'Fredoka', cursive;
-  --font-body: 'Noto Sans SC', 'Fredoka', sans-serif;
+  --font-display: 'PingFang SC', 'Microsoft YaHei', 'SimHei', 'Heiti SC', sans-serif;
+  --font-body: 'PingFang SC', 'Microsoft YaHei', 'SimHei', 'Heiti SC', sans-serif;
 }
+/* v17.6: 全局强制黑体 — 覆盖所有 ZCOOL/Fredoka 调用 */
+* {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'SimHei', 'Heiti SC', sans-serif !important;
+}
+/* 全局字体放大 */
+html { font-size: 17px; }
+body { font-size: 16px; }
 
 * {
   box-sizing: border-box;
@@ -1975,6 +1982,35 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .streak-broken-penalty { font-size: 13px; color: var(--color-warn); margin-bottom: 14px; padding: 6px; background: #FFF8E7; border-radius: 6px; }
 .streak-broken-inner button { width: 100%; padding: 10px; }
 
+/* ===== v17.6: 全局放大 + 角色卡缩短 + streak hover hint ===== */
+/* 角色卡缩短: SVG 缩小, padding 减少 */
+#page-dashboard .character-svg { width: 180px !important; height: 180px !important; }
+#page-dashboard .character-card { padding: 16px 18px !important; }
+#page-dashboard .big-score-block { padding: 10px 14px !important; margin-top: 10px !important; }
+#page-dashboard .big-score-num { font-size: 38px !important; }
+#page-dashboard .beat-block { padding: 8px 12px !important; margin-top: 8px !important; font-size: 13px !important; }
+
+/* 全局字体放大 — 主要元素 +2-4px */
+.card-title { font-size: 19px !important; }
+.btn { font-size: 15px !important; }
+.tab-btn { font-size: 16px !important; }
+.app-header .app-logo { font-size: 22px !important; }
+.stat-pill { font-size: 14px !important; padding: 6px 12px !important; }
+.checkin-title { font-size: 16px !important; }
+.checkin-desc { font-size: 13px !important; }
+.checkin-tip { font-size: 13px !important; line-height: 1.6 !important; }
+p { font-size: 14px; line-height: 1.6; }
+
+/* Streak block hover hint */
+.streak-block { cursor: pointer; }
+.streak-block .streak-hover-hint {
+  font-size: 11px;
+  color: var(--color-text-light);
+  margin-top: 4px;
+  font-style: italic;
+}
+.streak-block:hover { transform: translateY(-2px); transition: transform 0.15s; }
+
 /* ===== v17.5 Phase 2: 神秘宝箱卡 ===== */
 .mystery-box-card {
   background: linear-gradient(135deg, #FFE066 0%, #FF9F45 100%);
@@ -2442,22 +2478,13 @@ body.shake { animation: screen-shake 0.45s ease-out; }
         <div class="character-name" id="characterName">萌新佑子</div>
         <div class="character-title-big" id="characterTitle">刚入门的勇士</div>
         <span class="level-badge">LV <span id="charLevelDisplay">1</span></span>
-        <!-- v17.1: Daily Streak block -->
-        <div class="streak-block streak-warm" id="streakBlock">
+        <!-- v17.6: Streak block — 悬浮/点击看规则 -->
+        <div class="streak-block streak-warm" id="streakBlock"
+             title="🔥 连续打卡规则:&#10;• 每天打 1 个项目 = 火焰 +1 天&#10;• 断 1 天:火焰熄灭, 从 0 开始&#10;• 满 7 天:🛡️ 7 天勇者 + 🧊 救命券&#10;• 满 30 天:🔥 30 天战士火焰光环&#10;• 满 100 天:👑 百日王金光特效&#10;• 🧊 救命券:断 1 天自动救回(每 14 天 +1)"
+             onclick="showStreakRulesModal()">
           <div class="streak-num">🔥 0</div>
           <div class="streak-label">今天打 1 个项目, 点燃火焰</div>
-        </div>
-        <!-- v17.4: 火焰规则 紧贴 streak block 下方 -->
-        <div class="streak-rules-card" id="streakRulesCard">
-          <div class="rules-title">🔥 连续打卡规则</div>
-          <ul class="rules-list">
-            <li>每天打 <b>1 个项目</b> = 火焰 +1 天</li>
-            <li>断 1 天:火焰熄灭, <b>从 0 开始</b></li>
-            <li>满 7 天:解锁 🛡️ 7 天勇者 + 🧊 救命券 ×1</li>
-            <li>满 30 天:🔥 30 天战士火焰光环</li>
-            <li>满 100 天:👑 百日王金光特效</li>
-            <li>🧊 救命券:断 1 天自动救回(每 14 天 +1 张)</li>
-          </ul>
+          <div class="streak-hover-hint">📋 悬浮/点击看规则</div>
         </div>
         <!-- 大字总分 -->
         <div class="big-score-block">
@@ -2486,15 +2513,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
     <!-- v17.5 Phase 2: 神秘宝箱卡 -->
     <div class="card mystery-box-card" id="mysteryBoxCard"></div>
 
-    <!-- v16: 6 条铁律 mini-card,每天换 1 条 -->
-    <div class="card iron-rule-card" id="ironRuleCard">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-weight:700">📜 今日铁律 #<span id="irNum">1</span></span>
-        <span style="font-size:11px;color:#888">v16 · 6 条核心</span>
-      </div>
-      <div id="irTitle" style="font-size:16px;font-weight:700;color:var(--color-primary);margin:6px 0"></div>
-      <div id="irBody" style="font-size:13px;line-height:1.5;color:var(--color-text)"></div>
-    </div>
+    <!-- v17.6: 今日铁律已删除 (用户反馈) -->
 
     <!-- 智慧教练:本周诊断 + 重点 + 提升建议 + 名师秘诀 -->
     <div class="card coach-card">
@@ -2806,6 +2825,23 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 <!-- v17.5 Phase 2: 神秘宝箱开盒结果 modal -->
 <div id="mysteryBoxResultModal" class="mb-result-modal" onclick="if(event.target===this) closeMysteryBoxResult()"></div>
+
+<!-- v17.6: Streak 规则 modal (点 streak 块时显示) -->
+<div id="streakRulesModal" class="mb-result-modal" onclick="if(event.target===this) closeStreakRulesModal()">
+  <div class="mb-result-inner" style="max-width:420px;border-color:#FF9F45">
+    <div class="mb-result-icon">🔥</div>
+    <div class="mb-result-title">连续打卡规则</div>
+    <div class="mb-result-body" style="text-align:left;line-height:1.9">
+      <div>• 每天打 <b>1 个项目</b> = 火焰 +1 天</div>
+      <div>• 断 1 天:火焰熄灭, <b>从 0 开始</b></div>
+      <div>• 满 <b>7 天</b>:解锁 🛡️ 7 天勇者 + 🧊 救命券 ×1</div>
+      <div>• 满 <b>30 天</b>:🔥 30 天战士火焰光环</div>
+      <div>• 满 <b>100 天</b>:👑 百日王金光特效</div>
+      <div style="margin-top:8px;padding-top:8px;border-top:2px dashed #ccc">🧊 <b>救命券</b>:断 1 天自动救回(每 14 天 +1 张, 上限 3 张)</div>
+    </div>
+    <button class="btn btn-primary" onclick="closeStreakRulesModal()">知道了!</button>
+  </div>
+</div>
 
 <!-- ===== Firebase 同步配置(填了 firebaseConfig 才启用云同步,留空则纯本地)===== -->
 <script>

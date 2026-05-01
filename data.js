@@ -1067,6 +1067,155 @@ const WEEK_MASTER_TIPS = [
     content: '严格 PSLE 时长完整 4 科。建议顺序:① 数学(精神最好)② 科学 ③ 英语 Paper 1(作文)④ 英语 Paper 2 ⑤ 华文。每科考完不立刻对答案,等全考完再分析错题分类(粗心/概念/题型)。v14 目标:英 85+(AL2)/ 科 90+(AL1)/ 数 90+(AL1)/ 华 90+(AL1)→ 总 AL 6-8(DP 实际进 9-12 分校)。' },
 ];
 
+// ============= v17.6: 名师秘诀多科分池 (按日轮换 — 英语 3 天/科学 2 天/数学 1 天/华文 1 天) =============
+const ENGLISH_MASTER_TIPS = [
+  { subject:'📝 PSLE 英语作文', title:'4 段结构 + 必含 4 元素',
+    content:'4 段结构: ① 开场(描景/动作)② 矛盾发生 ③ 高潮 ④ 反思. 每篇必含: 对话/心理描写/感官描写(声音/气味/视觉)/全文过去时. 写在 150-180 词. PSLE 作文 40 分, 缺任一元素扣 5 分。' },
+  { subject:'📝 PSLE 英语作文', title:'高级词每篇 3 个加 5-10 分',
+    content:'crestfallen(沮丧)/ jubilant(欢欣)/ dawned upon me(突然意识到)/ ecstatic(狂喜)/ apprehensive(忧心). 每篇用 3 个就比平均高 5-10 分。考前背 30 个高级词, 作文 25→35 分。' },
+  { subject:'📝 PSLE 作文开头', title:'5 类开头模板',
+    content:'描景(That sunny morning, the playground was bustling)/ 直接对话("Hurry up!" Mom shouted)/ 反问(Have you ever felt...)/ 感觉(My heart pounded)/ 倒叙(Looking back, I still remember). 5 类背一种 = 永远不卡第 1 句。' },
+  { subject:'📖 Comprehension OE', title:'答案 90% 在原文找',
+    content:'PSLE Comp OE 答案直接在文章里, 找到关键词附近的句子, 摘下来稍改即可。别"自己想"原创答案 — 评卷只看你有没有抓到原文核心词。3 分题答 3 个点, 缺 1 点扣 1 分。' },
+  { subject:'📖 Comprehension', title:'定位法 4 步骤',
+    content:'① 先看题不看文 ② 题目划关键词 ③ 文章里搜关键词附近段落 ④ 摘原文核心词答。这样 1 篇 800 字 Comp 能 5 min 答完, 比"先读全文"快 3 倍。' },
+  { subject:'✍️ Cloze (一空一词)', title:'70% 是介词或冠词',
+    content:'PSLE Cloze 最难的空多是: in/on/at/of/for/with(介词)和 a/an/the(冠词)。这两类没规律, 全靠搭配感 — 读多遇多次自然会。每次错都查同义词 + 词性 + 搭配, 入词汇错题本。' },
+  { subject:'✍️ Cloze 介词搭配', title:'动词 + 介词 50 高频组合',
+    content:'look at(看)/ look after(照顾)/ look for(找)/ look up(查字典)/ look out(小心)/ depend on(取决于)/ result in(导致)/ result from(由...引起)/ believe in(信任)/ believe sb(信某人). 这 50 组占 Cloze 50% 答案。' },
+  { subject:'✏️ Editing', title:'5 类错占 95% 题目',
+    content:'主谓一致 / 时态 / 拼写 / 介词 / 冠词 — PSLE Editing 95% 错都在这 5 类。建一个 Editing 错题本按这 5 类分类记, 1 个月内错率减半。每天写 5 段 Editing, 26 周 100 段。' },
+  { subject:'✏️ Editing 时态错', title:'时间词 → 时态匹配',
+    content:'yesterday/last week → 过去式(was/went). tomorrow/next week → 将来时(will go). now/currently → 现在进行(is going). 每段先扫时间词, 锁定时态, 错率减 80%。' },
+  { subject:'📚 Grammar 套路', title:'PSLE Grammar MCQ 常考点',
+    content:'if/unless 看主从句关系(unless = if not). since/for 看时长(since 时间点 / for 时间段). much/many 看可数(much water / many books). too/either 看肯否(too 肯定 / either 否定)。' },
+  { subject:'📚 Grammar', title:'unless = if not 100% 等价',
+    content:'"Unless you study, you will fail" = "If you do not study, you will fail". unless 后用肯定句, 因为 unless 本身含否定。 PSLE 高频混淆, 1 题 2-3 分。' },
+  { subject:'🗣️ PSLE Oral', title:'Reading Aloud 3 大评分点',
+    content:'语调起伏 + 句末停 1.5 秒 + 重读关键词 = 流畅感觉. 平淡读完 8-10 分; 有节奏 13-15 分. 录音 + 自评 10 次, 一周提 3 分。' },
+  { subject:'🗣️ Stimulus 看图', title:'描述→联想→个人经历 3 步',
+    content:'Stimulus 看图说话每点 2-3 句即可: ① 描述场景(who/what/where) ② 联想问题或感受 ③ 个人经历呼应。缺哪一步扣 1-2 分, 多说反扣分。' },
+  { subject:'🎧 PSLE Listening', title:'90% 答案在转折后',
+    content:'听到 "but / however / although / on the other hand" 立刻竖耳朵 — 题目要问的内容 95% 在转折后, 不是前半句。听力题最大陷阱: 听了前半句就抢答。' },
+  { subject:'🎧 Listening 数字陷阱', title:'fifteen vs fifty 重音不同',
+    content:'fifteen [fɪfˈtiːn] 重音在后, fifty [ˈfɪfti] 重音在前。PSLE Listening 数字题常考 7 对易混: 13/30, 14/40, 15/50, 16/60, 17/70, 18/80, 19/90。听到 -teen 重音 → 1X, -ty 轻 → X0。' },
+  { subject:'🎧 Listening 训练', title:'每天 10 min 真实英语',
+    content:'CNA938 / CNA Insider 每天 10-15 min 精听: ① 不查字典先全听一遍 ② 第二遍记 3-5 个新词 ③ 第三遍跟读模仿语调。SG 口音熟悉度比 BBC 帮助大。' },
+  { subject:'🔗 Synthesis & Transformation', title:'10 分高分项',
+    content:'PSLE Paper 2 顶端 10 分: 把 2 个简单句合并成 1 个复杂句, 或换句型不变意。常考: although/because/while/since/whose/which/who. W15 起每周 1h 专项, 24 周熟练 = 稳拿 10 分。' },
+  { subject:'📚 Vocab 词汇', title:'PSLE 200 高频词 = Comp 80% 覆盖',
+    content:'PSLE 阅读题里 80% 单词来自最高频 200 词。背完这 200 个 = 任何文章读懂大意, 不卡壳。每天 5 个, W30 完 100, W52 完 200。 v14 词汇表里就是这 200 个。' },
+  { subject:'🇸🇬 PSLE 英语 Paper 1', title:'70 min 时间分配',
+    content:'Paper 1 = Composition(50 分, 50 min)+ Situational Writing(15 分, 20 min)。时间紧, 必须留 5 min 检查拼写。Composition 计划 3 min + 写 40 min + 检查 7 min。' },
+  { subject:'🇸🇬 PSLE 英语 Paper 2', title:'1h50min 6 部分顺序',
+    content:'Paper 2 = Grammar MCQ + Vocab MCQ + Vocab Cloze + Visual Text + Comp Cloze + Comprehension OE。6 部分严格按顺序, 难度递增。前 4 部分 50 min, 后 2 部分 60 min。' },
+  { subject:'🖼️ Visual Text 看图', title:'5 类信息源',
+    content:'Visual Text(海报/广告/通知)看图答题。必看 5 类: ① 大字标题(主题)② 数字(日期/时间/价格)③ 图片暗示 ④ 联系方式 ⑤ 排版强调(粗体/颜色)。题型: Who / What / When / Where / Why / How much。' },
+  { subject:'📝 PSLE 作文重写', title:'重写 = 真正的提分',
+    content:'老师改完作文后必须照标重写一次 — 不重写 = 白改。重写时换更好的词、更紧凑的句、更感官的描写。 1 篇重写比写 3 篇新作文提分快 3 倍。' },
+  { subject:'📖 Reading 速度', title:'240 wpm 是 PSLE 临界线',
+    content:'低于 240 词/分钟 = Comp 题做不完。每天 5 min 计时阅读练 1 个月 → 速度提到 240+。用《Conquer Comprehension》或同等级文章计时。' },
+  { subject:'📚 学科英语词汇 500', title:'数学 200 + 科学 300',
+    content:'PSLE 数学/科学题干用专业英语: perimeter/area/volume(数学)/ photosynthesis/transpiration/xylem(科学)。看不懂题干 → 数学/科学也丢分。 v16 附录 B 收的 500 词, W17 完成。' },
+  { subject:'✏️ Editing 5 大错', title:'分类记 → 错率减半',
+    content:'主谓一致(he go→goes)/ 时态(yesterday I am→was)/ 拼写(recieve→receive)/ 介词(in vs on)/ 冠词(a/an/the). 错题本按 5 类分页, 不混着记, 1 月翻 3 次。' },
+];
+
+const SCIENCE_MASTER_TIPS = [
+  { subject:'🔬 PSLE Science 答题模板', title:'OE 三大题型',
+    content:'PSLE Science Open-Ended 三大题型: "What"→直接答名词 / "Why"→"because... so..." / "Compare"→用 unlike/whereas 对比关键差异. 所有 OE 答案必含原文核心词。' },
+  { subject:'🔬 实验题 4 要素', title:'缺 1 个扣 1 分',
+    content:'PSLE 实验题必含: ① Independent variable(改变啥 — 1 个) ② Dependent variable(测啥 — 1 个) ③ Controlled variables(保持不变 — 至少 2 个) ④ Hypothesis(预测 + 理由)。少哪个扣哪个 — 不是 partial credit, 是直接 0。' },
+  { subject:'🔬 PSLE 8 大高频章', title:'占考试 70% 题量',
+    content:'Plant Transport / Digestive / Light / Heat / Reproduction / Cells / Energy / Electricity — 这 8 章占 PSLE Science 70% 题量。复习抓这 8 章 = 抓 70% 分。' },
+  { subject:'🔬 综合卷应试', title:'1h45min 时间分配',
+    content:'严格 PSLE 时长(科学 1h45min)。MCQ 50min(2min/题, 快做不纠结)→ OE 50min(慢做仔细审题)→ 检查 5min。不会的 MCQ 标记跳过最后回头。OE 没思路就先写关键词不留空白。' },
+  { subject:'🌳 Plant Transport', title:'芹菜染色实验答题',
+    content:'Q: Why coloured water moves up celery? A: Water travels up the stem THROUGH the XYLEM BY transpiration. Water evaporates from leaves, creating SUCTION that pulls more water up. 关键词必含: xylem(木质部)/transpiration(蒸腾)/suction.' },
+  { subject:'🌳 Plant Transport', title:'植物枯萎开放题',
+    content:'Q: Why does the plant wilt? A: Leaves lose water faster than roots can absorb. Cells lose turgor pressure, plant wilts. Q: Why is xylem important? A: Transports water from roots to leaves for photosynthesis.' },
+  { subject:'🍔 Digestive', title:'完整消化路径必背',
+    content:'Mouth(saliva 含 amylase 消化淀粉)→ Esophagus(传送)→ Stomach(胃酸 + pepsin 消化蛋白)→ Small intestine(消化完成 + 吸收 nutrients to blood)→ Large intestine(吸水 + 形成 feces)→ Anus。每个器官的 function 一句话答清楚。' },
+  { subject:'🍔 Digestive 营养素', title:'酶对应关系',
+    content:'淀粉 starch → amylase(口腔/胰腺)→ glucose / 蛋白 protein → pepsin(胃)→ amino acids / 脂肪 fat → bile(肝制) + lipase(胰腺/小肠)→ fatty acids。PSLE Q: enzyme 在哪个器官最活跃? → 看 pH 和温度。' },
+  { subject:'💡 Light & Shadow', title:'影子大小 vs 光源距离',
+    content:'Q: Why bigger shadow when light is closer? A: As light source moves CLOSER to the object, MORE light is BLOCKED by the object, so shadow becomes LARGER. 反之 → 越远越小. 注意答案要说"more light blocked", 不能只说"shadow bigger"。' },
+  { subject:'💡 Light 透光分类', title:'不透/半透/透明对比',
+    content:'Opaque(不透)→ dark shadow / Translucent(半透, 如磨砂玻璃)→ light shadow / Transparent(透, 如玻璃)→ no shadow。PSLE 实验题: 控制光源位置 + 物体距离 + 物体材质 3 变量。' },
+  { subject:'🔥 Heat 热传递', title:'三种区分模板',
+    content:'Conduction(传导): solid 直接接触(金属勺烫)。Convection(对流): fluid(液/气)流动循环(暖气片在地面 — 热气上升)。Radiation(辐射): 无介质, 可穿真空(太阳到地球). Q "为什么 X 是 Y 传递" → 答介质 + 方向。' },
+  { subject:'🔥 Heat 温度 vs 热', title:'易混高频陷阱',
+    content:'温度 temperature(°C)= 热的程度(状态量). 热 heat(J)= 能量(总量). 同 100°C 的水: 1 杯 vs 1 桶, 温度一样但热量不同. 热膨胀: 遇热体积↑, 遇冷体积↓ — 题"为什么夏天电线下垂?" → expansion。' },
+  { subject:'🌸 Reproduction', title:'花结构 + 受精流程',
+    content:'花的结构 stamen(雄)= anther(花药)+ filament / pistil(雌)= stigma(柱头)+ style + ovary(子房). Pollination(传粉)= 花粉 anther → stigma. Fertilisation(受精)= 花粉 + ovule → seed. Methods: insect / wind / water。' },
+  { subject:'🦠 Cells + Food Chain', title:'细胞结构对比 + 食物链',
+    content:'动物细胞: cell membrane + cytoplasm + nucleus. 植物多 2 个: cell wall + chloroplast(叶绿体). Food chain: producer(植物 — make food)→ primary consumer(草食)→ secondary consumer(肉食)→ tertiary consumer / decomposer(分解). 箭头方向 = energy flow。' },
+  { subject:'💧 Water Cycle', title:'4 步 + Air 组成',
+    content:'水循环 4 步: evaporation(蒸发, 液→气)→ condensation(凝结, 气→液成云)→ precipitation(降水, 雨/雪)→ collection(汇集回海). Air 组成 = 78% nitrogen + 21% oxygen + 1% other. Weather 工具: thermometer / anemometer / rain gauge。' },
+  { subject:'⚡ Electricity', title:'电路 + 用电安全',
+    content:'电路 = battery(power source)+ wires + component(灯/电机)+ switch. 必须 closed circuit 闭合才有电流. Conductor(导体)= metals. Insulator(绝缘体)= plastic/wood/rubber/dry skin. 湿手不能碰电器(湿水是导体)。' },
+  { subject:'⚡ Series & Parallel', title:'高频题型',
+    content:'Series 串联: 1 个 path, 电流相同(same current), 电压分配(voltage shared). 一灯坏 → 全灭. Parallel 并联: 多 path, 电压相同, 电流分配. 一灯坏 → 其他正常. Q "为什么家里用并联?" → 一灯坏不影响 + 各设备独立电压。' },
+  { subject:'🔋 Energy 形态', title:'7 种能量形态',
+    content:'Kinetic(动能 — 移动物体)/ Potential(势能 — 高度/拉伸的弹簧)/ Sound 声 / Light 光 / Electrical 电 / Heat 热 / Chemical 化学(电池/食物). Q "骑车上山时哪种能量在变" → kinetic ↑↓ + potential ↑。' },
+  { subject:'🔋 Energy Conversion', title:'转换链答题',
+    content:'灯泡: electrical → light(useful)+ heat(wasted, 95%!). 风扇: electrical → kinetic. 太阳能板: light → electrical. 化石燃料发电: chemical → heat → kinetic → electrical. 答题用 → 箭头, 标 useful/wasted energy。' },
+  { subject:'🌍 Adaptation', title:'P6 难章高频',
+    content:'仙人掌的"刺"是退化的叶 — 减少蒸腾。它的"绿色枝干"才是光合主力. 适应(Adaptation)= 百万年自然选择, 不是个体反应. PSLE 易混: adaptation(物种变化)vs response(个体反应, 如开花闭合)。' },
+  { subject:'🧪 PSLE 真题应试', title:'考前 1 个月策略',
+    content:'考前 1 个月不学新东西, 只: ① 错题本第 3 轮重做(神经科学: 3 次重复才入长期记忆) ② 真题严格计时 ③ 错题分类(粗心/概念/题型). 临时抱佛脚反而扰乱。' },
+];
+
+const MATH_MASTER_TIPS = [
+  { subject:'➗ PSLE Math 4 大 Heuristics', title:'Model Drawing / Table / Backwards / Show All',
+    content:'PSLE 数学 4 大解题套路: ① Model Drawing(线段图)② Make a Table ③ Work Backwards ④ Show ALL Working. 不会用任一种 = 难题肯定丢分. 4 种各练 5 题 = 全套熟练。' },
+  { subject:'➗ Math 时间分配', title:'Paper 2 17 题 6 min/题',
+    content:'PSLE Math Paper 2 一共 1h45min, 17 道大题 → 平均 6 min/题。最后 4 道难题留 30 min, 检查 5 min。前 13 道严格 5 min/题, 难的留更多时间。' },
+  { subject:'➗ Bar Graph 题', title:'必看 axis label',
+    content:'多数学生跳过 y 轴单位 — 然后答出 "10 个" 而不是 "10 千克". PSLE 数据题 30% 错在没读单位. 先看坐标轴 → 再看数据 → 再答题。' },
+  { subject:'➗ Math 难题', title:'限时 30min 不死磕',
+    content:'限时 30min. Heuristic 4 选 1 试. 做不出抄题型 + 思路下次回看, 不死磕超 45min. 1 道难题花 1h 不如花在 5 道中等题。' },
+  { subject:'➗ Math 错题本', title:'抄题 → 原因 → 正解',
+    content:'每错一题写: ① 抄题完整 ② 错的原因(粗心/公式/题型陌生) ③ 正确解法. 每题 3 行, 周末重做. 第 3 次重做才真正会。' },
+  { subject:'➗ PSLE 比例题', title:'高频题型',
+    content:'比例题 = PSLE 高分题. 模板: 设单位 → 列方程 → 验证. 例: A:B = 2:3, A 多 6 → 1 unit = 6, A=12 B=18. 别用代数, 用 unit 思维。' },
+];
+
+const CHINESE_MASTER_TIPS = [
+  { subject:'🇨🇳 PSLE 华文作文', title:'5 类开头 + 5 成语',
+    content:'5 类开头(描景/引句/反问/排比/对话)+ 5+ 成语 / 谚语 + 心理描写细致. 背 5 个固定开头 = 永远写得出第一段. 每篇用 3-5 个成语, 1 篇作文从 25→32 分。' },
+  { subject:'🇨🇳 PSLE 华文 Paper 1+2', title:'时间分配',
+    content:'PSLE 华文 Paper 1 = 作文(50min). Paper 2 = 阅读理解 + 综合(1h50min). 分开计时严格执行, 别让 Paper 2 拖累 Paper 1。' },
+  { subject:'🇨🇳 华文 OE 答题', title:'找句子原文 + 四字概括',
+    content:'PSLE 华文 OE: 找句子原文位置 + 用四字词概括 + 注意"为什么/有什么影响"格式. 答案直接从原文找, 不要自己原创. 抓核心词答题。' },
+  { subject:'🇨🇳 华文阅读', title:'抓 5 个关键人物/事件',
+    content:'PSLE 华文阅读理解: 先扫一遍找 5 个关键(人物/时间/地点/事件/结果), 再回头答题. 跟英语 Comp 一样, 定位法 4 步。' },
+  { subject:'🇨🇳 华文综合', title:'听写 + 阅读 + 看图',
+    content:'综合题 = 听写 + 阅读 + 看图. 听写最难, 平时多听 cna938 中文台 + 读古诗培养语感. 看图作文用记叙文结构 4 段。' },
+  { subject:'🇨🇳 华文作文老师', title:'每周 1 篇必交',
+    content:'华文作文每周 1 篇必交老师改. 改完照标重写一次 — 不重写 = 白改. 30-50 SGD/篇, 这是最不该省的钱。' },
+];
+
+// 按日轮换名师秘诀: 周一/三/五 = 英语 (3); 周二/四 = 科学 (2); 周六 = 数学 (1); 周日 = 华文 (1)
+function getTodayMasterTip(weekN, dateOverride) {
+  const d = dateOverride || new Date();
+  const dow = d.getDay();  // 0=Sun, 1=Mon, ..., 6=Sat
+  const epochDay = Math.floor(d.getTime() / 86400000);
+  let pool, subject, color;
+  if (dow === 1 || dow === 3 || dow === 5) {
+    pool = ENGLISH_MASTER_TIPS; subject = '英语'; color = '#4ECDC4';
+  } else if (dow === 2 || dow === 4) {
+    pool = SCIENCE_MASTER_TIPS; subject = '科学'; color = '#A788E0';
+  } else if (dow === 6) {
+    pool = MATH_MASTER_TIPS; subject = '数学'; color = '#FF9F45';
+  } else {
+    pool = CHINESE_MASTER_TIPS; subject = '华文'; color = '#FF6B6B';
+  }
+  const idx = ((epochDay % pool.length) + pool.length) % pool.length;
+  const tip = pool[idx];
+  return { ...tip, dailySubject: subject, dailySubjectColor: color };
+}
+
 // 弱项 → 针对性建议(基于 taskSubtype 关键字)
 function adviceForWeakness(subtype) {
   const m = {
@@ -2004,3 +2153,9 @@ window.openMysteryBoxOnce = openMysteryBoxOnce;
 window.THINK_PUZZLES = THINK_PUZZLES;
 window.getThinkPuzzleForWeek = getThinkPuzzleForWeek;
 window.submitThinkPuzzleAnswer = submitThinkPuzzleAnswer;
+// v17.6
+window.ENGLISH_MASTER_TIPS = ENGLISH_MASTER_TIPS;
+window.SCIENCE_MASTER_TIPS = SCIENCE_MASTER_TIPS;
+window.MATH_MASTER_TIPS = MATH_MASTER_TIPS;
+window.CHINESE_MASTER_TIPS = CHINESE_MASTER_TIPS;
+window.getTodayMasterTip = getTodayMasterTip;

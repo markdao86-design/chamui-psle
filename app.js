@@ -118,6 +118,7 @@ function renderStreakBlock() {
       <div class="streak-num">🪦</div>
       <div class="streak-label">火焰熄了 — 今天打 1 个项目重新点燃</div>
       ${best > 0 ? `<div class="streak-best">📜 历史最高 ${best} 天</div>` : ''}
+      <div class="streak-hover-hint">📋 悬浮/点击看规则</div>
     `;
     return;
   }
@@ -131,6 +132,7 @@ function renderStreakBlock() {
         ${freezes > 0 ? `<span class="streak-freeze">🧊 ×${freezes}</span>` : ''}
       </div>
     ` : ''}
+    <div class="streak-hover-hint">📋 悬浮/点击看规则</div>
   `;
 }
 
@@ -234,7 +236,7 @@ function renderDashboard() {
   document.getElementById('monthPoints').textContent = monthPoints;
   document.getElementById('streakWeeks').textContent = state.streakBonusCount;
 
-  renderIronRule();
+  // v17.6: renderIronRule() 已移除
   renderWowCard();  // v17.1
   renderMysteryBoxCard();  // v17.5
   renderWeeklyCoach();
@@ -436,24 +438,17 @@ function renderIronRule() {
 function renderMasterTipCard() {
   const el = document.getElementById('masterTipCard');
   if (!el) return;
-  const c = getWeeklyCoaching(state);
-  const tip = c.masterTip;
+  // v17.6: 用按日轮换的多科秘诀 (英语 3 天/科学 2 天/数学 1 天/华文 1 天)
+  const tip = window.getTodayMasterTip ? window.getTodayMasterTip(state.currentWeek) : null;
   if (!tip) {
     el.innerHTML = '';
     return;
   }
-  // tip.title 形如 "🔬 P4 Plant Transport ⭐ — 芹菜染色实验答题模板"
-  // 拆成 subject 和 title 两段更好看
-  let subject = '', title = tip.title;
-  const dashIdx = tip.title.indexOf(' — ');
-  if (dashIdx > 0) {
-    subject = tip.title.substring(0, dashIdx);
-    title = tip.title.substring(dashIdx + 3);
-  }
+  el.style.borderLeftColor = tip.dailySubjectColor || '#A788E0';
   el.innerHTML = `
-    <div class="master-tip-header">🌟 本周名师秘诀</div>
-    ${subject ? `<div class="master-tip-subject">${escapeHtml(subject)}</div>` : ''}
-    <div class="master-tip-title">${escapeHtml(title)}</div>
+    <div class="master-tip-header" style="color:${tip.dailySubjectColor}">🌟 今日名师秘诀 · ${tip.dailySubject}</div>
+    <div class="master-tip-subject">${escapeHtml(tip.subject)}</div>
+    <div class="master-tip-title">${escapeHtml(tip.title)}</div>
     <div class="master-tip-content">${escapeHtml(tip.content)}</div>
   `;
 }
@@ -2198,6 +2193,15 @@ window.renderStreakBlock = renderStreakBlock;
 window.openMysteryBoxModal = openMysteryBoxModal;
 window.closeMysteryBoxResult = closeMysteryBoxResult;
 window.submitThinkAnswer = submitThinkAnswer;
+// v17.6: Streak rules modal
+window.showStreakRulesModal = function() {
+  const m = document.getElementById('streakRulesModal');
+  if (m) m.classList.add('show');
+};
+window.closeStreakRulesModal = function() {
+  const m = document.getElementById('streakRulesModal');
+  if (m) m.classList.remove('show');
+};
 window.requireAdminAuth = requireAdminAuth;
 window.resetAdminPassword = resetAdminPassword;
 window.clearAdminAuth = clearAdminAuth;
