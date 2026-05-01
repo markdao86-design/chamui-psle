@@ -200,6 +200,175 @@ function getWeeklyCheckinTemplate(weekNum) {
   return items;
 }
 
+// ============= 本周智慧教练(诊断 + 重点 + 建议 + 名师秘诀) =============
+
+// 各周章节核心知识点(教练用 — 给孩子讲本周该重点抓什么)
+const WEEK_FOCUS_TIPS = [
+  // index = week-1
+  { theme: 'P3 Diversity', points: ['动物分类:脊椎 vs 无脊椎', '植物分类:开花 vs 不开花', '材料分类与性质(磁性/导热/透光)'] },
+  { theme: 'P3 Plant Life Cycle', points: ['种子结构:seed coat / embryo / cotyledon', '萌发 3 条件:水 + 空气 + 温度', '4 阶段:seed → seedling → mature → flowering'] },
+  { theme: 'P3 Animal Life Cycle', points: ['完全变态(蝴蝶/蛙)vs 不完全变态(蟑螂/蚊)', '4 类动物对比:鸡(无变态)/ 蛙 / 蝴蝶 / 蟑螂', 'PSLE 高频:阶段名英文术语必背'] },
+  { theme: 'P3 Plant Parts', points: ['根 = 吸收 + 固定 / 茎 = 运输 + 支撑 / 叶 = 光合 + 蒸腾', '花 = 繁殖 / 果实 = 保护种子', 'P3 整章思维导图必画'] },
+  { theme: 'P4 Plant Transport ⭐ 难章 1', points: ['xylem (木质部) 运水向上', 'phloem (韧皮部) 运养分双向', '芹菜染色实验:观察 + 推理'] },
+  { theme: 'P4 Plant Transport ⭐ 难章 2', points: ['蒸腾作用:为什么水会向上运', '开放题答题模板:"because... so..."', '实验设计:控制变量 + 假设'] },
+  { theme: 'P4 Digestive ⭐⭐ 难章 1', points: ['完整路径:口 → 食道 → 胃 → 小肠 → 大肠', '物理消化(咀嚼) vs 化学消化(酶)', '各器官功能英文术语必背'] },
+  { theme: 'P4 Digestive ⭐⭐ 难章 2', points: ['营养素 + 消化对应:糖→amylase / 蛋白→pepsin / 脂→bile', '酶活性实验(温度 / pH 影响)', 'PSLE 高频:为什么类开放题'] },
+  { theme: 'P4 Matter + Mass/Volume', points: ['三态 + 状态变化', 'Mass(质量,kg)vs Volume(体积,L) — 测量工具不同', '易章速过,不深挖'] },
+  { theme: 'P4 Light & Shadow ⭐ 难章 1', points: ['光源 + 直线传播 + 反射(镜面 vs 漫)', '影子形成 3 条件:光源 + 不透明物 + 屏', '不透明 / 半透明 / 透明 区别'] },
+  { theme: 'P4 Light & Shadow ⭐ 难章 2', points: ['影子大小 vs 光源距离(近 → 大)', '影子方向 vs 光源位置(对面)', '实验设计题答题模板熟练'] },
+  { theme: 'P4 Heat ⭐⭐ 难章 1', points: ['温度 vs 热(状态量 vs 能量量,易混)', '热传导(良/绝缘体)+ 对流(流体)+ 辐射(无介质)', '热膨胀冷缩(实验)'] },
+  { theme: 'P4 Heat ⭐⭐ 难章 2', points: ['PSLE 高频:三种传递混合应用题', '"为什么"开放题:用"because + 传递方式"', '保温 vs 散热设计题'] },
+  { theme: 'P4 Magnets + 综合 🎯', points: ['磁极:同极相斥/异极相吸', '磁性材料(铁钴镍)+ 磁化方法', '🎯 W14 P3-P4 综合模拟卷,严格 1h45min'] },
+  { theme: 'P5 Reproduction', points: ['Plant Reproduction(花的结构 + 受精)', 'Human Reproduction', '从 P3-P4 到 P5 的衔接整理'] },
+  { theme: 'P5 Cells + Energy from Food', points: ['Cells:植物 vs 动物结构(细胞壁/叶绿体)', '食物链 → 食物网,生产者/消费者/分解者', 'Vocab 5 完成 ✅'] },
+  { theme: 'P5 Water + Air & Weather', points: ['水循环深化:蒸发/凝结/降水', 'Air 组成(氮 78% 氧 21% 其他 1%)', 'Weather:云型 + 测量工具'] },
+  { theme: 'P5 Forms of Energy', points: ['Kinetic 动能 + Potential 势能', 'Sound + Light + Electrical + Heat 形态', '能量分类'] },
+  { theme: 'P5 Energy Conversions', points: ['转换链:化学→电→光/热(灯泡)', '可再生(太阳/风/水)vs 不可再生(化石)', 'Energy efficiency 概念'] },
+  { theme: 'P5 Electricity ⭐', points: ['电流(I,安培)/电压(V,伏特)/电阻', '简单电路:电池 + 灯 + 开关', '导体 vs 绝缘体 + 用电安全'] },
+  { theme: 'P5 Series & Parallel ⭐', points: ['串联:电流相同,电压分配', '并联:电压相同,电流分配', 'PSLE 电路题:开关短路 vs 断开'] },
+  { theme: 'P5 综合复习 1', points: ['Cycles 总复习(水/物质/生命)', 'Systems 总复习(消化/运输/呼吸)', '综合卷 1 限时模拟'] },
+  { theme: 'P5 综合复习 2', points: ['Energy 总复习', 'Electricity 总复习', '综合卷 2 + 错题分析'] },
+  { theme: 'P5 综合卷模拟 + 弱项回填', points: ['限时综合卷 ×2', '弱项章节回填(看错题本数据)', '整体掌握度自评'] },
+  { theme: 'P5 整体串讲 + Visual Text 启动', points: ['P5 整体串讲(联系 P3-P4)', 'PSLE 题型熟悉(开放题)', '看图答题 Visual Text 启动'] },
+  { theme: '🎯 第一阶段总模考', points: ['🎯 严格 PSLE 时长完整模拟 4 科', '对照目标:英 72+ / 科 88+ / 数 90+ / 华 88+', 'W27 第二阶段启动准备'] },
+];
+
+// 名师秘诀池(15 条精华,按周轮转)
+const MASTER_TIPS = [
+  { id: 'pomodoro', title: '🧠 番茄工作法',
+    content: '25 分钟专注 + 5 分钟起立喝水。手机/平板放房间外。3 个番茄钟 = 一个 1.5h 学习段。' },
+  { id: 'errbook', title: '📓 错题本三步法',
+    content: '抄题 → 写错的原因(粗心/概念/题型)→ 写正确解法。每题 3 行,周末翻一遍。' },
+  { id: 'sci8', title: '🎯 PSLE 科学高频 8 章',
+    content: 'Plant Transport / Digestive / Light / Heat / Reproduction / Cells / Energy / Electricity 占 70% 分。' },
+  { id: 'comp40', title: '✏️ 作文 40 分套路',
+    content: '4 段(开场→矛盾→高潮→反思)+ 对话 + 心理 + 感官描写 + 全文过去时 + 150-180 词。' },
+  { id: 'compoe', title: '📖 Comp OE 答题铁律',
+    content: '定位法(先看题找关键词)+ 答案含原文核心词 + 完整句子 + 3 分题答 3 个点。' },
+  { id: 'cloze', title: '✍️ Cloze 错题攻略',
+    content: '每错查 3 件事:同义词 / 词性 / 固定搭配。建词汇错题本按主题分(travel/school/nature)。' },
+  { id: 'math4', title: '🔢 数学 4 大 Heuristics',
+    content: 'Model Drawing(线段图)/ Make a Table / Work Backwards / Show ALL Working — 4 大武器选用。' },
+  { id: 'cnzw', title: '🇨🇳 华文作文模板',
+    content: '5 类开头(描景/引句/反问/排比/对话)+ 5 个成语 + 心理描写。结尾点题升华。' },
+  { id: 'oral3', title: '🎤 口试 3 句扩展法',
+    content: '看图说话:① 描述看到什么 ② 联想到什么 ③ 个人经历。每点延伸 2-3 句。' },
+  { id: 'sleep', title: '🛌 睡眠是金',
+    content: '21:30 必睡。睡眠不足 7h,大脑信息整合下降 40%,白天多刷 2h 也补不回。' },
+  { id: 'sciexp', title: '🧪 PSLE 实验题 4 要素',
+    content: '答题必含:① Independent var(改变啥)② Dependent var(测啥)③ Controlled vars(保持不变)④ Hypothesis 假设。' },
+  { id: 'vocab', title: '📚 单词记忆法',
+    content: '主题分类:travel/school/nature/emotion/sports 五大类。每周 2 单元,每天 5 个,连记带用。' },
+  { id: 'rest', title: '⚠️ 周日下午雷打不动',
+    content: '周日 14:00-18:00 完全不学习。这是大脑整合一周输入的关键期,休息出来效率更高。' },
+  { id: 'rewrite', title: '🔁 作文重写不能省',
+    content: '老师改完必须照标的地方重写一次。不重写 = 白改。重写时换更好的词、更紧的句。' },
+  { id: 'sundayreview', title: '📋 周日复盘 5 件事',
+    content: '① 本周打钩 ② 错题入册 ③ 看下周卡片 ④ 教材摆桌 ⑤ 作文题确定。19:30-21:00 完成。' },
+];
+
+// 弱项 → 针对性建议(基于 taskSubtype 关键字)
+function adviceForWeakness(subtype) {
+  const m = {
+    'Cloze 完形': '✍️ 每错一空必查 3 件事:同义词 / 词性 / 固定搭配。重点背介词搭配(look at/depend on),时态一致(过去时上下文连贯)。',
+    'Comp 阅读': '📖 用定位法:先看题找关键词再回原文找。OE 答案必含原文核心词,3 分题答 3 个点。每天 1 篇精读。',
+    '作文': '✏️ 4 段结构(开场→矛盾→高潮→反思)。每周必交老师改 + 重写一次。背 5 个高级词(crestfallen/jubilant)用进作文。',
+    'Editing 改错': '✏️ 每错按 5 类记本:主谓一致 / 时态 / 拼写 / 介词 / 冠词。每周 50 题 + 错题分类分析。',
+    'Grammar 语法': '📚 MCQ 50 题/周。错题分析为什么选错,不光改答案。重点:if/since/much/too 等高频套路。',
+    'Vocab 词汇': '📚 主题分类记(travel/school/nature/emotion)。每天 5 个,连记带用,在作文里用进去 3-5 个。',
+    '听力/口试': '🎤 每天 5-10min 朗读录音回放找发音错。看图说话 3 句扩展:描述→联想→个人经历。',
+    '科学综合卷': '🔬 错题分 3 类(粗心/概念/题型)。概念错回教材重读;题型错对照 PSLE 8 大高频章答题模板。',
+    '科学章节测': '🔬 70%+ 才进下章。错题立刻入本,周末重做。英文术语必背,实验题答题模板要熟。',
+    '科学其他': '🔬 概念图记英文术语。PSLE 高频:Plant Transport / Digestive / Light / Heat / Reproduction / Cells / Energy / Electricity。',
+    '数学模考': '🔢 错题本必填:粗心(看错题)/ 公式(忘记) / 题型(没见过)三类。Heuristic 4 选 1:Model Drawing / Table / Backwards / ALL Working。',
+    '数学其他': '🧮 难题限时 30min,做不出抄题型 + 思路下次回看,不死磕超 45min。',
+    '华文作文': '🇨🇳 5 类开头(描景/引句/反问/排比/对话)+ 5+ 成语/谚语 + 心理描写。',
+    '华文模考': '🇨🇳 Paper 1=作文(50min) / Paper 2=阅读+综合(1h50min)。分开计时,作文优先。',
+    '华文其他': '🇨🇳 找原文位置 + 用四字词概括 + 注意"为什么/有什么影响"格式。',
+    'Visual Text': '🖼️ 看海报答题:文字 + 数字 + 颜色 + 符号 + 排版 全注意。',
+  };
+  return m[subtype] || '💪 持续打卡,关注错题本,周末必复盘。每周日复盘 5 件事是命根子。';
+}
+
+// 整合 — 返回 { phase, weekTheme, diagnosis[], focus, weakness, masterTip }
+function getWeeklyCoaching(state) {
+  const week = state.currentWeek;
+  const wt = WEEK_TASKS[week - 1];
+  const c = calcWeekCompletion(week, state);
+  const dp = calcWeekDailyPoints(week, state);
+  const agg = aggregateScores(state);
+  const isHard = wt && wt.theme.includes('⭐');
+  const phase = week <= 14 ? '第一阶段 P3-P4 系统过' : '第一阶段 P5 收尾';
+
+  // 1) 诊断 (3-4 lines)
+  const diagnosis = [];
+  if (!c || c.total === 0) {
+    diagnosis.push('🌱 本周还没开始,加油打卡!');
+  } else {
+    if (c.percent === 100) diagnosis.push(`🌟 本周满勾 ${c.done}/${c.total} (100%) — 完美!`);
+    else if (c.onTrack) diagnosis.push(`🟢 本周完成 ${c.done}/${c.total} (${c.percent}%) — 进度优秀,目标稳了`);
+    else if (c.percent >= 50) diagnosis.push(`🟡 本周完成 ${c.done}/${c.total} (${c.percent}%) — 距 80% 达标还差 ${Math.max(0, Math.ceil(c.total * 0.8) - c.done)} 个`);
+    else diagnosis.push(`🟠 本周才 ${c.done}/${c.total} (${c.percent}%) — 加把劲!优先做今日剩下的 slot`);
+  }
+  if (dp.reviewBlocked) diagnosis.push(`⚠️ 完成率够了,但 ${dp.missingKeySlots.length} 个 🎯 必做 slot 还没做 → 拿不到周复盘 +5 分`);
+  if (agg.weakest && agg.weakest.count >= 2) {
+    diagnosis.push(`📉 当前弱项: ${agg.weakest.subtype}(${agg.weakest.count} 次记录,均 ${agg.weakest.avgPct}%)`);
+  } else if (agg.items.length >= 1) {
+    const totals = Object.values(agg.bySubject);
+    if (totals.length > 0) {
+      const avg = Math.round(totals.reduce((a, b) => a + b.avgPct, 0) / totals.length);
+      diagnosis.push(`📈 各科累计平均 ${avg}% (${agg.items.length} 项分数)`);
+    }
+  }
+  if (state.sadUntil && Date.now() < state.sadUntil) {
+    diagnosis.push(`😞 老师反馈学习问题 24h 内 — 沉住气,这是态度提醒,不是能力否定`);
+  }
+
+  // 2) 本周重点(从手册章节)
+  const focusData = WEEK_FOCUS_TIPS[week - 1] || { theme: wt ? wt.theme : `W${week}`, points: [] };
+  const focus = {
+    title: `W${week} ${focusData.theme}${isHard ? ' ⭐ 难章周' : ''}`,
+    points: focusData.points
+  };
+
+  // 3) 提升建议(基于弱项,否则给本周相关默认建议)
+  let weakAdvice = null;
+  if (agg.weakest && agg.weakest.count >= 2) {
+    weakAdvice = {
+      subject: agg.weakest.subtype,
+      avgPct: agg.weakest.avgPct,
+      advice: adviceForWeakness(agg.weakest.subtype)
+    };
+  }
+
+  // 4) 名师秘诀(按周轮转 + 弱项相关时优先匹配)
+  let tipIdx = (week - 1) % MASTER_TIPS.length;
+  // 弱项联动:Cloze 弱 → cloze tip;作文弱 → comp40
+  if (agg.weakest) {
+    const map = {
+      'Cloze 完形': 'cloze',
+      '作文': 'comp40',
+      'Comp 阅读': 'compoe',
+      '科学综合卷': 'sci8',
+      '科学章节测': 'sciexp',
+      '数学模考': 'math4',
+      '数学其他': 'math4',
+      '华文作文': 'cnzw',
+      '听力/口试': 'oral3',
+      'Vocab 词汇': 'vocab',
+      'Editing 改错': 'errbook'
+    };
+    const targetId = map[agg.weakest.subtype];
+    if (targetId) {
+      const found = MASTER_TIPS.findIndex(t => t.id === targetId);
+      if (found >= 0) tipIdx = found;
+    }
+  }
+  const masterTip = MASTER_TIPS[tipIdx];
+
+  return { phase, weekTheme: wt ? wt.theme : '', isHard, diagnosis, focus, weakAdvice, masterTip };
+}
+
 // ============= 击败全新加坡 P5 同学百分比(虚拟激励指标) =============
 // 新加坡每年 P5 学生约 50,000 人。曲线设计:
 // 0 分:0% / 30 分(W1 起步):20% / 100 分:43% / 250 分:71% / 500 分:91% / 1000 分:99% / 1500+:99.5%
@@ -874,6 +1043,10 @@ window.subjectGroup = subjectGroup;
 window.taskSubtype = taskSubtype;
 window.aggregateScores = aggregateScores;
 window.studentBeatPercent = studentBeatPercent;
+window.getWeeklyCoaching = getWeeklyCoaching;
+window.WEEK_FOCUS_TIPS = WEEK_FOCUS_TIPS;
+window.MASTER_TIPS = MASTER_TIPS;
+window.adviceForWeakness = adviceForWeakness;
 window.studentBeatCount = studentBeatCount;
 window.SG_P5_TOTAL = SG_P5_TOTAL;
 window.loadStateAsync = loadStateAsync;

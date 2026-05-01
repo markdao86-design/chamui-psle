@@ -369,6 +369,97 @@ body::before {
   margin-top: 2px;
 }
 
+/* ===== 智慧教练 card ===== */
+.coach-card {
+  background: linear-gradient(135deg, #FFF8E7, #FFE8F0);
+  border-color: var(--color-purple);
+}
+.coach-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px dashed var(--color-purple);
+}
+.coach-title {
+  font-family: 'ZCOOL KuaiLe', cursive;
+  font-size: 22px;
+  color: var(--color-purple);
+}
+.coach-meta {
+  font-size: 12px;
+  color: var(--color-text-light);
+  font-weight: 600;
+}
+.coach-section { margin-bottom: 14px; }
+.coach-section:last-child { margin-bottom: 0; }
+.coach-section-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+.coach-diag-list {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+.coach-diag-list > div {
+  padding: 6px 10px;
+  background: white;
+  border-left: 3px solid var(--color-secondary);
+  border-radius: 4px;
+}
+.coach-focus {
+  background: white;
+  border: 2px solid var(--color-text);
+  border-radius: var(--radius-tight);
+  padding: 10px 12px;
+}
+.coach-focus-title {
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+.coach-focus ul {
+  margin: 0; padding-left: 20px;
+  font-size: 13px; line-height: 1.6;
+  color: var(--color-text);
+}
+.coach-focus li { margin-bottom: 2px; }
+.coach-weak {
+  background: rgba(255, 159, 69, 0.12);
+  border: 2px solid var(--color-warn);
+  border-radius: var(--radius-tight);
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+.coach-weak b { color: var(--color-warn); }
+.coach-master {
+  background: linear-gradient(135deg, var(--color-accent), #FFB6D9);
+  border: 3px solid var(--color-text);
+  border-radius: var(--radius-tight);
+  padding: 12px 14px;
+  box-shadow: 0 3px 0 var(--color-text);
+}
+.coach-master-title {
+  font-family: 'ZCOOL KuaiLe', cursive;
+  font-size: 18px;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+.coach-master-content {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
 /* ===== 屏幕震动 ===== */
 @keyframes screen-shake {
   0%, 100% { transform: translate(0, 0); }
@@ -1639,6 +1730,15 @@ body.shake { animation: screen-shake 0.45s ease-out; }
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- 智慧教练:本周诊断 + 重点 + 提升建议 + 名师秘诀 -->
+    <div class="card coach-card">
+      <div class="coach-header">
+        <div class="coach-title">🎓 本周智慧教练</div>
+        <div class="coach-meta" id="coachMeta">W? · 阶段名</div>
+      </div>
+      <div id="coachContent"></div>
     </div>
 
     <div class="card">

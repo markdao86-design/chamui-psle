@@ -148,7 +148,57 @@ function renderDashboard() {
   document.getElementById('monthPoints').textContent = monthPoints;
   document.getElementById('streakWeeks').textContent = state.streakBonusCount;
 
+  renderWeeklyCoach();
   renderEquipment();
+}
+
+// ============ 智慧教练(v4 主页新模块)============
+function renderWeeklyCoach() {
+  const container = document.getElementById('coachContent');
+  const meta = document.getElementById('coachMeta');
+  if (!container) return;
+  const c = getWeeklyCoaching(state);
+  if (meta) meta.textContent = `W${state.currentWeek} · ${c.phase}`;
+
+  const diagHtml = `
+    <div class="coach-section">
+      <div class="coach-section-title">📊 本周诊断</div>
+      <div class="coach-diag-list">
+        ${c.diagnosis.map(d => `<div>${escapeHtml(d)}</div>`).join('')}
+      </div>
+    </div>
+  `;
+
+  const focusHtml = c.focus && c.focus.points.length ? `
+    <div class="coach-section">
+      <div class="coach-section-title">🎯 本周重点</div>
+      <div class="coach-focus">
+        <div class="coach-focus-title">${escapeHtml(c.focus.title)}</div>
+        <ul>${c.focus.points.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>
+      </div>
+    </div>
+  ` : '';
+
+  const weakHtml = c.weakAdvice ? `
+    <div class="coach-section">
+      <div class="coach-section-title">💡 提升建议</div>
+      <div class="coach-weak">
+        <b>${escapeHtml(c.weakAdvice.subject)}</b> 平均 ${c.weakAdvice.avgPct}% — ${escapeHtml(c.weakAdvice.advice)}
+      </div>
+    </div>
+  ` : '';
+
+  const masterHtml = c.masterTip ? `
+    <div class="coach-section">
+      <div class="coach-section-title">🌟 本周名师秘诀</div>
+      <div class="coach-master">
+        <div class="coach-master-title">${escapeHtml(c.masterTip.title)}</div>
+        <div class="coach-master-content">${escapeHtml(c.masterTip.content)}</div>
+      </div>
+    </div>
+  ` : '';
+
+  container.innerHTML = diagHtml + focusHtml + weakHtml + masterHtml;
 }
 
 // 计算某周拿到的总分(里程碑 + 每日打卡分 + 周复盘 + 当日 combo)
