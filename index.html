@@ -1255,6 +1255,21 @@ body::before {
   color: white;
 }
 
+/* ===== 任务"怎么做"提示 ===== */
+.checkin-tip {
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: rgba(78, 205, 196, 0.08);
+  border-left: 3px solid var(--color-secondary);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-text);
+}
+.checkin-item.checked .checkin-tip {
+  opacity: 0.55;
+}
+
 /* ===== Firebase 同步状态 badge ===== */
 #syncBadge {
   font-size: 11px;

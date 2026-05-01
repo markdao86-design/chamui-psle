@@ -197,6 +197,88 @@ function getWeeklyCheckinTemplate(weekNum) {
   return items;
 }
 
+// ============= 任务"怎么做"提示(从手册 v9 章节 IV/IX/XII 提炼) =============
+// 输入任务文本,输出 1-2 句具体执行方法。匹配多个则取第一个。
+function getTaskTip(task) {
+  if (!task) return '';
+  const t = String(task);
+
+  // ===== 复盘类 =====
+  if (/月评估|大复盘|月模考/.test(t))
+    return '🎯 大复盘:看模考成绩 → 检查这月哪些任务没做完 → 决定下月调整(花 2h)';
+  if (/复盘|错题本复盘|📓/.test(t))
+    return '📓 周日 19:30-21:00 做 5 件事:① 本周打钩 ② 错题入册 ③ 看下周卡 ④ 教材摆桌 ⑤ 作文题确定';
+  if (/W\d+ ?准备|准备\(P5|准备\(进/.test(t))
+    return '📋 把下周教材按周一到周日顺序摆好;作文题写在作文本第一行';
+  if (/总模考|科学总模考|英语模考/.test(t))
+    return '🎯 完整模拟 4 科,考完整理错题本,对照目标分(英 72+/科 88+/数 90+/华 88+)';
+
+  // ===== 科学 =====
+  if (/教材精读|精读/.test(t))
+    return '🔬 通读 + 划重点 + 概念图(写英文术语)。番茄钟 25min 专注 + 5min 起立喝水';
+  if (/概念图|思维导图/.test(t))
+    return '🧠 分支整理章节 + 写英文术语 + 标 PSLE 高频考点';
+  if (/实验设计|实验题/.test(t))
+    return '🧪 答题模板:① 假设 ② 控制变量 ③ 步骤 ④ 结论。注意控制变量法';
+  if (/开放题|为什么/.test(t))
+    return '💡 关键词答题法:答案必须含原文核心词;为什么类用"因为...所以..."';
+  if (/章节小测|配套练习|Activity/.test(t))
+    return '📝 限时 20-30min,正确率 70%+ 才能进下章。错题立刻入错题本';
+  if (/综合测试|综合模拟|综合卷|综合练习/.test(t))
+    return '⏱️ 限时 PSLE 真实时长(1h45min)。错题分类:粗心/概念/题型';
+  if (/补习/.test(t))
+    return '👨‍🏫 补习课:带上一周错题本,让老师专门讲不懂的点';
+  if (/^🔬|🔬/.test(t))
+    return '🔬 教材 + Activity Book 配套。英文术语必背,实验题答题模板要熟';
+
+  // ===== 英语 =====
+  if (/Comp|阅读理解/.test(t))
+    return '📖 定位法:先看题目找关键词再回原文。OE 答案必含原文核心词';
+  if (/Cloze|完形/.test(t))
+    return '✍️ 一空一词无选项。每错查 3 件事:同义词/词性/固定搭配。建词汇错题本按主题分';
+  if (/Editing/.test(t))
+    return '✏️ 5 类错误分类记本:主谓一致/时态/拼写/介词/冠词';
+  if (/Grammar/.test(t))
+    return '📚 MCQ 50 题/周。错题不光改答案,要分析为什么选错';
+  if (/作文计划/.test(t))
+    return '📝 列大纲:开头-发展-高潮-结尾;选 3-5 个高级词汇背好';
+  if (/作文.*重写|重写.*作文/.test(t))
+    return '🔁 照着老师标的地方重写一次 — 不重写 = 白改';
+  if (/作文/.test(t))
+    return '✏️ 周六 15:45-17:00 写,周一交老师改。模板库:开头/转折/结尾各 5 种背熟';
+  if (/Vocab|词汇/.test(t))
+    return '📚 每天 5 个,按主题分类(travel/school/nature/emotion)';
+  if (/听力.*口试|口试.*听力|🗣/.test(t))
+    return '🎤 朗读 1 段英文录音回放找发音错;看图说话 3 句扩展:看到→联想→个人经历';
+  if (/听力/.test(t))
+    return '🎧 每天 15min CNA938 / okto;周六晚 1 套听力题';
+  if (/Visual Text/.test(t))
+    return '🖼️ Visual Text:看图答题,注意图片中文字 + 数字 + 颜色暗示';
+  if (/Practice Package/.test(t))
+    return '📦 综合包套题:限时做完 + 老师批 Comp 部分';
+
+  // ===== 数学 =====
+  if (/数学.*模考|数学.*真题|数学.*错题/.test(t))
+    return '🔢 限时 1h30min。错题本必填:粗心/公式/题型 三类';
+  if (/难题|P5 难题/.test(t))
+    return '🧮 限时 30min 做。做不出抄思路下次回看,不死磕';
+  if (/^➗ 错题|错题.*数学|^➗/.test(t))
+    return '➗ 抄题 → 错的原因 → 正确解法。每题 3 行';
+
+  // ===== 华文 =====
+  if (/华文|🇨🇳/.test(t)) {
+    if (/作文/.test(t)) return '🇨🇳 华文作文:用规律句型 + 周末交老师改';
+    if (/真题|模拟|模考/.test(t)) return '🇨🇳 限时模拟,作文+阅读分开计时';
+    return '🇨🇳 词汇 + 阅读为主,周日上午 1.25h 完成';
+  }
+
+  // ===== 其它 =====
+  if (/启动|阶段大复盘|第二阶段启动/.test(t))
+    return '🚀 阶段交接:整理上阶段错题本 + 看下阶段计划 + 教材准备';
+
+  return '';  // 找不到对应 tip 就不显示
+}
+
 // ============= 每日任务查询 =============
 function getWeekTasks(weekNum) {
   return WEEK_TASKS[weekNum - 1] || null;
@@ -606,6 +688,7 @@ window.listKeySlots = listKeySlots;
 window.allKeySlotsDone = allKeySlotsDone;
 window.isDayComplete = isDayComplete;
 window.calcWeekDailyPoints = calcWeekDailyPoints;
+window.getTaskTip = getTaskTip;
 window.loadStateAsync = loadStateAsync;
 window.subscribeFirestore = subscribeFirestore;
 window.initFirebase = initFirebase;

@@ -237,10 +237,12 @@ function renderCheckinPage() {
       const hasPhoto = hasPhotoCached(week, selectedDay, t.slot);
       const isKey = isKeySlot(week, selectedDay, t.slot);
       const pts = slotPoints(week, t.slot);
+      const tip = getTaskTip(t.task);
       const photoBtn = hasPhoto
         ? `<button class="photo-btn has-photo" onclick="event.stopPropagation(); viewPhoto(${week}, '${selectedDay}', '${t.slot}')" title="看作业照">📸</button>`
         : `<button class="photo-btn" onclick="event.stopPropagation(); pickPhotoForSlot(${week}, '${selectedDay}', '${t.slot}')" title="传作业照">📷</button>`;
       const keyChip = isKey ? `<span class="key-chip" title="必做关键 slot,影响周复盘奖">🎯 必做</span>` : '';
+      const tipLine = tip ? `<div class="checkin-tip">${escapeHtml(tip)}</div>` : '';
       return `
         <div class="checkin-item ${checked ? 'checked' : ''} ${isKey ? 'key-slot' : ''}" data-slot="${t.slot}"
              onclick="toggleDailyCheck(${week}, '${selectedDay}', '${t.slot}', event)">
@@ -249,6 +251,7 @@ function renderCheckinPage() {
             <div class="checkin-info">
               <div class="checkin-title">${escapeHtml(t.task)} ${keyChip}</div>
               <div class="checkin-desc">⏰ ${escapeHtml(t.time)}</div>
+              ${tipLine}
             </div>
           </div>
           ${photoBtn}
