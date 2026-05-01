@@ -2282,6 +2282,25 @@ body.shake { animation: screen-shake 0.45s ease-out; }
             <button class="btn btn-success" onclick="addPoints('良好作息一整天', 3)">＋3 分</button>
           </div>
         </div>
+
+        <!-- v16.2: 学校测验 + 期中期末考试 -->
+        <div class="admin-action" style="border-color: #4ECDC4; background: #ECFFFC;">
+          <h4>📋 每周学校测验达标</h4>
+          <p>学校单元测验 / 周测达标(≥80%)+5 分;优秀(≥90%)+10 分</p>
+          <div class="admin-buttons">
+            <button class="btn btn-success" onclick="addPoints('学校测验达标(≥80%)', 5)">达标 ＋5 分</button>
+            <button class="btn btn-success" onclick="addPoints('学校测验优秀(≥90%)', 10)">优秀 ＋10 分</button>
+          </div>
+        </div>
+
+        <div class="admin-action" style="border-color: var(--color-warn); background: #FFF8E7; border-width: 4px;">
+          <h4>🎓 期中/期末考试优异</h4>
+          <p>4 科平均 90+ 才算优异。期中 +30,期末 +50。</p>
+          <div class="admin-buttons">
+            <button class="btn btn-warn" onclick="addPoints('期中考试优异(4 科 90+)', 30)">期中 ＋30 分</button>
+            <button class="btn btn-warn" onclick="addPoints('期末考试优异(4 科 90+)', 50)">期末 ＋50 分</button>
+          </div>
+        </div>
       </div>
     </div>
 
