@@ -1406,10 +1406,10 @@ function manualWeekChange() {
 }
 
 function resetData() {
-  if (!confirm('⚠️ 这会删除所有数据!确定吗?')) return;
+  if (!confirm('⚠️ 这会删除所有数据(包括云端 Firestore 历史)!确定吗?')) return;
   if (!confirm('真的真的确定吗?这无法恢复!')) return;
   state = getDefaultState();
-  saveState(state);
+  saveState(state, { force: true });  // 用户明确要重置 → 绕过空默认值安全闸
   renderAll();
   showToast('🗑️ 数据已重置', 'warn');
 }

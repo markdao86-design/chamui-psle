@@ -919,7 +919,24 @@ function loadState() {
   return getDefaultState();
 }
 
-function saveState(state) {
+// 检测 state 是不是"全空的默认值" — 用于防止意外覆盖云端数据
+function isEmptyDefaultState(s) {
+  if (!s) return true;
+  return (s.totalPoints || 0) === 0
+    && Object.keys(s.daily || {}).length === 0
+    && Object.keys(s.weekly || {}).length === 0
+    && Object.keys(s.scores || {}).length === 0
+    && (s.logs || []).length === 0
+    && (s.exchanges || []).length === 0
+    && (s.streakBonusCount || 0) === 0
+    && (s.monthlyTestPass || 0) === 0;
+}
+
+// saveState(state, options)
+// options.force = true → 即使是空默认值也写(用于"重置数据"按钮)
+// 默认情况下,空默认值 state 拒绝写 Firestore(防止意外覆盖云端历史)
+function saveState(state, options) {
+  options = options || {};
   let ok = true;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -927,13 +944,18 @@ function saveState(state) {
     console.error('保存数据失败', e);
     ok = false;
   }
-  // 同时镜像写到 Firestore(不阻塞)
+  // 镜像写到 Firestore(不阻塞)— 加安全闸
   if (_fbReady && _fbDoc) {
-    setFbStatus('syncing');
-    _fbDoc.set(state).then(
-      () => setFbStatus('synced'),
-      e => { console.warn('Firestore 写入失败:', e); setFbStatus('error'); }
-    );
+    if (isEmptyDefaultState(state) && !options.force) {
+      console.warn('🛡️ 拒绝写空默认值到 Firestore(防止覆盖云端历史)。如确需重置,请传 saveState(state, {force: true})');
+      // 不改 fbStatus
+    } else {
+      setFbStatus('syncing');
+      _fbDoc.set(state).then(
+        () => setFbStatus('synced'),
+        e => { console.warn('Firestore 写入失败:', e); setFbStatus('error'); }
+      );
+    }
   }
   return ok;
 }
