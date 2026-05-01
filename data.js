@@ -235,54 +235,44 @@ const VOCAB_500 = {
 // 孩子在打卡页 listening 项目点 🔊 按钮唤出
 // 选材原则: P5/P6 PSLE listening 实际语速 120-140 wpm + 儿童词汇,所以用儿童故事/儿童科普
 // CNA938 直播降级到末尾 + 标"进阶 W15+"(成人语速 ~180 wpm 太快)
-// v16.12: 按难度从低到高排序;删 2 个 P3-P5 启蒙/入门项(对 P5/P6 PSLE 备考太简单)
+// v16.13: 只保留 PSLE 真题及以上;趣味性高的(TED-Ed / Crash Course / 60-Sec)排前面
 const LISTENING_RESOURCES = [
-  // === 1) 入门:P5-P6 / B1 ===
-  {
-    type: 'youtube-playlist',
-    title: '📚 ESL 英语听力故事(频道连播)',
-    desc: 'StoryStudies 频道 B1 级英语故事 + 听力练习',
-    playlistId: 'UUAHBOA5B6WboGHTCwSj9nig',
-    level: 'P5-P6 (B1)',
-    levelColor: '#4ECDC4',
-    episodeInfo: '50 集 · 自动连播'
-  },
-  {
-    type: 'youtube-playlist',
-    title: '🔬 Brains On!: 儿童科学(频道连播)',
-    desc: 'APM 出品,主题贴 PSLE 科学(动植物/物质/能量/电)',
-    playlistId: 'UUHWOq5gBWXZ4OcI8asZoVTQ',
-    level: 'P5-P6 科学',
-    levelColor: '#A788E0',
-    episodeInfo: '204 集 · 自动连播'
-  },
-  // === 2) PSLE 真题(目标级别)===
+  // === 1) PSLE 真题(目标级别 — 起点)===
   { type: 'youtube', title: '🎬 PSLE 2020 English Listening', desc: '历年真题(老题型对比)', videoId: 'YEna-0IhkU8',
     level: 'PSLE 真题', levelColor: '#FF9F45', episodeInfo: '35:28 · 1 个视频' },
   { type: 'youtube', title: '🎬 PSLE 2024 English Listening', desc: '官方真题 Text 1-7 完整音频', videoId: '8ePjsfutd8E',
     level: 'PSLE 真题', levelColor: '#FF9F45', episodeInfo: '30:04 · 1 个视频' },
   { type: 'youtube', title: '🎬 PSLE 2025 English Listening', desc: '官方真题 Text 1-7 完整音频', videoId: 'rrqzKUGXdnw',
     level: 'PSLE 真题', levelColor: '#FF9F45', episodeInfo: '11:25 · 1 个视频' },
-  // === 3) 中高级 B2 — 词汇/语速升一档 ===
+  // === 2) 中高级 + 趣味性高(优先放 PSLE 真题正后面)===
   {
     type: 'youtube-playlist',
     title: '🎓 TED-Ed 教育动画(频道连播)',
-    desc: '5-15 min 动画课 — 科学/历史/数学/语言学,B2 中高级,词汇深化',
+    desc: '5-15 min 动画课 — 科学/历史/数学/语言学,B2 中高级,趣味性高',
     playlistId: 'UUsooa4yRKGN_zEE8iknghZA',
-    level: 'B2 中高级',
+    level: 'B2 中高级 ⭐ 有趣',
     levelColor: '#FF9F45',
     episodeInfo: '2350 集 · 自动连播'
   },
   {
     type: 'youtube-playlist',
+    title: '📚 Crash Course 学术速成(频道连播)',
+    desc: 'PBS 学术系列 — 文学/历史/生物/化学/物理,B2-C1,讲师生动',
+    playlistId: 'UUX6b17PVsYBQ0ip5gyeme-Q',
+    level: 'B2-C1 学术 ⭐ 有趣',
+    levelColor: '#FF9F45',
+    episodeInfo: '1685 集 · 自动连播'
+  },
+  {
+    type: 'youtube-playlist',
     title: '🔬 60-Second Science(频道连播)',
-    desc: 'Scientific American 出品 — 每集 60-90 秒科普短讯,B2-C1,适合泛听',
+    desc: 'Scientific American — 每集 60-90 秒科普短讯,B2-C1,适合泛听',
     playlistId: 'UU_xYMXx_-mAzheKyEtwtCAQ',
-    level: 'B2-C1 科普',
+    level: 'B2-C1 科普 ⭐ 短小',
     levelColor: '#FF9F45',
     episodeInfo: '1040 集 · 自动连播'
   },
-  // === 4) 进阶 B2-C1 ===
+  // === 3) 进阶 B2-C1(略偏严肃)===
   {
     type: 'youtube-playlist',
     title: '📺 BBC Learning English(频道连播)',
@@ -292,16 +282,7 @@ const LISTENING_RESOURCES = [
     levelColor: '#FF9F45',
     episodeInfo: '4314 集 · 自动连播'
   },
-  {
-    type: 'youtube-playlist',
-    title: '📚 Crash Course 学术速成(频道连播)',
-    desc: 'PBS 学术系列 — 文学/历史/生物/化学/物理,B2-C1,语速快但板书清晰',
-    playlistId: 'UUX6b17PVsYBQ0ip5gyeme-Q',
-    level: 'B2-C1 学术',
-    levelColor: '#FF9F45',
-    episodeInfo: '1685 集 · 自动连播'
-  },
-  // === 5) 高级 C1 ===
+  // === 4) 高级 C1(深度阅读型)===
   {
     type: 'youtube-playlist',
     title: '🇸🇬 CNA Insider 新加坡深度(频道连播)',
@@ -311,7 +292,7 @@ const LISTENING_RESOURCES = [
     levelColor: '#FF5757',
     episodeInfo: '6227 集 · 自动连播'
   },
-  // === 6) 成人级(背景泛听)===
+  // === 5) 成人级(背景泛听)===
   {
     type: 'live-audio',
     title: '🎙️ CNA938 新加坡新闻直播',
