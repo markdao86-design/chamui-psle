@@ -1446,6 +1446,7 @@ function _checkVocabPair() {
       });
       // v18 vocabPerfectRuns 用于成就
       if (g.wrong === 0) state.vocabPerfectRuns = (state.vocabPerfectRuns || 0) + 1;
+      state.vocabGameRuns = (state.vocabGameRuns || 0) + 1;
       saveState(state);
       spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 60);
       playSound('tada');
@@ -1535,9 +1536,10 @@ function renderPetWidget() {
   const inAshes = window.isStreakInAshes && window.isStreakInAshes(state);
   w.innerHTML = `
     <div class="pet-emoji ${isSad || inAshes ? 'pet-sad' : ''}">${form.emoji}</div>
-    <div class="pet-name">${escapeHtml(state.pet.name || '小蛋蛋')}</div>
-    <div class="pet-form-name">${form.name} · ${happy}/100 ${isSad ? '😢' : '😊'}</div>
   `;
+  // v18.2: 用 data-name 属性显示宠物名 + 形态(CSS ::after 渲染小标签)
+  w.setAttribute('data-name', `${state.pet.name || '小蛋蛋'} · ${form.name} ${isSad ? '😢' : ''}`);
+  w.title = `${state.pet.name || '小蛋蛋'} (${form.name})\n心情 ${happy}/100\n点击查看详情/改名`;
   w.onclick = openPetModal;
 }
 function openPetModal() {
@@ -1881,8 +1883,9 @@ function _finishMathGame() {
   if (reward > 0) {
     state.totalPoints += reward;
     state.logs.push({ reason: `🎮 数学速算 ${g.correct}/10`, points: reward, week: state.currentWeek, timestamp: Date.now() });
-    saveState(state);
   }
+  state.mathGameRuns = (state.mathGameRuns || 0) + 1;
+  saveState(state);
   const modal = document.getElementById('mathGameModal');
   modal.innerHTML = `
     <div class="mg-inner">
@@ -1949,6 +1952,7 @@ function clickEditingWord(word) {
       if (!state.mysteryBoxes) state.mysteryBoxes = { available: 0, opened: 0, totalSlotsAtLastEarn: 0, history: [] };
       state.mysteryBoxes.available += 1;
       state.logs.push({ reason: '🎮 Editing 找错全对', points: 10, week: state.currentWeek, timestamp: Date.now() });
+      state.editingGameRuns = (state.editingGameRuns || 0) + 1;
       saveState(state);
       spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40);
       playSound('tada');
@@ -2030,8 +2034,9 @@ function submitListenAnswers() {
     state.totalPoints += reward;
     if (correct >= 5 && state.mysteryBoxes) state.mysteryBoxes.available += 1;
     state.logs.push({ reason: `🎮 听写 ${correct}/5`, points: reward, week: state.currentWeek, timestamp: Date.now() });
-    saveState(state);
   }
+  state.listenGameRuns = (state.listenGameRuns || 0) + 1;
+  saveState(state);
   const modal = document.getElementById('listenGameModal');
   modal.innerHTML = `
     <div class="lg-inner">
@@ -2338,6 +2343,85 @@ function escapeAttr(s) {
   return escapeHtml(s).replace(/'/g, '&#39;');
 }
 
+// ============ v18.2 数据可视化 — 学习进度统计卡(历史页) ============
+function renderProgressStatsCard() {
+  const card = document.getElementById('progressStatsCard');
+  if (!card) return;
+  // 1) 思考题进度
+  const thinkAnswered = Object.keys(state.thinkPuzzleAnswers || {}).length;
+  const thinkTotal = (window.THINK_PUZZLES || []).length;
+  const thinkCorrect = Object.values(state.thinkPuzzleAnswers || {}).filter(a => a.correct).length;
+  const thinkPct = thinkAnswered > 0 ? Math.round(thinkCorrect / thinkAnswered * 100) : 0;
+  // 2) 词汇游戏
+  const vocabRuns = state.vocabGameRuns || 0;
+  const vocabPerfect = state.vocabPerfectRuns || 0;
+  const vocabPct = vocabRuns > 0 ? Math.round(vocabPerfect / vocabRuns * 100) : 0;
+  // 3) 听力 7 天趋势
+  const trendDays = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const sec = (state.listeningUsage && state.listeningUsage[k] && state.listeningUsage[k].seconds) || 0;
+    trendDays.push({ k, sec, label: ['日','一','二','三','四','五','六'][d.getDay()] });
+  }
+  const maxSec = Math.max(60, ...trendDays.map(d => d.sec));
+  const trendBars = trendDays.map(d => {
+    const h = Math.max(4, Math.round(d.sec / maxSec * 60));
+    const min = Math.floor(d.sec / 60);
+    return `<div class="ls-bar-col" title="${d.k}: ${min} 分钟">
+      <div class="ls-bar-val">${min}</div>
+      <div class="ls-bar" style="height:${h}px"></div>
+      <div class="ls-bar-label">${d.label}</div>
+    </div>`;
+  }).join('');
+  const totalListen = trendDays.reduce((a, b) => a + b.sec, 0);
+  // 4) mini-game 总数
+  const mathRuns = state.mathGameRuns || 0;
+  const editingRuns = state.editingGameRuns || 0;
+  const listenRuns = state.listenGameRuns || 0;
+  // 5) 成就 + 宝箱 + streak best
+  const achU = (state.achievements && state.achievements.unlocked.length) || 0;
+  const achTotal = (window.ACHIEVEMENTS || []).length;
+  const boxOpened = (state.mysteryBoxes && state.mysteryBoxes.opened) || 0;
+  const streakBest = (state.dailyStreak && state.dailyStreak.bestEver) || 0;
+
+  card.innerHTML = `
+    <div class="card-title">📊 学习进度统计</div>
+    <div class="ps-grid">
+      <div class="ps-stat">
+        <div class="ps-icon">🤔</div>
+        <div class="ps-val">${thinkAnswered}/${thinkTotal}</div>
+        <div class="ps-label">思考题答题进度</div>
+        <div class="ps-sub">正确率 <b>${thinkPct}%</b> (${thinkCorrect} 对)</div>
+      </div>
+      <div class="ps-stat">
+        <div class="ps-icon">🎮</div>
+        <div class="ps-val">${vocabRuns}</div>
+        <div class="ps-label">词汇游戏次数</div>
+        <div class="ps-sub">全对 <b>${vocabPerfect}</b> 次 (${vocabPct}%)</div>
+      </div>
+      <div class="ps-stat">
+        <div class="ps-icon">🎯</div>
+        <div class="ps-val">${achU}/${achTotal}</div>
+        <div class="ps-label">成就解锁</div>
+        <div class="ps-sub">宝箱开 <b>${boxOpened}</b> · 最高连击 <b>${streakBest}</b> 天</div>
+      </div>
+      <div class="ps-stat">
+        <div class="ps-icon">🧪</div>
+        <div class="ps-val">${mathRuns + editingRuns + listenRuns}</div>
+        <div class="ps-label">Mini-game 总次数</div>
+        <div class="ps-sub">数学 <b>${mathRuns}</b> · Editing <b>${editingRuns}</b> · 听写 <b>${listenRuns}</b></div>
+      </div>
+    </div>
+    <div class="card-title" style="margin-top:18px;font-size:16px">🎧 7 天听力时长趋势 (累计 ${Math.floor(totalListen / 60)} 分钟)</div>
+    <div class="ls-trend">
+      ${trendBars}
+    </div>
+  `;
+}
+
 // ============ 历史页 ============
 function renderHistoryPage() {
   const tbody = document.getElementById('historyTableBody');
@@ -2389,6 +2473,7 @@ function renderHistoryPage() {
   }
 
   drawChart();
+  renderProgressStatsCard();  // v18.2 数据可视化
   renderScoreTracking();
 }
 

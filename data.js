@@ -1295,7 +1295,12 @@ function getDefaultState() {
     vocabPerfectRuns: 0,
     adminPageOpens: 0,
     marathonStreak: 0,
-    rareBoxesCount: 0
+    rareBoxesCount: 0,
+    // v18.2 数据可视化用
+    vocabGameRuns: 0,
+    mathGameRuns: 0,
+    editingGameRuns: 0,
+    listenGameRuns: 0
   };
 }
 

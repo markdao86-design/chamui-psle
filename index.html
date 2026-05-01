@@ -2166,28 +2166,97 @@ p { font-size: 14px; line-height: 1.6; }
 }
 .vg-victory button { margin-top: 10px; }
 
+/* ===== v18.2: 数据可视化进度统计卡 ===== */
+.ps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.ps-stat {
+  background: white;
+  border: 2px solid var(--color-text);
+  border-radius: 12px;
+  padding: 12px 10px;
+  text-align: center;
+}
+.ps-icon { font-size: 28px; }
+.ps-val { font-size: 24px; font-weight: 900; color: var(--color-primary); margin: 4px 0; }
+.ps-label { font-size: 12px; color: var(--color-text); font-weight: 700; }
+.ps-sub { font-size: 11px; color: var(--color-text-light); margin-top: 4px; line-height: 1.5; }
+.ls-trend {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 6px;
+  background: #FAFAFA;
+  border: 2px solid var(--color-text);
+  border-radius: 10px;
+  padding: 12px 10px;
+  margin-top: 8px;
+  min-height: 100px;
+}
+.ls-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.ls-bar-val { font-size: 11px; font-weight: 700; color: var(--color-text); }
+.ls-bar {
+  width: 100%;
+  max-width: 36px;
+  background: linear-gradient(180deg, #4ECDC4 0%, #A788E0 100%);
+  border-radius: 4px 4px 0 0;
+  border: 1.5px solid var(--color-text);
+  border-bottom: none;
+}
+.ls-bar-label { font-size: 11px; color: var(--color-text-light); font-weight: 700; }
+
 /* ===== v18 Phase 5.1: 🐣 宠物 widget ===== */
 .pet-widget {
   position: absolute;
-  bottom: 12px;
-  right: 12px;
+  /* v18.2: 紧贴角色 SVG 右上, 不再放底部远处 */
+  top: 60px;
+  right: 8px;
   background: white;
   border: 3px solid var(--color-text);
-  border-radius: 14px;
-  padding: 6px 10px;
+  border-radius: 50%;
+  padding: 4px 6px;
   text-align: center;
   cursor: pointer;
   font-family: 'PingFang SC', sans-serif;
   box-shadow: 0 3px 0 var(--color-text);
   transition: transform 0.15s;
   z-index: 5;
-  min-width: 70px;
+  min-width: 56px;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
-.pet-widget:hover { transform: translateY(-2px); }
-.pet-widget .pet-emoji { font-size: 32px; line-height: 1; animation: pet-wobble 3s ease-in-out infinite; }
+.pet-widget:hover { transform: scale(1.08); }
+.pet-widget .pet-emoji { font-size: 26px; line-height: 1; animation: pet-wobble 3s ease-in-out infinite; }
 .pet-widget .pet-emoji.pet-sad { filter: grayscale(0.7); animation: none; }
-.pet-widget .pet-name { font-size: 11px; font-weight: 700; margin-top: 2px; }
-.pet-widget .pet-form-name { font-size: 9px; color: var(--color-text-light); }
+.pet-widget .pet-name { display: none; }     /* v18.2: 圆形小图标不显文字, 进 modal 看 */
+.pet-widget .pet-form-name { display: none; }
+.pet-widget::after {
+  content: attr(data-name);
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-text);
+  color: white;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+}
 @keyframes pet-wobble {
   0%, 100% { transform: rotate(0); }
   25% { transform: rotate(-8deg); }
@@ -2970,6 +3039,9 @@ p { font-size: 14px; line-height: 1.6; }
 
   <!-- 历史页 -->
   <div class="page" id="page-history">
+    <!-- v18.2 数据可视化: 思考题/词汇/听力 7天趋势 -->
+    <div class="card" id="progressStatsCard"></div>
+
     <div class="card">
       <div class="card-title">📊 各科分数追踪</div>
       <p style="color: var(--color-text-light); font-size: 13px; margin-bottom: 12px;">
