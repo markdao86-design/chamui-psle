@@ -1194,10 +1194,9 @@ const VOCAB_HARD = [
 
 // ============= v18.25: 难度自适应 helper =============
 function recordGameRun(state, gameKey, correct, total) {
-  // v18.31: 起点 P5 (difficulty 2), floor 也是 2
-  // v18.36: Cloze 起点+floor = 3 (P5 真起点)
-  const minFloor = (gameKey === 'cloze') ? 3 : 2;
-  if (!state.gameStats) state.gameStats = { vocab:{difficulty:2,recent:[]}, math:{difficulty:2,recent:[]}, editing:{difficulty:2,recent:[]}, listen:{difficulty:2,recent:[]}, cloze:{difficulty:3,recent:[]} };
+  // v18.37: 所有 game 起点+floor = 3 (P5 实战 PSLE 准)
+  const minFloor = 3;
+  if (!state.gameStats) state.gameStats = { vocab:{difficulty:3,recent:[]}, math:{difficulty:3,recent:[]}, editing:{difficulty:3,recent:[]}, listen:{difficulty:3,recent:[]}, cloze:{difficulty:3,recent:[]} };
   if (!state.gameStats[gameKey]) state.gameStats[gameKey] = { difficulty: minFloor, recent: [] };
   const s = state.gameStats[gameKey];
   if (s.difficulty < minFloor) s.difficulty = minFloor;
@@ -1220,7 +1219,8 @@ function recordGameRun(state, gameKey, correct, total) {
 }
 
 function getDifficulty(state, gameKey) {
-  const minFloor = (gameKey === 'cloze') ? 3 : 2;
+  // v18.37: 所有 game floor = 3
+  const minFloor = 3;
   if (!state.gameStats || !state.gameStats[gameKey]) return minFloor;
   return Math.max(minFloor, state.gameStats[gameKey].difficulty || minFloor);
 }
@@ -2468,16 +2468,15 @@ function getDefaultState() {
     listenGameRuns: 0,
     // v18.25: 4 mini-game 5 级难度自适应 (1=入门 P3-4, 5=超 PSLE)
     gameStats: {
-      // v18.31: 起点 = P5 (难度 2), 不再是 P3 入门
-      vocab:   { difficulty: 2, recent: [] },
-      math:    { difficulty: 2, recent: [] },
-      editing: { difficulty: 2, recent: [] },
-      listen:  { difficulty: 2, recent: [] },
-      unit:    { difficulty: 2, recent: [] },
-      grammar: { difficulty: 2, recent: [] },
-      // v18.36: Cloze 起点 P5 真水平 = diff 3 (介词搭配, 跳过冠词复习)
+      // v18.37: 全部 game 起点 = P5 实战 PSLE 准 (难度 3, ★★★)
+      vocab:   { difficulty: 3, recent: [] },
+      math:    { difficulty: 3, recent: [] },
+      editing: { difficulty: 3, recent: [] },
+      listen:  { difficulty: 3, recent: [] },
+      unit:    { difficulty: 3, recent: [] },
+      grammar: { difficulty: 3, recent: [] },
       cloze:   { difficulty: 3, recent: [] },
-      scilab:  { difficulty: 2, recent: [] }
+      scilab:  { difficulty: 3, recent: [] }
     },
     // v18.27: 闹铃
     alarmsEnabled: true,
