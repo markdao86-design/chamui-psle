@@ -1576,14 +1576,9 @@ function renderPetWidget() {
   const happy = state.pet.happiness || 0;
   const isSad = happy < 30;
   const inAshes = window.isStreakInAshes && window.isStreakInAshes(state);
-  // v18.7: 视觉进化 — 主 emoji 大小 + 装饰 + 底色都按形态变
-  const decorPosClass = form.decorPos ? `pet-decor-${form.decorPos}` : '';
-  const decorHtml = form.decor ? `<span class="pet-decor ${decorPosClass}">${form.decor}</span>` : '';
+  // v18.10: SVG 自绘 7 形态 — 直接渲染 form.svg
   w.style.background = (isSad || inAshes) ? '#E8E8E8' : (form.bg || 'white');
-  w.innerHTML = `
-    <div class="pet-emoji ${isSad || inAshes ? 'pet-sad' : ''}" style="font-size:${form.size || 26}px">${form.emoji}</div>
-    ${decorHtml}
-  `;
+  w.innerHTML = `<div class="pet-svg-wrap ${isSad || inAshes ? 'pet-sad' : ''}">${form.svg}</div>`;
   // v18.7: 高级形态加金色光环
   w.classList.toggle('pet-king', form.idx >= 6);
   w.classList.toggle('pet-warrior', form.idx === 5);
@@ -1600,12 +1595,8 @@ function openPetModal() {
   const formsList = window.PET_FORMS.map(f => {
     const unlocked = streak >= f.minStreak;
     const isCurrent = f.idx === form.idx;
-    const decorIn = f.decor ? `<span class="pf-decor pf-decor-${f.decorPos || 'tr'}">${f.decor}</span>` : '';
     return `<div class="pet-form-item ${unlocked ? 'unlocked' : 'locked'} ${isCurrent ? 'current' : ''}" style="background:${f.bg || 'white'}">
-      <div class="pet-form-emoji" style="font-size:${(f.size || 26) + 4}px;position:relative">
-        ${f.emoji}
-        ${decorIn}
-      </div>
+      <div class="pet-form-svg">${f.svg}</div>
       <div class="pet-form-meta">${f.name} (连续打卡 ≥${f.minStreak} 天)${isCurrent ? ' ← 你在这' : ''}</div>
     </div>`;
   }).join('');
@@ -1616,9 +1607,9 @@ function openPetModal() {
         <button class="vocab-modal-close" onclick="closePetModal()">×</button>
       </div>
       <div class="pet-modal-body">
-        <div class="pet-current">${form.emoji}<br>${form.name} · 心情 ${state.pet.happiness}/100</div>
+        <div class="pet-current"><div class="pet-current-svg">${form.svg}</div>${form.name} · 心情 ${state.pet.happiness}/100</div>
         <div class="pet-desc">${escapeHtml(form.desc)}</div>
-        ${nextForm ? `<div class="pet-next">下一形态: ${nextForm.emoji} ${nextForm.name} (连续打卡 ≥ ${nextForm.minStreak} 天 · 还差 ${Math.max(0, nextForm.minStreak - streak)} 天)</div>` : '<div class="pet-next">已最高形态! 🎉</div>'}
+        ${nextForm ? `<div class="pet-next">下一形态: <b>${nextForm.name}</b> (连续打卡 ≥ ${nextForm.minStreak} 天 · 还差 ${Math.max(0, nextForm.minStreak - streak)} 天)</div>` : '<div class="pet-next">已最高形态! 🎉</div>'}
         <div class="pet-rename">
           <button class="btn btn-secondary" onclick="renamePet()">✏️ 改名</button>
         </div>

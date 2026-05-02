@@ -301,6 +301,11 @@ assert(def8.pet && def8.pet.formIdx === 0, 'v18: 默认 pet.formIdx=0');
 assert(def8.achievements && Array.isArray(def8.achievements.unlocked), 'v18: achievements.unlocked array');
 assert(def8.dailyDraws && def8.dailyDraws.fragments === 0, 'v18: dailyDraws.fragments=0');
 assert(W.PET_FORMS && W.PET_FORMS.length === 7, `v18: PET_FORMS 7 形态 (实际 ${W.PET_FORMS && W.PET_FORMS.length})`);
+// v18.10: SVG 字段验证
+assert(W.PET_FORMS.every(f => typeof f.svg === 'string' && f.svg.includes('<svg')), 'v18.10: 每个形态有 svg 字符串');
+assert(W.PET_FORMS.every(f => !f.emoji), 'v18.10: 已迁移, 不再有 emoji 字段');
+const streaks = W.PET_FORMS.map(f => f.minStreak);
+assert(streaks.every((s, i) => i === 0 || s > streaks[i-1]), 'v18.10: minStreak 单调递增');
 const ts8 = W.getDefaultState();
 ts8.dailyStreak = { days: 7, bestEver: 7, freezeTokens: 0, lastDate: null, brokenAt: null };
 const form7 = W.getCurrentPetForm(ts8);
