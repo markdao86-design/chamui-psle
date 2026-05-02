@@ -2205,8 +2205,13 @@ function openKnowledgeNodeDetail(subj, idx) {
       </div>
       ${examplesHtml ? `
       <div class="ktnd-section">
-        <div class="ktnd-label">📌 关键例子</div>
+        <div class="ktnd-label">📌 关键例子 (PSLE 真考)</div>
         <ul class="ktnd-list">${examplesHtml}</ul>
+      </div>` : ''}
+      ${node.pitfall ? `
+      <div class="ktnd-section ktnd-pitfall">
+        <div class="ktnd-label">⚠️ AL 4-6 易错陷阱</div>
+        <div class="ktnd-text">${escapeHtml(node.pitfall)}</div>
       </div>` : ''}
       <div class="ktnd-section ktnd-action">
         ${g ? `<button class="btn btn-primary ktnd-go" onclick="closeKnowledgeNodeDetail(); ${g.open};">💪 去练习: ${g.name}</button>` : ''}

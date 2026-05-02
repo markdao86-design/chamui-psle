@@ -2387,6 +2387,12 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .ktnd-list li { margin-bottom: 3px; }
 .ktnd-action { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; border-left: none; background: transparent; padding: 8px 0; }
 .ktnd-go { font-size: 14px !important; padding: 10px 16px !important; }
+/* v18.42: pitfall 警示框 */
+.ktnd-pitfall {
+  background: var(--color-pink-soft) !important;
+  border-left-color: var(--color-danger) !important;
+}
+.ktnd-pitfall .ktnd-label { color: var(--color-danger); }
 
 /* v18.21: 听力 4 步精听法规则卡 */
 .listen-rules-card {
