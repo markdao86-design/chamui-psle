@@ -276,12 +276,8 @@ function renderMysteryBoxCard() {
 function openMysteryBoxModal() {
   const mb = state.mysteryBoxes;
   if (!mb || mb.available <= 0) {
-    // v17.7: 没盒时显示进度提示 (而非简单 toast)
-    const total = window.countTotalCompletedSlots ? window.countTotalCompletedSlots(state) : 0;
-    const nextAt = (Math.floor(total / 10) + 1) * 10;
-    const toNext = nextAt - total;
-    const frags = (state.dailyDraws && state.dailyDraws.fragments) || 0;
-    showToast(`🔒 没盒可开 — 还差 ${toNext} 个项目 +1 宝箱;另有 🧩 ${frags}/7 抽奖碎片`, 'sad');
+    // v18.9: 没盒 → 弹"规则+进度"卡 (替换原 toast)
+    _showMysteryBoxRules();
     return;
   }
   const result = window.openMysteryBoxOnce(state);
@@ -326,6 +322,7 @@ function _renderMysteryBoxResult(r) {
       <div class="mb-result-icon">${r.tier === 'common' ? '🎁' : r.tier === 'wow' ? '🎉' : '🌟'}</div>
       <div class="mb-result-title">${title}</div>
       <div class="mb-result-body">${body}</div>
+      <div class="mb-rules-mini">${_mysteryRulesHtml()}</div>
       <button class="btn btn-primary" onclick="closeMysteryBoxResult()">太棒了!</button>
     </div>
   `;
@@ -338,6 +335,43 @@ function _renderMysteryBoxResult(r) {
 function closeMysteryBoxResult() {
   const modal = document.getElementById('mysteryBoxResultModal');
   if (modal) modal.classList.remove('show');
+}
+
+// v18.9: 宝箱规则 HTML (复用于"没盒"模态 + 开完结果模态底部)
+function _mysteryRulesHtml() {
+  const mb = state.mysteryBoxes || { available: 0, opened: 0 };
+  const dd = state.dailyDraws || { fragments: 0, consecutive: 0 };
+  const total = window.countTotalCompletedSlots ? window.countTotalCompletedSlots(state) : 0;
+  const nextAt = (Math.floor(total / 10) + 1) * 10;
+  const toNext = nextAt - total;
+  return `
+    <div class="mb-rules-title">📜 宝箱与碎片规则</div>
+    <ul class="mb-rules-list">
+      <li>🎁 每完成 <b>10 个项目</b> +1 整盒 (再完成 <b>${toNext}</b> 个 → 下个盒)</li>
+      <li>🧩 每天首次打开 App → 自动抽 <b>1-3 片</b> 碎片</li>
+      <li>📅 连登 <b>7 天</b> → 必中 7 片(整盒)</li>
+      <li>📅 连登 <b>14 天</b> → +1 wow 知识</li>
+      <li>📅 连登 <b>30 天</b> → +1 rare 提示</li>
+      <li>🔄 集满 <b>7 片自动合 1 整盒</b> → tab 栏 🎁 计数 +1</li>
+    </ul>
+    <div class="mb-rules-status">
+      当前: 🎁 ${mb.available} 整盒 · 🧩 ${dd.fragments}/7 碎片 · 📅 连登 ${dd.consecutive} 天 · 累计开 ${mb.opened || 0} 个
+    </div>
+  `;
+}
+
+function _showMysteryBoxRules() {
+  const modal = document.getElementById('mysteryBoxResultModal');
+  if (!modal) return;
+  modal.innerHTML = `
+    <div class="mb-result-inner" style="border-color:#A788E0">
+      <div class="mb-result-icon">🔒</div>
+      <div class="mb-result-title">还没有可开宝箱</div>
+      <div class="mb-rules-full">${_mysteryRulesHtml()}</div>
+      <button class="btn btn-primary" onclick="closeMysteryBoxResult()">知道了</button>
+    </div>
+  `;
+  modal.classList.add('show');
 }
 
 // ============ v17.7 Phase 3: 每日特别任务 (Daily Quest) ============
