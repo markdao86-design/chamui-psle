@@ -497,53 +497,69 @@ const CHAMUI = {
     // 兼容旧引用 (避免引用未定义)
     const dragonBody = goldDragonBody + silverDragonBody;
 
-    // v18.61: 火箭 真骑乘 (火箭巨型在角色脚下 + 角色姿势浮起 + 喷射火焰)
+    // v18.62: 火箭 3D 立体感 (大型骑乘 + 金属渐变 + 阴影 + 高光)
     const rocket = has.rocket ? `
-      <g class="rocket-ride">
-        <!-- 整体上下飘动 (起飞感) -->
+      <g class="rocket-ride" filter="url(#eqShadowBig)">
+        <!-- 整体上下飘动 -->
         <animateTransform attributeName="transform" type="translate"
-                         values="0,0; 0,-6; 0,0" dur="1.8s" repeatCount="indefinite"/>
-        <!-- 火箭主体 (在角色腿后/下方, 大尺寸) -->
-        <g transform="translate(110, ${tpl.legBottom + 18})">
-          <!-- 火焰喷射 (动画) -->
-          <ellipse cx="0" cy="32" rx="14" ry="22" fill="#FFA500" opacity="0.85">
-            <animate attributeName="ry" values="18;28;18" dur="0.3s" repeatCount="indefinite"/>
-            <animate attributeName="opacity" values="0.6;0.95;0.6" dur="0.3s" repeatCount="indefinite"/>
-          </ellipse>
-          <ellipse cx="0" cy="34" rx="9" ry="16" fill="#FFE66D" opacity="0.95">
-            <animate attributeName="ry" values="13;20;13" dur="0.3s" repeatCount="indefinite" begin="0.1s"/>
-          </ellipse>
-          <ellipse cx="0" cy="36" rx="5" ry="10" fill="#FFF" opacity="0.8">
-            <animate attributeName="ry" values="8;14;8" dur="0.3s" repeatCount="indefinite" begin="0.15s"/>
-          </ellipse>
-          <!-- 火箭主体 (圆柱) -->
-          <ellipse cx="0" cy="0" rx="22" ry="14" fill="#E8E8E8" stroke="#2D3047" stroke-width="2.5"/>
-          <!-- 红色顶环 -->
-          <ellipse cx="0" cy="-6" rx="22" ry="6" fill="#FF6B6B" stroke="#2D3047" stroke-width="2"/>
-          <!-- 翼 -->
-          <polygon points="-22,2 -32,14 -22,12" fill="#FF6B6B" stroke="#2D3047" stroke-width="2"/>
-          <polygon points="22,2 32,14 22,12" fill="#FF6B6B" stroke="#2D3047" stroke-width="2"/>
-          <!-- 窗户 -->
-          <circle cx="-10" cy="0" r="3" fill="#4ECDC4" stroke="#2D3047" stroke-width="1.5"/>
-          <circle cx="10" cy="0" r="3" fill="#4ECDC4" stroke="#2D3047" stroke-width="1.5"/>
-          <!-- 喷气口 -->
-          <ellipse cx="0" cy="14" rx="10" ry="3" fill="#2D3047"/>
+                         values="0,0; 0,-8; 0,0" dur="1.8s" repeatCount="indefinite"/>
+        <!-- 火箭主体在角色腿后 (大尺寸, 略斜飞) -->
+        <g transform="translate(140, ${tpl.legBottom - 5}) rotate(-15)">
+          <!-- 火焰喷射 (3 层叠加 + 动画) -->
+          <g transform="translate(40, 0)">
+            <ellipse cx="0" cy="0" rx="36" ry="14" fill="#FF4500" opacity="0.85">
+              <animate attributeName="rx" values="30;46;30" dur="0.25s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.6;0.95;0.6" dur="0.25s" repeatCount="indefinite"/>
+            </ellipse>
+            <ellipse cx="-3" cy="0" rx="26" ry="9" fill="#FFA500" opacity="0.95">
+              <animate attributeName="rx" values="20;32;20" dur="0.25s" repeatCount="indefinite" begin="0.05s"/>
+            </ellipse>
+            <ellipse cx="-5" cy="0" rx="16" ry="5" fill="#FFE66D">
+              <animate attributeName="rx" values="12;20;12" dur="0.25s" repeatCount="indefinite" begin="0.1s"/>
+            </ellipse>
+            <ellipse cx="-7" cy="0" rx="8" ry="3" fill="#FFF" opacity="0.9"/>
+          </g>
+          <!-- 火箭尾环 -->
+          <ellipse cx="0" cy="0" rx="6" ry="16" fill="#2D3047" stroke="#000" stroke-width="2"/>
+          <!-- 火箭主体 (大圆柱, 金属银色渐变) -->
+          <rect x="-50" y="-16" width="50" height="32" fill="url(#rocketBody)" stroke="#2D3047" stroke-width="2.5" rx="6"/>
+          <!-- 金属高光带 (上半部) -->
+          <ellipse cx="-25" cy="-10" rx="22" ry="3" fill="#FFF" opacity="0.7"/>
+          <!-- 红色 banner 中段 -->
+          <rect x="-32" y="-8" width="14" height="16" fill="url(#rocketRed)" stroke="#2D3047" stroke-width="1.5"/>
+          <text x="-25" y="3" text-anchor="middle" font-size="9" font-weight="900" fill="#FFF">A+</text>
+          <!-- 圆窗 (玻璃感, 蓝色渐变) -->
+          <circle cx="-12" cy="-2" r="6" fill="#4ECDC4" stroke="#2D3047" stroke-width="2"/>
+          <circle cx="-12" cy="-2" r="5" fill="#7DDDD5" opacity="0.7"/>
+          <ellipse cx="-13" cy="-4" rx="2" ry="1.2" fill="#FFF" opacity="0.9"/>
+          <!-- 火箭头锥 (左尖端, 红色) -->
+          <polygon points="-50,-16 -50,16 -68,0" fill="url(#metalRed)" stroke="#2D3047" stroke-width="2.5"/>
+          <polygon points="-50,-16 -50,-8 -65,-3 -68,0" fill="#FFCCCC" opacity="0.6"/>
+          <!-- 火箭翼 (上翼) -->
+          <polygon points="-30,-16 -38,-30 -18,-16" fill="url(#metalRed)" stroke="#2D3047" stroke-width="2"/>
+          <!-- 火箭翼 (下翼) -->
+          <polygon points="-30,16 -38,30 -18,16" fill="url(#metalRed)" stroke="#2D3047" stroke-width="2"/>
+          <!-- 反光小铆钉 -->
+          <circle cx="-44" cy="-12" r="1.5" fill="#FFF"/>
+          <circle cx="-44" cy="12" r="1.5" fill="#FFF"/>
+          <circle cx="-5" cy="-12" r="1.5" fill="#FFF"/>
+          <circle cx="-5" cy="12" r="1.5" fill="#FFF"/>
         </g>
-        <!-- 速度线 (左右两侧拉伸) -->
-        <line x1="-5" y1="${tpl.legBottom - 30}" x2="-25" y2="${tpl.legBottom - 35}" stroke="#FFE66D" stroke-width="2" opacity="0.7" stroke-linecap="round">
-          <animate attributeName="opacity" values="0;0.9;0" dur="0.6s" repeatCount="indefinite"/>
+        <!-- 速度线 (后方拉伸) -->
+        <line x1="220" y1="${tpl.legBottom - 35}" x2="245" y2="${tpl.legBottom - 40}" stroke="#FFE66D" stroke-width="3" opacity="0.7" stroke-linecap="round">
+          <animate attributeName="opacity" values="0;1;0" dur="0.4s" repeatCount="indefinite"/>
         </line>
-        <line x1="225" y1="${tpl.legBottom - 30}" x2="245" y2="${tpl.legBottom - 35}" stroke="#FFE66D" stroke-width="2" opacity="0.7" stroke-linecap="round">
-          <animate attributeName="opacity" values="0;0.9;0" dur="0.6s" repeatCount="indefinite" begin="0.3s"/>
+        <line x1="225" y1="${tpl.legBottom - 25}" x2="250" y2="${tpl.legBottom - 28}" stroke="#FFA500" stroke-width="2.5" opacity="0.6" stroke-linecap="round">
+          <animate attributeName="opacity" values="0;1;0" dur="0.4s" repeatCount="indefinite" begin="0.2s"/>
         </line>
-        <!-- 烟雾尾 -->
-        <circle cx="60" cy="${tpl.legBottom + 50}" r="6" fill="#fff" opacity="0.6">
-          <animate attributeName="opacity" values="0.6;0;0.6" dur="1.5s" repeatCount="indefinite"/>
-          <animate attributeName="cx" values="60;30;60" dur="1.5s" repeatCount="indefinite"/>
+        <!-- 烟雾粒子 -->
+        <circle cx="240" cy="${tpl.legBottom - 20}" r="7" fill="#fff" opacity="0.7">
+          <animate attributeName="opacity" values="0.7;0;0.7" dur="1.2s" repeatCount="indefinite"/>
+          <animate attributeName="r" values="5;12;5" dur="1.2s" repeatCount="indefinite"/>
+          <animate attributeName="cx" values="240;260;240" dur="1.2s" repeatCount="indefinite"/>
         </circle>
-        <circle cx="160" cy="${tpl.legBottom + 50}" r="6" fill="#fff" opacity="0.6">
-          <animate attributeName="opacity" values="0.6;0;0.6" dur="1.7s" repeatCount="indefinite" begin="0.5s"/>
-          <animate attributeName="cx" values="160;190;160" dur="1.7s" repeatCount="indefinite" begin="0.5s"/>
+        <circle cx="232" cy="${tpl.legBottom - 10}" r="5" fill="#ddd" opacity="0.6">
+          <animate attributeName="opacity" values="0.6;0;0.6" dur="1.5s" repeatCount="indefinite" begin="0.3s"/>
         </circle>
       </g>
     ` : '';
@@ -687,27 +703,69 @@ const CHAMUI = {
                               Q ${A.handR[0]} ${A.handR[1]+8} ${A.handR[0]-6} ${A.handR[1]+5} Z"
                       fill="${skinColor}" stroke="#2D3047" stroke-width="1.5"/>`;
 
+    // v18.62: 剑 3D 立体感 (银色金属渐变 + 高光 + 红宝石护手)
     const sword = has.sword ? `
-      <g>
+      <g filter="url(#eqShadow)">
         <g transform="translate(${A.handR[0]}, ${A.handR[1]}) rotate(20)">
-          <rect x="-3" y="-50" width="6" height="50" rx="1" fill="#FFE66D" stroke="#2D3047" stroke-width="2"/>
-          <polygon points="-4,-50 4,-50 0,-62" fill="#2D3047"/>
-          <polygon points="-2,-50 2,-50 0,-58" fill="#FFB6D9"/>
-          <rect x="-3" y="-2" width="6" height="6" fill="#FF6B6B" stroke="#2D3047" stroke-width="1.5"/>
+          <!-- 剑身 (银色金属渐变, 加宽) -->
+          <rect x="-4" y="-58" width="8" height="56" rx="1" fill="url(#metalSilver)" stroke="#2D3047" stroke-width="2"/>
+          <!-- 剑身高光中线 -->
+          <line x1="0" y1="-58" x2="0" y2="-3" stroke="#FFF" stroke-width="1.2" opacity="0.85"/>
+          <!-- 剑刃边缘加深 (3D 厚度) -->
+          <line x1="-4" y1="-58" x2="-4" y2="-3" stroke="#888" stroke-width="0.8"/>
+          <line x1="4" y1="-58" x2="4" y2="-3" stroke="#888" stroke-width="0.8"/>
+          <!-- 剑尖 (双层金属) -->
+          <polygon points="-5,-58 5,-58 0,-72" fill="url(#metalSilver)" stroke="#2D3047" stroke-width="2"/>
+          <polygon points="-2,-60 2,-60 0,-68" fill="#FFF" opacity="0.9"/>
+          <!-- 护手 (金色, 加宽) -->
+          <rect x="-9" y="-3" width="18" height="5" rx="1" fill="url(#metalGold)" stroke="#2D3047" stroke-width="1.8"/>
+          <!-- 护手装饰星 -->
+          <circle cx="-7" cy="-1" r="1.5" fill="#FFA500"/>
+          <circle cx="7" cy="-1" r="1.5" fill="#FFA500"/>
+          <!-- 剑柄 (红色皮革缠绕) -->
+          <rect x="-3" y="2" width="6" height="10" fill="url(#metalRed)" stroke="#2D3047" stroke-width="1.5"/>
+          <line x1="-3" y1="5" x2="3" y2="6" stroke="#A03030" stroke-width="1"/>
+          <line x1="-3" y1="8" x2="3" y2="9" stroke="#A03030" stroke-width="1"/>
+          <!-- 红宝石 (球形) -->
+          <circle cx="0" cy="14" r="3.5" fill="url(#appleSphere)" stroke="#2D3047" stroke-width="1.5"/>
+          <ellipse cx="-1" cy="13" rx="1" ry="0.8" fill="#FFF" opacity="0.9"/>
         </g>
         ${gripR}
       </g>
     ` : '';
 
+    // v18.62: 魔法棒 3D (黑檀木 + 金色星头 + 旋转光环 + 火花)
     const magic = (has.magic && !has.sword) ? `
-      <g>
+      <g filter="url(#eqShadow)">
         <g transform="translate(${A.handR[0]}, ${A.handR[1]}) rotate(-15)">
-          <rect x="-2.5" y="-45" width="5" height="48" rx="1" fill="#2D3047"/>
-          <ellipse cx="0" cy="-50" rx="6" ry="6" fill="#FFE66D" stroke="#FFA500" stroke-width="1.5"/>
-          <polygon points="0,-58 2,-50 0,-42 -2,-50" fill="white" opacity="0.85"/>
-          <polygon points="-7,-50 -1,-49 0,-43 1,-49 7,-50 1,-51 0,-57 -1,-51" fill="#FFD700" opacity="0.6">
-            <animateTransform attributeName="transform" type="rotate" values="0 0 -50;360 0 -50" dur="3s" repeatCount="indefinite"/>
-          </polygon>
+          <!-- 棒身 (黑檀木质感, 加宽 + 高光) -->
+          <rect x="-3" y="-50" width="6" height="52" rx="1.5" fill="#1A1A2E" stroke="#000" stroke-width="1.5"/>
+          <line x1="-1" y1="-50" x2="-1" y2="2" stroke="#666" stroke-width="0.8" opacity="0.6"/>
+          <line x1="1" y1="-50" x2="1" y2="2" stroke="#FFF" stroke-width="0.5" opacity="0.4"/>
+          <!-- 缠绕金线 -->
+          <line x1="-3" y1="-30" x2="3" y2="-28" stroke="#FFD700" stroke-width="1"/>
+          <line x1="-3" y1="-15" x2="3" y2="-13" stroke="#FFD700" stroke-width="1"/>
+          <!-- 大星头 (金色 3D 球感) -->
+          <circle cx="0" cy="-56" r="9" fill="url(#metalGold)" stroke="#B8860B" stroke-width="2"/>
+          <!-- 五角星雕刻 -->
+          <polygon points="0,-65 2.5,-58 9,-58 4,-54 6,-47 0,-51 -6,-47 -4,-54 -9,-58 -2.5,-58" fill="#FFF" opacity="0.95" stroke="#B8860B" stroke-width="0.8"/>
+          <!-- 中心高光 -->
+          <circle cx="0" cy="-56" r="2" fill="#FFF8C4"/>
+          <!-- 旋转光环 -->
+          <circle cx="0" cy="-56" r="13" fill="none" stroke="#FFD700" stroke-width="1.5" stroke-dasharray="3 4" opacity="0.7">
+            <animateTransform attributeName="transform" type="rotate" values="0 0 -56;360 0 -56" dur="3s" repeatCount="indefinite"/>
+          </circle>
+          <!-- 飞溅火花 (3 颗) -->
+          <circle cx="-12" cy="-50" r="1.5" fill="#FFE66D">
+            <animate attributeName="opacity" values="0;1;0" dur="1.2s" repeatCount="indefinite"/>
+            <animate attributeName="r" values="1;2.5;1" dur="1.2s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="12" cy="-62" r="1.5" fill="#FFA500">
+            <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" begin="0.4s"/>
+          </circle>
+          <circle cx="-8" cy="-66" r="1" fill="#FFF">
+            <animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite" begin="0.8s"/>
+          </circle>
         </g>
         ${gripR}
       </g>
@@ -783,21 +841,31 @@ const CHAMUI = {
       </g>
     ` : '';
 
+    // v18.62: 水晶球 3D (球体玻璃感 + 多重高光 + 内部光晕)
     const crystal = (has.crystal && !has.cert && !has.shield) ? `
-      <g>
-        <g transform="translate(${A.handL[0]+5}, ${A.handL[1]-3})">
-          <ellipse cx="0" cy="2" rx="11" ry="3" fill="#7B2CBF" opacity="0.5"/>
-          <circle cx="0" cy="-3" r="11" fill="url(#crystalGrad)" stroke="#2D3047" stroke-width="2"/>
-          <ellipse cx="-3" cy="-7" rx="4" ry="3" fill="white" opacity="0.6"/>
-          <circle cx="2" cy="0" r="2" fill="#FFE66D" opacity="0.7">
-            <animate attributeName="r" values="1;3;1" dur="2s" repeatCount="indefinite"/>
+      <g filter="url(#eqShadow)">
+        <g transform="translate(${A.handL[0]+5}, ${A.handL[1]-5})">
+          <!-- 底座 (金色 3D 椭圆) -->
+          <ellipse cx="0" cy="9" rx="13" ry="4" fill="url(#metalGold)" stroke="#B8860B" stroke-width="1.5"/>
+          <ellipse cx="0" cy="8" rx="11" ry="2" fill="#B8860B"/>
+          <!-- 水晶球 (3D 球面渐变, 加大) -->
+          <circle cx="0" cy="-2" r="13" fill="url(#crystalSphere)" stroke="#2D3047" stroke-width="2"/>
+          <!-- 大反光斑 (左上) -->
+          <ellipse cx="-4" cy="-7" rx="5" ry="3.5" fill="white" opacity="0.75"/>
+          <!-- 小反光点 -->
+          <circle cx="-2" cy="-5" r="1.2" fill="white" opacity="0.95"/>
+          <!-- 内部光晕 (脉冲) -->
+          <circle cx="3" cy="0" r="3" fill="#FFE66D" opacity="0.8">
+            <animate attributeName="r" values="1.5;4;1.5" dur="2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite"/>
+          </circle>
+          <!-- 紫色魔光环绕 (旋转) -->
+          <circle cx="0" cy="-2" r="15" fill="none" stroke="#A788E0" stroke-width="0.8" stroke-dasharray="2 3" opacity="0.5">
+            <animateTransform attributeName="transform" type="rotate" values="0 0 -2;360 0 -2" dur="6s" repeatCount="indefinite"/>
           </circle>
         </g>
         ${gripL}
       </g>
-      <defs>
-        <radialGradient id="crystalGrad"><stop offset="0%" stop-color="#E1BEE7"/><stop offset="100%" stop-color="#7B2CBF"/></radialGradient>
-      </defs>
     ` : '';
 
     const phone = (has.phone && !has.sword && !has.magic && !has.mic) ? `
@@ -1073,21 +1141,26 @@ const CHAMUI = {
     ` : '';
 
     // === 腰带物品 (z=5) ===
-    // v18.61: 苹果 真握在右手 (举起咬一口的姿势, 苹果上方有缺口)
+    // v18.62: 苹果 3D 立体球感 (radial gradient + 阴影 + 反光斑)
     const apple = (has.apple && !has.sword && !has.magic && !has.mic) ? `
-      <g>
-        <g transform="translate(${A.handR[0]+4}, ${A.handR[1]-12})">
+      <g filter="url(#eqShadow)">
+        <g transform="translate(${A.handR[0]+6}, ${A.handR[1]-16})">
           <animateTransform attributeName="transform" type="translate"
-                           values="${A.handR[0]+4},${A.handR[1]-12}; ${A.handR[0]+4},${A.handR[1]-14}; ${A.handR[0]+4},${A.handR[1]-12}" dur="3s" repeatCount="indefinite"/>
-          <!-- 苹果本体 -->
-          <circle cx="0" cy="0" r="8" fill="#FF6B6B" stroke="#2D3047" stroke-width="2"/>
-          <!-- 咬过的缺口 (右上) -->
-          <path d="M 4 -6 Q 8 -4 6 0 Q 5 -2 3 -3 Z" fill="#FFFAEC" stroke="#2D3047" stroke-width="1"/>
-          <!-- 叶子 -->
-          <path d="M 0 -8 L -2 -12 L 3 -13 Z" fill="#6BCB77" stroke="#2D3047" stroke-width="1"/>
-          <line x1="0" y1="-8" x2="0" y2="-6" stroke="#2D3047" stroke-width="1"/>
-          <!-- 高光 -->
-          <ellipse cx="-3" cy="-2" rx="2" ry="1.5" fill="white" opacity="0.6"/>
+                           values="${A.handR[0]+6},${A.handR[1]-16}; ${A.handR[0]+6},${A.handR[1]-19}; ${A.handR[0]+6},${A.handR[1]-16}" dur="3s" repeatCount="indefinite"/>
+          <!-- 苹果本体 (3D 球面渐变, 大尺寸) -->
+          <circle cx="0" cy="0" r="11" fill="url(#appleSphere)" stroke="#2D3047" stroke-width="2"/>
+          <!-- 咬过的缺口 (右上, 内露白色果肉) -->
+          <path d="M 5 -8 Q 11 -5 8 1 Q 6 -2 4 -3 Q 4 -6 5 -8 Z" fill="#FFFAEC" stroke="#2D3047" stroke-width="1"/>
+          <ellipse cx="6.5" cy="-4" rx="0.5" ry="0.3" fill="#5D3A1A"/>
+          <!-- 叶子 (双层带描边) -->
+          <path d="M 0 -11 L -2 -16 L 4 -17 L 1 -13 Z" fill="#5DAA66" stroke="#2D3047" stroke-width="1"/>
+          <path d="M 0 -11 L -1 -14 L 2.5 -15 Z" fill="#7DDD80" opacity="0.7"/>
+          <!-- 茎 -->
+          <line x1="0" y1="-11" x2="0" y2="-8" stroke="#5D3A1A" stroke-width="1.5"/>
+          <!-- 大反光斑 (3D 球面感) -->
+          <ellipse cx="-4" cy="-3" rx="3" ry="2" fill="white" opacity="0.7"/>
+          <!-- 小反光点 -->
+          <circle cx="-2" cy="-1" r="0.8" fill="white" opacity="0.9"/>
         </g>
         ${gripR}
       </g>
@@ -1099,25 +1172,31 @@ const CHAMUI = {
       </g>
     ` : '';
 
-    // v18.61: 水杯 真握在右手 (低举姿势, 杯口冒热气)
+    // v18.62: 水杯 3D 立体感 (青色金属釉面 + 把手 + 热气)
     const cupHeld = (has.cup && !has.sword && !has.magic && !has.mic && !has.apple) ? `
-      <g>
-        <g transform="translate(${A.handR[0]+2}, ${A.handR[1]-10})">
-          <!-- 杯体 -->
-          <rect x="-6" y="-9" width="12" height="14" fill="#4ECDC4" stroke="#2D3047" stroke-width="2" rx="2"/>
-          <!-- 杯口 -->
-          <ellipse cx="0" cy="-9" rx="6" ry="2" fill="#fff" stroke="#2D3047" stroke-width="1.5"/>
-          <!-- 把手 -->
-          <path d="M 6 -5 Q 11 -2 6 3" fill="none" stroke="#2D3047" stroke-width="2" stroke-linecap="round"/>
-          <!-- 热气 -->
-          <path d="M -3 -11 Q -2 -16 -4 -19" fill="none" stroke="#999" stroke-width="1.5" opacity="0.6">
-            <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1.5s" repeatCount="indefinite"/>
+      <g filter="url(#eqShadow)">
+        <g transform="translate(${A.handR[0]+4}, ${A.handR[1]-12})">
+          <!-- 杯底椭圆阴影 -->
+          <ellipse cx="0" cy="7" rx="8" ry="2" fill="#2D3047" opacity="0.3"/>
+          <!-- 杯体 (青色釉面渐变) -->
+          <rect x="-7" y="-10" width="14" height="16" fill="url(#cupSphere)" stroke="#2D3047" stroke-width="2.5" rx="2"/>
+          <!-- 釉面反光带 -->
+          <rect x="-5" y="-9" width="3" height="13" fill="#FFF" opacity="0.5" rx="1"/>
+          <!-- 杯口 (椭圆 3D) -->
+          <ellipse cx="0" cy="-10" rx="7" ry="2.5" fill="#FFF" stroke="#2D3047" stroke-width="2"/>
+          <ellipse cx="0" cy="-10" rx="6" ry="1.8" fill="#2A8077"/>
+          <!-- 把手 (双线带阴影感) -->
+          <path d="M 7 -6 Q 13 -2 7 3" fill="none" stroke="#2D3047" stroke-width="3" stroke-linecap="round"/>
+          <path d="M 7 -5 Q 11 -2 7 2" fill="none" stroke="#4ECDC4" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- 热气 (3 道飘动) -->
+          <path d="M -3 -12 Q -1 -18 -4 -22" fill="none" stroke="#BBB" stroke-width="2" opacity="0.7" stroke-linecap="round">
+            <animate attributeName="opacity" values="0.3;0.9;0.3" dur="1.5s" repeatCount="indefinite"/>
           </path>
-          <path d="M 0 -11 Q 2 -16 -1 -20" fill="none" stroke="#999" stroke-width="1.5" opacity="0.6">
-            <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+          <path d="M 0 -12 Q 2 -18 -1 -23" fill="none" stroke="#BBB" stroke-width="2" opacity="0.7" stroke-linecap="round">
+            <animate attributeName="opacity" values="0.3;0.9;0.3" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
           </path>
-          <path d="M 3 -11 Q 4 -16 2 -20" fill="none" stroke="#999" stroke-width="1.5" opacity="0.5">
-            <animate attributeName="opacity" values="0.3;0.7;0.3" dur="1.7s" repeatCount="indefinite" begin="0.8s"/>
+          <path d="M 3 -12 Q 5 -18 2 -22" fill="none" stroke="#BBB" stroke-width="2" opacity="0.6" stroke-linecap="round">
+            <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1.7s" repeatCount="indefinite" begin="0.8s"/>
           </path>
         </g>
         ${gripR}
@@ -1146,40 +1225,63 @@ const CHAMUI = {
       </g>
     ` : '';
 
-    // v18.61: 蛋糕 双手捧 (生日庆祝姿态, 在胸前)
+    // v18.62: 蛋糕 3D 立体 (3 层立体阴影 + 多色奶油 + 真实蜡烛火苗)
     const cake = has.cake ? `
-      <g>
-        <!-- 蛋糕在胸前正中, 双手托底 -->
+      <g filter="url(#eqShadowBig)">
         <g transform="translate(${A.chest[0]}, ${A.chest[1]+5})">
-          <!-- 微微浮动 (生日感) -->
           <animateTransform attributeName="transform" type="translate"
-                           values="${A.chest[0]},${A.chest[1]+5}; ${A.chest[0]},${A.chest[1]+3}; ${A.chest[0]},${A.chest[1]+5}" dur="2s" repeatCount="indefinite"/>
-          <!-- 蛋糕底层 (大盘子) -->
-          <ellipse cx="0" cy="13" rx="20" ry="4" fill="#FFFAEC" stroke="#2D3047" stroke-width="2"/>
-          <!-- 蛋糕中层 -->
-          <rect x="-15" y="3" width="30" height="11" fill="#FFE066" stroke="#2D3047" stroke-width="2" rx="1"/>
-          <!-- 奶油波纹 -->
-          <path d="M -15 6 Q -10 3 -5 6 Q 0 3 5 6 Q 10 3 15 6 L 15 9 L -15 9 Z" fill="#FFFAEC" opacity="0.7"/>
-          <!-- 蛋糕上层 -->
-          <rect x="-10" y="-5" width="20" height="9" fill="#FFB6D9" stroke="#2D3047" stroke-width="2" rx="1"/>
-          <!-- 樱桃 -->
-          <circle cx="0" cy="-7" r="3" fill="#FF6B6B" stroke="#2D3047" stroke-width="1.5"/>
-          <line x1="0" y1="-9" x2="-1" y2="-12" stroke="#5D3A1A" stroke-width="1"/>
-          <!-- 蜡烛 + 火苗 -->
-          <rect x="-1" y="-15" width="2" height="6" fill="#fff" stroke="#2D3047" stroke-width="1"/>
-          <ellipse cx="0" cy="-17" rx="1.5" ry="2.5" fill="#FFA500">
-            <animate attributeName="ry" values="2.5;3.5;2.5" dur="0.5s" repeatCount="indefinite"/>
+                           values="${A.chest[0]},${A.chest[1]+5}; ${A.chest[0]},${A.chest[1]+2}; ${A.chest[0]},${A.chest[1]+5}" dur="2s" repeatCount="indefinite"/>
+          <!-- 盘子 (银色 3D 椭圆) -->
+          <ellipse cx="0" cy="16" rx="24" ry="5" fill="url(#metalSilver)" stroke="#2D3047" stroke-width="2"/>
+          <ellipse cx="0" cy="14" rx="22" ry="3" fill="#FFF" opacity="0.8"/>
+          <!-- 蛋糕底层 (黄色海绵, 立体感) -->
+          <rect x="-18" y="3" width="36" height="13" fill="#FFE066" stroke="#2D3047" stroke-width="2" rx="2"/>
+          <!-- 底层高光面 -->
+          <rect x="-17" y="3" width="34" height="3" fill="#FFFAEC" opacity="0.6" rx="1"/>
+          <!-- 奶油波纹层 (3 朵奶油花) -->
+          <ellipse cx="-12" cy="3" rx="5" ry="3" fill="#FFFAEC" stroke="#2D3047" stroke-width="1.5"/>
+          <ellipse cx="0" cy="3" rx="5" ry="3" fill="#FFFAEC" stroke="#2D3047" stroke-width="1.5"/>
+          <ellipse cx="12" cy="3" rx="5" ry="3" fill="#FFFAEC" stroke="#2D3047" stroke-width="1.5"/>
+          <!-- 蛋糕中层 (粉色) -->
+          <rect x="-13" y="-6" width="26" height="10" fill="#FFB6D9" stroke="#2D3047" stroke-width="2" rx="2"/>
+          <rect x="-12" y="-6" width="24" height="3" fill="#FFD4E5" opacity="0.7" rx="1"/>
+          <!-- 中层奶油花 (2 朵) -->
+          <ellipse cx="-7" cy="-6" rx="4" ry="2.5" fill="#FFFAEC" stroke="#2D3047" stroke-width="1.5"/>
+          <ellipse cx="7" cy="-6" rx="4" ry="2.5" fill="#FFFAEC" stroke="#2D3047" stroke-width="1.5"/>
+          <!-- 蛋糕上层 (青色, 小) -->
+          <rect x="-8" y="-13" width="16" height="7" fill="#A0F0E5" stroke="#2D3047" stroke-width="2" rx="2"/>
+          <rect x="-7" y="-13" width="14" height="2" fill="#FFF" opacity="0.6" rx="1"/>
+          <!-- 大樱桃 (3D 球) -->
+          <circle cx="0" cy="-15" r="3.5" fill="url(#appleSphere)" stroke="#2D3047" stroke-width="1.5"/>
+          <ellipse cx="-1" cy="-16" rx="1" ry="0.7" fill="#FFF" opacity="0.9"/>
+          <line x1="0" y1="-18" x2="-1" y2="-22" stroke="#5D3A1A" stroke-width="1.2"/>
+          <!-- 蜡烛 (蓝白条纹) -->
+          <rect x="-1.5" y="-26" width="3" height="8" fill="#FFF" stroke="#2D3047" stroke-width="1"/>
+          <line x1="-1.5" y1="-22" x2="1.5" y2="-22" stroke="#FF6B6B" stroke-width="0.8"/>
+          <line x1="-1.5" y1="-25" x2="1.5" y2="-25" stroke="#FF6B6B" stroke-width="0.8"/>
+          <!-- 蜡烛火苗 (3 层 + 跳动) -->
+          <ellipse cx="0" cy="-30" rx="2.5" ry="4.5" fill="#FFA500">
+            <animate attributeName="ry" values="3.5;5.5;3.5" dur="0.5s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.9;1;0.9" dur="0.5s" repeatCount="indefinite"/>
           </ellipse>
-          <ellipse cx="0" cy="-17" rx="0.8" ry="1.5" fill="#FFE66D"/>
-          <!-- 装饰糖珠 -->
-          <circle cx="-7" cy="-2" r="1" fill="#4ECDC4"/>
-          <circle cx="7" cy="-2" r="1" fill="#A788E0"/>
-          <circle cx="-12" cy="7" r="1" fill="#FF6B6B"/>
-          <circle cx="12" cy="7" r="1" fill="#6BCB77"/>
+          <ellipse cx="0" cy="-30" rx="1.5" ry="3" fill="#FFE66D">
+            <animate attributeName="ry" values="2;4;2" dur="0.5s" repeatCount="indefinite" begin="0.1s"/>
+          </ellipse>
+          <ellipse cx="0" cy="-30" rx="0.8" ry="1.8" fill="#FFF"/>
+          <!-- 装饰糖珠 (六颗 3D 球) -->
+          <circle cx="-15" cy="9" r="1.5" fill="#4ECDC4" stroke="#2D3047" stroke-width="0.5"/>
+          <circle cx="15" cy="9" r="1.5" fill="#A788E0" stroke="#2D3047" stroke-width="0.5"/>
+          <circle cx="-9" cy="-2" r="1.3" fill="#FF6B6B" stroke="#2D3047" stroke-width="0.5"/>
+          <circle cx="9" cy="-2" r="1.3" fill="#6BCB77" stroke="#2D3047" stroke-width="0.5"/>
+          <circle cx="-4" cy="-9" r="1.2" fill="#FFA500"/>
+          <circle cx="4" cy="-9" r="1.2" fill="#A788E0"/>
         </g>
-        <!-- 双手托住盘底 (左右各一个手势圆圈) -->
-        <ellipse cx="${A.handL[0]+5}" cy="${A.handL[1]-5}" rx="6" ry="4" fill="${skinColor}" stroke="#2D3047" stroke-width="1.5"/>
-        <ellipse cx="${A.handR[0]-5}" cy="${A.handR[1]-5}" rx="6" ry="4" fill="${skinColor}" stroke="#2D3047" stroke-width="1.5"/>
+        <!-- 双手托盘底 -->
+        <ellipse cx="${A.handL[0]+5}" cy="${A.handL[1]-5}" rx="7" ry="4.5" fill="${skinColor}" stroke="#2D3047" stroke-width="1.5"/>
+        <ellipse cx="${A.handR[0]-5}" cy="${A.handR[1]-5}" rx="7" ry="4.5" fill="${skinColor}" stroke="#2D3047" stroke-width="1.5"/>
+        <!-- 拇指 (露出托盘上方) -->
+        <ellipse cx="${A.handL[0]+8}" cy="${A.handL[1]-8}" rx="2" ry="3" fill="${skinColor}" stroke="#2D3047" stroke-width="1"/>
+        <ellipse cx="${A.handR[0]-8}" cy="${A.handR[1]-8}" rx="2" ry="3" fill="${skinColor}" stroke="#2D3047" stroke-width="1"/>
       </g>
     ` : '';
 
@@ -1214,15 +1316,36 @@ const CHAMUI = {
       </g>
     ` : '';
 
+    // v18.62: 手表 3D (银色金属边框 + 圆形表盘 + 玻璃反光)
     const watch = has.watch ? `
-      <g>
-        <rect x="${A.handR[0]-7}" y="${A.handR[1]-13}" width="14" height="10" rx="2" fill="#4ECDC4" stroke="#2D3047" stroke-width="2"/>
-        <rect x="${A.handR[0]-5}" y="${A.handR[1]-11}" width="10" height="6" rx="1" fill="#2D3047"/>
-        <text x="${A.handR[0]-4}" y="${A.handR[1]-6}" font-size="6" fill="#FFE66D" font-weight="bold">12</text>
-        <line x1="${A.handR[0]-7}" y1="${A.handR[1]-12}" x2="${A.handR[0]-10}" y2="${A.handR[1]-14}" stroke="#2D3047" stroke-width="2"/>
-        <line x1="${A.handR[0]-7}" y1="${A.handR[1]-4}" x2="${A.handR[0]-10}" y2="${A.handR[1]-2}" stroke="#2D3047" stroke-width="2"/>
-        <line x1="${A.handR[0]+7}" y1="${A.handR[1]-12}" x2="${A.handR[0]+10}" y2="${A.handR[1]-14}" stroke="#2D3047" stroke-width="2"/>
-        <line x1="${A.handR[0]+7}" y1="${A.handR[1]-4}" x2="${A.handR[0]+10}" y2="${A.handR[1]-2}" stroke="#2D3047" stroke-width="2"/>
+      <g filter="url(#eqShadow)">
+        <!-- 表带 (左) -->
+        <rect x="${A.handR[0]-12}" y="${A.handR[1]-13}" width="5" height="13" rx="1.5" fill="#2D3047"/>
+        <line x1="${A.handR[0]-12}" y1="${A.handR[1]-9}" x2="${A.handR[0]-7}" y2="${A.handR[1]-9}" stroke="#666" stroke-width="0.5"/>
+        <line x1="${A.handR[0]-12}" y1="${A.handR[1]-5}" x2="${A.handR[0]-7}" y2="${A.handR[1]-5}" stroke="#666" stroke-width="0.5"/>
+        <!-- 表带 (右) -->
+        <rect x="${A.handR[0]+7}" y="${A.handR[1]-13}" width="5" height="13" rx="1.5" fill="#2D3047"/>
+        <line x1="${A.handR[0]+7}" y1="${A.handR[1]-9}" x2="${A.handR[0]+12}" y2="${A.handR[1]-9}" stroke="#666" stroke-width="0.5"/>
+        <line x1="${A.handR[0]+7}" y1="${A.handR[1]-5}" x2="${A.handR[0]+12}" y2="${A.handR[1]-5}" stroke="#666" stroke-width="0.5"/>
+        <!-- 表壳外框 (银色金属) -->
+        <circle cx="${A.handR[0]}" cy="${A.handR[1]-7}" r="9" fill="url(#metalSilver)" stroke="#2D3047" stroke-width="2"/>
+        <!-- 表盘 -->
+        <circle cx="${A.handR[0]}" cy="${A.handR[1]-7}" r="7" fill="#1A1A2E" stroke="#666" stroke-width="0.8"/>
+        <!-- 12 / 3 / 6 / 9 刻度 -->
+        <text x="${A.handR[0]}" y="${A.handR[1]-12}" text-anchor="middle" font-size="4" fill="#FFE66D" font-weight="900">12</text>
+        <text x="${A.handR[0]+5}" y="${A.handR[1]-6}" text-anchor="middle" font-size="3.5" fill="#FFE66D">3</text>
+        <text x="${A.handR[0]}" y="${A.handR[1]-2}" text-anchor="middle" font-size="3.5" fill="#FFE66D">6</text>
+        <text x="${A.handR[0]-5}" y="${A.handR[1]-6}" text-anchor="middle" font-size="3.5" fill="#FFE66D">9</text>
+        <!-- 时针 (短) -->
+        <line x1="${A.handR[0]}" y1="${A.handR[1]-7}" x2="${A.handR[0]+2}" y2="${A.handR[1]-10}" stroke="#FFF" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- 分针 (长, 旋转动画) -->
+        <line x1="${A.handR[0]}" y1="${A.handR[1]-7}" x2="${A.handR[0]}" y2="${A.handR[1]-12}" stroke="#FFA500" stroke-width="1.2" stroke-linecap="round">
+          <animateTransform attributeName="transform" type="rotate" values="0 ${A.handR[0]} ${A.handR[1]-7};360 ${A.handR[0]} ${A.handR[1]-7}" dur="60s" repeatCount="indefinite"/>
+        </line>
+        <!-- 中心点 -->
+        <circle cx="${A.handR[0]}" cy="${A.handR[1]-7}" r="0.8" fill="#FFF"/>
+        <!-- 表镜反光 (3D 玻璃感, 弧形高光) -->
+        <path d="M ${A.handR[0]-5} ${A.handR[1]-12} Q ${A.handR[0]-3} ${A.handR[1]-9} ${A.handR[0]+1} ${A.handR[1]-12}" stroke="#FFF" stroke-width="1.5" fill="none" opacity="0.5"/>
       </g>
     ` : '';
 
@@ -1312,10 +1435,67 @@ const CHAMUI = {
     ` : '';
 
     // ====== 返回 SVG (按 z 层级顺序) ======
+    // v18.62: 加全局 defs (drop-shadow + 通用渐变) + 修 z-order + 扩 viewBox 容纳 3D 装备
     return `
-      <svg viewBox="0 0 220 240" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="-20 -10 270 270" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- 通用 3D 阴影 filter (装备立体感) -->
+          <filter id="eqShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="2.5"/>
+            <feOffset dx="2" dy="3" result="offsetblur"/>
+            <feComponentTransfer><feFuncA type="linear" slope="0.55"/></feComponentTransfer>
+            <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <!-- 强阴影 (大装备/骑乘类) -->
+          <filter id="eqShadowBig" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+            <feOffset dx="3" dy="5" result="offsetblur"/>
+            <feComponentTransfer><feFuncA type="linear" slope="0.65"/></feComponentTransfer>
+            <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <!-- 金属高光 -->
+          <linearGradient id="metalRed" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#FFAAAA"/>
+            <stop offset="40%" stop-color="#FF6B6B"/>
+            <stop offset="100%" stop-color="#A03030"/>
+          </linearGradient>
+          <linearGradient id="metalSilver" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#FFF"/>
+            <stop offset="50%" stop-color="#C0C0C0"/>
+            <stop offset="100%" stop-color="#666"/>
+          </linearGradient>
+          <linearGradient id="metalGold" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#FFF8C4"/>
+            <stop offset="50%" stop-color="#FFD700"/>
+            <stop offset="100%" stop-color="#B8860B"/>
+          </linearGradient>
+          <radialGradient id="appleSphere" cx="35%" cy="30%">
+            <stop offset="0%" stop-color="#FFCCCC"/>
+            <stop offset="60%" stop-color="#FF6B6B"/>
+            <stop offset="100%" stop-color="#A03030"/>
+          </radialGradient>
+          <radialGradient id="cupSphere" cx="30%" cy="30%">
+            <stop offset="0%" stop-color="#A0F0E5"/>
+            <stop offset="60%" stop-color="#4ECDC4"/>
+            <stop offset="100%" stop-color="#2A8077"/>
+          </radialGradient>
+          <radialGradient id="crystalSphere" cx="35%" cy="30%">
+            <stop offset="0%" stop-color="#F0D0FF"/>
+            <stop offset="50%" stop-color="#A788E0"/>
+            <stop offset="100%" stop-color="#5C3A9E"/>
+          </radialGradient>
+          <linearGradient id="rocketRed" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FF8888"/>
+            <stop offset="50%" stop-color="#FF4444"/>
+            <stop offset="100%" stop-color="#A02020"/>
+          </linearGradient>
+          <linearGradient id="rocketBody" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#FFF"/>
+            <stop offset="50%" stop-color="#E8E8E8"/>
+            <stop offset="100%" stop-color="#888"/>
+          </linearGradient>
+        </defs>
         ${fireBackground}
-        ${rocket}
         ${cometTrail}
         ${dragonBody}
         ${cape}
@@ -1364,6 +1544,7 @@ const CHAMUI = {
         ${streak30}
         ${rainbow}
         ${trophy}
+        ${rocket}
         ${unicorn}
       </svg>
     `;
