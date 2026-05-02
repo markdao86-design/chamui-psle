@@ -2297,12 +2297,24 @@ p { font-size: 14px; line-height: 1.6; }
 .pet-widget .pet-decor-tr { top: 0px; right: 0px; }
 .pet-widget .pet-decor-br { bottom: 14px; right: 0px; }
 .pet-widget .pet-decor-bl { bottom: 14px; left: 0px; }
-.pet-widget .pet-decor-tc { top: -8px; left: 50%; transform: translateX(-50%); }
+/* v18.8: 头顶装饰 — 落在仓鼠头上方 */
+.pet-widget .pet-decor-tc {
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));
+}
 @keyframes pet-decor-pop {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.18); }
 }
-.pet-widget.pet-decor-tc .pet-decor-tc { transform: translateX(-50%) scale(1); }
+/* tc 用 translateX(-50%), 单独 keyframes 避免覆盖 */
+.pet-widget .pet-decor-tc { animation: pet-decor-tc-pop 2.5s ease-in-out infinite; }
+@keyframes pet-decor-tc-pop {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.18); }
+}
 .pet-widget.pet-warrior {
   box-shadow: 0 0 14px 3px rgba(255, 87, 87, 0.55), 0 3px 0 var(--color-text);
 }

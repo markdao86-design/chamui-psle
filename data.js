@@ -569,19 +569,20 @@ function getTodayWowFact(weekN, dateOverride) {
 
 // ============= v18 Phase 5.1: 宠物 (v18.7 仓鼠 7 形态视觉进化) =============
 // 每个形态独立: 主 emoji + 装饰 + 底色 + 大小, 让孩子看到成长
+// v18.8: 装饰统一戴在头顶 (decorPos='tc'), emoji 也变化(蛋→小鼠→仓鼠), 头饰 🎀→👓→🎓→🎩→👑
 const PET_FORMS = [
   { idx: 0, emoji: '🥚', decor: '',   decorPos: '',   bg: 'linear-gradient(135deg, #FFF8E7 0%, #FFE0B2 100%)',
-    size: 22, name: '仓鼠蛋',   minStreak: 0,   desc: '里面有只小仓鼠在等着孵化' },
-  { idx: 1, emoji: '🐹', decor: '👶', decorPos: 'br', bg: 'linear-gradient(135deg, #FFE6F0 0%, #FFB6D9 100%)',
+    size: 24, name: '仓鼠蛋',   minStreak: 0,   desc: '里面有只小仓鼠在等着孵化' },
+  { idx: 1, emoji: '🐭', decor: '',   decorPos: '',   bg: 'linear-gradient(135deg, #FFE6F0 0%, #FFB6D9 100%)',
     size: 24, name: '仓鼠宝宝', minStreak: 3,   desc: '刚出生的小仓鼠, 软软的好可爱' },
-  { idx: 2, emoji: '🐹', decor: '✨', decorPos: 'tr', bg: 'linear-gradient(135deg, #FFE066 0%, #FFB347 100%)',
-    size: 26, name: '小仓鼠',   minStreak: 7,   desc: '会塞食物到腮帮子了' },
-  { idx: 3, emoji: '🐹', decor: '📚', decorPos: 'br', bg: 'linear-gradient(135deg, #B3E5FC 0%, #4ECDC4 100%)',
+  { idx: 2, emoji: '🐹', decor: '🎀', decorPos: 'tc', bg: 'linear-gradient(135deg, #FFE066 0%, #FFB347 100%)',
+    size: 26, name: '小仓鼠',   minStreak: 7,   desc: '系上蝴蝶结, 会塞食物到腮帮子了' },
+  { idx: 3, emoji: '🐹', decor: '👓', decorPos: 'tc', bg: 'linear-gradient(135deg, #B3E5FC 0%, #4ECDC4 100%)',
     size: 28, name: '学习仓鼠', minStreak: 14,  desc: '戴上眼镜, 很爱读书' },
   { idx: 4, emoji: '🐹', decor: '🎓', decorPos: 'tc', bg: 'linear-gradient(135deg, #E1BEE7 0%, #A788E0 100%)',
-    size: 30, name: '智慧仓鼠', minStreak: 30,  desc: '腮帮子塞满知识, 智力满分' },
-  { idx: 5, emoji: '🐹', decor: '🔥', decorPos: 'bl', bg: 'linear-gradient(135deg, #FF9F45 0%, #FF5757 100%)',
-    size: 32, name: '战神仓鼠', minStreak: 60,  desc: '披上斗篷, PSLE 战无不胜' },
+    size: 30, name: '智慧仓鼠', minStreak: 30,  desc: '戴上学士帽, 智力满分' },
+  { idx: 5, emoji: '🐹', decor: '🎩', decorPos: 'tc', bg: 'linear-gradient(135deg, #FF9F45 0%, #FF5757 100%)',
+    size: 32, name: '战神仓鼠', minStreak: 60,  desc: '戴上魔法帽, PSLE 战无不胜' },
   { idx: 6, emoji: '🐹', decor: '👑', decorPos: 'tc', bg: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B6B 100%)',
     size: 34, name: '仓鼠王者', minStreak: 100, desc: 'PSLE 终极守护神兽 — 戴上王冠' }
 ];
