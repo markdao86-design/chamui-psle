@@ -2831,8 +2831,35 @@ p { font-size: 14px; line-height: 1.6; }
 .mgh-inner, .mg-inner, .lg-inner, .eg-inner { background: white; border: 4px solid var(--color-text); border-radius: var(--radius-bubble); max-width: 600px; padding: 20px; box-shadow: var(--shadow-pop); width: 100%; }
 .mgh-header, .lg-header, .eg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .mgh-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.mgh-game { background: white; border: 3px solid var(--color-text); border-radius: 14px; padding: 18px 12px; cursor: pointer; font-family: inherit; font-size: 14px; line-height: 1.5; }
-.mgh-game:hover { transform: translateY(-3px); box-shadow: 0 5px 0 var(--color-text); }
+.mgh-game { background:
+  radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.7) 0%, transparent 55%),
+  linear-gradient(135deg, var(--color-primary-soft) 0%, #FFFFFF 80%);
+  border: 1px solid #C8DDF0; border-radius: 14px; padding: 18px 12px; cursor: pointer; font-family: inherit; font-size: 14px; line-height: 1.5;
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+.mgh-game:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(74,144,199,0.20); border-color: var(--color-primary); }
+/* v18.24: 防沉迷规则提示 + 各 game 状态 */
+.mgh-rules {
+  background: var(--color-accent-soft);
+  border: 1px solid #ECDFC8;
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-tight);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+.mgh-status {
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
 
 /* 数学速算 */
 .mg-stats { font-size: 13px; color: var(--color-text-light); text-align: center; margin-bottom: 12px; }

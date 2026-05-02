@@ -1593,20 +1593,27 @@ function _checkVocabPair() {
     g.selectedEn = null;
     g.selectedZh = null;
     if (g.matched.size >= g.pairs.length) {
-      // 全完成 — 给奖励
-      state.totalPoints += 10;
+      // v18.24: 递减奖励
+      const playNum = _bumpDailyGameCount('vocab');
+      const mult = _getGameMultiplier(playNum);
+      const points = Math.floor(10 * mult);
+      state.totalPoints += points;
       if (!state.mysteryBoxes) state.mysteryBoxes = { available: 0, opened: 0, totalSlotsAtLastEarn: 0, history: [] };
-      state.mysteryBoxes.available += 1;
+      // 仅第 1 次 give box
+      if (playNum === 1) state.mysteryBoxes.available += 1;
       state.logs.push({
-        reason: `🎮 词汇连连看 W${g.weekN} 全对(${g.wrong} 错)`,
-        points: 10, week: state.currentWeek, timestamp: Date.now()
+        reason: `🎮 词汇连连看 W${g.weekN} 全对(第 ${playNum} 次, ${_getMultiplierLabel(playNum)})`,
+        points, week: state.currentWeek, timestamp: Date.now()
       });
-      // v18 vocabPerfectRuns 用于成就
-      if (g.wrong === 0) state.vocabPerfectRuns = (state.vocabPerfectRuns || 0) + 1;
+      // v18 vocabPerfectRuns 用于成就 (仅第 1 次计成就)
+      if (g.wrong === 0 && playNum === 1) state.vocabPerfectRuns = (state.vocabPerfectRuns || 0) + 1;
       state.vocabGameRuns = (state.vocabGameRuns || 0) + 1;
       saveState(state);
-      spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 60);
-      playSound('tada');
+      if (mult > 0) {
+        spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 60);
+        playSound('tada');
+      }
+      if (playNum >= 2) showToast(`🎮 第 ${playNum} 次 — ${_getMultiplierLabel(playNum)} (+${points} 分)`, 'warn');
       _checkAndUnlockAch();
       setTimeout(() => renderAll(), 300);
     }
@@ -1785,6 +1792,33 @@ function _bumpScoreNumber() {
     setTimeout(() => el.classList.remove('bumping'), 600);
   }
   _lastShownScore = cur;
+}
+
+// ============ v18.24: 游戏防沉迷 — 递减奖励 ============
+// 第 1 次满奖, 第 2 次 50%, 第 3 次 25%, 第 4+ 次 0 分 (能玩, 不计分不发箱)
+function _getDailyGameCount(gameKey) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (!state.gameDailyCount || state.gameDailyCount.date !== today) {
+    state.gameDailyCount = { date: today, counts: { vocab: 0, math: 0, editing: 0, listen: 0 } };
+  }
+  return state.gameDailyCount.counts[gameKey] || 0;
+}
+function _bumpDailyGameCount(gameKey) {
+  _getDailyGameCount(gameKey);  // ensure init
+  state.gameDailyCount.counts[gameKey] = (state.gameDailyCount.counts[gameKey] || 0) + 1;
+  return state.gameDailyCount.counts[gameKey];
+}
+// playNum 是第几次玩 (1, 2, 3, 4, ...)
+function _getGameMultiplier(playNum) {
+  const m = [1, 0.5, 0.25, 0];
+  return m[Math.min(playNum - 1, 3)];
+}
+function _getMultiplierLabel(playNum) {
+  const m = _getGameMultiplier(playNum);
+  if (m === 1) return '满奖 100%';
+  if (m === 0.5) return '半奖 50%';
+  if (m === 0.25) return '1/4 奖 25%';
+  return '0 奖 (仅练习)';
 }
 
 function _rainbowSweep() {
@@ -2046,24 +2080,31 @@ function closeFutureSelf() {
 function openMiniGameHub() {
   const modal = document.getElementById('miniGameHubModal');
   if (!modal) return;
+  // v18.24: 显示今日各游戏次数 + 下次奖励倍率
+  const status = (k) => {
+    const c = _getDailyGameCount(k);
+    const next = c + 1;
+    return `<div class="mgh-status">今日已 ${c} 次 · 下次 ${_getMultiplierLabel(next)}</div>`;
+  };
   modal.innerHTML = `
     <div class="mgh-inner">
       <div class="mgh-header">
         <span class="mgh-title">🎮 Mini-game 大厅</span>
         <button class="vocab-modal-close" onclick="closeMiniGameHub()">×</button>
       </div>
+      <div class="mgh-rules">⚠️ 防沉迷: 第 1 次满奖 / 第 2 次半奖 / 第 3 次 1/4 奖 / 第 4+ 次只能玩不计分</div>
       <div class="mgh-grid">
         <button class="mgh-game" onclick="closeMiniGameHub(); openVocabGame(${state.currentWeek})">
-          📚<br><b>词汇连连看</b><br><small>6×6 配对, 全对 +10 + 1 宝箱</small>
+          📚<br><b>词汇连连看</b><br><small>6×6 配对, 全对 +10 + 1 宝箱</small>${status('vocab')}
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openMathGame()">
-          ➗<br><b>数学速算</b><br><small>30 秒答 10 题</small>
+          ➗<br><b>数学速算</b><br><small>30 秒答 10 题</small>${status('math')}
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openEditingGame()">
-          ✏️<br><b>Editing 找错</b><br><small>50 词找 5 错</small>
+          ✏️<br><b>Editing 找错</b><br><small>50 词找 5 错</small>${status('editing')}
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openListenGame()">
-          🎧<br><b>听写练习</b><br><small>听 1 段填 5 词</small>
+          🎧<br><b>听写练习</b><br><small>听 1 段填 5 词</small>${status('listen')}
         </button>
       </div>
     </div>
@@ -2152,12 +2193,16 @@ function submitMathAnswer() {
 function _finishMathGame() {
   const g = _mathGameState;
   if (!g) return;
-  let reward = 0;
-  if (g.correct >= 10) reward = 8;
-  else if (g.correct >= 7) reward = 5;
+  // v18.24: 递减奖励
+  const playNum = _bumpDailyGameCount('math');
+  const mult = _getGameMultiplier(playNum);
+  let baseReward = 0;
+  if (g.correct >= 10) baseReward = 8;
+  else if (g.correct >= 7) baseReward = 5;
+  const reward = Math.floor(baseReward * mult);
   if (reward > 0) {
     state.totalPoints += reward;
-    state.logs.push({ reason: `🎮 数学速算 ${g.correct}/10`, points: reward, week: state.currentWeek, timestamp: Date.now() });
+    state.logs.push({ reason: `🎮 数学速算 ${g.correct}/10 (第 ${playNum} 次)`, points: reward, week: state.currentWeek, timestamp: Date.now() });
   }
   state.mathGameRuns = (state.mathGameRuns || 0) + 1;
   saveState(state);
@@ -2165,13 +2210,13 @@ function _finishMathGame() {
   modal.innerHTML = `
     <div class="mg-inner">
       <div class="mg-result-icon">${g.correct >= 10 ? '🎉' : g.correct >= 7 ? '👍' : '🤔'}</div>
-      <div class="mg-result-title">${g.correct >= 10 ? '全对!' : '完成!'}</div>
+      <div class="mg-result-title">${g.correct >= 10 ? '全对!' : '完成!'} (今日第 ${playNum} 次)</div>
       <div class="mg-result-stats">${g.correct}/10 对 · ${g.wrong} 错 · ${30 - g.timeLeft}s 用时</div>
-      <div class="mg-result-reward">+${reward} 分</div>
+      <div class="mg-result-reward">+${reward} 分 · ${_getMultiplierLabel(playNum)}</div>
       <button class="btn btn-primary" onclick="closeMathGame()">知道了!</button>
     </div>
   `;
-  if (g.correct >= 10) { spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40); playSound('tada'); }
+  if (g.correct >= 10 && mult > 0) { spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40); playSound('tada'); }
   _mathGameState = null;
 }
 function closeMathGame() {
@@ -2225,15 +2270,21 @@ function clickEditingWord(word) {
     g.found.add(word);
     playSound('ding');
     if (g.found.size >= 5) {
-      // 全对
-      state.totalPoints += 10;
+      // 全对 v18.24 递减
+      const playNum = _bumpDailyGameCount('editing');
+      const mult = _getGameMultiplier(playNum);
+      const points = Math.floor(10 * mult);
+      state.totalPoints += points;
       if (!state.mysteryBoxes) state.mysteryBoxes = { available: 0, opened: 0, totalSlotsAtLastEarn: 0, history: [] };
-      state.mysteryBoxes.available += 1;
-      state.logs.push({ reason: '🎮 Editing 找错全对', points: 10, week: state.currentWeek, timestamp: Date.now() });
+      if (playNum === 1) state.mysteryBoxes.available += 1;
+      state.logs.push({ reason: `🎮 Editing 找错全对 (第 ${playNum} 次)`, points, week: state.currentWeek, timestamp: Date.now() });
       state.editingGameRuns = (state.editingGameRuns || 0) + 1;
       saveState(state);
-      spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40);
-      playSound('tada');
+      if (mult > 0) {
+        spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40);
+        playSound('tada');
+      }
+      if (playNum >= 2) showToast(`🎮 第 ${playNum} 次 — ${_getMultiplierLabel(playNum)} (+${points} 分)`, 'warn');
     }
   } else {
     g.wrong++;
@@ -2306,13 +2357,17 @@ function submitListenAnswers() {
     const got = (g.answers[i] || '').toLowerCase().trim();
     if (expected === got) correct++;
   }
-  let reward = 0;
-  if (correct >= 5) reward = 10;
-  else if (correct >= 3) reward = 5;
+  // v18.24: 递减奖励
+  const playNum = _bumpDailyGameCount('listen');
+  const mult = _getGameMultiplier(playNum);
+  let baseReward = 0;
+  if (correct >= 5) baseReward = 10;
+  else if (correct >= 3) baseReward = 5;
+  const reward = Math.floor(baseReward * mult);
   if (reward > 0) {
     state.totalPoints += reward;
-    if (correct >= 5 && state.mysteryBoxes) state.mysteryBoxes.available += 1;
-    state.logs.push({ reason: `🎮 听写 ${correct}/5`, points: reward, week: state.currentWeek, timestamp: Date.now() });
+    if (correct >= 5 && playNum === 1 && state.mysteryBoxes) state.mysteryBoxes.available += 1;
+    state.logs.push({ reason: `🎮 听写 ${correct}/5 (第 ${playNum} 次)`, points: reward, week: state.currentWeek, timestamp: Date.now() });
   }
   state.listenGameRuns = (state.listenGameRuns || 0) + 1;
   saveState(state);
@@ -2320,13 +2375,13 @@ function submitListenAnswers() {
   modal.innerHTML = `
     <div class="lg-inner">
       <div class="lg-result-icon">${correct >= 5 ? '🎉' : correct >= 3 ? '👍' : '🤔'}</div>
-      <div class="lg-result-title">${correct}/5 对</div>
+      <div class="lg-result-title">${correct}/5 对 (今日第 ${playNum} 次)</div>
       <div class="lg-result-text">原文: ${escapeHtml(g.item.text)}</div>
-      <div class="lg-result-reward">+${reward} 分${correct >= 5 ? ' + 1 宝箱' : ''}</div>
+      <div class="lg-result-reward">+${reward} 分${correct >= 5 && playNum === 1 ? ' + 1 宝箱' : ''} · ${_getMultiplierLabel(playNum)}</div>
       <button class="btn btn-primary" onclick="closeListenGame()">知道了!</button>
     </div>
   `;
-  if (correct >= 5) { spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40); playSound('tada'); }
+  if (correct >= 5 && mult > 0) { spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40); playSound('tada'); }
   _listenGameState = null;
 }
 function closeListenGame() {
