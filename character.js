@@ -201,7 +201,19 @@ const CHAMUI = {
     const pantsColor = skin.pantsColor;
 
     const tpl = this._getBodyTemplate(level.lv);
-    const A = this._getAnchors(tpl);
+    // v18.32: 锚点固定到原始 body 精确坐标 (装备真贴合, 不再有 1-3px 偏移)
+    const A = {
+      headTop: [110, 32],
+      earL: [62, 78], earR: [158, 78],
+      eyeL: [90, 78], eyeR: [130, 78],
+      noseTip: [110, 92], mouthC: [110, 104],
+      shoulderL: [70, 132], shoulderR: [150, 132],
+      chest: [110, 165],
+      waistL: [82, 178], waistC: [110, 178], waistR: [138, 178],
+      handL: [58, 180], handR: [162, 180],
+      wristL: [60, 175], wristR: [160, 175],
+      footL: [91, 232], footR: [129, 232]
+    };
 
     // v18.30: 单一表情 (回到原始大眼笑脸)
     const eyes = sad ? `
