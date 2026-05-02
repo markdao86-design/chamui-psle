@@ -972,6 +972,11 @@ function renderCheckinPage() {
       const listenTipLine = isListenTask
         ? `<div class="checkin-listen-tip">🎯 4 步法: 1️⃣ 听感觉 → 2️⃣ 挑 3-5 生词 → 3️⃣ 查字典 + 记本 → 4️⃣ 复听验证</div>`
         : '';
+      // v18.40: 华文题库按钮 — 任务含华文/VB/词汇时显示
+      const isChineseTask = /华文|VB.*华|🇨🇳/.test(t.task);
+      const cnReadingBtn = isChineseTask
+        ? `<button class="cn-reading-btn" onclick="event.stopPropagation(); openChineseReadingBank()" title="📚 PSLE 高华阅读题库 — 8 篇 + 答题">📚</button>`
+        : '';
       // v18.31: 作文按钮 — 任务含"作文" 且本周有 PSLE 题
       const isCompTask = /作文|composition|Composition/.test(t.task);
       const compPrompt = isCompTask && window.getCompositionPrompt ? window.getCompositionPrompt(week) : null;
@@ -1017,6 +1022,7 @@ function renderCheckinPage() {
           ${scoreBtn}
           ${vocabBtn}
           ${listenBtn}
+          ${cnReadingBtn}
           ${compBtn}
           ${photoBtn}
           <div class="checkin-points">+${pts}</div>
@@ -2002,36 +2008,84 @@ function _checkAlarms() {
   }
 }
 
+// v18.40: 闹铃 — 30-60s 持续旋律 + 大关闭按钮 + 可停
+let _alarmMusicTimers = [];
+function _stopAlarmMusic() {
+  _alarmMusicTimers.forEach(t => clearTimeout(t));
+  _alarmMusicTimers = [];
+}
+function _playAlarmLoop(type) {
+  _stopAlarmMusic();
+  if (state.soundEnabled === false) return;
+  const ctx = _getAudioCtx();
+  if (!ctx) return;
+  // 5 种旋律 (notes = [freq, durSec])
+  const MELODIES = {
+    rest: { notes: [[523,0.5],[659,0.5],[784,0.5],[1047,0.8],[988,0.5],[880,0.5],[784,0.5],[659,0.8],[523,0.5],[659,0.5],[784,1.2]], wave: 'sine', vol: 0.35 },
+    back: { notes: [[523,0.3],[659,0.3],[784,0.3],[1047,0.5],[784,0.3],[1047,0.5],[1319,0.8]], wave: 'triangle', vol: 0.4 },
+    start: { notes: [[659,0.3],[880,0.3],[1047,0.3],[1319,0.5],[1047,0.3],[1319,0.7]], wave: 'triangle', vol: 0.45 },
+    sleep: { notes: [[587,0.9],[494,0.9],[392,1.4],[330,0.9],[392,0.9],[494,1.2]], wave: 'sine', vol: 0.3 },
+    switch: { notes: [[880,0.2],[880,0.2],[1175,0.4],[988,0.4]], wave: 'sine', vol: 0.4 }
+  };
+  const m = MELODIES[type] || MELODIES.back;
+  const oneLoopDur = m.notes.reduce((s, n) => s + n[1], 0);
+  // 循环播 ~45s
+  const TARGET_DUR = 45;  // 秒
+  const loops = Math.ceil(TARGET_DUR / oneLoopDur);
+  let offset = 0;
+  for (let l = 0; l < loops; l++) {
+    m.notes.forEach(n => {
+      const startMs = offset * 1000;
+      const t = setTimeout(() => {
+        if (!_alarmMusicTimers.length) return;  // 已停
+        try {
+          const c2 = _getAudioCtx();
+          if (c2) _playTone(c2, n[0], n[1] * 0.95, m.wave, m.vol, 0);
+        } catch (e) {}
+      }, startMs);
+      _alarmMusicTimers.push(t);
+      offset += n[1];
+    });
+    offset += 0.5;  // loop 间隔 0.5s
+  }
+}
+
 function _showAlarmPopup(alarm, dayKey) {
   const old = document.querySelector('.alarm-popup');
-  if (old) old.remove();
+  if (old) { _stopAlarmMusic(); old.remove(); }
   const popup = document.createElement('div');
   popup.className = `alarm-popup alarm-${alarm.type}`;
   popup.innerHTML = `
-    <div class="alarm-icon">${alarm.icon}</div>
-    <div class="alarm-content">
-      <div class="alarm-time">⏰ ${alarm.time} · ${dayKey === 'Sat' ? '周六' : dayKey === 'Sun' ? '周日' : ''}</div>
-      <div class="alarm-msg">${alarm.msg}</div>
+    <div class="alarm-row">
+      <div class="alarm-icon">${alarm.icon}</div>
+      <div class="alarm-content">
+        <div class="alarm-time">⏰ ${alarm.time} · ${dayKey === 'Sat' ? '周六' : dayKey === 'Sun' ? '周日' : ''}</div>
+        <div class="alarm-msg">${alarm.msg}</div>
+      </div>
+      <button class="alarm-close" onclick="closeAlarmPopup()" title="关闭">✕</button>
     </div>
-    <button class="alarm-close" onclick="this.parentElement.remove()">✕</button>
+    <button class="alarm-close-big" onclick="closeAlarmPopup()">🔕 知道了, 关闭闹铃</button>
   `;
   document.body.appendChild(popup);
-  // v18.39: 按 alarm 类型选合适的旋律
-  const soundMap = {
-    rest: 'alarm-rest',     // 休息: 温柔下行钟声 ~2.2s
-    sleep: 'alarm-sleep',   // 睡觉: 极柔摇篮曲 ~3s
-    back: 'alarm-back',     // 回来学: 鼓舞上行 ~1.6s
-    start: 'alarm-start',   // 开始学: 晨钟 ~1.4s
-    switch: 'alarm-switch'  // 换任务: ping ping ~0.95s
-  };
-  playSound(soundMap[alarm.type] || 'alarm-back');
-  // v18.39: 弹窗停留时间延长, rest/sleep 30s, 其他 20s
-  const dur = (alarm.type === 'rest' || alarm.type === 'sleep') ? 30000 : 20000;
-  setTimeout(() => {
+  _playAlarmLoop(alarm.type);
+  // 60s 自动消失 (期间用户可手动关闭)
+  const t = setTimeout(() => {
+    _stopAlarmMusic();
     popup.classList.add('alarm-fade');
     setTimeout(() => popup.remove(), 400);
-  }, dur);
+  }, 60000);
+  _alarmMusicTimers.push(t);
 }
+
+function closeAlarmPopup() {
+  _stopAlarmMusic();
+  const p = document.querySelector('.alarm-popup');
+  if (p) {
+    p.classList.add('alarm-fade');
+    setTimeout(() => p.remove(), 400);
+  }
+}
+window.closeAlarmPopup = closeAlarmPopup;
 
 // 管理页用: 手动触发测试
 function testAlarm() {
@@ -2290,6 +2344,150 @@ window.uploadPolishedEssay = uploadPolishedEssay;
 window.viewPolishedEssay = viewPolishedEssay;
 window.openEssayLibrary = openEssayLibrary;
 window.closeEssayLibrary = closeEssayLibrary;
+
+// ============ v18.40: 华文 PSLE 高华阅读题库 ============
+function openChineseReadingBank() {
+  let modal = document.getElementById('cnReadingBankModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'cnReadingBankModal';
+    modal.className = 'kt-modal';
+    document.body.appendChild(modal);
+  }
+  const passages = window.CHINESE_READING || [];
+  const prog = state.questionBankProgress || {};
+  const cards = passages.map((p, idx) => {
+    const key = 'cn_' + idx;
+    const done = prog[key];
+    return `
+      <div class="qb-passage-card ${done ? 'qb-done' : ''}" onclick="openChineseReading(${idx})">
+        <div class="qb-card-title">📖 ${escapeHtml(p.title)}</div>
+        <div class="qb-card-meta">${escapeHtml(p.level || '★'.repeat(p.diff))} · ${p.questions.length} 题</div>
+        ${done ? `<div class="qb-card-status">✅ 已答 ${done.score}/${done.max}</div>` : '<div class="qb-card-status">⬜ 未答</div>'}
+      </div>`;
+  }).join('');
+  modal.innerHTML = `
+    <div class="kt-inner qb-inner">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title">📚 PSLE 题库</div>
+          <div class="kt-progress">当前: 🇨🇳 华文 PSLE 高华阅读 (${passages.length} 篇) · 后续升级链接更多开源题库</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeChineseReadingBank()">×</button>
+      </div>
+      <div class="qb-section-title">🇨🇳 华文 PSLE 高华阅读 (点篇目开始)</div>
+      <div class="qb-grid">${cards}</div>
+      <div class="qb-future">
+        <b>🔜 即将推出</b><br>
+        ➗ 数学 PSLE 真题集 / 🔬 科学 PSLE 综合 / 📖 英语 PSLE 阅读理解<br>
+        💡 后续版本将链接 SEAB 官方 + Hwa Chong / Nanyang / RGS 等开源 PSLE 模拟题库
+      </div>
+    </div>`;
+  modal.classList.add('show');
+}
+function closeChineseReadingBank() {
+  const m = document.getElementById('cnReadingBankModal');
+  if (m) m.classList.remove('show');
+}
+
+let _cnReadingState = null;
+function openChineseReading(idx) {
+  const passages = window.CHINESE_READING || [];
+  const p = passages[idx];
+  if (!p) return;
+  _cnReadingState = { idx, passage: p, answers: new Array(p.questions.length).fill(null), submitted: false };
+  _renderChineseReading();
+}
+function _renderChineseReading() {
+  const g = _cnReadingState;
+  if (!g) return;
+  let modal = document.getElementById('cnReadingModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'cnReadingModal';
+    modal.className = 'kt-modal';
+    document.body.appendChild(modal);
+  }
+  const p = g.passage;
+  const qsHtml = p.questions.map((q, i) => {
+    const userAns = g.answers[i];
+    const opts = q.opts.map((o, oi) => {
+      const selected = userAns === oi;
+      const reveal = g.submitted;
+      const isCorrect = oi === q.ans;
+      const cls = reveal
+        ? (isCorrect ? 'mcq-correct' : (selected ? 'mcq-wrong' : ''))
+        : (selected ? 'mcq-selected' : '');
+      const disabled = g.submitted ? 'disabled' : '';
+      return `<button class="mcq-opt ${cls}" onclick="selectChineseReadingAnswer(${i}, ${oi})" ${disabled}>${String.fromCharCode(65+oi)}. ${escapeHtml(o)}</button>`;
+    }).join('');
+    const explainHtml = g.submitted
+      ? `<div class="cn-q-explain">${userAns === q.ans ? '✅ 正确' : '❌ 应是 ' + String.fromCharCode(65+q.ans)} · ${escapeHtml(q.explain || '')}</div>`
+      : '';
+    return `
+      <div class="cn-question">
+        <div class="cn-q-text">${i+1}. ${escapeHtml(q.q)}</div>
+        <div class="mcq-opts">${opts}</div>
+        ${explainHtml}
+      </div>`;
+  }).join('');
+  const allAnswered = g.answers.every(a => a !== null);
+  const score = g.submitted ? g.answers.reduce((s, a, i) => s + (a === p.questions[i].ans ? 1 : 0), 0) : 0;
+  const total = p.questions.length;
+  modal.innerHTML = `
+    <div class="kt-inner cn-reading-inner">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title">📖 ${escapeHtml(p.title)}</div>
+          <div class="kt-progress">PSLE 高华阅读 · ${total} 题</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeChineseReading()">×</button>
+      </div>
+      <div class="cn-passage">${escapeHtml(p.passage)}</div>
+      <div class="cn-questions">${qsHtml}</div>
+      ${g.submitted
+        ? `<div class="cn-result">🎉 你的成绩: <b>${score}/${total}</b> ${score === total ? '— 满分!' : score >= total * 0.7 ? '— 不错!' : '— 看解析复习'}</div>
+           <button class="btn btn-primary" onclick="closeChineseReading()">完成</button>`
+        : `<button class="btn btn-primary cn-submit" ${allAnswered ? '' : 'disabled'} onclick="submitChineseReading()">${allAnswered ? '✅ 提交答案' : `请先答完 (${g.answers.filter(a => a !== null).length}/${total})`}</button>`}
+    </div>`;
+  modal.classList.add('show');
+}
+function selectChineseReadingAnswer(qIdx, optIdx) {
+  if (!_cnReadingState || _cnReadingState.submitted) return;
+  _cnReadingState.answers[qIdx] = optIdx;
+  _renderChineseReading();
+}
+function submitChineseReading() {
+  const g = _cnReadingState;
+  if (!g || g.submitted) return;
+  const p = g.passage;
+  const score = g.answers.reduce((s, a, i) => s + (a === p.questions[i].ans ? 1 : 0), 0);
+  const total = p.questions.length;
+  g.submitted = true;
+  // 给奖励 (5 分基础 + 满分 +5 bonus)
+  const reward = 5 + (score === total ? 5 : 0);
+  state.totalPoints = (state.totalPoints || 0) + reward;
+  state.logs.push({ reason: `📚 华文阅读 "${p.title}" ${score}/${total}`, points: reward, week: state.currentWeek, timestamp: Date.now() });
+  // 标记 progress
+  if (!state.questionBankProgress) state.questionBankProgress = {};
+  state.questionBankProgress['cn_' + g.idx] = { done: true, score, max: total, lastDate: new Date().toISOString().slice(0,10) };
+  saveState(state);
+  if (score === total) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 40); playSound('tada'); }
+  else playSound('ding');
+  _renderChineseReading();
+}
+function closeChineseReading() {
+  const m = document.getElementById('cnReadingModal');
+  if (m) m.classList.remove('show');
+  _cnReadingState = null;
+  renderAll();
+}
+window.openChineseReadingBank = openChineseReadingBank;
+window.closeChineseReadingBank = closeChineseReadingBank;
+window.openChineseReading = openChineseReading;
+window.selectChineseReadingAnswer = selectChineseReadingAnswer;
+window.submitChineseReading = submitChineseReading;
+window.closeChineseReading = closeChineseReading;
 
 function _rainbowSweep() {
   const sweep = document.createElement('div');

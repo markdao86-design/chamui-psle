@@ -2019,6 +2019,89 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   color: var(--color-text);
 }
 
+/* v18.40: 华文 PSLE 高华阅读题库 */
+.cn-reading-btn {
+  background: var(--color-pink);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px; height: 32px;
+  font-size: 14px;
+  cursor: pointer;
+  margin: 0 4px;
+}
+.cn-reading-btn:hover { transform: scale(1.1); }
+.qb-inner { max-width: 800px; }
+.qb-section-title { font-size: 14px; font-weight: 900; color: var(--color-text); margin: 16px 0 8px; }
+.qb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.qb-passage-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-tight);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.qb-passage-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(74,144,199,0.15); border-color: var(--color-primary); }
+.qb-passage-card.qb-done { background: linear-gradient(135deg, var(--color-secondary-soft) 0%, #FFFFFF 80%); border-color: var(--color-secondary); }
+.qb-card-title { font-size: 14px; font-weight: 900; color: var(--color-text); margin-bottom: 4px; }
+.qb-card-meta { font-size: 11px; color: var(--color-text-light); margin-bottom: 4px; }
+.qb-card-status { font-size: 11px; color: var(--color-text-light); }
+.qb-passage-card.qb-done .qb-card-status { color: var(--color-secondary); font-weight: 700; }
+.qb-future {
+  background: var(--color-accent-soft);
+  border: 1px dashed var(--color-accent);
+  border-radius: var(--radius-tight);
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--color-text);
+}
+.qb-future b { color: var(--color-warn); }
+/* 阅读 modal */
+.cn-reading-inner { max-width: 720px; }
+.cn-passage {
+  background: var(--color-card-soft);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-tight);
+  padding: 14px 18px;
+  font-size: 16px;
+  line-height: 1.9;
+  color: var(--color-text);
+  margin: 12px 0;
+  text-align: justify;
+}
+.cn-questions { display: flex; flex-direction: column; gap: 16px; margin: 16px 0; }
+.cn-question {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-tight);
+  padding: 12px;
+}
+.cn-q-text { font-size: 14px; font-weight: 700; color: var(--color-text); margin-bottom: 8px; }
+.cn-q-explain {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--color-card-soft);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--color-text);
+}
+.cn-result {
+  background: linear-gradient(135deg, var(--color-secondary-soft) 0%, #FFFFFF 80%);
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius-tight);
+  padding: 16px;
+  text-align: center;
+  font-size: 16px;
+  margin: 16px 0;
+}
+.cn-result b { color: var(--color-secondary); font-size: 22px; }
+.cn-submit { width: 100%; padding: 12px !important; font-size: 16px !important; }
+.mcq-opt.mcq-selected { background: var(--color-primary-soft); border-color: var(--color-primary); color: var(--color-primary); }
+
 /* v18.27: 闹铃弹窗 (顶部固定, 不阻挡操作) */
 .alarm-popup {
   position: fixed;
@@ -2049,6 +2132,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 @keyframes alarm-fade-out {
   to { transform: translate(-50%, -20px); opacity: 0; }
 }
+.alarm-popup .alarm-row { display: flex; align-items: center; gap: 12px; }
 .alarm-popup .alarm-icon { font-size: 36px; flex-shrink: 0; line-height: 1; }
 .alarm-popup .alarm-content { flex: 1; min-width: 0; }
 .alarm-popup .alarm-time { font-size: 12px; color: var(--color-text-light); font-weight: 700; }
@@ -2063,6 +2147,22 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   border-radius: 6px;
 }
 .alarm-popup .alarm-close:hover { background: rgba(0,0,0,0.06); }
+/* v18.40: 大关闭按钮 */
+.alarm-popup .alarm-close-big {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 14px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-tight);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.alarm-popup .alarm-close-big:hover { background: #3a7ab0; }
 /* 类型主色: rest=暖橙 / back=海蓝 / start=薄荷 / sleep=柔紫 */
 .alarm-popup.alarm-rest {
   background: radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.7) 0%, transparent 55%), linear-gradient(135deg, var(--color-accent-soft) 0%, #FFFFFF 80%);
