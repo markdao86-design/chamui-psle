@@ -1660,6 +1660,70 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   padding: 20px;
   animation: fadeInOverlay 0.2s ease;
 }
+
+/* v18.19: 拍照/相册 选择 modal */
+.photo-source-modal {
+  position: fixed; inset: 0;
+  background: rgba(31, 41, 55, 0.55);
+  z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: fadeInOverlay 0.18s ease;
+}
+.photo-source-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-bubble);
+  padding: 22px 20px;
+  max-width: 360px;
+  width: 100%;
+  box-shadow: var(--shadow-pop);
+  text-align: center;
+}
+.photo-source-title {
+  font-size: 17px;
+  font-weight: 900;
+  color: var(--color-text);
+  margin-bottom: 16px;
+}
+.photo-source-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.photo-source-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 18px 10px;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.7) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-primary-soft) 0%, #FFFFFF 80%);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-tight);
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.photo-source-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74,144,199,0.25);
+}
+.photo-source-btn .ps-icon { font-size: 36px; line-height: 1; }
+.photo-source-btn .ps-label { font-size: 14px; font-weight: 900; color: var(--color-text); }
+.photo-source-btn .ps-sub { font-size: 11px; color: var(--color-text-light); }
+.photo-source-cancel {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-tight);
+  padding: 8px 16px;
+  font-size: 13px;
+  color: var(--color-text-light);
+  cursor: pointer;
+}
+.photo-source-cancel:hover { background: var(--color-card-soft); }
 .photo-modal-card {
   background: white;
   border: 4px solid var(--color-text);
@@ -2382,6 +2446,148 @@ p { font-size: 14px; line-height: 1.6; }
   75% { transform: rotate(8deg); }
 }
 #page-dashboard .character-card { position: relative; }
+
+/* ===== v18.20: A 活的伙伴 — 对话气泡 + 庆祝动画 ===== */
+.pet-bubble {
+  position: absolute;
+  top: 28px;
+  right: 70px;
+  background: white;
+  border: 1px solid var(--color-primary);
+  border-radius: 14px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text);
+  max-width: 160px;
+  line-height: 1.4;
+  box-shadow: 0 3px 10px rgba(74,144,199,0.18);
+  z-index: 6;
+  pointer-events: none;
+  animation: pet-bubble-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: normal;
+  word-break: break-word;
+}
+.pet-bubble::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 18px;
+  width: 0; height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 8px solid var(--color-primary);
+}
+.pet-bubble::before {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 19px;
+  width: 0; height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid white;
+  z-index: 1;
+}
+@keyframes pet-bubble-pop {
+  0% { transform: scale(0.4) translateX(20px); opacity: 0; }
+  100% { transform: scale(1) translateX(0); opacity: 1; }
+}
+.pet-bubble.fade-out {
+  animation: pet-bubble-fade 0.4s ease forwards;
+}
+@keyframes pet-bubble-fade {
+  to { opacity: 0; transform: scale(0.85) translateY(-4px); }
+}
+
+/* 仓鼠庆祝跳动 */
+.pet-widget.celebrating {
+  animation: pet-celebrate 0.6s ease;
+}
+@keyframes pet-celebrate {
+  0%, 100% { transform: scale(1) translateY(0); }
+  20% { transform: scale(1.18) translateY(-10px); }
+  40% { transform: scale(1.05) translateY(-2px); }
+  60% { transform: scale(1.18) translateY(-8px); }
+}
+.pet-widget.celebrating::before {
+  content: '✨';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  font-size: 20px;
+  animation: pet-celebrate-sparkle 0.6s ease;
+  pointer-events: none;
+}
+@keyframes pet-celebrate-sparkle {
+  0% { opacity: 0; transform: translate(-50%, 5px) scale(0.5); }
+  50% { opacity: 1; transform: translate(-50%, -10px) scale(1.4); }
+  100% { opacity: 0; transform: translate(-50%, -25px) scale(1); }
+}
+
+/* ===== v18.20: E 微交互 ===== */
+/* 卡片 hover 微倾斜 + 上抬 */
+.card,
+.master-tip-card,
+.wow-card-big,
+.daily-quest-card,
+.mini-game-hub-card,
+.achievement-wall-card,
+.review-card {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+}
+.card:hover,
+.master-tip-card:hover,
+.wow-card-big:hover,
+.daily-quest-card:hover,
+.mini-game-hub-card:hover,
+.achievement-wall-card:hover,
+.review-card:hover {
+  transform: translateY(-3px);
+}
+
+/* 总分数字跳动 */
+.big-score-num {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s;
+  display: inline-block;
+}
+.big-score-num.bumping {
+  animation: score-bump 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes score-bump {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.25); color: var(--color-primary); }
+  100% { transform: scale(1); }
+}
+
+/* 完成任务彩虹扫过 */
+.rainbow-sweep {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9990;
+  background: linear-gradient(110deg,
+    transparent 0%, transparent 30%,
+    rgba(74,144,199,0.10) 38%, rgba(155,143,201,0.10) 45%,
+    rgba(232,184,110,0.10) 52%, rgba(111,184,160,0.10) 60%,
+    transparent 70%, transparent 100%);
+  background-size: 250% 100%;
+  background-position: -50% 0;
+  animation: rainbow-sweep 1.0s ease-out forwards;
+}
+@keyframes rainbow-sweep {
+  to { background-position: 150% 0; opacity: 0; }
+}
+
+/* 鼓励 toast 加心跳脉动 */
+.encourage-toast {
+  animation: encourage-pulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes encourage-pulse {
+  0% { transform: translateX(-50%) scale(0.7); opacity: 0; }
+  60% { transform: translateX(-50%) scale(1.08); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
 
 /* ===== v18.7: 仓鼠形态视觉进化 装饰 + 光环 ===== */
 .pet-widget .pet-decor {

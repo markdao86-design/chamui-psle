@@ -36,6 +36,8 @@ async function init() {
     _checkDailyDrawOnInit();
     _checkAndUnlockAch();
   }, 800);
+  // v18.20 A: 启动仓鼠周期性鼓励
+  if (typeof _startPetIdleTalk === 'function') _startPetIdleTalk();
   // 订阅 Firestore 远端变化
   if (typeof subscribeFirestore === 'function' && isFbReady && isFbReady()) {
     subscribeFirestore(remoteData => {
@@ -69,6 +71,8 @@ function renderAll() {
   renderCheckinPage();
   renderHistoryPage();
   renderAdminPage();
+  // v18.20 E: 总分变化时数字跳动
+  if (typeof _bumpScoreNumber === 'function') _bumpScoreNumber();
 }
 
 // ============ 日期工具 ============
@@ -1155,6 +1159,9 @@ function toggleDailyCheck(week, day, slot, evt) {
     spawnFloatPoints(`+${pts}`, evt, pts >= 3);
     // 大分数块脉动
     pulseScoreBlock();
+    // v18.20 A+E: 仓鼠庆祝 + 彩虹扫过
+    if (typeof petCelebrate === 'function') petCelebrate('💪 干得漂亮!');
+    if (typeof _rainbowSweep === 'function') _rainbowSweep();
     // v17.5 Phase 2: 新宝箱提示 (在 streak 庆祝之前)
     if (newBoxes > 0) {
       showToast(`🎁 你赢了 ${newBoxes} 个神秘宝箱! 主页可开盒`, 'happy');
@@ -1286,11 +1293,44 @@ function showAdminHint(label) {
 }
 
 // ============ 作业照片 (方案 A 防虚假打卡) ============
+// v18.19: 弹 modal 让用户选 拍照 / 从相册
 function pickPhotoForSlot(week, day, slot) {
+  const overlay = document.createElement('div');
+  overlay.className = 'photo-source-modal';
+  overlay.innerHTML = `
+    <div class="photo-source-card">
+      <div class="photo-source-title">📸 上传作业照</div>
+      <div class="photo-source-buttons">
+        <button class="photo-source-btn" data-source="camera">
+          <span class="ps-icon">📷</span>
+          <span class="ps-label">现在拍照</span>
+          <span class="ps-sub">用摄像头</span>
+        </button>
+        <button class="photo-source-btn" data-source="gallery">
+          <span class="ps-icon">🖼️</span>
+          <span class="ps-label">从相册选</span>
+          <span class="ps-sub">已拍好的照片</span>
+        </button>
+      </div>
+      <button class="photo-source-cancel" onclick="this.closest('.photo-source-modal').remove()">取消</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+    const btn = e.target.closest('.photo-source-btn');
+    if (!btn) return;
+    const source = btn.dataset.source;
+    overlay.remove();
+    _doPhotoUpload(week, day, slot, source === 'camera');
+  });
+}
+
+function _doPhotoUpload(week, day, slot, useCamera) {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'image/*';
-  input.capture = 'environment';
+  if (useCamera) input.capture = 'environment';  // 不设 = 相册/选文件
   input.style.display = 'none';
   input.onchange = async (e) => {
     const file = e.target.files && e.target.files[0];
@@ -1590,15 +1630,107 @@ function renderPetWidget() {
   const happy = state.pet.happiness || 0;
   const isSad = happy < 30;
   const inAshes = window.isStreakInAshes && window.isStreakInAshes(state);
-  // v18.10: SVG 自绘 7 形态 — 直接渲染 form.svg
   w.style.background = (isSad || inAshes) ? '#E8E8E8' : (form.bg || 'white');
   w.innerHTML = `<div class="pet-svg-wrap ${isSad || inAshes ? 'pet-sad' : ''}">${form.svg}</div>`;
-  // v18.7: 高级形态加金色光环
   w.classList.toggle('pet-king', form.idx >= 6);
   w.classList.toggle('pet-warrior', form.idx === 5);
   w.setAttribute('data-name', `${state.pet.name || '球球'} · ${form.name} ${isSad ? '😢' : ''}`);
   w.title = `${state.pet.name || '球球'} (${form.name})\n心情 ${happy}/100\n点击查看详情/改名`;
   w.onclick = openPetModal;
+}
+
+// ============ v18.20: A 活的伙伴 ============
+let _petBubbleTimer = null;
+let _petLastSpoke = 0;
+function petSay(message, duration) {
+  if (!message) return;
+  // 防止气泡重叠 — 最少间隔 4s
+  if (Date.now() - _petLastSpoke < 4000) return;
+  _petLastSpoke = Date.now();
+  const card = document.querySelector('.character-card');
+  if (!card) return;
+  const old = card.querySelector('.pet-bubble');
+  if (old) old.remove();
+  const bubble = document.createElement('div');
+  bubble.className = 'pet-bubble';
+  bubble.textContent = message;
+  card.appendChild(bubble);
+  const dur = duration || 4500;
+  setTimeout(() => {
+    bubble.classList.add('fade-out');
+    setTimeout(() => bubble.remove(), 400);
+  }, dur);
+}
+
+function petCelebrate(message) {
+  const w = document.getElementById('petWidget');
+  if (w) {
+    w.classList.remove('celebrating');
+    void w.offsetWidth;  // reflow 触发动画重启
+    w.classList.add('celebrating');
+    setTimeout(() => w.classList.remove('celebrating'), 700);
+  }
+  if (message) petSay(message, 3500);
+}
+
+// 周期性鼓励 — 根据状态选合适的话
+function _generatePetMessage() {
+  if (!state) return null;
+  const lv = window.CHAMUI ? window.CHAMUI.getLevelInfo(state.totalPoints).lv : 1;
+  const next = window.CHAMUI ? window.CHAMUI.getNextLevelInfo(state.totalPoints) : null;
+  const streak = state.dailyStreak?.days || 0;
+  const totalSlotsToday = window._countTodaySlots ? window._countTodaySlots(state) : 0;
+  const pool = [];
+  if (streak === 0) pool.push('🔥 今天打 1 个项目就点燃火焰!');
+  if (streak >= 1 && streak < 7) pool.push(`🔥 已经 ${streak} 天了, 别断哦`);
+  if (streak >= 7) pool.push(`🛡️ ${streak} 天勇者! 你超棒`);
+  if (next) {
+    const need = next.minPoints - state.totalPoints;
+    if (need > 0 && need < 50) pool.push(`✨ 还差 ${need} 分就升 Lv ${next.lv}!`);
+  }
+  if (totalSlotsToday === 0) pool.push('📚 今天还没开始呢, 加油!');
+  if (totalSlotsToday >= 3) pool.push('💪 今天好猛, 继续!');
+  pool.push('🐹 我陪你学!');
+  pool.push('💡 加油, 一点点就升级了');
+  pool.push('🌟 你比昨天更厉害了');
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function _startPetIdleTalk() {
+  if (_petBubbleTimer) clearInterval(_petBubbleTimer);
+  // 30s 后第一次, 之后每 60-90s 一次
+  setTimeout(() => {
+    petSay(_generatePetMessage());
+    _petBubbleTimer = setInterval(() => {
+      // 仅在 dashboard 页面 + tab 可见时才说话
+      if (document.hidden) return;
+      const dash = document.getElementById('page-dashboard');
+      if (!dash || !dash.classList.contains('active')) return;
+      petSay(_generatePetMessage());
+    }, 60000 + Math.random() * 30000);
+  }, 30000);
+}
+
+// ============ v18.20: E 数字跳动 + 彩虹扫过 ============
+let _lastShownScore = null;
+function _bumpScoreNumber() {
+  const el = document.getElementById('bigScoreNum');
+  if (!el) return;
+  const cur = parseInt(el.textContent) || 0;
+  if (_lastShownScore !== null && cur > _lastShownScore) {
+    el.classList.remove('bumping');
+    void el.offsetWidth;
+    el.classList.add('bumping');
+    setTimeout(() => el.classList.remove('bumping'), 600);
+  }
+  _lastShownScore = cur;
+}
+
+function _rainbowSweep() {
+  const sweep = document.createElement('div');
+  sweep.className = 'rainbow-sweep';
+  document.body.appendChild(sweep);
+  setTimeout(() => sweep.remove(), 1000);
 }
 function openPetModal() {
   const modal = document.getElementById('petModal');
