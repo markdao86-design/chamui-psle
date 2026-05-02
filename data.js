@@ -559,12 +559,12 @@ function getTodayWowFact(weekN, dateOverride) {
     const epochDay = Math.floor(d.getTime() / 86400000);
     const idx = ((epochDay % ENGLISH_WOW_FACTS.length) + ENGLISH_WOW_FACTS.length) % ENGLISH_WOW_FACTS.length;
     const fact = ENGLISH_WOW_FACTS[idx];
-    return { subject: '英语', subjectIcon: '📚', subjectColor: '#4ECDC4', subjectKey: 'english', tag: fact.tag, hook: fact.hook, body: fact.body, week: null };
+    return { subject: '英语', subjectIcon: '📚', subjectColor: '#6FB8A0', subjectKey: 'english', tag: fact.tag, hook: fact.hook, body: fact.body, week: null };
   }
   // 科学(本周对应 wow)
   const sci = WEEKLY_WOW_FACTS.find(w => w.week === weekN);
   if (!sci) return null;
-  return { subject: '科学/策略', subjectIcon: '🔬', subjectColor: '#A788E0', subjectKey: 'science', tag: `W${sci.week}`, hook: sci.hook, body: sci.body, week: sci.week };
+  return { subject: '科学/策略', subjectIcon: '🔬', subjectColor: '#9B8FC9', subjectKey: 'science', tag: `W${sci.week}`, hook: sci.hook, body: sci.body, week: sci.week };
 }
 
 // ============= v18.10: 仓鼠 7 形态 SVG 自绘 (每个独立可视化) =============
@@ -1952,13 +1952,13 @@ function getTodayMasterTip(weekN, dateOverride) {
   const epochDay = Math.floor(d.getTime() / 86400000);
   let pool, subject, color;
   if (dow === 1 || dow === 3 || dow === 5) {
-    pool = ENGLISH_MASTER_TIPS; subject = '英语'; color = '#4ECDC4';
+    pool = ENGLISH_MASTER_TIPS; subject = '英语'; color = '#6FB8A0';
   } else if (dow === 2 || dow === 4) {
-    pool = SCIENCE_MASTER_TIPS; subject = '科学'; color = '#A788E0';
+    pool = SCIENCE_MASTER_TIPS; subject = '科学'; color = '#9B8FC9';
   } else if (dow === 6) {
-    pool = MATH_MASTER_TIPS; subject = '数学'; color = '#FF9F45';
+    pool = MATH_MASTER_TIPS; subject = '数学'; color = '#E8B86E';
   } else {
-    pool = CHINESE_MASTER_TIPS; subject = '华文'; color = '#FF6B6B';
+    pool = CHINESE_MASTER_TIPS; subject = '华文'; color = '#E07B7B';
   }
   const idx = ((epochDay % pool.length) + pool.length) % pool.length;
   const tip = pool[idx];
