@@ -2763,6 +2763,31 @@ p { font-size: 14px; line-height: 1.6; }
   border-radius: 10px;
   margin-top: 12px;
 }
+/* v18.13: 先猜后揭晓 quiz 区 */
+.wow-quiz {
+  margin-top: 12px;
+  padding: 14px;
+  background: linear-gradient(135deg, #FFF8E7 0%, #FFE6F0 100%);
+  border: 2px dashed var(--color-warn, #FF9F45);
+  border-radius: 10px;
+  text-align: center;
+}
+.wow-quiz-prompt {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 10px;
+}
+.wow-quiz-btn {
+  font-size: 15px !important;
+  padding: 10px 20px !important;
+  font-weight: 900 !important;
+  animation: wow-quiz-pulse 2s ease-in-out infinite;
+}
+@keyframes wow-quiz-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
 
 /* v17.3: Streak 规则卡 (替代原 progress 在 hero-right) */
 .streak-rules-card {

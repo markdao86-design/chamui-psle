@@ -498,7 +498,7 @@ function submitThinkAnswer(weekN, userAnswer) {
   renderAll();
 }
 
-// v17.3: 每日 Wow 事实卡 — 默认展开 + 大字 + 高亮(英语/科学按日轮换)
+// v18.13: 每日 Wow 事实卡 — 先猜后揭晓 (Loewenstein curiosity gap 强化)
 function renderWowCard() {
   const card = document.getElementById('wowCard');
   if (!card || !window.getTodayWowFact) return;
@@ -509,39 +509,51 @@ function renderWowCard() {
   }
   card.style.display = '';
   card.style.borderLeftColor = wow.subjectColor || '#A788E0';
-  // v17.3: 默认展开 (孩子第一眼就看到完整解释), 用户可点击收起
-  if (card.dataset.expanded === undefined || card.dataset.expanded === '') {
-    card.dataset.expanded = '1';
+  // v18.13: 当日揭晓状态 — 不同 hook 重置
+  const today = new Date().toISOString().slice(0, 10);
+  if (!state.wowGuessedToday || state.wowGuessedToday.date !== today || state.wowGuessedToday.hook !== wow.hook) {
+    state.wowGuessedToday = { date: today, hook: wow.hook, revealed: false };
   }
-  const expanded = card.dataset.expanded === '1';
+  const revealed = !!state.wowGuessedToday.revealed;
   card.innerHTML = `
     <div class="wow-header">
       <span class="wow-tag" style="color:${wow.subjectColor};border-color:${wow.subjectColor}">
         🤯 ${wow.subjectIcon} ${wow.subject} · ${wow.tag}
       </span>
-      <span class="wow-toggle">${expanded ? '收起 ▲' : '点击展开 ▼'}</span>
+      ${revealed ? '<span class="wow-toggle">已揭晓 ✓</span>' : '<span class="wow-toggle">🤔 先想想</span>'}
     </div>
     <div class="wow-hook">${escapeHtml(wow.hook)}</div>
-    ${expanded ? `<div class="wow-body">${escapeHtml(wow.body)}</div>` : ''}
+    ${revealed ? `
+      <div class="wow-body">${escapeHtml(wow.body)}</div>
+    ` : `
+      <div class="wow-quiz">
+        <div class="wow-quiz-prompt">💭 先思考 5 秒, 然后点揭晓:</div>
+        <button class="btn btn-primary wow-quiz-btn" onclick="event.stopPropagation(); revealWowAnswer()">💡 揭晓答案 (+2 分)</button>
+      </div>
+    `}
   `;
-  card.onclick = () => {
-    card.dataset.expanded = expanded ? '0' : '1';
-    renderWowCard();
-    // v17.7 quest: 看 wow 算 1 次
-    if (card.dataset.expanded === '1') {
-      _trackQuest('wow-1', 1);
-      // v18 Phase 5.3: enqueue 复习(类型 wow)
-      if (window.enqueueReview) {
-        const wow = window.getTodayWowFact(state.currentWeek);
-        const id = wow.subjectKey === 'science' ? 'w' + wow.week : (wow.tag + '_' + (window.ENGLISH_WOW_FACTS.indexOf(window.ENGLISH_WOW_FACTS.find(w => w.hook === wow.hook))));
-        window.enqueueReview(state, 'wow', id);
-      }
-      // v18 wowSeenCount 累加
-      state.wowSeenCount = (state.wowSeenCount || 0) + 1;
-      saveState(state);
-      _checkAndUnlockAch();
-    }
-  };
+  card.onclick = null;  // v18.13: 不再点卡展开/收起, 必须用按钮揭晓
+}
+
+function revealWowAnswer() {
+  const today = new Date().toISOString().slice(0, 10);
+  const wow = window.getTodayWowFact(state.currentWeek);
+  if (!wow) return;
+  if (state.wowGuessedToday && state.wowGuessedToday.revealed) return;  // 防重复
+  state.wowGuessedToday = { date: today, hook: wow.hook, revealed: true };
+  state.totalPoints = (state.totalPoints || 0) + 2;
+  state.logs.push({ reason: '💡 揭晓 Wow 答案', points: 2, week: state.currentWeek, timestamp: Date.now() });
+  state.wowSeenCount = (state.wowSeenCount || 0) + 1;
+  // v18 Phase 5.3: enqueue 复习
+  if (window.enqueueReview) {
+    const id = wow.subjectKey === 'science' ? 'w' + wow.week : (wow.tag + '_' + (window.ENGLISH_WOW_FACTS.indexOf(window.ENGLISH_WOW_FACTS.find(w => w.hook === wow.hook))));
+    window.enqueueReview(state, 'wow', id);
+  }
+  _trackQuest('wow-1', 1);
+  playSound('ding');
+  saveState(state);
+  _checkAndUnlockAch();
+  renderAll();
 }
 
 // ============ v16: 6 条铁律(每天换一条) ============
