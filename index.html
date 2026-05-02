@@ -3226,6 +3226,10 @@ p { font-size: 14px; line-height: 1.6; }
   font-weight: 700;
   color: var(--color-primary);
 }
+/* v18.38: 锁/可玩 状态 */
+.mgh-lock { color: var(--color-text-light); font-weight: 400; }
+.mgh-ready { color: var(--color-secondary); font-weight: 700; }
+.mgh-game:has(.mgh-lock) { opacity: 0.6; }
 
 /* 数学速算 */
 .mg-stats { font-size: 13px; color: var(--color-text-light); text-align: center; margin-bottom: 12px; }
@@ -3880,7 +3884,7 @@ p { font-size: 14px; line-height: 1.6; }
             <div class="mgh-icon">🎮</div>
             <div class="mgh-info">
               <div class="mgh-title">Mini-game 大厅</div>
-              <div class="mgh-sub">4 个游戏 — 词汇/数学/Editing/听写</div>
+              <div class="mgh-sub">8 个游戏 — 词汇/数学/Editing/听写/单位/Grammar/Cloze/科学</div>
             </div>
             <button class="btn btn-primary" onclick="openMiniGameHub()">🎮 玩</button>
           </div>

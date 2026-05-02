@@ -1587,6 +1587,7 @@ function closeVocabModal() {
 let _vocabGameState = null;
 
 function openVocabGame(weekN) {
+  if (!_checkGameDailyLock('vocab')) return;  // v18.38
   // v18.25: 按当前难度采样 (含 sentence 卡 if diff>=4)
   const diff = window.getDifficulty ? window.getDifficulty(state, 'vocab') : 1;
   let pairs;
@@ -1908,17 +1909,21 @@ function _bumpDailyGameCount(gameKey) {
   state.gameDailyCount.counts[gameKey] = (state.gameDailyCount.counts[gameKey] || 0) + 1;
   return state.gameDailyCount.counts[gameKey];
 }
-// playNum 是第几次玩 (1, 2, 3, 4, ...)
+// v18.38: 每 game 每天 1 次, 都满奖, 第 2 次锁定
 function _getGameMultiplier(playNum) {
-  const m = [1, 0.5, 0.25, 0];
-  return m[Math.min(playNum - 1, 3)];
+  return playNum === 1 ? 1 : 0;
 }
 function _getMultiplierLabel(playNum) {
-  const m = _getGameMultiplier(playNum);
-  if (m === 1) return '满奖 100%';
-  if (m === 0.5) return '半奖 50%';
-  if (m === 0.25) return '1/4 奖 25%';
-  return '0 奖 (仅练习)';
+  return playNum === 1 ? '满奖 100%' : '🔒 已玩 (明日再来)';
+}
+// 检查游戏是否可玩, 不可玩则弹提示并返回 false
+function _checkGameDailyLock(gameKey) {
+  const count = _getDailyGameCount(gameKey);
+  if (count >= 1) {
+    showToast(`🔒 今日已玩 ${gameKey} — 换个游戏试试! 8 游戏每天各 1 次`, 'warn');
+    return false;
+  }
+  return true;
 }
 
 // ============ v18.27: in-app 闹铃 (周末为主) ============
@@ -2503,13 +2508,13 @@ function closeFutureSelf() {
 function openMiniGameHub() {
   const modal = document.getElementById('miniGameHubModal');
   if (!modal) return;
-  // v18.24+25: 显示今日次数 + 下次倍率 + 当前难度星级
+  // v18.38: 每 game 每天 1 次, 都满奖, 第 2 次锁
   const stars = (d) => '★'.repeat(d) + '☆'.repeat(5 - d);
   const status = (k) => {
     const c = _getDailyGameCount(k);
-    const next = c + 1;
     const d = window.getDifficulty ? window.getDifficulty(state, k) : 1;
-    return `<div class="mgh-status">难度 <b>${stars(d)}</b> · 今日已 ${c} 次 · 下次 ${_getMultiplierLabel(next)}</div>`;
+    const lockState = c >= 1 ? '<span class="mgh-lock">🔒 今日已玩</span>' : '<span class="mgh-ready">▶ 可玩 (满奖)</span>';
+    return `<div class="mgh-status">难度 <b>${stars(d)}</b> · ${lockState}</div>`;
   };
   modal.innerHTML = `
     <div class="mgh-inner">
@@ -2517,7 +2522,7 @@ function openMiniGameHub() {
         <span class="mgh-title">🎮 Mini-game 大厅</span>
         <button class="vocab-modal-close" onclick="closeMiniGameHub()">×</button>
       </div>
-      <div class="mgh-rules">⚠️ 防沉迷: 第 1 次满奖 / 第 2 次半奖 / 第 3 次 1/4 奖 / 第 4+ 次只能玩不计分</div>
+      <div class="mgh-rules">⚠️ 防沉迷: <b>每 game 每天 1 次, 满奖, 第 2 次锁定</b> · 8 game 全玩 ≈ 20-25 min</div>
       <div class="mgh-grid">
         <button class="mgh-game" onclick="closeMiniGameHub(); openVocabGame(${state.currentWeek})">
           📚<br><b>词汇连连看</b><br><small>6×6 配对</small>${status('vocab')}
@@ -2558,6 +2563,7 @@ function closeMiniGameHub() {
 let _unitGameState = null;
 let _unitTimer = null;
 function openUnitGame() {
+  if (!_checkGameDailyLock('unit')) return;  // v18.38
   const diff = window.getDifficulty ? window.getDifficulty(state, 'unit') : 1;
   const qs = window.getUnitByDiff(diff, 10);
   _unitGameState = { qs, idx: 0, correct: 0, wrong: 0, timeLeft: 45, diff };
@@ -2661,6 +2667,7 @@ let _mcqGameState = null;
 function openGrammarGame() { _openMcqGame('grammar', 'Grammar 选择题', 'q'); }
 function openClozeGame() { _openMcqGame('cloze', 'Cloze 单空填', 'sentence'); }
 function _openMcqGame(key, title, qField) {
+  if (!_checkGameDailyLock(key)) return;  // v18.38
   const diff = window.getDifficulty ? window.getDifficulty(state, key) : 1;
   const fn = key === 'grammar' ? window.getGrammarByDiff : window.getClozeByDiff;
   const rawQs = fn(diff, 10);
@@ -2793,6 +2800,7 @@ function closeMcqGame() {
 // === 4. Science 快分类 ===
 let _sciGameState = null;
 function openSciClassifyGame() {
+  if (!_checkGameDailyLock('scilab')) return;  // v18.38
   const diff = window.getDifficulty ? window.getDifficulty(state, 'scilab') : 1;
   const item = window.getSciClassifyByDiff(diff);
   _sciGameState = { item, picks: {}, correct: 0, wrong: 0, diff };
@@ -2898,6 +2906,7 @@ window.closeSciGame = closeSciGame;
 let _mathGameState = null;
 let _mathTimer = null;
 function openMathGame() {
+  if (!_checkGameDailyLock('math')) return;  // v18.38
   // v18.25: 按当前难度采样
   const diff = window.getDifficulty ? window.getDifficulty(state, 'math') : 1;
   const qs = window.getMathQuestionsByDiff ? window.getMathQuestionsByDiff(diff, 10)
@@ -3019,6 +3028,7 @@ function closeMathGame() {
 // Editing 找错
 let _editingGameState = null;
 function openEditingGame() {
+  if (!_checkGameDailyLock('editing')) return;  // v18.38
   // v18.25: 按当前难度采样
   const diff = window.getDifficulty ? window.getDifficulty(state, 'editing') : 1;
   const para = window.getEditingByDiff ? window.getEditingByDiff(diff)
@@ -3098,6 +3108,7 @@ function closeEditingGame() {
 // 听写
 let _listenGameState = null;
 function openListenGame() {
+  if (!_checkGameDailyLock('listen')) return;  // v18.38
   // v18.25: 按当前难度采样
   const diff = window.getDifficulty ? window.getDifficulty(state, 'listen') : 1;
   const item = window.getListenByDiff ? window.getListenByDiff(diff)
