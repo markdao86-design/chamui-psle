@@ -248,11 +248,13 @@ body::before {
 }
 /* v18.12: 名师秘诀 — 改白底深字 + 顶部学科色 banner, 大幅提高对比度 */
 .master-tip-card {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(255,255,255,0.6) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-accent-soft) 0%, #FFFFFF 70%);
+  border: 1px solid #ECDFC8;
   border-radius: var(--radius-bubble);
   padding: 0;
-  box-shadow: var(--shadow-cute);
+  box-shadow: 0 2px 8px rgba(232,184,110,0.10);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -846,9 +848,10 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   margin-top: 16px;
 }
 
+/* v18.18: 装备卡蓝色系 — 已穿戴用 primary-soft, 已收藏未穿用淡灰, 锁定灰 */
 .equipment-item {
-  background: white;
-  border: 3px solid var(--color-text);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-tight);
   padding: 12px;
   text-align: center;
@@ -858,8 +861,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 
 .equipment-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 0 var(--color-text);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(74,144,199,0.15);
+  border-color: var(--color-primary);
 }
 
 .equipment-item.locked {
@@ -867,37 +871,44 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   filter: grayscale(0.8);
 }
 
+/* 已穿戴 (active) — 蓝色高亮 + 柔和光晕 */
 .equipment-item.unlocked {
-  background: var(--color-accent);
-  animation: equipment-pulse 2s ease-in-out infinite;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.6) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-primary-soft) 0%, #FFFFFF 80%);
+  border: 1px solid var(--color-primary);
+  animation: equipment-pulse 2.4s ease-in-out infinite;
 }
-/* v16.8: 已解锁但卸下 — 静态浅色,不脉冲,有"卸下"标记 */
+/* v16.8: 已收藏但卸下 — 静态浅灰, 跟主调和谐 */
 .equipment-item.unlocked.unequipped {
-  background: #F0F0F0;
+  background: var(--color-card-soft);
+  border: 1px solid var(--color-border);
   animation: none;
-  opacity: 0.75;
+  opacity: 0.85;
 }
 .equipment-item.unlocked.unequipped:hover {
   opacity: 1;
+  border-color: var(--color-primary);
 }
-/* 穿戴中 — 加 ✓ 角标 */
+/* 穿戴中 — ✓ 角标海蓝 */
 .equipment-item.unlocked.equipped::after {
   content: "✓";
   position: absolute;
   top: -6px; right: -4px;
-  background: var(--color-success, #4ECDC4);
+  background: var(--color-primary);
   color: white;
   font-size: 11px;
   font-weight: 900;
-  width: 18px; height: 18px;
+  width: 20px; height: 20px;
   display: flex; align-items: center; justify-content: center;
   border-radius: 50%;
-  border: 2px solid var(--color-text);
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(74,144,199,0.30);
 }
 
 @keyframes equipment-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255,230,109,0.7); }
-  50% { box-shadow: 0 0 0 8px rgba(255,230,109,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74,144,199,0.35); }
+  50% { box-shadow: 0 0 0 6px rgba(74,144,199,0); }
 }
 
 .equipment-icon {
@@ -918,7 +929,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 
 .equipment-item.unlocked .equipment-condition {
-  color: var(--color-success);
+  color: var(--color-primary);
   font-weight: 700;
 }
 
@@ -930,8 +941,8 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   margin-top: 12px;
 }
 .skin-item {
-  background: white;
-  border: 3px solid var(--color-text);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-tight);
   padding: 10px 8px;
   text-align: center;
@@ -940,32 +951,37 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   position: relative;
   user-select: none;
 }
-.skin-item:hover { transform: translateY(-3px); box-shadow: 0 4px 0 var(--color-text); }
+.skin-item:hover { transform: translateY(-2px); box-shadow: 0 2px 8px rgba(74,144,199,0.15); border-color: var(--color-primary); }
 .skin-item.locked { opacity: 0.45; filter: grayscale(0.7); cursor: not-allowed; }
-.skin-item.locked:hover { transform: none; box-shadow: none; }
+.skin-item.locked:hover { transform: none; box-shadow: none; border-color: var(--color-border); }
 .skin-item.active {
-  background: var(--color-accent);
-  box-shadow: 0 0 0 4px var(--color-primary), 0 4px 0 var(--color-text);
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.6) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-primary-soft) 0%, #FFFFFF 80%);
+  border: 1px solid var(--color-primary);
+  box-shadow: 0 2px 12px rgba(74,144,199,0.20);
 }
 .skin-item.active::after {
   content: "✓ 穿着中";
   position: absolute;
   top: -10px; right: -6px;
-  background: var(--color-success, #4ECDC4);
+  background: var(--color-primary);
   color: white;
   font-size: 10px;
   font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 8px;
-  border: 2px solid var(--color-text);
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(74,144,199,0.30);
 }
 .skin-swatch {
   width: 38px; height: 38px;
   margin: 0 auto 6px;
-  border: 2px solid var(--color-text);
+  border: 1px solid var(--color-border);
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 22px;
+  background: var(--color-card-soft);
 }
 .skin-name { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
 .skin-desc { font-size: 10px; color: var(--color-text-light); line-height: 1.3; }
@@ -2441,7 +2457,14 @@ p { font-size: 14px; line-height: 1.6; }
 .pet-form-meta { font-size: 13px; font-weight: 700; }
 
 /* ===== v18 Phase 5.1: 🏆 成就墙 ===== */
-.achievement-wall-card { background: var(--color-card); border: 1px solid var(--color-border); border-left: 3px solid var(--color-pink); }
+.achievement-wall-card {
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(255,255,255,0.7) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-pink-soft) 0%, #FFFFFF 70%);
+  border: 1px solid #ECD3DC;
+  border-left: 3px solid var(--color-pink);
+  box-shadow: 0 2px 8px rgba(232,180,194,0.10);
+}
 .ach-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
 .ach-title { font-size: 17px; font-weight: 900; flex: 1; }
 .ach-count { font-size: 14px; font-weight: 700; color: var(--color-primary); }
@@ -2472,7 +2495,14 @@ p { font-size: 14px; line-height: 1.6; }
 .dd-bonus { font-size: 13px; padding: 8px; background: linear-gradient(135deg, #FFE066 0%, #FF9F45 100%); border-radius: 8px; margin: 8px 0; font-weight: 700; }
 
 /* ===== v18 Phase 5.3: 🔁 复习卡 ===== */
-.review-card { background: var(--color-card); border: 1px solid var(--color-border); border-left: 3px solid var(--color-secondary); }
+.review-card {
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(255,255,255,0.7) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-secondary-soft) 0%, #FFFFFF 70%);
+  border: 1px solid #C8E0D5;
+  border-left: 3px solid var(--color-secondary);
+  box-shadow: 0 2px 8px rgba(111,184,160,0.10);
+}
 .rev-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .rev-tag { font-size: 14px; font-weight: 900; color: #4ECDC4; }
 .rev-question { font-size: 16px; font-weight: 700; line-height: 1.4; margin: 8px 0; }
@@ -2496,7 +2526,14 @@ p { font-size: 14px; line-height: 1.6; }
 .fs-tip { font-size: 12px; color: var(--color-text-light); margin-top: 10px; font-style: italic; }
 
 /* ===== v18 Phase 5.4: mini-game hub + games ===== */
-.mini-game-hub-card { background: var(--color-card); border: 1px solid var(--color-border); border-left: 3px solid var(--color-purple); }
+.mini-game-hub-card {
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(255,255,255,0.7) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-purple-soft) 0%, #FFFFFF 70%);
+  border: 1px solid #D4CCEA;
+  border-left: 3px solid var(--color-purple);
+  box-shadow: 0 2px 8px rgba(155,143,201,0.10);
+}
 .mgh-row { display: flex; align-items: center; gap: 10px; }
 .mgh-icon { font-size: 36px; }
 .mgh-info { flex: 1; }
@@ -2544,9 +2581,12 @@ p { font-size: 14px; line-height: 1.6; }
 
 /* ===== v17.7 Phase 3: 每日特别任务卡 ===== */
 .daily-quest-card {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(255,255,255,0.7) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-accent-soft) 0%, #FFFFFF 70%);
+  border: 1px solid #ECDFC8;
   border-left: 3px solid var(--color-accent);
+  box-shadow: 0 2px 8px rgba(232,184,110,0.10);
 }
 .dq-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
 .dq-icon { font-size: 32px; flex-shrink: 0; }
@@ -2758,14 +2798,18 @@ p { font-size: 14px; line-height: 1.6; }
 }
 
 /* ===== v17.3: 每日 Wow 事实卡 (大字 + 高亮 + 默认展开) ===== */
+/* v18.17: 卡片主题化 — 柔和渐变底 + 主题色边框/阴影 */
 .wow-card-big {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(255,255,255,0.7) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-purple-soft) 0%, #FFFFFF 70%);
+  border: 1px solid #D4CCEA;
   border-left: 3px solid var(--color-purple);
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
   padding: 18px 20px;
   position: relative;
+  box-shadow: 0 2px 8px rgba(155,143,201,0.10);
 }
 .wow-card-big::before {
   content: '✨';
