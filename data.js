@@ -1282,6 +1282,60 @@ function getVocabPairsByDiff(diff, weekN, n) {
   return result;
 }
 
+// ============= v18.27: 闹铃时间表 (周末优先, 工作日 placeholder) =============
+const ALARM_SCHEDULE = {
+  Sat: [
+    { time: '09:00', type: 'start', icon: '📚', msg: '周六学习开始! 先做周四 1 对 1 作业 (1h)' },
+    { time: '10:00', type: 'switch', icon: '✏️', msg: '换 — 美林作业 (1h)' },
+    { time: '11:00', type: 'switch', icon: '🔬', msg: '换 — P5 科学练习册 (50min)' },
+    { time: '11:50', type: 'switch', icon: '🎧', msg: '换 — 听力 15min (4 步精听法)' },
+    { time: '12:00', type: 'rest', icon: '🍽️', msg: '吃饭休息! 2 小时, 离开桌子吃饭走动' },
+    { time: '14:00', type: 'back', icon: '🔔', msg: '回来! 数学 P6 paper 2 (限时 50min)' },
+    { time: '15:20', type: 'rest', icon: '☕', msg: '准备美林课! 上厕所 + 喝水' },
+    { time: '19:30', type: 'rest', icon: '☕', msg: '美林课结束! 休息 20min, 吃点东西放松' },
+    { time: '19:50', type: 'back', icon: '📝', msg: '回来! 美林课要点回顾 30min (趁记忆热)' },
+    { time: '20:30', type: 'switch', icon: '🪞', msg: '本周复盘 + 跟父母聊聊本周收获' },
+    { time: '21:30', type: 'sleep', icon: '😴', msg: '戴 OK 镜准备睡觉, 好好休息' }
+  ],
+  Sun: [
+    { time: '08:00', type: 'start', icon: '🎓', msg: '周日学习开始! 恒瑞课 (2h20)' },
+    { time: '10:20', type: 'rest', icon: '☕', msg: '恒瑞课结束! 真休息 15min, 离开桌子' },
+    { time: '10:35', type: 'back', icon: '✏️', msg: '回来! 恒瑞作业 (趁记忆热, 巩固 ×2)' },
+    { time: '11:30', type: 'switch', icon: '📖', msg: '换 — 阅读理解 + Cloze (30min)' },
+    { time: '12:00', type: 'rest', icon: '🍽️', msg: '吃饭休息! 2 小时' },
+    { time: '14:00', type: 'back', icon: '🎯', msg: '回来! 数学 PSLE paper 1 (限时 50min)' },
+    { time: '15:00', type: 'switch', icon: '🔬', msg: '换 — 科学练习册 (50min)' },
+    { time: '16:10', type: 'rest', icon: '🏊', msg: '游泳时间! 体力放松大脑' },
+    { time: '17:30', type: 'rest', icon: '🍽️', msg: '吃饭休息 (40min)' },
+    { time: '18:30', type: 'back', icon: '✏️', msg: '回来! 美玲周五作业 part 1 (1h)' },
+    { time: '19:30', type: 'rest', icon: '☕', msg: '休息 15min, 跟父母聊几句' },
+    { time: '19:45', type: 'back', icon: '📝', msg: '回来! 美玲作业 part 2 + cloze 收尾' },
+    { time: '20:30', type: 'switch', icon: '🪞', msg: '下周计划 + 整理书包 + 写明日 1 个目标' },
+    { time: '21:30', type: 'sleep', icon: '😴', msg: '戴 OK 镜睡觉, 周日辛苦了' }
+  ],
+  // 工作日 (简版, 仅关键时段)
+  Mon: [
+    { time: '16:30', type: 'start', icon: '📚', msg: '放学! 准备开始今日学习' },
+    { time: '21:30', type: 'sleep', icon: '😴', msg: '戴 OK 镜睡觉时间' }
+  ],
+  Tue: [
+    { time: '16:30', type: 'start', icon: '📚', msg: '放学! 准备开始今日学习' },
+    { time: '21:30', type: 'sleep', icon: '😴', msg: '戴 OK 镜睡觉时间' }
+  ],
+  Wed: [
+    { time: '16:30', type: 'start', icon: '📚', msg: '放学! 准备开始今日学习' },
+    { time: '21:30', type: 'sleep', icon: '😴', msg: '戴 OK 镜睡觉时间' }
+  ],
+  Thu: [
+    { time: '16:30', type: 'start', icon: '📚', msg: '放学! 准备开始今日学习' },
+    { time: '21:30', type: 'sleep', icon: '😴', msg: '戴 OK 镜睡觉时间' }
+  ],
+  Fri: [
+    { time: '16:30', type: 'start', icon: '📚', msg: '放学! 周五尽量完成本周作业, 别拖到周六' },
+    { time: '21:30', type: 'sleep', icon: '😴', msg: '戴 OK 镜睡觉时间' }
+  ]
+};
+
 // ============= v18.26: 知识树 (4 学科 × ~10 节点, 按 W1-W73 进度自动算) =============
 const KNOWLEDGE_TREE = {
   '🔬 科学': [
@@ -1829,7 +1883,10 @@ function getDefaultState() {
       math:    { difficulty: 1, recent: [] },
       editing: { difficulty: 1, recent: [] },
       listen:  { difficulty: 1, recent: [] }
-    }
+    },
+    // v18.27: 闹铃
+    alarmsEnabled: true,
+    alarmShownToday: { date: null, shown: [] }
   };
 }
 
@@ -3256,3 +3313,5 @@ window.VOCAB_HARD = VOCAB_HARD;
 window.KNOWLEDGE_TREE = KNOWLEDGE_TREE;
 window.getKnowledgeTreeStatus = getKnowledgeTreeStatus;
 window.getKnowledgeProgress = getKnowledgeProgress;
+// v18.27: 闹铃
+window.ALARM_SCHEDULE = ALARM_SCHEDULE;

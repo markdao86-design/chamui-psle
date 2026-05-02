@@ -1947,6 +1947,65 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .lis-item.lis-live { background: linear-gradient(135deg, #FFE6F0 0%, #E0F4F1 100%); border-width: 3px; }
 .lis-item.lis-youtube { background: #FFF8E7; border-width: 3px; }
 
+/* v18.27: 闹铃弹窗 (顶部固定, 不阻挡操作) */
+.alarm-popup {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9997;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.7) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-primary-soft) 0%, #FFFFFF 80%);
+  border: 1px solid var(--color-primary);
+  border-left: 4px solid var(--color-primary);
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(74,144,199,0.25);
+  max-width: 480px;
+  width: calc(100% - 40px);
+  animation: alarm-slide-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.alarm-popup.alarm-fade { animation: alarm-fade-out 0.4s ease forwards; }
+@keyframes alarm-slide-in {
+  from { transform: translate(-50%, -30px); opacity: 0; }
+  to { transform: translateX(-50%); opacity: 1; }
+}
+@keyframes alarm-fade-out {
+  to { transform: translate(-50%, -20px); opacity: 0; }
+}
+.alarm-popup .alarm-icon { font-size: 36px; flex-shrink: 0; line-height: 1; }
+.alarm-popup .alarm-content { flex: 1; min-width: 0; }
+.alarm-popup .alarm-time { font-size: 12px; color: var(--color-text-light); font-weight: 700; }
+.alarm-popup .alarm-msg { font-size: 14px; color: var(--color-text); font-weight: 700; line-height: 1.4; margin-top: 2px; }
+.alarm-popup .alarm-close {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  color: var(--color-text-light);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.alarm-popup .alarm-close:hover { background: rgba(0,0,0,0.06); }
+/* 类型主色: rest=暖橙 / back=海蓝 / start=薄荷 / sleep=柔紫 */
+.alarm-popup.alarm-rest {
+  background: radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.7) 0%, transparent 55%), linear-gradient(135deg, var(--color-accent-soft) 0%, #FFFFFF 80%);
+  border-color: var(--color-accent);
+}
+.alarm-popup.alarm-back { /* default primary */ }
+.alarm-popup.alarm-start, .alarm-popup.alarm-switch {
+  background: radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.7) 0%, transparent 55%), linear-gradient(135deg, var(--color-secondary-soft) 0%, #FFFFFF 80%);
+  border-color: var(--color-secondary);
+}
+.alarm-popup.alarm-sleep {
+  background: radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.7) 0%, transparent 55%), linear-gradient(135deg, var(--color-purple-soft) 0%, #FFFFFF 80%);
+  border-color: var(--color-purple);
+}
+
 /* v18.26: 知识树 modal */
 .kt-modal {
   position: fixed; inset: 0;
@@ -3797,6 +3856,8 @@ p { font-size: 14px; line-height: 1.6; }
         <button class="btn btn-secondary" style="font-size:11px;padding:3px 8px" onclick="clearAdminAuth(); showToast('已锁定,下次操作要重输密码','warn')">🔒 立即锁定</button>
         <button class="btn btn-secondary" style="font-size:11px;padding:3px 8px" onclick="unlockListeningToday()">🎧 解锁今日听力</button>
         <button class="btn btn-secondary" style="font-size:11px;padding:3px 8px" onclick="state.soundEnabled = !state.soundEnabled; saveState(state); showToast(state.soundEnabled ? '🔊 音效已开' : '🔇 音效已关', 'success'); playSound('ding');">🔊 音效开关</button>
+        <button class="btn btn-secondary" style="font-size:11px;padding:3px 8px" onclick="state.alarmsEnabled = !state.alarmsEnabled; saveState(state); showToast(state.alarmsEnabled ? '⏰ 闹铃已开' : '🔕 闹铃已关', 'success');">⏰ 闹铃开关</button>
+        <button class="btn btn-secondary" style="font-size:11px;padding:3px 8px" onclick="testAlarm()">🔔 测试闹铃</button>
       </div>
 
       <div class="admin-grid">

@@ -38,6 +38,8 @@ async function init() {
   }, 800);
   // v18.20 A: 启动仓鼠周期性鼓励
   if (typeof _startPetIdleTalk === 'function') _startPetIdleTalk();
+  // v18.27: 启动闹铃 (打开 App 时检查 + 每 60s)
+  if (typeof _startAlarmChecker === 'function') _startAlarmChecker();
   // 订阅 Firestore 远端变化
   if (typeof subscribeFirestore === 'function' && isFbReady && isFbReady()) {
     subscribeFirestore(remoteData => {
@@ -1834,6 +1836,75 @@ function _getMultiplierLabel(playNum) {
   if (m === 0.25) return '1/4 奖 25%';
   return '0 奖 (仅练习)';
 }
+
+// ============ v18.27: in-app 闹铃 (周末为主) ============
+let _alarmTimer = null;
+const _DAY_KEY_BY_JS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function _startAlarmChecker() {
+  if (_alarmTimer) clearInterval(_alarmTimer);
+  _checkAlarms();  // 立即查一次 (打开 App 时)
+  _alarmTimer = setInterval(_checkAlarms, 60000);
+}
+
+function _checkAlarms() {
+  if (!state || state.alarmsEnabled === false) return;
+  if (!window.ALARM_SCHEDULE) return;
+  const now = new Date();
+  const today = now.toISOString().slice(0, 10);
+  const dayKey = _DAY_KEY_BY_JS[now.getDay()];
+  const list = window.ALARM_SCHEDULE[dayKey] || [];
+  // 重置当日已显示列表
+  if (!state.alarmShownToday || state.alarmShownToday.date !== today) {
+    state.alarmShownToday = { date: today, shown: [] };
+  }
+  const curHM = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  const curMin = now.getHours() * 60 + now.getMinutes();
+  for (const a of list) {
+    const [h, m] = a.time.split(':').map(Number);
+    const aMin = h * 60 + m;
+    // 触发条件: 当前时间 ≥ 闹铃时间 且 ≤ 闹铃 + 5min (容错), 且未显示过
+    if (curMin >= aMin && curMin <= aMin + 5) {
+      const key = `${dayKey}_${a.time}`;
+      if (!state.alarmShownToday.shown.includes(key)) {
+        state.alarmShownToday.shown.push(key);
+        saveState(state);
+        _showAlarmPopup(a, dayKey);
+        break;  // 一次只显示 1 个
+      }
+    }
+  }
+}
+
+function _showAlarmPopup(alarm, dayKey) {
+  const old = document.querySelector('.alarm-popup');
+  if (old) old.remove();
+  const popup = document.createElement('div');
+  popup.className = `alarm-popup alarm-${alarm.type}`;
+  popup.innerHTML = `
+    <div class="alarm-icon">${alarm.icon}</div>
+    <div class="alarm-content">
+      <div class="alarm-time">⏰ ${alarm.time} · ${dayKey === 'Sat' ? '周六' : dayKey === 'Sun' ? '周日' : ''}</div>
+      <div class="alarm-msg">${alarm.msg}</div>
+    </div>
+    <button class="alarm-close" onclick="this.parentElement.remove()">✕</button>
+  `;
+  document.body.appendChild(popup);
+  playSound('pop');
+  // 自动消失 (rest/sleep 久一点, start/back 短)
+  const dur = (alarm.type === 'rest' || alarm.type === 'sleep') ? 15000 : 10000;
+  setTimeout(() => {
+    popup.classList.add('alarm-fade');
+    setTimeout(() => popup.remove(), 400);
+  }, dur);
+}
+
+// 管理页用: 手动触发测试
+function testAlarm() {
+  _showAlarmPopup({ time: '14:00', type: 'back', icon: '🔔', msg: '回来! 数学 P6 paper 2 (限时 50min)' }, 'Sat');
+}
+
+window.testAlarm = testAlarm;
 
 // ============ v18.26: 知识树 modal ============
 function openKnowledgeTreeModal() {
