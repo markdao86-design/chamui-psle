@@ -497,20 +497,54 @@ const CHAMUI = {
     // 兼容旧引用 (避免引用未定义)
     const dragonBody = goldDragonBody + silverDragonBody;
 
+    // v18.61: 火箭 真骑乘 (火箭巨型在角色脚下 + 角色姿势浮起 + 喷射火焰)
     const rocket = has.rocket ? `
-      <g>
-        <g transform="translate(28, ${tpl.headCY - 30})">
-          <animateTransform attributeName="transform" type="translate"
-                           values="28,${tpl.headCY - 30};34,${tpl.headCY - 36};28,${tpl.headCY - 30}" dur="2s" repeatCount="indefinite"/>
-          <ellipse cx="0" cy="0" rx="5" ry="13" fill="#FF6B6B" stroke="#2D3047" stroke-width="2"/>
-          <polygon points="-5,-7 5,-7 0,-17" fill="#FFE66D" stroke="#2D3047" stroke-width="2"/>
-          <circle cx="0" cy="-2" r="2.8" fill="#4ECDC4" stroke="#2D3047" stroke-width="1.4"/>
-          <polygon points="-5,7 -8,15 -2,11" fill="#FF6B6B" stroke="#2D3047" stroke-width="1.5"/>
-          <polygon points="5,7 8,15 2,11" fill="#FF6B6B" stroke="#2D3047" stroke-width="1.5"/>
-          <ellipse cx="0" cy="17" rx="3.5" ry="7" fill="#FFE66D">
-            <animate attributeName="ry" values="7;4;7" dur="0.4s" repeatCount="indefinite"/>
+      <g class="rocket-ride">
+        <!-- 整体上下飘动 (起飞感) -->
+        <animateTransform attributeName="transform" type="translate"
+                         values="0,0; 0,-6; 0,0" dur="1.8s" repeatCount="indefinite"/>
+        <!-- 火箭主体 (在角色腿后/下方, 大尺寸) -->
+        <g transform="translate(110, ${tpl.legBottom + 18})">
+          <!-- 火焰喷射 (动画) -->
+          <ellipse cx="0" cy="32" rx="14" ry="22" fill="#FFA500" opacity="0.85">
+            <animate attributeName="ry" values="18;28;18" dur="0.3s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.6;0.95;0.6" dur="0.3s" repeatCount="indefinite"/>
           </ellipse>
+          <ellipse cx="0" cy="34" rx="9" ry="16" fill="#FFE66D" opacity="0.95">
+            <animate attributeName="ry" values="13;20;13" dur="0.3s" repeatCount="indefinite" begin="0.1s"/>
+          </ellipse>
+          <ellipse cx="0" cy="36" rx="5" ry="10" fill="#FFF" opacity="0.8">
+            <animate attributeName="ry" values="8;14;8" dur="0.3s" repeatCount="indefinite" begin="0.15s"/>
+          </ellipse>
+          <!-- 火箭主体 (圆柱) -->
+          <ellipse cx="0" cy="0" rx="22" ry="14" fill="#E8E8E8" stroke="#2D3047" stroke-width="2.5"/>
+          <!-- 红色顶环 -->
+          <ellipse cx="0" cy="-6" rx="22" ry="6" fill="#FF6B6B" stroke="#2D3047" stroke-width="2"/>
+          <!-- 翼 -->
+          <polygon points="-22,2 -32,14 -22,12" fill="#FF6B6B" stroke="#2D3047" stroke-width="2"/>
+          <polygon points="22,2 32,14 22,12" fill="#FF6B6B" stroke="#2D3047" stroke-width="2"/>
+          <!-- 窗户 -->
+          <circle cx="-10" cy="0" r="3" fill="#4ECDC4" stroke="#2D3047" stroke-width="1.5"/>
+          <circle cx="10" cy="0" r="3" fill="#4ECDC4" stroke="#2D3047" stroke-width="1.5"/>
+          <!-- 喷气口 -->
+          <ellipse cx="0" cy="14" rx="10" ry="3" fill="#2D3047"/>
         </g>
+        <!-- 速度线 (左右两侧拉伸) -->
+        <line x1="-5" y1="${tpl.legBottom - 30}" x2="-25" y2="${tpl.legBottom - 35}" stroke="#FFE66D" stroke-width="2" opacity="0.7" stroke-linecap="round">
+          <animate attributeName="opacity" values="0;0.9;0" dur="0.6s" repeatCount="indefinite"/>
+        </line>
+        <line x1="225" y1="${tpl.legBottom - 30}" x2="245" y2="${tpl.legBottom - 35}" stroke="#FFE66D" stroke-width="2" opacity="0.7" stroke-linecap="round">
+          <animate attributeName="opacity" values="0;0.9;0" dur="0.6s" repeatCount="indefinite" begin="0.3s"/>
+        </line>
+        <!-- 烟雾尾 -->
+        <circle cx="60" cy="${tpl.legBottom + 50}" r="6" fill="#fff" opacity="0.6">
+          <animate attributeName="opacity" values="0.6;0;0.6" dur="1.5s" repeatCount="indefinite"/>
+          <animate attributeName="cx" values="60;30;60" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="160" cy="${tpl.legBottom + 50}" r="6" fill="#fff" opacity="0.6">
+          <animate attributeName="opacity" values="0.6;0;0.6" dur="1.7s" repeatCount="indefinite" begin="0.5s"/>
+          <animate attributeName="cx" values="160;190;160" dur="1.7s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
       </g>
     ` : '';
 
@@ -1039,39 +1073,113 @@ const CHAMUI = {
     ` : '';
 
     // === 腰带物品 (z=5) ===
-    const apple = has.apple ? `
+    // v18.61: 苹果 真握在右手 (举起咬一口的姿势, 苹果上方有缺口)
+    const apple = (has.apple && !has.sword && !has.magic && !has.mic) ? `
+      <g>
+        <g transform="translate(${A.handR[0]+4}, ${A.handR[1]-12})">
+          <animateTransform attributeName="transform" type="translate"
+                           values="${A.handR[0]+4},${A.handR[1]-12}; ${A.handR[0]+4},${A.handR[1]-14}; ${A.handR[0]+4},${A.handR[1]-12}" dur="3s" repeatCount="indefinite"/>
+          <!-- 苹果本体 -->
+          <circle cx="0" cy="0" r="8" fill="#FF6B6B" stroke="#2D3047" stroke-width="2"/>
+          <!-- 咬过的缺口 (右上) -->
+          <path d="M 4 -6 Q 8 -4 6 0 Q 5 -2 3 -3 Z" fill="#FFFAEC" stroke="#2D3047" stroke-width="1"/>
+          <!-- 叶子 -->
+          <path d="M 0 -8 L -2 -12 L 3 -13 Z" fill="#6BCB77" stroke="#2D3047" stroke-width="1"/>
+          <line x1="0" y1="-8" x2="0" y2="-6" stroke="#2D3047" stroke-width="1"/>
+          <!-- 高光 -->
+          <ellipse cx="-3" cy="-2" rx="2" ry="1.5" fill="white" opacity="0.6"/>
+        </g>
+        ${gripR}
+      </g>
+    ` : has.apple ? `
+      <!-- 已被武器占用右手, 退化为腰带挂饰 -->
       <g transform="translate(${A.waistL[0]+4}, ${A.waistL[1]+4})">
-        <circle cx="0" cy="2" r="6" fill="#FF6B6B" stroke="#2D3047" stroke-width="2"/>
-        <path d="M 0 -4 L -1.5 -7 L 1.5 -8 Z" fill="#6BCB77" stroke="#2D3047" stroke-width="1"/>
-        <line x1="0" y1="-4" x2="0" y2="-2" stroke="#2D3047" stroke-width="1"/>
-        <ellipse cx="-2" cy="0" rx="1.5" ry="1" fill="white" opacity="0.5"/>
+        <circle cx="0" cy="2" r="5" fill="#FF6B6B" stroke="#2D3047" stroke-width="1.5"/>
+        <path d="M 0 -3 L -1 -6 L 1.5 -6.5 Z" fill="#6BCB77"/>
       </g>
     ` : '';
 
-    const cup = has.cup ? `
+    // v18.61: 水杯 真握在右手 (低举姿势, 杯口冒热气)
+    const cupHeld = (has.cup && !has.sword && !has.magic && !has.mic && !has.apple) ? `
+      <g>
+        <g transform="translate(${A.handR[0]+2}, ${A.handR[1]-10})">
+          <!-- 杯体 -->
+          <rect x="-6" y="-9" width="12" height="14" fill="#4ECDC4" stroke="#2D3047" stroke-width="2" rx="2"/>
+          <!-- 杯口 -->
+          <ellipse cx="0" cy="-9" rx="6" ry="2" fill="#fff" stroke="#2D3047" stroke-width="1.5"/>
+          <!-- 把手 -->
+          <path d="M 6 -5 Q 11 -2 6 3" fill="none" stroke="#2D3047" stroke-width="2" stroke-linecap="round"/>
+          <!-- 热气 -->
+          <path d="M -3 -11 Q -2 -16 -4 -19" fill="none" stroke="#999" stroke-width="1.5" opacity="0.6">
+            <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1.5s" repeatCount="indefinite"/>
+          </path>
+          <path d="M 0 -11 Q 2 -16 -1 -20" fill="none" stroke="#999" stroke-width="1.5" opacity="0.6">
+            <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+          </path>
+          <path d="M 3 -11 Q 4 -16 2 -20" fill="none" stroke="#999" stroke-width="1.5" opacity="0.5">
+            <animate attributeName="opacity" values="0.3;0.7;0.3" dur="1.7s" repeatCount="indefinite" begin="0.8s"/>
+          </path>
+        </g>
+        ${gripR}
+      </g>
+    ` : '';
+    const cup = has.cup ? (cupHeld || `
+      <!-- 退化为腰带挂饰 -->
       <g transform="translate(${A.waistR[0]-2}, ${A.waistR[1]+2})">
-        <rect x="-5" y="-7" width="10" height="13" fill="#4ECDC4" stroke="#2D3047" stroke-width="2" rx="2"/>
-        <ellipse cx="0" cy="-7" rx="5" ry="1.5" fill="#fff" stroke="#2D3047" stroke-width="1.5"/>
-        <line x1="-5" y1="-3" x2="-7" y2="-3" stroke="#2D3047" stroke-width="1.5"/>
-        <path d="M -7 -3 Q -8 0 -7 3" fill="none" stroke="#2D3047" stroke-width="1.5"/>
+        <rect x="-4" y="-6" width="8" height="11" fill="#4ECDC4" stroke="#2D3047" stroke-width="1.5" rx="1.5"/>
+        <ellipse cx="0" cy="-6" rx="4" ry="1.2" fill="#fff" stroke="#2D3047" stroke-width="1"/>
       </g>
-    ` : '';
+    `) : '';
 
+    // v18.61: 饼干 嘴边咬一口 (脸侧)
     const cookie = has.cookie ? `
-      <g transform="translate(${A.waistC[0]}, ${A.waistC[1]+8})">
-        <circle cx="0" cy="0" r="5" fill="#D4A574" stroke="#2D3047" stroke-width="2"/>
-        <circle cx="-2" cy="-1" r="0.8" fill="#5D3A1A"/>
-        <circle cx="2" cy="0" r="0.8" fill="#5D3A1A"/>
-        <circle cx="0" cy="2" r="0.8" fill="#5D3A1A"/>
+      <g transform="translate(${A.handL[0]+10}, ${A.handL[1]-30})">
+        <animateTransform attributeName="transform" type="translate"
+                         values="${A.handL[0]+10},${A.handL[1]-30}; ${A.handL[0]+12},${A.handL[1]-32}; ${A.handL[0]+10},${A.handL[1]-30}" dur="2.5s" repeatCount="indefinite"/>
+        <circle cx="0" cy="0" r="6" fill="#D4A574" stroke="#2D3047" stroke-width="2"/>
+        <!-- 咬痕 -->
+        <path d="M -2 -5 Q 0 -3 -1 -1 Q -3 -3 -4 -5 Z" fill="#FFFAEC" stroke="#2D3047" stroke-width="1"/>
+        <!-- 巧克力豆 -->
+        <circle cx="2" cy="-1" r="1" fill="#5D3A1A"/>
+        <circle cx="-2" cy="2" r="1" fill="#5D3A1A"/>
+        <circle cx="3" cy="3" r="0.8" fill="#5D3A1A"/>
       </g>
     ` : '';
 
+    // v18.61: 蛋糕 双手捧 (生日庆祝姿态, 在胸前)
     const cake = has.cake ? `
-      <g transform="translate(${A.waistL[0]-4}, ${A.waistL[1]+4})">
-        <path d="M -7 4 L 7 4 L 5 -2 L -5 -2 Z" fill="#FFE066" stroke="#2D3047" stroke-width="1.5"/>
-        <rect x="-5" y="-7" width="10" height="5" fill="#FFB6D9" stroke="#2D3047" stroke-width="1.5"/>
-        <circle cx="0" cy="-9" r="2" fill="#FF6B6B" stroke="#2D3047" stroke-width="1"/>
-        <line x1="0" y1="-11" x2="0" y2="-13" stroke="#FFE66D" stroke-width="1"/>
+      <g>
+        <!-- 蛋糕在胸前正中, 双手托底 -->
+        <g transform="translate(${A.chest[0]}, ${A.chest[1]+5})">
+          <!-- 微微浮动 (生日感) -->
+          <animateTransform attributeName="transform" type="translate"
+                           values="${A.chest[0]},${A.chest[1]+5}; ${A.chest[0]},${A.chest[1]+3}; ${A.chest[0]},${A.chest[1]+5}" dur="2s" repeatCount="indefinite"/>
+          <!-- 蛋糕底层 (大盘子) -->
+          <ellipse cx="0" cy="13" rx="20" ry="4" fill="#FFFAEC" stroke="#2D3047" stroke-width="2"/>
+          <!-- 蛋糕中层 -->
+          <rect x="-15" y="3" width="30" height="11" fill="#FFE066" stroke="#2D3047" stroke-width="2" rx="1"/>
+          <!-- 奶油波纹 -->
+          <path d="M -15 6 Q -10 3 -5 6 Q 0 3 5 6 Q 10 3 15 6 L 15 9 L -15 9 Z" fill="#FFFAEC" opacity="0.7"/>
+          <!-- 蛋糕上层 -->
+          <rect x="-10" y="-5" width="20" height="9" fill="#FFB6D9" stroke="#2D3047" stroke-width="2" rx="1"/>
+          <!-- 樱桃 -->
+          <circle cx="0" cy="-7" r="3" fill="#FF6B6B" stroke="#2D3047" stroke-width="1.5"/>
+          <line x1="0" y1="-9" x2="-1" y2="-12" stroke="#5D3A1A" stroke-width="1"/>
+          <!-- 蜡烛 + 火苗 -->
+          <rect x="-1" y="-15" width="2" height="6" fill="#fff" stroke="#2D3047" stroke-width="1"/>
+          <ellipse cx="0" cy="-17" rx="1.5" ry="2.5" fill="#FFA500">
+            <animate attributeName="ry" values="2.5;3.5;2.5" dur="0.5s" repeatCount="indefinite"/>
+          </ellipse>
+          <ellipse cx="0" cy="-17" rx="0.8" ry="1.5" fill="#FFE66D"/>
+          <!-- 装饰糖珠 -->
+          <circle cx="-7" cy="-2" r="1" fill="#4ECDC4"/>
+          <circle cx="7" cy="-2" r="1" fill="#A788E0"/>
+          <circle cx="-12" cy="7" r="1" fill="#FF6B6B"/>
+          <circle cx="12" cy="7" r="1" fill="#6BCB77"/>
+        </g>
+        <!-- 双手托住盘底 (左右各一个手势圆圈) -->
+        <ellipse cx="${A.handL[0]+5}" cy="${A.handL[1]-5}" rx="6" ry="4" fill="${skinColor}" stroke="#2D3047" stroke-width="1.5"/>
+        <ellipse cx="${A.handR[0]-5}" cy="${A.handR[1]-5}" rx="6" ry="4" fill="${skinColor}" stroke="#2D3047" stroke-width="1.5"/>
       </g>
     ` : '';
 
@@ -1131,20 +1239,75 @@ const CHAMUI = {
       </g>
     ` : '';
 
+    // v18.61: 独角兽 真骑乘 (在角色脚下大尺寸 + 角色坐在背上)
     const unicorn = has.unicorn ? `
-      <g transform="translate(20, ${tpl.legBottom-22})">
-        <ellipse cx="0" cy="20" rx="18" ry="3" fill="#2D3047" opacity="0.2"/>
-        <ellipse cx="0" cy="6" rx="14" ry="10" fill="white" stroke="#2D3047" stroke-width="2"/>
-        <ellipse cx="-12" cy="-2" rx="8" ry="9" fill="white" stroke="#2D3047" stroke-width="2"/>
-        <polygon points="-15,-12 -10,-12 -12,-22" fill="#FFE66D" stroke="#2D3047" stroke-width="1.5"/>
-        <ellipse cx="-15" cy="-7" rx="2" ry="3" fill="white" stroke="#2D3047" stroke-width="1"/>
-        <ellipse cx="-9" cy="-7" rx="2" ry="3" fill="white" stroke="#2D3047" stroke-width="1"/>
-        <ellipse cx="-12" cy="-3" rx="1.2" ry="1.5" fill="#2D3047"/>
-        <path d="M -15 1 Q -12 4 -9 1" stroke="#FF6B6B" stroke-width="1.5" fill="none"/>
-        <rect x="-2" y="14" width="3" height="8" fill="white" stroke="#2D3047" stroke-width="1"/>
-        <rect x="6" y="14" width="3" height="8" fill="white" stroke="#2D3047" stroke-width="1"/>
-        <path d="M 14 4 Q 22 0 24 -8" stroke="#FFB6D9" stroke-width="3" fill="none"/>
-        <path d="M -18 -10 Q -22 -16 -16 -20" stroke="#FFB6D9" stroke-width="3" fill="none"/>
+      <g class="unicorn-ride">
+        <!-- 整体上下颠簸 (奔跑感) -->
+        <animateTransform attributeName="transform" type="translate"
+                         values="0,0; 0,-3; 0,0" dur="0.6s" repeatCount="indefinite"/>
+        <!-- 独角兽身体 (大型, 横跨角色脚下) -->
+        <g transform="translate(110, ${tpl.legBottom + 5})">
+          <!-- 影子 -->
+          <ellipse cx="0" cy="36" rx="60" ry="6" fill="#2D3047" opacity="0.2"/>
+          <!-- 后腿 (奔跑姿势) -->
+          <rect x="32" y="14" width="6" height="22" fill="white" stroke="#2D3047" stroke-width="2" rx="2">
+            <animateTransform attributeName="transform" type="rotate" values="-10 35 14;10 35 14;-10 35 14" dur="0.6s" repeatCount="indefinite"/>
+          </rect>
+          <rect x="20" y="16" width="6" height="20" fill="white" stroke="#2D3047" stroke-width="2" rx="2">
+            <animateTransform attributeName="transform" type="rotate" values="10 23 16;-10 23 16;10 23 16" dur="0.6s" repeatCount="indefinite"/>
+          </rect>
+          <!-- 前腿 (奔跑姿势) -->
+          <rect x="-26" y="14" width="6" height="22" fill="white" stroke="#2D3047" stroke-width="2" rx="2">
+            <animateTransform attributeName="transform" type="rotate" values="10 -23 14;-10 -23 14;10 -23 14" dur="0.6s" repeatCount="indefinite"/>
+          </rect>
+          <rect x="-38" y="16" width="6" height="20" fill="white" stroke="#2D3047" stroke-width="2" rx="2">
+            <animateTransform attributeName="transform" type="rotate" values="-10 -35 16;10 -35 16;-10 -35 16" dur="0.6s" repeatCount="indefinite"/>
+          </rect>
+          <!-- 身体主干 -->
+          <ellipse cx="0" cy="14" rx="48" ry="18" fill="white" stroke="#2D3047" stroke-width="2.5"/>
+          <!-- 鬃毛 (彩虹色, 动画飘动) -->
+          <path d="M -30 0 Q -32 -8 -28 -14 Q -22 -10 -20 -2" fill="#FFB6D9" stroke="#2D3047" stroke-width="1.5">
+            <animateTransform attributeName="transform" type="rotate" values="-3 -25 -2;3 -25 -2;-3 -25 -2" dur="1.2s" repeatCount="indefinite"/>
+          </path>
+          <path d="M -38 -2 Q -42 -10 -36 -16 Q -30 -12 -28 -4" fill="#A788E0" stroke="#2D3047" stroke-width="1.5"/>
+          <!-- 头部 (左侧) -->
+          <ellipse cx="-46" cy="0" rx="11" ry="13" fill="white" stroke="#2D3047" stroke-width="2"/>
+          <!-- 独角 (彩虹螺纹) -->
+          <polygon points="-50,-12 -42,-12 -46,-30" fill="#FFE66D" stroke="#2D3047" stroke-width="2"/>
+          <line x1="-49" y1="-16" x2="-43" y2="-16" stroke="#FF6B6B" stroke-width="1.2"/>
+          <line x1="-48" y1="-21" x2="-44" y2="-21" stroke="#A788E0" stroke-width="1.2"/>
+          <!-- 耳朵 -->
+          <ellipse cx="-49" cy="-8" rx="2.5" ry="4" fill="white" stroke="#2D3047" stroke-width="1.5"/>
+          <ellipse cx="-43" cy="-8" rx="2.5" ry="4" fill="white" stroke="#2D3047" stroke-width="1.5"/>
+          <!-- 眼睛 -->
+          <ellipse cx="-46" cy="-1" rx="1.5" ry="2" fill="#2D3047"/>
+          <circle cx="-46" cy="-2" r="0.8" fill="white"/>
+          <!-- 嘴 -->
+          <path d="M -50 4 Q -46 7 -42 4" stroke="#FF6B6B" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <!-- 尾巴 (彩虹色, 飘动) -->
+          <path d="M 48 6 Q 60 0 62 -10" stroke="#FFB6D9" stroke-width="4" fill="none" stroke-linecap="round">
+            <animateTransform attributeName="transform" type="rotate" values="-5 50 6;5 50 6;-5 50 6" dur="0.8s" repeatCount="indefinite"/>
+          </path>
+          <path d="M 50 8 Q 64 4 66 -8" stroke="#A788E0" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <!-- 鞍 (角色坐在上面) -->
+          <ellipse cx="0" cy="-2" rx="22" ry="6" fill="#A788E0" stroke="#2D3047" stroke-width="2"/>
+          <!-- 缰绳 -->
+          <path d="M -35 -4 Q -25 -8 -10 -6" stroke="#FF6B6B" stroke-width="1.5" fill="none"/>
+        </g>
+        <!-- 速度线 (后方残影) -->
+        <line x1="180" y1="${tpl.legBottom + 10}" x2="210" y2="${tpl.legBottom + 8}" stroke="#FFE66D" stroke-width="2" opacity="0.6" stroke-linecap="round">
+          <animate attributeName="opacity" values="0.2;0.8;0.2" dur="0.5s" repeatCount="indefinite"/>
+        </line>
+        <line x1="180" y1="${tpl.legBottom + 18}" x2="215" y2="${tpl.legBottom + 16}" stroke="#FFB6D9" stroke-width="2" opacity="0.6" stroke-linecap="round">
+          <animate attributeName="opacity" values="0.2;0.8;0.2" dur="0.5s" repeatCount="indefinite" begin="0.2s"/>
+        </line>
+        <!-- 闪粉星星 -->
+        <text x="60" y="${tpl.legBottom - 5}" font-size="10" fill="#FFD700">✨
+          <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite"/>
+        </text>
+        <text x="170" y="${tpl.legBottom + 20}" font-size="8" fill="#FFB6D9">✨
+          <animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite" begin="0.5s"/>
+        </text>
       </g>
     ` : '';
 
