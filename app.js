@@ -584,12 +584,12 @@ function renderMasterTipCard() {
     el.innerHTML = '';
     return;
   }
-  // v18.12: header 用学科色作为深底, 文字白
-  const subjColor = tip.dailySubjectColor || '#A788E0';
+  // v18.15: 学科色作 header 左条 + subject 文字下划线 (淡化)
+  const subjColor = tip.dailySubjectColor || 'var(--color-primary)';
   el.style.borderLeftColor = subjColor;
   el.innerHTML = `
-    <div class="master-tip-header" style="background:${subjColor}">🌟 今日名师秘诀 · ${tip.dailySubject}</div>
-    <div class="master-tip-subject" style="background:${subjColor}">${escapeHtml(tip.subject)}</div>
+    <div class="master-tip-header" style="border-left-color:${subjColor}"><span style="color:${subjColor}">🌟</span> 今日名师秘诀 · ${tip.dailySubject}</div>
+    <div class="master-tip-subject" style="color:${subjColor}">${escapeHtml(tip.subject)}</div>
     <div class="master-tip-title">${escapeHtml(tip.title)}</div>
     <div class="master-tip-content">${escapeHtml(tip.content)}</div>
   `;

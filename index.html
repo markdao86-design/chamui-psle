@@ -257,27 +257,32 @@ body::before {
   flex-direction: column;
   overflow: hidden;
 }
+/* v18.15: 头是淡灰底, 学科色仅作左侧 3px 条 + 图标色;subject 是简洁小标签 */
 .master-tip-header {
   font-family: 'ZCOOL KuaiLe', cursive;
-  font-size: 19px;
-  color: white;
-  background: var(--color-primary);
+  font-size: 17px;
+  color: var(--color-text);
+  background: var(--color-card-soft);
   margin: 0;
-  padding: 10px 14px;
-  border-bottom: none;
+  padding: 10px 14px 10px 14px;
+  border-bottom: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
   font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .master-tip-subject {
-  font-size: 12px;
-  color: white;
+  font-size: 11px;
   font-weight: 700;
-  margin: 0 14px;
-  margin-top: 10px;
+  margin: 10px 14px 0;
   display: inline-block;
-  padding: 3px 10px;
-  border-radius: 10px;
-  background: var(--color-primary);
-  letter-spacing: 0.5px;
+  padding: 2px 0;
+  background: transparent !important;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-bottom: 2px solid currentColor;
+  color: var(--color-text-light);
 }
 .master-tip-title {
   font-family: 'ZCOOL KuaiLe', cursive;
