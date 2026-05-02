@@ -1501,21 +1501,27 @@ function closeVocabModal() {
 let _vocabGameState = null;
 
 function openVocabGame(weekN) {
-  const v = window.getVocabForWeek ? window.getVocabForWeek(weekN) : null;
-  if (!v) {
-    showToast('本周没有学科词汇游戏可玩', 'sad');
-    return;
+  // v18.25: 按当前难度采样 (含 sentence 卡 if diff>=4)
+  const diff = window.getDifficulty ? window.getDifficulty(state, 'vocab') : 1;
+  let pairs;
+  if (window.getVocabPairsByDiff) {
+    pairs = window.getVocabPairsByDiff(diff, weekN, 6);
   }
-  // 从 section 中随机取 6 个有翻译的词
-  const allWords = (v.section.words || []).filter(w => window.VOCAB_MEANINGS && window.VOCAB_MEANINGS[w]);
-  if (allWords.length < 6) {
-    showToast(`本周词汇翻译数据不足(只有 ${allWords.length} 个), 暂不能玩`, 'sad');
-    return;
+  if (!pairs || pairs.length < 6) {
+    // fallback to old logic
+    const v = window.getVocabForWeek ? window.getVocabForWeek(weekN) : null;
+    if (!v) {
+      showToast('本周没有学科词汇游戏可玩', 'sad');
+      return;
+    }
+    const allWords = (v.section.words || []).filter(w => window.VOCAB_MEANINGS && window.VOCAB_MEANINGS[w]);
+    if (allWords.length < 6) {
+      showToast(`本周词汇翻译数据不足(只有 ${allWords.length} 个), 暂不能玩`, 'sad');
+      return;
+    }
+    pairs = allWords.sort(() => Math.random() - 0.5).slice(0, 6).map(w => ({ en: w, zh: window.getVocabMeaning(w), kind: 'word' }));
   }
-  // 洗牌选 6 个
-  const shuffled = [...allWords].sort(() => Math.random() - 0.5).slice(0, 6);
-  const pairs = shuffled.map(w => ({ en: w, zh: window.getVocabMeaning(w) }));
-  // 中文列另独立洗牌
+  // 中文列独立洗牌
   const zhShuffled = [...pairs].sort(() => Math.random() - 0.5);
   _vocabGameState = {
     pairs, zhShuffled,
@@ -1523,7 +1529,7 @@ function openVocabGame(weekN) {
     matched: new Set(),
     wrong: 0,
     startedAt: Date.now(),
-    weekN
+    weekN, diff
   };
   _renderVocabGame();
 }
@@ -1548,7 +1554,8 @@ function _renderVocabGame() {
           ${g.pairs.map((p, i) => {
             const isSelected = g.selectedEn === i;
             const isMatched = g.matched.has(p.en);
-            return `<button class="vg-tile vg-en ${isSelected ? 'selected' : ''} ${isMatched ? 'matched' : ''}"
+            const sentClass = p.kind === 'sent' ? 'vg-sent' : '';
+            return `<button class="vg-tile vg-en ${sentClass} ${isSelected ? 'selected' : ''} ${isMatched ? 'matched' : ''}"
               onclick="vocabGameClickEn(${i})" ${isMatched ? 'disabled' : ''}>${escapeHtml(p.en)}</button>`;
           }).join('')}
         </div>
@@ -1556,7 +1563,8 @@ function _renderVocabGame() {
           ${g.zhShuffled.map((p, i) => {
             const isSelected = g.selectedZh === i;
             const isMatched = g.matched.has(p.en);
-            return `<button class="vg-tile vg-zh ${isSelected ? 'selected' : ''} ${isMatched ? 'matched' : ''}"
+            const sentClass = p.kind === 'sent' ? 'vg-sent' : '';
+            return `<button class="vg-tile vg-zh ${sentClass} ${isSelected ? 'selected' : ''} ${isMatched ? 'matched' : ''}"
               onclick="vocabGameClickZh(${i})" ${isMatched ? 'disabled' : ''}>${escapeHtml(p.zh)}</button>`;
           }).join('')}
         </div>
@@ -1593,6 +1601,10 @@ function _checkVocabPair() {
     g.selectedEn = null;
     g.selectedZh = null;
     if (g.matched.size >= g.pairs.length) {
+      // v18.25: 记录难度 (vocab 完成度按 错误数 折算: 0 错 = 100%, 每错 1 个扣 1/total)
+      const acc = Math.max(0, 1 - g.wrong / g.pairs.length);
+      let diffResult = null;
+      if (window.recordGameRun) diffResult = window.recordGameRun(state, 'vocab', Math.round(acc * g.pairs.length), g.pairs.length);
       // v18.24: 递减奖励
       const playNum = _bumpDailyGameCount('vocab');
       const mult = _getGameMultiplier(playNum);
@@ -1614,6 +1626,8 @@ function _checkVocabPair() {
         playSound('tada');
       }
       if (playNum >= 2) showToast(`🎮 第 ${playNum} 次 — ${_getMultiplierLabel(playNum)} (+${points} 分)`, 'warn');
+      if (diffResult && diffResult.levelChanged === 'up') { showToast(`🆙 词汇难度升到 Lv ${diffResult.newDiff}!`, 'happy'); playSound('tada'); }
+      if (diffResult && diffResult.levelChanged === 'down') showToast(`📉 词汇难度降到 Lv ${diffResult.newDiff}`, 'sad');
       _checkAndUnlockAch();
       setTimeout(() => renderAll(), 300);
     }
@@ -2080,11 +2094,13 @@ function closeFutureSelf() {
 function openMiniGameHub() {
   const modal = document.getElementById('miniGameHubModal');
   if (!modal) return;
-  // v18.24: 显示今日各游戏次数 + 下次奖励倍率
+  // v18.24+25: 显示今日次数 + 下次倍率 + 当前难度星级
+  const stars = (d) => '★'.repeat(d) + '☆'.repeat(5 - d);
   const status = (k) => {
     const c = _getDailyGameCount(k);
     const next = c + 1;
-    return `<div class="mgh-status">今日已 ${c} 次 · 下次 ${_getMultiplierLabel(next)}</div>`;
+    const d = window.getDifficulty ? window.getDifficulty(state, k) : 1;
+    return `<div class="mgh-status">难度 <b>${stars(d)}</b> · 今日已 ${c} 次 · 下次 ${_getMultiplierLabel(next)}</div>`;
   };
   modal.innerHTML = `
     <div class="mgh-inner">
@@ -2119,9 +2135,11 @@ function closeMiniGameHub() {
 let _mathGameState = null;
 let _mathTimer = null;
 function openMathGame() {
-  // v18.3: 按今日轮换 (同一天稳定 10 题, 跨天换)
-  const qs = window.getDailyMathQuestions ? window.getDailyMathQuestions(10) : [...window.MATH_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10);
-  _mathGameState = { qs, idx: 0, correct: 0, wrong: 0, startedAt: Date.now(), timeLeft: 30 };
+  // v18.25: 按当前难度采样
+  const diff = window.getDifficulty ? window.getDifficulty(state, 'math') : 1;
+  const qs = window.getMathQuestionsByDiff ? window.getMathQuestionsByDiff(diff, 10)
+           : (window.getDailyMathQuestions ? window.getDailyMathQuestions(10) : [...window.MATH_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10));
+  _mathGameState = { qs, idx: 0, correct: 0, wrong: 0, startedAt: Date.now(), timeLeft: 30, diff };
   _renderMathGame();
   // v18.11: 计时器只更新 stats 文字, 不重渲染 input (避免 iPad 键盘跳)
   if (_mathTimer) clearInterval(_mathTimer);
@@ -2193,6 +2211,9 @@ function submitMathAnswer() {
 function _finishMathGame() {
   const g = _mathGameState;
   if (!g) return;
+  // v18.25: 记录运行 + 难度升降
+  let diffResult = null;
+  if (window.recordGameRun) diffResult = window.recordGameRun(state, 'math', g.correct, g.qs.length);
   // v18.24: 递减奖励
   const playNum = _bumpDailyGameCount('math');
   const mult = _getGameMultiplier(playNum);
@@ -2217,6 +2238,9 @@ function _finishMathGame() {
     </div>
   `;
   if (g.correct >= 10 && mult > 0) { spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40); playSound('tada'); }
+  // v18.25: 难度变化提示
+  if (diffResult && diffResult.levelChanged === 'up') { showToast(`🆙 数学难度升到 Lv ${diffResult.newDiff}!`, 'happy'); playSound('tada'); }
+  if (diffResult && diffResult.levelChanged === 'down') showToast(`📉 数学难度降到 Lv ${diffResult.newDiff}, 继续努力`, 'sad');
   _mathGameState = null;
 }
 function closeMathGame() {
@@ -2229,9 +2253,11 @@ function closeMathGame() {
 // Editing 找错
 let _editingGameState = null;
 function openEditingGame() {
-  // v18.3: 按今日轮换
-  const para = window.getDailyEditingParagraph ? window.getDailyEditingParagraph() : window.EDITING_PARAGRAPHS[0];
-  _editingGameState = { para, found: new Set(), wrong: 0, startedAt: Date.now() };
+  // v18.25: 按当前难度采样
+  const diff = window.getDifficulty ? window.getDifficulty(state, 'editing') : 1;
+  const para = window.getEditingByDiff ? window.getEditingByDiff(diff)
+             : (window.getDailyEditingParagraph ? window.getDailyEditingParagraph() : window.EDITING_PARAGRAPHS[0]);
+  _editingGameState = { para, found: new Set(), wrong: 0, startedAt: Date.now(), diff };
   _renderEditingGame();
 }
 function _renderEditingGame() {
@@ -2270,6 +2296,9 @@ function clickEditingWord(word) {
     g.found.add(word);
     playSound('ding');
     if (g.found.size >= 5) {
+      // v18.25: 记录难度
+      let diffResult = null;
+      if (window.recordGameRun) diffResult = window.recordGameRun(state, 'editing', 5, 5);
       // 全对 v18.24 递减
       const playNum = _bumpDailyGameCount('editing');
       const mult = _getGameMultiplier(playNum);
@@ -2285,6 +2314,8 @@ function clickEditingWord(word) {
         playSound('tada');
       }
       if (playNum >= 2) showToast(`🎮 第 ${playNum} 次 — ${_getMultiplierLabel(playNum)} (+${points} 分)`, 'warn');
+      if (diffResult && diffResult.levelChanged === 'up') { showToast(`🆙 Editing 难度升到 Lv ${diffResult.newDiff}!`, 'happy'); playSound('tada'); }
+      if (diffResult && diffResult.levelChanged === 'down') showToast(`📉 Editing 难度降到 Lv ${diffResult.newDiff}`, 'sad');
     }
   } else {
     g.wrong++;
@@ -2301,9 +2332,12 @@ function closeEditingGame() {
 // 听写
 let _listenGameState = null;
 function openListenGame() {
-  // v18.3: 按今日轮换
-  const item = window.getDailyListenDictation ? window.getDailyListenDictation() : window.LISTEN_DICTATIONS[0];
-  _listenGameState = { item, answers: ['', '', '', '', ''], played: false };
+  // v18.25: 按当前难度采样
+  const diff = window.getDifficulty ? window.getDifficulty(state, 'listen') : 1;
+  const item = window.getListenByDiff ? window.getListenByDiff(diff)
+             : (window.getDailyListenDictation ? window.getDailyListenDictation() : window.LISTEN_DICTATIONS[0]);
+  const numBlanks = (item.blanks || []).length;
+  _listenGameState = { item, answers: new Array(numBlanks).fill(''), played: false, diff };
   _renderListenGame();
 }
 function _renderListenGame() {
@@ -2357,6 +2391,9 @@ function submitListenAnswers() {
     const got = (g.answers[i] || '').toLowerCase().trim();
     if (expected === got) correct++;
   }
+  // v18.25: 记录难度
+  let diffResult = null;
+  if (window.recordGameRun) diffResult = window.recordGameRun(state, 'listen', correct, g.item.blanks.length);
   // v18.24: 递减奖励
   const playNum = _bumpDailyGameCount('listen');
   const mult = _getGameMultiplier(playNum);
@@ -2382,6 +2419,8 @@ function submitListenAnswers() {
     </div>
   `;
   if (correct >= 5 && mult > 0) { spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40); playSound('tada'); }
+  if (diffResult && diffResult.levelChanged === 'up') { showToast(`🆙 听写难度升到 Lv ${diffResult.newDiff}!`, 'happy'); playSound('tada'); }
+  if (diffResult && diffResult.levelChanged === 'down') showToast(`📉 听写难度降到 Lv ${diffResult.newDiff}`, 'sad');
   _listenGameState = null;
 }
 function closeListenGame() {

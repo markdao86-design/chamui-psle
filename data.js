@@ -1121,6 +1121,167 @@ const LISTEN_DICTATIONS = [
     blanks: ['Reading','words','improve','vocabulary','imagination'], voice:'en-GB' }
 ];
 
+// ============= v18.25: 难度标签 (auto-tag existing + 加 hard 题库) =============
+// MATH: 按 q 长度+关键词启发式分级
+MATH_QUESTIONS.forEach(q => {
+  if (q.diff !== undefined) return;
+  const t = q.q.toLowerCase();
+  const len = q.q.length;
+  // 关键词路由
+  if (/sqrt|²|³|根号|平方|立方/.test(t)) q.diff = 5;
+  else if (/gst|tax|profit|discount.*%|compound|ratio.*ratio/.test(t)) q.diff = 4;
+  else if (/speed|km\/h|km in|average|\bratio\b|km in.*h/.test(t)) q.diff = 3;
+  else if (/%|of \d|\?\/\d/.test(t)) q.diff = 2;  // 百分比/分数
+  else if (len < 10) q.diff = 1;  // 短题如 3+4
+  else q.diff = 2;
+});
+// 新加 diff 4-5 高难题 (PSLE+ / 超 PSLE)
+MATH_QUESTIONS.push(
+  { q: 'sqrt(144) + 13² = ?', ans: 181, diff: 5 },
+  { q: 'sqrt(225) - 7²', ans: -34, diff: 5 },
+  { q: '24 × 25 - 15 × 16', ans: 360, diff: 4 },
+  { q: '15% of 240 + 30% of 80', ans: 60, diff: 4 },
+  { q: 'A:B = 2:3, B:C = 4:5, A:C = ?:?', ans: 815, diff: 5 },  // 8:15 → encode
+  { q: 'GST 9%: $250 final price', ans: 273, diff: 4 }, // round 272.5 → 273
+  { q: '5/8 + 3/4 = ?/8', ans: 11, diff: 4 },
+  { q: '3 mins 45s in seconds', ans: 225, diff: 3 },
+  { q: '288 ÷ 12 + 48 ÷ 6', ans: 32, diff: 4 },
+  { q: 'Average of 78, 82, 95, 67, 88', ans: 82, diff: 4 },
+  { q: '20% discount on $85, pay?', ans: 68, diff: 3 },
+  { q: '(15² - 12²) ÷ 9', ans: 9, diff: 5 },
+  { q: 'Perimeter of 8×5 rect', ans: 26, diff: 2 },
+  { q: 'Area of triangle base 12 height 8', ans: 48, diff: 3 },
+  { q: '2 + 3 × 4', ans: 14, diff: 1 }
+);
+
+EDITING_PARAGRAPHS.forEach(p => {
+  if (p.diff !== undefined) return;
+  const len = (p.text || '').length;
+  if (len < 90) p.diff = 1;
+  else if (len < 130) p.diff = 2;
+  else if (len < 180) p.diff = 3;
+  else p.diff = 4;
+});
+
+LISTEN_DICTATIONS.forEach(d => {
+  if (d.diff !== undefined) return;
+  const len = (d.text || '').length;
+  const blanks = (d.blanks || []).length;
+  if (len < 80 && blanks <= 5) d.diff = 1;
+  else if (len < 120) d.diff = 2;
+  else if (len < 160) d.diff = 3;
+  else d.diff = 4;
+});
+
+// 高级英语词汇 + 例句 (供 vocab game diff 4-5 用)
+const VOCAB_HARD = [
+  { en: 'photosynthesis', zh: '光合作用', diff: 3, sent: 'Plants use photosynthesis to make food from sunlight.' },
+  { en: 'evaporation', zh: '蒸发', diff: 3, sent: 'Heat causes water evaporation in summer.' },
+  { en: 'condensation', zh: '凝结', diff: 3, sent: 'Water vapor turns into condensation on cold glass.' },
+  { en: 'congestion', zh: '拥堵', diff: 4, sent: 'Heavy traffic congestion delayed the bus.' },
+  { en: 'commute', zh: '通勤', diff: 4, sent: 'My father commutes to work by MRT.' },
+  { en: 'detour', zh: '绕道', diff: 4, sent: 'We had to take a detour due to road closure.' },
+  { en: 'paradigm', zh: '范式 (超 PSLE)', diff: 5, sent: 'This discovery shifts the scientific paradigm.' },
+  { en: 'crestfallen', zh: '沮丧的', diff: 5, sent: 'He was crestfallen after losing the match.' },
+  { en: 'jubilant', zh: '欢欣的', diff: 5, sent: 'The jubilant crowd cheered loudly.' },
+  { en: 'phenomenon', zh: '现象', diff: 4, sent: 'Lightning is a fascinating phenomenon.' },
+  { en: 'meticulous', zh: '一丝不苟的', diff: 5, sent: 'A meticulous student checks every answer.' },
+  { en: 'resilient', zh: '坚韧的', diff: 4, sent: 'Resilient students bounce back from setbacks.' },
+  { en: 'inevitable', zh: '不可避免的', diff: 4, sent: 'PSLE preparation is inevitable for P6 students.' },
+  { en: 'tremendous', zh: '巨大的', diff: 3, sent: 'She made tremendous progress this term.' },
+  { en: 'perspiration', zh: '汗水', diff: 3, sent: 'Hard work and perspiration lead to success.' }
+];
+
+// ============= v18.25: 难度自适应 helper =============
+function recordGameRun(state, gameKey, correct, total) {
+  if (!state.gameStats) state.gameStats = { vocab:{difficulty:1,recent:[]}, math:{difficulty:1,recent:[]}, editing:{difficulty:1,recent:[]}, listen:{difficulty:1,recent:[]} };
+  if (!state.gameStats[gameKey]) state.gameStats[gameKey] = { difficulty: 1, recent: [] };
+  const s = state.gameStats[gameKey];
+  const acc = total > 0 ? correct / total : 0;
+  s.recent.push({ date: new Date().toISOString().slice(0,10), correct, total, accuracy: acc });
+  if (s.recent.length > 5) s.recent.shift();
+  // 升降判定
+  let levelChanged = null;
+  const last3 = s.recent.slice(-3);
+  const last2 = s.recent.slice(-2);
+  if (s.difficulty < 5 && last3.length === 3 && last3.every(r => r.accuracy >= 0.8)) {
+    s.difficulty++;
+    levelChanged = 'up';
+    s.recent = [];  // 升级后重置, 在新难度上重新评估
+  } else if (s.difficulty > 1 && last2.length === 2 && last2.every(r => r.accuracy <= 0.4)) {
+    s.difficulty--;
+    levelChanged = 'down';
+    s.recent = [];
+  }
+  return { newDiff: s.difficulty, levelChanged };
+}
+
+function getDifficulty(state, gameKey) {
+  if (!state.gameStats || !state.gameStats[gameKey]) return 1;
+  return state.gameStats[gameKey].difficulty || 1;
+}
+
+// 从池中按难度采样: 主难度 70% + ±1 难度 30%
+function _sampleByDiff(pool, diff, n) {
+  const main = pool.filter(p => p.diff === diff);
+  const near = pool.filter(p => Math.abs(p.diff - diff) === 1);
+  const out = [];
+  const shuffle = arr => arr.map(x => [Math.random(), x]).sort((a,b) => a[0]-b[0]).map(x => x[1]);
+  const m = shuffle(main);
+  const ne = shuffle(near);
+  const mainCount = Math.ceil(n * 0.7);
+  for (let i = 0; i < mainCount && i < m.length; i++) out.push(m[i]);
+  for (let i = 0; out.length < n && i < ne.length; i++) out.push(ne[i]);
+  // 不够再从全池补
+  if (out.length < n) {
+    const all = shuffle(pool.filter(p => !out.includes(p)));
+    for (let i = 0; out.length < n && i < all.length; i++) out.push(all[i]);
+  }
+  return out.slice(0, n);
+}
+
+function getMathQuestionsByDiff(diff, n) {
+  return _sampleByDiff(MATH_QUESTIONS, diff, n || 10);
+}
+function getEditingByDiff(diff) {
+  const arr = _sampleByDiff(EDITING_PARAGRAPHS, diff, 1);
+  return arr[0] || EDITING_PARAGRAPHS[0];
+}
+function getListenByDiff(diff) {
+  const arr = _sampleByDiff(LISTEN_DICTATIONS, diff, 1);
+  return arr[0] || LISTEN_DICTATIONS[0];
+}
+
+// 词汇按难度: 1-2 用本周 vocab, 3+ 加 VOCAB_HARD; 5 混入句子
+function getVocabPairsByDiff(diff, weekN, n) {
+  n = n || 6;
+  const v = window.getVocabForWeek ? window.getVocabForWeek(weekN) : null;
+  let basePairs = [];
+  if (v && v.section && v.section.words) {
+    const words = v.section.words.filter(w => VOCAB_MEANINGS && VOCAB_MEANINGS[w]);
+    basePairs = words.map(w => ({ en: w, zh: VOCAB_MEANINGS[w], kind: 'word' }));
+  }
+  // diff 3+ 加 VOCAB_HARD 词
+  if (diff >= 3) {
+    const hardWords = VOCAB_HARD.filter(h => h.diff <= diff && h.diff >= diff - 1);
+    basePairs = basePairs.concat(hardWords.map(h => ({ en: h.en, zh: h.zh, kind: 'word' })));
+  }
+  // 洗牌取词
+  const sh = basePairs.map(p => [Math.random(), p]).sort((a,b) => a[0]-b[0]).map(p => p[1]);
+  let result = sh.slice(0, n);
+  // diff 4+ 强制混入 1-2 个句子卡 (替换最后 1-2 个 word)
+  if (diff >= 4) {
+    const sentPool = VOCAB_HARD.filter(h => h.sent && h.diff <= diff);
+    const sShuf = sentPool.map(x => [Math.random(), x]).sort((a,b) => a[0]-b[0]).map(x => x[1]);
+    const sentCount = diff === 4 ? 1 : 2;
+    for (let i = 0; i < sentCount && i < sShuf.length; i++) {
+      const s = sShuf[i];
+      result[result.length - 1 - i] = { en: s.sent, zh: '【句】' + s.zh, kind: 'sent' };
+    }
+  }
+  return result;
+}
+
 // v18.3: 按今日 epochDay 哈希选 mini-game 内容(同一天稳定,跨天换)
 function _epochDay() { return Math.floor(Date.now() / 86400000); }
 function getDailyMathQuestions(count) {
@@ -1582,7 +1743,14 @@ function getDefaultState() {
     vocabGameRuns: 0,
     mathGameRuns: 0,
     editingGameRuns: 0,
-    listenGameRuns: 0
+    listenGameRuns: 0,
+    // v18.25: 4 mini-game 5 级难度自适应 (1=入门 P3-4, 5=超 PSLE)
+    gameStats: {
+      vocab:   { difficulty: 1, recent: [] },
+      math:    { difficulty: 1, recent: [] },
+      editing: { difficulty: 1, recent: [] },
+      listen:  { difficulty: 1, recent: [] }
+    }
   };
 }
 
@@ -2997,3 +3165,11 @@ window.LISTEN_DICTATIONS = LISTEN_DICTATIONS;
 window.getDailyMathQuestions = getDailyMathQuestions;
 window.getDailyEditingParagraph = getDailyEditingParagraph;
 window.getDailyListenDictation = getDailyListenDictation;
+// v18.25: 难度自适应
+window.recordGameRun = recordGameRun;
+window.getDifficulty = getDifficulty;
+window.getMathQuestionsByDiff = getMathQuestionsByDiff;
+window.getEditingByDiff = getEditingByDiff;
+window.getListenByDiff = getListenByDiff;
+window.getVocabPairsByDiff = getVocabPairsByDiff;
+window.VOCAB_HARD = VOCAB_HARD;

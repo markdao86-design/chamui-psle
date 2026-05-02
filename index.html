@@ -2399,8 +2399,17 @@ p { font-size: 14px; line-height: 1.6; }
   font-family: inherit;
   color: var(--color-text);
 }
-.vg-tile.vg-en { background: #E0F4F1; }
-.vg-tile.vg-zh { background: #FFE6F0; }
+.vg-tile.vg-en { background: var(--color-secondary-soft); }
+.vg-tile.vg-zh { background: var(--color-pink-soft); }
+/* v18.25: 句子卡 (diff 4-5) */
+.vg-tile.vg-sent {
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+  padding: 8px 10px !important;
+  text-align: left !important;
+  font-weight: 500 !important;
+  min-height: 56px;
+}
 .vg-tile:hover:not(:disabled):not(.matched) { transform: scale(1.04); box-shadow: 0 3px 0 var(--color-text); }
 .vg-tile.selected {
   background: #FFE066 !important;
