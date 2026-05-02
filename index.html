@@ -4011,6 +4011,17 @@ p { font-size: 14px; line-height: 1.6; }
   opacity: 0.55;
 }
 
+/* v18.48: 宝箱 pill (顶部 stat-pill 风格, 跟 ⭐ 分数同列) */
+.stat-pill.mystery-pill {
+  background: linear-gradient(135deg, var(--color-accent-soft), var(--color-accent));
+  color: var(--color-text);
+  border-color: var(--color-accent);
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.stat-pill.mystery-pill:hover { transform: translateY(-2px); box-shadow: 0 3px 8px rgba(232,184,110,0.4); }
+
 /* ===== Firebase 同步状态 badge ===== */
 #syncBadge {
   font-size: 11px;
@@ -4054,6 +4065,10 @@ p { font-size: 14px; line-height: 1.6; }
   <div class="app-stats">
     <div class="stat-pill points">⭐ <span id="totalPoints">0</span> 分</div>
     <div class="stat-pill level">Lv<span id="currentLevel">1</span></div>
+    <!-- v18.48: 宝箱挪到顶部, 跟分数同列 -->
+    <div class="stat-pill mystery-pill" id="mysteryTabBtn" onclick="openMysteryBoxModal()" title="🎁 神秘宝箱 + 抽奖碎片">
+      🎁 <span id="mysteryTabCount">0</span>
+    </div>
     <div class="stat-pill week">W<span id="currentWeek">1</span> / 73</div>
     <div class="stat-pill sync-local" id="syncBadge" title="数据同步状态">📴 本地</div>
   </div>
@@ -4063,10 +4078,6 @@ p { font-size: 14px; line-height: 1.6; }
   <button class="tab-btn active" data-page="dashboard">🏠 主页</button>
   <button class="tab-btn" data-page="checkin">✅ 打卡</button>
   <button class="tab-btn" data-page="history">📊 PSLE 能力</button>
-  <!-- v17.7: 宝箱按钮(action 不是 tab, 直接弹 modal) -->
-  <button class="tab-btn tab-action mystery-tab" id="mysteryTabBtn" onclick="openMysteryBoxModal()">
-    🎁 <span id="mysteryTabCount">0</span>
-  </button>
   <!-- v18.26: 知识树按钮 -->
   <button class="tab-btn tab-action knowledge-tab" onclick="openKnowledgeTreeModal()" title="知识树 — 4 学科 PSLE 大纲">
     🌳 知识树
