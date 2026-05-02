@@ -2056,8 +2056,36 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   font-size: 12px;
   line-height: 1.7;
   color: var(--color-text);
+  margin-top: 10px;
 }
 .qb-future b { color: var(--color-warn); }
+/* v18.40-fix: 真题资源 grid */
+.qb-real-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin: 8px 0 12px; }
+.qb-real-card {
+  display: block;
+  background: var(--color-card);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-tight);
+  padding: 10px 12px;
+  text-decoration: none;
+  color: var(--color-text);
+  transition: all 0.15s;
+}
+.qb-real-card:hover { background: var(--color-primary-soft); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(74,144,199,0.20); }
+.qb-real-icon { font-size: 22px; margin-bottom: 2px; }
+.qb-real-title { font-size: 13px; font-weight: 900; color: var(--color-primary); }
+.qb-real-desc { font-size: 11px; color: var(--color-text-light); margin-top: 2px; line-height: 1.4; }
+.qb-tip {
+  background: var(--color-accent-soft);
+  border-left: 3px solid var(--color-warn);
+  padding: 10px 12px;
+  border-radius: var(--radius-tight);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-text);
+  margin-bottom: 12px;
+}
+.qb-tip b { color: var(--color-warn); }
 /* 阅读 modal */
 .cn-reading-inner { max-width: 720px; }
 .cn-passage {
