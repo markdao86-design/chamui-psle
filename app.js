@@ -2398,19 +2398,22 @@ function showFutureSelfModal() {
         <div class="fs-stat-row">
           <div class="fs-stat-col">
             <div class="fs-label">今天</div>
-            <div class="fs-num">${state.totalPoints}</div>
-            <div class="fs-sub">总分 · Lv ${window.CHAMUI ? window.CHAMUI.getLevelInfo(state.totalPoints).lv : '?'}</div>
+            <div class="fs-num">${state.totalPoints.toLocaleString()}</div>
+            <div class="fs-sub">总分 · Lv ${window.CHAMUI ? window.CHAMUI.getLevelInfo(state.totalPoints).lv : '?'} · ≈ SGD ${(state.totalPoints * (window.SGD_PER_POINT || 0.05)).toFixed(0)}</div>
           </div>
           <div class="fs-arrow">→</div>
           <div class="fs-stat-col fs-future">
             <div class="fs-label">W73 预测</div>
-            <div class="fs-num">${p.predictedTotal}</div>
-            <div class="fs-sub">总分 · Lv ${p.predLv.lv}</div>
+            <div class="fs-num">${p.predictedTotal.toLocaleString()}</div>
+            <div class="fs-sub">总分 · Lv ${p.predLv.lv} · ≈ SGD ${(p.predictedTotal * (window.SGD_PER_POINT || 0.05)).toFixed(0)}</div>
           </div>
         </div>
+        ${p.predictedTotal >= (window.ULTIMATE_PRIZE_POINTS || 30000) ? `
+          <div class="fs-cap-note">🏆 预测已超 ${(window.ULTIMATE_PRIZE_POINTS || 30000).toLocaleString()} 分终极奖线! SGD ${window.ULTIMATE_PRIZE_SGD || 1500} 等价已达成 (后续分数仍累积)</div>
+        ` : ''}
         <div class="fs-summary">
           <div>📊 预测 PSLE 成绩 ≈ <b>AL ${p.predAL}</b></div>
-          <div>⚔️ 预测装备 <b>${p.predEqCount}/45</b></div>
+          <div>⚔️ 预测分数装备 <b>${p.predEqCount}/29</b> 件 (按分数解锁)</div>
           <div>📅 还有 <b>${p.daysLeft}</b> 天 · 平均日加分 <b>${p.avgDaily}</b></div>
         </div>
         <div class="fs-tip">💡 当前 streak: ${(state.dailyStreak && state.dailyStreak.days) || 0} 天 — streak 保持率 ${Math.round(p.breakRate * 100)}%. streak 越稳, 预测越准!</div>
