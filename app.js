@@ -2105,15 +2105,22 @@ function openKnowledgeTreeModal() {
   }
   const tree = window.getKnowledgeTreeStatus(state);
   const prog = window.getKnowledgeProgress(state);
+  const explored = state.knowledgeExplored || {};
+  const exploredCount = Object.keys(explored).length;
   const subjHtml = Object.keys(tree).map(subj => {
     const nodes = tree[subj];
     const nodeHtml = nodes.map((n, i) => {
       const isLast = i === nodes.length - 1;
       const stateClass = `kt-node-${n.status}`;
-      const tip = `${n.name} · W${n.weeks[0]}-W${n.weeks[1]} · ${n.status === 'mastered' ? '已掌握' : n.status === 'learning' ? '学习中' : '锁定'}`;
+      const isExplored = !!explored[n.id];
+      const exploredBadge = isExplored ? '<div class="kt-node-star">⭐</div>' : '';
+      const statusTxt = n.status === 'mastered' ? '已掌握' : n.status === 'learning' ? '学习中' : '锁定';
+      const tip = `${n.name} · W${n.weeks[0]}-W${n.weeks[1]} · ${statusTxt}${isExplored ? ' · ⭐已探索' : ''} · 点击看讲解`;
       return `
         <div class="kt-node-wrap">
-          <div class="kt-node ${stateClass}" title="${escapeHtml(tip)}">
+          <div class="kt-node ${stateClass} kt-clickable ${isExplored ? 'kt-explored' : ''}" title="${escapeHtml(tip)}"
+               onclick="openKnowledgeNodeDetail('${escapeHtml(subj)}', ${i})">
+            ${exploredBadge}
             <div class="kt-node-icon">${n.icon}</div>
             <div class="kt-node-name">${escapeHtml(n.name)}</div>
             <div class="kt-node-week">W${n.weeks[0]}-${n.weeks[1]}</div>
@@ -2132,14 +2139,16 @@ function openKnowledgeTreeModal() {
       <div class="kt-header">
         <div>
           <div class="kt-title">🌳 知识树</div>
-          <div class="kt-progress">总进度 <b>${prog.mastered}/${prog.total}</b> · ${prog.percent}% 已掌握 · ${prog.learning} 个学习中</div>
+          <div class="kt-progress">⭐ 已探索 <b>${exploredCount}/${prog.total}</b> · 周进度: ${prog.mastered} 掌握 / ${prog.learning} 学习中</div>
         </div>
         <button class="vocab-modal-close" onclick="closeKnowledgeTreeModal()">×</button>
       </div>
+      <div class="kt-tip-banner">💡 <b>点任意节点</b> 看讲解 + 例子 + 一键去练习对应 mini-game · 学完一个 +2 分 + ⭐ 标记</div>
       <div class="kt-legend">
         <span class="kt-legend-item"><span class="kt-dot kt-node-mastered"></span> 已掌握</span>
         <span class="kt-legend-item"><span class="kt-dot kt-node-learning"></span> 学习中</span>
         <span class="kt-legend-item"><span class="kt-dot kt-node-locked"></span> 锁定</span>
+        <span class="kt-legend-item">⭐ 已探索讲解</span>
       </div>
       <div class="kt-body">${subjHtml}</div>
     </div>
@@ -2150,6 +2159,78 @@ function closeKnowledgeTreeModal() {
   const m = document.getElementById('knowledgeTreeModal');
   if (m) m.classList.remove('show');
 }
+
+// v18.41: 节点详情 modal
+function openKnowledgeNodeDetail(subj, idx) {
+  const KT = window.KNOWLEDGE_TREE || {};
+  const node = KT[subj] && KT[subj][idx];
+  if (!node) return;
+  let modal = document.getElementById('ktNodeModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'ktNodeModal';
+    modal.className = 'kt-modal';
+    document.body.appendChild(modal);
+  }
+  const wasExplored = !!(state.knowledgeExplored && state.knowledgeExplored[node.id]);
+  // 标记探索 + 给奖励 (首次)
+  if (!wasExplored) {
+    if (!state.knowledgeExplored) state.knowledgeExplored = {};
+    state.knowledgeExplored[node.id] = { date: new Date().toISOString().slice(0,10) };
+    state.totalPoints = (state.totalPoints || 0) + 2;
+    state.logs.push({ reason: `🌳 知识树探索: ${node.name}`, points: 2, week: state.currentWeek, timestamp: Date.now() });
+    saveState(state);
+    playSound('ding');
+  }
+  // 关联 mini-game 名字 + open 函数
+  const GAME_INFO = {
+    math:    { name: '🔢 数学速算', open: 'openMathGame()' },
+    unit:    { name: '⚗️ 单位换算', open: 'openUnitGame()' },
+    grammar: { name: '✏️ Grammar MCQ', open: 'openGrammarGame()' },
+    cloze:   { name: '🧩 Cloze 填空', open: 'openClozeGame()' },
+    editing: { name: '🔍 Editing 找错', open: 'openEditingGame()' },
+    vocab:   { name: '📚 词汇连连看', open: `openVocabGame(${state.currentWeek})` },
+    listen:  { name: '🎧 听写练习', open: 'openListenGame()' },
+    scilab:  { name: '🔬 科学快分类', open: 'openSciClassifyGame()' }
+  };
+  const g = GAME_INFO[node.game];
+  const examplesHtml = (node.examples || []).map(e => `<li>${escapeHtml(e)}</li>`).join('');
+  modal.innerHTML = `
+    <div class="kt-inner kt-node-inner">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title">${node.icon} ${escapeHtml(node.name)} ${wasExplored ? '⭐' : ''}</div>
+          <div class="kt-progress">${escapeHtml(subj)} · W${node.weeks[0]}-W${node.weeks[1]} ${wasExplored ? '· 已探索' : '· +2 分'}</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeKnowledgeNodeDetail()">×</button>
+      </div>
+      <div class="ktnd-section">
+        <div class="ktnd-label">💡 核心讲解</div>
+        <div class="ktnd-text">${escapeHtml(node.desc || '本章节内容请看课本与 wow 揭晓')}</div>
+      </div>
+      ${examplesHtml ? `
+      <div class="ktnd-section">
+        <div class="ktnd-label">📌 关键例子</div>
+        <ul class="ktnd-list">${examplesHtml}</ul>
+      </div>` : ''}
+      <div class="ktnd-section ktnd-action">
+        ${g ? `<button class="btn btn-primary ktnd-go" onclick="closeKnowledgeNodeDetail(); ${g.open};">💪 去练习: ${g.name}</button>` : ''}
+        <button class="btn btn-secondary" onclick="closeKnowledgeNodeDetail()">关闭</button>
+      </div>
+    </div>`;
+  modal.classList.add('show');
+}
+function closeKnowledgeNodeDetail() {
+  const m = document.getElementById('ktNodeModal');
+  if (m) m.classList.remove('show');
+  // 重新渲染知识树以显示新的 ⭐
+  if (document.getElementById('knowledgeTreeModal')?.classList.contains('show')) {
+    openKnowledgeTreeModal();
+  }
+  renderAll();
+}
+window.openKnowledgeNodeDetail = openKnowledgeNodeDetail;
+window.closeKnowledgeNodeDetail = closeKnowledgeNodeDetail;
 window.openKnowledgeTreeModal = openKnowledgeTreeModal;
 window.closeKnowledgeTreeModal = closeKnowledgeTreeModal;
 

@@ -2321,6 +2321,44 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   background: var(--color-border);
   margin: 0 2px;
 }
+/* v18.41: 节点可点 + 探索 ⭐ + tip banner */
+.kt-clickable { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; position: relative; }
+.kt-clickable:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(74,144,199,0.20); }
+.kt-clickable.kt-explored { box-shadow: 0 0 0 2px var(--color-accent); }
+.kt-node-star {
+  position: absolute;
+  top: -6px; right: -6px;
+  font-size: 16px;
+  z-index: 2;
+}
+.kt-tip-banner {
+  background: var(--color-accent-soft);
+  border: 1px dashed var(--color-accent);
+  border-radius: var(--radius-tight);
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--color-text);
+  line-height: 1.5;
+  text-align: center;
+}
+.kt-tip-banner b { color: var(--color-warn); }
+/* 节点详情 modal */
+.kt-node-inner { max-width: 540px; }
+.ktnd-section {
+  background: var(--color-card-soft);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-tight);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.ktnd-label { font-size: 13px; font-weight: 900; color: var(--color-text); margin-bottom: 6px; }
+.ktnd-text { font-size: 14px; line-height: 1.7; color: var(--color-text); }
+.ktnd-list { margin: 0 0 0 22px; padding: 0; font-size: 13px; line-height: 1.7; color: var(--color-text); }
+.ktnd-list li { margin-bottom: 3px; }
+.ktnd-action { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; border-left: none; background: transparent; padding: 8px 0; }
+.ktnd-go { font-size: 14px !important; padding: 10px 16px !important; }
 
 /* v18.21: 听力 4 步精听法规则卡 */
 .listen-rules-card {

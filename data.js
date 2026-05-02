@@ -2677,7 +2677,9 @@ function getDefaultState() {
     alarmsEnabled: true,
     alarmShownToday: { date: null, shown: [] },
     // v18.40: 题库进度 — { 'cn_friendship': {done: true, score: 4, max: 4, lastDate: '2026-...'} }
-    questionBankProgress: {}
+    questionBankProgress: {},
+    // v18.41: 知识树探索状态 — { 'sci_diversity': {date: 'YYYY-MM-DD'} }
+    knowledgeExplored: {}
   };
 }
 
