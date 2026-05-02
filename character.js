@@ -72,7 +72,20 @@ const CHAMUI = {
     { id: 'monthking',icon: '🎯', name: '月度王',     condition: 'monthly3',  value: 6,    hint: '累积 6 次月度小测达标' },
     { id: 'streak7',  icon: '🛡️', name: '7 天勇者',  condition: 'streak-days', value: 7,   hint: '连续打卡 7 天解锁' },
     { id: 'streak30', icon: '🔥', name: '30 天战士', condition: 'streak-days', value: 30,  hint: '连续打卡 30 天解锁(火焰光环)' },
-    { id: 'streak100',icon: '👑', name: '百日王',    condition: 'streak-days', value: 100, hint: '连续打卡 100 天解锁(永久金光特效)' }
+    { id: 'streak50', icon: '⚔️', name: '50 天战士', condition: 'streak-days', value: 50,  hint: '连续 50 天 (v18.58)' },
+    { id: 'streak75', icon: '💪', name: '75 天勇者', condition: 'streak-days', value: 75,  hint: '连续 75 天 (v18.58)' },
+    { id: 'streak100',icon: '👑', name: '百日王',    condition: 'streak-days', value: 100, hint: '连续打卡 100 天解锁(永久金光特效)' },
+    { id: 'streak150',icon: '🏵️', name: '150 天英雄',condition: 'streak-days', value: 150, hint: '连续 150 天 (v18.58)' },
+    { id: 'streak200',icon: '🏛️', name: '200 天传奇',condition: 'streak-days', value: 200, hint: '连续 200 天 (v18.58)' },
+    { id: 'streak300',icon: '🌟', name: '300 天大神',condition: 'streak-days', value: 300, hint: '连续 300 天 (v18.58)' },
+    // v18.58: 知识树 ⭐ 装备 (深学路径, 跟金龙不冲突)
+    { id: 'kt30',     icon: '📗', name: '⭐ 30 学者',   condition: 'kt-stars', value: 30,  hint: '知识树累计 30 ⭐ (v18.58)' },
+    { id: 'kt60',     icon: '📕', name: '⭐ 60 探究者', condition: 'kt-stars', value: 60,  hint: '知识树累计 60 ⭐ (v18.58)' },
+    { id: 'kt90',     icon: '📚', name: '⭐ 90 大师',   condition: 'kt-stars', value: 90,  hint: '知识树累计 90 ⭐, 离金龙仅 15 ⭐ (v18.58)' },
+    // v18.58: mini-game 局数装备 (玩得多有奖)
+    { id: 'gr50',     icon: '🎮', name: '练习生',     condition: 'game-runs', value: 50,  hint: 'Mini-game 累计 50 局 (v18.58)' },
+    { id: 'gr200',    icon: '🎯', name: '神射手',     condition: 'game-runs', value: 200, hint: 'Mini-game 累计 200 局 (v18.58)' },
+    { id: 'gr500',    icon: '🎰', name: 'mini-game 王', condition: 'game-runs', value: 500, hint: 'Mini-game 累计 500 局 (v18.58)' }
   ],
 
   getLevelInfo(points) {
@@ -118,6 +131,13 @@ const CHAMUI = {
         return state.monthlyTestPass >= eq.value;
       case 'streak-days':
         return !!(state.dailyStreak && (state.dailyStreak.bestEver || 0) >= eq.value);
+      case 'kt-stars': {
+        const ks = state.knowledgeStars || {};
+        const total = Object.values(ks).reduce((s, e) => s + (e.stars || 0), 0);
+        return total >= eq.value;
+      }
+      case 'game-runs':
+        return (state.totalGameRuns || 0) >= eq.value;
       default:
         return false;
     }

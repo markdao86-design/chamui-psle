@@ -821,7 +821,23 @@ const ACHIEVEMENTS = [
   { id: 'mid_3000pts', icon:'🎯', name:'半程战士',     desc:'累积 3000 分 (PSLE 备考过半证明)', cat:'PSLE', cond:s=>(s.totalPoints||0)>=3000 },
   { id: 'mid_streak50',icon:'⚔️', name:'50 天战士',   desc:'连续打卡 50 天 (介于 30/100 天之间)', cat:'坚持', cond:s=>(s.dailyStreak&&s.dailyStreak.bestEver||0)>=50 },
   { id: 'mid_kt_explore20', icon:'🌳', name:'知识树探险家', desc:'探索 20 个知识树节点 (35 中超半)', cat:'探索', cond:s=>Object.keys(s.knowledgeExplored||{}).length>=20 },
-  { id: 'mid_kt_stars30', icon:'⭐', name:'⭐ 30 收集者', desc:'知识树累计 30 ⭐ (105 中近 1/3)', cat:'探索', cond:s=>Object.values(s.knowledgeStars||{}).reduce((s,e)=>s+(e.stars||0),0)>=30 }
+  { id: 'mid_kt_stars30', icon:'⭐', name:'⭐ 30 收集者', desc:'知识树累计 30 ⭐ (105 中近 1/3)', cat:'探索', cond:s=>Object.values(s.knowledgeStars||{}).reduce((s,e)=>s+(e.stars||0),0)>=30 },
+  // v18.58: 15 个周次里程碑 (每 5 周必触发, 防中后期激励荒漠)
+  { id: 'wk_5',  icon:'🌱', name:'W5 起步达人',  desc:'打卡到第 5 周 (1 个月里程碑)',     cat:'PSLE', cond:s=>(s.currentWeek||1)>=5 },
+  { id: 'wk_10', icon:'🌿', name:'W10 茁壮成长', desc:'打卡到第 10 周',                    cat:'PSLE', cond:s=>(s.currentWeek||1)>=10 },
+  { id: 'wk_15', icon:'🌳', name:'W15 1/5 路程', desc:'打卡到第 15 周 (跨过 1/5 备考)',    cat:'PSLE', cond:s=>(s.currentWeek||1)>=15 },
+  { id: 'wk_20', icon:'🚶', name:'W20 稳步前进', desc:'打卡到第 20 周',                    cat:'PSLE', cond:s=>(s.currentWeek||1)>=20 },
+  { id: 'wk_25', icon:'🏃', name:'W25 1/3 达标', desc:'打卡到第 25 周 (1/3 备考完成)',     cat:'PSLE', cond:s=>(s.currentWeek||1)>=25 },
+  { id: 'wk_30', icon:'⚡', name:'W30 加速期',   desc:'打卡到第 30 周',                    cat:'PSLE', cond:s=>(s.currentWeek||1)>=30 },
+  { id: 'wk_35', icon:'🔥', name:'W35 半程王',   desc:'打卡到第 35 周 (备考接近一半)',     cat:'PSLE', cond:s=>(s.currentWeek||1)>=35 },
+  { id: 'wk_40', icon:'💪', name:'W40 P6 攻坚',  desc:'打卡到第 40 周 (P6 主战场)',        cat:'PSLE', cond:s=>(s.currentWeek||1)>=40 },
+  { id: 'wk_45', icon:'🏔️', name:'W45 翻山', desc:'打卡到第 45 周',                       cat:'PSLE', cond:s=>(s.currentWeek||1)>=45 },
+  { id: 'wk_50', icon:'⛰️', name:'W50 登顶', desc:'打卡到第 50 周 (2/3 备考完成)',         cat:'PSLE', cond:s=>(s.currentWeek||1)>=50 },
+  { id: 'wk_55', icon:'🚀', name:'W55 冲刺起点', desc:'打卡到第 55 周',                    cat:'PSLE', cond:s=>(s.currentWeek||1)>=55 },
+  { id: 'wk_60', icon:'⭐', name:'W60 星光', desc:'打卡到第 60 周',                        cat:'PSLE', cond:s=>(s.currentWeek||1)>=60 },
+  { id: 'wk_65', icon:'🎖️', name:'W65 荣耀', desc:'打卡到第 65 周 (PSLE 倒计时)',         cat:'PSLE', cond:s=>(s.currentWeek||1)>=65 },
+  { id: 'wk_70', icon:'🏆', name:'W70 冠军', desc:'打卡到第 70 周 (笔试前)',               cat:'PSLE', cond:s=>(s.currentWeek||1)>=70 },
+  { id: 'wk_73', icon:'👑', name:'W73 PSLE 王', desc:'打卡到 W73 PSLE 笔试周!',           cat:'PSLE', cond:s=>(s.currentWeek||1)>=73 }
 ];
 
 // 检查并解锁新成就 — 返回新解锁的成就数组
@@ -1226,6 +1242,7 @@ function recordGameRun(state, gameKey, correct, total) {
   const minFloor = _gameMinFloor(gameKey);
   if (!state.gameStats) state.gameStats = { vocab:{difficulty:3,recent:[]}, math:{difficulty:4,recent:[]}, editing:{difficulty:3,recent:[]}, listen:{difficulty:3,recent:[]}, cloze:{difficulty:3,recent:[]} };
   if (!state.gameStats[gameKey]) state.gameStats[gameKey] = { difficulty: minFloor, recent: [] };
+  state.totalGameRuns = (state.totalGameRuns || 0) + 1;  // v18.58: 累积 mini-game 局数 (用于 game-runs 装备)
   const s = state.gameStats[gameKey];
   if (s.difficulty < minFloor) s.difficulty = minFloor;
   const acc = total > 0 ? correct / total : 0;
