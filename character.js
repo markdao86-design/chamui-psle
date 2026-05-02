@@ -50,7 +50,9 @@ const CHAMUI = {
     { id: 'comet',    icon: '☄️', name: '彗星轨迹',   condition: 'points',    value: 4350, hint: '累积 4350 分' },
     { id: 'unicorn',  icon: '🦄', name: '独角兽伙伴', condition: 'points',    value: 4750, hint: '累积 4750 分(神兽级)' },
     { id: 'medal',    icon: '🥇', name: '金牌得主',   condition: 'points',    value: 5300, hint: '累积 5300 分(冲刺王)' },
-    { id: 'dragon',   icon: '🐉', name: '神龙伙伴',   condition: 'points',    value: 30000, hint: '累积 30000 分 = SGD 1500 终极大奖等价🐲' },
+    // v18.55: 双层龙 — 银龙(打卡线) + 金龙(深学线)
+    { id: 'silver_dragon', icon: '🐲', name: '银龙伙伴', condition: 'points', value: 10000, hint: '累积 10000 分 = SGD 500 (打卡之王 — 习惯养成奖励)' },
+    { id: 'dragon',   icon: '🐉', name: '金龙伙伴',   condition: 'points',    value: 30000, hint: '105/105 ⭐ + ≥10000 分 = SGD 1500 (传说级 — 真本事奖励, 知识树全 3⭐ 才解锁)' },
     { id: 'tube',     icon: '🔬', name: '试管',       condition: 'milestone', value: 'W14', hint: '完成 W14 P3-P4 综合模拟' },
     { id: 'trophy',   icon: '🏆', name: '奖杯',       condition: 'milestone', value: 'W20', hint: '完成 W20 P5 综合' },
     { id: 'crown',    icon: '👑', name: '皇冠',       condition: 'milestone', value: 'W26', hint: 'W26 第一阶段总模考' },
@@ -88,6 +90,12 @@ const CHAMUI = {
   checkEquipmentUnlocked(equipId, state) {
     const eq = this.equipment.find(e => e.id === equipId);
     if (!eq) return false;
+    // v18.55: 金龙特例 — 必须 105/105 ⭐ 全拿 + ≥10000 分 (传说级深学奖励)
+    if (equipId === 'dragon') {
+      const ks = state.knowledgeStars || {};
+      const totalStars = Object.values(ks).reduce((s, e) => s + (e.stars || 0), 0);
+      return totalStars >= 105 && (state.totalPoints || 0) >= 10000;
+    }
     switch (eq.condition) {
       case 'points':
         return state.totalPoints >= eq.value;

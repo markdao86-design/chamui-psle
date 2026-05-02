@@ -68,7 +68,7 @@ assert(def.activeSkin === 'default', `默认 activeSkin = 'default' (实际 ${de
 
 // ===== 4. character.js 装备 42 件 =====
 const C = ctx.window.CHAMUI;
-assert(C.equipment.length === 45, `equipment 数量 45 (v17 加 3 streak 装备) (实际 ${C.equipment.length})`);
+assert(C.equipment.length === 46, `equipment 数量 46 (v18.55 加 silver_dragon) (实际 ${C.equipment.length})`);
 
 // 装备 id 唯一
 const eqIds = C.equipment.map(e => e.id);

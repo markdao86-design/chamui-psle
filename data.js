@@ -957,12 +957,14 @@ function predictOverallAL(state) {
     totalAccPct += acc * g.weight;
     totalW += g.weight;
   }
-  // 加入知识树 ⭐ 平均完成度 (权重 20%)
+  // v18.55: 加入知识树 ⭐ 绝对完成度 (权重 20%)
+  // 修 v18.53 bug: 之前用平均⭐/3, 1 节点拿 3⭐ 就 = 知识树 100%, 严重虚高 AL
+  // 现在用 totalStars / (35×3) — 105⭐ 全拿才 = 100%, 真实反映学习深度
   const ks = state.knowledgeStars || {};
   const starEntries = Object.values(ks);
   if (starEntries.length > 0) {
-    const avgStars = starEntries.reduce((s, e) => s + (e.stars || 0), 0) / starEntries.length;
-    const ktAcc = avgStars / 3;  // 0-1
+    const totalStars = starEntries.reduce((s, e) => s + (e.stars || 0), 0);
+    const ktAcc = totalStars / (35 * 3);  // 0-1, 105⭐ 满分
     totalAccPct += ktAcc * 0.20;
     totalW += 0.20;
   }

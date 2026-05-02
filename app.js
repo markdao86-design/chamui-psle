@@ -256,8 +256,63 @@ function renderDashboard() {
   renderReviewCard();  // v18 Phase 5.3
   renderWeeklyCoach();
   renderMasterTipCard();
+  renderDragonProgress();  // v18.55
   renderEquipment();
 }
+
+// v18.55: 双层龙进度卡 — 银龙(打卡线 10000分) + 金龙(深学线 105⭐+10000分)
+function renderDragonProgress() {
+  const card = document.getElementById('dragonProgressCard');
+  if (!card) return;
+  const pts = state.totalPoints || 0;
+  const ks = state.knowledgeStars || {};
+  const totalStars = Object.values(ks).reduce((s, e) => s + (e.stars || 0), 0);
+  const silverPct = Math.min(100, Math.round(pts / 10000 * 100));
+  const silverDone = pts >= 10000;
+  const goldStarPct = Math.min(100, Math.round(totalStars / 105 * 100));
+  const goldPtsPct = Math.min(100, Math.round(pts / 10000 * 100));
+  const goldDone = totalStars >= 105 && pts >= 10000;
+  card.innerHTML = `
+    <div class="card-title">🐉 双龙伙伴 — 终极目标</div>
+    <p style="color:var(--color-text-light);font-size:12px;margin-bottom:12px">两条线: <b>打卡养成</b> 拿银龙, <b>学得深透</b> 拿金龙</p>
+
+    <div style="background:linear-gradient(135deg,#E8E8E8,#C0C0C0);border-radius:12px;padding:12px;margin-bottom:10px;border:2px solid #888">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-weight:900;font-size:15px">🐲 银龙伙伴 ${silverDone ? '✅ 已解锁' : ''}</span>
+        <span style="font-size:13px;color:#555">SGD 500</span>
+      </div>
+      <div style="font-size:11px;color:#444;margin-bottom:6px">习惯养成奖励 — 累积 10000 分 (打卡 + mini-game)</div>
+      <div style="background:#fff;border-radius:8px;height:14px;overflow:hidden;border:1px solid #888">
+        <div style="background:linear-gradient(90deg,#999,#bbb);height:100%;width:${silverPct}%;transition:width 0.5s"></div>
+      </div>
+      <div style="font-size:12px;margin-top:4px;text-align:right;color:#333"><b>${pts.toLocaleString()}</b> / 10,000 分 (${silverPct}%)</div>
+    </div>
+
+    <div style="background:linear-gradient(135deg,#FFF3C4,#FFD700);border-radius:12px;padding:12px;border:2px solid #DAA520">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-weight:900;font-size:15px">🐉 金龙伙伴 (传说级) ${goldDone ? '✅ 已解锁!' : ''}</span>
+        <span style="font-size:13px;color:#7A5C00">SGD 1500</span>
+      </div>
+      <div style="font-size:11px;color:#5D4500;margin-bottom:8px">真本事奖励 — 知识树 35 节点 全 3⭐ <b>且</b> ≥10000 分 (双门槛)</div>
+
+      <div style="font-size:11px;font-weight:700;color:#5D4500;margin-bottom:2px">⭐ 进度: <b>${totalStars}/105</b></div>
+      <div style="background:#fff;border-radius:8px;height:12px;overflow:hidden;border:1px solid #DAA520;margin-bottom:6px">
+        <div style="background:linear-gradient(90deg,#FFA500,#FFD700);height:100%;width:${goldStarPct}%;transition:width 0.5s"></div>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:#5D4500;margin-bottom:2px">💰 分数: <b>${pts.toLocaleString()}/10,000</b></div>
+      <div style="background:#fff;border-radius:8px;height:12px;overflow:hidden;border:1px solid #DAA520">
+        <div style="background:linear-gradient(90deg,#FFA500,#FFD700);height:100%;width:${goldPtsPct}%;transition:width 0.5s"></div>
+      </div>
+
+      ${goldDone
+        ? '<div style="margin-top:8px;text-align:center;font-size:13px;font-weight:900;color:#7A5C00">🎉 恭喜! 金龙已解锁! 你是真正的 PSLE AL 1-2 选手!</div>'
+        : `<div style="margin-top:8px;font-size:11px;color:#5D4500;text-align:center">还差 <b>${105 - totalStars}</b> ⭐ + <b>${Math.max(0, 10000 - pts).toLocaleString()}</b> 分</div>`
+      }
+    </div>
+  `;
+}
+window.renderDragonProgress = renderDragonProgress;
 
 // ============ v17.5 Phase 2 / v17.7: 神秘宝箱 — 移到 tab 栏按钮 ============
 function renderMysteryBoxCard() {
@@ -2159,6 +2214,7 @@ function _buildKnowledgeTreeInnerHtml(forPage) {
         </div>
         ${forPage ? '' : '<button class="vocab-modal-close" onclick="closeKnowledgeTreeModal()">×</button>'}
       </div>
+      <div class="kt-tip-banner" style="background:linear-gradient(135deg,#FFF3C4,#FFD700);color:#5D4500;border:2px solid #DAA520">🐉 <b>金龙进度: ${totalStars}/105 ⭐</b> · 还差 ${Math.max(0, 105 - totalStars)} ⭐ + ${Math.max(0, 10000 - (state.totalPoints||0)).toLocaleString()} 分 → 解锁传说级金龙伙伴 (SGD 1500)</div>
       <div class="kt-tip-banner">💡 <b>点任意节点</b> 看讲解 + 例子 + 一键去练习对应 mini-game · 学完一个 +2 分 + ⭐ 标记</div>
       <div class="kt-legend">
         <span class="kt-legend-item"><span class="kt-dot kt-node-mastered"></span> 已掌握</span>
