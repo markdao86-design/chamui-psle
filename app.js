@@ -910,11 +910,38 @@ function renderCheckinPage() {
   // === 3) 当日任务列表 ===
   const dayTasks = getDailyTasks(week, selectedDay);
   const allDoneToday = dayTasks.length > 0 && dayTasks.every(t => getDailyCheck(state, week, selectedDay, t.slot));
+  // v18.23: 周末按 上午/下午/晚上 分段, 段间显示休息/外课说明
+  const SECTION_BY_SLOT = {
+    WSE: 'AM', WSF: 'AM', WSS: 'AM', WSL: 'AM',
+    WSM: 'PM',
+    WSR: 'EV', WSV: 'EV',
+    WUH: 'AM', WUR: 'AM',
+    WUM: 'PM', WUS: 'PM',
+    WUE1: 'EV', WUE2: 'EV', WUP: 'EV'
+  };
+  const SAT_REST = {
+    AM_PM: '🍽️ 12:00-14:00 吃饭休息',
+    PM_EV: '🎓 15:30-19:30 美林课 (外课, 不打卡) → 19:30-19:50 真休息'
+  };
+  const SUN_REST = {
+    BEFORE_AM: '🎓 08:00-10:20 恒瑞课 (外课, 不打卡) → 10:20-10:35 真休息',
+    AM_PM: '🍽️ 12:00-14:00 吃饭休息',
+    PM_EV: '🏊 16:10-17:00 游泳 → 17:30-18:10 吃饭'
+  };
+  const sectionLabel = (s) => s === 'AM' ? '🌅 上午' : s === 'PM' ? '☀️ 下午' : '🌙 晚上';
+
   let slotsHtml;
   if (dayTasks.length === 0) {
     slotsHtml = `<div class="empty-day">📭 这一天没有安排任务</div>`;
   } else {
-    slotsHtml = dayTasks.map(t => {
+    const isWeekend = selectedDay === 'Sat' || selectedDay === 'Sun';
+    let lastSection = null;
+    // 周日开头加恒瑞课/真休息说明
+    let prefixRest = '';
+    if (selectedDay === 'Sun') {
+      prefixRest = `<div class="rest-divider">${SUN_REST.BEFORE_AM}</div>`;
+    }
+    slotsHtml = prefixRest + dayTasks.map(t => {
       const checked = getDailyCheck(state, week, selectedDay, t.slot);
       const hasPhoto = hasPhotoCached(week, selectedDay, t.slot);
       const isKey = isKeySlot(week, selectedDay, t.slot);
@@ -945,7 +972,25 @@ function renderCheckinPage() {
         : '';
       const keyChip = isKey ? `<span class="key-chip" title="必做关键项目,影响周复盘奖">🎯 必做</span>` : '';
       const tipLine = tip ? `<div class="checkin-tip">${escapeHtml(tip)}</div>` : '';
-      return `
+      // v18.23: 周末段间分隔
+      let sectionHeader = '';
+      if (isWeekend) {
+        const curSection = SECTION_BY_SLOT[t.slot];
+        if (curSection && curSection !== lastSection) {
+          // 段头
+          if (lastSection) {
+            // 段间休息说明
+            const rests = selectedDay === 'Sat' ? SAT_REST : SUN_REST;
+            const transKey = lastSection + '_' + curSection;
+            if (rests[transKey]) {
+              sectionHeader += `<div class="rest-divider">${rests[transKey]}</div>`;
+            }
+          }
+          sectionHeader += `<div class="section-divider">${sectionLabel(curSection)}</div>`;
+          lastSection = curSection;
+        }
+      }
+      return sectionHeader + `
         <div class="checkin-item ${checked ? 'checked' : ''} ${isKey ? 'key-slot' : ''}" data-slot="${t.slot}"
              onclick="toggleDailyCheck(${week}, '${selectedDay}', '${t.slot}', event)">
           <div class="checkin-content">

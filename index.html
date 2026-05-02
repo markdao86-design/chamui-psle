@@ -1990,6 +1990,32 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   text-align: center;
 }
 
+/* v18.23: 周末段头 (上午/下午/晚上) + 段间休息分隔 */
+.section-divider {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--color-primary);
+  margin: 16px 0 8px;
+  padding: 6px 12px;
+  background: var(--color-primary-soft);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-tight);
+  letter-spacing: 1px;
+}
+.section-divider:first-child { margin-top: 4px; }
+.rest-divider {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-light);
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: var(--color-card-soft);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-tight);
+  text-align: center;
+  font-style: italic;
+}
+
 /* v18.21: checkin LS 行内 1 行精简 tip */
 .checkin-listen-tip {
   font-size: 12px;
