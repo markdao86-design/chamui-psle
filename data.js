@@ -1282,6 +1282,155 @@ function getVocabPairsByDiff(diff, weekN, n) {
   return result;
 }
 
+// ============= v18.28: 4 个新 mini-game 数据池 =============
+
+// 1. 单位换算 (~50 道, 5 级)
+const UNIT_CONVERSIONS = [
+  // diff 1 — P3 简单
+  { q: '1 m = ? cm', ans: 100, diff: 1 },
+  { q: '1 km = ? m', ans: 1000, diff: 1 },
+  { q: '1 kg = ? g', ans: 1000, diff: 1 },
+  { q: '1 L = ? ml', ans: 1000, diff: 1 },
+  { q: '1 h = ? min', ans: 60, diff: 1 },
+  { q: '1 min = ? sec', ans: 60, diff: 1 },
+  { q: '2 m = ? cm', ans: 200, diff: 1 },
+  { q: '3 kg = ? g', ans: 3000, diff: 1 },
+  { q: '5 L = ? ml', ans: 5000, diff: 1 },
+  { q: '2 km = ? m', ans: 2000, diff: 1 },
+  // diff 2 — P4
+  { q: '1.5 m = ? cm', ans: 150, diff: 2 },
+  { q: '2.5 kg = ? g', ans: 2500, diff: 2 },
+  { q: '1.5 L = ? ml', ans: 1500, diff: 2 },
+  { q: '0.5 km = ? m', ans: 500, diff: 2 },
+  { q: '90 min = ? h ? min (输 h*100+min)', ans: 130, diff: 2 },  // 1h30min
+  { q: '120 min = ? h', ans: 2, diff: 2 },
+  { q: '300 cm = ? m', ans: 3, diff: 2 },
+  { q: '4500 g = ? kg ? g (输 kg*1000+g)', ans: 4500, diff: 2 },  // 4kg500g
+  // diff 3 — P5 (混合单位)
+  { q: '2 h 30 min = ? min', ans: 150, diff: 3 },
+  { q: '3 L 500 ml = ? ml', ans: 3500, diff: 3 },
+  { q: '1 m 25 cm = ? cm', ans: 125, diff: 3 },
+  { q: '5 kg 200 g = ? g', ans: 5200, diff: 3 },
+  { q: '750 cm = ? m ? cm (输 m*100+cm)', ans: 750, diff: 3 },  // 7m50cm
+  { q: '3500 ml = ? L ? ml (输 L*1000+ml)', ans: 3500, diff: 3 },
+  { q: '180 sec = ? min', ans: 3, diff: 3 },
+  { q: '4 h 15 min = ? min', ans: 255, diff: 3 },
+  // diff 4 — PSLE
+  { q: '0.45 km = ? m', ans: 450, diff: 4 },
+  { q: '2.75 L = ? ml', ans: 2750, diff: 4 },
+  { q: '1.25 kg = ? g', ans: 1250, diff: 4 },
+  { q: '675 cm = ? m (小数, 输 cm/100*100, 即 6.75 输 675)', ans: 675, diff: 4 },
+  { q: '2 km 350 m = ? m', ans: 2350, diff: 4 },
+  { q: '8 h 20 min = ? min', ans: 500, diff: 4 },
+  { q: '6500 ml = ? L (小数 ×100, 即 6.5 输 650)', ans: 650, diff: 4 },
+  { q: '0.08 km = ? m', ans: 80, diff: 4 },
+  // diff 5 — 超 PSLE
+  { q: '5400 sec = ? h ? min (输 h*100+min)', ans: 130, diff: 5 },  // 1h 30min
+  { q: '2.5 h = ? sec', ans: 9000, diff: 5 },
+  { q: '0.005 km = ? cm', ans: 500, diff: 5 },
+  { q: '12500 g = ? kg (×100, 即 12.5 输 1250)', ans: 1250, diff: 5 },
+  { q: '3 days = ? hours', ans: 72, diff: 5 },
+  { q: '1 week = ? hours', ans: 168, diff: 5 }
+];
+
+// 2. Grammar MCQ (~40 道)
+const GRAMMAR_QUESTIONS = [
+  // diff 1 — 主谓 / 时态基础
+  { q: 'He ___ to school every day.', opts: ['go','goes','going','gone'], ans: 1, diff: 1, tag: '主谓' },
+  { q: 'They ___ playing football.', opts: ['is','are','am','be'], ans: 1, diff: 1, tag: '主谓' },
+  { q: 'I ___ a student.', opts: ['am','is','are','be'], ans: 0, diff: 1, tag: '主谓' },
+  { q: 'She ___ a book now.', opts: ['read','reads','is reading','are reading'], ans: 2, diff: 1, tag: '现在进行' },
+  { q: 'My brother ___ tall.', opts: ['is','are','am','be'], ans: 0, diff: 1, tag: '主谓' },
+  // diff 2 — 时态扩展
+  { q: 'Yesterday I ___ a movie.', opts: ['watch','watches','watched','watching'], ans: 2, diff: 2, tag: '过去时' },
+  { q: 'Tomorrow we ___ to the park.', opts: ['go','went','will go','going'], ans: 2, diff: 2, tag: '将来时' },
+  { q: 'I ___ my homework already.', opts: ['finish','finished','have finished','finishing'], ans: 2, diff: 2, tag: '完成时' },
+  { q: 'When I arrived, she ___ TV.', opts: ['watch','watched','was watching','watching'], ans: 2, diff: 2, tag: '过去进行' },
+  { q: 'He ___ in Singapore for 5 years.', opts: ['live','lived','has lived','living'], ans: 2, diff: 2, tag: '现在完成' },
+  // diff 3 — 比较级 / 介词
+  { q: 'She is ___ than me.', opts: ['taller','more taller','tallest','tall'], ans: 0, diff: 3, tag: '比较级' },
+  { q: 'This is the ___ book I have read.', opts: ['good','better','best','well'], ans: 2, diff: 3, tag: '最高级' },
+  { q: 'The cat is ___ the chair.', opts: ['under','at','in','on top'], ans: 0, diff: 3, tag: '介词' },
+  { q: 'I am good ___ math.', opts: ['at','in','on','to'], ans: 0, diff: 3, tag: '介词搭配' },
+  { q: 'Be careful ___ the hot soup.', opts: ['with','of','to','in'], ans: 0, diff: 3, tag: '介词' },
+  // diff 4 — 高频陷阱
+  { q: 'If it rains, I ___ at home.', opts: ['stay','will stay','stayed','staying'], ans: 1, diff: 4, tag: '条件句' },
+  { q: 'Neither John ___ Mary likes durian.', opts: ['or','nor','and','but'], ans: 1, diff: 4, tag: 'neither/nor' },
+  { q: 'She speaks English ___ than her brother.', opts: ['good','better','best','more well'], ans: 1, diff: 4, tag: '副词比较' },
+  { q: 'I would rather ___ tea than coffee.', opts: ['drink','drinks','drinking','to drink'], ans: 0, diff: 4, tag: 'would rather' },
+  { q: 'The book ___ I borrowed is interesting.', opts: ['who','which','whom','whose'], ans: 1, diff: 4, tag: '关系代词' },
+  // diff 5 — PSLE+ 难点
+  { q: 'Neither of them ___ here.', opts: ['is','are','were','have'], ans: 0, diff: 5, tag: '主谓陷阱' },
+  { q: 'Each of the boys ___ a prize.', opts: ['receive','receives','receiving','have'], ans: 1, diff: 5, tag: '主谓陷阱' },
+  { q: 'The news ___ shocking.', opts: ['is','are','were','being'], ans: 0, diff: 5, tag: '不可数主谓' },
+  { q: 'Hardly ___ I sat down when the phone rang.', opts: ['have','had','did','was'], ans: 1, diff: 5, tag: '倒装' },
+  { q: 'Not only ___ smart, but also kind.', opts: ['he is','is he','he was','was him'], ans: 1, diff: 5, tag: '倒装' }
+];
+
+// 3. Cloze 单空填 (~40 道)
+const CLOZE_QUESTIONS = [
+  // diff 1 — 基础介词
+  { sentence: 'I went ___ school yesterday.', opts: ['to','at','in','on'], ans: 0, diff: 1 },
+  { sentence: 'The book is ___ the table.', opts: ['on','at','in','to'], ans: 0, diff: 1 },
+  { sentence: 'I live ___ Singapore.', opts: ['in','at','on','to'], ans: 0, diff: 1 },
+  { sentence: 'She is afraid ___ dogs.', opts: ['of','from','to','at'], ans: 0, diff: 1 },
+  { sentence: 'Class starts ___ 8 am.', opts: ['at','on','in','to'], ans: 0, diff: 1 },
+  // diff 2 — 冠词/简单
+  { sentence: '___ apple a day keeps the doctor away.', opts: ['An','A','The','One'], ans: 0, diff: 2, tag: '冠词' },
+  { sentence: 'She is ___ honest girl.', opts: ['an','a','the','one'], ans: 0, diff: 2, tag: '冠词' },
+  { sentence: 'I had ___ cup of tea.', opts: ['a','an','the','some'], ans: 0, diff: 2, tag: '冠词' },
+  { sentence: 'He plays ___ piano well.', opts: ['the','a','an','/'], ans: 0, diff: 2, tag: '冠词' },
+  { sentence: 'My dad goes to work ___ MRT.', opts: ['by','on','in','with'], ans: 0, diff: 2, tag: '介词' },
+  // diff 3 — 介词搭配
+  { sentence: 'She arrived ___ Singapore last week.', opts: ['in','at','on','to'], ans: 0, diff: 3 },
+  { sentence: 'I am interested ___ science.', opts: ['in','at','on','about'], ans: 0, diff: 3 },
+  { sentence: "Don't laugh ___ him!", opts: ['at','to','of','with'], ans: 0, diff: 3 },
+  { sentence: 'We will meet ___ Monday.', opts: ['on','at','in','from'], ans: 0, diff: 3 },
+  { sentence: 'She is married ___ a doctor.', opts: ['to','with','of','at'], ans: 0, diff: 3 },
+  // diff 4 — phrasal verbs
+  { sentence: 'I came ___ this old photo in the attic.', opts: ['across','at','on','through'], ans: 0, diff: 4, tag: 'phrasal' },
+  { sentence: 'Please look ___ the children while I go out.', opts: ['after','at','for','into'], ans: 0, diff: 4, tag: 'phrasal' },
+  { sentence: 'The fire broke ___ at midnight.', opts: ['out','in','off','down'], ans: 0, diff: 4, tag: 'phrasal' },
+  { sentence: 'He gave ___ smoking last year.', opts: ['up','off','in','out'], ans: 0, diff: 4, tag: 'phrasal' },
+  { sentence: 'They put ___ the meeting to next week.', opts: ['off','in','out','down'], ans: 0, diff: 4, tag: 'phrasal' },
+  // diff 5 — 难混淆
+  { sentence: 'Despite ___ tired, he kept working.', opts: ['being','to be','was','being a'], ans: 0, diff: 5 },
+  { sentence: "The students were dismissed ___ the principal's announcement.", opts: ['upon','at','on','in'], ans: 0, diff: 5 },
+  { sentence: 'She was so engrossed ___ the book.', opts: ['in','at','with','on'], ans: 0, diff: 5 },
+  { sentence: 'I prefer reading ___ watching TV.', opts: ['to','than','rather','more'], ans: 0, diff: 5 },
+  { sentence: 'He had no choice ___ to apologize.', opts: ['but','than','rather','then'], ans: 0, diff: 5 }
+];
+
+// 4. Science 分类 (~10 题, 每题 5-8 项)
+const SCIENCE_CLASSIFY = [
+  { topic: '动物分类: 脊椎 vs 无脊椎', cats: ['脊椎动物','无脊椎动物'], diff: 1,
+    items: [{n:'鱼',c:0},{n:'蝴蝶',c:1},{n:'青蛙',c:0},{n:'蜘蛛',c:1},{n:'鸟',c:0},{n:'蜗牛',c:1}] },
+  { topic: '植物: 开花 vs 不开花', cats: ['开花植物','不开花植物'], diff: 1,
+    items: [{n:'玫瑰',c:0},{n:'蕨类',c:1},{n:'向日葵',c:0},{n:'苔藓',c:1},{n:'樱花',c:0},{n:'蘑菇',c:1}] },
+  { topic: '材料: 导体 vs 绝缘体', cats: ['导体','绝缘体'], diff: 2,
+    items: [{n:'铜',c:0},{n:'塑料',c:1},{n:'铁',c:0},{n:'橡胶',c:1},{n:'银',c:0},{n:'木头',c:1},{n:'玻璃',c:1}] },
+  { topic: '动物分类: 哺乳/鸟/鱼/爬行', cats: ['哺乳','鸟类','鱼类','爬行类'], diff: 3,
+    items: [{n:'狗',c:0},{n:'鹰',c:1},{n:'鲨鱼',c:2},{n:'蛇',c:3},{n:'蝙蝠',c:0},{n:'企鹅',c:1},{n:'鳄鱼',c:3}] },
+  { topic: '物质三态: 固/液/气', cats: ['固体','液体','气体'], diff: 2,
+    items: [{n:'冰',c:0},{n:'水',c:1},{n:'水蒸气',c:2},{n:'石头',c:0},{n:'果汁',c:1},{n:'氧气',c:2}] },
+  { topic: '能量形式', cats: ['热能','光能','电能','声能'], diff: 4,
+    items: [{n:'阳光',c:1},{n:'火',c:0},{n:'电池',c:2},{n:'乐器',c:3},{n:'灯泡',c:1},{n:'微波炉',c:0},{n:'扬声器',c:3}] },
+  { topic: '生命周期: 完全/不完全变态', cats: ['完全变态','不完全变态'], diff: 4,
+    items: [{n:'蝴蝶',c:0},{n:'蝗虫',c:1},{n:'蚊子',c:0},{n:'蝉',c:1},{n:'蜜蜂',c:0},{n:'蟋蟀',c:1}] },
+  { topic: '光的反射/折射/吸收', cats: ['反射','折射','吸收'], diff: 5,
+    items: [{n:'镜子',c:0},{n:'水中筷子弯',c:1},{n:'黑布',c:2},{n:'放大镜',c:1},{n:'金属表面',c:0},{n:'深色衣服',c:2}] },
+  { topic: '环境因素', cats: ['生物因素','非生物因素'], diff: 3,
+    items: [{n:'植物',c:0},{n:'阳光',c:1},{n:'细菌',c:0},{n:'温度',c:1},{n:'动物',c:0},{n:'水',c:1},{n:'空气',c:1}] },
+  { topic: '电路: 串联/并联', cats: ['串联','并联'], diff: 5,
+    items: [{n:'圣诞灯一坏全灭',c:0},{n:'家用插座',c:1},{n:'手电筒电池',c:0},{n:'路灯一栋楼',c:1}] }
+];
+
+// helpers
+function getUnitByDiff(diff, n) { return _sampleByDiff(UNIT_CONVERSIONS, diff, n || 10); }
+function getGrammarByDiff(diff, n) { return _sampleByDiff(GRAMMAR_QUESTIONS, diff, n || 10); }
+function getClozeByDiff(diff, n) { return _sampleByDiff(CLOZE_QUESTIONS, diff, n || 10); }
+function getSciClassifyByDiff(diff) { const arr = _sampleByDiff(SCIENCE_CLASSIFY, diff, 1); return arr[0] || SCIENCE_CLASSIFY[0]; }
+
 // ============= v18.27: 闹铃时间表 (周末优先, 工作日 placeholder) =============
 const ALARM_SCHEDULE = {
   Sat: [
@@ -1882,7 +2031,12 @@ function getDefaultState() {
       vocab:   { difficulty: 1, recent: [] },
       math:    { difficulty: 1, recent: [] },
       editing: { difficulty: 1, recent: [] },
-      listen:  { difficulty: 1, recent: [] }
+      listen:  { difficulty: 1, recent: [] },
+      // v18.28: 4 个新 game
+      unit:    { difficulty: 1, recent: [] },
+      grammar: { difficulty: 1, recent: [] },
+      cloze:   { difficulty: 1, recent: [] },
+      scilab:  { difficulty: 1, recent: [] }
     },
     // v18.27: 闹铃
     alarmsEnabled: true,
@@ -3315,3 +3469,12 @@ window.getKnowledgeTreeStatus = getKnowledgeTreeStatus;
 window.getKnowledgeProgress = getKnowledgeProgress;
 // v18.27: 闹铃
 window.ALARM_SCHEDULE = ALARM_SCHEDULE;
+// v18.28: 4 新 mini-game 数据 + helpers
+window.UNIT_CONVERSIONS = UNIT_CONVERSIONS;
+window.GRAMMAR_QUESTIONS = GRAMMAR_QUESTIONS;
+window.CLOZE_QUESTIONS = CLOZE_QUESTIONS;
+window.SCIENCE_CLASSIFY = SCIENCE_CLASSIFY;
+window.getUnitByDiff = getUnitByDiff;
+window.getGrammarByDiff = getGrammarByDiff;
+window.getClozeByDiff = getClozeByDiff;
+window.getSciClassifyByDiff = getSciClassifyByDiff;

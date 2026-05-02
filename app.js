@@ -1815,7 +1815,7 @@ function _bumpScoreNumber() {
 function _getDailyGameCount(gameKey) {
   const today = new Date().toISOString().slice(0, 10);
   if (!state.gameDailyCount || state.gameDailyCount.date !== today) {
-    state.gameDailyCount = { date: today, counts: { vocab: 0, math: 0, editing: 0, listen: 0 } };
+    state.gameDailyCount = { date: today, counts: { vocab: 0, math: 0, editing: 0, listen: 0, unit: 0, grammar: 0, cloze: 0, scilab: 0 } };
   }
   return state.gameDailyCount.counts[gameKey] || 0;
 }
@@ -2241,7 +2241,7 @@ function openMiniGameHub() {
       <div class="mgh-rules">⚠️ 防沉迷: 第 1 次满奖 / 第 2 次半奖 / 第 3 次 1/4 奖 / 第 4+ 次只能玩不计分</div>
       <div class="mgh-grid">
         <button class="mgh-game" onclick="closeMiniGameHub(); openVocabGame(${state.currentWeek})">
-          📚<br><b>词汇连连看</b><br><small>6×6 配对, 全对 +10 + 1 宝箱</small>${status('vocab')}
+          📚<br><b>词汇连连看</b><br><small>6×6 配对</small>${status('vocab')}
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openMathGame()">
           ➗<br><b>数学速算</b><br><small>30 秒答 10 题</small>${status('math')}
@@ -2252,6 +2252,18 @@ function openMiniGameHub() {
         <button class="mgh-game" onclick="closeMiniGameHub(); openListenGame()">
           🎧<br><b>听写练习</b><br><small>听 1 段填 5 词</small>${status('listen')}
         </button>
+        <button class="mgh-game" onclick="closeMiniGameHub(); openUnitGame()">
+          ⚗️<br><b>单位换算</b><br><small>30 秒 10 题</small>${status('unit')}
+        </button>
+        <button class="mgh-game" onclick="closeMiniGameHub(); openGrammarGame()">
+          ✏️<br><b>Grammar MCQ</b><br><small>10 题语法</small>${status('grammar')}
+        </button>
+        <button class="mgh-game" onclick="closeMiniGameHub(); openClozeGame()">
+          🧩<br><b>Cloze 单空</b><br><small>10 句填空</small>${status('cloze')}
+        </button>
+        <button class="mgh-game" onclick="closeMiniGameHub(); openSciClassifyGame()">
+          🔬<br><b>科学快分类</b><br><small>拖项到正确类</small>${status('scilab')}
+        </button>
       </div>
     </div>
   `;
@@ -2260,6 +2272,303 @@ function openMiniGameHub() {
 function closeMiniGameHub() {
   document.getElementById('miniGameHubModal').classList.remove('show');
 }
+
+// ============ v18.28: 4 个新 mini-game ============
+
+// === 1. 单位换算 (复用 mathGameModal) ===
+let _unitGameState = null;
+let _unitTimer = null;
+function openUnitGame() {
+  const diff = window.getDifficulty ? window.getDifficulty(state, 'unit') : 1;
+  const qs = window.getUnitByDiff(diff, 10);
+  _unitGameState = { qs, idx: 0, correct: 0, wrong: 0, timeLeft: 45, diff };
+  _renderUnitGame();
+  if (_unitTimer) clearInterval(_unitTimer);
+  _unitTimer = setInterval(() => {
+    if (!_unitGameState) { clearInterval(_unitTimer); _unitTimer = null; return; }
+    _unitGameState.timeLeft--;
+    if (_unitGameState.timeLeft <= 0) { clearInterval(_unitTimer); _unitTimer = null; _finishUnitGame(); }
+    else _updateUnitStats();
+  }, 1000);
+}
+function _updateUnitStats() {
+  const el = document.getElementById('unitStats');
+  const g = _unitGameState;
+  if (el && g) el.textContent = `⏱️ ${g.timeLeft}s · ✅ ${g.correct} · ❌ ${g.wrong} · ${g.idx+1}/10`;
+}
+function _renderUnitGame() {
+  const modal = document.getElementById('mathGameModal');  // 复用容器
+  if (!modal || !_unitGameState) return;
+  const g = _unitGameState;
+  if (g.idx >= g.qs.length) { _finishUnitGame(); return; }
+  const q = g.qs[g.idx];
+  modal.innerHTML = `
+    <div class="mg-inner">
+      <div class="mg-stats" id="unitStats">⏱️ ${g.timeLeft}s · ✅ ${g.correct} · ❌ ${g.wrong} · ${g.idx+1}/10</div>
+      <div class="mg-q">⚗️ ${escapeHtml(q.q)}</div>
+      <input type="text" inputmode="numeric" pattern="-?[0-9]*" id="unitInput" value="" class="mg-input" onkeydown="if(event.key==='Enter') submitUnitAnswer()" placeholder="点这里输入答案">
+      <button class="btn btn-primary mg-submit" onclick="submitUnitAnswer()">提交 (Enter)</button>
+      <button class="vocab-modal-close mg-close" onclick="closeUnitGame()">×</button>
+    </div>`;
+  modal.classList.add('show');
+}
+function _updateUnitQuestion() {
+  const g = _unitGameState;
+  if (!g || g.idx >= g.qs.length) return;
+  const q = g.qs[g.idx];
+  const qEl = document.querySelector('.mg-q');
+  const inp = document.getElementById('unitInput');
+  if (qEl) qEl.innerHTML = '⚗️ ' + escapeHtml(q.q);
+  if (inp) inp.value = '';
+  _updateUnitStats();
+}
+function submitUnitAnswer() {
+  const g = _unitGameState;
+  if (!g) return;
+  const inp = document.getElementById('unitInput');
+  if (!inp || inp.value === '') return;
+  const val = parseInt(inp.value);
+  const q = g.qs[g.idx];
+  if (val === q.ans) { g.correct++; playSound('ding'); } else { g.wrong++; playSound('sad'); }
+  g.idx++;
+  if (g.idx >= g.qs.length) {
+    if (_unitTimer) { clearInterval(_unitTimer); _unitTimer = null; }
+    _finishUnitGame();
+  } else _updateUnitQuestion();
+}
+function _finishUnitGame() {
+  const g = _unitGameState;
+  if (!g) return;
+  let diffR = null;
+  if (window.recordGameRun) diffR = window.recordGameRun(state, 'unit', g.correct, g.qs.length);
+  const playNum = _bumpDailyGameCount('unit');
+  const mult = _getGameMultiplier(playNum);
+  let baseR = 0;
+  if (g.correct >= 10) baseR = 8;
+  else if (g.correct >= 7) baseR = 5;
+  const reward = Math.floor(baseR * mult);
+  if (reward > 0) {
+    state.totalPoints += reward;
+    state.logs.push({ reason: `🎮 单位换算 ${g.correct}/10 (第 ${playNum} 次)`, points: reward, week: state.currentWeek, timestamp: Date.now() });
+  }
+  saveState(state);
+  const modal = document.getElementById('mathGameModal');
+  modal.innerHTML = `
+    <div class="mg-inner">
+      <div class="mg-result-icon">${g.correct >= 10 ? '🎉' : g.correct >= 7 ? '👍' : '🤔'}</div>
+      <div class="mg-result-title">${g.correct >= 10 ? '全对!' : '完成!'} (今日第 ${playNum} 次)</div>
+      <div class="mg-result-stats">${g.correct}/10 对 · ${g.wrong} 错</div>
+      <div class="mg-result-reward">+${reward} 分 · ${_getMultiplierLabel(playNum)}</div>
+      <button class="btn btn-primary" onclick="closeUnitGame()">知道了!</button>
+    </div>`;
+  if (g.correct >= 10 && mult > 0) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 40); playSound('tada'); }
+  if (diffR && diffR.levelChanged === 'up') { showToast(`🆙 单位换算难度升到 Lv ${diffR.newDiff}!`, 'happy'); playSound('tada'); }
+  if (diffR && diffR.levelChanged === 'down') showToast(`📉 单位换算难度降到 Lv ${diffR.newDiff}`, 'sad');
+  _unitGameState = null;
+}
+function closeUnitGame() {
+  if (_unitTimer) { clearInterval(_unitTimer); _unitTimer = null; }
+  document.getElementById('mathGameModal').classList.remove('show');
+  _unitGameState = null;
+  renderAll();
+}
+
+// === 2/3. Grammar + Cloze (共用 MCQ 框架) ===
+let _mcqGameState = null;
+function openGrammarGame() { _openMcqGame('grammar', 'Grammar 选择题', 'q'); }
+function openClozeGame() { _openMcqGame('cloze', 'Cloze 单空填', 'sentence'); }
+function _openMcqGame(key, title, qField) {
+  const diff = window.getDifficulty ? window.getDifficulty(state, key) : 1;
+  const fn = key === 'grammar' ? window.getGrammarByDiff : window.getClozeByDiff;
+  const qs = fn(diff, 10);
+  _mcqGameState = { key, title, qField, qs, idx: 0, correct: 0, wrong: 0, diff };
+  _renderMcqGame();
+}
+function _renderMcqGame() {
+  const g = _mcqGameState;
+  if (!g) return;
+  let modal = document.getElementById('mcqGameModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'mcqGameModal';
+    modal.className = 'mb-result-modal';
+    document.body.appendChild(modal);
+  }
+  if (g.idx >= g.qs.length) { _finishMcqGame(); return; }
+  const q = g.qs[g.idx];
+  const qText = q[g.qField];
+  const optsHtml = q.opts.map((o, i) =>
+    `<button class="mcq-opt" onclick="submitMcqAnswer(${i})">${String.fromCharCode(65+i)}. ${escapeHtml(o)}</button>`
+  ).join('');
+  modal.innerHTML = `
+    <div class="mg-inner mcq-inner">
+      <div class="mg-stats">${g.title} · ✅ ${g.correct} · ❌ ${g.wrong} · ${g.idx+1}/10</div>
+      <div class="mg-q mcq-q">${escapeHtml(qText)}</div>
+      ${q.tag ? `<div class="mcq-tag">${escapeHtml(q.tag)}</div>` : ''}
+      <div class="mcq-opts">${optsHtml}</div>
+      <button class="vocab-modal-close mg-close" onclick="closeMcqGame()">×</button>
+    </div>`;
+  modal.classList.add('show');
+}
+function submitMcqAnswer(idx) {
+  const g = _mcqGameState;
+  if (!g) return;
+  const q = g.qs[g.idx];
+  const isCorrect = idx === q.ans;
+  if (isCorrect) { g.correct++; playSound('ding'); } else { g.wrong++; playSound('sad'); }
+  // 视觉反馈 0.4s 然后下一题
+  const opts = document.querySelectorAll('.mcq-opt');
+  opts.forEach((b, i) => {
+    if (i === q.ans) b.classList.add('mcq-correct');
+    else if (i === idx) b.classList.add('mcq-wrong');
+    b.disabled = true;
+  });
+  setTimeout(() => {
+    g.idx++;
+    if (g.idx >= g.qs.length) _finishMcqGame();
+    else _renderMcqGame();
+  }, 700);
+}
+function _finishMcqGame() {
+  const g = _mcqGameState;
+  if (!g) return;
+  let diffR = null;
+  if (window.recordGameRun) diffR = window.recordGameRun(state, g.key, g.correct, g.qs.length);
+  const playNum = _bumpDailyGameCount(g.key);
+  const mult = _getGameMultiplier(playNum);
+  let baseR = 0;
+  if (g.correct >= 10) baseR = 8;
+  else if (g.correct >= 7) baseR = 5;
+  const reward = Math.floor(baseR * mult);
+  if (reward > 0) {
+    state.totalPoints += reward;
+    state.logs.push({ reason: `🎮 ${g.title} ${g.correct}/10 (第 ${playNum} 次)`, points: reward, week: state.currentWeek, timestamp: Date.now() });
+  }
+  saveState(state);
+  const modal = document.getElementById('mcqGameModal');
+  modal.innerHTML = `
+    <div class="mg-inner mcq-inner">
+      <div class="mg-result-icon">${g.correct >= 10 ? '🎉' : g.correct >= 7 ? '👍' : '🤔'}</div>
+      <div class="mg-result-title">${g.title} (今日第 ${playNum} 次)</div>
+      <div class="mg-result-stats">${g.correct}/10 对 · ${g.wrong} 错</div>
+      <div class="mg-result-reward">+${reward} 分 · ${_getMultiplierLabel(playNum)}</div>
+      <button class="btn btn-primary" onclick="closeMcqGame()">知道了!</button>
+    </div>`;
+  if (g.correct >= 10 && mult > 0) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 40); playSound('tada'); }
+  if (diffR && diffR.levelChanged === 'up') { showToast(`🆙 ${g.title} 难度升到 Lv ${diffR.newDiff}!`, 'happy'); playSound('tada'); }
+  if (diffR && diffR.levelChanged === 'down') showToast(`📉 ${g.title} 难度降到 Lv ${diffR.newDiff}`, 'sad');
+  _mcqGameState = null;
+}
+function closeMcqGame() {
+  const m = document.getElementById('mcqGameModal');
+  if (m) m.classList.remove('show');
+  _mcqGameState = null;
+  renderAll();
+}
+
+// === 4. Science 快分类 ===
+let _sciGameState = null;
+function openSciClassifyGame() {
+  const diff = window.getDifficulty ? window.getDifficulty(state, 'scilab') : 1;
+  const item = window.getSciClassifyByDiff(diff);
+  _sciGameState = { item, picks: {}, correct: 0, wrong: 0, diff };
+  _renderSciGame();
+}
+function _renderSciGame() {
+  const g = _sciGameState;
+  if (!g) return;
+  let modal = document.getElementById('sciGameModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'sciGameModal';
+    modal.className = 'mb-result-modal';
+    document.body.appendChild(modal);
+  }
+  const total = g.item.items.length;
+  const done = Object.keys(g.picks).length;
+  const itemsHtml = g.item.items.map((it, i) => {
+    const picked = g.picks[i];
+    const isCorrect = picked !== undefined && picked === it.c;
+    const isWrong = picked !== undefined && picked !== it.c;
+    const cls = picked !== undefined ? (isCorrect ? 'sci-correct' : 'sci-wrong') : '';
+    const chips = g.item.cats.map((c, ci) =>
+      `<button class="sci-chip" onclick="sciClassifyPick(${i}, ${ci})" ${picked !== undefined ? 'disabled' : ''}>${escapeHtml(c)}</button>`
+    ).join('');
+    return `
+      <div class="sci-row ${cls}">
+        <div class="sci-name">${escapeHtml(it.n)}</div>
+        ${picked !== undefined ?
+          `<div class="sci-result">${isCorrect ? '✓ 对' : '✗ 错, 应是 ' + escapeHtml(g.item.cats[it.c])}</div>` :
+          `<div class="sci-chips">${chips}</div>`}
+      </div>`;
+  }).join('');
+  modal.innerHTML = `
+    <div class="mg-inner sci-inner">
+      <div class="mg-stats">🔬 ${escapeHtml(g.item.topic)} · ${done}/${total}</div>
+      <div class="sci-list">${itemsHtml}</div>
+      ${done >= total ? `<button class="btn btn-primary" onclick="_finishSciGame()">完成 — 看结果</button>` : ''}
+      <button class="vocab-modal-close mg-close" onclick="closeSciGame()">×</button>
+    </div>`;
+  modal.classList.add('show');
+}
+function sciClassifyPick(itemIdx, catIdx) {
+  const g = _sciGameState;
+  if (!g) return;
+  g.picks[itemIdx] = catIdx;
+  if (catIdx === g.item.items[itemIdx].c) { g.correct++; playSound('ding'); }
+  else { g.wrong++; playSound('sad'); }
+  _renderSciGame();
+}
+function _finishSciGame() {
+  const g = _sciGameState;
+  if (!g) return;
+  const total = g.item.items.length;
+  let diffR = null;
+  if (window.recordGameRun) diffR = window.recordGameRun(state, 'scilab', g.correct, total);
+  const playNum = _bumpDailyGameCount('scilab');
+  const mult = _getGameMultiplier(playNum);
+  let baseR = 0;
+  const acc = g.correct / total;
+  if (acc >= 1) baseR = 10;
+  else if (acc >= 0.7) baseR = 5;
+  const reward = Math.floor(baseR * mult);
+  if (reward > 0) {
+    state.totalPoints += reward;
+    state.logs.push({ reason: `🎮 科学分类 ${g.correct}/${total} (第 ${playNum} 次)`, points: reward, week: state.currentWeek, timestamp: Date.now() });
+  }
+  saveState(state);
+  const modal = document.getElementById('sciGameModal');
+  modal.innerHTML = `
+    <div class="mg-inner">
+      <div class="mg-result-icon">${acc >= 1 ? '🎉' : acc >= 0.7 ? '👍' : '🤔'}</div>
+      <div class="mg-result-title">${escapeHtml(g.item.topic)} (今日第 ${playNum} 次)</div>
+      <div class="mg-result-stats">${g.correct}/${total} 对</div>
+      <div class="mg-result-reward">+${reward} 分 · ${_getMultiplierLabel(playNum)}</div>
+      <button class="btn btn-primary" onclick="closeSciGame()">知道了!</button>
+    </div>`;
+  if (acc >= 1 && mult > 0) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 40); playSound('tada'); }
+  if (diffR && diffR.levelChanged === 'up') { showToast(`🆙 科学分类难度升到 Lv ${diffR.newDiff}!`, 'happy'); playSound('tada'); }
+  if (diffR && diffR.levelChanged === 'down') showToast(`📉 科学分类难度降到 Lv ${diffR.newDiff}`, 'sad');
+  _sciGameState = null;
+}
+function closeSciGame() {
+  const m = document.getElementById('sciGameModal');
+  if (m) m.classList.remove('show');
+  _sciGameState = null;
+  renderAll();
+}
+
+window.openUnitGame = openUnitGame;
+window.submitUnitAnswer = submitUnitAnswer;
+window.closeUnitGame = closeUnitGame;
+window.openGrammarGame = openGrammarGame;
+window.openClozeGame = openClozeGame;
+window.submitMcqAnswer = submitMcqAnswer;
+window.closeMcqGame = closeMcqGame;
+window.openSciClassifyGame = openSciClassifyGame;
+window.sciClassifyPick = sciClassifyPick;
+window._finishSciGame = _finishSciGame;
+window.closeSciGame = closeSciGame;
 
 // 数学速算
 let _mathGameState = null;
