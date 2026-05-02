@@ -4211,7 +4211,7 @@ function renderHistoryPage() {
       <div style="background: white; border: 2px solid var(--color-text); border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
         <div>
           <b>${escapeHtml(ex.item)}</b><br>
-          <span style="font-size: 12px; color: var(--color-text-light);">${ex.date} · ${ex.points} 分 = SGD ${(ex.points * (window.SGD_PER_POINT || 0.25)).toFixed(2)}</span>
+          <span style="font-size: 12px; color: var(--color-text-light);">${ex.date} · ${ex.points} 分 = SGD ${(ex.points * (window.SGD_PER_POINT || 0.05)).toFixed(2)}</span>
         </div>
         <button class="btn btn-secondary" style="font-size: 12px; padding: 4px 8px;" onclick="deleteExchange(${idx})">删除</button>
       </div>
@@ -4700,10 +4700,10 @@ function addExchange() {
   if (points > state.totalPoints) {
     if (!confirm(`积分不够(当前 ${state.totalPoints} 分),仍要记录吗?`)) return;
   }
-  // v16: 单次终极大奖封顶 SGD 1500 (= 6000 积分 @ 0.25/分)
-  const SGD = points * (window.SGD_PER_POINT || 0.25);
+  // 单次终极大奖封顶 SGD 1500 (= 30000 积分 @ 0.05/分)
+  const SGD = points * (window.SGD_PER_POINT || 0.05);
   const CAP = window.ULTIMATE_PRIZE_SGD || 1500;
-  const CAP_PTS = window.ULTIMATE_PRIZE_POINTS || 6000;
+  const CAP_PTS = window.ULTIMATE_PRIZE_POINTS || 30000;
   if (SGD > CAP) {
     if (!confirm(`这次兑换 SGD ${SGD.toFixed(0)} 超过单次终极大奖封顶 SGD ${CAP} (=${CAP_PTS} 积分)。建议拆成多次。仍要继续?`)) return;
   }

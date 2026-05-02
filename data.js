@@ -198,11 +198,11 @@ const DAY_LABELS = {
 };
 const DAY_KEYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-// ============= v16: 兑换汇率 (1 积分 = 0.25 SGD) =============
-// 6000 积分 (满分 dragon 装备线) = SGD 1500 终极大奖
-const SGD_PER_POINT = 0.05;  // v18.33: 0.25→0.05 (实际多分数源累加, 30000 分 = 1500 SGD 终极奖)
+// ============= 兑换汇率 (v18.33 起: 1 积分 = 0.05 SGD) =============
+// 30000 积分 (神龙装备线) = SGD 1500 终极大奖
+const SGD_PER_POINT = 0.05;
 const ULTIMATE_PRIZE_SGD = 1500;
-const ULTIMATE_PRIZE_POINTS = ULTIMATE_PRIZE_SGD / SGD_PER_POINT;  // = 6000
+const ULTIMATE_PRIZE_POINTS = ULTIMATE_PRIZE_SGD / SGD_PER_POINT;  // = 30000
 
 // ============= v16: 6 条核心铁律 (每天主页轮换 1 条) =============
 const IRON_RULES = [
@@ -567,7 +567,7 @@ const ENGLISH_WOW_FACTS = [
   { tag:'Synthesis', hook:'🔗 PSLE Paper 2 顶端 10 分: Synthesis', body:'把 2 个简单句合并成 1 个复杂句, 或换句型不变意 — Synthesis & Transformation 占 10 分。 W15 起每周 1h 专项练习。' },
   { tag:'词汇', hook:'🌍 PSLE Vocab 6 完成 = AL2 起步线', body:'Vocabulary 6 这本完成 = 词汇量到 PSLE AL2 标准。 v14 计划 W16 完成 Vocab 5, W52 前完成 Vocab 6 — 严格执行 = 英语稳 AL2。' },
   { tag:'写作', hook:'🌧️ 描写下雨用 5 个不同动词 — 都比 "rain" 好', body:'drizzle(细雨)/ shower(短雨)/ pour(倾盆)/ pelt(打)/ patter(嗒嗒). PSLE 作文用一个就比 "It rained" 高级 3 倍。' },
-  { tag:'PSLE', hook:'🎯 PSLE 英语 Paper 1 = 作文 + Editing — 70 min', body:'Paper 1 = Composition(50 分, 50 min)+ Situational Writing(15 分, 20 min). 时间紧, 必须留 5 min 检查拼写。' }
+  { tag:'PSLE', hook:'🎯 PSLE 英语 Paper 1 = 写作 1h 10min', body:'Paper 1 = Situational Writing(15 分, ~20 min) + Continuous Writing(40 分, ~50 min). 注意: Editing 在 Paper 2, 不在 Paper 1. 必留 5 min 检查拼写。' }
 ];
 
 // 按日轮换: Sun/Mon/Wed/Fri = 英语 (4 天), Tue/Thu/Sat = 科学 (3 天)
@@ -1181,7 +1181,6 @@ const VOCAB_HARD = [
   { en: 'congestion', zh: '拥堵', diff: 4, sent: 'Heavy traffic congestion delayed the bus.' },
   { en: 'commute', zh: '通勤', diff: 4, sent: 'My father commutes to work by MRT.' },
   { en: 'detour', zh: '绕道', diff: 4, sent: 'We had to take a detour due to road closure.' },
-  { en: 'paradigm', zh: '范式 (超 PSLE)', diff: 5, sent: 'This discovery shifts the scientific paradigm.' },
   { en: 'crestfallen', zh: '沮丧的', diff: 5, sent: 'He was crestfallen after losing the match.' },
   { en: 'jubilant', zh: '欢欣的', diff: 5, sent: 'The jubilant crowd cheered loudly.' },
   { en: 'phenomenon', zh: '现象', diff: 4, sent: 'Lightning is a fascinating phenomenon.' },
@@ -1865,7 +1864,7 @@ const SCIENCE_CLASSIFY = [
   { topic: '动物分类: 脊椎 vs 无脊椎', cats: ['脊椎动物','无脊椎动物'], diff: 1,
     items: [{n:'鱼',c:0},{n:'蝴蝶',c:1},{n:'青蛙',c:0},{n:'蜘蛛',c:1},{n:'鸟',c:0},{n:'蜗牛',c:1}] },
   { topic: '植物: 开花 vs 不开花', cats: ['开花植物','不开花植物'], diff: 1,
-    items: [{n:'玫瑰',c:0},{n:'蕨类',c:1},{n:'向日葵',c:0},{n:'苔藓',c:1},{n:'樱花',c:0},{n:'蘑菇',c:1}] },
+    items: [{n:'玫瑰',c:0},{n:'蕨类',c:1},{n:'向日葵',c:0},{n:'苔藓',c:1},{n:'樱花',c:0},{n:'地钱',c:1}] },
   { topic: '材料: 导体 vs 绝缘体', cats: ['导体','绝缘体'], diff: 2,
     items: [{n:'铜',c:0},{n:'塑料',c:1},{n:'铁',c:0},{n:'橡胶',c:1},{n:'银',c:0},{n:'木头',c:1},{n:'玻璃',c:1}] },
   { topic: '动物分类: 哺乳/鸟/鱼/爬行', cats: ['哺乳','鸟类','鱼类','爬行类'], diff: 3,
@@ -2105,7 +2104,7 @@ const KNOWLEDGE_TREE = {
       pitfall: '卡顿 1 次 -1 分, 错词 -0.5. 宁用简单流畅, 别用复杂卡 5 秒',
       game: 'vocab' },
     { id: 'eng_psle', name: 'PSLE 笔试', weeks: [66, 73], icon: '🎯', milestone: 'W73',
-      desc: 'PSLE 英语 4 张卷 = 200 分. AL 4-6 = 75-89%. 时间分配: P1 (作文 70 min) / P2 (1h45 阅读+语法) / P3 (听力 35 min) / P4 (Oral 单独).',
+      desc: 'PSLE 英语 4 张卷 = 200 分. AL 4-6 = 75-89%. 时间分配: P1 (作文 1h10min: Sit Writing+Cont Writing) / P2 (1h50min Grammar+Cloze+Editing+Comp) / P3 (听力 35 min) / P4 (Oral). Editing 在 Paper 2, 不在 P1.',
       examples: ['Paper 2 时间: 35 min synthesis + 35 min comp + 35 min cloze/editing', '作文 = 25-30 min 写 + 5 min 检查', '检查必看: 时态 + 主谓 + 拼写 + 标点'],
       pitfall: 'Paper 2 SST (Synthesis & Transformation) 是杀手, 一字一分必练',
       game: 'editing' }
@@ -2288,7 +2287,7 @@ const KNOWLEDGE_PRACTICE = {
     { q: '5 大解题法不包含?', opts: ['模型法', '假设法', '替换法', '猜测法'], ans: 3, explain: 'PSLE 5 法: 模型/假设/替换/倒推/单位. 猜测不算' }
   ],
   math_psle_paper1: [
-    { q: 'PSLE 数学 Paper 1 多少分钟? 多少题?', opts: ['1h, 30 题', '50 min, 30 题', '1h15min, 25 题', '40 min, 40 题'], ans: 1, explain: 'P1: 50 min / 30 题; P2: 1h40min / 17 题. 平均 1.6 min/题' },
+    { q: 'PSLE 数学 Paper 1 多少分钟? 多少题?', opts: ['1h, 30 题', '50 min, 30 题', '1h15min, 25 题', '40 min, 40 题'], ans: 1, explain: 'Paper 1 = 50 min / 30 题, 平均 1.6 min/题. 不会跳着做.' },
     { q: 'Paper 2 长难题最多分值?', opts: ['2 分', '3 分', '4 分', '5 分'], ans: 3, explain: 'P2 末几道大题 4-5 分, 多步推理. 必给完整 working' },
     { q: '检查发现错题但时间不够时?', opts: ['硬改', '保留原答 + 旁注新答', '空着', '随便填'], ans: 0, explain: '硬改也比空着好; 至少有机会得分' }
   ],
@@ -3205,8 +3204,8 @@ const ENGLISH_MASTER_TIPS = [
     content:'PSLE Paper 2 顶端 10 分: 把 2 个简单句合并成 1 个复杂句, 或换句型不变意。常考: although/because/while/since/whose/which/who. W15 起每周 1h 专项, 24 周熟练 = 稳拿 10 分。' },
   { subject:'📚 Vocab 词汇', title:'PSLE 200 高频词 = Comp 80% 覆盖',
     content:'PSLE 阅读题里 80% 单词来自最高频 200 词。背完这 200 个 = 任何文章读懂大意, 不卡壳。每天 5 个, W30 完 100, W52 完 200。 v14 词汇表里就是这 200 个。' },
-  { subject:'🇸🇬 PSLE 英语 Paper 1', title:'70 min 时间分配',
-    content:'Paper 1 = Composition(50 分, 50 min)+ Situational Writing(15 分, 20 min)。时间紧, 必须留 5 min 检查拼写。Composition 计划 3 min + 写 40 min + 检查 7 min。' },
+  { subject:'🇸🇬 PSLE 英语 Paper 1', title:'1h 10min 时间分配',
+    content:'Paper 1 = Situational Writing(15 分, ~20 min) + Continuous Writing(40 分, ~50 min)。注意: Editing 在 Paper 2 不在 P1. 写作必留 5 min 检查拼写。Continuous Writing: 计划 3 min + 写 40 min + 检查 7 min。' },
   { subject:'🇸🇬 PSLE 英语 Paper 2', title:'1h50min 6 部分顺序',
     content:'Paper 2 = Grammar MCQ + Vocab MCQ + Vocab Cloze + Visual Text + Comp Cloze + Comprehension OE。6 部分严格按顺序, 难度递增。前 4 部分 50 min, 后 2 部分 60 min。' },
   { subject:'🖼️ Visual Text 看图', title:'5 类信息源',
@@ -3729,7 +3728,7 @@ function getTaskTip(task) {
   if (/总模考|科学总模考/.test(t))
     return '🎯 严格 PSLE 时长完整模拟 4 科。v14 目标:英 85+ / 科 90+ / 数 90+ / 华 90+ → 总 AL 6-8 分 (DP 冲分版)';
   if (/英语模考|Paper 1\+2/.test(t))
-    return '📃 PSLE 英语 Paper 1=Composition+Editing(70min) / Paper 2=Grammar+Vocab+Cloze+Comp(1h50min)';
+    return '📃 PSLE 英语 Paper 1=Sit+Cont Writing(1h10min) / Paper 2=Grammar+Cloze+Editing+Comp(1h50min) — Editing 在 P2!';
 
   // ===== 科学 PSLE Science 答题技巧 =====
   if (/教材精读|精读/.test(t))
