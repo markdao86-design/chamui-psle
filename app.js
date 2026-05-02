@@ -369,11 +369,23 @@ function _mysteryRulesHtml() {
 function _showMysteryBoxRules() {
   const modal = document.getElementById('mysteryBoxResultModal');
   if (!modal) return;
+  // v18.47: 加历史回顾 — 即使没盒也能看以前开过的
+  const mb = state.mysteryBoxes || { opened: 0, history: [] };
+  const hist = (mb.history || []).slice(-5).reverse();  // 最近 5 个
+  const histHtml = hist.length === 0
+    ? '<div style="color:var(--color-text-light);font-style:italic;text-align:center;padding:8px">还没开过宝箱</div>'
+    : hist.map(h => {
+        const date = h.timestamp ? new Date(h.timestamp).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }) : '';
+        const tier = h.tier === 'rare' ? '🌟 神级' : h.tier === 'wow' ? '🎉 惊喜' : '🎁 普通';
+        return `<div class="mb-hist-item"><span>${date}</span> <b>${tier}</b> +${h.points || 0} 分${h.equipName ? ' · 解锁 ' + h.equipName : ''}</div>`;
+      }).join('');
   modal.innerHTML = `
     <div class="mb-result-inner" style="border-color:#A788E0">
       <div class="mb-result-icon">🔒</div>
       <div class="mb-result-title">还没有可开宝箱</div>
       <div class="mb-rules-full">${_mysteryRulesHtml()}</div>
+      <div class="mb-hist-title">📦 最近开过 (累计 ${mb.opened || 0} 个)</div>
+      <div class="mb-hist-list">${histHtml}</div>
       <button class="btn btn-primary" onclick="closeMysteryBoxResult()">知道了</button>
     </div>
   `;

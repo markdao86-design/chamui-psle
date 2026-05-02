@@ -3625,6 +3625,22 @@ p { font-size: 14px; line-height: 1.6; }
   font-weight: 700;
   color: var(--color-primary);
 }
+/* v18.47: 宝箱历史 */
+.mb-hist-title { font-size: 13px; font-weight: 900; color: var(--color-text); margin: 12px 0 6px; }
+.mb-hist-list { display: flex; flex-direction: column; gap: 4px; max-height: 150px; overflow-y: auto; }
+.mb-hist-item {
+  background: var(--color-card-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--color-text);
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mb-hist-item span { color: var(--color-text-light); }
+.mb-hist-item b { color: var(--color-primary); }
 .mb-rare {
   background: linear-gradient(135deg, #FFF8E7 0%, #FFE066 100%);
   padding: 14px;
@@ -4047,7 +4063,6 @@ p { font-size: 14px; line-height: 1.6; }
   <button class="tab-btn active" data-page="dashboard">🏠 主页</button>
   <button class="tab-btn" data-page="checkin">✅ 打卡</button>
   <button class="tab-btn" data-page="history">📊 PSLE 能力</button>
-  <button class="tab-btn" data-page="admin">⚙️ 管理</button>
   <!-- v17.7: 宝箱按钮(action 不是 tab, 直接弹 modal) -->
   <button class="tab-btn tab-action mystery-tab" id="mysteryTabBtn" onclick="openMysteryBoxModal()">
     🎁 <span id="mysteryTabCount">0</span>
@@ -4060,6 +4075,8 @@ p { font-size: 14px; line-height: 1.6; }
   <button class="tab-btn tab-action essay-tab" onclick="openEssayLibrary()" title="73 周 PSLE 作文模板库">
     📝 作文
   </button>
+  <!-- v18.47: 管理移到末尾 -->
+  <button class="tab-btn" data-page="admin">⚙️ 管理</button>
 </nav>
 
 <main class="main-container">
