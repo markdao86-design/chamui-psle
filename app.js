@@ -1125,6 +1125,17 @@ function toggleDailyCheck(week, day, slot, evt) {
   const oldOnTrack = (calcWeekCompletion(week, state) || {}).onTrack;
   const wasChecked = getDailyCheck(state, week, day, slot);
 
+  // v18.22: 打卡必须先有照片 (取消勾选不限制); 4 mini-game 走独立路径不受此限制
+  if (!wasChecked) {
+    const hasPhoto = hasPhotoCached(week, day, slot);
+    if (!hasPhoto) {
+      showToast('📸 请先上传作业照才能打卡', 'warn');
+      // 自动弹出拍照/相册选择
+      pickPhotoForSlot(week, day, slot);
+      return;
+    }
+  }
+
   setDailyCheck(state, week, day, slot, !wasChecked);
   recalcTotalPoints(state);
 
