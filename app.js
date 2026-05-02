@@ -572,10 +572,12 @@ function renderMasterTipCard() {
     el.innerHTML = '';
     return;
   }
-  el.style.borderLeftColor = tip.dailySubjectColor || '#A788E0';
+  // v18.12: header 用学科色作为深底, 文字白
+  const subjColor = tip.dailySubjectColor || '#A788E0';
+  el.style.borderLeftColor = subjColor;
   el.innerHTML = `
-    <div class="master-tip-header" style="color:${tip.dailySubjectColor}">🌟 今日名师秘诀 · ${tip.dailySubject}</div>
-    <div class="master-tip-subject">${escapeHtml(tip.subject)}</div>
+    <div class="master-tip-header" style="background:${subjColor}">🌟 今日名师秘诀 · ${tip.dailySubject}</div>
+    <div class="master-tip-subject" style="background:${subjColor}">${escapeHtml(tip.subject)}</div>
     <div class="master-tip-title">${escapeHtml(tip.title)}</div>
     <div class="master-tip-content">${escapeHtml(tip.content)}</div>
   `;
@@ -1902,33 +1904,45 @@ function _renderMathGame() {
     return;
   }
   const q = g.qs[g.idx];
-  // v18.11: inputmode=numeric + pattern, 让 iPad 弹数字键盘且稳定
+  // v18.12: 整页只在首次构建一次, 之后用 _updateMathQuestion 部分更新, 保留 input 元素
   modal.innerHTML = `
     <div class="mg-inner">
       <div class="mg-stats" id="mgStats">⏱️ ${g.timeLeft}s · ✅ ${g.correct} · ❌ ${g.wrong} · ${g.idx + 1}/10</div>
-      <div class="mg-q">${q.q} = ?</div>
-      <input type="text" inputmode="numeric" pattern="-?[0-9]*" id="mgInput" value="" class="mg-input" onkeydown="if(event.key==='Enter') submitMathAnswer()">
-      <button class="btn btn-primary mg-submit" onclick="submitMathAnswer()">提交</button>
+      <div class="mg-q" id="mgQ">${q.q} = ?</div>
+      <input type="text" inputmode="numeric" pattern="-?[0-9]*" id="mgInput" value="" class="mg-input" onkeydown="if(event.key==='Enter') submitMathAnswer()" placeholder="点这里输入答案">
+      <button class="btn btn-primary mg-submit" onclick="submitMathAnswer()">提交 (Enter)</button>
       <button class="vocab-modal-close mg-close" onclick="closeMathGame()">×</button>
     </div>
   `;
   modal.classList.add('show');
-  // 仅首次/换题时 focus 一次
-  setTimeout(() => {
-    const inp = document.getElementById('mgInput');
-    if (inp) { inp.focus(); inp.select(); }
-  }, 50);
+}
+function _updateMathQuestion() {
+  const g = _mathGameState;
+  if (!g || g.idx >= g.qs.length) return;
+  const q = g.qs[g.idx];
+  const qEl = document.getElementById('mgQ');
+  const inp = document.getElementById('mgInput');
+  if (qEl) qEl.textContent = `${q.q} = ?`;
+  if (inp) inp.value = '';
+  _updateMathStats();
+  // input 不重建, 不调 focus(), iPad 键盘保持开
 }
 function submitMathAnswer() {
   const g = _mathGameState;
   if (!g) return;
   const input = document.getElementById('mgInput');
+  if (!input || input.value === '') return;  // 不提交空值
   const val = parseInt(input.value);
   const q = g.qs[g.idx];
   if (val === q.ans) { g.correct++; playSound('ding'); }
   else { g.wrong++; playSound('sad'); }
   g.idx++;
-  _renderMathGame();
+  if (g.idx >= g.qs.length) {
+    if (_mathTimer) { clearInterval(_mathTimer); _mathTimer = null; }
+    _finishMathGame();
+  } else {
+    _updateMathQuestion();  // v18.12: 只更新文字, 不重建 input
+  }
 }
 function _finishMathGame() {
   const g = _mathGameState;
