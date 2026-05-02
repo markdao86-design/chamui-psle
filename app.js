@@ -1835,6 +1835,65 @@ function _getMultiplierLabel(playNum) {
   return '0 奖 (仅练习)';
 }
 
+// ============ v18.26: 知识树 modal ============
+function openKnowledgeTreeModal() {
+  let modal = document.getElementById('knowledgeTreeModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'knowledgeTreeModal';
+    modal.className = 'kt-modal';
+    document.body.appendChild(modal);
+  }
+  const tree = window.getKnowledgeTreeStatus(state);
+  const prog = window.getKnowledgeProgress(state);
+  const subjHtml = Object.keys(tree).map(subj => {
+    const nodes = tree[subj];
+    const nodeHtml = nodes.map((n, i) => {
+      const isLast = i === nodes.length - 1;
+      const stateClass = `kt-node-${n.status}`;
+      const tip = `${n.name} · W${n.weeks[0]}-W${n.weeks[1]} · ${n.status === 'mastered' ? '已掌握' : n.status === 'learning' ? '学习中' : '锁定'}`;
+      return `
+        <div class="kt-node-wrap">
+          <div class="kt-node ${stateClass}" title="${escapeHtml(tip)}">
+            <div class="kt-node-icon">${n.icon}</div>
+            <div class="kt-node-name">${escapeHtml(n.name)}</div>
+            <div class="kt-node-week">W${n.weeks[0]}-${n.weeks[1]}</div>
+          </div>
+          ${isLast ? '' : '<div class="kt-connector"></div>'}
+        </div>`;
+    }).join('');
+    return `
+      <div class="kt-row">
+        <div class="kt-row-label">${subj}</div>
+        <div class="kt-row-nodes">${nodeHtml}</div>
+      </div>`;
+  }).join('');
+  modal.innerHTML = `
+    <div class="kt-inner">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title">🌳 知识树</div>
+          <div class="kt-progress">总进度 <b>${prog.mastered}/${prog.total}</b> · ${prog.percent}% 已掌握 · ${prog.learning} 个学习中</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeKnowledgeTreeModal()">×</button>
+      </div>
+      <div class="kt-legend">
+        <span class="kt-legend-item"><span class="kt-dot kt-node-mastered"></span> 已掌握</span>
+        <span class="kt-legend-item"><span class="kt-dot kt-node-learning"></span> 学习中</span>
+        <span class="kt-legend-item"><span class="kt-dot kt-node-locked"></span> 锁定</span>
+      </div>
+      <div class="kt-body">${subjHtml}</div>
+    </div>
+  `;
+  modal.classList.add('show');
+}
+function closeKnowledgeTreeModal() {
+  const m = document.getElementById('knowledgeTreeModal');
+  if (m) m.classList.remove('show');
+}
+window.openKnowledgeTreeModal = openKnowledgeTreeModal;
+window.closeKnowledgeTreeModal = closeKnowledgeTreeModal;
+
 function _rainbowSweep() {
   const sweep = document.createElement('div');
   sweep.className = 'rainbow-sweep';

@@ -1282,6 +1282,85 @@ function getVocabPairsByDiff(diff, weekN, n) {
   return result;
 }
 
+// ============= v18.26: 知识树 (4 学科 × ~10 节点, 按 W1-W73 进度自动算) =============
+const KNOWLEDGE_TREE = {
+  '🔬 科学': [
+    { id: 'sci_diversity', name: 'Diversity 分类', weeks: [1, 2], icon: '🦋' },
+    { id: 'sci_plant_lc', name: '植物生命周期', weeks: [3, 4], icon: '🌱' },
+    { id: 'sci_material', name: '材料性质', weeks: [5, 6], icon: '🧪' },
+    { id: 'sci_forces', name: '力 Forces', weeks: [7, 9], icon: '⚙️' },
+    { id: 'sci_light_heat', name: '光与热', weeks: [10, 12], icon: '💡' },
+    { id: 'sci_cells', name: '细胞 Cells', weeks: [13, 15], icon: '🔬' },
+    { id: 'sci_water', name: '水循环', weeks: [16, 18], icon: '💧' },
+    { id: 'sci_reproduction', name: '生殖', weeks: [19, 21], icon: '🌿' },
+    { id: 'sci_energy', name: '能量 Energy', weeks: [22, 26], icon: '⚡' },
+    { id: 'sci_adaptations', name: 'P6 适应', weeks: [27, 42], icon: '🦎' },
+    { id: 'sci_revision', name: 'PSLE 复习', weeks: [43, 65], icon: '📚' },
+    { id: 'sci_psle', name: 'PSLE 笔试', weeks: [66, 73], icon: '🎯', milestone: 'W73' }
+  ],
+  '📖 英语': [
+    { id: 'eng_basics', name: '基础 Grammar', weeks: [1, 4], icon: '✏️' },
+    { id: 'eng_comp', name: 'Comprehension P5', weeks: [5, 10], icon: '📖' },
+    { id: 'eng_cloze', name: 'Cloze 填空', weeks: [11, 14], icon: '🧩' },
+    { id: 'eng_editing', name: 'Editing 改错', weeks: [15, 18], icon: '🔍' },
+    { id: 'eng_writing', name: '作文 Composition', weeks: [19, 26], icon: '✒️' },
+    { id: 'eng_listening', name: '听力 Listening', weeks: [27, 42], icon: '🎧', milestone: 'W42' },
+    { id: 'eng_oral', name: '口试 Oral', weeks: [43, 65], icon: '🗣️', milestone: 'W68' },
+    { id: 'eng_psle', name: 'PSLE 笔试', weeks: [66, 73], icon: '🎯', milestone: 'W73' }
+  ],
+  '➗ 数学': [
+    { id: 'math_basics', name: '四则运算', weeks: [1, 3], icon: '🔢' },
+    { id: 'math_fractions', name: '分数', weeks: [4, 7], icon: '½' },
+    { id: 'math_decimals', name: '小数', weeks: [8, 10], icon: '0.5' },
+    { id: 'math_percent', name: '百分比', weeks: [11, 13], icon: '%' },
+    { id: 'math_ratio', name: '比例', weeks: [14, 16], icon: '⚖️' },
+    { id: 'math_speed', name: '速度', weeks: [17, 19], icon: '🏃' },
+    { id: 'math_geometry', name: '几何', weeks: [20, 23], icon: '📐' },
+    { id: 'math_word_problems', name: '应用题', weeks: [24, 42], icon: '📝' },
+    { id: 'math_psle_paper1', name: 'P5 paper 1+2', weeks: [27, 52], icon: '🎯' },
+    { id: 'math_psle', name: 'PSLE 笔试', weeks: [66, 73], icon: '🏆', milestone: 'W73' }
+  ],
+  '🇨🇳 华文': [
+    { id: 'ch_basic', name: '基础词汇', weeks: [1, 6], icon: '汉' },
+    { id: 'ch_reading', name: '阅读理解', weeks: [7, 14], icon: '📖' },
+    { id: 'ch_composition', name: '作文', weeks: [15, 26], icon: '✒️' },
+    { id: 'ch_oral', name: '口试', weeks: [27, 65], icon: '🗣️' },
+    { id: 'ch_psle', name: 'PSLE', weeks: [66, 73], icon: '🎯', milestone: 'W73' }
+  ]
+};
+
+// 计算节点状态: locked / learning / mastered
+function getKnowledgeNodeStatus(node, state) {
+  const cw = state.currentWeek || 1;
+  // 如果有 milestone 要求, 先看是否完成
+  if (node.milestone && state.milestones && state.milestones[node.milestone]) return 'mastered';
+  // 按周范围
+  if (cw < node.weeks[0]) return 'locked';
+  if (cw > node.weeks[1]) return 'mastered';
+  return 'learning';
+}
+
+function getKnowledgeTreeStatus(state) {
+  const out = {};
+  Object.keys(KNOWLEDGE_TREE).forEach(subj => {
+    out[subj] = KNOWLEDGE_TREE[subj].map(n => ({ ...n, status: getKnowledgeNodeStatus(n, state) }));
+  });
+  return out;
+}
+
+function getKnowledgeProgress(state) {
+  let total = 0, mastered = 0, learning = 0;
+  Object.keys(KNOWLEDGE_TREE).forEach(subj => {
+    KNOWLEDGE_TREE[subj].forEach(n => {
+      total++;
+      const s = getKnowledgeNodeStatus(n, state);
+      if (s === 'mastered') mastered++;
+      else if (s === 'learning') learning++;
+    });
+  });
+  return { total, mastered, learning, percent: Math.round(mastered / total * 100) };
+}
+
 // v18.3: 按今日 epochDay 哈希选 mini-game 内容(同一天稳定,跨天换)
 function _epochDay() { return Math.floor(Date.now() / 86400000); }
 function getDailyMathQuestions(count) {
@@ -3173,3 +3252,7 @@ window.getEditingByDiff = getEditingByDiff;
 window.getListenByDiff = getListenByDiff;
 window.getVocabPairsByDiff = getVocabPairsByDiff;
 window.VOCAB_HARD = VOCAB_HARD;
+// v18.26: 知识树
+window.KNOWLEDGE_TREE = KNOWLEDGE_TREE;
+window.getKnowledgeTreeStatus = getKnowledgeTreeStatus;
+window.getKnowledgeProgress = getKnowledgeProgress;

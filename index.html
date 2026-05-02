@@ -1947,6 +1947,122 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .lis-item.lis-live { background: linear-gradient(135deg, #FFE6F0 0%, #E0F4F1 100%); border-width: 3px; }
 .lis-item.lis-youtube { background: #FFF8E7; border-width: 3px; }
 
+/* v18.26: 知识树 modal */
+.kt-modal {
+  position: fixed; inset: 0;
+  background: rgba(31, 41, 55, 0.55);
+  z-index: 9998;
+  display: none;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+.kt-modal.show { display: flex; }
+.kt-inner {
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(255,255,255,0.7) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-secondary-soft) 0%, #FFFFFF 70%);
+  border: 1px solid #C8E0D5;
+  border-radius: var(--radius-bubble);
+  padding: 20px;
+  max-width: 1000px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: var(--shadow-pop);
+}
+.kt-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+.kt-title { font-size: 22px; font-weight: 900; color: var(--color-text); }
+.kt-progress { font-size: 13px; color: var(--color-text-light); margin-top: 4px; }
+.kt-progress b { color: var(--color-secondary); font-size: 16px; }
+.kt-legend {
+  display: flex; gap: 16px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--color-text-light);
+}
+.kt-legend-item { display: flex; align-items: center; gap: 6px; }
+.kt-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.kt-row {
+  margin-bottom: 18px;
+}
+.kt-row-label {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--color-text);
+  margin-bottom: 8px;
+  padding-left: 4px;
+}
+.kt-row-nodes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+}
+.kt-node-wrap {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.kt-node {
+  width: 80px; height: 80px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  font-size: 11px;
+  padding: 4px;
+  transition: transform 0.15s;
+  cursor: help;
+}
+.kt-node:hover { transform: translateY(-2px); }
+.kt-node-icon { font-size: 24px; line-height: 1; margin-bottom: 2px; }
+.kt-node-name { font-weight: 700; line-height: 1.2; color: var(--color-text); }
+.kt-node-week { font-size: 9px; color: var(--color-text-light); margin-top: 2px; }
+.kt-node-locked {
+  background: var(--color-card-soft);
+  border: 1px solid var(--color-border);
+  opacity: 0.5;
+  filter: grayscale(0.6);
+}
+.kt-node-locked.kt-dot { background: var(--color-text-dim); border-color: var(--color-text-dim); opacity: 1; filter: none; }
+.kt-node-learning {
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.7) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-accent-soft) 0%, #FFFFFF 80%);
+  border: 1px solid var(--color-accent);
+  animation: kt-pulse 2s ease-in-out infinite;
+}
+.kt-node-learning.kt-dot { background: var(--color-accent); border-color: var(--color-accent); animation: none; }
+.kt-node-mastered {
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.6) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-secondary-soft) 0%, var(--color-secondary) 100%);
+  border: 1px solid var(--color-secondary);
+  color: white;
+}
+.kt-node-mastered .kt-node-name,
+.kt-node-mastered .kt-node-week { color: white; }
+.kt-node-mastered.kt-dot { background: var(--color-secondary); border-color: var(--color-secondary); }
+@keyframes kt-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 184, 110, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(232, 184, 110, 0); }
+}
+.kt-connector {
+  width: 14px; height: 2px;
+  background: var(--color-border);
+  margin: 0 2px;
+}
+
 /* v18.21: 听力 4 步精听法规则卡 */
 .listen-rules-card {
   background:
@@ -3460,6 +3576,10 @@ p { font-size: 14px; line-height: 1.6; }
   <!-- v17.7: 宝箱按钮(action 不是 tab, 直接弹 modal) -->
   <button class="tab-btn tab-action mystery-tab" id="mysteryTabBtn" onclick="openMysteryBoxModal()">
     🎁 <span id="mysteryTabCount">0</span>
+  </button>
+  <!-- v18.26: 知识树按钮 -->
+  <button class="tab-btn tab-action knowledge-tab" onclick="openKnowledgeTreeModal()" title="知识树 — 4 学科 PSLE 大纲">
+    🌳 知识树
   </button>
 </nav>
 
