@@ -4125,10 +4125,8 @@ p { font-size: 14px; line-height: 1.6; }
   <!-- v18.49: 知识树/作文 改为 data-page (不再 modal) -->
   <button class="tab-btn" data-page="knowledge" title="知识树 — 4 学科 PSLE 大纲">🌳 知识树</button>
   <button class="tab-btn" data-page="essay" title="73 周 PSLE 作文模板库">📝 作文</button>
-  <!-- v18.46: PSLE 题库 (modal 式仍 OK) -->
-  <button class="tab-btn tab-action paper-bank-tab" onclick="openPaperBank()" title="PSLE 真题 + P5/P6 名校 prelim 4 学科">
-    📚 题库
-  </button>
+  <!-- v18.50: 题库 改为 page (不再 modal) -->
+  <button class="tab-btn paper-bank-tab" data-page="paperbank" title="PSLE 真题 + P5/P6 名校 prelim 4 学科">📚 题库</button>
   <!-- v18.47: 管理移到末尾 -->
   <button class="tab-btn" data-page="admin">⚙️ 管理</button>
 </nav>
@@ -4352,6 +4350,13 @@ p { font-size: 14px; line-height: 1.6; }
   <!-- v18.49: 作文独立页 (取代旧 modal) -->
   <div class="page" id="page-essay">
     <div class="kt-page-wrap" id="essayPageContent">
+      <p style="color:var(--color-text-light);text-align:center;padding:40px">加载中…</p>
+    </div>
+  </div>
+
+  <!-- v18.50: PSLE 题库独立页 (取代旧 modal) -->
+  <div class="page" id="page-paperbank">
+    <div class="kt-page-wrap" id="paperBankPageContent">
       <p style="color:var(--color-text-light);text-align:center;padding:40px">加载中…</p>
     </div>
   </div>

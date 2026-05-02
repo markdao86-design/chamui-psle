@@ -2766,24 +2766,13 @@ function closeChineseReading() {
 window.openChineseReadingBank = openChineseReadingBank;
 
 // ============ v18.46: PSLE 4 学科真题 + 名校 prelim 题库 (所有链接 WebFetch 验证过) ============
+// v18.50: 改为 page 形态 (不再 modal)
 let _paperBankSubj = 'math';
-function openPaperBank() {
-  let modal = document.getElementById('paperBankModal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'paperBankModal';
-    modal.className = 'kt-modal';
-    document.body.appendChild(modal);
-  }
-  _renderPaperBank();
-}
 function switchPaperBankSubj(subj) {
   _paperBankSubj = subj;
-  _renderPaperBank();
+  renderPaperBankPage();
 }
-function _renderPaperBank() {
-  const modal = document.getElementById('paperBankModal');
-  if (!modal) return;
+function _buildPaperBankInnerHtml(forPage) {
   const PB = window.PSLE_PAPER_BANK || {};
   const subjects = ['math', 'english', 'science', 'chinese'];
   const tabs = subjects.map(s => {
@@ -2804,26 +2793,37 @@ function _renderPaperBank() {
           </a>`).join('')}
       </div>
     </div>`).join('');
-  modal.innerHTML = `
+  return `
     <div class="kt-inner pb-inner">
       <div class="kt-header">
         <div>
           <div class="kt-title">📚 PSLE 真题题库</div>
           <div class="kt-progress">4 学科 · 所有链接已验证 · 真题 + P5/P6 名校 prelim</div>
         </div>
-        <button class="vocab-modal-close" onclick="closePaperBank()">×</button>
+        ${forPage ? '' : '<button class="vocab-modal-close" onclick="closePaperBank()">×</button>'}
       </div>
       <div class="pb-tabs">${tabs}</div>
       ${sectionsHtml}
       <div class="pb-tip">💡 ⭐ 标记的源完全免费 + 直达对应学科 P6 专区 · 点开新窗口跳转</div>
     </div>`;
-  modal.classList.add('show');
+}
+function renderPaperBankPage() {
+  const el = document.getElementById('paperBankPageContent');
+  if (!el) return;
+  el.innerHTML = _buildPaperBankInnerHtml(true);
+}
+// 旧 modal API 保留为转发 (防存量调用): 切到 paperbank tab
+function openPaperBank() {
+  const btn = document.querySelector('.tab-btn[data-page="paperbank"]');
+  if (btn) btn.click();
+  else renderPaperBankPage();
 }
 function closePaperBank() {
   const m = document.getElementById('paperBankModal');
   if (m) m.classList.remove('show');
 }
 window.openPaperBank = openPaperBank;
+window.renderPaperBankPage = renderPaperBankPage;
 window.closePaperBank = closePaperBank;
 window.switchPaperBankSubj = switchPaperBankSubj;
 window.closeChineseReadingBank = closeChineseReadingBank;
@@ -4864,6 +4864,9 @@ function bindEvents() {
       }
       if (page === 'essay') {
         renderEssayPage().catch(err => console.error('renderEssayPage', err));
+      }
+      if (page === 'paperbank') {
+        renderPaperBankPage();
       }
       if (page === 'admin') {
         renderPhotoGallery(state.currentWeek).catch(() => {});
