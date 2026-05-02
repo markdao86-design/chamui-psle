@@ -2191,6 +2191,58 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   font-style: italic;
 }
 
+/* v18.31: 作文 (composition) UI */
+.checkin-comp-tip {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-purple);
+  background: var(--color-purple-soft);
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-top: 4px;
+  display: inline-block;
+  border: 1px solid #D4CCEA;
+}
+.comp-btn {
+  background: var(--color-purple);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px; height: 32px;
+  font-size: 14px;
+  cursor: pointer;
+  margin: 0 4px;
+}
+.comp-btn:hover { transform: scale(1.1); }
+.comp-inner { max-width: 720px; }
+.comp-section { margin: 12px 0; padding: 10px 12px; background: var(--color-card-soft); border-radius: var(--radius-tight); border-left: 3px solid var(--color-purple); }
+.comp-section.comp-req { border-left-color: var(--color-primary); background: var(--color-primary-soft); }
+.comp-label { font-size: 13px; font-weight: 900; color: var(--color-text); margin-bottom: 6px; }
+.comp-text { font-size: 13px; line-height: 1.6; color: var(--color-text); }
+.comp-list { margin: 0 0 0 22px; padding: 0; font-size: 13px; line-height: 1.7; }
+.comp-list li { margin-bottom: 3px; }
+.comp-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; justify-content: center; }
+/* 作文模板库 */
+.essay-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; max-height: 70vh; overflow-y: auto; }
+.essay-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-tight);
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.essay-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(74,144,199,0.15); border-color: var(--color-primary); }
+.essay-card.essay-saved {
+  background: linear-gradient(135deg, var(--color-secondary-soft) 0%, #FFFFFF 80%);
+  border-color: var(--color-secondary);
+}
+.essay-card.essay-empty { opacity: 0.7; }
+.essay-week { font-size: 14px; font-weight: 900; color: var(--color-primary); }
+.essay-theme { font-size: 12px; font-weight: 700; color: var(--color-text); margin: 4px 0; line-height: 1.3; }
+.essay-status { font-size: 11px; color: var(--color-text-light); }
+.essay-card.essay-saved .essay-status { color: var(--color-secondary); font-weight: 700; }
+
 /* v18.21: checkin LS 行内 1 行精简 tip */
 .checkin-listen-tip {
   font-size: 12px;

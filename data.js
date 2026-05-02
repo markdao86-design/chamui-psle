@@ -1194,21 +1194,24 @@ const VOCAB_HARD = [
 
 // ============= v18.25: 难度自适应 helper =============
 function recordGameRun(state, gameKey, correct, total) {
-  if (!state.gameStats) state.gameStats = { vocab:{difficulty:1,recent:[]}, math:{difficulty:1,recent:[]}, editing:{difficulty:1,recent:[]}, listen:{difficulty:1,recent:[]} };
-  if (!state.gameStats[gameKey]) state.gameStats[gameKey] = { difficulty: 1, recent: [] };
+  // v18.31: 起点 P5 (difficulty 2), floor 也是 2
+  if (!state.gameStats) state.gameStats = { vocab:{difficulty:2,recent:[]}, math:{difficulty:2,recent:[]}, editing:{difficulty:2,recent:[]}, listen:{difficulty:2,recent:[]} };
+  if (!state.gameStats[gameKey]) state.gameStats[gameKey] = { difficulty: 2, recent: [] };
   const s = state.gameStats[gameKey];
+  // 老用户 difficulty=1 自动迁移到 2
+  if (s.difficulty < 2) s.difficulty = 2;
   const acc = total > 0 ? correct / total : 0;
   s.recent.push({ date: new Date().toISOString().slice(0,10), correct, total, accuracy: acc });
   if (s.recent.length > 5) s.recent.shift();
-  // 升降判定
   let levelChanged = null;
   const last3 = s.recent.slice(-3);
   const last2 = s.recent.slice(-2);
   if (s.difficulty < 5 && last3.length === 3 && last3.every(r => r.accuracy >= 0.8)) {
     s.difficulty++;
     levelChanged = 'up';
-    s.recent = [];  // 升级后重置, 在新难度上重新评估
-  } else if (s.difficulty > 1 && last2.length === 2 && last2.every(r => r.accuracy <= 0.4)) {
+    s.recent = [];
+  } else if (s.difficulty > 2 && last2.length === 2 && last2.every(r => r.accuracy <= 0.4)) {
+    // floor at 2 — 不能降到 P5 以下
     s.difficulty--;
     levelChanged = 'down';
     s.recent = [];
@@ -1217,8 +1220,8 @@ function recordGameRun(state, gameKey, correct, total) {
 }
 
 function getDifficulty(state, gameKey) {
-  if (!state.gameStats || !state.gameStats[gameKey]) return 1;
-  return state.gameStats[gameKey].difficulty || 1;
+  if (!state.gameStats || !state.gameStats[gameKey]) return 2;
+  return Math.max(2, state.gameStats[gameKey].difficulty || 2);
 }
 
 // 从池中按难度采样: 主难度 70% + ±1 难度 30%
@@ -2393,15 +2396,15 @@ function getDefaultState() {
     listenGameRuns: 0,
     // v18.25: 4 mini-game 5 级难度自适应 (1=入门 P3-4, 5=超 PSLE)
     gameStats: {
-      vocab:   { difficulty: 1, recent: [] },
-      math:    { difficulty: 1, recent: [] },
-      editing: { difficulty: 1, recent: [] },
-      listen:  { difficulty: 1, recent: [] },
-      // v18.28: 4 个新 game
-      unit:    { difficulty: 1, recent: [] },
-      grammar: { difficulty: 1, recent: [] },
-      cloze:   { difficulty: 1, recent: [] },
-      scilab:  { difficulty: 1, recent: [] }
+      // v18.31: 起点 = P5 (难度 2), 不再是 P3 入门
+      vocab:   { difficulty: 2, recent: [] },
+      math:    { difficulty: 2, recent: [] },
+      editing: { difficulty: 2, recent: [] },
+      listen:  { difficulty: 2, recent: [] },
+      unit:    { difficulty: 2, recent: [] },
+      grammar: { difficulty: 2, recent: [] },
+      cloze:   { difficulty: 2, recent: [] },
+      scilab:  { difficulty: 2, recent: [] }
     },
     // v18.27: 闹铃
     alarmsEnabled: true,
@@ -3843,3 +3846,6 @@ window.getUnitByDiff = getUnitByDiff;
 window.getGrammarByDiff = getGrammarByDiff;
 window.getClozeByDiff = getClozeByDiff;
 window.getSciClassifyByDiff = getSciClassifyByDiff;
+// v18.31: 作文
+window.PSLE_COMPOSITIONS = PSLE_COMPOSITIONS;
+window.getCompositionPrompt = getCompositionPrompt;

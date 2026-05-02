@@ -972,6 +972,15 @@ function renderCheckinPage() {
       const listenTipLine = isListenTask
         ? `<div class="checkin-listen-tip">🎯 4 步法: 1️⃣ 听感觉 → 2️⃣ 挑 3-5 生词 → 3️⃣ 查字典 + 记本 → 4️⃣ 复听验证</div>`
         : '';
+      // v18.31: 作文按钮 — 任务含"作文" 且本周有 PSLE 题
+      const isCompTask = /作文|composition|Composition/.test(t.task);
+      const compPrompt = isCompTask && window.getCompositionPrompt ? window.getCompositionPrompt(week) : null;
+      const compBtn = compPrompt
+        ? `<button class="comp-btn" onclick="event.stopPropagation(); openCompositionModal(${week})" title="PSLE 作文题 + 精修上传">📝</button>`
+        : '';
+      const compTipLine = compPrompt
+        ? `<div class="checkin-comp-tip">📝 W${week}: <b>${escapeHtml(compPrompt.theme)}</b> · ${escapeHtml(compPrompt.level)}</div>`
+        : '';
       const keyChip = isKey ? `<span class="key-chip" title="必做关键项目,影响周复盘奖">🎯 必做</span>` : '';
       const tipLine = tip ? `<div class="checkin-tip">${escapeHtml(tip)}</div>` : '';
       // v18.23: 周末段间分隔
@@ -1002,11 +1011,13 @@ function renderCheckinPage() {
               <div class="checkin-desc">⏰ ${escapeHtml(t.time)}</div>
               ${tipLine}
               ${listenTipLine}
+              ${compTipLine}
             </div>
           </div>
           ${scoreBtn}
           ${vocabBtn}
           ${listenBtn}
+          ${compBtn}
           ${photoBtn}
           <div class="checkin-points">+${pts}</div>
         </div>
@@ -1964,6 +1975,198 @@ function closeKnowledgeTreeModal() {
 }
 window.openKnowledgeTreeModal = openKnowledgeTreeModal;
 window.closeKnowledgeTreeModal = closeKnowledgeTreeModal;
+
+// ============ v18.31: PSLE 作文 modal + 精修上传 + 作文模板库 ============
+async function openCompositionModal(week) {
+  const p = window.getCompositionPrompt(week);
+  if (!p) { showToast('本周无作文题', 'sad'); return; }
+  let modal = document.getElementById('compositionModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'compositionModal';
+    modal.className = 'kt-modal';  // 复用样式
+    document.body.appendChild(modal);
+  }
+  // 检查是否已上传精修作文
+  let hasEssay = false;
+  try {
+    const rec = await window.photoGet(week, 'Wed', 'ESSAY');
+    hasEssay = !!(rec && rec.blob);
+  } catch (e) {}
+  const picsHtml = p.pictures.map(pic => `<li>${escapeHtml(pic)}</li>`).join('');
+  modal.innerHTML = `
+    <div class="kt-inner comp-inner">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title">📝 W${week} 作文 — ${escapeHtml(p.theme)}</div>
+          <div class="kt-progress">${escapeHtml(p.level)} · PSLE Paper 1 Section B 风格</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeCompositionModal()">×</button>
+      </div>
+      <div class="comp-section">
+        <div class="comp-label">🖼️ 三幅图片 (你可选 1+ 或自己 idea, 必须扣题)</div>
+        <ul class="comp-list">${picsHtml}</ul>
+      </div>
+      <div class="comp-section">
+        <div class="comp-label">📐 推荐结构</div>
+        <div class="comp-text">${escapeHtml(p.structure)}</div>
+      </div>
+      <div class="comp-section">
+        <div class="comp-label">💡 写作 tips</div>
+        <div class="comp-text">${escapeHtml(p.tips)}</div>
+      </div>
+      <div class="comp-section comp-req">
+        <div class="comp-label">✅ 要求</div>
+        <div class="comp-text"><b>${escapeHtml(p.requirement)}</b></div>
+      </div>
+      <div class="comp-actions">
+        <button class="btn btn-primary" onclick="uploadPolishedEssay(${week})">
+          ${hasEssay ? '🔄 替换精修作文' : '📸 上传精修作文'}
+        </button>
+        ${hasEssay ? `<button class="btn btn-secondary" onclick="viewPolishedEssay(${week})">📖 看已存精修</button>` : ''}
+        <button class="btn btn-secondary" onclick="openEssayLibrary()">📚 作文模板库 (背诵)</button>
+      </div>
+    </div>
+  `;
+  modal.classList.add('show');
+}
+function closeCompositionModal() {
+  const m = document.getElementById('compositionModal');
+  if (m) m.classList.remove('show');
+}
+
+function uploadPolishedEssay(week) {
+  // 复用拍照/相册选择
+  const overlay = document.createElement('div');
+  overlay.className = 'photo-source-modal';
+  overlay.innerHTML = `
+    <div class="photo-source-card">
+      <div class="photo-source-title">📝 上传 W${week} 精修作文</div>
+      <div class="photo-source-buttons">
+        <button class="photo-source-btn" data-source="camera">
+          <span class="ps-icon">📷</span><span class="ps-label">现在拍照</span><span class="ps-sub">用摄像头</span>
+        </button>
+        <button class="photo-source-btn" data-source="gallery">
+          <span class="ps-icon">🖼️</span><span class="ps-label">从相册选</span><span class="ps-sub">已拍好的</span>
+        </button>
+      </div>
+      <button class="photo-source-cancel" onclick="this.closest('.photo-source-modal').remove()">取消</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+    const btn = e.target.closest('.photo-source-btn');
+    if (!btn) return;
+    const source = btn.dataset.source;
+    overlay.remove();
+    _doEssayUpload(week, source === 'camera');
+  });
+}
+
+function _doEssayUpload(week, useCamera) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  if (useCamera) input.capture = 'environment';
+  input.style.display = 'none';
+  input.onchange = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    showToast('📤 压缩上传中…', 'success');
+    try {
+      const blob = await compressImage(file);
+      await window.photoPut(week, 'Wed', 'ESSAY', blob);
+      await refreshPhotoKeyCache();
+      showToast(`📝 W${week} 精修作文已存 (${Math.round(blob.size/1024)} KB)`, 'success');
+      // 重开 modal 刷新状态
+      openCompositionModal(week);
+    } catch (err) {
+      console.error(err);
+      showToast('❌ 上传失败:' + err.message, 'danger');
+    }
+  };
+  document.body.appendChild(input);
+  input.click();
+  setTimeout(() => input.remove(), 5000);
+}
+
+async function viewPolishedEssay(week) {
+  try {
+    const rec = await window.photoGet(week, 'Wed', 'ESSAY');
+    if (!rec || !rec.blob) { showToast('没找到 W' + week + ' 精修作文', 'sad'); return; }
+    const url = URL.createObjectURL(rec.blob);
+    const overlay = document.createElement('div');
+    overlay.className = 'photo-modal';
+    overlay.innerHTML = `
+      <div class="photo-modal-card">
+        <div class="photo-modal-header">
+          <div>
+            <div class="photo-modal-title">📝 W${week} 精修作文</div>
+            <div class="photo-modal-meta">背诵模板 · ${Math.round(rec.size/1024)} KB</div>
+          </div>
+          <button class="photo-modal-close" onclick="this.closest('.photo-modal').remove(); URL.revokeObjectURL('${url}')">✕</button>
+        </div>
+        <img class="photo-modal-img" src="${url}" alt="精修作文 W${week}">
+      </div>`;
+    document.body.appendChild(overlay);
+  } catch (e) {
+    showToast('读取失败:' + e.message, 'danger');
+  }
+}
+
+async function openEssayLibrary() {
+  let modal = document.getElementById('essayLibraryModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'essayLibraryModal';
+    modal.className = 'kt-modal';
+    document.body.appendChild(modal);
+  }
+  // 扫描 W1-W73 哪些有精修
+  const cards = [];
+  for (let w = 1; w <= 73; w++) {
+    const p = window.getCompositionPrompt(w);
+    if (!p) continue;
+    let has = false;
+    try {
+      const rec = await window.photoGet(w, 'Wed', 'ESSAY');
+      has = !!(rec && rec.blob);
+    } catch (e) {}
+    cards.push({ week: w, theme: p.theme, level: p.level, has });
+  }
+  const total = cards.length;
+  const filed = cards.filter(c => c.has).length;
+  const grid = cards.map(c => `
+    <div class="essay-card ${c.has ? 'essay-saved' : 'essay-empty'}" onclick="${c.has ? `viewPolishedEssay(${c.week})` : `openCompositionModal(${c.week})`}">
+      <div class="essay-week">W${c.week}</div>
+      <div class="essay-theme">${escapeHtml(c.theme)}</div>
+      <div class="essay-status">${c.has ? '✅ 已精修' : '⬜ 未上传'}</div>
+    </div>
+  `).join('');
+  modal.innerHTML = `
+    <div class="kt-inner">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title">📚 作文模板库</div>
+          <div class="kt-progress">已存 <b>${filed}/${total}</b> · 点已精修看模板, 点未上传去写</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeEssayLibrary()">×</button>
+      </div>
+      <div class="essay-grid">${grid}</div>
+    </div>`;
+  modal.classList.add('show');
+}
+function closeEssayLibrary() {
+  const m = document.getElementById('essayLibraryModal');
+  if (m) m.classList.remove('show');
+}
+
+window.openCompositionModal = openCompositionModal;
+window.closeCompositionModal = closeCompositionModal;
+window.uploadPolishedEssay = uploadPolishedEssay;
+window.viewPolishedEssay = viewPolishedEssay;
+window.openEssayLibrary = openEssayLibrary;
+window.closeEssayLibrary = closeEssayLibrary;
 
 function _rainbowSweep() {
   const sweep = document.createElement('div');
