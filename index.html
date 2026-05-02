@@ -2244,6 +2244,14 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   padding: 20px;
 }
 .kt-modal.show { display: flex; }
+/* v18.49: page 形态 — 知识树/作文 直接嵌在 page 里, 不浮层 */
+.kt-page-wrap .kt-inner {
+  position: static; max-height: none; max-width: none; width: auto;
+  box-shadow: none; border-radius: var(--radius-card);
+  background: var(--color-card-bg, #FFFFFF);
+  padding: 16px;
+}
+.kt-page-wrap .vocab-modal-close { display: none !important; }
 .kt-inner {
   background:
     radial-gradient(ellipse at 15% 15%, rgba(255,255,255,0.7) 0%, transparent 55%),
@@ -2393,6 +2401,42 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   border-left-color: var(--color-danger) !important;
 }
 .ktnd-pitfall .ktnd-label { color: var(--color-danger); }
+/* v18.46: PSLE 题库 modal */
+.pb-inner { max-width: 900px; }
+.pb-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; border-bottom: 1px solid var(--color-border); padding-bottom: 8px; }
+.pb-tab {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-tight);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--color-text);
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.pb-tab:hover { transform: translateY(-1px); }
+.pb-section { margin-bottom: 16px; }
+.pb-section-title { font-size: 14px; font-weight: 900; margin-bottom: 8px; color: var(--color-text); }
+.pb-link-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.pb-link-card {
+  display: block;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-tight);
+  padding: 10px 12px;
+  text-decoration: none;
+  color: var(--color-text);
+  transition: all 0.15s;
+}
+.pb-link-card:hover { background: var(--color-primary-soft); border-color: var(--color-primary); transform: translateY(-2px); }
+.pb-link-card.pb-star { border-color: var(--color-accent); background: linear-gradient(135deg, var(--color-accent-soft) 0%, #FFF 80%); }
+.pb-link-name { font-size: 13px; font-weight: 900; color: var(--color-text); }
+.pb-link-desc { font-size: 11px; color: var(--color-text-light); margin: 3px 0; line-height: 1.5; }
+.pb-link-url { font-size: 10px; color: var(--color-primary); margin-top: 4px; }
+.pb-tip { background: var(--color-accent-soft); border: 1px dashed var(--color-accent); border-radius: var(--radius-tight); padding: 8px 12px; font-size: 12px; text-align: center; color: var(--color-text); margin-top: 12px; }
+
 /* v18.45: 知识树 ⭐ 系统 */
 .kt-row-stars { font-size: 11px; font-weight: 700; color: var(--color-accent); margin-left: 8px; }
 .kt-node-stars-1 { color: #FFA500; font-size: 14px; }
@@ -4078,13 +4122,12 @@ p { font-size: 14px; line-height: 1.6; }
   <button class="tab-btn active" data-page="dashboard">🏠 主页</button>
   <button class="tab-btn" data-page="checkin">✅ 打卡</button>
   <button class="tab-btn" data-page="history">📊 PSLE 能力</button>
-  <!-- v18.26: 知识树按钮 -->
-  <button class="tab-btn tab-action knowledge-tab" onclick="openKnowledgeTreeModal()" title="知识树 — 4 学科 PSLE 大纲">
-    🌳 知识树
-  </button>
-  <!-- v18.36: 作文按钮 -->
-  <button class="tab-btn tab-action essay-tab" onclick="openEssayLibrary()" title="73 周 PSLE 作文模板库">
-    📝 作文
+  <!-- v18.49: 知识树/作文 改为 data-page (不再 modal) -->
+  <button class="tab-btn" data-page="knowledge" title="知识树 — 4 学科 PSLE 大纲">🌳 知识树</button>
+  <button class="tab-btn" data-page="essay" title="73 周 PSLE 作文模板库">📝 作文</button>
+  <!-- v18.46: PSLE 题库 (modal 式仍 OK) -->
+  <button class="tab-btn tab-action paper-bank-tab" onclick="openPaperBank()" title="PSLE 真题 + P5/P6 名校 prelim 4 学科">
+    📚 题库
   </button>
   <!-- v18.47: 管理移到末尾 -->
   <button class="tab-btn" data-page="admin">⚙️ 管理</button>
@@ -4296,6 +4339,20 @@ p { font-size: 14px; line-height: 1.6; }
         <p style="color: var(--color-text-light); font-style: italic;">暂无兑换记录</p>
       </div>
       <button class="btn btn-primary" onclick="addExchange()" style="margin-top: 12px;">＋ 记录新兑换</button>
+    </div>
+  </div>
+
+  <!-- v18.49: 知识树独立页 (取代旧 modal) -->
+  <div class="page" id="page-knowledge">
+    <div class="kt-page-wrap" id="knowledgeTreePageContent">
+      <p style="color:var(--color-text-light);text-align:center;padding:40px">加载中…</p>
+    </div>
+  </div>
+
+  <!-- v18.49: 作文独立页 (取代旧 modal) -->
+  <div class="page" id="page-essay">
+    <div class="kt-page-wrap" id="essayPageContent">
+      <p style="color:var(--color-text-light);text-align:center;padding:40px">加载中…</p>
     </div>
   </div>
 

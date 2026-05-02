@@ -2372,6 +2372,91 @@ function getNodePractice(nodeId) {
   return KNOWLEDGE_PRACTICE[nodeId] || null;
 }
 
+// v18.46: PSLE 真题 + P5/P6 名校 prelim 题库 (所有链接已 WebFetch 验证)
+const PSLE_PAPER_BANK = {
+  math: {
+    name: '数学', icon: '➗', color: '#E8B86E',
+    sections: [
+      {
+        title: '🎯 PSLE 真题 (历年完整卷 + 答案)',
+        links: [
+          { name: 'Club Math', star: true, desc: 'PSLE Math 2022-2025 历年真题 + 完整答案 PDF', url: 'https://www.clubmath.sg/past-years-psle-math-questions-with-answers/' },
+          { name: 'Free Test Paper', star: true, desc: 'PSLE Math 历年真题免费下载 (P6 专区)', url: 'https://freetestpaper.com/' },
+          { name: 'SG Test Paper', desc: '2009-2025 PSLE Math 历年汇编', url: 'https://www.sgtestpaper.com/' }
+        ]
+      },
+      {
+        title: '📚 P5/P6 名校 Prelim',
+        links: [
+          { name: 'Lion City Tutors', star: true, desc: 'P6 Math 11 套名校 (Raffles/Nanyang/Methodist/Nanhua/Red Swastika)', url: 'https://www.lioncitytutors.com/free-test-papers' },
+          { name: 'Test Papers Free', desc: 'P5/P6 Math WA1/SA2 各名校免费 PDF', url: 'https://testpapersfree.com/' }
+        ]
+      }
+    ]
+  },
+  english: {
+    name: '英语', icon: '📖', color: '#6FB8A0',
+    sections: [
+      {
+        title: '🎯 PSLE 真题',
+        links: [
+          { name: 'Free Test Paper', star: true, desc: 'P6 English PSLE 真题 + 名校 prelim', url: 'https://freetestpaper.com/' },
+          { name: 'SG Test Paper', star: true, desc: '历年 PSLE English Paper 1-3 汇编', url: 'https://www.sgtestpaper.com/' }
+        ]
+      },
+      {
+        title: '📚 P5/P6 名校 Prelim',
+        links: [
+          { name: 'Lion City Tutors', star: true, desc: 'P6 English 3 套 (Nanyang/Raffles Girls/SCGS) + P5 15 套', url: 'https://www.lioncitytutors.com/free-test-papers' },
+          { name: 'Test Papers Free', desc: 'P5/P6 English WA1/SA2/Prelim 各名校免费', url: 'https://testpapersfree.com/' },
+          { name: 'Asian Parent', desc: 'PSLE English 题型 + 历年总结', url: 'https://sg.theasianparent.com/psle-past-year-papers' }
+        ]
+      }
+    ]
+  },
+  science: {
+    name: '科学', icon: '🔬', color: '#9B8FC9',
+    sections: [
+      {
+        title: '🎯 PSLE 真题',
+        links: [
+          { name: 'Free Test Paper', star: true, desc: 'P6 Science PSLE 真题 + 名校 prelim 全免费', url: 'https://freetestpaper.com/' },
+          { name: 'SG Test Paper', star: true, desc: '2009-2025 PSLE Science 历年 (含 OE 答案)', url: 'https://www.sgtestpaper.com/' }
+        ]
+      },
+      {
+        title: '📚 P5/P6 名校 Prelim',
+        links: [
+          { name: 'Lion City Tutors', star: true, desc: 'P6 Science 10 套名校 (ACS Junior/Methodist/Nanhua/Nanyang/Raffles Girls)', url: 'https://www.lioncitytutors.com/free-test-papers' },
+          { name: 'Test Papers Free', desc: 'P5/P6 Science 免费 PDF (WA1/SA2)', url: 'https://testpapersfree.com/' }
+        ]
+      }
+    ]
+  },
+  chinese: {
+    name: '华文/高华', icon: '🇨🇳', color: '#E07B7B',
+    sections: [
+      {
+        title: '🎯 PSLE 高华真题',
+        links: [
+          { name: 'Free Test Paper', star: true, desc: 'P6 Higher Chinese 2025 + 历年专区, 15+ 真题免费', url: 'https://freetestpaper.com/' },
+          { name: 'SG Test Paper', star: true, desc: 'P6 HCL 专区, 2009-2025 历年高华真题', url: 'https://www.sgtestpaper.com/' },
+          { name: 'Kiasu Exampaper', desc: '2018-2024 P6 HCL + 名校 prelim PDF (部分免费)', url: 'https://kiasuexampaper.com/product/psle-p6-higher-chinese-hcl-exam-papers-soft-copy-download-pdf/' }
+        ]
+      },
+      {
+        title: '📚 P5/P6 名校 Prelim',
+        links: [
+          { name: 'SG Exam', star: true, desc: 'P6 名校中文卷 (Hwa Chong / Nanyang / RGS / RI)', url: 'https://sgexam.com/category/primary/chinese/' },
+          { name: 'PSLE Pals 网课', desc: 'PSLE Chinese 在线课程 + 真题精讲', url: 'https://pslepals.thinkific.com/courses/pslechinese' }
+        ]
+      }
+    ]
+  }
+};
+
+function getPaperBank(subj) { return PSLE_PAPER_BANK[subj] || null; }
+
 // 计算节点状态: locked / learning / mastered
 function getKnowledgeNodeStatus(node, state) {
   const cw = state.currentWeek || 1;
@@ -4321,6 +4406,9 @@ window.getKnowledgeProgress = getKnowledgeProgress;
 // v18.45: 知识树独立练习
 window.KNOWLEDGE_PRACTICE = KNOWLEDGE_PRACTICE;
 window.getNodePractice = getNodePractice;
+// v18.46: PSLE 题库
+window.PSLE_PAPER_BANK = PSLE_PAPER_BANK;
+window.getPaperBank = getPaperBank;
 // v18.27: 闹铃
 window.ALARM_SCHEDULE = ALARM_SCHEDULE;
 // v18.28: 4 新 mini-game 数据 + helpers

@@ -2102,20 +2102,13 @@ function testAlarm() {
 window.testAlarm = testAlarm;
 
 // ============ v18.26: 知识树 modal ============
-function openKnowledgeTreeModal() {
-  let modal = document.getElementById('knowledgeTreeModal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'knowledgeTreeModal';
-    modal.className = 'kt-modal';
-    document.body.appendChild(modal);
-  }
+// v18.49: 抽出 HTML 构建, 复用于 modal + page 两种形态
+function _buildKnowledgeTreeInnerHtml(forPage) {
   const tree = window.getKnowledgeTreeStatus(state);
   const prog = window.getKnowledgeProgress(state);
   const explored = state.knowledgeExplored || {};
   const stars = state.knowledgeStars || {};
   const exploredCount = Object.keys(explored).length;
-  // v18.45: 计 ⭐ 总数
   const totalStars = Object.values(stars).reduce((s, v) => s + (v.stars || 0), 0);
   const maxStars = prog.total * 3;
   const subjHtml = Object.keys(tree).map(subj => {
@@ -2151,14 +2144,14 @@ function openKnowledgeTreeModal() {
         <div class="kt-row-nodes">${nodeHtml}</div>
       </div>`;
   }).join('');
-  modal.innerHTML = `
+  return `
     <div class="kt-inner">
       <div class="kt-header">
         <div>
           <div class="kt-title">🌳 知识树</div>
           <div class="kt-progress">⭐ 总 <b>${totalStars}/${maxStars}</b> · 已探索 ${exploredCount}/${prog.total} · 周进度: ${prog.mastered}掌握 / ${prog.learning}学习中</div>
         </div>
-        <button class="vocab-modal-close" onclick="closeKnowledgeTreeModal()">×</button>
+        ${forPage ? '' : '<button class="vocab-modal-close" onclick="closeKnowledgeTreeModal()">×</button>'}
       </div>
       <div class="kt-tip-banner">💡 <b>点任意节点</b> 看讲解 + 例子 + 一键去练习对应 mini-game · 学完一个 +2 分 + ⭐ 标记</div>
       <div class="kt-legend">
@@ -2170,9 +2163,21 @@ function openKnowledgeTreeModal() {
       <div class="kt-body">${subjHtml}</div>
     </div>
   `;
-  modal.classList.add('show');
+}
+// v18.49: page 形态 — 直接渲染到 #knowledgeTreePageContent
+function renderKnowledgeTreePage() {
+  const el = document.getElementById('knowledgeTreePageContent');
+  if (!el) return;
+  el.innerHTML = _buildKnowledgeTreeInnerHtml(true);
+}
+// 旧 modal API 保留为转发(防存量调用): 切到 knowledge tab
+function openKnowledgeTreeModal() {
+  const btn = document.querySelector('.tab-btn[data-page="knowledge"]');
+  if (btn) btn.click();
+  else renderKnowledgeTreePage();
 }
 function closeKnowledgeTreeModal() {
+  // page 形态无需关闭, 但保留以防旧 modal 残留
   const m = document.getElementById('knowledgeTreeModal');
   if (m) m.classList.remove('show');
 }
@@ -2250,9 +2255,9 @@ function _starsHtml(nodeId) {
 function closeKnowledgeNodeDetail() {
   const m = document.getElementById('ktNodeModal');
   if (m) m.classList.remove('show');
-  // 重新渲染知识树以显示新的 ⭐
-  if (document.getElementById('knowledgeTreeModal')?.classList.contains('show')) {
-    openKnowledgeTreeModal();
+  // v18.49: 知识树是 page, 直接 re-render 显示新的 ⭐
+  if (document.getElementById('page-knowledge')?.classList.contains('active')) {
+    renderKnowledgeTreePage();
   }
   renderAll();
 }
@@ -2393,8 +2398,10 @@ function closeKnowledgePractice() {
   const m = document.getElementById('kpracticeModal');
   if (m) m.classList.remove('show');
   _kpracticeState = null;
-  // 重新打开知识树以显示新 ⭐
-  if (document.getElementById('knowledgeTreeModal')) openKnowledgeTreeModal();
+  // v18.49: knowledge 是 page — 若用户在 knowledge 页, re-render 显示新 ⭐
+  if (document.getElementById('page-knowledge')?.classList.contains('active')) {
+    renderKnowledgeTreePage();
+  }
   renderAll();
 }
 window.openKnowledgePractice = openKnowledgePractice;
@@ -2404,6 +2411,7 @@ window.restartKnowledgePractice = restartKnowledgePractice;
 window.closeKnowledgePractice = closeKnowledgePractice;
 window.openKnowledgeTreeModal = openKnowledgeTreeModal;
 window.closeKnowledgeTreeModal = closeKnowledgeTreeModal;
+window.renderKnowledgeTreePage = renderKnowledgeTreePage;
 
 // ============ v18.31: PSLE 作文 modal + 精修上传 + 作文模板库 ============
 async function openCompositionModal(week) {
@@ -2543,15 +2551,8 @@ async function viewPolishedEssay(week) {
   }
 }
 
-async function openEssayLibrary() {
-  let modal = document.getElementById('essayLibraryModal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'essayLibraryModal';
-    modal.className = 'kt-modal';
-    document.body.appendChild(modal);
-  }
-  // 扫描 W1-W73 哪些有精修
+// v18.49: 抽出 HTML 构建, 复用于 modal + page 两种形态
+async function _buildEssayInnerHtml(forPage) {
   const cards = [];
   for (let w = 1; w <= 73; w++) {
     const p = window.getCompositionPrompt(w);
@@ -2572,18 +2573,29 @@ async function openEssayLibrary() {
       <div class="essay-status">${c.has ? '✅ 已精修' : '⬜ 未上传'}</div>
     </div>
   `).join('');
-  modal.innerHTML = `
+  return `
     <div class="kt-inner">
       <div class="kt-header">
         <div>
           <div class="kt-title">📚 作文模板库</div>
           <div class="kt-progress">已存 <b>${filed}/${total}</b> · 点已精修看模板, 点未上传去写</div>
         </div>
-        <button class="vocab-modal-close" onclick="closeEssayLibrary()">×</button>
+        ${forPage ? '' : '<button class="vocab-modal-close" onclick="closeEssayLibrary()">×</button>'}
       </div>
       <div class="essay-grid">${grid}</div>
     </div>`;
-  modal.classList.add('show');
+}
+// v18.49: page 形态 — 直接渲染到 #essayPageContent
+async function renderEssayPage() {
+  const el = document.getElementById('essayPageContent');
+  if (!el) return;
+  el.innerHTML = await _buildEssayInnerHtml(true);
+}
+// 旧 modal API 保留为转发: 切到 essay tab
+async function openEssayLibrary() {
+  const btn = document.querySelector('.tab-btn[data-page="essay"]');
+  if (btn) btn.click();
+  else await renderEssayPage();
 }
 function closeEssayLibrary() {
   const m = document.getElementById('essayLibraryModal');
@@ -2596,6 +2608,7 @@ window.uploadPolishedEssay = uploadPolishedEssay;
 window.viewPolishedEssay = viewPolishedEssay;
 window.openEssayLibrary = openEssayLibrary;
 window.closeEssayLibrary = closeEssayLibrary;
+window.renderEssayPage = renderEssayPage;
 
 // ============ v18.40: 华文 PSLE 高华阅读题库 ============
 function openChineseReadingBank() {
@@ -2751,6 +2764,68 @@ function closeChineseReading() {
   renderAll();
 }
 window.openChineseReadingBank = openChineseReadingBank;
+
+// ============ v18.46: PSLE 4 学科真题 + 名校 prelim 题库 (所有链接 WebFetch 验证过) ============
+let _paperBankSubj = 'math';
+function openPaperBank() {
+  let modal = document.getElementById('paperBankModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'paperBankModal';
+    modal.className = 'kt-modal';
+    document.body.appendChild(modal);
+  }
+  _renderPaperBank();
+}
+function switchPaperBankSubj(subj) {
+  _paperBankSubj = subj;
+  _renderPaperBank();
+}
+function _renderPaperBank() {
+  const modal = document.getElementById('paperBankModal');
+  if (!modal) return;
+  const PB = window.PSLE_PAPER_BANK || {};
+  const subjects = ['math', 'english', 'science', 'chinese'];
+  const tabs = subjects.map(s => {
+    const data = PB[s];
+    const isActive = s === _paperBankSubj;
+    return `<button class="pb-tab ${isActive ? 'pb-tab-active' : ''}" onclick="switchPaperBankSubj('${s}')" style="${isActive ? 'border-color:' + data.color + '; background:' + data.color + ';color:white' : ''}">${data.icon} ${data.name}</button>`;
+  }).join('');
+  const cur = PB[_paperBankSubj];
+  const sectionsHtml = cur.sections.map(sec => `
+    <div class="pb-section">
+      <div class="pb-section-title">${escapeHtml(sec.title)}</div>
+      <div class="pb-link-grid">
+        ${sec.links.map(link => `
+          <a class="pb-link-card ${link.star ? 'pb-star' : ''}" href="${link.url}" target="_blank" rel="noopener">
+            <div class="pb-link-name">${link.star ? '⭐ ' : ''}${escapeHtml(link.name)}</div>
+            <div class="pb-link-desc">${escapeHtml(link.desc)}</div>
+            <div class="pb-link-url">🔗 ${escapeHtml(link.url.replace(/^https?:\/\//, '').split('/')[0])} ↗</div>
+          </a>`).join('')}
+      </div>
+    </div>`).join('');
+  modal.innerHTML = `
+    <div class="kt-inner pb-inner">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title">📚 PSLE 真题题库</div>
+          <div class="kt-progress">4 学科 · 所有链接已验证 · 真题 + P5/P6 名校 prelim</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closePaperBank()">×</button>
+      </div>
+      <div class="pb-tabs">${tabs}</div>
+      ${sectionsHtml}
+      <div class="pb-tip">💡 ⭐ 标记的源完全免费 + 直达对应学科 P6 专区 · 点开新窗口跳转</div>
+    </div>`;
+  modal.classList.add('show');
+}
+function closePaperBank() {
+  const m = document.getElementById('paperBankModal');
+  if (m) m.classList.remove('show');
+}
+window.openPaperBank = openPaperBank;
+window.closePaperBank = closePaperBank;
+window.switchPaperBankSubj = switchPaperBankSubj;
 window.closeChineseReadingBank = closeChineseReadingBank;
 window.openChineseReading = openChineseReading;
 window.selectChineseReadingAnswer = selectChineseReadingAnswer;
@@ -4783,6 +4858,12 @@ function bindEvents() {
 
       if (page === 'history') {
         setTimeout(drawChart, 100);
+      }
+      if (page === 'knowledge') {
+        renderKnowledgeTreePage();
+      }
+      if (page === 'essay') {
+        renderEssayPage().catch(err => console.error('renderEssayPage', err));
       }
       if (page === 'admin') {
         renderPhotoGallery(state.currentWeek).catch(() => {});
