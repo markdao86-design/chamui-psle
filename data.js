@@ -980,136 +980,82 @@ function predictOverallAL(state) {
 }
 window.predictOverallAL = predictOverallAL;
 
-// ============= v18 Phase 5.4: 🧪 mini-game 数据 (v18.3 升级 P5/P6 PSLE 难度) =============
-// 60+ 题 PSLE 级别, 涵盖 分数 / 比例 / 速度 / 百分比 / 平均数 / 周长面积 / 小数 / 整数四则
-// 都设计为答案是整数(便于输入), 30 秒答 10 题
+// ============= v18.54 mini-game Math (P6 + PSLE 中难度专攻, 已删入门题) =============
+// 孩子数学已 90+, 直起 P6 难度. 全部 diff 4-5, 极少 diff 3 作热身. 答案均整数.
 const MATH_QUESTIONS = [
-  // === 分数 (P5/P6 高频) ===
-  { q: '3/4 + 1/4', ans: 1 },
-  { q: '1/2 + 1/4 = ?/4', ans: 3 },
-  { q: '5/6 - 1/3 = ?/2', ans: 1 },
-  { q: '2/3 of 18', ans: 12 },
-  { q: '3/5 of 25', ans: 15 },
-  { q: '5/8 of 24', ans: 15 },
-  { q: '7/10 of 50', ans: 35 },
-  { q: '1/4 of 60', ans: 15 },
-  { q: '4/5 of 30', ans: 24 },
-  { q: '2/7 of 49', ans: 14 },
-  // === 百分比 (P5/P6 重点) ===
-  { q: '50% of 80', ans: 40 },
-  { q: '25% of 60', ans: 15 },
-  { q: '10% of 250', ans: 25 },
-  { q: '20% of 45', ans: 9 },
-  { q: '75% of 80', ans: 60 },
-  { q: '40% of 150', ans: 60 },
-  { q: '60% of 50', ans: 30 },
-  { q: '15% of 200', ans: 30 },
-  { q: '30% of 90', ans: 27 },
-  { q: '5% of 400', ans: 20 },
-  // === 速度 (PSLE 高频, distance/time) ===
-  { q: '60 km in 2h, speed (km/h)', ans: 30 },
-  { q: '120 km at 40 km/h, time (h)', ans: 3 },
-  { q: '45 km/h × 2h = ? km', ans: 90 },
-  { q: '180 km in 3h, speed', ans: 60 },
-  { q: '20 km/h × 4h = ? km', ans: 80 },
-  { q: '100 km at 25 km/h, time (h)', ans: 4 },
-  { q: '50 km/h × 5h = ? km', ans: 250 },
-  { q: '90 km in 1.5h, speed', ans: 60 },
-  { q: '300 km at 60 km/h, time (h)', ans: 5 },
-  // === 比例 ratio (P5 重点) ===
-  { q: 'Ratio 2:3, total 25, larger', ans: 15 },
-  { q: 'Ratio 1:4, total 30, larger', ans: 24 },
-  { q: 'Ratio 3:5, smaller is 15, larger', ans: 25 },
-  { q: 'Ratio 4:5, total 36, smaller', ans: 16 },
-  { q: 'Ratio 2:7, total 27, smaller', ans: 6 },
-  { q: 'Ratio 3:4 = 9:?', ans: 12 },
-  { q: 'Ratio 5:2 = ?:6', ans: 15 },
-  { q: 'A:B = 3:5, A=12, B', ans: 20 },
-  { q: 'Ratio 2:3:5, total 50, biggest', ans: 25 },
-  // === 平均数 ===
-  { q: 'Avg of 4, 6, 8', ans: 6 },
-  { q: 'Avg of 10, 20, 30, 40', ans: 25 },
-  { q: 'Avg of 5, 7, 9, 11', ans: 8 },
-  { q: 'Avg of 12, 15, 18', ans: 15 },
-  { q: 'Sum 100, count 4, avg', ans: 25 },
-  { q: '3 numbers avg 10, sum', ans: 30 },
-  { q: '5 numbers avg 12, sum', ans: 60 },
-  { q: 'Avg of 50, 60, 70, 80', ans: 65 },
-  // === 周长 / 面积 ===
-  { q: 'Square side 7, perimeter', ans: 28 },
-  { q: 'Square side 9, area', ans: 81 },
-  { q: 'Rectangle 5×8, area', ans: 40 },
-  { q: 'Rectangle 6×4, perimeter', ans: 20 },
-  { q: 'Square area 64, side', ans: 8 },
-  { q: 'Square area 144, side', ans: 12 },
-  { q: 'Rectangle 12×7, area', ans: 84 },
-  { q: 'Square side 11, perimeter', ans: 44 },
-  { q: 'Rectangle 15×4, perimeter', ans: 38 },
-  // === 小数 ===
-  { q: '0.5 × 0.4 (×100)', ans: 20 },
-  { q: '0.25 + 0.75 (×100)', ans: 100 },
-  { q: '1.5 × 4', ans: 6 },
-  { q: '2.5 × 4', ans: 10 },
-  { q: '0.1 × 100', ans: 10 },
-  { q: '12.5 × 8', ans: 100 },
-  { q: '0.6 × 50', ans: 30 },
-  // === 整数四则(快速心算)===
-  { q: '125 + 75', ans: 200 },
-  { q: '300 - 175', ans: 125 },
-  { q: '12 × 25', ans: 300 },
-  { q: '15 × 15', ans: 225 },
-  { q: '450 ÷ 9', ans: 50 },
-  { q: '720 ÷ 8', ans: 90 },
-  { q: '13 × 7', ans: 91 },
-  { q: '17 × 6', ans: 102 },
-  { q: '24 × 25', ans: 600 },
-  { q: '999 + 1', ans: 1000 },
-  // === 余数除法 ===
-  { q: '47 ÷ 6, remainder', ans: 5 },
-  { q: '100 ÷ 7, remainder', ans: 2 },
-  { q: '85 ÷ 9, remainder', ans: 4 },
-  // === GST / 折扣 (Singapore PSLE 高频) ===
-  { q: 'Item $100, 9% GST, total ($)', ans: 109 },
-  { q: 'Item $200, 10% off, pay ($)', ans: 180 },
-  { q: 'Item $50, 20% off, pay ($)', ans: 40 },
-  { q: 'Item $80, 25% discount, pay ($)', ans: 60 },
-
-  // ========== v18.52: PSLE Paper 2 多步推理 (AL 4-6 提分关键 25 题) ==========
-  // === 反向百分比 (PSLE 高频陷阱) ===
-  { q: '8 折后 $640, 原价 ($)', ans: 800 },
-  { q: '9 折后 $360, 原价 ($)', ans: 400 },
-  { q: '含 9% GST 总价 $327, 不含税 ($)', ans: 300 },  // 327÷1.09
-  { q: '增 20% 后 $144, 原 ($)', ans: 120 },
-  { q: '减 15% 后 $170, 原 ($)', ans: 200 },
-  // === 多步百分比 (复合) ===
-  { q: '$500 先涨 20% 再降 20%, 最终 ($)', ans: 480 },  // 500×1.2×0.8
-  { q: '$200 先 8 折再 9 折, 最终 ($)', ans: 144 },
-  { q: '$1000 涨 10% 后再 9% GST, 最终 ($)', ans: 1199 },  // 1000×1.1×1.09 取整
-  // === 比例多步 (PSLE 高频应用题) ===
-  { q: 'A:B = 2:3, B:C = 4:5, A:C 化简比的 A 部分', ans: 8 },  // A:C = 8:15
-  { q: '4 人 12 天完工, 6 人需几天?', ans: 8 },  // 反比例
-  { q: 'A:B = 3:5, A 比 B 少 16, A = ?', ans: 24 },
-  { q: '红:蓝 = 5:3, 共 64 个, 红比蓝多几个?', ans: 16 },
-  { q: '3 个比 4 个便宜 $5, 1 个 = ? (单位)', ans: 5 },  // 替换法
-  // === 速度进阶 (PSLE 高频) ===
-  { q: '60 km/h 跑 90 km, 几分钟?', ans: 90 },  // 1.5h × 60
-  { q: '甲 60km/h 乙 40km/h 同向, 1h 后差几 km?', ans: 20 },
-  { q: '相向 50+30 km/h, 240 km, 几小时相遇?', ans: 3 },
-  { q: '匀速 1h 走 45 km, 走 135 km 几小时?', ans: 3 },
-  // === 分数应用 (PSLE Paper 2 风) ===
-  { q: '花掉 1/3, 又花余下的 1/2, 共花全部的 ?/3', ans: 2 },  // 1/3+2/3×1/2=2/3
-  { q: '某数的 2/5 是 60, 此数 = ?', ans: 150 },
-  { q: '蛋糕吃 3/8, 剩 25 块, 原共几块?', ans: 40 },  // 余 5/8 = 25
-  // === 平均数变化 (PSLE 高频) ===
-  { q: '5 数平均 12, 加一新数变 13, 新数 = ?', ans: 18 },  // (13×6 - 12×5)
-  { q: '4 人平均 80 分, 加 1 人后平均 78, 新人多少分?', ans: 70 },
-  // === 几何 (复合图形) ===
-  { q: '圆 r=7, 面积 (π=22/7)', ans: 154 },  // 22/7 × 49 = 154
-  { q: '圆 r=14, 周长 (π=22/7)', ans: 88 },  // 2×22/7×14 = 88
-  { q: '长 20 宽 15 矩形, 中挖 5×5 正方形, 剩面积', ans: 275 },
-  // === 假设法 (鸡兔同笼变种) ===
-  { q: '鸡兔共 20 头, 共 56 脚, 兔几只?', ans: 8 },  // (56-40)/2
-  { q: '5 元 + 2 元票共 30 张共 96 元, 5 元几张?', ans: 12 }  // (96-60)/3
+  // ========== 反向百分比 (PSLE 必考陷阱) ==========
+  { q: '8 折后 $640, 原价 ($)', ans: 800, diff: 4 },
+  { q: '9 折后 $360, 原价 ($)', ans: 400, diff: 4 },
+  { q: '含 9% GST 总价 $327, 不含税 ($)', ans: 300, diff: 4 },
+  { q: '增 20% 后 $144, 原 ($)', ans: 120, diff: 4 },
+  { q: '减 15% 后 $170, 原 ($)', ans: 200, diff: 4 },
+  // ========== 多步百分比 (复合) ==========
+  { q: '$500 先涨 20% 再降 20%, 最终 ($)', ans: 480, diff: 5 },
+  { q: '$200 先 8 折再 9 折, 最终 ($)', ans: 144, diff: 5 },
+  { q: '$1000 涨 10% 后再 9% GST, 最终 ($)', ans: 1199, diff: 5 },
+  { q: '$1200 涨 25% 后降 20%, 现价 ($)', ans: 1200, diff: 5 },  // 经典陷阱: 不还原 = 不变
+  { q: '$300 涨 10% 后降 10%, 现价 ($)', ans: 297, diff: 5 },
+  { q: '原价 $1000 打 8 折再加 9% GST, 实付 ($)', ans: 872, diff: 5 },
+  { q: '考 80 满分, A 得 60% B 得 75%, B 比 A 多几分', ans: 12, diff: 4 },
+  // ========== 比例多步 (Bar Model / Before-After) ==========
+  { q: 'A:B = 2:3, B:C = 4:5, A:C 化简比 A 部分', ans: 8, diff: 4 },
+  { q: 'A:B = 3:5, A 比 B 少 16, A = ?', ans: 24, diff: 4 },
+  { q: '红:蓝 = 5:3, 共 64 个, 红比蓝多几个?', ans: 16, diff: 4 },
+  { q: '3 个比 4 个便宜 $5, 1 个 = ? ($)', ans: 5, diff: 4 },
+  { q: '甲乙钱 7:3, 甲给乙 $20 后变 1:1, 甲原 ($)', ans: 70, diff: 5 },
+  { q: 'A:B = 2:5, A 加 9 后 B 减 9 后变 1:1, 原 A', ans: 12, diff: 5 },
+  { q: '男:女 = 5:3, 30 男生离开后比 1:1, 原总人数', ans: 120, diff: 5 },
+  { q: '4 人 12 天完工, 6 人需几天?', ans: 8, diff: 4 },
+  // ========== 速度 (PSLE Paper 2 高频) ==========
+  { q: '60 km/h 跑 90 km, 几分钟?', ans: 90, diff: 4 },
+  { q: '甲 60 km/h 乙 40 km/h 同向, 1h 后差几 km?', ans: 20, diff: 4 },
+  { q: '相向 50+30 km/h, 240 km, 几小时相遇?', ans: 3, diff: 4 },
+  { q: '相向 80+60 km/h, 280 km, 几小时相遇?', ans: 2, diff: 4 },
+  { q: '匀速 1h 走 45 km, 走 135 km 几小时?', ans: 3, diff: 3 },
+  { q: '上山 30 km/h 下山 60 km/h, 全程平均速度 (km/h)', ans: 40, diff: 5 },  // 调和平均陷阱
+  { q: '上学 1.2 km, 步行 4 km/h, 几分钟到?', ans: 18, diff: 4 },
+  { q: '火车 200 m, 60 km/h, 完全过 800 m 桥需几秒?', ans: 60, diff: 5 },
+  // ========== 分数 of remainder (PSLE 必考) ==========
+  { q: '花 1/3 后, 又花余下 1/2, 共花全部的 ?/3', ans: 2, diff: 4 },
+  { q: '某数 2/5 是 60, 此数 = ?', ans: 150, diff: 4 },
+  { q: '蛋糕吃 3/8, 剩 25 块, 原共几块?', ans: 40, diff: 4 },
+  { q: '看书第 1 天 1/4, 第 2 天剩余的 1/3, 共看 ?/12', ans: 6, diff: 5 },
+  { q: '$X 给 A 1/3, 给 B 1/4, 余 $25, X = ?', ans: 60, diff: 5 },
+  // ========== 平均数变化 (PSLE 高频) ==========
+  { q: '5 数平均 12, 加一新数变 13, 新数 = ?', ans: 18, diff: 4 },
+  { q: '4 人平均 80 分, 加 1 人后平均 78, 新人 ?', ans: 70, diff: 4 },
+  { q: '4 数平均 25, 加 1 后平均 27, 新数', ans: 35, diff: 4 },
+  { q: '6 数平均 50, 前 4 平均 45, 后 2 平均', ans: 60, diff: 5 },
+  // ========== 几何 (复合图形 / 立体) ==========
+  { q: '圆 r=7, 面积 (π=22/7)', ans: 154, diff: 3 },
+  { q: '圆 r=14, 周长 (π=22/7)', ans: 88, diff: 3 },
+  { q: '长 20 宽 15 矩形, 中挖 5×5 正方形, 剩面积', ans: 275, diff: 4 },
+  { q: '矩形 14×10 内挖直径 14 半圆, 剩面积 (π=22/7)', ans: 63, diff: 5 },
+  { q: '直角三角形腿 6 和 8, 斜边长 (cm)', ans: 10, diff: 4 },
+  { q: '立方体棱长 5 cm, 表面积 (cm²)', ans: 150, diff: 4 },
+  { q: '立方体棱长 6 cm, 体积 (cm³)', ans: 216, diff: 4 },
+  { q: '长方体 10×8×4 表面积 (cm²)', ans: 304, diff: 5 },
+  { q: '水箱 20×10×5 cm³ 满水, 倒入 5×4 cm² 底瓶, 水高 (cm)', ans: 50, diff: 5 },
+  // ========== 假设法 (鸡兔同笼变种) ==========
+  { q: '鸡兔共 20 头, 共 56 脚, 兔几只?', ans: 8, diff: 4 },
+  { q: '$5 + $2 票共 30 张共 $96, $5 几张?', ans: 12, diff: 4 },
+  { q: '$5 + $2 票共 30 张共 $108, $5 几张?', ans: 16, diff: 4 },
+  { q: '苹果 $2 香蕉 $1 共 15 个用 $25, 苹果几个?', ans: 10, diff: 4 },
+  // ========== 利润 / 成本 (PSLE 应用题) ==========
+  { q: '原价 $80, 成本 $50, 打 8 折卖, 利润 ($)', ans: 14, diff: 4 },
+  { q: '进价 $30 加 50% 利润, 售价 ($)', ans: 45, diff: 4 },
+  { q: '售价 $90 成本 $75, 利润率 (%)', ans: 20, diff: 4 },
+  // ========== v18.25 hard 题 (保留 diff 4-5) ==========
+  { q: 'sqrt(144) + 13² = ?', ans: 181, diff: 5 },
+  { q: '24 × 25 - 15 × 16', ans: 360, diff: 4 },
+  { q: '15% of 240 + 30% of 80', ans: 60, diff: 4 },
+  { q: 'GST 9%: $250 final price', ans: 273, diff: 4 },
+  { q: '5/8 + 3/4 = ?/8', ans: 11, diff: 4 },
+  { q: '288 ÷ 12 + 48 ÷ 6', ans: 32, diff: 4 },
+  { q: 'Average of 78, 82, 95, 67, 88', ans: 82, diff: 4 },
+  { q: '20% discount on $85, pay?', ans: 68, diff: 3 },
+  { q: '(15² - 12²) ÷ 9', ans: 9, diff: 5 },
+  { q: 'Area of triangle base 12 height 8', ans: 48, diff: 3 }
 ];
 
 // v18.3: 25 段 PSLE Editing 5 类错(主谓/时态/拼写/介词/冠词), 每段 ~50 词 5 错
@@ -1221,23 +1167,10 @@ MATH_QUESTIONS.forEach(q => {
   else if (len < 10) q.diff = 1;  // 短题如 3+4
   else q.diff = 2;
 });
-// 新加 diff 4-5 高难题 (PSLE+ / 超 PSLE)
+// v18.54: 旧的 v18.25 push 已合并到 MATH_QUESTIONS 主体, 此处保留极少几道超 PSLE+ 挑战题
 MATH_QUESTIONS.push(
-  { q: 'sqrt(144) + 13² = ?', ans: 181, diff: 5 },
   { q: 'sqrt(225) - 7²', ans: -34, diff: 5 },
-  { q: '24 × 25 - 15 × 16', ans: 360, diff: 4 },
-  { q: '15% of 240 + 30% of 80', ans: 60, diff: 4 },
-  { q: 'A:B = 2:3, B:C = 4:5, A:C = ?:?', ans: 815, diff: 5 },  // 8:15 → encode
-  { q: 'GST 9%: $250 final price', ans: 273, diff: 4 }, // round 272.5 → 273
-  { q: '5/8 + 3/4 = ?/8', ans: 11, diff: 4 },
-  { q: '3 mins 45s in seconds', ans: 225, diff: 3 },
-  { q: '288 ÷ 12 + 48 ÷ 6', ans: 32, diff: 4 },
-  { q: 'Average of 78, 82, 95, 67, 88', ans: 82, diff: 4 },
-  { q: '20% discount on $85, pay?', ans: 68, diff: 3 },
-  { q: '(15² - 12²) ÷ 9', ans: 9, diff: 5 },
-  { q: 'Perimeter of 8×5 rect', ans: 26, diff: 2 },
-  { q: 'Area of triangle base 12 height 8', ans: 48, diff: 3 },
-  { q: '2 + 3 × 4', ans: 14, diff: 1 }
+  { q: '3 mins 45s in seconds', ans: 225, diff: 3 }
 );
 
 EDITING_PARAGRAPHS.forEach(p => {
@@ -1278,10 +1211,13 @@ const VOCAB_HARD = [
 ];
 
 // ============= v18.25: 难度自适应 helper =============
+// v18.54: math game minFloor=4 (孩子 90+, 直接起 P6 难). 其他 game 保持 3 (英语弱).
+function _gameMinFloor(gameKey) {
+  return gameKey === 'math' ? 4 : 3;
+}
 function recordGameRun(state, gameKey, correct, total) {
-  // v18.37: 所有 game 起点+floor = 3 (P5 实战 PSLE 准)
-  const minFloor = 3;
-  if (!state.gameStats) state.gameStats = { vocab:{difficulty:3,recent:[]}, math:{difficulty:3,recent:[]}, editing:{difficulty:3,recent:[]}, listen:{difficulty:3,recent:[]}, cloze:{difficulty:3,recent:[]} };
+  const minFloor = _gameMinFloor(gameKey);
+  if (!state.gameStats) state.gameStats = { vocab:{difficulty:3,recent:[]}, math:{difficulty:4,recent:[]}, editing:{difficulty:3,recent:[]}, listen:{difficulty:3,recent:[]}, cloze:{difficulty:3,recent:[]} };
   if (!state.gameStats[gameKey]) state.gameStats[gameKey] = { difficulty: minFloor, recent: [] };
   const s = state.gameStats[gameKey];
   if (s.difficulty < minFloor) s.difficulty = minFloor;
@@ -1304,8 +1240,8 @@ function recordGameRun(state, gameKey, correct, total) {
 }
 
 function getDifficulty(state, gameKey) {
-  // v18.37: 所有 game floor = 3
-  const minFloor = 3;
+  // v18.54: math = 4, 其他 = 3
+  const minFloor = _gameMinFloor(gameKey);
   if (!state.gameStats || !state.gameStats[gameKey]) return minFloor;
   return Math.max(minFloor, state.gameStats[gameKey].difficulty || minFloor);
 }
