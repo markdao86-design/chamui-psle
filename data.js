@@ -562,7 +562,7 @@ const ENGLISH_WOW_FACTS = [
   { tag:'Editing', hook:'⏰ "Yesterday I am hungry" — 时态错', body:'yesterday 是过去时间 → 必须用 was, 不是 am。 PSLE Editing 高频: 时间词跟动词时态不匹配(yesterday/last week → 过去式; tomorrow → 将来时)。' },
   { tag:'Grammar', hook:'🔀 if 句 vs unless 句 — 90% 学生混了', body:'"unless = if not". "Unless you study, you will fail" = "If you do not study, you will fail". PSLE Grammar 高频: unless 后用肯定句, 因为本身就含否定。' },
   { tag:'Grammar', hook:'⏳ "since" vs "for" — 都表"持续多久"', body:'since + 时间点(since 2020 / since I was 5). for + 时间段(for 5 years / for 10 minutes). PSLE 高频, 别混。' },
-  { tag:'Oral', hook:'🗣️ Reading Aloud: 句号停 1.5 秒 = 多 2 分', body:'PSLE Oral Reading Aloud 评 15 分。 句末停顿 1.5 秒 + 重读关键词 = 流畅感觉。 平淡读完就 8-10 分; 有节奏 13-15 分。' },
+  { tag:'Oral', hook:'🗣️ Reading Aloud: 句末适当停顿 + 重读关键词', body:'PSLE Oral Reading Aloud 评 15 分。 句末停顿约 0.5-1.5 秒(逗号短/句号长)+ 重读关键词 = 流畅感觉。 平淡读完 8-10 分; 有起伏节奏 13-15 分。' },
   { tag:'Oral', hook:'🖼️ Stimulus 看图: 描述→联想→个人 3 步答', body:'PSLE Oral 看图说话: ① 描述场景 ② 联想问题/感受 ③ 个人经历呼应。 每点 2-3 句即可。 缺哪一步扣 1-2 分。' },
   { tag:'Synthesis', hook:'🔗 PSLE Paper 2 顶端 10 分: Synthesis', body:'把 2 个简单句合并成 1 个复杂句, 或换句型不变意 — Synthesis & Transformation 占 10 分。 W15 起每周 1h 专项练习。' },
   { tag:'词汇', hook:'🌍 PSLE Vocab 6 完成 = AL2 起步线', body:'Vocabulary 6 这本完成 = 词汇量到 PSLE AL2 标准。 v14 计划 W16 完成 Vocab 5, W52 前完成 Vocab 6 — 严格执行 = 英语稳 AL2。' },
@@ -943,12 +943,12 @@ function predictFutureSelf(state) {
 function predictOverallAL(state) {
   if (!window.getSubjectAccuracy) return 6;  // 冷启动
   const bySubj = window.getSubjectAccuracy(state);  // returns { '数学': {accuracy, correct, total}, '英语':..., '科学':... }
-  // 4 科加权 (无华文 mini-game 数据 → 跳过华文权重)
+  // v18.53: 5 项加权 — 4 科 mini-game (60%) + 知识树 ⭐ (20%) + 留 20% 给未参考项
   const groups = [
-    { name: '数学', weight: 0.30, data: bySubj['数学'] },
-    { name: '英语', weight: 0.35, data: bySubj['英语'] },  // 英语权重略增 (因为没华文)
-    { name: '科学', weight: 0.25, data: bySubj['科学'] },
-    { name: '华文', weight: 0.10, data: bySubj['华文'] }   // 华文目前无 mini-game, 占位 0
+    { name: '数学', weight: 0.25, data: bySubj['数学'] },
+    { name: '英语', weight: 0.25, data: bySubj['英语'] },
+    { name: '科学', weight: 0.20, data: bySubj['科学'] },
+    { name: '华文', weight: 0.10, data: bySubj['华文'] }
   ];
   let totalAccPct = 0, totalW = 0;
   for (const g of groups) {
@@ -956,6 +956,15 @@ function predictOverallAL(state) {
     const acc = g.data.correct / g.data.total;  // 0-1
     totalAccPct += acc * g.weight;
     totalW += g.weight;
+  }
+  // 加入知识树 ⭐ 平均完成度 (权重 20%)
+  const ks = state.knowledgeStars || {};
+  const starEntries = Object.values(ks);
+  if (starEntries.length > 0) {
+    const avgStars = starEntries.reduce((s, e) => s + (e.stars || 0), 0) / starEntries.length;
+    const ktAcc = avgStars / 3;  // 0-1
+    totalAccPct += ktAcc * 0.20;
+    totalW += 0.20;
   }
   if (totalW === 0) return 6;  // 冷启动默认 AL 6
   const wAcc = totalAccPct / totalW;  // 0-1
@@ -1182,7 +1191,20 @@ const LISTEN_DICTATIONS = [
   { text: 'The water cycle includes evaporation condensation and precipitation which keeps water moving around the earth.',
     blanks: ['water','evaporation','condensation','precipitation','earth'], voice:'en-GB' },
   { text: 'Reading books helps you learn new words improve your vocabulary and develop a strong imagination.',
-    blanks: ['Reading','words','improve','vocabulary','imagination'], voice:'en-GB' }
+    blanks: ['Reading','words','improve','vocabulary','imagination'], voice:'en-GB' },
+  // ====== v18.53 P2-B: 加 4 段 — SG 本地化 + PSLE 数字陷阱 + 转折否定 ======
+  // 数字易混 (15 vs 50, 30 vs 13)
+  { text: 'The MRT train arrives every fifteen minutes and the journey from Bukit Timah to Marina Bay takes about thirty minutes.',
+    blanks: ['MRT','fifteen','Bukit','Marina','thirty'], voice:'en-GB' },
+  // SG 生活: hawker / kopi / void deck
+  { text: 'After school we often go to the hawker centre at the void deck for a plate of chicken rice and a cup of kopi.',
+    blanks: ['hawker','void','deck','chicken','kopi'], voice:'en-GB' },
+  // 转折否定 (although/however 后才是真意思)
+  { text: 'Although the science test looked easy at first, many students actually scored below seventy percent due to careless mistakes.',
+    blanks: ['Although','science','below','seventy','careless'], voice:'en-GB' },
+  // 同义改写陷阱 (precipitation = rainfall)
+  { text: 'The weather forecast warned that heavy precipitation would continue throughout the weekend, so outdoor activities were cancelled.',
+    blanks: ['forecast','heavy','precipitation','weekend','cancelled'], voice:'en-GB' }
 ];
 
 // ============= v18.25: 难度标签 (auto-tag existing + 加 hard 题库) =============
@@ -2132,7 +2154,7 @@ const KNOWLEDGE_TREE = {
       pitfall: '光直线传播, 不能"绕过"物体 → 影子永远在背光面', game: 'scilab' },
     { id: 'sci_cells', name: '细胞 Cells', weeks: [13, 15], icon: '🔬',
       desc: 'PSLE 必识 6 个 organelles. AL 4-6 必会画图 + 标 function.',
-      examples: ['植物特有: 细胞壁 (支撑) + 叶绿体 (光合) + 大液泡 (储水)', '动物特有: 中心体 (分裂)', '细胞膜 vs 细胞壁: 膜是动植都有 + 选择性通过, 壁只植物 + 完全通透'],
+      examples: ['植物特有: 细胞壁 (支撑) + 叶绿体 (光合) + 大液泡 (储水)', '动物特有: 中心体 (分裂)', '细胞膜 vs 细胞壁: 膜动植都有 (选择性通过, "看门人"); 壁只植物有 (刚性支撑, 让分子可通过但靠膜筛选)'],
       pitfall: '叶绿体 ≠ 叶绿素, 前者是 organelle, 后者是 pigment 分子', game: 'vocab' },
     { id: 'sci_water', name: '水循环', weeks: [16, 18], icon: '💧',
       desc: 'PSLE 必考: 给图标 4 步 + 解释能量来源 + 连接到环境 (干旱/洪水).',
@@ -2145,7 +2167,7 @@ const KNOWLEDGE_TREE = {
     { id: 'sci_energy', name: '能量 Energy', weeks: [22, 26], icon: '⚡',
       desc: 'PSLE 高频: 画 energy flow chart + Energy conservation (不消失只转化). AL 4-6 必标每个箭头的能量类型.',
       examples: ['手电筒: 电能 → 光能 + 热能 (热是 waste)', '光合作用: 光能 → 化学能 (储在葡萄糖)', '食物链: 太阳→植物→草食→肉食 (10% 传递, 顶端 energy 最少)'],
-      pitfall: '能量"用完" 错 → 是"转化为不可用形式"(常是热能散失)', game: 'scilab' },
+      pitfall: '能量守恒 (总量不变) 但 "可用能" 递减 — 常以热能形式散失到环境, 不可逆。PSLE 答 "energy is converted, not destroyed"', game: 'scilab' },
     { id: 'sci_adaptations', name: 'P6 适应', weeks: [27, 42], icon: '🦎',
       desc: 'PSLE Paper 2 长题: 给环境推适应特征. AL 4-6 必分 structural / behavioral 两类.',
       examples: ['沙漠: 仙人掌刺 (减蒸发) + 深根 (找水) + 厚皮 (储水) — 3 个不同 features', 'Camel 驼峰储脂肪 (不是水 — PSLE 高频陷阱)', '北极熊: 白毛 (camouflage) + 厚脂肪 (insulation) + 大脚掌 (分散重量) — structural'],
@@ -2208,7 +2230,7 @@ const KNOWLEDGE_TREE = {
       pitfall: '别忽视符号变化 — "减去 -3" = "+3"', game: 'math' },
     { id: 'math_fractions', name: '分数', weeks: [4, 7], icon: '½',
       desc: 'PSLE 必考: 分数 of remainder (剩余的分数). AL 4-6 模型法画 bar diagram.',
-      examples: ['"花掉 1/3 后, 又花掉 1/2 of remainder" = 总共花 1/3 + 1/3 = 2/3', '比较: 3/4 vs 5/6 → 通分 9/12 vs 10/12, 后大', '混合运算: (1 - 2/5) × 30 = 18'],
+      examples: ['"花 1/3 后, 又花剩余的 1/2" → 剩 2/3, 再花 2/3×1/2 = 1/3, 总共 1/3+1/3 = 2/3 (不是 1/3+1/2)', '比较: 3/4 vs 5/6 → 通分 9/12 vs 10/12, 5/6 大', '混合运算: (1 - 2/5) × 30 = 3/5×30 = 18'],
       pitfall: '"of remainder" 是剩下的分数, 不是原数 — 必画 bar', game: 'math' },
     { id: 'math_decimals', name: '小数', weeks: [8, 10], icon: '0.5',
       desc: 'PSLE 高频: 小数与分数互转 + 钱算法 ($X.YY) + 测量精确度.',
@@ -2304,7 +2326,7 @@ const KNOWLEDGE_PRACTICE = {
   sci_cells: [
     { q: '哪个 organelle 只在植物细胞有?', opts: ['细胞膜', '细胞核', '叶绿体', '线粒体'], ans: 2, explain: '叶绿体 (光合作用) 只在植物; 动物细胞没有' },
     { q: '细胞壁的功能?', opts: ['控制进出', '储存能量', '提供支撑结构', '光合作用'], ans: 2, explain: '细胞壁 = 植物特有, 提供刚性支撑 (动物靠骨骼)' },
-    { q: '细胞膜 vs 细胞壁的区别?', opts: ['完全一样', '膜动植都有, 壁只植物', '膜只动物, 壁只植物', '膜不允许物质通过'], ans: 1, explain: '膜 = 动植物都有 + 选择性通过; 壁 = 只植物 + 完全通透' }
+    { q: '细胞膜 vs 细胞壁的区别?', opts: ['完全一样', '膜动植都有, 壁只植物', '膜只动物, 壁只植物', '膜不允许物质通过'], ans: 1, explain: '膜 = 动植物都有 + 选择性通过 (看门人); 壁 = 只植物 + 提供刚性支撑 (分子可通过)' }
   ],
   sci_water: [
     { q: '水蒸气在冷玻璃上变水滴, 这个过程叫?', opts: ['蒸发', '凝结', '降水', '径流'], ans: 1, explain: 'Condensation 凝结: 气 → 液, 温度降低发生' },
@@ -3283,7 +3305,7 @@ const ENGLISH_MASTER_TIPS = [
   { subject:'📚 Grammar', title:'unless = if not 100% 等价',
     content:'"Unless you study, you will fail" = "If you do not study, you will fail". unless 后用肯定句, 因为 unless 本身含否定。 PSLE 高频混淆, 1 题 2-3 分。' },
   { subject:'🗣️ PSLE Oral', title:'Reading Aloud 3 大评分点',
-    content:'语调起伏 + 句末停 1.5 秒 + 重读关键词 = 流畅感觉. 平淡读完 8-10 分; 有节奏 13-15 分. 录音 + 自评 10 次, 一周提 3 分。' },
+    content:'语调起伏 + 句末适当停顿(0.5-1.5 秒, 逗号短/句号长)+ 重读关键词 = 流畅感觉. 平淡读完 8-10 分; 有节奏 13-15 分. 录音 + 自评 10 次, 一周提 3 分。' },
   { subject:'🗣️ Stimulus 看图', title:'描述→联想→个人经历 3 步',
     content:'Stimulus 看图说话每点 2-3 句即可: ① 描述场景(who/what/where) ② 联想问题或感受 ③ 个人经历呼应。缺哪一步扣 1-2 分, 多说反扣分。' },
   { subject:'🎧 PSLE Listening', title:'90% 答案在转折后',
