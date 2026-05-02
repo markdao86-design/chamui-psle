@@ -165,6 +165,13 @@ const CHAMUI = {
       accessory: 'masterCrown', condition: { type: 'milestone', value: 'W73' }, hint: 'W73 PSLE 笔试完成解锁(终极)' }
   ],
 
+  // v18.60: 双龙称号前缀 (在角色名后追加)
+  getDragonTitle(state) {
+    if (state.dragonsUnlocked && state.dragonsUnlocked.gold) return ' · 🐉 金龙之王';
+    if (state.dragonsUnlocked && state.dragonsUnlocked.silver) return ' · 🐲 银龙骑士';
+    return '';
+  },
+
   checkSkinUnlocked(skinId, state) {
     const skin = this.skins.find(s => s.id === skinId);
     if (!skin) return false;
@@ -382,22 +389,113 @@ const CHAMUI = {
       </defs>
     ` : '';
 
-    const dragonBody = has.dragon ? `
-      <g opacity="0.85">
-        <path d="M 5 ${tpl.bodyBottom + 5} Q 30 ${tpl.bodyTop + 20} 5 ${tpl.bodyTop - 10}
-                 Q 50 ${tpl.headCY - 10} 90 ${tpl.headCY - 30}
-                 Q 130 ${tpl.headCY - 30} 165 ${tpl.headCY - 10}
-                 Q 215 ${tpl.bodyTop - 10} 215 ${tpl.bodyBottom + 5}
-                 Q 195 ${tpl.bodyBottom - 5} 165 ${tpl.bodyBottom + 5}
-                 L 55 ${tpl.bodyBottom + 5}
-                 Q 25 ${tpl.bodyBottom - 5} 5 ${tpl.bodyBottom + 5} Z"
-              fill="none" stroke="#FFD700" stroke-width="3" stroke-dasharray="4 3">
-          <animate attributeName="stroke-dashoffset" values="0;-20" dur="2s" repeatCount="indefinite"/>
-        </path>
-        <text x="180" y="${tpl.headCY - 20}" font-size="22">🐉</text>
-        <text x="20" y="${tpl.bodyBottom - 5}" font-size="22" transform="scale(-1,1) translate(-40,0)">🐉</text>
+    // v18.60: 双龙真 SVG (替代 emoji + dasharray) — 银龙浮在头顶, 金龙环绕全身
+    const hasSilverDragon = !!(state.dragonsUnlocked && state.dragonsUnlocked.silver);
+    const hasGoldDragon = !!(state.dragonsUnlocked && state.dragonsUnlocked.gold);
+    const silverDragonBody = hasSilverDragon ? `
+      <defs>
+        <linearGradient id="silverGrad${tpl.bodyBottom}" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#E8E8E8"/>
+          <stop offset="50%" stop-color="#C0C0C0"/>
+          <stop offset="100%" stop-color="#888"/>
+        </linearGradient>
+      </defs>
+      <g opacity="0.92">
+        <animateTransform attributeName="transform" type="translate"
+                         values="0,0; 0,-4; 0,0" dur="2.5s" repeatCount="indefinite"/>
+        <!-- 银龙身体 (S 形飞行) -->
+        <path d="M 175 ${tpl.headCY - 50}
+                 Q 195 ${tpl.headCY - 56} 200 ${tpl.headCY - 38}
+                 Q 205 ${tpl.headCY - 22} 195 ${tpl.headCY - 14}
+                 Q 215 ${tpl.headCY - 4} 218 ${tpl.headCY + 14}"
+              fill="none" stroke="url(#silverGrad${tpl.bodyBottom})" stroke-width="6" stroke-linecap="round"/>
+        <!-- 银龙头 -->
+        <ellipse cx="175" cy="${tpl.headCY - 50}" rx="9" ry="7" fill="url(#silverGrad${tpl.bodyBottom})" stroke="#666" stroke-width="1"/>
+        <!-- 银龙角 -->
+        <path d="M 170 ${tpl.headCY - 56} L 167 ${tpl.headCY - 64} M 178 ${tpl.headCY - 56} L 181 ${tpl.headCY - 64}" stroke="#888" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- 银龙眼 -->
+        <circle cx="172" cy="${tpl.headCY - 51}" r="1.5" fill="#FFF"/>
+        <circle cx="172" cy="${tpl.headCY - 51}" r="0.8" fill="#000"/>
+        <!-- 银龙翼 -->
+        <path d="M 192 ${tpl.headCY - 30} Q 215 ${tpl.headCY - 45} 222 ${tpl.headCY - 22} L 200 ${tpl.headCY - 24} Z" fill="#D8D8D8" opacity="0.85" stroke="#888" stroke-width="1"/>
+        <!-- 银龙尾尖 -->
+        <path d="M 218 ${tpl.headCY + 14} L 226 ${tpl.headCY + 8} L 222 ${tpl.headCY + 22} Z" fill="url(#silverGrad${tpl.bodyBottom})"/>
+        <!-- 银光粒子 -->
+        <circle cx="200" cy="${tpl.headCY - 30}" r="1.5" fill="#FFF" opacity="0.9">
+          <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite"/>
+          <animate attributeName="r" values="1;2.5;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
       </g>
     ` : '';
+    const goldDragonBody = hasGoldDragon ? `
+      <defs>
+        <linearGradient id="goldGrad${tpl.bodyBottom}" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#FFF3C4"/>
+          <stop offset="40%" stop-color="#FFD700"/>
+          <stop offset="80%" stop-color="#FFA500"/>
+          <stop offset="100%" stop-color="#FF6B00"/>
+        </linearGradient>
+        <radialGradient id="goldGlow${tpl.bodyBottom}">
+          <stop offset="0%" stop-color="#FFD700" stop-opacity="0.5"/>
+          <stop offset="100%" stop-color="#FFD700" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <g>
+        <!-- 金光圆环 (背景光晕) -->
+        <circle cx="110" cy="${tpl.bodyTop + 30}" r="120" fill="url(#goldGlow${tpl.bodyBottom})">
+          <animate attributeName="r" values="115;130;115" dur="3s" repeatCount="indefinite"/>
+        </circle>
+        <!-- 金龙环绕路径 (大椭圆缠绕角色) -->
+        <path d="M 5 ${tpl.bodyBottom + 8}
+                 Q 25 ${tpl.bodyTop - 10} 60 ${tpl.headCY - 50}
+                 Q 110 ${tpl.headCY - 60} 165 ${tpl.headCY - 50}
+                 Q 200 ${tpl.bodyTop - 10} 220 ${tpl.bodyBottom + 8}
+                 Q 200 ${tpl.bodyBottom - 10} 175 ${tpl.bodyBottom + 4}
+                 L 50 ${tpl.bodyBottom + 4}
+                 Q 25 ${tpl.bodyBottom - 10} 5 ${tpl.bodyBottom + 8} Z"
+              fill="none" stroke="url(#goldGrad${tpl.bodyBottom})" stroke-width="5" stroke-dasharray="8 4" stroke-linecap="round" opacity="0.95">
+          <animate attributeName="stroke-dashoffset" values="0;-24" dur="1.5s" repeatCount="indefinite"/>
+        </path>
+        <!-- 金龙鳞片 (沿路径分布) -->
+        <circle cx="60" cy="${tpl.headCY - 48}" r="3.5" fill="#FFD700" stroke="#FF8C00" stroke-width="1"/>
+        <circle cx="110" cy="${tpl.headCY - 56}" r="4" fill="#FFA500" stroke="#FF6B00" stroke-width="1"/>
+        <circle cx="165" cy="${tpl.headCY - 48}" r="3.5" fill="#FFD700" stroke="#FF8C00" stroke-width="1"/>
+        <!-- 金龙头 (左侧) -->
+        <g>
+          <ellipse cx="30" cy="${tpl.bodyTop - 5}" rx="11" ry="9" fill="url(#goldGrad${tpl.bodyBottom})" stroke="#B8860B" stroke-width="1.5"/>
+          <path d="M 22 ${tpl.bodyTop - 12} L 18 ${tpl.bodyTop - 22} M 35 ${tpl.bodyTop - 12} L 39 ${tpl.bodyTop - 22}" stroke="#DAA520" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="26" cy="${tpl.bodyTop - 5}" r="2" fill="#FFF"/>
+          <circle cx="26" cy="${tpl.bodyTop - 5}" r="1.2" fill="#000"/>
+          <!-- 火焰口吐 -->
+          <path d="M 19 ${tpl.bodyTop - 2} Q 12 ${tpl.bodyTop - 8} 8 ${tpl.bodyTop + 2} Q 14 ${tpl.bodyTop} 19 ${tpl.bodyTop - 2} Z" fill="#FF6B00" opacity="0.9">
+            <animate attributeName="opacity" values="1;0.5;1" dur="0.6s" repeatCount="indefinite"/>
+          </path>
+        </g>
+        <!-- 金龙尾尖 (右侧) -->
+        <g>
+          <path d="M 220 ${tpl.bodyBottom + 8} L 230 ${tpl.bodyBottom + 2} L 226 ${tpl.bodyBottom + 18} Z" fill="url(#goldGrad${tpl.bodyBottom})" stroke="#B8860B" stroke-width="1.5"/>
+        </g>
+        <!-- 金光粒子 (4 个浮动) -->
+        <circle cx="80" cy="${tpl.bodyTop + 20}" r="1.5" fill="#FFD700">
+          <animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite" begin="0s"/>
+          <animate attributeName="cy" values="${tpl.bodyTop + 20};${tpl.bodyTop - 10};${tpl.bodyTop + 20}" dur="1.8s" repeatCount="indefinite" begin="0s"/>
+        </circle>
+        <circle cx="140" cy="${tpl.bodyTop + 30}" r="1.5" fill="#FFA500">
+          <animate attributeName="opacity" values="0;1;0" dur="2.2s" repeatCount="indefinite" begin="0.5s"/>
+          <animate attributeName="cy" values="${tpl.bodyTop + 30};${tpl.bodyTop};${tpl.bodyTop + 30}" dur="2.2s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+        <circle cx="100" cy="${tpl.bodyBottom - 10}" r="1.2" fill="#FFF3C4">
+          <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" begin="0.8s"/>
+          <animate attributeName="cy" values="${tpl.bodyBottom - 10};${tpl.bodyBottom - 40};${tpl.bodyBottom - 10}" dur="2s" repeatCount="indefinite" begin="0.8s"/>
+        </circle>
+        <circle cx="170" cy="${tpl.bodyBottom + 5}" r="1.5" fill="#FFD700">
+          <animate attributeName="opacity" values="0;1;0" dur="1.6s" repeatCount="indefinite" begin="0.3s"/>
+          <animate attributeName="cy" values="${tpl.bodyBottom + 5};${tpl.bodyBottom - 25};${tpl.bodyBottom + 5}" dur="1.6s" repeatCount="indefinite" begin="0.3s"/>
+        </circle>
+      </g>
+    ` : '';
+    // 兼容旧引用 (避免引用未定义)
+    const dragonBody = goldDragonBody + silverDragonBody;
 
     const rocket = has.rocket ? `
       <g>

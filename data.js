@@ -711,12 +711,49 @@ const PET_FORMS = [
     </svg>` }
 ];
 
+// v18.60: 金龙幼崽 (拿金龙后解锁的第二宠物, 跟仓鼠并存可切换)
+const GOLD_DRAGON_PET = {
+  idx: 'gd', name: '金龙幼崽', minStreak: 0,
+  bg: 'radial-gradient(ellipse at center, #FFF8E0 0%, #FFD700 60%, #FF8C00 100%)',
+  desc: '从金龙之卵孵化的幼龙伙伴, 跟你一起冲 PSLE',
+  svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="gdpGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFF3C4"/>
+        <stop offset="50%" stop-color="#FFD700"/>
+        <stop offset="100%" stop-color="#FF8C00"/>
+      </linearGradient>
+    </defs>
+    <ellipse cx="24" cy="30" rx="14" ry="11" fill="url(#gdpGrad)" stroke="#B8860B" stroke-width="1.2"/>
+    <ellipse cx="24" cy="20" rx="11" ry="9" fill="url(#gdpGrad)" stroke="#B8860B" stroke-width="1.2"/>
+    <path d="M 17 12 L 14 6 M 31 12 L 34 6" stroke="#DAA520" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="20" cy="20" r="2" fill="#FFF"/>
+    <circle cx="20" cy="20" r="1.2" fill="#000"/>
+    <circle cx="28" cy="20" r="2" fill="#FFF"/>
+    <circle cx="28" cy="20" r="1.2" fill="#000"/>
+    <ellipse cx="24" cy="24" rx="2" ry="1" fill="#FF8C00" opacity="0.8"/>
+    <path d="M 36 28 Q 44 22 42 32 L 36 30 Z" fill="#FFA500" opacity="0.9" stroke="#B8860B" stroke-width="0.8"/>
+    <path d="M 12 28 Q 4 22 6 32 L 12 30 Z" fill="#FFA500" opacity="0.9" stroke="#B8860B" stroke-width="0.8"/>
+    <path d="M 38 36 L 44 38 L 40 42 Z" fill="url(#gdpGrad)" stroke="#B8860B" stroke-width="0.8"/>
+    <circle cx="14" cy="14" r="1" fill="#FFD700">
+      <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="34" cy="16" r="1" fill="#FFA500">
+      <animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite" begin="0.5s"/>
+    </circle>
+  </svg>`
+};
 function getCurrentPetForm(state) {
+  // v18.60: 如果拿了金龙 + 选了金龙宠物, 显示金龙幼崽
+  if (state.activePetType === 'gold_dragon' && state.dragonsUnlocked && state.dragonsUnlocked.gold) {
+    return GOLD_DRAGON_PET;
+  }
   const streak = (state.dailyStreak && state.dailyStreak.bestEver) || 0;
   let form = PET_FORMS[0];
   for (const f of PET_FORMS) if (streak >= f.minStreak) form = f;
   return form;
 }
+window.GOLD_DRAGON_PET = GOLD_DRAGON_PET;
 
 function feedPet(state) {
   if (!state.pet) state.pet = { name: '小蛋蛋', formIdx: 0, spawnedAt: Date.now(), feedCount: 0, happiness: 100, lastFedDate: null };
@@ -3078,9 +3115,53 @@ function getDefaultState() {
     // v18.41: 知识树探索状态 — { 'sci_diversity': {date: 'YYYY-MM-DD'} }
     knowledgeExplored: {},
     // v18.45: 知识树练习 ⭐ 进度 — { 'sci_diversity': {stars: 0-3, bestScore: 3, attempts: 5} }
-    knowledgeStars: {}
+    knowledgeStars: {},
+    // v18.59: 错题本
+    wrongAnswers: [],
+    // v18.60: 双龙觉醒状态 — null 或 { unlockedAt, totalPointsAtUnlock, ceremonyDone }
+    dragonsUnlocked: { silver: null, gold: null },
+    // v18.60: 当前主页宠物类型 — 'hamster' (默认) 或 'gold_dragon' (拿金龙后可切)
+    activePetType: 'hamster'
   };
 }
+
+// ============= v18.60: 双龙 RPG 系统 =============
+// 拿到银龙 mini-game +10%, 金龙 +20% (累计取最高)
+function getDragonBuff(state) {
+  if (state.dragonsUnlocked && state.dragonsUnlocked.gold) return 1.20;
+  if (state.dragonsUnlocked && state.dragonsUnlocked.silver) return 1.10;
+  return 1.0;
+}
+// 检测是否新解锁双龙. 返回新解锁的类型 ('silver'|'gold'|null) 用于触发觉醒仪式
+function checkDragonUnlock(state) {
+  if (!state.dragonsUnlocked) state.dragonsUnlocked = { silver: null, gold: null };
+  const pts = state.totalPoints || 0;
+  const ks = state.knowledgeStars || {};
+  const totalStars = Object.values(ks).reduce((s, e) => s + (e.stars || 0), 0);
+  let newlyUnlocked = null;
+  // 银龙: 10000 分
+  if (!state.dragonsUnlocked.silver && pts >= 10000) {
+    state.dragonsUnlocked.silver = {
+      unlockedAt: new Date().toISOString(),
+      totalPointsAtUnlock: pts,
+      ceremonyDone: false
+    };
+    newlyUnlocked = 'silver';
+  }
+  // 金龙: 105 ⭐ + 10000 分 (双门槛)
+  if (!state.dragonsUnlocked.gold && totalStars >= 105 && pts >= 10000) {
+    state.dragonsUnlocked.gold = {
+      unlockedAt: new Date().toISOString(),
+      totalPointsAtUnlock: pts,
+      totalStarsAtUnlock: totalStars,
+      ceremonyDone: false
+    };
+    newlyUnlocked = 'gold';  // 金龙优先 (覆盖 silver 标记)
+  }
+  return newlyUnlocked;
+}
+window.getDragonBuff = getDragonBuff;
+window.checkDragonUnlock = checkDragonUnlock;
 
 // ============= 周打卡项(里程碑/月小测,不含 review) =============
 // review 不再是手动勾选项,改为根据每日打卡完成率自动判定

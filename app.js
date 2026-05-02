@@ -73,6 +73,8 @@ function renderAll() {
   renderCheckinPage();
   renderHistoryPage();
   renderAdminPage();
+  // v18.60: 检测双龙是否新解锁, 触发觉醒仪式
+  if (typeof _checkAndTriggerDragonCeremony === 'function') _checkAndTriggerDragonCeremony();
   // v18.20 E: 总分变化时数字跳动
   if (typeof _bumpScoreNumber === 'function') _bumpScoreNumber();
 }
@@ -208,7 +210,9 @@ function renderDashboard() {
   const nextLevel = CHAMUI.getNextLevelInfo(points);
 
   document.getElementById('characterSvg').innerHTML = CHAMUI.renderCharacter(state);
-  document.getElementById('characterName').textContent = levelInfo.name;
+  // v18.60: 称号加双龙前缀 (银龙骑士 / 金龙之王)
+  const dragonTitle = (CHAMUI.getDragonTitle ? CHAMUI.getDragonTitle(state) : '');
+  document.getElementById('characterName').textContent = levelInfo.name + dragonTitle;
   document.getElementById('characterTitle').textContent = levelInfo.title;
   document.getElementById('charLevelDisplay').textContent = levelInfo.lv;
 
@@ -278,7 +282,7 @@ function renderErrorBankCard() {
 }
 window.renderErrorBankCard = renderErrorBankCard;
 
-// v18.55: 双龙紧凑进度条 (v18.56: 大幅缩小, 一行一龙)
+// v18.60: 双龙 RPG 化进度卡 — 真 SVG 龙头像 + 力量/智慧值条 + 已觉醒展示
 function renderDragonProgress() {
   const card = document.getElementById('dragonProgressCard');
   if (!card) return;
@@ -286,28 +290,193 @@ function renderDragonProgress() {
   const ks = state.knowledgeStars || {};
   const totalStars = Object.values(ks).reduce((s, e) => s + (e.stars || 0), 0);
   const silverPct = Math.min(100, Math.round(pts / 10000 * 100));
-  const silverDone = pts >= 10000;
-  const goldPct = Math.min(100, Math.round(((totalStars / 105) * 0.5 + (pts / 10000) * 0.5) * 100));
-  const goldDone = totalStars >= 105 && pts >= 10000;
+  const silverDone = !!(state.dragonsUnlocked && state.dragonsUnlocked.silver);
+  const goldStarPct = Math.min(100, Math.round(totalStars / 105 * 100));
+  const goldPtsPct = Math.min(100, Math.round(pts / 10000 * 100));
+  const goldDone = !!(state.dragonsUnlocked && state.dragonsUnlocked.gold);
+  const buff = window.getDragonBuff ? window.getDragonBuff(state) : 1.0;
+
+  // 银龙缩略 SVG (头像)
+  const silverIcon = `
+    <svg viewBox="0 0 60 60" width="56" height="56">
+      <defs><linearGradient id="sIcon" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#E8E8E8"/><stop offset="100%" stop-color="#888"/>
+      </linearGradient></defs>
+      <circle cx="30" cy="30" r="26" fill="rgba(192,192,192,0.15)" stroke="#888" stroke-width="1"/>
+      <ellipse cx="30" cy="32" rx="14" ry="11" fill="url(#sIcon)" stroke="#666" stroke-width="1.5"/>
+      <path d="M 22 22 L 18 14 M 38 22 L 42 14" stroke="#888" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="25" cy="30" r="2.2" fill="#FFF"/><circle cx="25" cy="30" r="1.2" fill="#000"/>
+      <path d="M 42 32 Q 50 18 56 30 L 46 28 Z" fill="#D8D8D8" opacity="0.85" stroke="#888"/>
+      ${silverDone ? '<circle cx="48" cy="14" r="4" fill="#FFD700"/><text x="48" y="18" text-anchor="middle" font-size="7" fill="#7A5C00">✓</text>' : ''}
+    </svg>`;
+  // 金龙缩略 SVG (头像)
+  const goldIcon = `
+    <svg viewBox="0 0 60 60" width="56" height="56">
+      <defs><linearGradient id="gIcon" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFF3C4"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#FF8C00"/>
+      </linearGradient>
+      <radialGradient id="gIconGlow"><stop offset="0%" stop-color="#FFD700" stop-opacity="0.4"/><stop offset="100%" stop-color="#FFD700" stop-opacity="0"/></radialGradient></defs>
+      <circle cx="30" cy="30" r="28" fill="url(#gIconGlow)"/>
+      <circle cx="30" cy="30" r="26" fill="rgba(255,215,0,0.15)" stroke="#DAA520" stroke-width="1.5"/>
+      <ellipse cx="30" cy="32" rx="15" ry="12" fill="url(#gIcon)" stroke="#B8860B" stroke-width="1.5"/>
+      <path d="M 22 22 L 18 12 M 38 22 L 42 12" stroke="#DAA520" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="25" cy="30" r="2.5" fill="#FFF"/><circle cx="25" cy="30" r="1.5" fill="#000"/>
+      <path d="M 16 32 Q 8 20 6 30 Q 12 32 16 32 Z" fill="#FF6B00" opacity="0.9"/>
+      <path d="M 44 32 Q 54 18 60 30 L 48 28 Z" fill="#FFA500" opacity="0.9" stroke="#B8860B"/>
+      ${goldDone ? '<circle cx="48" cy="12" r="5" fill="#FFD700" stroke="#B8860B" stroke-width="1"/><text x="48" y="16" text-anchor="middle" font-size="8" fill="#7A5C00" font-weight="900">✓</text>' : ''}
+    </svg>`;
+
   card.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;margin-bottom:6px">
-      <span style="min-width:80px">🐲 银龙</span>
-      <div style="flex:1;background:#E8E8E8;border-radius:8px;height:10px;overflow:hidden;border:1px solid #999">
-        <div style="background:linear-gradient(90deg,#999,#ddd);height:100%;width:${silverPct}%"></div>
-      </div>
-      <span style="min-width:90px;text-align:right;color:#555">${silverDone ? '✅ 已得' : pts + '/10000'}</span>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+      <div style="font-size:14px;font-weight:900">⚔️ 双龙契约 · RPG 终极</div>
+      ${buff > 1.0 ? `<div style="margin-left:auto;background:linear-gradient(135deg,#FFA500,#FFD700);color:#FFF;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:900">⚡ +${Math.round((buff-1)*100)}% mini-game buff</div>` : ''}
     </div>
-    <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700">
-      <span style="min-width:80px;color:#7A5C00">🐉 金龙</span>
-      <div style="flex:1;background:#FFF3C4;border-radius:8px;height:10px;overflow:hidden;border:1px solid #DAA520">
-        <div style="background:linear-gradient(90deg,#FFA500,#FFD700);height:100%;width:${goldPct}%"></div>
+
+    <!-- 银龙契约卡 -->
+    <div style="display:flex;align-items:center;gap:10px;padding:8px;background:${silverDone ? 'linear-gradient(135deg,#F5F5F5,#E0E0E0)' : '#FAFAFA'};border:2px solid ${silverDone ? '#888' : '#DDD'};border-radius:10px;margin-bottom:8px">
+      <div style="flex-shrink:0">${silverIcon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:900;color:${silverDone ? '#444' : '#888'}">🐲 银龙 · 守护契约 ${silverDone ? '<span style="color:#2E7D32">✅ 已觉醒</span>' : ''}</div>
+        <div style="font-size:11px;color:#666;margin:2px 0 4px">${silverDone ? '永久 +10% mini-game 奖励 · 称号: 银龙骑士' : '⚡ 力量值 (积分)'}</div>
+        ${silverDone ? '' : `<div style="background:#E0E0E0;border-radius:6px;height:8px;overflow:hidden;border:1px solid #999">
+          <div style="background:linear-gradient(90deg,#999,#ddd);height:100%;width:${silverPct}%;transition:width 0.5s"></div>
+        </div>
+        <div style="font-size:10px;color:#666;margin-top:2px;display:flex;justify-content:space-between">
+          <span>${pts.toLocaleString()} / 10,000</span><span><b>${silverPct}%</b></span>
+        </div>`}
       </div>
-      <span style="min-width:90px;text-align:right;color:#7A5C00">${goldDone ? '✅ 传说!' : `${totalStars}/105⭐ · ${pts}/10000`}</span>
     </div>
-    <div style="font-size:10px;color:var(--color-text-light);margin-top:4px;text-align:center">银=打卡 SGD 500 · 金=知识树全⭐+分 SGD 1500</div>
+
+    <!-- 金龙契约卡 -->
+    <div style="display:flex;align-items:center;gap:10px;padding:8px;background:${goldDone ? 'linear-gradient(135deg,#FFF3C4,#FFD700)' : 'linear-gradient(135deg,#FFFEF5,#FFF8E0)'};border:2px solid ${goldDone ? '#DAA520' : '#E5C870'};border-radius:10px;${goldDone ? 'box-shadow:0 0 16px rgba(255,215,0,0.4)' : ''}">
+      <div style="flex-shrink:0">${goldIcon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:900;color:#7A5C00">🐉 金龙 · 传说契约 ${goldDone ? '<span style="color:#B8860B">👑 已觉醒</span>' : ''}</div>
+        ${goldDone
+          ? '<div style="font-size:11px;color:#5D4500">永久 +20% 奖励 · 称号: 金龙之王 · 第二宠物解锁</div>'
+          : `<div style="font-size:10px;color:#7A5C00;margin:2px 0 4px">⚡ 力量值 ${pts}/10000 · ✨ 智慧值 ${totalStars}/105 ⭐ (双门槛)</div>
+             <div style="display:flex;gap:6px;align-items:center;margin-bottom:3px">
+               <span style="font-size:9px;color:#7A5C00;min-width:14px">⚡</span>
+               <div style="flex:1;background:#FFF;border-radius:6px;height:8px;overflow:hidden;border:1px solid #DAA520">
+                 <div style="background:linear-gradient(90deg,#FFA500,#FFD700);height:100%;width:${goldPtsPct}%"></div>
+               </div>
+             </div>
+             <div style="display:flex;gap:6px;align-items:center">
+               <span style="font-size:9px;color:#7A5C00;min-width:14px">✨</span>
+               <div style="flex:1;background:#FFF;border-radius:6px;height:8px;overflow:hidden;border:1px solid #DAA520">
+                 <div style="background:linear-gradient(90deg,#FF8C00,#FFD700);height:100%;width:${goldStarPct}%"></div>
+               </div>
+             </div>`}
+      </div>
+    </div>
+
+    <div style="font-size:10px;color:var(--color-text-light);margin-top:6px;text-align:center">
+      🐲 = SGD 500 + 银龙骑士称号 + 10% buff &nbsp; · &nbsp; 🐉 = SGD 1500 + 金龙之王称号 + 20% buff + 第二宠物
+    </div>
   `;
+
+  // v18.60: 主页 hero 区金色主题 (拿金龙后)
+  const hero = document.querySelector('.hero-section');
+  if (hero) hero.classList.toggle('gold-dragon-active', goldDone);
 }
 window.renderDragonProgress = renderDragonProgress;
+
+// v18.60: 觉醒仪式 modal (一次性, 拿到龙瞬间触发)
+function renderDragonCeremony(type) {
+  if (!type) return;
+  const isGold = type === 'gold';
+  const colorMain = isGold ? '#FFD700' : '#C0C0C0';
+  const colorDark = isGold ? '#B8860B' : '#666';
+  const colorBg = isGold ? '#7A5C00' : '#444';
+  const dragonIcon = isGold ? '🐉' : '🐲';
+  const titleStr = isGold ? '金龙觉醒' : '银龙觉醒';
+  const subtitleStr = isGold ? '传说契约成立!' : '守护契约成立!';
+  const messages = isGold
+    ? ['你征服了…', '105 个知识节点 ✨', '累积 10,000 积分 ⚡', '智慧 + 毅力 = 传说', `${dragonIcon} 金龙 · 觉醒!`]
+    : ['你打卡坚持…', '累积 10,000 积分 ⚡', '银龙守护契约成立', `${dragonIcon} 银龙 · 觉醒!`];
+  const buffsStr = isGold
+    ? '⚡ 永久 +20% mini-game 奖励<br>👑 称号 "金龙之王" 自动佩戴<br>🐉 第二宠物 "金龙幼崽" 解锁<br>✨ 主页金光主题永久激活<br>💰 SGD 1500 终极大奖兑现'
+    : '⚡ 永久 +10% mini-game 奖励<br>🛡 称号 "银龙骑士" 自动佩戴<br>💰 SGD 500 兑现';
+
+  let modal = document.getElementById('dragonCeremonyModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'dragonCeremonyModal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(0,0,0,0.92),rgba(0,0,0,0.98));backdrop-filter:blur(8px);';
+    document.body.appendChild(modal);
+  } else {
+    modal.style.display = 'flex';
+  }
+
+  const messagesHtml = messages.map((m, i) =>
+    `<div style="opacity:0;font-size:${i === messages.length-1 ? '32px' : '18px'};font-weight:900;color:${colorMain};margin:8px 0;text-shadow:0 0 20px ${colorMain};animation:dragonMsgIn 0.6s ${i*0.7}s forwards">${m}</div>`
+  ).join('');
+
+  modal.innerHTML = `
+    <style>
+      @keyframes dragonMsgIn { from { opacity:0; transform:translateY(20px) scale(0.8); } to { opacity:1; transform:translateY(0) scale(1); } }
+      @keyframes dragonGlow { 0%,100% { transform:scale(1); filter:drop-shadow(0 0 30px ${colorMain}); } 50% { transform:scale(1.08); filter:drop-shadow(0 0 60px ${colorMain}); } }
+      @keyframes dragonBgPulse { 0%,100% { box-shadow:inset 0 0 100px ${colorMain}66; } 50% { box-shadow:inset 0 0 200px ${colorMain}99; } }
+      .dragon-ceremony-glow { animation:dragonBgPulse 3s ease-in-out infinite; }
+      .dragon-ceremony-icon { animation:dragonGlow 2s ease-in-out infinite; }
+    </style>
+    <div class="dragon-ceremony-glow" style="position:absolute;inset:0;pointer-events:none"></div>
+    <div style="text-align:center;max-width:520px;padding:40px;position:relative;z-index:2">
+      <div class="dragon-ceremony-icon" style="font-size:120px;margin-bottom:20px">${dragonIcon}</div>
+      <div style="font-size:44px;font-weight:900;color:${colorMain};margin-bottom:8px;text-shadow:0 0 30px ${colorMain};letter-spacing:4px">${titleStr}</div>
+      <div style="font-size:16px;color:#FFF;opacity:0.9;margin-bottom:24px;letter-spacing:2px">${subtitleStr}</div>
+      <div style="margin:24px 0;min-height:200px">${messagesHtml}</div>
+      <div style="background:rgba(255,255,255,0.1);border:2px solid ${colorMain};border-radius:12px;padding:16px;margin:24px 0;text-align:left;color:#FFF;font-size:13px;line-height:2;opacity:0;animation:dragonMsgIn 0.8s ${messages.length * 0.7}s forwards">
+        <div style="font-weight:900;color:${colorMain};margin-bottom:8px;font-size:14px">🎁 觉醒奖励:</div>
+        ${buffsStr}
+      </div>
+      <button onclick="closeDragonCeremony('${type}')" style="opacity:0;animation:dragonMsgIn 0.5s ${messages.length * 0.7 + 0.5}s forwards;padding:14px 40px;font-size:16px;font-weight:900;background:linear-gradient(135deg,${colorMain},${colorDark});color:#FFF;border:none;border-radius:30px;cursor:pointer;box-shadow:0 0 30px ${colorMain};letter-spacing:3px">接受契约</button>
+    </div>
+  `;
+
+  // 撒花 + 音效
+  if (typeof spawnConfetti === 'function') {
+    setTimeout(() => spawnConfetti(window.innerWidth/2, window.innerHeight/3, 100), 600);
+    setTimeout(() => spawnConfetti(window.innerWidth/2, window.innerHeight/3, 80), 2000);
+    setTimeout(() => spawnConfetti(window.innerWidth/2, window.innerHeight/3, 120), 3500);
+  }
+  if (typeof playSound === 'function') {
+    setTimeout(() => playSound('tada'), 600);
+    setTimeout(() => playSound('tada'), (messages.length * 0.7 + 0.3) * 1000);
+  }
+}
+function closeDragonCeremony(type) {
+  const modal = document.getElementById('dragonCeremonyModal');
+  if (modal) modal.style.display = 'none';
+  // 标记已完成仪式
+  if (state.dragonsUnlocked && state.dragonsUnlocked[type]) {
+    state.dragonsUnlocked[type].ceremonyDone = true;
+    saveState(state);
+  }
+  if (typeof renderAll === 'function') renderAll();
+}
+window.renderDragonCeremony = renderDragonCeremony;
+window.closeDragonCeremony = closeDragonCeremony;
+
+// v18.60: 检测是否新解锁双龙, 触发觉醒仪式 (在 renderAll 调用)
+function _checkAndTriggerDragonCeremony() {
+  if (!window.checkDragonUnlock) return;
+  const newType = window.checkDragonUnlock(state);
+  if (newType) {
+    saveState(state);
+    setTimeout(() => renderDragonCeremony(newType), 300);
+  } else {
+    // 万一之前解锁但还没仪式, 补 (例如老用户升级版本后)
+    if (state.dragonsUnlocked) {
+      if (state.dragonsUnlocked.gold && !state.dragonsUnlocked.gold.ceremonyDone) {
+        setTimeout(() => renderDragonCeremony('gold'), 300);
+      } else if (state.dragonsUnlocked.silver && !state.dragonsUnlocked.silver.ceremonyDone) {
+        setTimeout(() => renderDragonCeremony('silver'), 300);
+      }
+    }
+  }
+}
+window._checkAndTriggerDragonCeremony = _checkAndTriggerDragonCeremony;
 
 // ============ v17.5 Phase 2 / v17.7: 神秘宝箱 — 移到 tab 栏按钮 ============
 function renderMysteryBoxCard() {
@@ -1908,13 +2077,28 @@ function renderPetWidget() {
   const isSad = happy < 30;
   const inAshes = window.isStreakInAshes && window.isStreakInAshes(state);
   w.style.background = (isSad || inAshes) ? '#E8E8E8' : (form.bg || 'white');
-  w.innerHTML = `<div class="pet-svg-wrap ${isSad || inAshes ? 'pet-sad' : ''}">${form.svg}</div>`;
+  // v18.60: 拿金龙后显示宠物切换按钮
+  const goldUnlocked = !!(state.dragonsUnlocked && state.dragonsUnlocked.gold);
+  const isGoldPet = state.activePetType === 'gold_dragon';
+  const switchBtn = goldUnlocked
+    ? `<button onclick="event.stopPropagation(); switchPet()" style="position:absolute;top:2px;right:2px;font-size:10px;padding:2px 6px;background:rgba(255,215,0,0.9);border:1px solid #DAA520;border-radius:8px;cursor:pointer;font-weight:700;color:#7A5C00" title="切换宠物 (仓鼠 ↔ 金龙)">${isGoldPet ? '🐹' : '🐉'}</button>`
+    : '';
+  w.style.position = 'relative';
+  w.innerHTML = `<div class="pet-svg-wrap ${isSad || inAshes ? 'pet-sad' : ''}">${form.svg}</div>${switchBtn}`;
   w.classList.toggle('pet-king', form.idx >= 6);
   w.classList.toggle('pet-warrior', form.idx === 5);
   w.setAttribute('data-name', `${state.pet.name || '球球'} · ${form.name} ${isSad ? '😢' : ''}`);
   w.title = `${state.pet.name || '球球'} (${form.name})\n心情 ${happy}/100\n点击查看详情/改名`;
   w.onclick = openPetModal;
 }
+// v18.60: 切换宠物 (仓鼠 / 金龙幼崽)
+function switchPet() {
+  state.activePetType = (state.activePetType === 'gold_dragon') ? 'hamster' : 'gold_dragon';
+  saveState(state);
+  renderAll();
+  showToast(state.activePetType === 'gold_dragon' ? '🐉 切到金龙幼崽' : '🐹 切到仓鼠伙伴', 'happy');
+}
+window.switchPet = switchPet;
 
 // ============ v18.20: A 活的伙伴 ============
 let _petBubbleTimer = null;
@@ -3516,7 +3700,7 @@ function _finishUnitGame() {
   let baseR = 0;
   if (g.correct >= 10) baseR = 8;
   else if (g.correct >= 7) baseR = 5;
-  const reward = Math.floor(baseR * mult);
+  const reward = Math.floor(baseR * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
   if (reward > 0) {
     state.totalPoints += reward;
     state.logs.push({ reason: `🎮 单位换算 ${g.correct}/10 (第 ${playNum} 次)`, points: reward, week: state.currentWeek, timestamp: Date.now() });
@@ -3659,7 +3843,7 @@ function _finishMcqGame() {
   let baseR = 0;
   if (g.correct >= 10) baseR = 8;
   else if (g.correct >= 7) baseR = 5;
-  const reward = Math.floor(baseR * mult);
+  const reward = Math.floor(baseR * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
   if (reward > 0) {
     state.totalPoints += reward;
     state.logs.push({ reason: `🎮 ${g.title} ${g.correct}/10 (第 ${playNum} 次)`, points: reward, week: state.currentWeek, timestamp: Date.now() });
@@ -3752,7 +3936,7 @@ function _finishSciGame() {
   const acc = g.correct / total;
   if (acc >= 1) baseR = 10;
   else if (acc >= 0.7) baseR = 5;
-  const reward = Math.floor(baseR * mult);
+  const reward = Math.floor(baseR * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
   if (reward > 0) {
     state.totalPoints += reward;
     state.logs.push({ reason: `🎮 科学分类 ${g.correct}/${total} (第 ${playNum} 次)`, points: reward, week: state.currentWeek, timestamp: Date.now() });
@@ -3892,7 +4076,7 @@ function _finishMathGame() {
   let baseReward = 0;
   if (g.correct >= 10) baseReward = 8;
   else if (g.correct >= 7) baseReward = 5;
-  const reward = Math.floor(baseReward * mult);
+  const reward = Math.floor(baseReward * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
   if (reward > 0) {
     state.totalPoints += reward;
     state.logs.push({ reason: `🎮 数学速算 ${g.correct}/10 (第 ${playNum} 次)`, points: reward, week: state.currentWeek, timestamp: Date.now() });
@@ -4074,7 +4258,7 @@ function submitListenAnswers() {
   let baseReward = 0;
   if (correct >= 5) baseReward = 10;
   else if (correct >= 3) baseReward = 5;
-  const reward = Math.floor(baseReward * mult);
+  const reward = Math.floor(baseReward * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
   if (reward > 0) {
     state.totalPoints += reward;
     if (correct >= 5 && playNum === 1 && state.mysteryBoxes) state.mysteryBoxes.available += 1;
