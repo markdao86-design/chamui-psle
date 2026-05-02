@@ -1542,10 +1542,17 @@ function renderPetWidget() {
   const happy = state.pet.happiness || 0;
   const isSad = happy < 30;
   const inAshes = window.isStreakInAshes && window.isStreakInAshes(state);
+  // v18.7: 视觉进化 — 主 emoji 大小 + 装饰 + 底色都按形态变
+  const decorPosClass = form.decorPos ? `pet-decor-${form.decorPos}` : '';
+  const decorHtml = form.decor ? `<span class="pet-decor ${decorPosClass}">${form.decor}</span>` : '';
+  w.style.background = (isSad || inAshes) ? '#E8E8E8' : (form.bg || 'white');
   w.innerHTML = `
-    <div class="pet-emoji ${isSad || inAshes ? 'pet-sad' : ''}">${form.emoji}</div>
+    <div class="pet-emoji ${isSad || inAshes ? 'pet-sad' : ''}" style="font-size:${form.size || 26}px">${form.emoji}</div>
+    ${decorHtml}
   `;
-  // v18.2: 用 data-name 属性显示宠物名 + 形态(CSS ::after 渲染小标签)
+  // v18.7: 高级形态加金色光环
+  w.classList.toggle('pet-king', form.idx >= 6);
+  w.classList.toggle('pet-warrior', form.idx === 5);
   w.setAttribute('data-name', `${state.pet.name || '球球'} · ${form.name} ${isSad ? '😢' : ''}`);
   w.title = `${state.pet.name || '球球'} (${form.name})\n心情 ${happy}/100\n点击查看详情/改名`;
   w.onclick = openPetModal;
@@ -1559,8 +1566,12 @@ function openPetModal() {
   const formsList = window.PET_FORMS.map(f => {
     const unlocked = streak >= f.minStreak;
     const isCurrent = f.idx === form.idx;
-    return `<div class="pet-form-item ${unlocked ? 'unlocked' : 'locked'} ${isCurrent ? 'current' : ''}">
-      <div class="pet-form-emoji">${f.emoji}</div>
+    const decorIn = f.decor ? `<span class="pf-decor pf-decor-${f.decorPos || 'tr'}">${f.decor}</span>` : '';
+    return `<div class="pet-form-item ${unlocked ? 'unlocked' : 'locked'} ${isCurrent ? 'current' : ''}" style="background:${f.bg || 'white'}">
+      <div class="pet-form-emoji" style="font-size:${(f.size || 26) + 4}px;position:relative">
+        ${f.emoji}
+        ${decorIn}
+      </div>
       <div class="pet-form-meta">${f.name} (连续打卡 ≥${f.minStreak} 天)${isCurrent ? ' ← 你在这' : ''}</div>
     </div>`;
   }).join('');

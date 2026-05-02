@@ -2285,6 +2285,49 @@ p { font-size: 14px; line-height: 1.6; }
 }
 #page-dashboard .character-card { position: relative; }
 
+/* ===== v18.7: 仓鼠形态视觉进化 装饰 + 光环 ===== */
+.pet-widget .pet-decor {
+  position: absolute;
+  font-size: 16px;
+  line-height: 1;
+  z-index: 3;
+  pointer-events: none;
+  animation: pet-decor-pop 2.5s ease-in-out infinite;
+}
+.pet-widget .pet-decor-tr { top: 0px; right: 0px; }
+.pet-widget .pet-decor-br { bottom: 14px; right: 0px; }
+.pet-widget .pet-decor-bl { bottom: 14px; left: 0px; }
+.pet-widget .pet-decor-tc { top: -8px; left: 50%; transform: translateX(-50%); }
+@keyframes pet-decor-pop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+}
+.pet-widget.pet-decor-tc .pet-decor-tc { transform: translateX(-50%) scale(1); }
+.pet-widget.pet-warrior {
+  box-shadow: 0 0 14px 3px rgba(255, 87, 87, 0.55), 0 3px 0 var(--color-text);
+}
+.pet-widget.pet-king {
+  box-shadow: 0 0 18px 5px rgba(255, 215, 0, 0.75), 0 3px 0 var(--color-text);
+  animation: pet-king-glow 2s ease-in-out infinite;
+  border-color: #FFD700;
+}
+@keyframes pet-king-glow {
+  0%, 100% { box-shadow: 0 0 18px 5px rgba(255, 215, 0, 0.75), 0 3px 0 var(--color-text); }
+  50% { box-shadow: 0 0 28px 8px rgba(255, 215, 0, 0.95), 0 3px 0 var(--color-text); }
+}
+.pet-form-emoji { position: relative; }
+.pf-decor {
+  position: absolute;
+  font-size: 14px;
+  line-height: 1;
+  z-index: 2;
+  pointer-events: none;
+}
+.pf-decor-tr { top: -2px; right: -8px; }
+.pf-decor-br { bottom: -2px; right: -8px; }
+.pf-decor-bl { bottom: -2px; left: -8px; }
+.pf-decor-tc { top: -10px; left: 50%; transform: translateX(-50%); }
+
 /* 宠物 modal */
 .pet-modal-inner { background: white; border: 4px solid var(--color-text); border-radius: var(--radius-bubble); max-width: 480px; padding: 20px; box-shadow: var(--shadow-pop); }
 .pet-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
