@@ -933,13 +933,13 @@ function predictFutureSelf(state) {
     e.condition === 'points' && e.value <= predictedTotal
   ).length : 0;
   // 预测 PSLE 成绩 — 粗估: 总分越高 AL 越低(更好)
-  // 4 科 AL 总分 = 总分映射 (假设 6000 分 = AL 6, 3000 分 = AL 12, 1000 分 = AL 20)
+  // v18.34: 重标到 30000 分上限 (0.05 SGD/分): 27500=AL6, 22500=AL8, 17500=AL10, 12500=AL12, 7500=AL16, else AL20
   let predAL = 24;
-  if (predictedTotal >= 5500) predAL = 6;
-  else if (predictedTotal >= 4500) predAL = 8;
-  else if (predictedTotal >= 3500) predAL = 10;
-  else if (predictedTotal >= 2500) predAL = 12;
-  else if (predictedTotal >= 1500) predAL = 16;
+  if (predictedTotal >= 27500) predAL = 6;
+  else if (predictedTotal >= 22500) predAL = 8;
+  else if (predictedTotal >= 17500) predAL = 10;
+  else if (predictedTotal >= 12500) predAL = 12;
+  else if (predictedTotal >= 7500) predAL = 16;
   else predAL = 20;
   return { predictedTotal, predLv, predEqCount, predAL, daysLeft, avgDaily: Math.round(avgDaily * 10) / 10, breakRate };
 }
@@ -2982,13 +2982,14 @@ function generateWeeklyReport(state, weekNum) {
 }
 
 // ============= 击败全新加坡 P5 同学百分比(虚拟激励指标) =============
-// 新加坡每年 P5 学生约 50,000 人。曲线设计:
-// 0 分:0% / 30 分(W1 起步):20% / 100 分:43% / 250 分:71% / 500 分:91% / 1000 分:99% / 1500+:99.5%
+// 新加坡每年 P5 学生约 50,000 人。
+// v18.34: 标定到 30000 分上限 (0.05 SGD/分):
+// 500=14% / 1000=26% / 3000=59% / 5000=78% / 10000=95% / 20000=99.5% / 30000+=99.5%
 const SG_P5_TOTAL = 50000;
 function studentBeatPercent(pts) {
   if (pts <= 0) return 0;
-  // 平滑曲线:1 - exp(-pts / 200 * 0.9),最高 99.5%
-  const raw = 100 * (1 - Math.exp(-pts / 200 * 0.9));
+  // 平滑曲线: 1 - exp(-pts / 3000 * 0.9), 最高 99.5%
+  const raw = 100 * (1 - Math.exp(-pts / 3000 * 0.9));
   return Math.min(99.5, Math.round(raw * 10) / 10);
 }
 function studentBeatCount(pts) {
@@ -3509,6 +3510,10 @@ function isEmptyDefaultState(s) {
 // 默认情况下,空默认值 state 拒绝写 Firestore(防止意外覆盖云端历史)
 function saveState(state, options) {
   options = options || {};
+  // v18.34: 防 logs 无限增长 (73 周 511 天 × 5 = 2500+ 条会撑爆 Firestore 1MB 文档)
+  if (state.logs && state.logs.length > 1000) {
+    state.logs = state.logs.slice(-1000);  // 只保留最近 1000 条
+  }
   let ok = true;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
