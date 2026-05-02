@@ -1947,6 +1947,74 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .lis-item.lis-live { background: linear-gradient(135deg, #FFE6F0 0%, #E0F4F1 100%); border-width: 3px; }
 .lis-item.lis-youtube { background: #FFF8E7; border-width: 3px; }
 
+/* v18.36: 周汇总弱项分析 + 思维导图 + 下周计划 */
+.weak-section { margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--color-border); }
+.acc-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+.acc-pill {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.acc-pill small { font-weight: 400; color: var(--color-text-light); }
+.acc-empty {
+  background: var(--color-card-soft);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-tight);
+  padding: 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-light);
+  margin: 8px 0;
+}
+.weak-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-purple);
+  border-radius: var(--radius-tight);
+  padding: 12px;
+  margin-top: 12px;
+  box-shadow: 0 1px 3px rgba(31,41,55,0.04);
+}
+.weak-header { font-size: 14px; font-weight: 900; margin-bottom: 8px; color: var(--color-text); }
+.weak-header b { color: var(--color-danger); font-size: 16px; }
+.weak-header small { font-weight: 400; color: var(--color-text-light); font-size: 12px; }
+.weak-mindmap { text-align: center; margin: 10px 0; background: var(--color-card-soft); border-radius: var(--radius-tight); padding: 8px; }
+.weak-topics { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
+@media (min-width: 600px) { .weak-topics { grid-template-columns: 1fr 1fr 1fr; } }
+.weak-topic {
+  background: var(--color-card-soft);
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+.wt-name { font-size: 13px; font-weight: 900; color: var(--color-text); margin-bottom: 4px; }
+.wt-why { font-size: 12px; color: var(--color-text-light); margin-bottom: 4px; line-height: 1.4; }
+.wt-drill { font-size: 12px; color: var(--color-primary); font-weight: 700; }
+.weak-none {
+  text-align: center;
+  padding: 12px;
+  color: var(--color-secondary);
+  font-weight: 700;
+  background: var(--color-secondary-soft);
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius-tight);
+  margin-top: 12px;
+}
+.next-plan {
+  background: var(--color-accent-soft);
+  border: 1px dashed var(--color-accent);
+  border-radius: var(--radius-tight);
+  padding: 12px;
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--color-text);
+}
+
 /* v18.27: 闹铃弹窗 (顶部固定, 不阻挡操作) */
 .alarm-popup {
   position: fixed;
@@ -3753,6 +3821,10 @@ p { font-size: 14px; line-height: 1.6; }
   <!-- v18.26: 知识树按钮 -->
   <button class="tab-btn tab-action knowledge-tab" onclick="openKnowledgeTreeModal()" title="知识树 — 4 学科 PSLE 大纲">
     🌳 知识树
+  </button>
+  <!-- v18.36: 作文按钮 -->
+  <button class="tab-btn tab-action essay-tab" onclick="openEssayLibrary()" title="73 周 PSLE 作文模板库">
+    📝 作文
   </button>
 </nav>
 

@@ -1195,11 +1195,12 @@ const VOCAB_HARD = [
 // ============= v18.25: 难度自适应 helper =============
 function recordGameRun(state, gameKey, correct, total) {
   // v18.31: 起点 P5 (difficulty 2), floor 也是 2
-  if (!state.gameStats) state.gameStats = { vocab:{difficulty:2,recent:[]}, math:{difficulty:2,recent:[]}, editing:{difficulty:2,recent:[]}, listen:{difficulty:2,recent:[]} };
-  if (!state.gameStats[gameKey]) state.gameStats[gameKey] = { difficulty: 2, recent: [] };
+  // v18.36: Cloze 起点+floor = 3 (P5 真起点)
+  const minFloor = (gameKey === 'cloze') ? 3 : 2;
+  if (!state.gameStats) state.gameStats = { vocab:{difficulty:2,recent:[]}, math:{difficulty:2,recent:[]}, editing:{difficulty:2,recent:[]}, listen:{difficulty:2,recent:[]}, cloze:{difficulty:3,recent:[]} };
+  if (!state.gameStats[gameKey]) state.gameStats[gameKey] = { difficulty: minFloor, recent: [] };
   const s = state.gameStats[gameKey];
-  // 老用户 difficulty=1 自动迁移到 2
-  if (s.difficulty < 2) s.difficulty = 2;
+  if (s.difficulty < minFloor) s.difficulty = minFloor;
   const acc = total > 0 ? correct / total : 0;
   s.recent.push({ date: new Date().toISOString().slice(0,10), correct, total, accuracy: acc });
   if (s.recent.length > 5) s.recent.shift();
@@ -1210,8 +1211,7 @@ function recordGameRun(state, gameKey, correct, total) {
     s.difficulty++;
     levelChanged = 'up';
     s.recent = [];
-  } else if (s.difficulty > 2 && last2.length === 2 && last2.every(r => r.accuracy <= 0.4)) {
-    // floor at 2 — 不能降到 P5 以下
+  } else if (s.difficulty > minFloor && last2.length === 2 && last2.every(r => r.accuracy <= 0.4)) {
     s.difficulty--;
     levelChanged = 'down';
     s.recent = [];
@@ -1220,8 +1220,9 @@ function recordGameRun(state, gameKey, correct, total) {
 }
 
 function getDifficulty(state, gameKey) {
-  if (!state.gameStats || !state.gameStats[gameKey]) return 2;
-  return Math.max(2, state.gameStats[gameKey].difficulty || 2);
+  const minFloor = (gameKey === 'cloze') ? 3 : 2;
+  if (!state.gameStats || !state.gameStats[gameKey]) return minFloor;
+  return Math.max(minFloor, state.gameStats[gameKey].difficulty || minFloor);
 }
 
 // 从池中按难度采样: 主难度 70% + ±1 难度 30%
@@ -1798,6 +1799,77 @@ function getUnitByDiff(diff, n) { return _sampleByDiff(UNIT_CONVERSIONS, diff, n
 function getGrammarByDiff(diff, n) { return _sampleByDiff(GRAMMAR_QUESTIONS, diff, n || 10); }
 function getClozeByDiff(diff, n) { return _sampleByDiff(CLOZE_QUESTIONS, diff, n || 10); }
 function getSciClassifyByDiff(diff) { const arr = _sampleByDiff(SCIENCE_CLASSIFY, diff, 1); return arr[0] || SCIENCE_CLASSIFY[0]; }
+
+// ============= v18.36: 弱项分析 + 知识点映射 =============
+const SUBJECT_OF_GAME = {
+  math: '数学', unit: '数学',
+  grammar: '英语', cloze: '英语', editing: '英语', vocab: '英语', listen: '英语',
+  scilab: '科学'
+};
+
+function getSubjectAccuracy(state) {
+  const stats = (state && state.gameStats) || {};
+  const bySubject = {};
+  Object.keys(SUBJECT_OF_GAME).forEach(gameKey => {
+    const subj = SUBJECT_OF_GAME[gameKey];
+    const recent = (stats[gameKey] && stats[gameKey].recent) || [];
+    if (recent.length === 0) return;
+    const tc = recent.reduce((s, r) => s + r.correct, 0);
+    const ta = recent.reduce((s, r) => s + r.total, 0);
+    if (ta === 0) return;
+    if (!bySubject[subj]) bySubject[subj] = { correct: 0, total: 0, runs: 0 };
+    bySubject[subj].correct += tc;
+    bySubject[subj].total += ta;
+    bySubject[subj].runs += recent.length;
+  });
+  Object.keys(bySubject).forEach(s => {
+    bySubject[s].accuracy = bySubject[s].total > 0
+      ? Math.round(bySubject[s].correct / bySubject[s].total * 100) : null;
+  });
+  return bySubject;
+}
+
+function findWeakSubjects(state) {
+  const acc = getSubjectAccuracy(state);
+  return Object.keys(acc)
+    .filter(s => acc[s].accuracy !== null && acc[s].accuracy < 70)
+    .sort((a, b) => acc[a].accuracy - acc[b].accuracy)
+    .slice(0, 2);
+}
+
+const WEAK_KNOWLEDGE_MAP = {
+  '数学': {
+    color: '#E8B86E',
+    topics: [
+      { name: '百分比', why: 'X% of Y = X/100 × Y, 别忘 /100', drill: '玩 数学速算 + 单位换算' },
+      { name: '比例', why: 'A:B = 2:3 时, A/(A+B) = 2/5, B/(A+B) = 3/5', drill: '数学速算选 ratio 题' },
+      { name: '速度', why: '速度 = 距离 ÷ 时间; 单位匹配 (km/h vs m/s)', drill: '单位换算 + speed 题' }
+    ]
+  },
+  '英语': {
+    color: '#6FB8A0',
+    topics: [
+      { name: '介词搭配', why: 'good at / interested in / careful with — 多读多记', drill: 'Cloze MCQ 重点' },
+      { name: '时态', why: 'yesterday→过去, tomorrow→将来, since→现在完成', drill: 'Grammar MCQ' },
+      { name: 'phrasal verbs', why: 'come across / look after / put off — 整体记忆', drill: 'Cloze 高难度' }
+    ]
+  },
+  '科学': {
+    color: '#9B8FC9',
+    topics: [
+      { name: '分类', why: '按可见特征 (有无脊椎/导电与否)', drill: '科学快分类 game' },
+      { name: '生命周期', why: '完全变态 4 段 (蝴蝶) vs 不完全变态 3 段 (蝗虫)', drill: '科学分类 + wow 复习' },
+      { name: '能量转换', why: '热↔光↔电↔声 不消失只转化', drill: 'wow 揭晓 + 阅读' }
+    ]
+  },
+  '华文': {
+    color: '#E07B7B',
+    topics: [
+      { name: '词汇', why: '常考成语 + 造句搭配', drill: 'VB slot 复习' },
+      { name: '阅读', why: '抓段落主旨, 不纠结生字', drill: '多读多看' }
+    ]
+  }
+};
 
 // ============= v18.27: 闹铃时间表 (周末优先, 工作日 placeholder) =============
 const ALARM_SCHEDULE = {
@@ -2403,7 +2475,8 @@ function getDefaultState() {
       listen:  { difficulty: 2, recent: [] },
       unit:    { difficulty: 2, recent: [] },
       grammar: { difficulty: 2, recent: [] },
-      cloze:   { difficulty: 2, recent: [] },
+      // v18.36: Cloze 起点 P5 真水平 = diff 3 (介词搭配, 跳过冠词复习)
+      cloze:   { difficulty: 3, recent: [] },
       scilab:  { difficulty: 2, recent: [] }
     },
     // v18.27: 闹铃
@@ -3854,3 +3927,8 @@ window.getSciClassifyByDiff = getSciClassifyByDiff;
 // v18.31: 作文
 window.PSLE_COMPOSITIONS = PSLE_COMPOSITIONS;
 window.getCompositionPrompt = getCompositionPrompt;
+// v18.36: 弱项分析
+window.SUBJECT_OF_GAME = SUBJECT_OF_GAME;
+window.WEAK_KNOWLEDGE_MAP = WEAK_KNOWLEDGE_MAP;
+window.getSubjectAccuracy = getSubjectAccuracy;
+window.findWeakSubjects = findWeakSubjects;

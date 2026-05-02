@@ -1140,6 +1140,51 @@ function renderWeekSummary(week) {
         </div>
       `).join('') + (c.missed.length > 8 ? `<div class="missed-more">还有 ${c.missed.length - 8} 个未完成…</div>` : '');
 
+  // v18.36: 弱项分析 + 思维导图 + 下周计划
+  const subjAcc = window.getSubjectAccuracy ? window.getSubjectAccuracy(state) : {};
+  const weakList = window.findWeakSubjects ? window.findWeakSubjects(state) : [];
+  const weakMap = window.WEAK_KNOWLEDGE_MAP || {};
+  const accSummary = Object.keys(subjAcc).length === 0
+    ? '<div class="acc-empty">📭 还没有游戏数据 — 先玩 mini-game 让系统了解你</div>'
+    : `<div class="acc-grid">
+        ${Object.keys(subjAcc).map(s => {
+          const a = subjAcc[s];
+          const colorVar = a.accuracy >= 80 ? 'var(--color-secondary)' : a.accuracy >= 60 ? 'var(--color-accent)' : 'var(--color-danger)';
+          return `<div class="acc-pill" style="border-color:${colorVar}"><b>${s}</b> ${a.accuracy}% <small>(${a.correct}/${a.total})</small></div>`;
+        }).join('')}
+       </div>`;
+  const weakHtml = weakList.length === 0
+    ? (Object.keys(subjAcc).length > 0 ? '<div class="weak-none">🎉 各科正确率都 ≥70%, 继续保持!</div>' : '')
+    : weakList.map(subj => {
+        const data = weakMap[subj];
+        if (!data) return '';
+        const acc = subjAcc[subj];
+        return `
+          <div class="weak-card" style="border-left-color:${data.color}">
+            <div class="weak-header">⚠️ ${subj} 正确率 <b>${acc.accuracy}%</b> <small>(${acc.correct}/${acc.total})</small></div>
+            <div class="weak-mindmap">${_renderMindmap(subj, data)}</div>
+            <div class="weak-topics">
+              ${data.topics.map(t => `
+                <div class="weak-topic">
+                  <div class="wt-name">📚 ${escapeHtml(t.name)}</div>
+                  <div class="wt-why">${escapeHtml(t.why)}</div>
+                  <div class="wt-drill">💪 ${escapeHtml(t.drill)}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>`;
+      }).join('');
+  const planHtml = weakList.length === 0
+    ? (Object.keys(subjAcc).length > 0
+        ? '<div class="next-plan">📅 <b>下周计划</b>:维持当前节奏, 玩 1 次 PSLE+ 难度的 mini-game 挑战自己</div>'
+        : '')
+    : `<div class="next-plan">
+         📅 <b>下周提升计划</b><br>
+         1. 重点: ${weakList.join(' + ')} → 每天玩 1 局对应 mini-game<br>
+         2. 看 wow 揭晓 + 复习卡时多注意 ${weakList[0]} 知识点<br>
+         3. 周日复盘时回看本周漏的相关题目
+       </div>`;
+
   return `
     <div class="week-summary card">
       <div class="card-title">📊 本周汇总分析</div>
@@ -1168,8 +1213,36 @@ function renderWeekSummary(week) {
         <div class="subj-section-title">⚠️ 漏掉的任务</div>
         ${missedHtml}
       </div>
+      <div class="weak-section">
+        <div class="subj-section-title">🎯 学科正确率</div>
+        ${accSummary}
+        ${weakHtml}
+        ${planHtml}
+      </div>
     </div>
   `;
+}
+
+// v18.36: 思维导图 (SVG 中心-辐射)
+function _renderMindmap(subjectName, data) {
+  const cx = 150, cy = 100;
+  const branches = data.topics.map((t, i) => {
+    const angle = (i * 120 - 90) * Math.PI / 180;
+    return { x: cx + Math.cos(angle) * 95, y: cy + Math.sin(angle) * 65, name: t.name };
+  });
+  const lines = branches.map(b => `<line x1="${cx}" y1="${cy}" x2="${b.x}" y2="${b.y}" stroke="${data.color}" stroke-width="2" opacity="0.6"/>`).join('');
+  const nodes = branches.map(b => `
+    <g transform="translate(${b.x},${b.y})">
+      <rect x="-36" y="-13" width="72" height="26" rx="13" fill="white" stroke="${data.color}" stroke-width="2"/>
+      <text x="0" y="4" text-anchor="middle" font-size="12" font-weight="700" fill="${data.color}">${escapeHtml(b.name)}</text>
+    </g>`).join('');
+  return `
+    <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:300px;height:auto">
+      ${lines}
+      <circle cx="${cx}" cy="${cy}" r="28" fill="${data.color}"/>
+      <text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="14" font-weight="900" fill="white">${escapeHtml(subjectName)}</text>
+      ${nodes}
+    </svg>`;
 }
 
 function selectDay(day) {
