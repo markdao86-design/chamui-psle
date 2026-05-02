@@ -897,6 +897,12 @@ function renderCheckinPage() {
     ? `<div class="goal-banner">🎯 ${escapeHtml(wt.goal)}</div>`
     : '';
 
+  // v18.52: 95% 休息提示 (防沉迷第3闸 — 软提醒, 不扣分)
+  const wkComp = calcWeekCompletion(week, state);
+  const restBanner = (wkComp && wkComp.percent >= 95)
+    ? `<div class="rest-banner" style="background:linear-gradient(135deg,#FFF8E7,#FFE0B2);border:2px dashed #FF9800;border-radius:10px;padding:12px;margin:8px 0;text-align:center;font-size:13px;color:#5D4037">🛋️ <b>本周已完成 ${wkComp.percent}%</b> · 剩下的可以休息了, 大脑也需要 recovery · PSLE 是马拉松不是冲刺</div>`
+    : '';
+
   // === 2) 日期 Tab ===
   const realToday = todayDayKeyForWeek(week);
   const dayTabs = `
@@ -1082,7 +1088,7 @@ function renderCheckinPage() {
     `;
   }
 
-  list.innerHTML = goalBanner + dayTabs + `<div class="day-slots">${slotsHtml}</div>` + summary + adminHtml;
+  list.innerHTML = goalBanner + restBanner + dayTabs + `<div class="day-slots">${slotsHtml}</div>` + summary + adminHtml;
 }
 
 function countDayDone(week, day) {

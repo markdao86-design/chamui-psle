@@ -932,17 +932,44 @@ function predictFutureSelf(state) {
   const predEqCount = window.CHAMUI ? window.CHAMUI.equipment.filter(e =>
     e.condition === 'points' && e.value <= predictedTotal
   ).length : 0;
-  // 预测 PSLE 成绩 — 粗估: 总分越高 AL 越低(更好)
-  // v18.34: 重标到 30000 分上限 (0.05 SGD/分): 27500=AL6, 22500=AL8, 17500=AL10, 12500=AL12, 7500=AL16, else AL20
-  let predAL = 24;
-  if (predictedTotal >= 27500) predAL = 6;
-  else if (predictedTotal >= 22500) predAL = 8;
-  else if (predictedTotal >= 17500) predAL = 10;
-  else if (predictedTotal >= 12500) predAL = 12;
-  else if (predictedTotal >= 7500) predAL = 16;
-  else predAL = 20;
+  // v18.52: PSLE AL 综合预测 — 用 4 科 mini-game 实战正确率加权 (而非 app 积分)
+  // 原因: app 积分主要反映"是否打卡", PSLE AL 应反映"做题对错率". PSLE 真实 AL 范围 1-9.
+  const predAL = window.predictOverallAL ? window.predictOverallAL(state) : 6;
   return { predictedTotal, predLv, predEqCount, predAL, daysLeft, avgDaily: Math.round(avgDaily * 10) / 10, breakRate };
 }
+
+// v18.52: 4 科 mini-game 加权综合 AL 预测 (PSLE AL 1-9 真实范围)
+// 权重: 数学 30% + 英语 30% + 科学 25% + 华文 15% (PSLE 4 科 AL 等权但英数偏重)
+function predictOverallAL(state) {
+  if (!window.getSubjectAccuracy) return 6;  // 冷启动
+  const bySubj = window.getSubjectAccuracy(state);  // returns { '数学': {accuracy, correct, total}, '英语':..., '科学':... }
+  // 4 科加权 (无华文 mini-game 数据 → 跳过华文权重)
+  const groups = [
+    { name: '数学', weight: 0.30, data: bySubj['数学'] },
+    { name: '英语', weight: 0.35, data: bySubj['英语'] },  // 英语权重略增 (因为没华文)
+    { name: '科学', weight: 0.25, data: bySubj['科学'] },
+    { name: '华文', weight: 0.10, data: bySubj['华文'] }   // 华文目前无 mini-game, 占位 0
+  ];
+  let totalAccPct = 0, totalW = 0;
+  for (const g of groups) {
+    if (!g.data || !g.data.total) continue;
+    const acc = g.data.correct / g.data.total;  // 0-1
+    totalAccPct += acc * g.weight;
+    totalW += g.weight;
+  }
+  if (totalW === 0) return 6;  // 冷启动默认 AL 6
+  const wAcc = totalAccPct / totalW;  // 0-1
+  // PSLE AL 真实分布: AL 1=≥90%, 2=85-89, 3=80-84, 4=75-79, 5=65-74, 6=45-64, 7=20-44, 8=<20
+  if (wAcc >= 0.90) return 1;
+  if (wAcc >= 0.85) return 2;
+  if (wAcc >= 0.80) return 3;
+  if (wAcc >= 0.75) return 4;
+  if (wAcc >= 0.65) return 5;
+  if (wAcc >= 0.45) return 6;
+  if (wAcc >= 0.20) return 7;
+  return 8;
+}
+window.predictOverallAL = predictOverallAL;
 
 // ============= v18 Phase 5.4: 🧪 mini-game 数据 (v18.3 升级 P5/P6 PSLE 难度) =============
 // 60+ 题 PSLE 级别, 涵盖 分数 / 比例 / 速度 / 百分比 / 平均数 / 周长面积 / 小数 / 整数四则
@@ -1036,7 +1063,44 @@ const MATH_QUESTIONS = [
   { q: 'Item $100, 9% GST, total ($)', ans: 109 },
   { q: 'Item $200, 10% off, pay ($)', ans: 180 },
   { q: 'Item $50, 20% off, pay ($)', ans: 40 },
-  { q: 'Item $80, 25% discount, pay ($)', ans: 60 }
+  { q: 'Item $80, 25% discount, pay ($)', ans: 60 },
+
+  // ========== v18.52: PSLE Paper 2 多步推理 (AL 4-6 提分关键 25 题) ==========
+  // === 反向百分比 (PSLE 高频陷阱) ===
+  { q: '8 折后 $640, 原价 ($)', ans: 800 },
+  { q: '9 折后 $360, 原价 ($)', ans: 400 },
+  { q: '含 9% GST 总价 $327, 不含税 ($)', ans: 300 },  // 327÷1.09
+  { q: '增 20% 后 $144, 原 ($)', ans: 120 },
+  { q: '减 15% 后 $170, 原 ($)', ans: 200 },
+  // === 多步百分比 (复合) ===
+  { q: '$500 先涨 20% 再降 20%, 最终 ($)', ans: 480 },  // 500×1.2×0.8
+  { q: '$200 先 8 折再 9 折, 最终 ($)', ans: 144 },
+  { q: '$1000 涨 10% 后再 9% GST, 最终 ($)', ans: 1199 },  // 1000×1.1×1.09 取整
+  // === 比例多步 (PSLE 高频应用题) ===
+  { q: 'A:B = 2:3, B:C = 4:5, A:C 化简比的 A 部分', ans: 8 },  // A:C = 8:15
+  { q: '4 人 12 天完工, 6 人需几天?', ans: 8 },  // 反比例
+  { q: 'A:B = 3:5, A 比 B 少 16, A = ?', ans: 24 },
+  { q: '红:蓝 = 5:3, 共 64 个, 红比蓝多几个?', ans: 16 },
+  { q: '3 个比 4 个便宜 $5, 1 个 = ? (单位)', ans: 5 },  // 替换法
+  // === 速度进阶 (PSLE 高频) ===
+  { q: '60 km/h 跑 90 km, 几分钟?', ans: 90 },  // 1.5h × 60
+  { q: '甲 60km/h 乙 40km/h 同向, 1h 后差几 km?', ans: 20 },
+  { q: '相向 50+30 km/h, 240 km, 几小时相遇?', ans: 3 },
+  { q: '匀速 1h 走 45 km, 走 135 km 几小时?', ans: 3 },
+  // === 分数应用 (PSLE Paper 2 风) ===
+  { q: '花掉 1/3, 又花余下的 1/2, 共花全部的 ?/3', ans: 2 },  // 1/3+2/3×1/2=2/3
+  { q: '某数的 2/5 是 60, 此数 = ?', ans: 150 },
+  { q: '蛋糕吃 3/8, 剩 25 块, 原共几块?', ans: 40 },  // 余 5/8 = 25
+  // === 平均数变化 (PSLE 高频) ===
+  { q: '5 数平均 12, 加一新数变 13, 新数 = ?', ans: 18 },  // (13×6 - 12×5)
+  { q: '4 人平均 80 分, 加 1 人后平均 78, 新人多少分?', ans: 70 },
+  // === 几何 (复合图形) ===
+  { q: '圆 r=7, 面积 (π=22/7)', ans: 154 },  // 22/7 × 49 = 154
+  { q: '圆 r=14, 周长 (π=22/7)', ans: 88 },  // 2×22/7×14 = 88
+  { q: '长 20 宽 15 矩形, 中挖 5×5 正方形, 剩面积', ans: 275 },
+  // === 假设法 (鸡兔同笼变种) ===
+  { q: '鸡兔共 20 头, 共 56 脚, 兔几只?', ans: 8 },  // (56-40)/2
+  { q: '5 元 + 2 元票共 30 张共 96 元, 5 元几张?', ans: 12 }  // (96-60)/3
 ];
 
 // v18.3: 25 段 PSLE Editing 5 类错(主谓/时态/拼写/介词/冠词), 每段 ~50 词 5 错
@@ -1732,7 +1796,26 @@ const GRAMMAR_QUESTIONS = [
   { q: 'Each of the boys ___ a prize.', opts: ['receive','receives','receiving','have'], ans: 1, diff: 5, tag: '主谓陷阱' },
   { q: 'The news ___ shocking.', opts: ['is','are','were','being'], ans: 0, diff: 5, tag: '不可数主谓' },
   { q: 'Hardly ___ I sat down when the phone rang.', opts: ['have','had','did','was'], ans: 1, diff: 5, tag: '倒装' },
-  { q: 'Not only ___ smart, but also kind.', opts: ['he is','is he','he was','was him'], ans: 1, diff: 5, tag: '倒装' }
+  { q: 'Not only ___ smart, but also kind.', opts: ['he is','is he','he was','was him'], ans: 1, diff: 5, tag: '倒装' },
+  // ====== v18.52: 加 15 题, 重点 article + pronoun (PSLE Grammar Cloze 高频) ======
+  // === 冠词 (a / an / the / 0) — PSLE Cloze 占 30% ===
+  { q: 'I saw ___ elephant at the zoo.', opts: ['a','an','the','/'], ans: 1, diff: 2, tag: '冠词-元音' },
+  { q: 'My mother is ___ teacher.', opts: ['a','an','the','/'], ans: 0, diff: 2, tag: '冠词-辅音' },
+  { q: 'He plays ___ football every weekend.', opts: ['a','an','the','/'], ans: 3, diff: 3, tag: '冠词-球类不加' },
+  { q: 'The Sun rises in ___ east.', opts: ['a','an','the','/'], ans: 2, diff: 3, tag: '冠词-方位the' },
+  { q: 'She is ___ honest student.', opts: ['a','an','the','/'], ans: 1, diff: 3, tag: '冠词-h不发音' },
+  { q: 'I want to be ___ engineer when I grow up.', opts: ['a','an','the','/'], ans: 1, diff: 3, tag: '冠词-元音音' },
+  // === 代词 (主格/宾格/所有格/反身) — PSLE 必考 ===
+  { q: 'My brother and ___ went to the park.', opts: ['I','me','my','myself'], ans: 0, diff: 3, tag: '代词-主格' },
+  { q: 'The teacher gave the prize to John and ___.', opts: ['I','me','my','myself'], ans: 1, diff: 3, tag: '代词-宾格' },
+  { q: 'She did the homework by ___.', opts: ['her','herself','she','hers'], ans: 1, diff: 3, tag: '代词-反身' },
+  { q: 'This pen is ___, not yours.', opts: ['my','mine','me','I'], ans: 1, diff: 4, tag: '代词-名词性物主' },
+  { q: 'The cat licked ___ paws.', opts: ['it','its','it\'s','itself'], ans: 1, diff: 4, tag: '代词-its陷阱' },
+  { q: 'Everyone should bring ___ own pencil.', opts: ['his or her','their','its','one\'s'], ans: 0, diff: 5, tag: '代词-everyone' },
+  { q: 'Between you and ___, this is a secret.', opts: ['I','me','my','myself'], ans: 1, diff: 5, tag: '代词-between后宾格' },
+  // === 修饰主谓陷阱 (article + pronoun 联动) ===
+  { q: 'A group of students ___ waiting outside.', opts: ['is','are','was','have'], ans: 0, diff: 5, tag: '主谓-集合主语' },
+  { q: 'One of the books ___ missing.', opts: ['is','are','were','being'], ans: 0, diff: 5, tag: '主谓-one of' }
 ];
 
 // 3. Cloze 单空填 (~40 道)
@@ -1766,7 +1849,16 @@ const CLOZE_QUESTIONS = [
   { sentence: "The students were dismissed ___ the principal's announcement.", opts: ['upon','at','on','in'], ans: 0, diff: 5 },
   { sentence: 'She was so engrossed ___ the book.', opts: ['in','at','with','on'], ans: 0, diff: 5 },
   { sentence: 'I prefer reading ___ watching TV.', opts: ['to','than','rather','more'], ans: 0, diff: 5 },
-  { sentence: 'He had no choice ___ to apologize.', opts: ['but','than','rather','then'], ans: 0, diff: 5 }
+  { sentence: 'He had no choice ___ to apologize.', opts: ['but','than','rather','then'], ans: 0, diff: 5 },
+  // ====== v18.52: 加 8 道 PSLE 段落风 Cloze (30-50 词 context, 模拟真考 Vocab+Grammar Cloze) ======
+  { sentence: 'After working tirelessly for ten hours under the scorching sun, the construction workers were ___ exhausted.', opts: ['utterly','quite','rather','barely'], ans: 0, diff: 5, tag: 'context-vocab' },
+  { sentence: 'Although the storm warning was issued early, many residents ___ to evacuate, hoping the typhoon would change course.', opts: ['refused','accepted','hurried','agreed'], ans: 0, diff: 4, tag: 'context-vocab' },
+  { sentence: 'The teacher reminded the class that ___ a complete sentence requires both a subject and a verb.', opts: ['constructing','construct','to constructs','constructed'], ans: 0, diff: 4, tag: 'context-grammar' },
+  { sentence: 'By the time the firefighters arrived, the entire building ___ to the ground.', opts: ['burned','was burning','had burned','has burned'], ans: 2, diff: 5, tag: 'context-grammar-pluperfect' },
+  { sentence: 'Despite ___ the fastest runner in the school, Ahmad lost the race because he tripped over a stone.', opts: ['being','been','to be','is'], ans: 0, diff: 5, tag: 'context-grammar-despite' },
+  { sentence: 'The librarian, ___ patience with the noisy children was wearing thin, finally asked them to leave.', opts: ['who','whom','whose','which'], ans: 2, diff: 5, tag: 'context-grammar-whose' },
+  { sentence: 'If I ___ harder for the test, I would not have failed it.', opts: ['studied','had studied','have studied','study'], ans: 1, diff: 5, tag: 'context-grammar-conditional3' },
+  { sentence: 'The detective examined the crime scene ___, looking for any clue that might have been overlooked.', opts: ['meticulously','barely','randomly','quickly'], ans: 0, diff: 5, tag: 'context-vocab-adv' }
 ];
 
 // v18.40: PSLE 高华阅读理解题库 (新加坡 PSLE 高级华文 Paper 2 风格)
