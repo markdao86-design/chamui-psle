@@ -1947,6 +1947,34 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .lis-item.lis-live { background: linear-gradient(135deg, #FFE6F0 0%, #E0F4F1 100%); border-width: 3px; }
 .lis-item.lis-youtube { background: #FFF8E7; border-width: 3px; }
 
+/* v18.43: PSLE 能力分析 (历史页主卡) */
+.pa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.pa-subject {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-tight);
+  padding: 12px;
+  text-align: center;
+}
+.pa-subject.pa-good { background: linear-gradient(135deg, var(--color-secondary-soft) 0%, #FFFFFF 80%); border-color: var(--color-secondary); }
+.pa-subject.pa-mid { background: linear-gradient(135deg, var(--color-accent-soft) 0%, #FFFFFF 80%); border-color: var(--color-accent); }
+.pa-subject.pa-weak { background: linear-gradient(135deg, var(--color-pink-soft) 0%, #FFFFFF 80%); border-color: var(--color-danger); }
+.pa-subject.pa-empty { opacity: 0.6; }
+.pa-subj-icon { font-size: 28px; }
+.pa-subj-name { font-size: 14px; font-weight: 900; color: var(--color-text); margin: 4px 0; }
+.pa-subj-al { font-size: 24px; font-weight: 900; color: var(--color-primary); }
+.pa-subject.pa-good .pa-subj-al { color: var(--color-secondary); }
+.pa-subject.pa-mid .pa-subj-al { color: var(--color-accent); }
+.pa-subject.pa-weak .pa-subj-al { color: var(--color-danger); }
+.pa-subj-acc { font-size: 11px; color: var(--color-text-light); margin-top: 4px; }
+.pa-subj-desc { font-size: 11px; color: var(--color-text-light); font-style: italic; margin-top: 2px; }
+.pa-divider { border-top: 1px dashed var(--color-border); margin: 8px 0; }
+
 /* v18.36: 周汇总弱项分析 + 思维导图 + 下周计划 */
 .weak-section { margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--color-border); }
 .acc-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
@@ -3974,6 +4002,7 @@ p { font-size: 14px; line-height: 1.6; }
   <div class="app-logo">
     <span class="hammer-emoji">🔨</span>
     <span>佑子的备考冒险</span>
+    <span class="app-subtitle" style="font-size:11px;color:var(--color-text-light);font-weight:400;margin-left:8px;">PSLE 4-6 分陪练 · 打卡是养成, 能力才是目标</span>
   </div>
   <div class="app-stats">
     <div class="stat-pill points">⭐ <span id="totalPoints">0</span> 分</div>
@@ -3986,7 +4015,7 @@ p { font-size: 14px; line-height: 1.6; }
 <nav class="tabs">
   <button class="tab-btn active" data-page="dashboard">🏠 主页</button>
   <button class="tab-btn" data-page="checkin">✅ 打卡</button>
-  <button class="tab-btn" data-page="history">📊 分数</button>
+  <button class="tab-btn" data-page="history">📊 PSLE 能力</button>
   <button class="tab-btn" data-page="admin">⚙️ 管理</button>
   <!-- v17.7: 宝箱按钮(action 不是 tab, 直接弹 modal) -->
   <button class="tab-btn tab-action mystery-tab" id="mysteryTabBtn" onclick="openMysteryBoxModal()">
@@ -4147,28 +4176,36 @@ p { font-size: 14px; line-height: 1.6; }
     </div>
   </div>
 
-  <!-- 历史页 -->
+  <!-- 历史页 — v18.43 重定位为 PSLE 能力分析 (不是 app 积分) -->
   <div class="page" id="page-history">
+    <!-- v18.43: PSLE 能力分析 (顶部主卡, 取代旧打卡分析) -->
+    <div class="card" id="psleAbilityCard">
+      <div class="card-title">🎯 PSLE 实战能力分析</div>
+      <div class="card-subtitle" style="font-size:12px;color:var(--color-text-light);margin-bottom:8px">本 app 主目的: 帮你考到 PSLE AL 4-6 (顶级 5-15%) · 这里看你当前能力距离目标多远</div>
+      <div id="psleAbilityContent"></div>
+    </div>
+
     <!-- v18.2 数据可视化: 思考题/词汇/听力 7天趋势 -->
     <div class="card" id="progressStatsCard"></div>
 
     <div class="card">
-      <div class="card-title">📊 各科分数追踪</div>
+      <div class="card-title">📝 PSLE 真题/模考成绩追踪</div>
       <p style="color: var(--color-text-light); font-size: 13px; margin-bottom: 12px;">
-        在 ✅ 打卡页每个项目卡片上点 📊 输入老师评分。这里自动按 周/月/科目/类型 统计提升趋势,标出弱项。
+        孩子做 PSLE 真题/学校模考后, 在 ✅ 打卡页项目卡片点 📊 输入实际成绩。这里自动按 科目 统计趋势, 标出弱项 (跟 mini-game 自适应难度联动)。
       </p>
       <div id="scoreTracking"></div>
     </div>
 
     <div class="card">
-      <div class="card-title">📊 73 周积分曲线</div>
+      <div class="card-title">⭐ 习惯养成进度 — 73 周积分曲线</div>
+      <p style="color: var(--color-text-light); font-size: 12px; margin-bottom: 8px;">这是 app 内激励积分 (鼓励坚持打卡), 不直接代表 PSLE 分数</p>
       <div class="chart-container">
         <canvas id="pointsChart"></canvas>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title">📅 73 周追踪表</div>
+      <div class="card-title">📅 73 周备考时间线</div>
       <div style="overflow-x: auto;">
         <table class="history-table" id="historyTable">
           <thead>

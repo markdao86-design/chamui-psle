@@ -1193,7 +1193,8 @@ function renderWeekSummary(week) {
 
   return `
     <div class="week-summary card">
-      <div class="card-title">📊 本周汇总分析</div>
+      <div class="card-title">📊 本周打卡完成情况</div>
+      <div class="card-subtitle" style="font-size:12px;color:var(--color-text-light);margin-bottom:8px">打卡 = 习惯养成 · PSLE 能力分析见 📊 PSLE 能力 tab</div>
       <div class="week-summary-top">
         <div class="completion-ring" style="--ring-color: ${ringColor}; --ring-pct: ${c.percent}">
           <div class="ring-inner">
@@ -1218,12 +1219,6 @@ function renderWeekSummary(week) {
       <div class="missed-section">
         <div class="subj-section-title">⚠️ 漏掉的任务</div>
         ${missedHtml}
-      </div>
-      <div class="weak-section">
-        <div class="subj-section-title">🎯 学科正确率</div>
-        ${accSummary}
-        ${weakHtml}
-        ${planHtml}
       </div>
     </div>
   `;
@@ -3973,8 +3968,91 @@ function renderHistoryPage() {
   }
 
   drawChart();
+  renderPsleAbilityCard();    // v18.43 PSLE 能力分析 (顶部)
   renderProgressStatsCard();  // v18.2 数据可视化
   renderScoreTracking();
+}
+
+// v18.43: PSLE 能力分析 (取代旧"分数 = app 积分"思路)
+function renderPsleAbilityCard() {
+  const el = document.getElementById('psleAbilityContent');
+  if (!el) return;
+  const subjAcc = window.getSubjectAccuracy ? window.getSubjectAccuracy(state) : {};
+  const weakList = window.findWeakSubjects ? window.findWeakSubjects(state) : [];
+  const weakMap = window.WEAK_KNOWLEDGE_MAP || {};
+
+  // PSLE AL 预测: 按 mini-game 正确率粗估 (>85%=AL4, 70-85%=AL5, 55-70%=AL6, 40-55%=AL7, <40%=AL8)
+  const accToAL = (acc) => {
+    if (acc === null) return { al: '?', desc: '玩 mini-game 解锁' };
+    if (acc >= 85) return { al: 'AL 4', desc: '顶级 5%' };
+    if (acc >= 70) return { al: 'AL 5', desc: '顶级 15%' };
+    if (acc >= 55) return { al: 'AL 6', desc: '良好' };
+    if (acc >= 40) return { al: 'AL 7', desc: '中等' };
+    return { al: 'AL 8+', desc: '需要重点提升' };
+  };
+  const SUBJ_ICONS = { '数学': '➗', '英语': '📖', '科学': '🔬', '华文': '🇨🇳' };
+  const ALL_SUBJ = ['数学', '英语', '科学', '华文'];
+  const alGrid = ALL_SUBJ.map(s => {
+    const a = subjAcc[s];
+    const acc = a ? a.accuracy : null;
+    const { al, desc } = accToAL(acc);
+    const colorClass = acc === null ? 'pa-empty' : (acc >= 70 ? 'pa-good' : acc >= 55 ? 'pa-mid' : 'pa-weak');
+    return `
+      <div class="pa-subject ${colorClass}">
+        <div class="pa-subj-icon">${SUBJ_ICONS[s]}</div>
+        <div class="pa-subj-name">${s}</div>
+        <div class="pa-subj-al">${al}</div>
+        <div class="pa-subj-acc">${a ? a.accuracy + '% (' + a.correct + '/' + a.total + ')' : '尚无数据'}</div>
+        <div class="pa-subj-desc">${desc}</div>
+      </div>`;
+  }).join('');
+
+  const accSummary = Object.keys(subjAcc).length === 0
+    ? '<div class="acc-empty">📭 还没有 mini-game 数据 — 玩 1 局让系统了解你, AL 预测会更准</div>'
+    : `<div class="acc-grid">
+        ${Object.keys(subjAcc).map(s => {
+          const a = subjAcc[s];
+          const colorVar = a.accuracy >= 80 ? 'var(--color-secondary)' : a.accuracy >= 60 ? 'var(--color-accent)' : 'var(--color-danger)';
+          return `<div class="acc-pill" style="border-color:${colorVar}"><b>${s}</b> ${a.accuracy}% <small>(${a.correct}/${a.total})</small></div>`;
+        }).join('')}
+       </div>`;
+  const weakHtml = weakList.length === 0
+    ? (Object.keys(subjAcc).length > 0 ? '<div class="weak-none">🎉 各科正确率都 ≥70%, 距 AL 4-6 目标已很近!</div>' : '')
+    : weakList.map(subj => {
+        const data = weakMap[subj];
+        if (!data) return '';
+        const acc = subjAcc[subj];
+        return `
+          <div class="weak-card" style="border-left-color:${data.color}">
+            <div class="weak-header">⚠️ ${subj} 正确率 <b>${acc.accuracy}%</b> <small>(${acc.correct}/${acc.total})</small> · 距 AL 4-6 还差 <b>${Math.max(0, 70 - acc.accuracy)}%</b></div>
+            <div class="weak-mindmap">${_renderMindmap(subj, data)}</div>
+            <div class="weak-topics">
+              ${data.topics.map(t => `
+                <div class="weak-topic">
+                  <div class="wt-name">📚 ${escapeHtml(t.name)}</div>
+                  <div class="wt-why">${escapeHtml(t.why)}</div>
+                  <div class="wt-drill">💪 ${escapeHtml(t.drill)}</div>
+                </div>`).join('')}
+            </div>
+          </div>`;
+      }).join('');
+  const planHtml = weakList.length === 0
+    ? (Object.keys(subjAcc).length > 0 ? '<div class="next-plan">📅 <b>下周计划</b>: 维持节奏, 挑战 PSLE+ 难度 mini-game 冲 AL 4</div>' : '')
+    : `<div class="next-plan">
+         📅 <b>下周提升计划 — 冲 AL 4-6 目标</b><br>
+         1. 重点: ${weakList.join(' + ')} → 每天玩 1 局对应 mini-game 提正确率<br>
+         2. 知识树点对应弱项节点看讲解 + 一键去练习<br>
+         3. 周日复盘看本周漏题 + 做 1 套 PSLE 真题模拟
+       </div>`;
+
+  el.innerHTML = `
+    <div class="pa-grid">${alGrid}</div>
+    <div class="pa-divider"></div>
+    <div class="subj-section-title" style="margin-top:12px">📊 学科正确率 (基于 mini-game 实战数据)</div>
+    ${accSummary}
+    ${weakHtml}
+    ${planHtml}
+  `;
 }
 
 // ============ 各科分数追踪(v4 历史页新增)============
