@@ -1003,6 +1003,40 @@ function predictOverallAL(state) {
 }
 window.predictOverallAL = predictOverallAL;
 
+// ============= v18.59: 错题本 (Error Bank) =============
+// 知识树/mini-game 答错的题自动入库, 反复练直到答对清空
+function addToErrorBank(state, item) {
+  if (!state.wrongAnswers) state.wrongAnswers = [];
+  // 去重: 同一道题不重复加 (按 gameKey + q + nodeId fingerprint)
+  const fp = (item.gameKey || '') + '|' + (item.q || '') + '|' + (item.nodeId || '');
+  if (state.wrongAnswers.some(w => w._fp === fp)) return false;
+  item._fp = fp;
+  item.id = fp + ':' + Date.now();
+  item.addedDate = new Date().toISOString().slice(0, 10);
+  item.addedWeek = state.currentWeek || 1;
+  item.retries = 0;
+  state.wrongAnswers.push(item);
+  return true;
+}
+function removeFromErrorBank(state, id) {
+  if (!state.wrongAnswers) return;
+  state.wrongAnswers = state.wrongAnswers.filter(w => w.id !== id);
+}
+function errorBankCount(state) {
+  return (state.wrongAnswers || []).length;
+}
+function errorBankByGame(state) {
+  const out = {};
+  (state.wrongAnswers || []).forEach(w => {
+    out[w.gameKey] = (out[w.gameKey] || 0) + 1;
+  });
+  return out;
+}
+window.addToErrorBank = addToErrorBank;
+window.removeFromErrorBank = removeFromErrorBank;
+window.errorBankCount = errorBankCount;
+window.errorBankByGame = errorBankByGame;
+
 // ============= v18.54 mini-game Math (P6 + PSLE 中难度专攻, 已删入门题) =============
 // 孩子数学已 90+, 直起 P6 难度. 全部 diff 4-5, 极少 diff 3 作热身. 答案均整数.
 const MATH_QUESTIONS = [

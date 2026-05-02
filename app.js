@@ -257,8 +257,26 @@ function renderDashboard() {
   renderWeeklyCoach();
   renderMasterTipCard();
   renderDragonProgress();  // v18.55
+  renderErrorBankCard();   // v18.59
   renderEquipment();
 }
+
+// v18.59: 错题本入口卡 (主页)
+function renderErrorBankCard() {
+  const card = document.getElementById('errorBankCard');
+  if (!card) return;
+  const count = (state.wrongAnswers || []).length;
+  const byGame = window.errorBankByGame ? window.errorBankByGame(state) : {};
+  const breakdown = Object.entries(byGame).map(([k,v]) => `${k}:${v}`).join(' · ') || '空';
+  card.innerHTML = count > 0
+    ? `<div class="card-title">📓 错题本 <span style="background:#FF6B6B;color:white;padding:2px 10px;border-radius:12px;font-size:13px;margin-left:6px">${count}</span></div>
+       <p style="color:var(--color-text-light);font-size:12px;margin-bottom:8px">${breakdown}</p>
+       <button class="btn btn-primary" onclick="openErrorBank()" style="width:100%">🎯 立即复习 (${count} 题)</button>`
+    : `<div class="card-title">📓 错题本</div>
+       <p style="color:var(--color-text-light);font-size:13px;margin:8px 0">✨ 当前没有错题! 答错的题会自动收进来反复练。</p>
+       <button class="btn btn-secondary" onclick="openErrorBank()" style="width:100%">查看说明</button>`;
+}
+window.renderErrorBankCard = renderErrorBankCard;
 
 // v18.55: 双龙紧凑进度条 (v18.56: 大幅缩小, 一行一龙)
 function renderDragonProgress() {
@@ -2389,6 +2407,17 @@ function submitKnowledgePractice() {
   const total = g.qs.length;
   const score = g.answers.reduce((s, a, i) => s + (a === g.qs[i].ans ? 1 : 0), 0);
   g.submitted = true;
+  // v18.59: 错题入错题本
+  if (window.addToErrorBank) {
+    g.qs.forEach((q, i) => {
+      if (g.answers[i] !== q.ans) {
+        window.addToErrorBank(state, {
+          gameKey: 'knowledge', type: 'mcq', subj: g.subj, nodeId: g.nodeId,
+          q: q.q, opts: q.opts, ans: q.ans, explain: q.explain || ''
+        });
+      }
+    });
+  }
   // 计算 ⭐ 数
   const acc = score / total;
   let stars = 0;
@@ -2435,6 +2464,231 @@ function restartKnowledgePractice() {
   if (!g) return;
   openKnowledgePractice(g.nodeId, g.subj, g.idx);
 }
+
+// ============ v18.59: 错题本 (Error Bank) ============
+// 知识树/mini-game 答错的题入库, 反复练直到答对清空
+let _errorBankState = null;
+function openErrorBank() {
+  const wrongs = state.wrongAnswers || [];
+  let modal = document.getElementById('errorBankModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'errorBankModal';
+    modal.className = 'kt-modal';
+    document.body.appendChild(modal);
+  }
+  if (wrongs.length === 0) {
+    modal.innerHTML = `
+      <div class="kt-inner cn-reading-inner">
+        <div class="kt-header">
+          <div>
+            <div class="kt-title">📓 错题本</div>
+            <div class="kt-progress">空空如也 — 继续保持!</div>
+          </div>
+          <button class="vocab-modal-close" onclick="closeErrorBank()">×</button>
+        </div>
+        <div style="text-align:center;padding:40px;font-size:48px">🎉</div>
+        <div style="text-align:center;font-size:14px;color:var(--color-text-light);margin-bottom:20px">
+          目前没有错题! 知识树和 mini-game 答错的题会自动收进这里, 反复练习直到答对清空。
+        </div>
+        <button class="btn btn-secondary" onclick="closeErrorBank()" style="width:100%">关闭</button>
+      </div>`;
+    modal.classList.add('show');
+    return;
+  }
+  // 按学科分组显示 + "开始复习" 按钮
+  const byGame = window.errorBankByGame ? window.errorBankByGame(state) : {};
+  const GAME_LABEL = {
+    knowledge: '🌳 知识树', math: '🔢 数学', grammar: '✏️ Grammar', cloze: '🧩 Cloze',
+    editing: '🔍 Editing', vocab: '📚 词汇', listen: '🎧 听力', scilab: '🔬 科学'
+  };
+  const breakdown = Object.entries(byGame).map(([k, v]) =>
+    `<div class="eb-stat"><span class="eb-stat-label">${GAME_LABEL[k] || k}</span><span class="eb-stat-num">${v}</span></div>`
+  ).join('');
+  modal.innerHTML = `
+    <div class="kt-inner cn-reading-inner">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title">📓 错题本</div>
+          <div class="kt-progress">共 <b>${wrongs.length}</b> 题待复习 · 答对自动清空</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeErrorBank()">×</button>
+      </div>
+      <div style="background:#FFF3E0;border:2px dashed #FF9800;border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;color:#5D4037">
+        💡 错题反复练 = 真正消灭弱点。每次答对一题, 自动从错题本删掉。答错继续留着。
+      </div>
+      <div class="eb-stats">${breakdown}</div>
+      <div class="kp-actions" style="margin-top:16px">
+        <button class="btn btn-primary" onclick="startErrorBankReview()">🎯 开始复习 (${wrongs.length} 题)</button>
+        <button class="btn btn-secondary" onclick="closeErrorBank()">稍后再说</button>
+      </div>
+    </div>`;
+  modal.classList.add('show');
+}
+function closeErrorBank() {
+  const m = document.getElementById('errorBankModal');
+  if (m) m.classList.remove('show');
+  _errorBankState = null;
+  if (typeof renderDashboard === 'function') renderDashboard();
+}
+function startErrorBankReview() {
+  const wrongs = (state.wrongAnswers || []).slice();
+  if (wrongs.length === 0) { closeErrorBank(); return; }
+  // 打乱顺序
+  wrongs.sort(() => Math.random() - 0.5);
+  _errorBankState = { items: wrongs, idx: 0, correct: 0, removed: [] };
+  _renderErrorBankReview();
+}
+function _renderErrorBankReview() {
+  const g = _errorBankState;
+  if (!g) return;
+  const modal = document.getElementById('errorBankModal');
+  if (!modal) return;
+  if (g.idx >= g.items.length) { _finishErrorBankReview(); return; }
+  const item = g.items[g.idx];
+  const GAME_LABEL = {
+    knowledge: '🌳 知识树', math: '🔢 数学', grammar: '✏️ Grammar', cloze: '🧩 Cloze',
+    editing: '🔍 Editing', vocab: '📚 词汇', listen: '🎧 听力', scilab: '🔬 科学'
+  };
+  const tag = GAME_LABEL[item.gameKey] || item.gameKey;
+  let answerArea = '';
+  if (item.type === 'mcq') {
+    const opts = (item.opts || []).map((o, oi) =>
+      `<button class="mcq-opt" onclick="submitErrorBankAnswer(${oi})">${String.fromCharCode(65+oi)}. ${escapeHtml(o)}</button>`
+    ).join('');
+    answerArea = `<div class="mcq-opts">${opts}</div>`;
+  } else if (item.type === 'math') {
+    answerArea = `
+      <div style="text-align:center;margin:16px 0">
+        <input type="number" id="ebMathInput" inputmode="numeric"
+               style="font-size:24px;padding:8px 12px;width:160px;text-align:center;border:2px solid var(--color-text);border-radius:8px"
+               placeholder="答案" />
+        <button class="btn btn-primary" style="margin-left:8px" onclick="submitErrorBankMath()">提交</button>
+      </div>`;
+  }
+  modal.innerHTML = `
+    <div class="kt-inner cn-reading-inner">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title">📓 错题复习 · ${g.idx + 1}/${g.items.length}</div>
+          <div class="kt-progress">✅ 已答对 ${g.correct} · 累计入库 ${(state.wrongAnswers||[]).length} 题</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeErrorBank()">×</button>
+      </div>
+      <div style="background:#E3F2FD;color:#0D47A1;font-size:11px;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:8px">${tag}${item.subj ? ' · ' + escapeHtml(item.subj) : ''}${item.retries ? ' · 已重做 ' + item.retries + ' 次' : ''}</div>
+      <div class="cn-q-text" style="margin-bottom:16px">${escapeHtml(item.q)}</div>
+      ${answerArea}
+      <div id="ebFeedback" style="min-height:24px;margin-top:12px;font-size:13px"></div>
+    </div>`;
+  modal.classList.add('show');
+  if (item.type === 'math') {
+    setTimeout(() => document.getElementById('ebMathInput')?.focus(), 100);
+  }
+}
+function submitErrorBankAnswer(optIdx) {
+  const g = _errorBankState;
+  if (!g) return;
+  const item = g.items[g.idx];
+  const isCorrect = optIdx === item.ans;
+  _handleErrorBankResult(isCorrect, item, () => {
+    if (isCorrect) {
+      g.correct++;
+      // 从错题本移除
+      window.removeFromErrorBank(state, item.id);
+      g.removed.push(item.id);
+    } else {
+      // 答错: retries++, 留在本里
+      const w = (state.wrongAnswers || []).find(w => w.id === item.id);
+      if (w) w.retries = (w.retries || 0) + 1;
+    }
+    saveState(state);
+    g.idx++;
+    setTimeout(() => _renderErrorBankReview(), isCorrect ? 1200 : 2200);
+  });
+}
+function submitErrorBankMath() {
+  const input = document.getElementById('ebMathInput');
+  if (!input || input.value === '') return;
+  const val = parseInt(input.value);
+  const g = _errorBankState;
+  if (!g) return;
+  const item = g.items[g.idx];
+  const isCorrect = val === item.ans;
+  _handleErrorBankResult(isCorrect, item, () => {
+    if (isCorrect) {
+      g.correct++;
+      window.removeFromErrorBank(state, item.id);
+      g.removed.push(item.id);
+    } else {
+      const w = (state.wrongAnswers || []).find(w => w.id === item.id);
+      if (w) w.retries = (w.retries || 0) + 1;
+    }
+    saveState(state);
+    g.idx++;
+    setTimeout(() => _renderErrorBankReview(), isCorrect ? 1200 : 2200);
+  });
+}
+function _handleErrorBankResult(isCorrect, item, next) {
+  const fb = document.getElementById('ebFeedback');
+  if (fb) {
+    if (isCorrect) {
+      fb.innerHTML = `✅ <b>答对了!</b> 此题已从错题本删除 🎉 ${escapeHtml(item.explain || '')}`;
+      fb.style.color = '#2E7D32';
+      playSound('ding');
+    } else {
+      const correctText = item.type === 'mcq' && item.opts
+        ? String.fromCharCode(65 + item.ans) + '. ' + (item.opts[item.ans] || '')
+        : item.ans;
+      fb.innerHTML = `❌ 应是 <b>${escapeHtml(String(correctText))}</b><br>💡 ${escapeHtml(item.explain || '')}<br><span style="color:#FF9800">仍留在错题本, 下次再练</span>`;
+      fb.style.color = '#C62828';
+      playSound('sad');
+    }
+  }
+  // 禁用所有 opts
+  document.querySelectorAll('.mcq-opt').forEach(b => b.disabled = true);
+  const ebInput = document.getElementById('ebMathInput');
+  if (ebInput) ebInput.disabled = true;
+  next();
+}
+function _finishErrorBankReview() {
+  const g = _errorBankState;
+  if (!g) return;
+  const modal = document.getElementById('errorBankModal');
+  if (!modal) return;
+  const remain = (state.wrongAnswers || []).length;
+  modal.innerHTML = `
+    <div class="kt-inner cn-reading-inner">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title">📓 复习完成!</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeErrorBank()">×</button>
+      </div>
+      <div style="text-align:center;padding:24px">
+        <div style="font-size:64px">${remain === 0 ? '🏆' : '👏'}</div>
+        <div style="font-size:18px;font-weight:900;margin-top:12px">本轮答对 ${g.correct}/${g.items.length}</div>
+        <div style="margin-top:8px;color:var(--color-text-light)">
+          ${remain === 0
+            ? '🎉 错题本清空! 你已彻底消灭这批弱点!'
+            : `还剩 <b>${remain}</b> 道题在错题本里, 继续加油!`}
+        </div>
+      </div>
+      <div class="kp-actions">
+        ${remain > 0 ? '<button class="btn btn-primary" onclick="startErrorBankReview()">🔄 再练一轮</button>' : ''}
+        <button class="btn btn-secondary" onclick="closeErrorBank()">完成</button>
+      </div>
+    </div>`;
+  if (g.correct >= g.items.length && g.items.length > 0) {
+    spawnConfetti(window.innerWidth/2, window.innerHeight/3, 50);
+    playSound('tada');
+  }
+  _errorBankState = null;
+}
+window.openErrorBank = openErrorBank;
+window.closeErrorBank = closeErrorBank;
+window.startErrorBankReview = startErrorBankReview;
+window.submitErrorBankAnswer = submitErrorBankAnswer;
+window.submitErrorBankMath = submitErrorBankMath;
 function closeKnowledgePractice() {
   const m = document.getElementById('kpracticeModal');
   if (m) m.classList.remove('show');
@@ -3341,6 +3595,14 @@ function submitMcqAnswer(idx) {
   const q = g.qs[g.idx];
   const isCorrect = idx === q.ans;
   if (isCorrect) { g.correct++; playSound('ding'); } else { g.wrong++; playSound('sad'); }
+  // v18.59: 错题入错题本
+  if (!isCorrect && window.addToErrorBank) {
+    window.addToErrorBank(state, {
+      gameKey: g.key, type: 'mcq',
+      q: q[g.qField] || '', opts: q.opts, ans: q.ans,
+      explain: q.explain || _generateMcqExplain(q)
+    });
+  }
   const opts = document.querySelectorAll('.mcq-opt');
   opts.forEach((b, i) => {
     if (i === q.ans) b.classList.add('mcq-correct');
@@ -3601,6 +3863,14 @@ function submitMathAnswer() {
   else {
     g.wrong++; playSound('sad');
     showToast(`❌ 应是 ${q.ans}`, 'sad');  // v18.33: 错答显示正确答案
+    // v18.59: 错题入错题本
+    if (window.addToErrorBank) {
+      window.addToErrorBank(state, {
+        gameKey: 'math', type: 'math',
+        q: q.q, ans: q.ans, diff: q.diff || 4,
+        explain: '正确答案: ' + q.ans
+      });
+    }
   }
   g.idx++;
   if (g.idx >= g.qs.length) {
