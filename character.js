@@ -151,24 +151,11 @@ const CHAMUI = {
     return skin;
   },
 
-  // ====== v18.13: 3 套身体模板 + 锚点系统 ======
+  // v18.30: 锁定单一身体形象 (回到原始, 不随等级变化, 仅装备升级)
   _getBodyTemplate(lv) {
-    if (lv <= 3) {
-      // young: P3-P4 小学生 — 头大身短但显瘦不胖
-      return { tier: 'young', headR: 38, headRy: 40, headCY: 76,
-        neckTop: 113, neckBottom: 128, shoulderY: 130, bodyTop: 130, bodyBottom: 195,
-        legTop: 195, legBottom: 230, bodyHalfW: 38, hipHalfW: 32 };
-    } else if (lv <= 8) {
-      // teen: P5-P6 准中学生 — 头比例缩, 身体拉长
-      return { tier: 'teen', headR: 35, headRy: 36, headCY: 64,
-        neckTop: 99, neckBottom: 116, shoulderY: 118, bodyTop: 118, bodyBottom: 200,
-        legTop: 200, legBottom: 233, bodyHalfW: 38, hipHalfW: 32 };
-    } else {
-      // hero: 神级少年 — 高瘦带气场
-      return { tier: 'hero', headR: 32, headRy: 33, headCY: 54,
-        neckTop: 86, neckBottom: 106, shoulderY: 108, bodyTop: 108, bodyBottom: 205,
-        legTop: 205, legBottom: 236, bodyHalfW: 36, hipHalfW: 30 };
-    }
+    return { tier: 'classic', headR: 48, headRy: 46, headCY: 78,
+      neckTop: 115, neckBottom: 129, shoulderY: 132, bodyTop: 128, bodyBottom: 195,
+      legTop: 200, legBottom: 232, bodyHalfW: 44, hipHalfW: 40 };
   },
 
   _getAnchors(tpl) {
@@ -216,108 +203,32 @@ const CHAMUI = {
     const tpl = this._getBodyTemplate(level.lv);
     const A = this._getAnchors(tpl);
 
-    // ====== 表情 (3 套按 tier) ======
+    // v18.30: 单一表情 (回到原始大眼笑脸)
     const eyes = sad ? `
-      <ellipse cx="${A.eyeL[0]}" cy="${A.eyeL[1]}" rx="3" ry="6" fill="#2D3047"/>
-      <ellipse cx="${A.eyeR[0]}" cy="${A.eyeR[1]}" rx="3" ry="6" fill="#2D3047"/>
-      <path d="M ${A.eyeL[0]-10} ${A.eyeL[1]-10} L ${A.eyeL[0]+5} ${A.eyeL[1]-4}
-               M ${A.eyeR[0]-5} ${A.eyeR[1]-4} L ${A.eyeR[0]+10} ${A.eyeR[1]-10}"
-            stroke="#2D3047" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    ` : tpl.tier === 'young' ? `
-      <ellipse cx="${A.eyeL[0]}" cy="${A.eyeL[1]}" rx="6" ry="9" fill="#2D3047"/>
-      <ellipse cx="${A.eyeR[0]}" cy="${A.eyeR[1]}" rx="6" ry="9" fill="#2D3047"/>
-      <ellipse cx="${A.eyeL[0]+1.5}" cy="${A.eyeL[1]-3}" rx="2" ry="3" fill="white"/>
-      <ellipse cx="${A.eyeR[0]+1.5}" cy="${A.eyeR[1]-3}" rx="2" ry="3" fill="white"/>
-      <ellipse cx="${A.eyeL[0]-1.5}" cy="${A.eyeL[1]+4}" rx="0.7" ry="1" fill="white" opacity="0.85"/>
-      <ellipse cx="${A.eyeR[0]-1.5}" cy="${A.eyeR[1]+4}" rx="0.7" ry="1" fill="white" opacity="0.85"/>
-    ` : tpl.tier === 'teen' ? `
-      <path d="M ${A.eyeL[0]-7} ${A.eyeL[1]-2} Q ${A.eyeL[0]} ${A.eyeL[1]-6} ${A.eyeL[0]+7} ${A.eyeL[1]-2}"
-            stroke="${hairColor}" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <ellipse cx="${A.eyeL[0]}" cy="${A.eyeL[1]+1}" rx="4" ry="6" fill="#2D3047"/>
-      <ellipse cx="${A.eyeL[0]+1}" cy="${A.eyeL[1]-1}" rx="1.4" ry="2" fill="white"/>
-      <path d="M ${A.eyeR[0]-7} ${A.eyeR[1]-2} Q ${A.eyeR[0]} ${A.eyeR[1]-6} ${A.eyeR[0]+7} ${A.eyeR[1]-2}"
-            stroke="${hairColor}" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <ellipse cx="${A.eyeR[0]}" cy="${A.eyeR[1]+1}" rx="4" ry="6" fill="#2D3047"/>
-      <ellipse cx="${A.eyeR[0]+1}" cy="${A.eyeR[1]-1}" rx="1.4" ry="2" fill="white"/>
+      <ellipse cx="90" cy="78" rx="3" ry="6" fill="#2D3047"/>
+      <ellipse cx="130" cy="78" rx="3" ry="6" fill="#2D3047"/>
+      <path d="M 80 68 L 95 74 M 125 74 L 140 68" stroke="#2D3047" stroke-width="2.5" fill="none" stroke-linecap="round"/>
     ` : `
-      <path d="M ${A.eyeL[0]-10} ${A.eyeL[1]-5} L ${A.eyeL[0]+8} ${A.eyeL[1]-2}"
-            stroke="${hairColor}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <ellipse cx="${A.eyeL[0]}" cy="${A.eyeL[1]+1}" rx="3.5" ry="5" fill="#2D3047"/>
-      <ellipse cx="${A.eyeL[0]+1.5}" cy="${A.eyeL[1]-1}" rx="1.2" ry="1.6" fill="white"/>
-      <path d="M ${A.eyeR[0]-8} ${A.eyeR[1]-2} L ${A.eyeR[0]+10} ${A.eyeR[1]-5}"
-            stroke="${hairColor}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <ellipse cx="${A.eyeR[0]}" cy="${A.eyeR[1]+1}" rx="3.5" ry="5" fill="#2D3047"/>
-      <ellipse cx="${A.eyeR[0]+1.5}" cy="${A.eyeR[1]-1}" rx="1.2" ry="1.6" fill="white"/>
+      <ellipse cx="90" cy="78" rx="7" ry="10" fill="#2D3047"/>
+      <ellipse cx="130" cy="78" rx="7" ry="10" fill="#2D3047"/>
+      <ellipse cx="92" cy="74" rx="2.5" ry="3.5" fill="white"/>
+      <ellipse cx="132" cy="74" rx="2.5" ry="3.5" fill="white"/>
     `;
 
     const mouth = sad ? `
-      <path d="M ${A.mouthC[0]-12} ${A.mouthC[1]+3} Q ${A.mouthC[0]} ${A.mouthC[1]-4} ${A.mouthC[0]+12} ${A.mouthC[1]+3}"
-            stroke="#2D3047" stroke-width="3" fill="none" stroke-linecap="round"/>
-    ` : tpl.tier === 'young' ? `
-      <path d="M ${A.mouthC[0]-9} ${A.mouthC[1]-2} Q ${A.mouthC[0]} ${A.mouthC[1]+8} ${A.mouthC[0]+9} ${A.mouthC[1]-2}"
-            fill="#2D3047" stroke="#2D3047" stroke-width="2" stroke-linejoin="round"/>
-      <path d="M ${A.mouthC[0]-7} ${A.mouthC[1]} L ${A.mouthC[0]+7} ${A.mouthC[1]} L ${A.mouthC[0]+5} ${A.mouthC[1]+3} L ${A.mouthC[0]-5} ${A.mouthC[1]+3} Z" fill="white"/>
-      <ellipse cx="${A.mouthC[0]}" cy="${A.mouthC[1]+5}" rx="5" ry="2" fill="#FF6B6B"/>
-    ` : tpl.tier === 'teen' ? `
-      <path d="M ${A.mouthC[0]-8} ${A.mouthC[1]} Q ${A.mouthC[0]} ${A.mouthC[1]+5} ${A.mouthC[0]+8} ${A.mouthC[1]}"
-            stroke="#2D3047" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M 95 108 Q 110 100 125 108" stroke="#2D3047" stroke-width="3" fill="none" stroke-linecap="round"/>
     ` : `
-      <path d="M ${A.mouthC[0]-7} ${A.mouthC[1]+1} Q ${A.mouthC[0]+2} ${A.mouthC[1]+5} ${A.mouthC[0]+9} ${A.mouthC[1]-2}"
-            stroke="#2D3047" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M 88 98 Q 110 122 132 98 Q 132 104 110 110 Q 88 104 88 98 Z" fill="#2D3047" stroke="#2D3047" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M 92 100 L 128 100 L 124 104 L 96 104 Z" fill="white"/>
+      <ellipse cx="110" cy="110" rx="9" ry="3.5" fill="#FF6B6B"/>
     `;
 
-    // ====== 头发 (3 套按 tier) ======
-    const hair = tpl.tier === 'young' ? `
-      <path d="M ${110 - tpl.headR + 2} ${tpl.headCY - 4}
-               Q ${110 - tpl.headR - 2} ${tpl.headCY - tpl.headRy + 6}
-                 ${110 - tpl.headR * 0.55} ${tpl.headCY - tpl.headRy + 2}
-               L ${110 - tpl.headR * 0.3} ${tpl.headCY - tpl.headRy - 4}
-               L ${110 - tpl.headR * 0.1} ${tpl.headCY - tpl.headRy + 2}
-               L 110 ${tpl.headCY - tpl.headRy - 6}
-               L ${110 + tpl.headR * 0.1} ${tpl.headCY - tpl.headRy + 2}
-               L ${110 + tpl.headR * 0.3} ${tpl.headCY - tpl.headRy - 3}
-               L ${110 + tpl.headR * 0.55} ${tpl.headCY - tpl.headRy + 2}
-               Q ${110 + tpl.headR + 2} ${tpl.headCY - tpl.headRy + 6}
-                 ${110 + tpl.headR - 2} ${tpl.headCY - 4} Z"
-            fill="${hairColor}"/>
-    ` : tpl.tier === 'teen' ? `
-      <path d="M ${110 - tpl.headR} ${tpl.headCY}
-               Q ${110 - tpl.headR - 4} ${tpl.headCY - tpl.headRy + 4}
-                 ${110 - tpl.headR * 0.5} ${tpl.headCY - tpl.headRy - 2}
-               Q ${110 - 4} ${tpl.headCY - tpl.headRy - 8}
-                 ${110 + 6} ${tpl.headCY - tpl.headRy - 4}
-               L ${110 + tpl.headR * 0.4} ${tpl.headCY - tpl.headRy + 4}
-               L ${110 + tpl.headR * 0.7} ${tpl.headCY - tpl.headRy - 1}
-               Q ${110 + tpl.headR + 2} ${tpl.headCY - tpl.headRy + 6}
-                 ${110 + tpl.headR} ${tpl.headCY} Z"
-            fill="${hairColor}"/>
-      <!-- 侧分刘海 -->
-      <path d="M ${110 - 4} ${tpl.headCY - tpl.headRy + 4}
-               Q ${110 + 8} ${tpl.headCY - 4} ${110 + tpl.headR * 0.7} ${tpl.headCY - 2}"
-            stroke="${hairColor}" stroke-width="6" fill="none" stroke-linecap="round"/>
-    ` : `
-      <!-- hero: 长刘海遮一只眼 + 飞扬后发 -->
-      <path d="M ${110 - tpl.headR - 2} ${tpl.headCY + 2}
-               Q ${110 - tpl.headR - 6} ${tpl.headCY - tpl.headRy}
-                 ${110 - tpl.headR * 0.4} ${tpl.headCY - tpl.headRy - 4}
-               Q ${110 + 2} ${tpl.headCY - tpl.headRy - 10}
-                 ${110 + 14} ${tpl.headCY - tpl.headRy - 6}
-               L ${110 + tpl.headR * 0.5} ${tpl.headCY - tpl.headRy + 2}
-               L ${110 + tpl.headR * 0.85} ${tpl.headCY - tpl.headRy - 3}
-               Q ${110 + tpl.headR + 4} ${tpl.headCY - tpl.headRy + 6}
-                 ${110 + tpl.headR + 2} ${tpl.headCY + 2} Z"
-            fill="${hairColor}"/>
-      <!-- 长刘海覆盖左眼 -->
-      <path d="M ${110 - tpl.headR * 0.4} ${tpl.headCY - tpl.headRy + 2}
-               Q ${110 - tpl.headR * 0.6} ${A.eyeL[1] + 2} ${110 - tpl.headR * 0.2} ${A.eyeL[1] + 6}
-               L ${110 + tpl.headR * 0.1} ${A.eyeL[1] + 2}
-               Q ${110} ${tpl.headCY - tpl.headRy + 4} ${110 - 5} ${tpl.headCY - tpl.headRy + 2} Z"
-            fill="${hairColor}" opacity="0.95"/>
-      <!-- 后头发飞扬 -->
-      <path d="M ${110 + tpl.headR + 2} ${tpl.headCY}
-               L ${110 + tpl.headR + 12} ${tpl.headCY - 4}
-               L ${110 + tpl.headR + 6} ${tpl.headCY + 6} Z"
-            fill="${hairColor}" opacity="0.85"/>
+    // v18.30: 单一头发 (回到原始 11 簇尖刺 + 招牌冲天角)
+    const hair = `
+      <path d="M 65 78 Q 60 32 105 30 L 108 18 L 113 30 Q 162 32 158 80
+               L 152 65 L 145 75 L 137 60 L 128 73 L 118 58 L 108 72 L 96 60 L 88 75 L 78 62 L 70 76 Z"
+            fill="${hairColor}" stroke="${hairColor}" stroke-width="2"/>
+      <path d="M 105 30 L 108 12 L 113 30 Z" fill="${hairColor}"/>
     `;
 
     // ====== 主体 body (头/身/四肢) ======
@@ -376,22 +287,13 @@ const CHAMUI = {
       <!-- 头发 -->
       ${hair}
 
-      <!-- 腮红 -->
-      <ellipse cx="${110 - tpl.headR * 0.75}" cy="${A.eyeL[1] + 12}" rx="7" ry="4" fill="#FF6B6B" opacity="0.5"/>
-      <ellipse cx="${110 + tpl.headR * 0.75}" cy="${A.eyeR[1] + 12}" rx="7" ry="4" fill="#FF6B6B" opacity="0.5"/>
+      <!-- 腮红 (原始位置) -->
+      <ellipse cx="76" cy="92" rx="9" ry="5" fill="#FF6B6B" opacity="0.55"/>
+      <ellipse cx="144" cy="92" rx="9" ry="5" fill="#FF6B6B" opacity="0.55"/>
 
-      <!-- 眉毛 -->
-      ${tpl.tier === 'young' ? `
-        <path d="M ${A.eyeL[0]-7} ${A.eyeL[1]-13} Q ${A.eyeL[0]} ${A.eyeL[1]-15} ${A.eyeL[0]+5} ${A.eyeL[1]-12}"
-              stroke="${hairColor}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-        <path d="M ${A.eyeR[0]-5} ${A.eyeR[1]-12} Q ${A.eyeR[0]} ${A.eyeR[1]-15} ${A.eyeR[0]+7} ${A.eyeR[1]-13}"
-              stroke="${hairColor}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      ` : `
-        <path d="M ${A.eyeL[0]-9} ${A.eyeL[1]-12} L ${A.eyeL[0]+5} ${A.eyeL[1]-14}"
-              stroke="${hairColor}" stroke-width="3" fill="none" stroke-linecap="round"/>
-        <path d="M ${A.eyeR[0]-5} ${A.eyeR[1]-14} L ${A.eyeR[0]+9} ${A.eyeR[1]-12}"
-              stroke="${hairColor}" stroke-width="3" fill="none" stroke-linecap="round"/>
-      `}
+      <!-- 眉毛 (原始位置) -->
+      <path d="M 80 60 L 100 64" stroke="${hairColor}" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path d="M 120 64 L 140 60" stroke="${hairColor}" stroke-width="3.5" fill="none" stroke-linecap="round"/>
 
       <!-- 眼睛 -->
       ${eyes}
