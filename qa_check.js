@@ -144,14 +144,14 @@ assert(ptsLow.length >= 4, `v16: 0-100 分内 ≥4 件装备 (实际 ${ptsLow.le
 const minPts = Math.min(...C.equipment.filter(e => e.condition === 'points').map(e => e.value));
 const maxPts = Math.max(...C.equipment.filter(e => e.condition === 'points').map(e => e.value));
 assert(minPts === 5, `v16: 装备最小阈值 = 5 (实际 ${minPts})`);
-assert(maxPts === 6000, `v16: 装备最大阈值 = 6000 (= SGD 1500 终极) (实际 ${maxPts})`);
+assert(maxPts === 30000, `v18.33: 装备最大阈值 = 30000 (= SGD 1500 终极, 0.05/分) (实际 ${maxPts})`);
 
 // ===== 9. v16 新增: 6 条铁律 / 周日复盘 / 词汇 500 / 汇率 =====
 assert(W.IRON_RULES && W.IRON_RULES.length === 6, `v16: IRON_RULES 长度 6 (实际 ${W.IRON_RULES && W.IRON_RULES.length})`);
 assert(W.SUNDAY_REVIEW_STEPS && W.SUNDAY_REVIEW_STEPS.length === 5, `v16: SUNDAY_REVIEW_STEPS 长度 5 (实际 ${W.SUNDAY_REVIEW_STEPS && W.SUNDAY_REVIEW_STEPS.length})`);
-assert(W.SGD_PER_POINT === 0.25, `v16: SGD_PER_POINT = 0.25 (实际 ${W.SGD_PER_POINT})`);
+assert(W.SGD_PER_POINT === 0.05, `v18.33: SGD_PER_POINT = 0.05 (实际 ${W.SGD_PER_POINT})`);
 assert(W.ULTIMATE_PRIZE_SGD === 1500, `v16: ULTIMATE_PRIZE_SGD = 1500 (实际 ${W.ULTIMATE_PRIZE_SGD})`);
-assert(W.ULTIMATE_PRIZE_POINTS === 6000, `v16: ULTIMATE_PRIZE_POINTS = 6000 (实际 ${W.ULTIMATE_PRIZE_POINTS})`);
+assert(W.ULTIMATE_PRIZE_POINTS === 30000, `v18.33: ULTIMATE_PRIZE_POINTS = 30000 (实际 ${W.ULTIMATE_PRIZE_POINTS})`);
 const vTotal = (W.VOCAB_500.math.total || 0) + (W.VOCAB_500.sci.total || 0);
 assert(vTotal === 500, `v16: VOCAB_500 总词数 500 (实际 ${vTotal})`);
 const v1 = W.getVocabForWeek(1);

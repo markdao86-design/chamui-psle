@@ -200,7 +200,7 @@ const DAY_KEYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 // ============= v16: 兑换汇率 (1 积分 = 0.25 SGD) =============
 // 6000 积分 (满分 dragon 装备线) = SGD 1500 终极大奖
-const SGD_PER_POINT = 0.25;
+const SGD_PER_POINT = 0.05;  // v18.33: 0.25→0.05 (实际多分数源累加, 30000 分 = 1500 SGD 终极奖)
 const ULTIMATE_PRIZE_SGD = 1500;
 const ULTIMATE_PRIZE_POINTS = ULTIMATE_PRIZE_SGD / SGD_PER_POINT;  // = 6000
 

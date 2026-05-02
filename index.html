@@ -3084,6 +3084,23 @@ p { font-size: 14px; line-height: 1.6; }
 .mcq-opt:disabled { cursor: default; }
 .mcq-opt.mcq-correct { background: var(--color-secondary-soft); border-color: var(--color-secondary); color: var(--color-secondary); }
 .mcq-opt.mcq-wrong { background: var(--color-pink-soft); border-color: var(--color-danger); color: var(--color-danger); }
+/* v18.33: MCQ 答案解析 */
+.mcq-feedback {
+  background: var(--color-card-soft);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-tight);
+  padding: 10px 12px;
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 20px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  text-align: left;
+}
+.mcq-feedback.show { opacity: 1; }
+.mcq-feedback.fb-correct { background: var(--color-secondary-soft); border: 1px solid var(--color-secondary); color: var(--color-text); }
+.mcq-feedback.fb-wrong { background: var(--color-pink-soft); border: 1px solid var(--color-danger); color: var(--color-text); }
 /* v18.28: Science 分类 */
 .sci-inner { max-width: 600px; }
 .sci-list { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; max-height: 400px; overflow-y: auto; }

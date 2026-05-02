@@ -50,7 +50,7 @@ const CHAMUI = {
     { id: 'comet',    icon: '☄️', name: '彗星轨迹',   condition: 'points',    value: 4350, hint: '累积 4350 分' },
     { id: 'unicorn',  icon: '🦄', name: '独角兽伙伴', condition: 'points',    value: 4750, hint: '累积 4750 分(神兽级)' },
     { id: 'medal',    icon: '🥇', name: '金牌得主',   condition: 'points',    value: 5300, hint: '累积 5300 分(冲刺王)' },
-    { id: 'dragon',   icon: '🐉', name: '神龙伙伴',   condition: 'points',    value: 6000, hint: '累积 6000 分 = SGD 1500 终极大奖等价🐲' },
+    { id: 'dragon',   icon: '🐉', name: '神龙伙伴',   condition: 'points',    value: 30000, hint: '累积 30000 分 = SGD 1500 终极大奖等价🐲' },
     { id: 'tube',     icon: '🔬', name: '试管',       condition: 'milestone', value: 'W14', hint: '完成 W14 P3-P4 综合模拟' },
     { id: 'trophy',   icon: '🏆', name: '奖杯',       condition: 'milestone', value: 'W20', hint: '完成 W20 P5 综合' },
     { id: 'crown',    icon: '👑', name: '皇冠',       condition: 'milestone', value: 'W26', hint: 'W26 第一阶段总模考' },

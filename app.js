@@ -2532,7 +2532,11 @@ function submitUnitAnswer() {
   if (!inp || inp.value === '') return;
   const val = parseInt(inp.value);
   const q = g.qs[g.idx];
-  if (val === q.ans) { g.correct++; playSound('ding'); } else { g.wrong++; playSound('sad'); }
+  if (val === q.ans) { g.correct++; playSound('ding'); }
+  else {
+    g.wrong++; playSound('sad');
+    showToast(`❌ 应是 ${q.ans}`, 'sad');  // v18.33
+  }
   g.idx++;
   if (g.idx >= g.qs.length) {
     if (_unitTimer) { clearInterval(_unitTimer); _unitTimer = null; }
@@ -2583,8 +2587,15 @@ function openClozeGame() { _openMcqGame('cloze', 'Cloze 单空填', 'sentence');
 function _openMcqGame(key, title, qField) {
   const diff = window.getDifficulty ? window.getDifficulty(state, key) : 1;
   const fn = key === 'grammar' ? window.getGrammarByDiff : window.getClozeByDiff;
-  const qs = fn(diff, 10);
-  _mcqGameState = { key, title, qField, qs, idx: 0, correct: 0, wrong: 0, diff };
+  const rawQs = fn(diff, 10);
+  // v18.33: 每题洗牌 opts + remap ans (修 "all A" bug)
+  const qs = rawQs.map(q => {
+    const correctOpt = q.opts[q.ans];
+    const shuffled = [...q.opts].sort(() => Math.random() - 0.5);
+    const newAns = shuffled.indexOf(correctOpt);
+    return Object.assign({}, q, { opts: shuffled, ans: newAns });
+  });
+  _mcqGameState = { key, title, qField, qs, idx: 0, correct: 0, wrong: 0, diff, lastFeedback: null };
   _renderMcqGame();
 }
 function _renderMcqGame() {
@@ -2609,6 +2620,7 @@ function _renderMcqGame() {
       <div class="mg-q mcq-q">${escapeHtml(qText)}</div>
       ${q.tag ? `<div class="mcq-tag">${escapeHtml(q.tag)}</div>` : ''}
       <div class="mcq-opts">${optsHtml}</div>
+      <div class="mcq-feedback"></div>
       <button class="vocab-modal-close mg-close" onclick="closeMcqGame()">×</button>
     </div>`;
   modal.classList.add('show');
@@ -2619,18 +2631,51 @@ function submitMcqAnswer(idx) {
   const q = g.qs[g.idx];
   const isCorrect = idx === q.ans;
   if (isCorrect) { g.correct++; playSound('ding'); } else { g.wrong++; playSound('sad'); }
-  // 视觉反馈 0.4s 然后下一题
   const opts = document.querySelectorAll('.mcq-opt');
   opts.forEach((b, i) => {
     if (i === q.ans) b.classList.add('mcq-correct');
     else if (i === idx) b.classList.add('mcq-wrong');
     b.disabled = true;
   });
+  // v18.33: 显示解析 1.8s 才进下题
+  const expl = q.explain || _generateMcqExplain(q);
+  const fb = document.querySelector('.mcq-feedback');
+  if (fb) {
+    fb.innerHTML = isCorrect
+      ? `✅ <b>答对!</b> ${escapeHtml(expl)}`
+      : `❌ 应是 <b>${String.fromCharCode(65+q.ans)}. ${escapeHtml(q.opts[q.ans])}</b><br>💡 ${escapeHtml(expl)}`;
+    fb.className = 'mcq-feedback show ' + (isCorrect ? 'fb-correct' : 'fb-wrong');
+  }
   setTimeout(() => {
     g.idx++;
     if (g.idx >= g.qs.length) _finishMcqGame();
     else _renderMcqGame();
-  }, 700);
+  }, isCorrect ? 1200 : 2200);  // 答错给更长时间看解析
+}
+function _generateMcqExplain(q) {
+  const tag = q.tag || '';
+  if (tag.includes('主谓陷阱')) return '主谓陷阱: neither/each/news 看似复数其实当单数, 用 is/has';
+  if (tag.includes('主谓')) return '主谓一致: 第三人称单数 (he/she/it) 动词 + s/es';
+  if (tag.includes('过去时')) return 'Yesterday/last week → 用过去式 (-ed)';
+  if (tag.includes('将来时')) return 'Tomorrow/next... → 用 will + 动词原形';
+  if (tag.includes('现在完成')) return '"已经" / "for X years" → have/has + p.p.';
+  if (tag.includes('过去进行')) return '过去某时正在做 → was/were + -ing';
+  if (tag.includes('现在进行')) return '现在正在做 → am/is/are + -ing';
+  if (tag.includes('时态')) return '看时间词判时态: yesterday=过去, now=现在, tomorrow=将来';
+  if (tag.includes('比较级')) return '比较级 +er/more (短词加 er, 长词加 more); 不能 more taller';
+  if (tag.includes('最高级')) return '最高级 +est/most + the';
+  if (tag.includes('副词比较')) return 'good 形 → well 副; better 是两者比较级';
+  if (tag.includes('介词搭配')) return '动词+介词固定搭配: good at / interested in / careful with';
+  if (tag.includes('介词')) return '常见介词: at (时点) / on (日期/上面) / in (月年/里面) / to (方向)';
+  if (tag.includes('冠词')) return 'a + 辅音音; an + 元音音 (an honest 辅音 h 不发音); the = 特指';
+  if (tag.includes('phrasal')) return '短语动词: come across=偶遇 / look after=照顾 / give up=放弃 / put off=推迟';
+  if (tag.includes('条件句')) return 'if 从句用现在时, 主句用 will + 动词原形';
+  if (tag.includes('neither/nor')) return 'neither + nor 配对 (像 either + or)';
+  if (tag.includes('would rather')) return 'would rather + 动词原形 (rather than + 原形 / 名词)';
+  if (tag.includes('关系代词')) return 'who=人 / which=物 / whose=所有 / whom=宾格';
+  if (tag.includes('倒装')) return '否定词/hardly/no sooner 开头 → 助动词倒装到主语前';
+  if (tag.includes('不可数主谓')) return '新闻 news / 信息 info / 家具 furniture 都是不可数, 用 is/has';
+  return '正确答案见上, 多读几次记下来';
 }
 function _finishMcqGame() {
   const g = _mcqGameState;
@@ -2837,11 +2882,14 @@ function submitMathAnswer() {
   const g = _mathGameState;
   if (!g) return;
   const input = document.getElementById('mgInput');
-  if (!input || input.value === '') return;  // 不提交空值
+  if (!input || input.value === '') return;
   const val = parseInt(input.value);
   const q = g.qs[g.idx];
   if (val === q.ans) { g.correct++; playSound('ding'); }
-  else { g.wrong++; playSound('sad'); }
+  else {
+    g.wrong++; playSound('sad');
+    showToast(`❌ 应是 ${q.ans}`, 'sad');  // v18.33: 错答显示正确答案
+  }
   g.idx++;
   if (g.idx >= g.qs.length) {
     if (_mathTimer) { clearInterval(_mathTimer); _mathTimer = null; }
