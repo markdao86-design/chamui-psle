@@ -260,7 +260,7 @@ function renderDashboard() {
   renderEquipment();
 }
 
-// v18.55: 双层龙进度卡 — 银龙(打卡线 10000分) + 金龙(深学线 105⭐+10000分)
+// v18.55: 双龙紧凑进度条 (v18.56: 大幅缩小, 一行一龙)
 function renderDragonProgress() {
   const card = document.getElementById('dragonProgressCard');
   if (!card) return;
@@ -269,47 +269,24 @@ function renderDragonProgress() {
   const totalStars = Object.values(ks).reduce((s, e) => s + (e.stars || 0), 0);
   const silverPct = Math.min(100, Math.round(pts / 10000 * 100));
   const silverDone = pts >= 10000;
-  const goldStarPct = Math.min(100, Math.round(totalStars / 105 * 100));
-  const goldPtsPct = Math.min(100, Math.round(pts / 10000 * 100));
+  const goldPct = Math.min(100, Math.round(((totalStars / 105) * 0.5 + (pts / 10000) * 0.5) * 100));
   const goldDone = totalStars >= 105 && pts >= 10000;
   card.innerHTML = `
-    <div class="card-title">🐉 双龙伙伴 — 终极目标</div>
-    <p style="color:var(--color-text-light);font-size:12px;margin-bottom:12px">两条线: <b>打卡养成</b> 拿银龙, <b>学得深透</b> 拿金龙</p>
-
-    <div style="background:linear-gradient(135deg,#E8E8E8,#C0C0C0);border-radius:12px;padding:12px;margin-bottom:10px;border:2px solid #888">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-weight:900;font-size:15px">🐲 银龙伙伴 ${silverDone ? '✅ 已解锁' : ''}</span>
-        <span style="font-size:13px;color:#555">SGD 500</span>
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;margin-bottom:6px">
+      <span style="min-width:80px">🐲 银龙</span>
+      <div style="flex:1;background:#E8E8E8;border-radius:8px;height:10px;overflow:hidden;border:1px solid #999">
+        <div style="background:linear-gradient(90deg,#999,#ddd);height:100%;width:${silverPct}%"></div>
       </div>
-      <div style="font-size:11px;color:#444;margin-bottom:6px">习惯养成奖励 — 累积 10000 分 (打卡 + mini-game)</div>
-      <div style="background:#fff;border-radius:8px;height:14px;overflow:hidden;border:1px solid #888">
-        <div style="background:linear-gradient(90deg,#999,#bbb);height:100%;width:${silverPct}%;transition:width 0.5s"></div>
-      </div>
-      <div style="font-size:12px;margin-top:4px;text-align:right;color:#333"><b>${pts.toLocaleString()}</b> / 10,000 分 (${silverPct}%)</div>
+      <span style="min-width:90px;text-align:right;color:#555">${silverDone ? '✅ 已得' : pts + '/10000'}</span>
     </div>
-
-    <div style="background:linear-gradient(135deg,#FFF3C4,#FFD700);border-radius:12px;padding:12px;border:2px solid #DAA520">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-weight:900;font-size:15px">🐉 金龙伙伴 (传说级) ${goldDone ? '✅ 已解锁!' : ''}</span>
-        <span style="font-size:13px;color:#7A5C00">SGD 1500</span>
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700">
+      <span style="min-width:80px;color:#7A5C00">🐉 金龙</span>
+      <div style="flex:1;background:#FFF3C4;border-radius:8px;height:10px;overflow:hidden;border:1px solid #DAA520">
+        <div style="background:linear-gradient(90deg,#FFA500,#FFD700);height:100%;width:${goldPct}%"></div>
       </div>
-      <div style="font-size:11px;color:#5D4500;margin-bottom:8px">真本事奖励 — 知识树 35 节点 全 3⭐ <b>且</b> ≥10000 分 (双门槛)</div>
-
-      <div style="font-size:11px;font-weight:700;color:#5D4500;margin-bottom:2px">⭐ 进度: <b>${totalStars}/105</b></div>
-      <div style="background:#fff;border-radius:8px;height:12px;overflow:hidden;border:1px solid #DAA520;margin-bottom:6px">
-        <div style="background:linear-gradient(90deg,#FFA500,#FFD700);height:100%;width:${goldStarPct}%;transition:width 0.5s"></div>
-      </div>
-
-      <div style="font-size:11px;font-weight:700;color:#5D4500;margin-bottom:2px">💰 分数: <b>${pts.toLocaleString()}/10,000</b></div>
-      <div style="background:#fff;border-radius:8px;height:12px;overflow:hidden;border:1px solid #DAA520">
-        <div style="background:linear-gradient(90deg,#FFA500,#FFD700);height:100%;width:${goldPtsPct}%;transition:width 0.5s"></div>
-      </div>
-
-      ${goldDone
-        ? '<div style="margin-top:8px;text-align:center;font-size:13px;font-weight:900;color:#7A5C00">🎉 恭喜! 金龙已解锁! 你是真正的 PSLE AL 1-2 选手!</div>'
-        : `<div style="margin-top:8px;font-size:11px;color:#5D4500;text-align:center">还差 <b>${105 - totalStars}</b> ⭐ + <b>${Math.max(0, 10000 - pts).toLocaleString()}</b> 分</div>`
-      }
+      <span style="min-width:90px;text-align:right;color:#7A5C00">${goldDone ? '✅ 传说!' : `${totalStars}/105⭐ · ${pts}/10000`}</span>
     </div>
+    <div style="font-size:10px;color:var(--color-text-light);margin-top:4px;text-align:center">银=打卡 SGD 500 · 金=知识树全⭐+分 SGD 1500</div>
   `;
 }
 window.renderDragonProgress = renderDragonProgress;
@@ -858,7 +835,9 @@ function calcMonthPoints(weekNum) {
 function renderEquipment() {
   const grid = document.getElementById('equipmentGrid');
   const disabled = new Set(state.equipmentDisabled || []);
-  grid.innerHTML = CHAMUI.equipment.map(eq => {
+  // v18.56: 双龙已在 dragonProgressCard 单独展示, 不在装备墙重复
+  const HIDDEN_FROM_GRID = new Set(['silver_dragon', 'dragon']);
+  grid.innerHTML = CHAMUI.equipment.filter(eq => !HIDDEN_FROM_GRID.has(eq.id)).map(eq => {
     const unlocked = CHAMUI.checkEquipmentUnlocked(eq.id, state);
     const equipped = unlocked && !disabled.has(eq.id);
     const cls = !unlocked ? 'locked' : (equipped ? 'unlocked equipped' : 'unlocked unequipped');

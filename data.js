@@ -816,7 +816,7 @@ const ACHIEVEMENTS = [
   { id: 'hidden_dawn',     icon:'🌅', name:'早起鸟', desc:'早 6:00 前打卡',     cat:'隐藏', cond:s=>!!s._earlyMorningChecked },
   { id: 'hidden_sunday',   icon:'🛌', name:'周日奉献',desc:'周日完成 5 项',     cat:'隐藏', cond:s=>_countSundaySlots(s) },
   { id: 'hidden_marathon', icon:'🏃', name:'马拉松', desc:'连续答对 10 题',     cat:'隐藏', cond:s=>(s.marathonStreak||0)>=10 },
-  { id: 'hidden_pet_dragon',icon:'🐉', name:'神龙伙伴',desc:'宠物进化到神龙',  cat:'隐藏', cond:s=>(s.pet&&s.pet.formIdx||0)>=6 }
+  { id: 'hidden_pet_dragon',icon:'🐲', name:'宠物终极进化',desc:'仓鼠 → 神龙形态 (打卡 streak 6+ 触发, 跟装备龙无关)',  cat:'隐藏', cond:s=>(s.pet&&s.pet.formIdx||0)>=6 }
 ];
 
 // 检查并解锁新成就 — 返回新解锁的成就数组
