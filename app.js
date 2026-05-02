@@ -2356,63 +2356,47 @@ function openChineseReadingBank() {
   }
   const passages = window.CHINESE_READING || [];
   const prog = state.questionBankProgress || {};
-  const cards = passages.map((p, idx) => {
-    const key = 'cn_' + idx;
-    const done = prog[key];
-    return `
-      <div class="qb-passage-card ${done ? 'qb-done' : ''}" onclick="openChineseReading(${idx})">
-        <div class="qb-card-title">📖 ${escapeHtml(p.title)}</div>
-        <div class="qb-card-meta">入门级热身 · ${p.questions.length} 题</div>
-        ${done ? `<div class="qb-card-status">✅ 已答 ${done.score}/${done.max}</div>` : '<div class="qb-card-status">⬜ 未答</div>'}
-      </div>`;
-  }).join('');
+  // v18.40c: 删除入门热身, 仅保留验证过的真题资源
   modal.innerHTML = `
     <div class="kt-inner qb-inner">
       <div class="kt-header">
         <div>
-          <div class="kt-title">📚 PSLE 高华阅读</div>
-          <div class="kt-progress">真题资源 (主) + 入门热身 (兜底)</div>
+          <div class="kt-title">📚 PSLE 高华真题资源</div>
+          <div class="kt-progress">已验证 5 个免费真题站, 直接下载/在线练习</div>
         </div>
         <button class="vocab-modal-close" onclick="closeChineseReadingBank()">×</button>
       </div>
-      <div class="qb-section-title">🎯 PSLE 高华真题资源 (新窗口打开 — 真题难度高)</div>
+      <div class="qb-section-title">🎯 直接打开真题 (新窗口)</div>
       <div class="qb-real-grid">
-        <a class="qb-real-card" href="https://www.seab.gov.sg/home/examinations/psle" target="_blank" rel="noopener">
+        <a class="qb-real-card" href="https://freetestpaper.com/" target="_blank" rel="noopener">
           <div class="qb-real-icon">📄</div>
-          <div class="qb-real-title">SEAB 官方</div>
-          <div class="qb-real-desc">新加坡考试局 PSLE 样卷 + 评分标准</div>
+          <div class="qb-real-title">Free Test Paper ⭐</div>
+          <div class="qb-real-desc">P6 Higher Chinese 2025 专区 · 15 套+ 真题免费下载</div>
+        </a>
+        <a class="qb-real-card" href="https://www.sgtestpaper.com/" target="_blank" rel="noopener">
+          <div class="qb-real-icon">📄</div>
+          <div class="qb-real-title">SG Test Paper ⭐</div>
+          <div class="qb-real-desc">P6 HCL 专区 · 2009-2025 历年真题</div>
+        </a>
+        <a class="qb-real-card" href="https://kiasuexampaper.com/product/psle-p6-higher-chinese-hcl-exam-papers-soft-copy-download-pdf/" target="_blank" rel="noopener">
+          <div class="qb-real-icon">📄</div>
+          <div class="qb-real-title">Kiasu Exampaper</div>
+          <div class="qb-real-desc">2018-2024 P6 HCL 历年 + 名校 prelim PDF (部分免费)</div>
         </a>
         <a class="qb-real-card" href="https://sgexam.com/category/primary/chinese/" target="_blank" rel="noopener">
           <div class="qb-real-icon">📄</div>
           <div class="qb-real-title">SG Exam</div>
-          <div class="qb-real-desc">名校模拟卷 (Hwa Chong / Nanyang / RGS / RI)</div>
+          <div class="qb-real-desc">P6 名校 Prelim 中文卷 (Hwa Chong/Nanyang/RGS) - 普华</div>
         </a>
-        <a class="qb-real-card" href="https://www.timetable.sg/psle-past-year-papers" target="_blank" rel="noopener">
-          <div class="qb-real-icon">📄</div>
-          <div class="qb-real-title">Past Year Papers</div>
-          <div class="qb-real-desc">PSLE 真题汇编 (含高华专项)</div>
-        </a>
-        <a class="qb-real-card" href="https://www.moe.gov.sg/education-in-sg/our-programmes/mother-tongue-languages" target="_blank" rel="noopener">
-          <div class="qb-real-icon">📄</div>
-          <div class="qb-real-title">MOE 母语资源</div>
-          <div class="qb-real-desc">教育部官方母语学习资源 (含高华大纲)</div>
-        </a>
-        <a class="qb-real-card" href="https://www.bukufree.com/search/label/PSLE" target="_blank" rel="noopener">
-          <div class="qb-real-icon">📄</div>
-          <div class="qb-real-title">Buku Free</div>
-          <div class="qb-real-desc">免费 PSLE PDF 题库 (含华文/高华)</div>
-        </a>
-        <a class="qb-real-card" href="https://www.examina.sg/" target="_blank" rel="noopener">
-          <div class="qb-real-icon">📄</div>
-          <div class="qb-real-title">Examina SG</div>
-          <div class="qb-real-desc">在线 PSLE 模拟练习平台</div>
+        <a class="qb-real-card" href="https://pslepals.thinkific.com/courses/pslechinese" target="_blank" rel="noopener">
+          <div class="qb-real-icon">🎓</div>
+          <div class="qb-real-title">PSLE Pals 网课</div>
+          <div class="qb-real-desc">PSLE Chinese 在线课程 + 真题精讲</div>
         </a>
       </div>
-      <div class="qb-tip">💡 <b>真题难度高</b> — 长篇议论/记叙文 (300-500 字) + 古诗/成语鉴赏 + 隐含含义题。先做真题, 不会再用下面入门热身练手。</div>
-      <div class="qb-section-title">📖 入门热身练习 (我自编, P3-P4 级 — 帮你先适应阅读节奏)</div>
-      <div class="qb-grid">${cards}</div>
+      <div class="qb-tip">💡 <b>使用建议</b>: ⭐ 标记的 2 个站完全免费 + 直接到 P6 高华专区。其他需注册或部分付费。</div>
       <div class="qb-future">
-        <b>🔜 后续升级</b>: 集成更多学科 (➗ 数学 / 🔬 科学 / 📖 英语 PSLE 真题), 持续更新真题链接
+        <b>🔜 后续升级</b>: 集成更多学科 (➗ 数学 / 🔬 科学 / 📖 英语 PSLE 真题), 持续更新验证可用的真题链接
       </div>
     </div>`;
   modal.classList.add('show');
