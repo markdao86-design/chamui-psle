@@ -796,7 +796,7 @@ const ACHIEVEMENTS = [
   // 收藏家 (4)
   { id: 'eq_20',      icon:'⚔️', name:'装备 20 件',  desc:'解锁 20 件装备',     cat:'收藏', cond:s=>_countUnlockedEq(s)>=20 },
   { id: 'eq_35',      icon:'🛡️', name:'装备 35 件', desc:'解锁 35 件装备',     cat:'收藏', cond:s=>_countUnlockedEq(s)>=35 },
-  { id: 'eq_all',     icon:'🏆', name:'装备全集齐',   desc:'解锁全部 45 件',     cat:'收藏', cond:s=>_countUnlockedEq(s)>=45 },
+  { id: 'eq_all',     icon:'🏆', name:'装备全集齐',   desc:'解锁 45+ 件 (双龙除外)', cat:'收藏', cond:s=>_countUnlockedEq(s)>=45 },
   { id: 'skin_all',   icon:'👕', name:'6 皮肤集齐',   desc:'解锁全部 6 皮肤',    cat:'收藏', cond:s=>_countUnlockedSkins(s)>=6 },
   // 宝箱大师 (4)
   { id: 'box_10',     icon:'🎁', name:'开盒 10 个',  desc:'累计开 10 个宝箱',   cat:'宝箱', cond:s=>(s.mysteryBoxes&&s.mysteryBoxes.opened||0)>=10 },
@@ -816,7 +816,12 @@ const ACHIEVEMENTS = [
   { id: 'hidden_dawn',     icon:'🌅', name:'早起鸟', desc:'早 6:00 前打卡',     cat:'隐藏', cond:s=>!!s._earlyMorningChecked },
   { id: 'hidden_sunday',   icon:'🛌', name:'周日奉献',desc:'周日完成 5 项',     cat:'隐藏', cond:s=>_countSundaySlots(s) },
   { id: 'hidden_marathon', icon:'🏃', name:'马拉松', desc:'连续答对 10 题',     cat:'隐藏', cond:s=>(s.marathonStreak||0)>=10 },
-  { id: 'hidden_pet_dragon',icon:'🐲', name:'宠物终极进化',desc:'仓鼠 → 神龙形态 (打卡 streak 6+ 触发, 跟装备龙无关)',  cat:'隐藏', cond:s=>(s.pet&&s.pet.formIdx||0)>=6 }
+  { id: 'hidden_pet_dragon',icon:'🐲', name:'宠物终极进化',desc:'仓鼠 → 神龙形态 (打卡 streak 6+ 触发, 跟装备龙无关)',  cat:'隐藏', cond:s=>(s.pet&&s.pet.formIdx||0)>=6 },
+  // v18.57: 中段填荒漠 4 个成就 (W23-W50 之间触发)
+  { id: 'mid_3000pts', icon:'🎯', name:'半程战士',     desc:'累积 3000 分 (PSLE 备考过半证明)', cat:'PSLE', cond:s=>(s.totalPoints||0)>=3000 },
+  { id: 'mid_streak50',icon:'⚔️', name:'50 天战士',   desc:'连续打卡 50 天 (介于 30/100 天之间)', cat:'坚持', cond:s=>(s.dailyStreak&&s.dailyStreak.bestEver||0)>=50 },
+  { id: 'mid_kt_explore20', icon:'🌳', name:'知识树探险家', desc:'探索 20 个知识树节点 (35 中超半)', cat:'探索', cond:s=>Object.keys(s.knowledgeExplored||{}).length>=20 },
+  { id: 'mid_kt_stars30', icon:'⭐', name:'⭐ 30 收集者', desc:'知识树累计 30 ⭐ (105 中近 1/3)', cat:'探索', cond:s=>Object.values(s.knowledgeStars||{}).reduce((s,e)=>s+(e.stars||0),0)>=30 }
 ];
 
 // 检查并解锁新成就 — 返回新解锁的成就数组
