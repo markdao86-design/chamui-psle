@@ -2393,6 +2393,31 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   border-left-color: var(--color-danger) !important;
 }
 .ktnd-pitfall .ktnd-label { color: var(--color-danger); }
+/* v18.45: 知识树 ⭐ 系统 */
+.kt-row-stars { font-size: 11px; font-weight: 700; color: var(--color-accent); margin-left: 8px; }
+.kt-node-stars-1 { color: #FFA500; font-size: 14px; }
+.kt-node-stars-2 { color: #FFA500; font-size: 13px; letter-spacing: -2px; }
+.kt-node-stars-3 { color: #FFD700; font-size: 12px; letter-spacing: -3px; }
+.kt-node.kt-stars-1 { box-shadow: 0 0 0 2px #FFE066; }
+.kt-node.kt-stars-2 { box-shadow: 0 0 0 2px #FFA500; }
+.kt-node.kt-stars-3 { box-shadow: 0 0 0 3px #FFD700; }
+.ktnd-practice {
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-warn) 100%) !important;
+  border: none !important;
+  color: white !important;
+}
+.kp-stars { font-size: 12px; margin-left: 4px; letter-spacing: -1px; }
+.kp-tip {
+  background: var(--color-accent-soft);
+  border: 1px dashed var(--color-accent);
+  border-radius: var(--radius-tight);
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--color-text);
+  margin: 8px 0 12px;
+  text-align: center;
+}
+.kp-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
 
 /* v18.21: 听力 4 步精听法规则卡 */
 .listen-rules-card {

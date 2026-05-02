@@ -2181,6 +2181,197 @@ const KNOWLEDGE_TREE = {
   ]
 };
 
+// v18.45: 知识树独立练习题库 (按 node id, 每节点 3 题, PSLE AL 4-6 风格)
+// q = 题干; opts = 4 选项; ans = 正确 idx; explain = 解析
+const KNOWLEDGE_PRACTICE = {
+  // === 🔬 科学 ===
+  sci_diversity: [
+    { q: '鲸鱼和鱼最大的区别是什么? (PSLE 真考)', opts: ['鲸鱼有鳃', '鲸鱼用肺呼吸 + 胎生', '鲸鱼是冷血动物', '鲸鱼有鱼鳞'], ans: 1, explain: '鲸鱼=哺乳类: 用肺呼吸 + 胎生 + 哺乳 + 体温恒定. 看似鱼实非鱼' },
+    { q: '蝙蝠属于哪一类动物?', opts: ['鸟类', '昆虫', '哺乳动物', '爬行动物'], ans: 2, explain: '蝙蝠 = 哺乳: 体毛 + 胎生 + 哺乳, 能飞但不是鸟' },
+    { q: '"它是 XXX, 因为它有 YYY" — 这个答题模板适用于:', opts: ['MCQ 题', 'Open-ended 分类题', 'Calculation 题', '填空题'], ans: 1, explain: 'PSLE Open-ended 分类题必给 specific feature 才得分' }
+  ],
+  sci_plant_lc: [
+    { q: '种子萌发不需要哪个条件?', opts: ['水', '空气', '光', '适宜温度'], ans: 2, explain: '萌发用的是种子内储存的食物, 不需要光. 光合作用是萌发后才需要' },
+    { q: '风媒花的特征是?', opts: ['花瓣大艳', '花香浓郁', '花粉轻量多', '有花蜜'], ans: 2, explain: '风媒花靠风传粉 → 需大量轻花粉飘散; 虫媒花反之要吸引昆虫' },
+    { q: '设计萌发实验, IV (independent variable) 是?', opts: ['种子大小', '水的量', '萌发率', '温度计'], ans: 1, explain: 'IV = 主动改变的变量 (水量); DV = 测量结果 (萌发率)' }
+  ],
+  sci_material: [
+    { q: '锅柄用塑料因为?', opts: ['塑料便宜', '塑料是热的不良导体', '塑料漂亮', '塑料轻'], ans: 1, explain: 'PSLE OE 答题: 必给 property + use, "塑料是不良导体, 所以不烫手"' },
+    { q: '电线芯用铜不用铁的原因?', opts: ['铜便宜', '铜更亮', '铜导电性好且不易锈', '铁不导电'], ans: 2, explain: '铁也导电但易生锈断路; 铜导电好 + 抗锈 + 延展性好' },
+    { q: '透明材料适合做?', opts: ['锅', '窗户', '电线', '保温杯'], ans: 1, explain: '透明 = 透光; 窗户需要透光让光线进入' }
+  ],
+  sci_forces: [
+    { q: '骑车后突然停止, 人前倾因为?', opts: ['重力', '惯性', '风力', '摩擦'], ans: 1, explain: '惯性 = 物体维持原运动状态; 车停了人因惯性继续前移' },
+    { q: 'mass 和 weight 的区别?', opts: ['完全一样', 'mass 单位 N, weight kg', 'mass 不变, weight 因重力改变', 'mass 是 force'], ans: 2, explain: 'Mass(kg) 物质多少, 不变; Weight(N) = mass × g, 月球上变小' },
+    { q: '增大摩擦力的方法?', opts: ['抹油', '加压力', '减少接触面', '让表面更光滑'], ans: 1, explain: '增大摩擦: 加压力 / 增大接触面 / 表面更粗糙. 抹油是减小' }
+  ],
+  sci_light_heat: [
+    { q: '光源越靠近物体, 影子怎样?', opts: ['变小', '变大', '不变', '消失'], ans: 1, explain: '光源近 → 光线发散角大 → 影子大 (PSLE 真题高频)' },
+    { q: '夏天穿什么颜色衣服更凉爽?', opts: ['黑色', '白色', '红色', '深蓝'], ans: 1, explain: '浅色反射阳光 → 吸热少; 深色吸热多 → 更热' },
+    { q: '热从一个物体到另一个: 高 → 低. 这个过程叫?', opts: ['热反射', '热平衡', '热传递', '热消失'], ans: 2, explain: '热传递 (conduction/convection/radiation), 高温 → 低温, 直到平衡' }
+  ],
+  sci_cells: [
+    { q: '哪个 organelle 只在植物细胞有?', opts: ['细胞膜', '细胞核', '叶绿体', '线粒体'], ans: 2, explain: '叶绿体 (光合作用) 只在植物; 动物细胞没有' },
+    { q: '细胞壁的功能?', opts: ['控制进出', '储存能量', '提供支撑结构', '光合作用'], ans: 2, explain: '细胞壁 = 植物特有, 提供刚性支撑 (动物靠骨骼)' },
+    { q: '细胞膜 vs 细胞壁的区别?', opts: ['完全一样', '膜动植都有, 壁只植物', '膜只动物, 壁只植物', '膜不允许物质通过'], ans: 1, explain: '膜 = 动植物都有 + 选择性通过; 壁 = 只植物 + 完全通透' }
+  ],
+  sci_water: [
+    { q: '水蒸气在冷玻璃上变水滴, 这个过程叫?', opts: ['蒸发', '凝结', '降水', '径流'], ans: 1, explain: 'Condensation 凝结: 气 → 液, 温度降低发生' },
+    { q: '水循环的能量来源是?', opts: ['月亮', '风', '太阳', '地热'], ans: 2, explain: '太阳 = 蒸发动力源; 整个水循环由太阳能驱动' },
+    { q: 'Boiling 和 evaporation 的区别?', opts: ['完全不同的过程', 'Boiling 在 100°C 发生, evaporation 任何温度', 'Boiling 只在液体里, evaporation 只在气体', 'Evaporation 需要太阳, boiling 不需要'], ans: 1, explain: '都是液→气, boiling 是 evaporation 的特殊情况 (达 100°C 沸点)' }
+  ],
+  sci_reproduction: [
+    { q: '蝴蝶的生命周期有几个阶段?', opts: ['3 个 (卵-若虫-成虫)', '4 个 (卵-幼虫-蛹-成虫)', '2 个 (卵-成虫)', '5 个'], ans: 1, explain: '蝴蝶 = 完全变态 4 段, 蝗虫蜻蜓是不完全变态 3 段 (无蛹期)' },
+    { q: '花的雄性部分叫?', opts: ['Pistil', 'Stamen', 'Ovary', 'Stigma'], ans: 1, explain: 'Stamen = anther + filament, 雄性; Pistil 含 stigma+style+ovary, 雌性' },
+    { q: 'Pollination 和 Fertilization 的区别?', opts: ['完全相同', 'Pollination=花粉到 stigma; Fertilization=精到卵', 'Pollination 在动物; Fertilization 在植物', '都是受精过程'], ans: 1, explain: '先 pollination (传粉) → 后 fertilization (受精)' }
+  ],
+  sci_energy: [
+    { q: '手电筒涉及的能量转换?', opts: ['光 → 电', '电 → 光 + 热', '热 → 电', '声 → 光'], ans: 1, explain: '电池 (化学) → 电 → 灯泡 → 光 + 热 (热是 waste)' },
+    { q: '光合作用的能量转换?', opts: ['化学 → 光', '光 → 化学 (储在葡萄糖)', '光 → 热', '电 → 光'], ans: 1, explain: '光合 = 光能 → 化学能, 储存在葡萄糖中供植物用' },
+    { q: '能量"用完"的真正含义?', opts: ['消失了', '转化为不可用形式 (常是热)', '变成 mass', '储存到电池里'], ans: 1, explain: '能量守恒 — 不消失, 只是转化为不可用形式 (散失为热)' }
+  ],
+  sci_adaptations: [
+    { q: '骆驼的驼峰储存什么?', opts: ['水', '脂肪', '空气', '盐分'], ans: 1, explain: 'PSLE 高频陷阱: 驼峰 = 脂肪 (代谢脂肪 → 产生水), 不是水' },
+    { q: '北极熊白色毛的两个功能?', opts: ['保暖 + 反射光', '保护色 + 保暖 (空气隔层)', '吸热 + 美观', '防水 + 反射'], ans: 1, explain: 'White camouflage + 中空毛保暖 (空气是好的 insulator)' },
+    { q: '仙人掌的刺最主要功能?', opts: ['防止被吃', '减少水蒸发', '吸收阳光', '吸引昆虫'], ans: 1, explain: '刺 = 退化的叶, 减少表面积 → 减少水蒸发 (沙漠适应)' }
+  ],
+  sci_revision: [
+    { q: 'PSLE OE 题答题 4 要素是?', opts: ['Identify-Explain-Evidence-Conclude', 'Question-Answer-Reason-Sum', 'Yes-Why-Example-No', 'Read-Think-Write-Check'], ans: 0, explain: '4 要素: I (识别现象) + E (解释概念) + E (举证据) + C (下结论)' },
+    { q: '画图题必标的 2 个要素?', opts: ['颜色 + 名字', 'Axis + units', '日期 + 作者', '方向 + 大小'], ans: 1, explain: 'PSLE 画图: 必标 X/Y axis 名称 + units, 漏 1 项扣 1 分' },
+    { q: '科学的 5 大主题是?', opts: ['Math-Sci-Eng-Hist-Geo', 'Cycles-Diversity-Systems-Energy-Interactions', 'Plant-Animal-Material-Force-Light', 'Water-Air-Land-Sun-Moon'], ans: 1, explain: 'PSLE Science 5 themes: 5 大块全要复习, 每块至少 5 道真题' }
+  ],
+  sci_psle: [
+    { q: 'PSLE 科学考多长时间? 几道题?', opts: ['1h, 50 题', '1h15min, 40 题', '1h45min, 60 题', '2h, 30 题'], ans: 1, explain: 'PSLE Science: Booklet A (28 MCQ) + B (12-13 OE), 总 1h15min' },
+    { q: 'AL 4-6 时间分配 Booklet A:B 的建议?', opts: ['一半一半', 'A 30 min / B 40 min + 5 min 检查', 'A 40 min / B 30 min', 'A 50 min / B 20 min'], ans: 1, explain: 'B 卷 OE 是拉分关键, 要留时间; A 卷别花太久' },
+    { q: 'OE 题以"Yes/No"开头?', opts: ['可以, 直接给结论', '不可以, 必先 explain 再 conclude', '看题型', '只有 12 题可以'], ans: 1, explain: 'PSLE 评分: 直接 Yes/No 不给分, 必须先 explain (concept + evidence) 再 conclude' }
+  ],
+
+  // === ➗ 数学 ===
+  math_basics: [
+    { q: '12 - 4 + 3 = ?', opts: ['5', '11', '15', '9'], ans: 1, explain: '左→右运算: 12-4=8, 8+3=11. 别误以为先算 4+3' },
+    { q: '24 ÷ 6 × 2 = ?', opts: ['2', '8', '24', '12'], ans: 1, explain: '左→右: 24÷6=4, 4×2=8. 不是 24÷(6×2)=2' },
+    { q: '20 - (8 - 3) ÷ 5 = ?', opts: ['3', '17', '19', '0'], ans: 2, explain: '括号优先: (8-3)=5, 5÷5=1, 20-1=19' }
+  ],
+  math_fractions: [
+    { q: '"花掉 1/3 后, 又花掉剩余的 1/2", 总共花了多少?', opts: ['1/2', '1/3 + 1/2 = 5/6', '1/3 + 1/3 = 2/3', '2/5'], ans: 2, explain: '剩余 = 1-1/3 = 2/3; 又花 2/3 × 1/2 = 1/3; 总共 1/3+1/3 = 2/3' },
+    { q: '比较 3/4 和 5/6 大小?', opts: ['3/4 大', '5/6 大', '相等', '不能比较'], ans: 1, explain: '通分: 9/12 vs 10/12, 5/6 > 3/4' },
+    { q: '(1 - 2/5) × 30 = ?', opts: ['18', '12', '6', '24'], ans: 0, explain: '先算括号: 1-2/5 = 3/5; 3/5 × 30 = 18' }
+  ],
+  math_decimals: [
+    { q: '$2.50 + $1.05 + $0.75 = ?', opts: ['$3.30', '$4.30', '$4.50', '$3.80'], ans: 1, explain: '$2.50 + $1.05 = $3.55, + $0.75 = $4.30' },
+    { q: '0.625 = ? (分数)', opts: ['1/2', '5/8', '3/4', '7/8'], ans: 1, explain: '0.625 = 625/1000 = 5/8 (PSLE 高频, 必背)' },
+    { q: 'Round 4.85 to 1 d.p. = ?', opts: ['4.8', '4.85', '4.9', '5.0'], ans: 2, explain: '小数第 2 位 5 → 进位; 4.85 → 4.9' }
+  ],
+  math_percent: [
+    { q: '8 折后 $640, 原价多少?', opts: ['$512', '$700', '$800', '$640'], ans: 2, explain: '8 折 = 0.8; 原价 = $640 ÷ 0.8 = $800' },
+    { q: 'GST 9% 含税价 $327, 不含税价?', opts: ['$300', '$320', '$297.27', '$310'], ans: 0, explain: '含税 ÷ 1.09 = 不含税; $327 ÷ 1.09 = $300' },
+    { q: '$100 增 20% 后再减 20%, 等于?', opts: ['$100', '$96', '$104', '$120'], ans: 1, explain: '$100×1.2=$120; $120×0.8=$96. 不是还原!' }
+  ],
+  math_ratio: [
+    { q: 'A:B = 2:3, 总 25, A 是多少?', opts: ['10', '8', '15', '12'], ans: 0, explain: 'A:B=2:3, 5 份共 25; 1 份 = 5; A=2 份=10' },
+    { q: 'A:B=2:3, B:C=4:5, A:C 是?', opts: ['2:5', '8:15', '6:12', '4:5'], ans: 1, explain: 'B 通分: A:B=8:12, B:C=12:15; A:C=8:15' },
+    { q: 'PSLE 比例题最常用的解法?', opts: ['代数法', 'Bar model 模型法', '猜', '画图列表'], ans: 1, explain: 'Singapore Bar Model 是 PSLE 比例题标准解法, 必学' }
+  ],
+  math_speed: [
+    { q: '120 km in 1.5 h, 平均速度?', opts: ['60 km/h', '75 km/h', '80 km/h', '90 km/h'], ans: 2, explain: '120 ÷ 1.5 = 80 km/h; 别误算成 120 ÷ 1 = 120' },
+    { q: '60 km/h = ? m/s', opts: ['10', '16.67', '20', '60'], ans: 1, explain: 'km/h ÷ 3.6 = m/s; 60 ÷ 3.6 = 16.67' },
+    { q: '相遇问题: A 速 60, B 速 40, 相距 200 km, 多久相遇?', opts: ['2 h', '4 h', '5 h', '3 h'], ans: 0, explain: '相遇: 速度和 × 时间 = 距离; 100×t=200, t=2h' }
+  ],
+  math_geometry: [
+    { q: '矩形长 8, 宽 5, 周长 + 面积?', opts: ['周 26 面 40', '周 13 面 40', '周 40 面 26', '周 26 面 13'], ans: 0, explain: '周长 = 2(8+5)=26; 面积 = 8×5=40' },
+    { q: '三角形底 12 高 8, 面积?', opts: ['96', '48', '24', '20'], ans: 1, explain: '三角形面积 = 底×高÷2 = 12×8÷2 = 48' },
+    { q: '内角和 540° 是几边形?', opts: ['四边形', '五边形', '六边形', '七边形'], ans: 1, explain: '(n-2)×180 = 540, n-2=3, n=5; 五边形' }
+  ],
+  math_word_problems: [
+    { q: '鸡兔同笼: 头 10, 脚 26, 鸡几只?', opts: ['4', '6', '7', '5'], ans: 2, explain: '假设法: 假设全鸡=20脚, 多 6 脚 → 6÷2=3 只兔, 7 只鸡' },
+    { q: '应用题为什么 PSLE 评分必给 working?', opts: ['老师查作弊', '过程分 (method marks)', '没区别', '只是建议'], ans: 1, explain: 'PSLE 5 分题: 答错但 working 对仍给 method marks 1-2 分' },
+    { q: '5 大解题法不包含?', opts: ['模型法', '假设法', '替换法', '猜测法'], ans: 3, explain: 'PSLE 5 法: 模型/假设/替换/倒推/单位. 猜测不算' }
+  ],
+  math_psle_paper1: [
+    { q: 'PSLE 数学 Paper 1 多少分钟? 多少题?', opts: ['1h, 30 题', '50 min, 30 题', '1h15min, 25 题', '40 min, 40 题'], ans: 1, explain: 'P1: 50 min / 30 题; P2: 1h40min / 17 题. 平均 1.6 min/题' },
+    { q: 'Paper 2 长难题最多分值?', opts: ['2 分', '3 分', '4 分', '5 分'], ans: 3, explain: 'P2 末几道大题 4-5 分, 多步推理. 必给完整 working' },
+    { q: '检查发现错题但时间不够时?', opts: ['硬改', '保留原答 + 旁注新答', '空着', '随便填'], ans: 0, explain: '硬改也比空着好; 至少有机会得分' }
+  ],
+  math_psle: [
+    { q: 'AL 4-6 数学需要多少分?', opts: ['60-74%', '75-89%', '90-100%', '50-59%'], ans: 1, explain: 'AL 4=85-89, AL 5=80-84, AL 6=75-79' },
+    { q: '答题漏单位最多扣几分?', opts: ['不扣', '1 分', '2 分', '全题分'], ans: 1, explain: '漏单位 (e.g., $50 写 50) -1; 多发可累积' },
+    { q: '估算检查最有效的方法?', opts: ['看时长', '答案数量级是否合理', '检查写字工整', '问同学'], ans: 1, explain: '估算: 题问几百块, 答出 $1234 一定算错' }
+  ],
+
+  // === 📖 英语 ===
+  eng_basics: [
+    { q: 'Each of the boys ___ a book. 选?', opts: ['have', 'has', 'having', 'had'], ans: 1, explain: 'Each + 单数动词; "Each of the boys" 整体当 each 看, 单数' },
+    { q: 'The news ___ shocking. 选?', opts: ['are', 'is', 'were', 'have'], ans: 1, explain: 'news 不可数 + 单数. 同类: information / advice / furniture' },
+    { q: 'Neither John nor Mary ___ here. 选?', opts: ['is', 'are', 'were', 'has been'], ans: 0, explain: 'Neither/nor 看后面更近的主语 (Mary 单数), 用 is' }
+  ],
+  eng_comp: [
+    { q: '"author suggests that..." 这种题考的是?', opts: ['表面意思', '隐含/推断', '词汇', '语法'], ans: 1, explain: 'Suggest/imply/hint = 推断题, 必抓证据再推, 不是直接答' },
+    { q: '3 分 OE 题应给几个 point?', opts: ['1', '2', '3', '5'], ans: 2, explain: '3 分 = 3 个独立 point; 重复同样意思不给分' },
+    { q: '词义题最有效的方法?', opts: ['查字典', 'Substitute test (代入测试)', '猜', '看上下文颜色'], ans: 1, explain: '把每个选项代入原句, 看哪个最通顺 + 不改变意思' }
+  ],
+  eng_cloze: [
+    { q: 'I came ___ this old photo in the attic. 选?', opts: ['across', 'to', 'on', 'over'], ans: 0, explain: 'come across = 偶遇/无意中发现; phrasal verb 必背' },
+    { q: 'In ___ of the rain, we went out. 选?', opts: ['spite', 'despite', 'although', 'instead'], ans: 0, explain: 'in spite of = despite (不是 spite alone); 都接名词' },
+    { q: 'I am good ___ math. 选?', opts: ['at', 'in', 'on', 'with'], ans: 0, explain: '固定搭配: good AT subject. 类似: interested in / careful with' }
+  ],
+  eng_editing: [
+    { q: 'Editing 12 空中 unchanged 有几个?', opts: ['0', '2', '4', '6'], ans: 2, explain: 'PSLE Editing: 8 错 + 4 unchanged. 改 unchanged 双扣分' },
+    { q: '"He don\'t like apples." 改正为?', opts: ['He don\'t likes', 'He doesn\'t like', 'He do not like', 'unchanged'], ans: 1, explain: '主谓: He = 3rd person → doesn\'t (not don\'t)' },
+    { q: '"Yesterday I am hungry." 改正?', opts: ['unchanged', 'I were', 'I was', 'I will be'], ans: 2, explain: 'yesterday = 过去时间 → 用 was, 不是 am' }
+  ],
+  eng_writing: [
+    { q: '作文开头 3 句最佳策略?', opts: ['介绍人物', 'Sensory details + dialogue + action', '直接讲故事', '总结全文'], ans: 1, explain: 'Hook 读者: 听觉/视觉描写 + 对话 + 动作 → 评卷老师 6 分钟内决定分数' },
+    { q: 'PSLE 作文跑题扣多少?', opts: ['扣 5 分', '扣 10 分', '直接 0 分', '不扣'], ans: 2, explain: '跑题 = 0 分; 全文必有 1 句扣 theme 关键词' },
+    { q: '高级词最少几个?', opts: ['0', '1', '5', '10'], ans: 2, explain: 'AL 4-6 关键: 至少 5 个高级词 (crestfallen / jubilant / dawned upon...)' }
+  ],
+  eng_listening: [
+    { q: '听到 "but" 后, 答案大概率在?', opts: ['前半句', '后半句', '完全无关', '需重听'], ans: 1, explain: 'but/however/although 后 90% 是答案; 前半句常是 distractor' },
+    { q: 'fifteen 和 fifty 怎么区分?', opts: ['完全一样', '重音位置不同', 'fifteen 长一点', '看上下文'], ans: 1, explain: 'fifteen [fɪfˈtiːn] 重音第 2; fifty [ˈfɪfti] 重音第 1' },
+    { q: '"the third of April" 是哪天?', opts: ['3/4', '4/3', '3 April', 'April 3'], ans: 1, explain: 'the third of April = April 3 = 4/3 (新加坡 day/month); 不是 3/4' }
+  ],
+  eng_oral: [
+    { q: 'PSLE Oral 总分?', opts: ['20', '30', '40', '50'], ans: 1, explain: 'Oral = 朗读 10 + 看图说话 10 + 对话 10 = 30 分' },
+    { q: '看图说话最佳深度?', opts: ['只描述', '描述 + 推断 + 联系生活', '只表达观点', '编故事'], ans: 1, explain: 'AL 4-6 关键: 不只看图说图, 加 personal opinion + 假设/经验' },
+    { q: '卡顿 1 次扣多少分?', opts: ['0.5 分', '1 分', '2 分', '不扣'], ans: 1, explain: '卡 1 次 -1, 错词 -0.5; 宁可用简单流畅, 别用复杂卡 5 秒' }
+  ],
+  eng_psle: [
+    { q: 'PSLE 英语总分?', opts: ['100', '150', '200', '300'], ans: 2, explain: 'P1 (作文 40) + P2 (95) + P3 (听 14) + P4 (Oral 30) ≈ 200 分' },
+    { q: 'AL 4-6 英语对应几分?', opts: ['60-74%', '75-89%', '90-100%', '50-59%'], ans: 1, explain: 'PSLE AL 4=85-89, AL 5=80-84, AL 6=75-79' },
+    { q: 'P2 SST (Synthesis & Transformation) 是?', opts: ['填空', '合并/改写句子', '阅读', '听力'], ans: 1, explain: 'SST = 合并 2 句 / 改主动被动 / 直接转间接, 一字一分' }
+  ],
+
+  // === 🇨🇳 华文 ===
+  ch_basic: [
+    { q: '"差强人意" 的真正意思?', opts: ['让人不满意', '勉强令人满意', '差很多', '完美'], ans: 1, explain: '差强人意 = 勉强 OK (褒义), 不是不满意! 望文生义陷阱' },
+    { q: '"首当其冲" 用在?', opts: ['第一名', '最先受冲击', '主动出击', '冲在最前'], ans: 1, explain: '首当其冲 = 比喻最先受到冲击/灾难, 中性偏负, 不是"首先"' },
+    { q: '"莘莘学子" 用法?', opts: ['一个杰出学子', '众多学子', '莘莘种地', '辛苦的学子'], ans: 1, explain: 'Strict usage: 莘莘 = 众多, 必复数; 不能说 "他是一位莘莘学子"' }
+  ],
+  ch_reading: [
+    { q: '"作者借此表达什么" 这种题?', opts: ['答原文表面', '推中心思想 + 自己话总结', '答字数最多的', '随便答'], ans: 1, explain: 'PSLE 高华推断题 = 不能照抄原文, 必用自己的话提炼升华' },
+    { q: '古诗中"月亮" 常代表?', opts: ['夜晚', '思乡/团圆', '光明', '冷清'], ans: 1, explain: '月 = 思乡 (李白 "举头望明月"); 团圆 (中秋); PSLE 高频意象' },
+    { q: '"这句话在文中的作用" 应答?', opts: ['只答内容', '只答结构', '内容 + 结构 (承上启下)', '答字数'], ans: 2, explain: '内容上 (突出主题) + 结构上 (承上启下/铺垫). 缺一扣分' }
+  ],
+  ch_composition: [
+    { q: '议论文标准结构?', opts: ['开端-结局', '总-分-总', '起承转合', '提问-回答'], ans: 2, explain: '起 (引出论点) → 承 (论证 1+2) → 转 (反例) → 合 (升华)' },
+    { q: 'AL 4-6 作文必有的元素?', opts: ['只要 150 字', '高级词 + 引用古文 + 比喻', '只写日常', '只说观点'], ans: 1, explain: '高华作文要"古为今用": 引用 (孔子云) + 高级词 + 至少 1 比喻' },
+    { q: '作文跑题扣多少?', opts: ['扣 10 分', '扣 50%', '直接 0 分', '不扣'], ans: 2, explain: '跑题 = 0 分. 全文必扣 theme; 结尾必呼应题目' }
+  ],
+  ch_oral: [
+    { q: 'PSLE 高华口试 看图说话 满分策略?', opts: ['只描述图片', '描述 + 推因 + 联系生活/经验', '说越多越好', '说越快越好'], ans: 1, explain: '高华口试要展示思考深度: 描述+推断+联系自身, 不只是描述' },
+    { q: '常用对话连接词?', opts: ['首先...其次...最后', '随便', '我觉得...', '不知道'], ans: 0, explain: '"首先...其次...最后..." / "在我看来" / "古人云..." 显逻辑' },
+    { q: '高华口试 vs 普华区别?', opts: ['一样', '高华内容深度更高', '只考朗读', '只考听'], ans: 1, explain: '高华: 朗读难度更高 + 内容深度 (议论性) + 引用古典' }
+  ],
+  ch_psle: [
+    { q: 'PSLE 高华 Paper 1 是?', opts: ['阅读', '作文', '听力', '口试'], ans: 1, explain: 'Paper 1 = 作文 1.5h; Paper 2 = 1h45 阅读+成语+造句+病句' },
+    { q: '高华证书对中学申请的作用?', opts: ['没作用', '加分 (HCL bonus)', '减分', '只是装饰'], ans: 1, explain: 'HCL pass = +2 加分点申请名校 (e.g., RI/Hwa Chong)' },
+    { q: '高华失败 (fail) 的影响?', opts: ['不能上中学', '影响中学分配', '没影响', '加分 50%'], ans: 1, explain: 'HCL fail 影响 secondary school posting; 别为冲 AL 1 牺牲华文' }
+  ]
+};
+
+function getNodePractice(nodeId) {
+  return KNOWLEDGE_PRACTICE[nodeId] || null;
+}
+
 // 计算节点状态: locked / learning / mastered
 function getKnowledgeNodeStatus(node, state) {
   const cw = state.currentWeek || 1;
@@ -2693,7 +2884,9 @@ function getDefaultState() {
     // v18.40: 题库进度 — { 'cn_friendship': {done: true, score: 4, max: 4, lastDate: '2026-...'} }
     questionBankProgress: {},
     // v18.41: 知识树探索状态 — { 'sci_diversity': {date: 'YYYY-MM-DD'} }
-    knowledgeExplored: {}
+    knowledgeExplored: {},
+    // v18.45: 知识树练习 ⭐ 进度 — { 'sci_diversity': {stars: 0-3, bestScore: 3, attempts: 5} }
+    knowledgeStars: {}
   };
 }
 
@@ -4125,6 +4318,9 @@ window.VOCAB_HARD = VOCAB_HARD;
 window.KNOWLEDGE_TREE = KNOWLEDGE_TREE;
 window.getKnowledgeTreeStatus = getKnowledgeTreeStatus;
 window.getKnowledgeProgress = getKnowledgeProgress;
+// v18.45: 知识树独立练习
+window.KNOWLEDGE_PRACTICE = KNOWLEDGE_PRACTICE;
+window.getNodePractice = getNodePractice;
 // v18.27: 闹铃
 window.ALARM_SCHEDULE = ALARM_SCHEDULE;
 // v18.28: 4 新 mini-game 数据 + helpers

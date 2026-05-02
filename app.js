@@ -2101,21 +2101,31 @@ function openKnowledgeTreeModal() {
   const tree = window.getKnowledgeTreeStatus(state);
   const prog = window.getKnowledgeProgress(state);
   const explored = state.knowledgeExplored || {};
+  const stars = state.knowledgeStars || {};
   const exploredCount = Object.keys(explored).length;
+  // v18.45: 计 ⭐ 总数
+  const totalStars = Object.values(stars).reduce((s, v) => s + (v.stars || 0), 0);
+  const maxStars = prog.total * 3;
   const subjHtml = Object.keys(tree).map(subj => {
     const nodes = tree[subj];
+    // 该学科 ⭐ 进度
+    const subjStars = nodes.reduce((s, n) => s + ((stars[n.id] && stars[n.id].stars) || 0), 0);
+    const subjMax = nodes.length * 3;
     const nodeHtml = nodes.map((n, i) => {
       const isLast = i === nodes.length - 1;
       const stateClass = `kt-node-${n.status}`;
-      const isExplored = !!explored[n.id];
-      const exploredBadge = isExplored ? '<div class="kt-node-star">⭐</div>' : '';
+      const nodeStars = (stars[n.id] && stars[n.id].stars) || 0;
+      const isExplored = !!explored[n.id] || nodeStars > 0;
+      const starBadge = nodeStars > 0
+        ? `<div class="kt-node-star kt-node-stars-${nodeStars}">${'⭐'.repeat(nodeStars)}</div>`
+        : (isExplored ? '<div class="kt-node-star">👁️</div>' : '');
       const statusTxt = n.status === 'mastered' ? '已掌握' : n.status === 'learning' ? '学习中' : '锁定';
-      const tip = `${n.name} · W${n.weeks[0]}-W${n.weeks[1]} · ${statusTxt}${isExplored ? ' · ⭐已探索' : ''} · 点击看讲解`;
+      const tip = `${n.name} · W${n.weeks[0]}-W${n.weeks[1]} · ${statusTxt}${nodeStars > 0 ? ' · ' + nodeStars + '⭐' : isExplored ? ' · 已看' : ''} · 点击看讲解+练习`;
       return `
         <div class="kt-node-wrap">
-          <div class="kt-node ${stateClass} kt-clickable ${isExplored ? 'kt-explored' : ''}" title="${escapeHtml(tip)}"
+          <div class="kt-node ${stateClass} kt-clickable ${nodeStars > 0 ? 'kt-stars-' + nodeStars : (isExplored ? 'kt-explored' : '')}" title="${escapeHtml(tip)}"
                onclick="openKnowledgeNodeDetail('${escapeHtml(subj)}', ${i})">
-            ${exploredBadge}
+            ${starBadge}
             <div class="kt-node-icon">${n.icon}</div>
             <div class="kt-node-name">${escapeHtml(n.name)}</div>
             <div class="kt-node-week">W${n.weeks[0]}-${n.weeks[1]}</div>
@@ -2125,7 +2135,7 @@ function openKnowledgeTreeModal() {
     }).join('');
     return `
       <div class="kt-row">
-        <div class="kt-row-label">${subj}</div>
+        <div class="kt-row-label">${subj} <span class="kt-row-stars">${subjStars}/${subjMax} ⭐</span></div>
         <div class="kt-row-nodes">${nodeHtml}</div>
       </div>`;
   }).join('');
@@ -2134,7 +2144,7 @@ function openKnowledgeTreeModal() {
       <div class="kt-header">
         <div>
           <div class="kt-title">🌳 知识树</div>
-          <div class="kt-progress">⭐ 已探索 <b>${exploredCount}/${prog.total}</b> · 周进度: ${prog.mastered} 掌握 / ${prog.learning} 学习中</div>
+          <div class="kt-progress">⭐ 总 <b>${totalStars}/${maxStars}</b> · 已探索 ${exploredCount}/${prog.total} · 周进度: ${prog.mastered}掌握 / ${prog.learning}学习中</div>
         </div>
         <button class="vocab-modal-close" onclick="closeKnowledgeTreeModal()">×</button>
       </div>
@@ -2214,11 +2224,16 @@ function openKnowledgeNodeDetail(subj, idx) {
         <div class="ktnd-text">${escapeHtml(node.pitfall)}</div>
       </div>` : ''}
       <div class="ktnd-section ktnd-action">
-        ${g ? `<button class="btn btn-primary ktnd-go" onclick="closeKnowledgeNodeDetail(); ${g.open};">💪 去练习: ${g.name}</button>` : ''}
+        ${window.getNodePractice && window.getNodePractice(node.id) ? `<button class="btn btn-primary ktnd-go ktnd-practice" onclick="openKnowledgePractice('${node.id}', '${escapeHtml(subj)}', ${idx})">📝 PSLE 风格练习 ${_starsHtml(node.id)}</button>` : ''}
+        ${g ? `<button class="btn btn-secondary ktnd-go" onclick="closeKnowledgeNodeDetail(); ${g.open};">🎮 玩 mini-game: ${g.name}</button>` : ''}
         <button class="btn btn-secondary" onclick="closeKnowledgeNodeDetail()">关闭</button>
       </div>
     </div>`;
   modal.classList.add('show');
+}
+function _starsHtml(nodeId) {
+  const s = (state.knowledgeStars && state.knowledgeStars[nodeId]) || { stars: 0 };
+  return '<span class="kp-stars">' + '⭐'.repeat(s.stars) + '☆'.repeat(3 - s.stars) + '</span>';
 }
 function closeKnowledgeNodeDetail() {
   const m = document.getElementById('ktNodeModal');
@@ -2231,6 +2246,150 @@ function closeKnowledgeNodeDetail() {
 }
 window.openKnowledgeNodeDetail = openKnowledgeNodeDetail;
 window.closeKnowledgeNodeDetail = closeKnowledgeNodeDetail;
+
+// ============ v18.45: 知识树独立练习 modal (3 题 PSLE 风) ============
+let _kpracticeState = null;
+function openKnowledgePractice(nodeId, subj, idx) {
+  const qs = window.getNodePractice(nodeId);
+  if (!qs || qs.length === 0) { showToast('本节点暂无练习题', 'sad'); return; }
+  // 洗牌每题 opts (修 cloze 全 A bug 一样的逻辑)
+  const shuffled = qs.map(q => {
+    const correctOpt = q.opts[q.ans];
+    const opts = [...q.opts].sort(() => Math.random() - 0.5);
+    return Object.assign({}, q, { opts, ans: opts.indexOf(correctOpt) });
+  });
+  _kpracticeState = { nodeId, subj, idx, qs: shuffled, answers: new Array(shuffled.length).fill(null), submitted: false };
+  closeKnowledgeNodeDetail();
+  _renderKnowledgePractice();
+}
+function _renderKnowledgePractice() {
+  const g = _kpracticeState;
+  if (!g) return;
+  let modal = document.getElementById('kpracticeModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'kpracticeModal';
+    modal.className = 'kt-modal';
+    document.body.appendChild(modal);
+  }
+  const KT = window.KNOWLEDGE_TREE || {};
+  const node = KT[g.subj] && KT[g.subj][g.idx];
+  const total = g.qs.length;
+  const score = g.submitted ? g.answers.reduce((s, a, i) => s + (a === g.qs[i].ans ? 1 : 0), 0) : 0;
+  const allAnswered = g.answers.every(a => a !== null);
+  const qsHtml = g.qs.map((q, i) => {
+    const userAns = g.answers[i];
+    const opts = q.opts.map((o, oi) => {
+      const selected = userAns === oi;
+      const reveal = g.submitted;
+      const isCorrect = oi === q.ans;
+      const cls = reveal ? (isCorrect ? 'mcq-correct' : (selected ? 'mcq-wrong' : '')) : (selected ? 'mcq-selected' : '');
+      const disabled = g.submitted ? 'disabled' : '';
+      return `<button class="mcq-opt ${cls}" onclick="selectKnowledgePracticeAnswer(${i}, ${oi})" ${disabled}>${String.fromCharCode(65+oi)}. ${escapeHtml(o)}</button>`;
+    }).join('');
+    const explainHtml = g.submitted
+      ? `<div class="cn-q-explain">${userAns === q.ans ? '✅ 正确' : '❌ 应是 ' + String.fromCharCode(65+q.ans)} · ${escapeHtml(q.explain || '')}</div>`
+      : '';
+    return `
+      <div class="cn-question">
+        <div class="cn-q-text">${i+1}. ${escapeHtml(q.q)}</div>
+        <div class="mcq-opts">${opts}</div>
+        ${explainHtml}
+      </div>`;
+  }).join('');
+  modal.innerHTML = `
+    <div class="kt-inner cn-reading-inner">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title">📝 ${node ? node.icon + ' ' + escapeHtml(node.name) : '练习'}</div>
+          <div class="kt-progress">PSLE 风练习 · ${total} 题 · ${escapeHtml(g.subj)}</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeKnowledgePractice()">×</button>
+      </div>
+      <div class="kp-tip">💡 不限次数 — 反复练习巩固. ⭐ 升级: 60% = 1 ⭐ / 80% = 2 ⭐ / 100% = 3 ⭐ (取最高记录)</div>
+      <div class="cn-questions">${qsHtml}</div>
+      ${g.submitted
+        ? `<div class="cn-result">
+             🎯 你的成绩: <b>${score}/${total}</b> (${Math.round(score/total*100)}%) ${score === total ? '— 满分! 3 ⭐' : score >= total*0.8 ? '— 优秀 2 ⭐' : score >= total*0.6 ? '— 及格 1 ⭐' : '— 需复习'}
+           </div>
+           <div class="kp-actions">
+             <button class="btn btn-primary" onclick="restartKnowledgePractice()">🔄 再练 1 次</button>
+             <button class="btn btn-secondary" onclick="closeKnowledgePractice()">完成</button>
+           </div>`
+        : `<button class="btn btn-primary cn-submit" ${allAnswered ? '' : 'disabled'} onclick="submitKnowledgePractice()">${allAnswered ? '✅ 提交答案' : `请先答完 (${g.answers.filter(a => a !== null).length}/${total})`}</button>`}
+    </div>`;
+  modal.classList.add('show');
+}
+function selectKnowledgePracticeAnswer(qIdx, optIdx) {
+  if (!_kpracticeState || _kpracticeState.submitted) return;
+  _kpracticeState.answers[qIdx] = optIdx;
+  _renderKnowledgePractice();
+}
+function submitKnowledgePractice() {
+  const g = _kpracticeState;
+  if (!g || g.submitted) return;
+  const total = g.qs.length;
+  const score = g.answers.reduce((s, a, i) => s + (a === g.qs[i].ans ? 1 : 0), 0);
+  g.submitted = true;
+  // 计算 ⭐ 数
+  const acc = score / total;
+  let stars = 0;
+  if (acc >= 1) stars = 3;
+  else if (acc >= 0.8) stars = 2;
+  else if (acc >= 0.6) stars = 1;
+  // 更新 state.knowledgeStars (取 best)
+  if (!state.knowledgeStars) state.knowledgeStars = {};
+  const prev = state.knowledgeStars[g.nodeId] || { stars: 0, bestScore: 0, attempts: 0 };
+  const isFirstTime = prev.attempts === 0;
+  const newRec = {
+    stars: Math.max(prev.stars, stars),
+    bestScore: Math.max(prev.bestScore, score),
+    attempts: prev.attempts + 1,
+    lastDate: new Date().toISOString().slice(0, 10)
+  };
+  state.knowledgeStars[g.nodeId] = newRec;
+  // 第一次完成给 +5 分; 每升 1 ⭐ 额外 +5; 满分 3⭐ 额外 +10
+  let pointsAwarded = 0;
+  if (isFirstTime) pointsAwarded += 5;
+  if (newRec.stars > prev.stars) pointsAwarded += 5 * (newRec.stars - prev.stars);
+  if (newRec.stars === 3 && prev.stars < 3) pointsAwarded += 10;
+  if (pointsAwarded > 0) {
+    state.totalPoints = (state.totalPoints || 0) + pointsAwarded;
+    state.logs.push({ reason: `📝 知识练习: ${g.nodeId} ${score}/${total} (${stars}⭐)`, points: pointsAwarded, week: state.currentWeek, timestamp: Date.now() });
+  }
+  saveState(state);
+  if (stars === 3) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 50); playSound('tada'); }
+  else if (stars > 0) playSound('ding');
+  else playSound('sad');
+  if (newRec.stars > prev.stars) showToast(`🎉 ${node_name(g.nodeId)} 升级到 ${newRec.stars} ⭐!`, 'happy');
+  _renderKnowledgePractice();
+}
+function node_name(nodeId) {
+  const KT = window.KNOWLEDGE_TREE || {};
+  for (const subj of Object.keys(KT)) {
+    const found = KT[subj].find(n => n.id === nodeId);
+    if (found) return found.name;
+  }
+  return nodeId;
+}
+function restartKnowledgePractice() {
+  const g = _kpracticeState;
+  if (!g) return;
+  openKnowledgePractice(g.nodeId, g.subj, g.idx);
+}
+function closeKnowledgePractice() {
+  const m = document.getElementById('kpracticeModal');
+  if (m) m.classList.remove('show');
+  _kpracticeState = null;
+  // 重新打开知识树以显示新 ⭐
+  if (document.getElementById('knowledgeTreeModal')) openKnowledgeTreeModal();
+  renderAll();
+}
+window.openKnowledgePractice = openKnowledgePractice;
+window.selectKnowledgePracticeAnswer = selectKnowledgePracticeAnswer;
+window.submitKnowledgePractice = submitKnowledgePractice;
+window.restartKnowledgePractice = restartKnowledgePractice;
+window.closeKnowledgePractice = closeKnowledgePractice;
 window.openKnowledgeTreeModal = openKnowledgeTreeModal;
 window.closeKnowledgeTreeModal = closeKnowledgeTreeModal;
 
