@@ -1869,22 +1869,29 @@ function closeMiniGameHub() {
 
 // 数学速算
 let _mathGameState = null;
+let _mathTimer = null;
 function openMathGame() {
   // v18.3: 按今日轮换 (同一天稳定 10 题, 跨天换)
   const qs = window.getDailyMathQuestions ? window.getDailyMathQuestions(10) : [...window.MATH_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10);
-  _mathGameState = { qs, idx: 0, correct: 0, wrong: 0, startedAt: Date.now(), userAns: '', timeLeft: 30 };
+  _mathGameState = { qs, idx: 0, correct: 0, wrong: 0, startedAt: Date.now(), timeLeft: 30 };
   _renderMathGame();
-  // 计时
-  const timer = setInterval(() => {
-    if (!_mathGameState) { clearInterval(timer); return; }
+  // v18.11: 计时器只更新 stats 文字, 不重渲染 input (避免 iPad 键盘跳)
+  if (_mathTimer) clearInterval(_mathTimer);
+  _mathTimer = setInterval(() => {
+    if (!_mathGameState) { clearInterval(_mathTimer); _mathTimer = null; return; }
     _mathGameState.timeLeft -= 1;
-    if (_mathGameState.timeLeft <= 0 || _mathGameState.idx >= _mathGameState.qs.length) {
-      clearInterval(timer);
+    if (_mathGameState.timeLeft <= 0) {
+      clearInterval(_mathTimer); _mathTimer = null;
       _finishMathGame();
     } else {
-      _renderMathGame();
+      _updateMathStats();
     }
   }, 1000);
+}
+function _updateMathStats() {
+  const stats = document.getElementById('mgStats');
+  const g = _mathGameState;
+  if (stats && g) stats.textContent = `⏱️ ${g.timeLeft}s · ✅ ${g.correct} · ❌ ${g.wrong} · ${g.idx + 1}/10`;
 }
 function _renderMathGame() {
   const modal = document.getElementById('mathGameModal');
@@ -1895,17 +1902,22 @@ function _renderMathGame() {
     return;
   }
   const q = g.qs[g.idx];
+  // v18.11: inputmode=numeric + pattern, 让 iPad 弹数字键盘且稳定
   modal.innerHTML = `
     <div class="mg-inner">
-      <div class="mg-stats">⏱️ ${g.timeLeft}s · ✅ ${g.correct} · ❌ ${g.wrong} · ${g.idx + 1}/10</div>
+      <div class="mg-stats" id="mgStats">⏱️ ${g.timeLeft}s · ✅ ${g.correct} · ❌ ${g.wrong} · ${g.idx + 1}/10</div>
       <div class="mg-q">${q.q} = ?</div>
-      <input type="number" id="mgInput" value="${g.userAns}" autofocus class="mg-input" onkeydown="if(event.key==='Enter') submitMathAnswer()">
+      <input type="text" inputmode="numeric" pattern="-?[0-9]*" id="mgInput" value="" class="mg-input" onkeydown="if(event.key==='Enter') submitMathAnswer()">
       <button class="btn btn-primary mg-submit" onclick="submitMathAnswer()">提交</button>
       <button class="vocab-modal-close mg-close" onclick="closeMathGame()">×</button>
     </div>
   `;
   modal.classList.add('show');
-  setTimeout(() => document.getElementById('mgInput')?.focus(), 50);
+  // 仅首次/换题时 focus 一次
+  setTimeout(() => {
+    const inp = document.getElementById('mgInput');
+    if (inp) { inp.focus(); inp.select(); }
+  }, 50);
 }
 function submitMathAnswer() {
   const g = _mathGameState;
@@ -1916,7 +1928,6 @@ function submitMathAnswer() {
   if (val === q.ans) { g.correct++; playSound('ding'); }
   else { g.wrong++; playSound('sad'); }
   g.idx++;
-  g.userAns = '';
   _renderMathGame();
 }
 function _finishMathGame() {
@@ -1945,6 +1956,7 @@ function _finishMathGame() {
   _mathGameState = null;
 }
 function closeMathGame() {
+  if (_mathTimer) { clearInterval(_mathTimer); _mathTimer = null; }
   document.getElementById('mathGameModal').classList.remove('show');
   _mathGameState = null;
   renderAll();
