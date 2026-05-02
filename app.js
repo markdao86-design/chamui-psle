@@ -1223,26 +1223,28 @@ function renderWeekSummary(week) {
   `;
 }
 
-// v18.36: 思维导图 (SVG 中心-辐射)
+// v18.36: 思维导图 (SVG 中心-辐射) + v18.39 加标题说明
 function _renderMindmap(subjectName, data) {
-  const cx = 150, cy = 100;
+  const cx = 160, cy = 110;
   const branches = data.topics.map((t, i) => {
     const angle = (i * 120 - 90) * Math.PI / 180;
-    return { x: cx + Math.cos(angle) * 95, y: cy + Math.sin(angle) * 65, name: t.name };
+    return { x: cx + Math.cos(angle) * 100, y: cy + Math.sin(angle) * 70, name: t.name };
   });
   const lines = branches.map(b => `<line x1="${cx}" y1="${cy}" x2="${b.x}" y2="${b.y}" stroke="${data.color}" stroke-width="2" opacity="0.6"/>`).join('');
-  const nodes = branches.map(b => `
+  const nodes = branches.map((b, i) => `
     <g transform="translate(${b.x},${b.y})">
-      <rect x="-36" y="-13" width="72" height="26" rx="13" fill="white" stroke="${data.color}" stroke-width="2"/>
+      <rect x="-40" y="-14" width="80" height="28" rx="14" fill="white" stroke="${data.color}" stroke-width="2"/>
       <text x="0" y="4" text-anchor="middle" font-size="12" font-weight="700" fill="${data.color}">${escapeHtml(b.name)}</text>
     </g>`).join('');
   return `
-    <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:300px;height:auto">
+    <div class="mindmap-title">📍 <b>${escapeHtml(subjectName)}弱点知识图</b> — 中心是学科, 周围 3 个气泡是该学科最常错的知识点 (下方有详细解析)</div>
+    <svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:320px;height:auto">
       ${lines}
-      <circle cx="${cx}" cy="${cy}" r="28" fill="${data.color}"/>
+      <circle cx="${cx}" cy="${cy}" r="32" fill="${data.color}"/>
       <text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="14" font-weight="900" fill="white">${escapeHtml(subjectName)}</text>
       ${nodes}
-    </svg>`;
+    </svg>
+    <div class="mindmap-legend">💡 看完点击下方每个气泡对应的卡片, 知道<b>为什么</b>错 + <b>怎么练</b></div>`;
 }
 
 function selectDay(day) {
@@ -1773,6 +1775,41 @@ function playSound(type) {
         _playTone(ctx, 660, 0.08, 'sine', 0.2, 0);
         _playTone(ctx, 990, 0.12, 'sine', 0.2, 0.06);
         break;
+      // v18.39: 闹铃用 — 长音、舒缓、有旋律
+      case 'alarm-rest': {
+        // 休息提醒 — 5 音下行钟声 (温柔)
+        const notes = [880, 784, 659, 587, 523]; // A5 G5 E5 D5 C5
+        notes.forEach((f, i) => _playTone(ctx, f, 0.45, 'sine', 0.4, i * 0.35));
+        break;
+      }
+      case 'alarm-back': {
+        // 回来学 — 上行钟声 + 1 长音收尾 (鼓舞)
+        const notes = [523, 659, 784, 1047]; // C E G C+
+        notes.forEach((f, i) => _playTone(ctx, f, 0.32, 'triangle', 0.45, i * 0.22));
+        _playTone(ctx, 1047, 0.6, 'triangle', 0.45, 1.0);
+        break;
+      }
+      case 'alarm-start': {
+        // 开始学 — 4 音欢快 (晨钟)
+        const notes = [659, 880, 1047, 1319]; // E A C E
+        notes.forEach((f, i) => _playTone(ctx, f, 0.3, 'triangle', 0.5, i * 0.18));
+        _playTone(ctx, 1319, 0.5, 'triangle', 0.4, 0.85);
+        break;
+      }
+      case 'alarm-sleep': {
+        // 睡觉 — 极柔 3 音缓降 (摇篮曲感)
+        _playTone(ctx, 587, 0.8, 'sine', 0.35, 0);    // D
+        _playTone(ctx, 494, 0.8, 'sine', 0.35, 0.7);  // B
+        _playTone(ctx, 392, 1.4, 'sine', 0.35, 1.4);  // G (长尾)
+        break;
+      }
+      case 'alarm-switch': {
+        // 换任务 — 2 音 ping ping (提醒)
+        _playTone(ctx, 880, 0.18, 'sine', 0.4, 0);
+        _playTone(ctx, 880, 0.18, 'sine', 0.4, 0.3);
+        _playTone(ctx, 1175, 0.35, 'sine', 0.4, 0.6);
+        break;
+      }
     }
   } catch (e) {}
 }
@@ -1979,9 +2016,17 @@ function _showAlarmPopup(alarm, dayKey) {
     <button class="alarm-close" onclick="this.parentElement.remove()">✕</button>
   `;
   document.body.appendChild(popup);
-  playSound('pop');
-  // 自动消失 (rest/sleep 久一点, start/back 短)
-  const dur = (alarm.type === 'rest' || alarm.type === 'sleep') ? 15000 : 10000;
+  // v18.39: 按 alarm 类型选合适的旋律
+  const soundMap = {
+    rest: 'alarm-rest',     // 休息: 温柔下行钟声 ~2.2s
+    sleep: 'alarm-sleep',   // 睡觉: 极柔摇篮曲 ~3s
+    back: 'alarm-back',     // 回来学: 鼓舞上行 ~1.6s
+    start: 'alarm-start',   // 开始学: 晨钟 ~1.4s
+    switch: 'alarm-switch'  // 换任务: ping ping ~0.95s
+  };
+  playSound(soundMap[alarm.type] || 'alarm-back');
+  // v18.39: 弹窗停留时间延长, rest/sleep 30s, 其他 20s
+  const dur = (alarm.type === 'rest' || alarm.type === 'sleep') ? 30000 : 20000;
   setTimeout(() => {
     popup.classList.add('alarm-fade');
     setTimeout(() => popup.remove(), 400);
