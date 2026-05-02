@@ -1947,6 +1947,62 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .lis-item.lis-live { background: linear-gradient(135deg, #FFE6F0 0%, #E0F4F1 100%); border-width: 3px; }
 .lis-item.lis-youtube { background: #FFF8E7; border-width: 3px; }
 
+/* v18.21: 听力 4 步精听法规则卡 */
+.listen-rules-card {
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(255,255,255,0.7) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-primary-soft) 0%, #FFFFFF 80%);
+  border: 1px solid #C8DDF0;
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-tight);
+  padding: 12px 16px;
+  margin: 12px 0 16px;
+  box-shadow: 0 2px 8px rgba(74,144,199,0.10);
+}
+.listen-rules-card .lr-title {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--color-primary);
+  margin-bottom: 8px;
+}
+.listen-rules-card .lr-steps {
+  margin: 0 0 8px 20px;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--color-text);
+}
+.listen-rules-card .lr-steps li {
+  margin-bottom: 4px;
+}
+.listen-rules-card .lr-steps li b {
+  color: var(--color-primary);
+  font-weight: 900;
+}
+.listen-rules-card .lr-tip {
+  background: rgba(255,255,255,0.7);
+  border: 1px dashed var(--color-primary);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+}
+
+/* v18.21: checkin LS 行内 1 行精简 tip */
+.checkin-listen-tip {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-top: 4px;
+  display: inline-block;
+  border: 1px solid #D1E4F2;
+}
+
 /* v16.7: 听力 modal 紧凑 2 列网格(audio 第 1 项跨满全宽) */
 .lis-grid {
   display: grid !important;

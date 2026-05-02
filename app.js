@@ -937,7 +937,11 @@ function renderCheckinPage() {
       // v16.3: 听力资源按钮 — 任务含 CNA938 / okto / Listening / 听力 时出现
       const isListenTask = /CNA938|okto|Listening|听力|🎧/.test(t.task);
       const listenBtn = isListenTask
-        ? `<button class="listen-btn" onclick="event.stopPropagation(); openListeningModal(${week})" title="听力资源(CNA938 直播 + 播客)">🔊</button>`
+        ? `<button class="listen-btn" onclick="event.stopPropagation(); openListeningModal(${week})" title="听力资源 + 4 步精听法">🔊</button>`
+        : '';
+      // v18.21: LS 任务下方加 1 行 4 步法 tip (详细规则点 🔊 看)
+      const listenTipLine = isListenTask
+        ? `<div class="checkin-listen-tip">🎯 4 步法: 1️⃣ 听感觉 → 2️⃣ 挑 3-5 生词 → 3️⃣ 查字典 + 记本 → 4️⃣ 复听验证</div>`
         : '';
       const keyChip = isKey ? `<span class="key-chip" title="必做关键项目,影响周复盘奖">🎯 必做</span>` : '';
       const tipLine = tip ? `<div class="checkin-tip">${escapeHtml(tip)}</div>` : '';
@@ -950,6 +954,7 @@ function renderCheckinPage() {
               <div class="checkin-title">${escapeHtml(t.task)} ${keyChip}</div>
               <div class="checkin-desc">⏰ ${escapeHtml(t.time)}</div>
               ${tipLine}
+              ${listenTipLine}
             </div>
           </div>
           ${scoreBtn}
@@ -2444,6 +2449,16 @@ function openListeningModal(week) {
           <span id="listeningRemaining" style="display:block;font-size:11px;font-weight:700;margin-top:4px;color:${remainColor}">⏳ 今日剩余 ${remainMin}:${String(remainSecOnly).padStart(2,'0')} (上限 ${window.LISTENING_DAILY_LIMIT_MIN} 分钟)</span>
         </div>
         <button class="vocab-modal-close" onclick="closeListeningModal()">×</button>
+      </div>
+      <div class="listen-rules-card">
+        <div class="lr-title">🎯 听力 4 步精听法</div>
+        <ol class="lr-steps">
+          <li><b>第 1 遍 (3-4 min)</b>: 整段听一遍, <b>不查字典、不暂停</b>, 听个大概, 听不懂也坚持</li>
+          <li><b>第 2 遍 (5-6 min)</b>: 再听一遍, 边听边捕捉 <b>3-5 个生词</b> (没听过 / 听不懂的英文)</li>
+          <li>暂停记下来 (本子 / 备忘录), 然后<b>查字典 + 抄中文意思 + 例句</b></li>
+          <li><b>下次再听同一段</b>, 看能不能听出这些词 (复习的关键)</li>
+        </ol>
+        <div class="lr-tip">💡 不需要听懂全部, 抓住"有用的 3-5 个"就赢了</div>
       </div>
       <div class="vocab-modal-body lis-grid">${items}</div>
       <div class="vocab-modal-footer">
