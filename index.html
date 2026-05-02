@@ -308,23 +308,70 @@ body::before {
   .hero-section { grid-template-columns: 1fr; }
 }
 
+/* v18.16: 蓝色系角色卡 — 暖蓝渐变 + 云朵 + 星点装饰 + 角色光晕 */
 .character-card {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.7) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(255,255,255,0.5) 0%, transparent 45%),
+    linear-gradient(140deg, #DCEBF7 0%, #E8F2FB 45%, #F4F8FD 100%);
+  border: 1px solid #C8DDF0;
   border-radius: var(--radius-bubble);
   padding: 32px;
   text-align: center;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow-cute);
+  box-shadow:
+    0 2px 8px rgba(74, 144, 199, 0.10),
+    0 12px 28px rgba(74, 144, 199, 0.08),
+    inset 0 1px 0 rgba(255,255,255,0.8);
 }
 
 .character-card::before {
+  /* 角色身后的柔光 */
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: var(--color-primary);
+  top: 28%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(74,144,199,0.18) 0%, transparent 65%);
+  pointer-events: none;
+  animation: char-glow 5s ease-in-out infinite;
+}
+.character-card::after {
+  /* 装饰: 飘浮的云朵和星星 */
+  content: '☁️ ✦ ⭐ ☁️ ✦';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(255,255,255,0.85) 2px, transparent 3px),
+    radial-gradient(circle at 88% 22%, rgba(255,255,255,0.7) 2.5px, transparent 3.5px),
+    radial-gradient(circle at 22% 75%, rgba(255,255,255,0.6) 2px, transparent 3px),
+    radial-gradient(circle at 80% 82%, rgba(255,255,255,0.7) 2.5px, transparent 3.5px),
+    radial-gradient(circle at 50% 8%, rgba(255,255,255,0.5) 1.5px, transparent 2.5px),
+    radial-gradient(circle at 6% 50%, rgba(255,255,255,0.6) 2px, transparent 3px),
+    radial-gradient(circle at 95% 50%, rgba(255,255,255,0.7) 2px, transparent 3px);
+  color: transparent;
+  pointer-events: none;
+  z-index: 0;
+}
+.character-card > * {
+  position: relative;
+  z-index: 1;
+}
+@keyframes char-glow {
+  0%, 100% { opacity: 0.55; transform: translateX(-50%) scale(1); }
+  50% { opacity: 0.85; transform: translateX(-50%) scale(1.08); }
+}
+
+/* 蓝色调的飘浮云朵 (右上角 + 左下角) */
+.character-card::before { z-index: 0; }
+.cloud-deco {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.7;
 }
 
 @keyframes glow-rotate {
@@ -385,17 +432,17 @@ body::before {
   color: var(--color-primary);
   margin: 6px 0 8px;
   letter-spacing: 1px;
-  text-shadow: 0 2px 0 rgba(0,0,0,0.06);
+  text-shadow: 0 1px 2px rgba(74,144,199,0.15);
 }
 .big-score-block {
   margin-top: 16px;
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
+  background: linear-gradient(135deg, #FFFFFF 0%, #F0F7FB 100%);
+  border: 1px solid #C8DDF0;
   border-top: 3px solid var(--color-primary);
   border-radius: var(--radius-bubble);
   padding: 16px 24px;
   text-align: center;
-  box-shadow: var(--shadow-cute);
+  box-shadow: 0 2px 8px rgba(74,144,199,0.10);
   transition: transform 0.2s;
 }
 .big-score-block.pulse {
@@ -423,13 +470,14 @@ body::before {
 
 .beat-block {
   margin-top: 12px;
-  background: var(--color-card-soft);
-  border: 1px solid var(--color-border);
+  background: rgba(255,255,255,0.7);
+  border: 1px solid #D1E4F2;
   border-radius: var(--radius-tight);
   padding: 12px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
+  backdrop-filter: blur(4px);
 }
 .beat-rocket {
   font-size: 32px;
