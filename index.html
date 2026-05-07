@@ -3244,16 +3244,16 @@ p { font-size: 14px; line-height: 1.6; }
   position: absolute;
   top: 67px;
   right: 78px;
-  background: white;
-  border: 1px solid var(--color-primary);
+  background: rgba(28, 28, 40, 0.82);
+  border: none;
   border-radius: 14px;
   padding: 8px 12px;
   font-size: 12px;
   font-weight: 700;
-  color: var(--color-text);
+  color: #fff;
   max-width: 160px;
   line-height: 1.4;
-  box-shadow: 0 3px 10px rgba(74,144,199,0.18);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
   z-index: 6;
   pointer-events: none;
   animation: pet-bubble-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -3268,19 +3268,9 @@ p { font-size: 14px; line-height: 1.6; }
   width: 0; height: 0;
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
-  border-left: 8px solid var(--color-primary);
+  border-left: 8px solid rgba(28, 28, 40, 0.82);
 }
-.pet-bubble::before {
-  content: '';
-  position: absolute;
-  right: -6px;
-  top: 19px;
-  width: 0; height: 0;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 7px solid white;
-  z-index: 1;
-}
+.pet-bubble::before { display: none; }
 @keyframes pet-bubble-pop {
   0% { transform: scale(0.4) translateX(20px); opacity: 0; }
   100% { transform: scale(1) translateX(0); opacity: 1; }

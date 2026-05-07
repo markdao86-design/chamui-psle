@@ -2240,6 +2240,19 @@ function petCelebrate(message) {
   if (message) petSay(message, 3500);
 }
 
+// 冷笑话不重复队列 — 全部讲完才重新洗牌
+let _jokeQueue = [];
+function _nextColdJoke() {
+  if (_jokeQueue.length === 0) {
+    _jokeQueue = _COLD_JOKES.map((_, i) => i);
+    for (let i = _jokeQueue.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [_jokeQueue[i], _jokeQueue[j]] = [_jokeQueue[j], _jokeQueue[i]];
+    }
+  }
+  return _COLD_JOKES[_jokeQueue.pop()];
+}
+
 // 周期性鼓励 — 根据状态选合适的话
 const _COLD_JOKES = [
   '为什么数学书那么悲伤？因为它有太多"问题"了 😔',
@@ -2264,10 +2277,6 @@ function _generatePetMessage() {
   const next = window.CHAMUI ? window.CHAMUI.getNextLevelInfo(state.totalPoints) : null;
   const streak = state.dailyStreak?.days || 0;
   const totalSlotsToday = window._countTodaySlots ? window._countTodaySlots(state) : 0;
-  // 40% 概率讲冷笑话
-  if (Math.random() < 0.4) {
-    return _COLD_JOKES[Math.floor(Math.random() * _COLD_JOKES.length)];
-  }
   const pool = [];
   if (streak === 0) pool.push('🔥 今天打 1 个项目就点燃火焰!');
   if (streak >= 1 && streak < 7) pool.push(`🔥 已经 ${streak} 天了, 别断哦`);
@@ -2284,19 +2293,27 @@ function _generatePetMessage() {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+let _jokeTimer = null;
 function _startPetIdleTalk() {
   if (_petBubbleTimer) clearInterval(_petBubbleTimer);
-  // 30s 后第一次, 之后每 60-90s 一次
+  if (_jokeTimer) clearInterval(_jokeTimer);
+  // 鼓励话: 30s 后第一次, 之后每 60-90s 一次
   setTimeout(() => {
     petSay(_generatePetMessage());
     _petBubbleTimer = setInterval(() => {
-      // 仅在 dashboard 页面 + tab 可见时才说话
       if (document.hidden) return;
       const dash = document.getElementById('page-dashboard');
       if (!dash || !dash.classList.contains('active')) return;
       petSay(_generatePetMessage());
     }, 60000 + Math.random() * 30000);
   }, 30000);
+  // 冷笑话: 每 5 分钟一条, 不重复
+  _jokeTimer = setInterval(() => {
+    if (document.hidden) return;
+    const dash = document.getElementById('page-dashboard');
+    if (!dash || !dash.classList.contains('active')) return;
+    petSay(_nextColdJoke(), 7000);
+  }, 5 * 60 * 1000);
 }
 
 // ============ v18.20: E 数字跳动 + 彩虹扫过 ============
