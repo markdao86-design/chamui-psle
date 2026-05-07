@@ -1,0 +1,21 @@
+# 依赖
+node_modules/
+
+# Firebase 缓存
+.firebase/
+*-debug.log
+
+# 本地测试合并产物(每次构建可重新生成)
+chamui_app_single.html
+
+# 系统/编辑器
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# 临时
+*.log
+*.tmp
+/tmp/
