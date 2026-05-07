@@ -589,171 +589,200 @@ function getTodayWowFact(weekN, dateOverride) {
   return { subject: '科学/策略', subjectIcon: '🔬', subjectColor: '#9B8FC9', subjectKey: 'science', tag: `W${sci.week}`, hook: sci.hook, body: sci.body, week: sci.week };
 }
 
-// ============= v18.10: 仓鼠 7 形态 SVG 自绘 (每个独立可视化) =============
-// 每个形态有独立 SVG 插画, 越高阶越华丽: 蛋→宝宝→蝴蝶结→眼镜→学士帽→战甲→王冠披风
-// SVG viewBox 48×48; 共用基础: 头/耳朵/眼睛/腮红/鼻嘴 (HAMSTER_BASE 函数)
-// 颜色随形态进化: 浅橙(baby)→标准(cute)→蓝学(study)→紫智(wisdom)→红战(warrior)→金王(king)
-function _hamsterBase(furColor, faceColor, hasHelmet) {
+// ============= v18.69: 仓鼠全身 Q 版小动物 (7形态 × viewBox 60×75) =============
+// 从头像升级为完整全身: 耳/头/脸/身/肚/手/脚 + 形态专属配饰
+// 颜色随形态进化: 浅橙(baby)→金橙(cute)→蓝学(study)→紫智(wisdom)→红战(warrior)→金王(king)
+function _hamsterBody(earC, backC, faceC, bellyC, eyeC, extra) {
   return `
-    ${hasHelmet ? '' : `<ellipse cx="13" cy="15" rx="4" ry="5" fill="${furColor}"/><ellipse cx="35" cy="15" rx="4" ry="5" fill="${furColor}"/><ellipse cx="13" cy="15" rx="2" ry="3" fill="#FFB6D9"/><ellipse cx="35" cy="15" rx="2" ry="3" fill="#FFB6D9"/>`}
-    <circle cx="24" cy="26" r="14" fill="${furColor}"/>
-    <ellipse cx="24" cy="30" rx="9" ry="6" fill="${faceColor}"/>
-    <circle cx="15" cy="29" r="2" fill="#FFB6D9" opacity="0.75"/>
-    <circle cx="33" cy="29" r="2" fill="#FFB6D9" opacity="0.75"/>
-    <ellipse cx="24" cy="28" rx="1" ry="0.8" fill="#D67C7C"/>
-    <path d="M22 30 Q24 31.5 26 30" fill="none" stroke="#5D3D2D" stroke-width="0.6" stroke-linecap="round"/>`;
-}
-function _hamsterEyes(eyeColor) {
-  eyeColor = eyeColor || '#2D2D2D';
-  return `<circle cx="19" cy="24" r="1.6" fill="${eyeColor}"/><circle cx="29" cy="24" r="1.6" fill="${eyeColor}"/><circle cx="19.4" cy="23.5" r="0.4" fill="white"/><circle cx="29.4" cy="23.5" r="0.4" fill="white"/>`;
+    <ellipse cx="15" cy="19" rx="7" ry="7.5" fill="${earC}"/>
+    <ellipse cx="45" cy="19" rx="7" ry="7.5" fill="${earC}"/>
+    <ellipse cx="15" cy="19" rx="4.2" ry="4.5" fill="#FFB6D9"/>
+    <ellipse cx="45" cy="19" rx="4.2" ry="4.5" fill="#FFB6D9"/>
+    <ellipse cx="30" cy="57" rx="16" ry="14" fill="${backC}"/>
+    <ellipse cx="30" cy="59" rx="10" ry="10" fill="${bellyC}"/>
+    <circle cx="30" cy="29" r="17" fill="${backC}"/>
+    <ellipse cx="30" cy="34" rx="13" ry="10.5" fill="${faceC}"/>
+    <circle cx="18" cy="35" r="4.5" fill="#FFB6C1" opacity="0.55"/>
+    <circle cx="42" cy="35" r="4.5" fill="#FFB6C1" opacity="0.55"/>
+    <ellipse cx="30" cy="31" rx="2" ry="1.5" fill="#E07070"/>
+    <path d="M27 34.5 Q30 38 33 34.5" fill="none" stroke="#7D4B2A" stroke-width="0.85" stroke-linecap="round"/>
+    <circle cx="22" cy="27" r="4" fill="white"/>
+    <circle cx="38" cy="27" r="4" fill="white"/>
+    <circle cx="22.5" cy="27" r="2.8" fill="${eyeC}"/>
+    <circle cx="38.5" cy="27" r="2.8" fill="${eyeC}"/>
+    <circle cx="23.5" cy="26" r="1" fill="white"/>
+    <circle cx="39.5" cy="26" r="1" fill="white"/>
+    <ellipse cx="12" cy="54" rx="5.5" ry="7" fill="${backC}" transform="rotate(-18 12 54)"/>
+    <ellipse cx="48" cy="54" rx="5.5" ry="7" fill="${backC}" transform="rotate(18 48 54)"/>
+    <ellipse cx="10" cy="58.5" rx="4" ry="3" fill="${faceC}"/>
+    <ellipse cx="50" cy="58.5" rx="4" ry="3" fill="${faceC}"/>
+    <ellipse cx="22" cy="68" rx="6.5" ry="5" fill="${backC}"/>
+    <ellipse cx="38" cy="68" rx="6.5" ry="5" fill="${backC}"/>
+    <ellipse cx="22" cy="72" rx="5" ry="3" fill="${faceC}"/>
+    <ellipse cx="38" cy="72" rx="5" ry="3" fill="${faceC}"/>
+    ${extra || ''}`;
 }
 
 const PET_FORMS = [
   { idx: 0, name: '仓鼠蛋', minStreak: 0,
     bg: 'linear-gradient(135deg, #FFF8E7 0%, #FFE0B2 100%)',
     desc: '里面有只小仓鼠在等着孵化',
-    svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="24" cy="26" rx="14" ry="18" fill="#FFF3D6" stroke="#D9A86A" stroke-width="1.5"/>
-      <ellipse cx="19" cy="20" rx="3" ry="5" fill="#FFFAEC" opacity="0.6"/>
-      <path d="M16 28 L19 26 L21 29 L23 26 L26 29 L29 26 L32 28" fill="none" stroke="#B8860B" stroke-width="0.6" opacity="0.5"/>
-      <circle cx="24" cy="38" r="1" fill="#D9A86A" opacity="0.4"/>
+    svg: `<svg viewBox="0 0 60 75" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="30" cy="44" rx="22" ry="30" fill="#FFF3D6" stroke="#D9A86A" stroke-width="1.8"/>
+      <ellipse cx="23" cy="32" rx="6" ry="10" fill="#FFFAEC" opacity="0.45"/>
+      <path d="M14 56 L20 51 L26 57 L30 51 L34 57 L40 51 L46 56" fill="none" stroke="#B8860B" stroke-width="0.7" opacity="0.4"/>
+      <circle cx="30" cy="35" r="2" fill="#D9A86A" opacity="0.25"/>
     </svg>` },
 
   { idx: 1, name: '仓鼠宝宝', minStreak: 3,
     bg: 'linear-gradient(135deg, #FFE6F0 0%, #FFB6D9 100%)',
     desc: '刚出生的小仓鼠, 软软的好可爱',
-    svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      ${_hamsterBase('#FFD8A8', '#FFF5E6', false)}
-      ${_hamsterEyes('#2D2D2D')}
+    svg: `<svg viewBox="0 0 60 75" xmlns="http://www.w3.org/2000/svg">
+      ${_hamsterBody('#FFD8A8', '#FFD8A8', '#FFF5E6', '#FFFAED', '#2D2D2D', '')}
     </svg>` },
 
   { idx: 2, name: '小仓鼠', minStreak: 7,
     bg: 'linear-gradient(135deg, #FFE066 0%, #FFB347 100%)',
     desc: '系上蝴蝶结, 会塞食物到腮帮子了',
-    svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      ${_hamsterBase('#F4B860', '#FFF5E6', false)}
-      ${_hamsterEyes('#2D2D2D')}
-      <path d="M14 8 L20 5 L22 11 L17 13 Z" fill="#FF6B9D" stroke="#C3447A" stroke-width="0.6"/>
-      <path d="M34 8 L28 5 L26 11 L31 13 Z" fill="#FF6B9D" stroke="#C3447A" stroke-width="0.6"/>
-      <circle cx="24" cy="10" r="2.2" fill="#C3447A"/>
+    svg: `<svg viewBox="0 0 60 75" xmlns="http://www.w3.org/2000/svg">
+      ${_hamsterBody('#F4B860', '#F4B860', '#FFF5E6', '#FFF8EC', '#2D2D2D', `
+        <path d="M19 10 L25 7 L27 15 L22 18 L17 15 Z" fill="#FF6B9D" stroke="#C3447A" stroke-width="0.5"/>
+        <path d="M41 10 L35 7 L33 15 L38 18 L43 15 Z" fill="#FF6B9D" stroke="#C3447A" stroke-width="0.5"/>
+        <circle cx="30" cy="12" r="3" fill="#C3447A"/>
+      `)}
     </svg>` },
 
   { idx: 3, name: '学习仓鼠', minStreak: 14,
     bg: 'linear-gradient(135deg, #B3E5FC 0%, #4ECDC4 100%)',
-    desc: '戴上眼镜, 很爱读书',
-    svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      ${_hamsterBase('#F4B860', '#FFF5E6', false)}
-      <circle cx="19" cy="24" r="1.4" fill="#2D2D2D"/>
-      <circle cx="29" cy="24" r="1.4" fill="#2D2D2D"/>
-      <circle cx="19" cy="24" r="3.6" fill="white" fill-opacity="0.25" stroke="#2D2D2D" stroke-width="1.3"/>
-      <circle cx="29" cy="24" r="3.6" fill="white" fill-opacity="0.25" stroke="#2D2D2D" stroke-width="1.3"/>
-      <line x1="22.6" y1="24" x2="25.4" y2="24" stroke="#2D2D2D" stroke-width="1.1"/>
-      <rect x="18" y="38" width="12" height="7" fill="#4A90E2" stroke="#2D2D2D" stroke-width="0.7" rx="0.5"/>
-      <rect x="18.6" y="38.6" width="10.8" height="5.8" fill="#FFF" stroke="none"/>
-      <line x1="24" y1="38" x2="24" y2="45" stroke="#2D2D2D" stroke-width="0.6"/>
-      <line x1="20" y1="40.5" x2="22.8" y2="40.5" stroke="#2D2D2D" stroke-width="0.4"/>
-      <line x1="25.2" y1="40.5" x2="28" y2="40.5" stroke="#2D2D2D" stroke-width="0.4"/>
+    desc: '戴上眼镜, 捧着书认真看, 好用功',
+    svg: `<svg viewBox="0 0 60 75" xmlns="http://www.w3.org/2000/svg">
+      ${_hamsterBody('#F4B860', '#F4B860', '#FFF5E6', '#FFF8EC', '#2D2D2D', `
+        <circle cx="22" cy="27" r="5.5" fill="none" stroke="#3A3A3A" stroke-width="1.4"/>
+        <circle cx="38" cy="27" r="5.5" fill="none" stroke="#3A3A3A" stroke-width="1.4"/>
+        <line x1="27.5" y1="27" x2="32.5" y2="27" stroke="#3A3A3A" stroke-width="1.2"/>
+        <rect x="14" y="59" width="32" height="15" fill="#4A90E2" stroke="#1A5BA0" stroke-width="0.8" rx="1"/>
+        <rect x="15.2" y="60" width="14" height="13" fill="white"/>
+        <rect x="30.8" y="60" width="14" height="13" fill="white"/>
+        <line x1="30" y1="59" x2="30" y2="74" stroke="#1A5BA0" stroke-width="0.9"/>
+        <line x1="17" y1="64" x2="28" y2="64" stroke="#888" stroke-width="0.4"/>
+        <line x1="17" y1="67" x2="28" y2="67" stroke="#888" stroke-width="0.4"/>
+        <line x1="32" y1="64" x2="43" y2="64" stroke="#888" stroke-width="0.4"/>
+        <line x1="32" y1="67" x2="43" y2="67" stroke="#888" stroke-width="0.4"/>
+      `)}
     </svg>` },
 
   { idx: 4, name: '智慧仓鼠', minStreak: 30,
     bg: 'linear-gradient(135deg, #E1BEE7 0%, #A788E0 100%)',
-    desc: '戴上学士帽, 智力满分',
-    svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      ${_hamsterBase('#F4B860', '#FFF5E6', false)}
-      ${_hamsterEyes('#2D2D2D')}
-      <polygon points="6,10 42,10 38,14 10,14" fill="#2D2D2D"/>
-      <rect x="11" y="9" width="26" height="2.5" fill="#1A1A1A" rx="0.4"/>
-      <rect x="22" y="6" width="4" height="4" fill="#2D2D2D"/>
-      <line x1="34" y1="10" x2="38" y2="16" stroke="#FFD700" stroke-width="0.9"/>
-      <circle cx="38" cy="16.5" r="2" fill="#FFD700" stroke="#B8860B" stroke-width="0.4"/>
-      <rect x="33" y="34" width="5" height="11" fill="#FFFAEC" stroke="#8B6F47" stroke-width="0.6" transform="rotate(15 35.5 39.5)"/>
-      <line x1="33" y1="36" x2="38" y2="36" stroke="#8B6F47" stroke-width="0.4" transform="rotate(15 35.5 39.5)"/>
-      <line x1="33" y1="39" x2="38" y2="39" stroke="#8B6F47" stroke-width="0.4" transform="rotate(15 35.5 39.5)"/>
+    desc: '戴上学士帽, 手持毕业证书, 智力满分',
+    svg: `<svg viewBox="0 0 60 75" xmlns="http://www.w3.org/2000/svg">
+      ${_hamsterBody('#F4B860', '#F4B860', '#FFF5E6', '#FFF8EC', '#2D2D2D', `
+        <polygon points="5,11 55,11 49,18 11,18" fill="#2D2D2D"/>
+        <rect x="5" y="9.5" width="50" height="3" fill="#1A1A1A" rx="0.5"/>
+        <rect x="27" y="4" width="6" height="7" fill="#2D2D2D"/>
+        <line x1="49" y1="11" x2="56" y2="23" stroke="#FFD700" stroke-width="1.3"/>
+        <circle cx="56" cy="24" r="3" fill="#FFD700" stroke="#8B6F00" stroke-width="0.5"/>
+        <rect x="40" y="59" width="10" height="14" fill="#FFF8DC" stroke="#8B6F47" stroke-width="0.7" rx="1" transform="rotate(10 45 66)"/>
+        <line x1="41" y1="64" x2="49" y2="62.5" stroke="#8B6F47" stroke-width="0.5"/>
+        <line x1="41" y1="67.5" x2="49" y2="66" stroke="#8B6F47" stroke-width="0.5"/>
+      `)}
     </svg>` },
 
   { idx: 5, name: '战神仓鼠', minStreak: 60,
     bg: 'linear-gradient(135deg, #FF9F45 0%, #FF5757 100%)',
     desc: '披上红色战袍, PSLE 战无不胜',
-    svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      <path d="M6 28 Q2 42 10 46 L38 46 Q46 42 42 28 Q40 36 24 36 Q8 36 6 28 Z" fill="#C13030" stroke="#7A1A1A" stroke-width="0.7"/>
-      <path d="M6 28 L24 32 L42 28 L40 30 L24 34 L8 30 Z" fill="#FFD700" opacity="0.7"/>
-      ${_hamsterBase('#E89060', '#FFE5C2', true)}
-      ${_hamsterEyes('#1A1A1A')}
-      <path d="M8 16 Q24 4 40 16 L40 19 Q24 14 8 19 Z" fill="#8B7355" stroke="#5D4A2D" stroke-width="0.8"/>
-      <path d="M8 16 Q24 4 40 16" fill="none" stroke="#FFD700" stroke-width="0.6"/>
-      <rect x="22" y="2" width="4" height="6" fill="#FFD700" stroke="#8B6F00" stroke-width="0.4"/>
-      <polygon points="22,2 26,2 24,-1" fill="#FF5757"/>
-      <path d="M14 22 L16 20 L17 23 Z" fill="#5D2D1D"/>
-      <path d="M34 22 L32 20 L31 23 Z" fill="#5D2D1D"/>
+    svg: `<svg viewBox="0 0 60 75" xmlns="http://www.w3.org/2000/svg">
+      <path d="M7 52 Q3 68 14 73 L46 73 Q57 68 53 52 Q50 64 38 65 L30 64 L22 65 Q10 64 7 52 Z" fill="#C13030" stroke="#7A1A1A" stroke-width="0.8"/>
+      <path d="M7 52 L30 57 L53 52" fill="none" stroke="#FFD700" stroke-width="0.9"/>
+      ${_hamsterBody('#E89060', '#E89060', '#FFE5C2', '#FFCF9A', '#1A1A1A', `
+        <path d="M6 26 Q30 13 54 26 L54 31 Q30 19 6 31 Z" fill="#8B7355" stroke="#5D4A2D" stroke-width="0.8"/>
+        <path d="M6 26 Q30 13 54 26" fill="none" stroke="#FFD700" stroke-width="0.6"/>
+        <rect x="25" y="3" width="10" height="5" fill="#FFD700" stroke="#8B6F00" stroke-width="0.5" rx="0.5"/>
+        <polygon points="30,1 27,4 33,4" fill="#FF5757"/>
+        <rect x="46" y="52" width="3" height="22" fill="#CCC" stroke="#888" stroke-width="0.6" rx="1" transform="rotate(15 47.5 63)"/>
+        <rect x="41" y="60" width="13" height="3" fill="#8B6F00" rx="0.5" transform="rotate(15 47.5 63)"/>
+        <rect x="44" y="49" width="7" height="5" fill="#FFD700" stroke="#8B6F00" stroke-width="0.5" rx="0.5" transform="rotate(15 47.5 52)"/>
+      `)}
     </svg>` },
 
   { idx: 6, name: '仓鼠王者', minStreak: 100,
     bg: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B6B 100%)',
     desc: 'PSLE 终极守护神兽 — 戴上王冠披上紫袍',
-    svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="24" cy="24" r="22" fill="none" stroke="#FFD700" stroke-width="1.2" opacity="0.55">
-        <animate attributeName="r" values="20;23;20" dur="2s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.7;0.3;0.7" dur="2s" repeatCount="indefinite"/>
+    svg: `<svg viewBox="0 0 60 75" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="30" cy="37" r="34" fill="none" stroke="#FFD700" stroke-width="1.5" opacity="0.4">
+        <animate attributeName="r" values="30;36;30" dur="2.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.6;0.15;0.6" dur="2.5s" repeatCount="indefinite"/>
       </circle>
-      <path d="M5 28 Q1 44 11 47 L37 47 Q47 44 43 28 Q42 38 32 39 L24 38 L16 39 Q6 38 5 28 Z" fill="#7B2CBF" stroke="#4D0F8B" stroke-width="0.7"/>
-      <path d="M5 28 L11 30 L24 32 L37 30 L43 28" fill="none" stroke="#FFD700" stroke-width="0.8"/>
-      <circle cx="13" cy="42" r="1.4" fill="#FFD700"/>
-      <circle cx="35" cy="42" r="1.4" fill="#FFD700"/>
-      ${_hamsterBase('#F4C140', '#FFF8DC', false)}
-      ${_hamsterEyes('#1A1A1A')}
-      <path d="M9 13 L14 4 L18 11 L24 3 L30 11 L34 4 L39 13 Z" fill="#FFD700" stroke="#8B6F00" stroke-width="0.7"/>
-      <rect x="9" y="13" width="30" height="2" fill="#FFA500" stroke="#8B6F00" stroke-width="0.4"/>
-      <circle cx="24" cy="9" r="1.8" fill="#FF1744" stroke="#8B0000" stroke-width="0.3"/>
-      <circle cx="14" cy="11" r="1.2" fill="#1A75FF" stroke="#003D99" stroke-width="0.3"/>
-      <circle cx="34" cy="11" r="1.2" fill="#00C853" stroke="#005728" stroke-width="0.3"/>
-      <circle cx="18" cy="11.5" r="0.6" fill="#FFF" opacity="0.8"/>
-      <circle cx="30" cy="11.5" r="0.6" fill="#FFF" opacity="0.8"/>
+      <path d="M7 52 Q3 68 14 73 L46 73 Q57 68 53 52 Q50 63 38 65 L30 64 L22 65 Q10 63 7 52 Z" fill="#7B2CBF" stroke="#4D0F8B" stroke-width="0.8"/>
+      <path d="M7 52 L30 57 L53 52" fill="none" stroke="#FFD700" stroke-width="0.9"/>
+      <circle cx="20" cy="64" r="1.8" fill="#FFD700"/>
+      <circle cx="40" cy="64" r="1.8" fill="#FFD700"/>
+      ${_hamsterBody('#F4C140', '#F4C140', '#FFF8DC', '#FFFAEF', '#1A1A1A', `
+        <path d="M7 12 L15 2 L22 12 L30 2 L38 12 L45 2 L53 12 Z" fill="#FFD700" stroke="#8B6F00" stroke-width="0.9"/>
+        <rect x="7" y="12" width="46" height="3.5" fill="#FFA500" stroke="#8B6F00" stroke-width="0.5"/>
+        <circle cx="30" cy="7" r="3" fill="#FF1744" stroke="#8B0000" stroke-width="0.4"/>
+        <circle cx="15" cy="11" r="2" fill="#1A75FF" stroke="#003D99" stroke-width="0.3"/>
+        <circle cx="45" cy="11" r="2" fill="#00C853" stroke="#005728" stroke-width="0.3"/>
+        <circle cx="22" cy="13" r="0.9" fill="white" opacity="0.8"/>
+        <circle cx="38" cy="13" r="0.9" fill="white" opacity="0.8"/>
+        <rect x="46" y="50" width="3.5" height="22" fill="#8B6F00" rx="1.2"/>
+        <circle cx="47.8" cy="48" r="5" fill="#FFD700" stroke="#8B6F00" stroke-width="0.6"/>
+        <circle cx="47.8" cy="48" r="2.5" fill="#FF1744"/>
+      `)}
     </svg>` }
 ];
 
-// v18.60: 金龙幼崽 (拿金龙后解锁的第二宠物, 跟仓鼠并存可切换)
-const GOLD_DRAGON_PET = {
-  idx: 'gd', name: '金龙幼崽', minStreak: 0,
-  bg: 'radial-gradient(ellipse at center, #FFF8E0 0%, #FFD700 60%, #FF8C00 100%)',
-  desc: '从金龙之卵孵化的幼龙伙伴, 跟你一起冲 PSLE',
+// v18.68: 命运高达 (连续打卡100天仓鼠满级后解锁的第二宠物)
+const GUNDAM_PET = {
+  idx: 'gundam', name: '命运高达', minStreak: 100,
+  bg: 'radial-gradient(ellipse at center, #0A1628 0%, #1A3A6B 60%, #CC2200 100%)',
+  desc: '连续百日苦练，从仓鼠王者觉醒的终极战神伙伴！展翅飞翔，PSLE 必胜！',
   svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="gdpGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#FFF3C4"/>
-        <stop offset="50%" stop-color="#FFD700"/>
-        <stop offset="100%" stop-color="#FF8C00"/>
-      </linearGradient>
-    </defs>
-    <ellipse cx="24" cy="30" rx="14" ry="11" fill="url(#gdpGrad)" stroke="#B8860B" stroke-width="1.2"/>
-    <ellipse cx="24" cy="20" rx="11" ry="9" fill="url(#gdpGrad)" stroke="#B8860B" stroke-width="1.2"/>
-    <path d="M 17 12 L 14 6 M 31 12 L 34 6" stroke="#DAA520" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="20" cy="20" r="2" fill="#FFF"/>
-    <circle cx="20" cy="20" r="1.2" fill="#000"/>
-    <circle cx="28" cy="20" r="2" fill="#FFF"/>
-    <circle cx="28" cy="20" r="1.2" fill="#000"/>
-    <ellipse cx="24" cy="24" rx="2" ry="1" fill="#FF8C00" opacity="0.8"/>
-    <path d="M 36 28 Q 44 22 42 32 L 36 30 Z" fill="#FFA500" opacity="0.9" stroke="#B8860B" stroke-width="0.8"/>
-    <path d="M 12 28 Q 4 22 6 32 L 12 30 Z" fill="#FFA500" opacity="0.9" stroke="#B8860B" stroke-width="0.8"/>
-    <path d="M 38 36 L 44 38 L 40 42 Z" fill="url(#gdpGrad)" stroke="#B8860B" stroke-width="0.8"/>
-    <circle cx="14" cy="14" r="1" fill="#FFD700">
-      <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="34" cy="16" r="1" fill="#FFA500">
-      <animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite" begin="0.5s"/>
-    </circle>
+    <!-- 左翼 -->
+    <path d="M24 20 L1 5 L4 14 L9 18 L7 28 L2 32 L24 26Z" fill="#CC2200" opacity="0.9"/>
+    <path d="M24 20 L3 8 L6 15 L11 18Z" fill="#FF4444" opacity="0.7"/>
+    <path d="M24 20 L2 6 L2.5 11 L8 15" fill="none" stroke="#111" stroke-width="1.5" opacity="0.6"/>
+    <!-- 右翼 (镜像) -->
+    <path d="M24 20 L47 5 L44 14 L39 18 L41 28 L46 32 L24 26Z" fill="#CC2200" opacity="0.9"/>
+    <path d="M24 20 L45 8 L42 15 L37 18Z" fill="#FF4444" opacity="0.7"/>
+    <path d="M24 20 L46 6 L45.5 11 L40 15" fill="none" stroke="#111" stroke-width="1.5" opacity="0.6"/>
+    <!-- 翼光粒子 -->
+    <circle cx="4" cy="8" r="1.2" fill="#FF6666"><animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite"/></circle>
+    <circle cx="44" cy="8" r="1.2" fill="#FF6666"><animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite" begin="0.7s"/></circle>
+    <circle cx="7" cy="26" r="0.8" fill="#FF8888"><animate attributeName="opacity" values="0;1;0" dur="2.2s" repeatCount="indefinite" begin="0.3s"/></circle>
+    <circle cx="41" cy="26" r="0.8" fill="#FF8888"><animate attributeName="opacity" values="0;1;0" dur="2.2s" repeatCount="indefinite" begin="1.1s"/></circle>
+    <!-- 机体胸甲 -->
+    <rect x="20.5" y="21" width="7" height="9" fill="#2255CC" stroke="#0A2266" stroke-width="0.8" rx="0.8"/>
+    <!-- 胸核心 (发光菱形) -->
+    <polygon points="24,22 26,24 24,26 22,24" fill="#00FFFF" opacity="0.9">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite"/>
+    </polygon>
+    <!-- 肩甲 -->
+    <rect x="17" y="21" width="4" height="5" fill="#1A44AA" stroke="#0A2266" stroke-width="0.6" rx="0.5"/>
+    <rect x="27" y="21" width="4" height="5" fill="#1A44AA" stroke="#0A2266" stroke-width="0.6" rx="0.5"/>
+    <!-- 头部 -->
+    <rect x="21.5" y="13" width="5" height="8" fill="#E8E8F4" stroke="#AAAACC" stroke-width="0.7" rx="1"/>
+    <!-- 眼部 visor -->
+    <rect x="22" y="15.5" width="4" height="2" fill="#00BBFF" rx="0.4">
+      <animate attributeName="fill" values="#00BBFF;#88EEFF;#00BBFF" dur="3s" repeatCount="indefinite"/>
+    </rect>
+    <!-- V字额角 -->
+    <polygon points="24,12 22.5,14 24,13.2 25.5,14" fill="#FFD700"/>
+    <!-- 腿部 -->
+    <rect x="21" y="30" width="3" height="9" fill="#1A44AA" stroke="#0A2266" stroke-width="0.6" rx="0.5"/>
+    <rect x="24" y="30" width="3" height="9" fill="#1A44AA" stroke="#0A2266" stroke-width="0.6" rx="0.5"/>
   </svg>`
 };
 function getCurrentPetForm(state) {
-  // v18.60: 如果拿了金龙 + 选了金龙宠物, 显示金龙幼崽
-  if (state.activePetType === 'gold_dragon' && state.dragonsUnlocked && state.dragonsUnlocked.gold) {
-    return GOLD_DRAGON_PET;
-  }
   const streak = (state.dailyStreak && state.dailyStreak.bestEver) || 0;
+  // v18.68: 连续100天仓鼠王者 → 解锁高达, 若选了高达模式则显示
+  if (state.activePetType === 'gundam' && streak >= 100) {
+    return GUNDAM_PET;
+  }
   let form = PET_FORMS[0];
   for (const f of PET_FORMS) if (streak >= f.minStreak) form = f;
   return form;
 }
-window.GOLD_DRAGON_PET = GOLD_DRAGON_PET;
+window.GUNDAM_PET = GUNDAM_PET;
 
 function feedPet(state) {
   if (!state.pet) state.pet = { name: '小蛋蛋', formIdx: 0, spawnedAt: Date.now(), feedCount: 0, happiness: 100, lastFedDate: null };
@@ -2255,18 +2284,18 @@ const KNOWLEDGE_TREE = {
       game: 'editing' }
   ],
   '➗ 数学': [
-    { id: 'math_basics', name: '四则运算', weeks: [1, 3], icon: '🔢',
-      desc: 'PSLE 高频陷阱: 运算顺序 (BODMAS) + 负数符号. AL 4-6 必看清括号.',
-      examples: ['12 - 4 + 3 = 11 (不是 5, 左→右)', '24 ÷ 6 × 2 = 8 (不是 2)', '20 - (8 - 3) ÷ 5 = 19 (括号优先)'],
-      pitfall: '别忽视符号变化 — "减去 -3" = "+3"', game: 'math' },
-    { id: 'math_fractions', name: '分数', weeks: [4, 7], icon: '½',
-      desc: 'PSLE 必考: 分数 of remainder (剩余的分数). AL 4-6 模型法画 bar diagram.',
-      examples: ['"花 1/3 后, 又花剩余的 1/2" → 剩 2/3, 再花 2/3×1/2 = 1/3, 总共 1/3+1/3 = 2/3 (不是 1/3+1/2)', '比较: 3/4 vs 5/6 → 通分 9/12 vs 10/12, 5/6 大', '混合运算: (1 - 2/5) × 30 = 3/5×30 = 18'],
-      pitfall: '"of remainder" 是剩下的分数, 不是原数 — 必画 bar', game: 'math' },
-    { id: 'math_decimals', name: '小数', weeks: [8, 10], icon: '0.5',
-      desc: 'PSLE 高频: 小数与分数互转 + 钱算法 ($X.YY) + 测量精确度.',
-      examples: ['$2.50 + $1.05 + $0.75 = $4.30 (对齐小数点)', '0.625 = 5/8 (常考)', 'Round to 1 d.p.: 4.85 → 4.9 (5 进位); 4.84 → 4.8'],
-      pitfall: 'Round 5 时 — PSLE 用"四舍五入" (5 进位), 不是 banker\'s rounding', game: 'math' },
+    { id: 'math_algebra', name: '代数方程', weeks: [1, 4], icon: '🔣',
+      desc: 'PSLE Paper 2 核心: 设未知数 x, 列方程解题. 2 个未知数 → 2 个方程联立 (代入/消元). 必写 "Let x = ..." 才拿 method marks.',
+      examples: ['设 x 只鸡 (2 腿), (8-x) 只牛 (4 腿): 2x + 4(8-x) = 26, 32-2x=26, x=3', '代入法: A+B=24, A=3B → 3B+B=24, B=6, A=18', 'PSLE 步骤: ①Let x=... ②列方程 ③解方程 ④答 (缺步扣分)'],
+      pitfall: '只写答案最多 1 分; 方程中括号展开必仔细: 4(8-x) = 32-4x 不是 32-x', game: 'math' },
+    { id: 'math_fraction_adv', name: '分数余数陷阱', weeks: [5, 8], icon: '🍕',
+      desc: 'PSLE 必考: fraction of remainder 多步链. "剩余的 1/3" ≠ 原数的 1/3 — 必画 bar model 标清基准.',
+      examples: ['"花 1/3, 再花剩余的 1/2, 最后剩 $60": 设总=$x; 余=2x/3; 再花=x/3; 剩=x/3=$60; x=$180', '验证: 180×1/3=60余120; 120×1/2=60余60 ✓', '3步链: 先花1/4 → 余3/4; "余下的1/3" = 3/4×1/3 = 1/4原数 (不是1/3!)'],
+      pitfall: '"of remainder" 以剩下为基准, 不是原数 — 直接算原数的 1/3 是高频大错', game: 'math' },
+    { id: 'math_vol_3d', name: '体积与容积', weeks: [9, 10], icon: '📦',
+      desc: 'PSLE 必考: 复合立体体积 + 单位换算. 圆柱必用 π=22/7 (不是3.14). 1L=1000cm³.',
+      examples: ['水缸 40×25×30 cm: V=30000cm³=30L (1L=1000cm³)', '圆柱 r=7cm, h=10cm: V=22/7×49×10=1540cm³', '复合立体: 拆分各形状 → 分别算 → 相加/相减'],
+      pitfall: 'PSLE 规定 π=22/7; 升与 cm³ 换算: 1L=1000cm³, 1mL=1cm³', game: 'unit' },
     { id: 'math_percent', name: '百分比', weeks: [11, 13], icon: '%',
       desc: 'PSLE 高频: 多步百分比 + GST + 反向找原值. AL 4-6 必明: 增加 20% 后再减 20% ≠ 还原.',
       examples: ['8 折后 $640 → 原价 $640 ÷ 0.8 = $800 (反向)', 'GST 9% 含税: 含税 ÷ 1.09 = 不含税', '$100 增 20% = $120, 再减 20% = $96 (不是 $100!)'],
@@ -2297,10 +2326,10 @@ const KNOWLEDGE_TREE = {
       pitfall: 'Paper 2 一道大题 4-5 分, 答错连扣全题', game: 'math' }
   ],
   '🇨🇳 华文': [
-    { id: 'ch_basic', name: '基础词汇', weeks: [1, 6], icon: '汉',
-      desc: 'PSLE 高华 200+ 高频成语 + 词语应用. AL 4-6 必避陷阱: 望文生义 (差强人意 ≠ 不满意) + 词性活用.',
-      examples: ['"差强人意" = 勉强令人满意 (褒, 不是不满意)', '"首当其冲" = 最先受冲击 (中性, 不是首先)', '"莘莘学子" = 众多学子 (复数, 用错为单数)', '"七月流火" = 天气转凉 (不是炎热)'],
-      pitfall: 'PSLE 高华成语题最坑: 望文生义/感情色彩/单复数',
+    { id: 'ch_idiom_adv', name: '成语辨析+病句', weeks: [1, 6], icon: '🈵',
+      desc: 'PSLE 高华 Paper 2 两大丢分项: ①成语误用 (望文生义/感情色彩/单复数) ②病句辨析 (成分缺失/搭配不当/语义重复/逻辑矛盾). AL1 必全覆盖.',
+      examples: ['望文生义: "差强人意"≠不满意 (实=勉强可以); "七月流火"≠炎热 (实=天凉)', '感情色彩: "处心积虑"=贬 (阴谋); "殚精竭虑"=褒 (尽心尽力). 不可互换!', '病句: "他的成绩和体育都很好" (搭配不当) → "他成绩优异, 体育出色"'],
+      pitfall: '成语选填: 先确认褒/贬/中性 → 再排除望文生义; 病句先找"是否能搭配"',
       game: 'vocab' },
     { id: 'ch_reading', name: '阅读理解', weeks: [7, 14], icon: '📖',
       desc: 'PSLE 高华阅读 = 长篇 300+ 字 + 古文/古诗 + 隐含含义题. AL 4-6 必练: 找中心句 + 推作者意图.',
@@ -2391,20 +2420,20 @@ const KNOWLEDGE_PRACTICE = {
   ],
 
   // === ➗ 数学 ===
-  math_basics: [
-    { q: '12 - 4 + 3 = ?', opts: ['5', '11', '15', '9'], ans: 1, explain: '左→右运算: 12-4=8, 8+3=11. 别误以为先算 4+3' },
-    { q: '24 ÷ 6 × 2 = ?', opts: ['2', '8', '24', '12'], ans: 1, explain: '左→右: 24÷6=4, 4×2=8. 不是 24÷(6×2)=2' },
-    { q: '20 - (8 - 3) ÷ 5 = ?', opts: ['3', '17', '19', '0'], ans: 2, explain: '括号优先: (8-3)=5, 5÷5=1, 20-1=19' }
+  math_algebra: [
+    { q: '解方程: 4x + 3 = 19', opts: ['x = 4', 'x = 3', 'x = 5', 'x = 22'], ans: 0, explain: '4x = 19-3 = 16, x = 4. PSLE 必写三步: Let x=... 列方程 解方程' },
+    { q: 'A + B = 24, A = 3B, 求 B?', opts: ['8', '6', '18', '3'], ans: 1, explain: '代入: 3B+B=24, 4B=24, B=6; A=18. 联立方程标准解法' },
+    { q: '为什么代数题必须写 "Let x = ..."?', opts: ['老师习惯', '有 working 才能拿 method marks', '无区别', '只是建议'], ans: 1, explain: 'PSLE 5分题: 答错但 working 对可拿 2-3 分; 只写答案最多 1 分' }
   ],
-  math_fractions: [
-    { q: '"花掉 1/3 后, 又花掉剩余的 1/2", 总共花了多少?', opts: ['1/2', '1/3 + 1/2 = 5/6', '1/3 + 1/3 = 2/3', '2/5'], ans: 2, explain: '剩余 = 1-1/3 = 2/3; 又花 2/3 × 1/2 = 1/3; 总共 1/3+1/3 = 2/3' },
-    { q: '比较 3/4 和 5/6 大小?', opts: ['3/4 大', '5/6 大', '相等', '不能比较'], ans: 1, explain: '通分: 9/12 vs 10/12, 5/6 > 3/4' },
-    { q: '(1 - 2/5) × 30 = ?', opts: ['18', '12', '6', '24'], ans: 0, explain: '先算括号: 1-2/5 = 3/5; 3/5 × 30 = 18' }
+  math_fraction_adv: [
+    { q: '小明有 $120, 花 1/3 后再花剩下的 1/4, 剩多少?', opts: ['$60', '$70', '$30', '$80'], ans: 0, explain: '余 $120×2/3=$80; 再花 $80×1/4=$20; 剩 $80-$20=$60' },
+    { q: '"花剩余的 1/3" vs "花总数的 1/3", 区别?', opts: ['一样', '剩余的 1/3 更小', '没有规律', '看题目决定'], ans: 1, explain: '已花1/4后剩3/4; 剩余的1/3=3/4×1/3=1/4原数 ≠ 原数的1/3. 必画 bar model!' },
+    { q: 'fraction of remainder 题最安全的解法?', opts: ['心算', '直接乘分数', '画 bar model 标清剩余', '估算'], ans: 2, explain: '必画 bar: 标出"已花"和"剩余"两部分, 以"剩余"为100%再算下一步' }
   ],
-  math_decimals: [
-    { q: '$2.50 + $1.05 + $0.75 = ?', opts: ['$3.30', '$4.30', '$4.50', '$3.80'], ans: 1, explain: '$2.50 + $1.05 = $3.55, + $0.75 = $4.30' },
-    { q: '0.625 = ? (分数)', opts: ['1/2', '5/8', '3/4', '7/8'], ans: 1, explain: '0.625 = 625/1000 = 5/8 (PSLE 高频, 必背)' },
-    { q: 'Round 4.85 to 1 d.p. = ?', opts: ['4.8', '4.85', '4.9', '5.0'], ans: 2, explain: '小数第 2 位 5 → 进位; 4.85 → 4.9' }
+  math_vol_3d: [
+    { q: '水缸 40cm×25cm×30cm, 注满水是几升?', opts: ['3 L', '30 L', '300 L', '3000 L'], ans: 1, explain: '40×25×30=30000cm³; 1L=1000cm³; 30000÷1000=30L' },
+    { q: '圆柱底面半径 7cm, 高 10cm, 体积? (π=22/7)', opts: ['440 cm³', '1540 cm³', '220 cm³', '770 cm³'], ans: 1, explain: '22/7 × 7² × 10 = 22/7 × 49 × 10 = 22×7×10 = 1540cm³' },
+    { q: '1 mL = ? cm³', opts: ['10', '100', '1', '0.1'], ans: 2, explain: '1mL=1cm³; 1L=1000mL=1000cm³. PSLE 体积题必知换算' }
   ],
   math_percent: [
     { q: '8 折后 $640, 原价多少?', opts: ['$512', '$700', '$800', '$640'], ans: 2, explain: '8 折 = 0.8; 原价 = $640 ÷ 0.8 = $800' },
@@ -2485,10 +2514,10 @@ const KNOWLEDGE_PRACTICE = {
   ],
 
   // === 🇨🇳 华文 ===
-  ch_basic: [
-    { q: '"差强人意" 的真正意思?', opts: ['让人不满意', '勉强令人满意', '差很多', '完美'], ans: 1, explain: '差强人意 = 勉强 OK (褒义), 不是不满意! 望文生义陷阱' },
-    { q: '"首当其冲" 用在?', opts: ['第一名', '最先受冲击', '主动出击', '冲在最前'], ans: 1, explain: '首当其冲 = 比喻最先受到冲击/灾难, 中性偏负, 不是"首先"' },
-    { q: '"莘莘学子" 用法?', opts: ['一个杰出学子', '众多学子', '莘莘种地', '辛苦的学子'], ans: 1, explain: 'Strict usage: 莘莘 = 众多, 必复数; 不能说 "他是一位莘莘学子"' }
+  ch_idiom_adv: [
+    { q: '"差强人意"的正确用法?', opts: ['表现差强人意让大家失望', '这次考试差强人意还算可接受', '表现实在差强人意太差了', '差强人意表示完美'], ans: 1, explain: '差强人意 = 勉强令人满意 (偏褒义). 望文生义误以为"很差"是最常见错误' },
+    { q: '以下哪个句子有病句?', opts: ['他学习很努力', '这本书非常有意思', '他的成绩和体育都很好', '她认真完成了作业'], ans: 2, explain: '"成绩和体育都很好" — 搭配不当; 成绩用"优异", 体育用"出色", 不能混搭' },
+    { q: '"处心积虑"的感情色彩是?', opts: ['褒义', '贬义', '中性', '看上下文'], ans: 1, explain: '处心积虑=贬义(蓄谋已久). 对应褒义: 殚精竭虑(尽心尽力). 感情色彩不可错用' }
   ],
   ch_reading: [
     { q: '"作者借此表达什么" 这种题?', opts: ['答原文表面', '推中心思想 + 自己话总结', '答字数最多的', '随便答'], ans: 1, explain: 'PSLE 高华推断题 = 不能照抄原文, 必用自己的话提炼升华' },

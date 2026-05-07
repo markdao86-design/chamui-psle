@@ -371,7 +371,11 @@ function renderDragonProgress() {
     </div>
 
     <div style="font-size:10px;color:var(--color-text-light);margin-top:6px;text-align:center">
-      🐲 = SGD 500 + 银龙骑士称号 + 10% buff &nbsp; · &nbsp; 🐉 = SGD 1500 + 金龙之王称号 + 20% buff + 第二宠物
+      🐲 = SGD 500 + 银龙骑士称号 + 10% buff &nbsp; · &nbsp; 🐉 = SGD 1500 + 金龙之王称号 + 20% buff
+    </div>
+    <div style="font-size:10px;color:var(--color-text-light);margin-top:4px;border-top:1px solid var(--color-border);padding-top:5px">
+      ⚡ <b>力量值</b> = 打卡 + 玩 mini-game 所得积分总量 &nbsp;|&nbsp; ✨ <b>智慧值</b> = 知识树⭐总数 (每节点最多3颗, 共35节点)<br>
+      🎮 <b>buff</b> = 解锁后每次 mini-game 答对额外增加对应百分比积分 &nbsp;|&nbsp; 🤖 连续打卡100天 → 解锁命运高达伙伴
     </div>
   `;
 
@@ -395,7 +399,7 @@ function renderDragonCeremony(type) {
     ? ['你征服了…', '105 个知识节点 ✨', '累积 10,000 积分 ⚡', '智慧 + 毅力 = 传说', `${dragonIcon} 金龙 · 觉醒!`]
     : ['你打卡坚持…', '累积 10,000 积分 ⚡', '银龙守护契约成立', `${dragonIcon} 银龙 · 觉醒!`];
   const buffsStr = isGold
-    ? '⚡ 永久 +20% mini-game 奖励<br>👑 称号 "金龙之王" 自动佩戴<br>🐉 第二宠物 "金龙幼崽" 解锁<br>✨ 主页金光主题永久激活<br>💰 SGD 1500 终极大奖兑现'
+    ? '⚡ 永久 +20% mini-game 奖励<br>👑 称号 "金龙之王" 自动佩戴<br>✨ 主页金光主题永久激活<br>💰 SGD 1500 终极大奖兑现<br>💡 另: 连续100天打卡 → 解锁命运高达伙伴'
     : '⚡ 永久 +10% mini-game 奖励<br>🛡 称号 "银龙骑士" 自动佩戴<br>💰 SGD 500 兑现';
 
   let modal = document.getElementById('dragonCeremonyModal');
@@ -1096,6 +1100,62 @@ function setActiveSkin(skinId) {
   showToast(`已换上 ${sk ? sk.name : skinId}!`, 'happy');
 }
 
+// ============ v18.66: 知识树穿插打卡任务 辅助函数 ============
+
+function _getTaskKtKey(taskText) {
+  if (!taskText) return null;
+  if (/^🔬|科学|SciLab/.test(taskText)) return '🔬 科学';
+  if (/^📖|^🎧|^✏️|^✍️|English|Grammar|Cloze|Vocab|Listen|Editing|Comprehension|Composition|作文|听力/.test(taskText)) return '📖 英语';
+  if (/^➗|数学|Math|单位换算|速算/.test(taskText)) return '➗ 数学';
+  if (/^🇨🇳|华文/.test(taskText)) return '🇨🇳 华文';
+  return null;
+}
+
+function _getActiveKtNode(ktKey, weekNum) {
+  const nodes = (window.KNOWLEDGE_TREE || {})[ktKey] || [];
+  const idx = nodes.findIndex(n => n.weeks && n.weeks[0] <= weekNum && weekNum <= n.weeks[1]);
+  return idx >= 0 ? { node: nodes[idx], idx } : null;
+}
+
+function _buildKtHintCard(node, subj, idx, st) {
+  const ks = st.knowledgeStars || {};
+  const entry = ks[node.id];
+  const stars = entry ? (entry.stars || 0) : 0;
+  const starsStr = stars > 0 ? ('★').repeat(stars) + ('☆').repeat(3 - stars) : '☆☆☆ 未练习';
+  const starColor = stars === 3 ? 'var(--color-success)' : stars > 0 ? 'var(--color-warn)' : 'var(--color-text-light)';
+  const hasPractice = window.getNodePractice && window.getNodePractice(node.id);
+  const practiceBtn = hasPractice
+    ? `<button class="btn btn-primary" onclick="event.stopPropagation(); openKnowledgePractice('${node.id}', '${escapeAttr(subj)}', ${idx})">📝 去练习</button>`
+    : '';
+  const descShort = node.desc ? node.desc.slice(0, 90) + (node.desc.length > 90 ? '…' : '') : '';
+  return `
+    <div class="kt-hint-card" data-ktid="${node.id}">
+      <div class="kt-hint-row" onclick="toggleKtHint(this)">
+        <span class="kt-hint-icon">${node.icon || '🌳'}</span>
+        <span class="kt-hint-name">本周知识点: <b>${escapeHtml(node.name)}</b></span>
+        <span class="kt-hint-stars" style="color:${starColor}">${starsStr}</span>
+        <span class="kt-hint-toggle">▼ 展开</span>
+      </div>
+      <div class="kt-hint-body" style="display:none">
+        ${node.pitfall ? `<div class="kt-hint-pitfall">⚠️ 易错: ${escapeHtml(node.pitfall)}</div>` : ''}
+        ${descShort ? `<div class="kt-hint-desc">${escapeHtml(descShort)}</div>` : ''}
+        <div class="kt-hint-actions">
+          <button class="btn btn-secondary" onclick="event.stopPropagation(); openKnowledgeNodeDetail('${escapeAttr(subj)}', ${idx})">📖 看讲解</button>
+          ${practiceBtn}
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleKtHint(el) {
+  const body = el.nextElementSibling;
+  const toggle = el.querySelector('.kt-hint-toggle');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  toggle.textContent = isOpen ? '▼ 展开' : '▲ 收起';
+}
+window.toggleKtHint = toggleKtHint;
+
 // ============ 打卡页 (v2 — 每日) ============
 function renderCheckinPage() {
   const week = state.currentWeek;
@@ -1182,6 +1242,7 @@ function renderCheckinPage() {
     if (selectedDay === 'Sun') {
       prefixRest = `<div class="rest-divider">${SUN_REST.BEFORE_AM}</div>`;
     }
+    const seenKtSubjects = new Set();  // v18.66: 每科只插一次知识树提醒
     slotsHtml = prefixRest + dayTasks.map(t => {
       const checked = getDailyCheck(state, week, selectedDay, t.slot);
       const hasPhoto = hasPhotoCached(week, selectedDay, t.slot);
@@ -1247,6 +1308,16 @@ function renderCheckinPage() {
           lastSection = curSection;
         }
       }
+      // v18.66: 知识树无痛提醒 — 每学科第一个任务后插入折叠卡片
+      const ktKey = _getTaskKtKey(t.task);
+      let ktHintHtml = '';
+      if (ktKey && !seenKtSubjects.has(ktKey)) {
+        const hit = _getActiveKtNode(ktKey, week);
+        if (hit) {
+          seenKtSubjects.add(ktKey);
+          ktHintHtml = _buildKtHintCard(hit.node, ktKey, hit.idx, state);
+        }
+      }
       return sectionHeader + `
         <div class="checkin-item ${checked ? 'checked' : ''} ${isKey ? 'key-slot' : ''}" data-slot="${t.slot}"
              onclick="toggleDailyCheck(${week}, '${selectedDay}', '${t.slot}', event)">
@@ -1268,7 +1339,7 @@ function renderCheckinPage() {
           ${photoBtn}
           <div class="checkin-points">+${pts}</div>
         </div>
-      `;
+      ` + ktHintHtml;
     }).join('');
     // Day combo banner
     if (allDoneToday) {
@@ -2104,26 +2175,34 @@ function renderPetWidget() {
   const isSad = happy < 30;
   const inAshes = window.isStreakInAshes && window.isStreakInAshes(state);
   w.style.background = (isSad || inAshes) ? '#E8E8E8' : (form.bg || 'white');
-  // v18.60: 拿金龙后显示宠物切换按钮
-  const goldUnlocked = !!(state.dragonsUnlocked && state.dragonsUnlocked.gold);
-  const isGoldPet = state.activePetType === 'gold_dragon';
-  const switchBtn = goldUnlocked
-    ? `<button onclick="event.stopPropagation(); switchPet()" style="position:absolute;top:2px;right:2px;font-size:10px;padding:2px 6px;background:rgba(255,215,0,0.9);border:1px solid #DAA520;border-radius:8px;cursor:pointer;font-weight:700;color:#7A5C00" title="切换宠物 (仓鼠 ↔ 金龙)">${isGoldPet ? '🐹' : '🐉'}</button>`
+  // v18.68: 连续100天解锁高达宠物切换按钮
+  const streak = (state.dailyStreak && state.dailyStreak.bestEver) || 0;
+  const gundamUnlocked = streak >= 100;
+  const isGundam = state.activePetType === 'gundam';
+  const switchBtn = gundamUnlocked
+    ? `<button onclick="event.stopPropagation(); switchPet()" style="position:absolute;top:2px;right:2px;font-size:10px;padding:2px 6px;background:rgba(0,100,200,0.85);border:1px solid #003388;border-radius:8px;cursor:pointer;font-weight:700;color:#FFF" title="切换宠物 (仓鼠 ↔ 高达)">${isGundam ? '🐹' : '🤖'}</button>`
     : '';
+  // v18.68: 情绪动画类
+  w.classList.remove('pet-happy', 'pet-sad', 'pet-gundam');
+  if (isGundam) w.classList.add('pet-gundam');
+  else if (isSad || inAshes) w.classList.add('pet-sad');
+  else if (happy >= 70) w.classList.add('pet-happy');
   w.style.position = 'relative';
-  w.innerHTML = `<div class="pet-svg-wrap ${isSad || inAshes ? 'pet-sad' : ''}">${form.svg}</div>${switchBtn}`;
+  w.innerHTML = `<div class="pet-svg-wrap">${form.svg}</div>${switchBtn}`;
   w.classList.toggle('pet-king', form.idx >= 6);
   w.classList.toggle('pet-warrior', form.idx === 5);
   w.setAttribute('data-name', `${state.pet.name || '球球'} · ${form.name} ${isSad ? '😢' : ''}`);
   w.title = `${state.pet.name || '球球'} (${form.name})\n心情 ${happy}/100\n点击查看详情/改名`;
   w.onclick = openPetModal;
 }
-// v18.60: 切换宠物 (仓鼠 / 金龙幼崽)
+// v18.68: 切换宠物 (仓鼠 / 命运高达)
 function switchPet() {
-  state.activePetType = (state.activePetType === 'gold_dragon') ? 'hamster' : 'gold_dragon';
+  const streak = (state.dailyStreak && state.dailyStreak.bestEver) || 0;
+  if (streak < 100) { showToast('🤖 连续打卡100天解锁命运高达!', 'info'); return; }
+  state.activePetType = (state.activePetType === 'gundam') ? 'hamster' : 'gundam';
   saveState(state);
   renderAll();
-  showToast(state.activePetType === 'gold_dragon' ? '🐉 切到金龙幼崽' : '🐹 切到仓鼠伙伴', 'happy');
+  showToast(state.activePetType === 'gundam' ? '🤖 切到命运高达' : '🐹 切到仓鼠伙伴', 'happy');
 }
 window.switchPet = switchPet;
 
@@ -4747,85 +4826,332 @@ function renderHistoryPage() {
 }
 
 // v18.43: PSLE 能力分析 (取代旧"分数 = app 积分"思路)
+// v18.65: 全面重构 — 5 板块: AL总览 / 游戏明细 / 知识树 / 错题分析 / 改进计划
+
+const _GAME_LABELS = {
+  grammar: '✏️ Grammar',  cloze: '📝 Cloze',   vocab: '📚 Vocab',
+  listen:  '🎧 Listen',   editing: '✍️ Editing',
+  math:    '➗ 数学速算',  unit:   '📐 单位换算',
+  scilab:  '🧪 SciLab'
+};
+const _SUBJ_GAME_ORDER = {
+  '英语': ['editing', 'cloze', 'grammar', 'vocab', 'listen'],
+  '数学': ['math', 'unit'],
+  '科学': ['scilab'],
+  '华文': []
+};
+const _SUBJ_ICONS = { '英语': '📖', '数学': '➗', '科学': '🔬', '华文': '🇨🇳' };
+// 英语排首位（最大缺口）
+const _SUBJ_ORDER = ['英语', '数学', '科学', '华文'];
+
+function _abBarColor(acc) {
+  if (acc === null || acc === undefined) return 'ab-bar-empty';
+  return acc >= 75 ? 'ab-bar-good' : acc >= 55 ? 'ab-bar-mid' : 'ab-bar-weak';
+}
+function _abRowClass(acc) {
+  if (acc === null || acc === undefined) return 'ab-empty';
+  return acc >= 75 ? 'ab-good' : acc >= 55 ? 'ab-mid' : 'ab-weak';
+}
+function _abTrend(recent) {
+  if (!recent || recent.length < 2) return '<span class="ab-trend" style="opacity:.3">→</span>';
+  const last = recent[recent.length - 1].accuracy;
+  const prev = recent[recent.length - 2].accuracy;
+  if (last > prev + 0.03) return '<span class="ab-trend" style="color:var(--color-success)">↑</span>';
+  if (last < prev - 0.03) return '<span class="ab-trend" style="color:var(--color-danger)">↓</span>';
+  return '<span class="ab-trend" style="color:var(--color-text-light)">→</span>';
+}
+function _accToALShort(acc) {
+  if (acc === null || acc === undefined) return '?';
+  if (acc >= 90) return 'AL1'; if (acc >= 82) return 'AL2'; if (acc >= 74) return 'AL3';
+  if (acc >= 65) return 'AL4'; if (acc >= 55) return 'AL5'; if (acc >= 44) return 'AL6';
+  return 'AL7+';
+}
+
+// 板块1: AL 预测横向条
+function _renderAbilityOverview(state) {
+  const bySubj = window.getSubjectAccuracy ? window.getSubjectAccuracy(state) : {};
+  const stats = state.gameStats || {};
+  const rows = _SUBJ_ORDER.map(s => {
+    const a = bySubj[s];
+    const acc = a ? a.accuracy : null;
+    const pct = acc !== null ? acc : 0;
+    const al = _accToALShort(acc);
+    const rc = _abRowClass(acc);
+    const bc = _abBarColor(acc);
+    // 聚合该科所有 game 的 recent 来算趋势
+    const games = _SUBJ_GAME_ORDER[s] || [];
+    const allRecent = games.flatMap(g => (stats[g] && stats[g].recent) || []);
+    const trend = _abTrend(allRecent.length > 0 ? allRecent.slice(-2) : []);
+    const label = acc !== null
+      ? `<span style="font-weight:700">${acc}%</span> <small style="color:var(--color-text-light)">${a.correct}/${a.total} · ${a.runs}局</small>`
+      : '<span style="color:var(--color-text-light);font-size:12px">暂无数据</span>';
+    return `
+      <div class="ab-subj-row ${rc}">
+        <div class="ab-subj-name">${_SUBJ_ICONS[s]} ${s}</div>
+        <div class="ab-subj-al">${al}</div>
+        <div class="ab-subj-bar-wrap"><div class="ab-subj-bar ${bc}" style="width:${pct}%"></div></div>
+        <div class="ab-subj-pct">${label}</div>
+        ${trend}
+      </div>`;
+  }).join('');
+  return `<div class="ab-section">
+    <div class="ab-section-title">🎯 各科 AL 预测</div>
+    ${rows}
+    <div style="font-size:11px;color:var(--color-text-light);margin-top:4px">AL1=90%+ · AL2=82%+ · AL4=65%+ · AL6=44%+（基于 mini-game 实战）</div>
+  </div>`;
+}
+
+// 板块2: 每科游戏正确率明细
+function _renderGameBreakdown(state) {
+  const stats = state.gameStats || {};
+  const sections = _SUBJ_ORDER.map(s => {
+    const games = _SUBJ_GAME_ORDER[s] || [];
+    if (games.length === 0) return '';
+    const bySubj = window.getSubjectAccuracy ? window.getSubjectAccuracy(state) : {};
+    const sa = bySubj[s];
+    const summaryTag = sa
+      ? `<span style="font-size:12px;font-weight:700;color:${sa.accuracy>=75?'var(--color-success)':sa.accuracy>=55?'var(--color-warn)':'var(--color-danger)'}">${sa.accuracy}%</span>`
+      : '<span style="font-size:12px;color:var(--color-text-light)">暂无数据</span>';
+    const rows = games.map(g => {
+      const gs = stats[g];
+      const recent = gs ? gs.recent : [];
+      if (recent.length === 0) {
+        return `<div class="ab-game-row">
+          <div class="ab-game-name">${_GAME_LABELS[g] || g}</div>
+          <div class="ab-game-bar-wrap"><div class="ab-game-bar ab-bar-empty" style="width:0%"></div></div>
+          <div class="ab-game-pct" style="color:var(--color-text-light)">—</div>
+          <div class="ab-game-detail ab-no-data">尚无数据</div>
+          <div class="ab-game-trend"></div>
+        </div>`;
+      }
+      const correct = recent.reduce((s, r) => s + r.correct, 0);
+      const total = recent.reduce((s, r) => s + r.total, 0);
+      const acc = total > 0 ? Math.round(correct / total * 100) : 0;
+      const bc = _abBarColor(acc);
+      const pctColor = acc >= 75 ? 'var(--color-success)' : acc >= 55 ? 'var(--color-warn)' : 'var(--color-danger)';
+      const trend = _abTrend(recent);
+      const warnTag = acc < 55 ? ' <span style="color:var(--color-danger);font-size:11px">⚠重点弱项</span>' : acc < 70 ? ' <span style="color:var(--color-warn);font-size:11px">需提升</span>' : '';
+      return `<div class="ab-game-row">
+        <div class="ab-game-name">${_GAME_LABELS[g] || g}${warnTag}</div>
+        <div class="ab-game-bar-wrap"><div class="ab-game-bar ${bc}" style="width:${acc}%"></div></div>
+        <div class="ab-game-pct" style="color:${pctColor}">${acc}%</div>
+        <div class="ab-game-detail">${correct}/${total} · ${recent.length}局</div>
+        ${trend}
+      </div>`;
+    }).join('');
+    return `<div class="ab-game-group">
+      <div class="ab-game-header">
+        <span>${_SUBJ_ICONS[s]} ${s}</span>${summaryTag}
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
+  return `<div class="ab-section">
+    <div class="ab-section-title">📊 各游戏正确率明细</div>
+    ${sections || '<div class="ab-empty-hint">📭 还没有 mini-game 数据，先玩 1 局解锁</div>'}
+  </div>`;
+}
+
+// 板块3: 知识树各科⭐进度
+function _renderKnowledgeTreeSummary(state) {
+  const ks = state.knowledgeStars || {};
+  const ke = state.knowledgeExplored || {};
+  const cw = state.currentWeek || 1;
+  const kt = window.KNOWLEDGE_TREE;
+  if (!kt) return '';
+  const subjOrder = ['🔬 科学', '📖 英语', '➗ 数学', '🇨🇳 华文'];
+  // 匹配 KNOWLEDGE_TREE 的 key 前缀
+  const subjMap = { '🔬 科学': '科学', '📖 英语': '英语', '➗ 数学': '数学', '🇨🇳 华文': '华文' };
+  const blocks = Object.keys(kt).map(ktKey => {
+    const nodes = kt[ktKey];
+    if (!nodes || nodes.length === 0) return '';
+    let totalStars = 0, maxStars = 0, mastered = 0;
+    const nodeRows = nodes.map(n => {
+      const isUnlocked = !n.weeks || n.weeks[0] <= cw;
+      const entry = ks[n.id];
+      const stars = entry ? (entry.stars || 0) : 0;
+      const bestScore = entry ? (entry.bestScore || 0) : 0;
+      const attempts = entry ? (entry.attempts || 0) : 0;
+      const explored = !!ke[n.id];
+      if (isUnlocked) { totalStars += stars; maxStars += 3; if (stars === 3) mastered++; }
+      const starStr = isUnlocked
+        ? ('★').repeat(stars) + ('☆').repeat(3 - stars)
+        : '🔒';
+      const starColor = stars === 3 ? 'var(--color-success)' : stars > 0 ? 'var(--color-warn)' : 'var(--color-text-light)';
+      const statusTag = !isUnlocked ? '<span class="ab-kt-status" style="color:var(--color-text-light)">待解锁</span>'
+        : stars === 3 ? '<span class="ab-kt-status" style="color:var(--color-success)">已掌握</span>'
+        : explored && stars > 0 ? '<span class="ab-kt-status" style="color:var(--color-warn)">练习中</span>'
+        : explored ? '<span class="ab-kt-status" style="color:var(--color-accent)">已探索</span>'
+        : '<span class="ab-kt-status" style="color:var(--color-text-light)">未开始</span>';
+      const scoreText = isUnlocked && attempts > 0 ? `最佳 ${bestScore}/3 · ${attempts}次` : '';
+      const lockedClass = isUnlocked ? '' : 'ab-kt-locked';
+      return `<div class="ab-kt-node ${lockedClass}">
+        <div class="ab-kt-stars" style="color:${starColor}">${starStr}</div>
+        <div class="ab-kt-name">${n.icon || ''} ${n.name}</div>
+        <div class="ab-kt-score">${scoreText}</div>
+        ${statusTag}
+      </div>`;
+    }).join('');
+    const pct = maxStars > 0 ? Math.round(totalStars / maxStars * 100) : 0;
+    const unlockedTotal = nodes.filter(n => !n.weeks || n.weeks[0] <= cw).length;
+    return `<div class="ab-kt-subject">
+      <div class="ab-kt-header">
+        <span>${ktKey}</span>
+        <span style="font-size:12px;color:var(--color-text-light)">${mastered}/${unlockedTotal} 已掌握 · ⭐${totalStars}/${maxStars} · ${pct}%</span>
+      </div>
+      ${nodeRows}
+    </div>`;
+  }).join('');
+  return `<div class="ab-section">
+    <div class="ab-section-title">🌳 知识树⭐达成情况</div>
+    ${blocks}
+  </div>`;
+}
+
+// 板块4: 错题本归类分析
+function _renderErrorBankAnalysis(state) {
+  const errors = state.wrongAnswers || [];
+  if (errors.length === 0) {
+    return `<div class="ab-section">
+      <div class="ab-section-title">📚 错题本分析</div>
+      <div class="ab-empty-hint">🎉 错题本为空——保持！答错的题会自动收录</div>
+    </div>`;
+  }
+  // 按 gameKey 分组
+  const byGame = {};
+  errors.forEach(w => {
+    const g = w.gameKey || '其他';
+    if (!byGame[g]) byGame[g] = { count: 0, items: [], retries: 0 };
+    byGame[g].count++;
+    byGame[g].items.push(w);
+    byGame[g].retries += (w.retries || 0);
+  });
+  const maxCount = Math.max(...Object.values(byGame).map(x => x.count));
+  const sorted = Object.keys(byGame).sort((a, b) => byGame[b].count - byGame[a].count);
+  const bars = sorted.map(g => {
+    const d = byGame[g];
+    const pct = Math.round(d.count / maxCount * 100);
+    const label = _GAME_LABELS[g] || g;
+    const pctOfTotal = Math.round(d.count / errors.length * 100);
+    return `<div class="ab-err-bar-row">
+      <div class="ab-err-game">${label}</div>
+      <div class="ab-err-bar-wrap"><div class="ab-err-bar" style="width:${pct}%"></div></div>
+      <div class="ab-err-cnt">${d.count}题 <span style="color:var(--color-text-light)">(${pctOfTotal}%)</span></div>
+    </div>`;
+  }).join('');
+  // 按知识树节点再聚合
+  const byNode = {};
+  errors.forEach(w => {
+    if (w.nodeId) { byNode[w.nodeId] = (byNode[w.nodeId] || 0) + 1; }
+  });
+  const kt = window.KNOWLEDGE_TREE;
+  const nodeNames = {};
+  if (kt) Object.values(kt).forEach(nodes => nodes.forEach(n => { nodeNames[n.id] = n.name; }));
+  const topNodes = Object.keys(byNode).sort((a, b) => byNode[b] - byNode[a]).slice(0, 3);
+  const nodeHtml = topNodes.length > 0
+    ? `<div style="margin-top:8px;font-size:12px;color:var(--color-text-light)">
+        💡 知识点薄弱: ${topNodes.map(id => `<b>${nodeNames[id] || id}</b>(${byNode[id]}题)`).join(' · ')}
+       </div>` : '';
+  return `<div class="ab-section">
+    <div class="ab-section-title">📚 错题本 — 共 ${errors.length} 题</div>
+    <div style="background:var(--color-card);border-radius:10px;padding:8px 0">${bars}</div>
+    ${nodeHtml}
+  </div>`;
+}
+
+// 板块5: 改进建议 + 下周计划（数据驱动）
+function _renderImprovementPlan(state) {
+  const stats = state.gameStats || {};
+  const errors = state.wrongAnswers || [];
+  const bySubj = window.getSubjectAccuracy ? window.getSubjectAccuracy(state) : {};
+  const week = state.currentWeek || 1;
+
+  // 找出所有游戏正确率，排序
+  const gameAccs = [];
+  Object.keys(_GAME_LABELS).forEach(g => {
+    const gs = stats[g];
+    if (!gs || !gs.recent || gs.recent.length === 0) return;
+    const recent = gs.recent;
+    const correct = recent.reduce((s, r) => s + r.correct, 0);
+    const total = recent.reduce((s, r) => s + r.total, 0);
+    const acc = total > 0 ? Math.round(correct / total * 100) : 0;
+    const errCnt = errors.filter(w => w.gameKey === g).length;
+    gameAccs.push({ g, acc, runs: recent.length, errCnt, subj: window.SUBJECT_OF_GAME ? window.SUBJECT_OF_GAME[g] : '?' });
+  });
+  gameAccs.sort((a, b) => a.acc - b.acc);  // 正确率最低排前
+
+  // 找出知识树空缺
+  const ks = state.knowledgeStars || {};
+  const ke = state.knowledgeExplored || {};
+  const kt = window.KNOWLEDGE_TREE;
+  let unstarted = 0, practicing = 0;
+  if (kt) {
+    Object.values(kt).forEach(nodes => nodes.forEach(n => {
+      if (!n.weeks || n.weeks[0] <= week) {
+        const stars = (ks[n.id] && ks[n.id].stars) || 0;
+        if (!ke[n.id]) unstarted++;
+        else if (stars < 3) practicing++;
+      }
+    }));
+  }
+
+  if (gameAccs.length === 0) {
+    return `<div class="ab-section">
+      <div class="ab-section-title">🎯 改进建议</div>
+      <div class="ab-empty-hint">📭 先玩几局 mini-game，系统生成专属建议</div>
+    </div>`;
+  }
+
+  const items = [];
+  // 优先级 1: 最弱游戏（正确率 < 60%）
+  const weakGames = gameAccs.filter(x => x.acc < 60).slice(0, 2);
+  weakGames.forEach(x => {
+    const errText = x.errCnt > 0 ? `错题本有 ${x.errCnt} 题待复习` : '';
+    items.push({ icon: '🔴', title: `优先攻: ${_GAME_LABELS[x.g] || x.g} — 正确率 ${x.acc}%（最弱）`,
+      body: `每天做 1 局，目标: 连续 3 局 ≥65%。${errText ? '<br>→ ' + errText : ''}` });
+  });
+  // 优先级 2: 接近目标（60-72%）
+  const midGames = gameAccs.filter(x => x.acc >= 60 && x.acc < 73).slice(0, 2);
+  midGames.forEach(x => {
+    items.push({ icon: '🟡', title: `巩固: ${_GAME_LABELS[x.g] || x.g} — ${x.acc}%（距目标 73% 还差 ${73 - x.acc}%）`,
+      body: `隔天做 1 局，重点攻${x.subj}专题知识点。` });
+  });
+  // 优先级 3: 维持优势
+  const strongSubjs = Object.keys(bySubj).filter(s => bySubj[s].accuracy >= 80);
+  if (strongSubjs.length > 0) {
+    items.push({ icon: '🟢', title: `维持: ${strongSubjs.join(' / ')} — 已达 AL4 目标区`,
+      body: '每周 2 局保持手感即可，把时间投入弱项。' });
+  }
+  // 知识树提示
+  if (unstarted > 0 || practicing > 0) {
+    items.push({ icon: '🌳', title: `知识树: ${unstarted} 个节点未开始，${practicing} 个练习中`,
+      body: `W${week} 优先解锁与当前弱项同主题的节点，看讲解 + 做练习冲⭐。` });
+  }
+
+  const html = items.map(it => `
+    <div class="ab-plan-item">
+      <div class="ab-plan-icon">${it.icon}</div>
+      <div class="ab-plan-body">
+        <div class="ab-plan-title">${it.title}</div>
+        <div>${it.body}</div>
+      </div>
+    </div>`).join('');
+
+  return `<div class="ab-section">
+    <div class="ab-section-title">🎯 下周提升计划（数据驱动）</div>
+    ${html}
+  </div>`;
+}
+
 function renderPsleAbilityCard() {
   const el = document.getElementById('psleAbilityContent');
   if (!el) return;
-  const subjAcc = window.getSubjectAccuracy ? window.getSubjectAccuracy(state) : {};
-  const weakList = window.findWeakSubjects ? window.findWeakSubjects(state) : [];
-  const weakMap = window.WEAK_KNOWLEDGE_MAP || {};
-
-  // PSLE AL 预测: 按 mini-game 正确率粗估 (>85%=AL4, 70-85%=AL5, 55-70%=AL6, 40-55%=AL7, <40%=AL8)
-  const accToAL = (acc) => {
-    if (acc === null) return { al: '?', desc: '玩 mini-game 解锁' };
-    if (acc >= 85) return { al: 'AL 4', desc: '顶级 5%' };
-    if (acc >= 70) return { al: 'AL 5', desc: '顶级 15%' };
-    if (acc >= 55) return { al: 'AL 6', desc: '良好' };
-    if (acc >= 40) return { al: 'AL 7', desc: '中等' };
-    return { al: 'AL 8+', desc: '需要重点提升' };
-  };
-  const SUBJ_ICONS = { '数学': '➗', '英语': '📖', '科学': '🔬', '华文': '🇨🇳' };
-  const ALL_SUBJ = ['数学', '英语', '科学', '华文'];
-  const alGrid = ALL_SUBJ.map(s => {
-    const a = subjAcc[s];
-    const acc = a ? a.accuracy : null;
-    const { al, desc } = accToAL(acc);
-    const colorClass = acc === null ? 'pa-empty' : (acc >= 70 ? 'pa-good' : acc >= 55 ? 'pa-mid' : 'pa-weak');
-    return `
-      <div class="pa-subject ${colorClass}">
-        <div class="pa-subj-icon">${SUBJ_ICONS[s]}</div>
-        <div class="pa-subj-name">${s}</div>
-        <div class="pa-subj-al">${al}</div>
-        <div class="pa-subj-acc">${a ? a.accuracy + '% (' + a.correct + '/' + a.total + ')' : '尚无数据'}</div>
-        <div class="pa-subj-desc">${desc}</div>
-      </div>`;
-  }).join('');
-
-  const accSummary = Object.keys(subjAcc).length === 0
-    ? '<div class="acc-empty">📭 还没有 mini-game 数据 — 玩 1 局让系统了解你, AL 预测会更准</div>'
-    : `<div class="acc-grid">
-        ${Object.keys(subjAcc).map(s => {
-          const a = subjAcc[s];
-          const colorVar = a.accuracy >= 80 ? 'var(--color-secondary)' : a.accuracy >= 60 ? 'var(--color-accent)' : 'var(--color-danger)';
-          return `<div class="acc-pill" style="border-color:${colorVar}"><b>${s}</b> ${a.accuracy}% <small>(${a.correct}/${a.total})</small></div>`;
-        }).join('')}
-       </div>`;
-  const weakHtml = weakList.length === 0
-    ? (Object.keys(subjAcc).length > 0 ? '<div class="weak-none">🎉 各科正确率都 ≥70%, 距 AL 4-6 目标已很近!</div>' : '')
-    : weakList.map(subj => {
-        const data = weakMap[subj];
-        if (!data) return '';
-        const acc = subjAcc[subj];
-        return `
-          <div class="weak-card" style="border-left-color:${data.color}">
-            <div class="weak-header">⚠️ ${subj} 正确率 <b>${acc.accuracy}%</b> <small>(${acc.correct}/${acc.total})</small> · 距 AL 4-6 还差 <b>${Math.max(0, 70 - acc.accuracy)}%</b></div>
-            <div class="weak-mindmap">${_renderMindmap(subj, data)}</div>
-            <div class="weak-topics">
-              ${data.topics.map(t => `
-                <div class="weak-topic">
-                  <div class="wt-name">📚 ${escapeHtml(t.name)}</div>
-                  <div class="wt-why">${escapeHtml(t.why)}</div>
-                  <div class="wt-drill">💪 ${escapeHtml(t.drill)}</div>
-                </div>`).join('')}
-            </div>
-          </div>`;
-      }).join('');
-  const planHtml = weakList.length === 0
-    ? (Object.keys(subjAcc).length > 0 ? '<div class="next-plan">📅 <b>下周计划</b>: 维持节奏, 挑战 PSLE+ 难度 mini-game 冲 AL 4</div>' : '')
-    : `<div class="next-plan">
-         📅 <b>下周提升计划 — 冲 AL 4-6 目标</b><br>
-         1. 重点: ${weakList.join(' + ')} → 每天玩 1 局对应 mini-game 提正确率<br>
-         2. 知识树点对应弱项节点看讲解 + 一键去练习<br>
-         3. 周日复盘看本周漏题 + 做 1 套 PSLE 真题模拟
-       </div>`;
-
-  el.innerHTML = `
-    <div class="pa-grid">${alGrid}</div>
-    <div class="pa-divider"></div>
-    <div class="subj-section-title" style="margin-top:12px">📊 学科正确率 (基于 mini-game 实战数据)</div>
-    ${accSummary}
-    ${weakHtml}
-    ${planHtml}
-  `;
+  el.innerHTML =
+    _renderAbilityOverview(state) +
+    _renderGameBreakdown(state) +
+    _renderKnowledgeTreeSummary(state) +
+    _renderErrorBankAnalysis(state) +
+    _renderImprovementPlan(state);
 }
 
 // ============ 各科分数追踪(v4 历史页新增)============
