@@ -2241,12 +2241,33 @@ function petCelebrate(message) {
 }
 
 // 周期性鼓励 — 根据状态选合适的话
+const _COLD_JOKES = [
+  '为什么数学书那么悲伤？因为它有太多"问题"了 😔',
+  '为什么7很怕8？因为"7 8 9"(7 ate 9)! 😱',
+  '什么东西越洗越脏？答：水！🥲',
+  '我昨晚梦到自己PSLE考了满分…闹钟一响全没了 ⏰',
+  '铅笔为什么最适合做作业？因为做错了可以"消除"烦恼！✏️',
+  '我问仓鼠你怎么那么圆？它说：每次你答对我就偷吃一粒瓜子 🌰',
+  '为什么植物不用考试？因为它们已经"结果"了！🍎',
+  '考试时脑子里有答案，可惜在另一个平行宇宙的我脑子里 🧠',
+  '老师说举手可以加分。我把手举得太高，手臂酸了，还是不知道答案 😅',
+  '书和电视有什么区别？书让你动脑，电视让你动遥控器 📺',
+  '科学家说宇宙在膨胀。难怪书包越来越重，因为它也在"膨胀" 🎒',
+  '我很擅长数学。一加一等于二，轻而易举。其他题嘛……再说吧 😐',
+  '为什么小仓鼠不怕PSLE？因为它懂一个秘诀：每天多存一点，一百天就够了 🌟',
+  '问：什么时候鱼最幸运？答：被钓上来那天，因为它终于"上岸"了！🎣',
+  '老师问世界上最圆的东西是什么。小明说：是我的饼干，因为我还没来得及咬 🍪',
+];
 function _generatePetMessage() {
   if (!state) return null;
   const lv = window.CHAMUI ? window.CHAMUI.getLevelInfo(state.totalPoints).lv : 1;
   const next = window.CHAMUI ? window.CHAMUI.getNextLevelInfo(state.totalPoints) : null;
   const streak = state.dailyStreak?.days || 0;
   const totalSlotsToday = window._countTodaySlots ? window._countTodaySlots(state) : 0;
+  // 40% 概率讲冷笑话
+  if (Math.random() < 0.4) {
+    return _COLD_JOKES[Math.floor(Math.random() * _COLD_JOKES.length)];
+  }
   const pool = [];
   if (streak === 0) pool.push('🔥 今天打 1 个项目就点燃火焰!');
   if (streak >= 1 && streak < 7) pool.push(`🔥 已经 ${streak} 天了, 别断哦`);

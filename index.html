@@ -3197,17 +3197,16 @@ p { font-size: 14px; line-height: 1.6; }
 /* ===== v18 Phase 5.1: 🐣 宠物 widget ===== */
 .pet-widget {
   position: absolute;
-  /* v18.2: 紧贴角色 SVG 右上, 不再放底部远处 */
-  top: 60px;
-  right: 8px;
-  background: white;
-  border: 3px solid var(--color-text);
-  border-radius: 14px;
-  padding: 3px 4px;
+  top: 56px;
+  right: 4px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
   text-align: center;
   cursor: pointer;
   font-family: 'PingFang SC', sans-serif;
-  box-shadow: 0 3px 0 var(--color-text);
+  box-shadow: none;
   transition: transform 0.15s;
   z-index: 5;
   min-width: 66px;
@@ -3231,22 +3230,8 @@ p { font-size: 14px; line-height: 1.6; }
 @keyframes pet-gundam-float { 0%,100% { transform:translateY(0) scale(1); } 50% { transform:translateY(-5px) scale(1.03); } }
 .pet-widget .pet-emoji { font-size: 26px; line-height: 1; animation: pet-wobble 3s ease-in-out infinite; }
 .pet-widget .pet-emoji.pet-sad { filter: grayscale(0.7); animation: none; }
-.pet-widget .pet-name { display: none; }     /* v18.2: 圆形小图标不显文字, 进 modal 看 */
+.pet-widget .pet-name { display: none; }
 .pet-widget .pet-form-name { display: none; }
-.pet-widget::after {
-  content: attr(data-name);
-  position: absolute;
-  bottom: -16px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--color-text);
-  color: white;
-  font-size: 10px;
-  padding: 1px 6px;
-  border-radius: 8px;
-  white-space: nowrap;
-  pointer-events: none;
-}
 @keyframes pet-wobble {
   0%, 100% { transform: translateY(0) rotate(0deg); }
   25% { transform: translateY(-3px) rotate(-4deg); }
@@ -3257,8 +3242,8 @@ p { font-size: 14px; line-height: 1.6; }
 /* ===== v18.20: A 活的伙伴 — 对话气泡 + 庆祝动画 ===== */
 .pet-bubble {
   position: absolute;
-  top: 71px;
-  right: 82px;
+  top: 67px;
+  right: 78px;
   background: white;
   border: 1px solid var(--color-primary);
   border-radius: 14px;
