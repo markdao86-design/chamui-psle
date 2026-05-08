@@ -589,9 +589,8 @@ function getTodayWowFact(weekN, dateOverride) {
   return { subject: '科学/策略', subjectIcon: '🔬', subjectColor: '#9B8FC9', subjectKey: 'science', tag: `W${sci.week}`, hook: sci.hook, body: sci.body, week: sci.week };
 }
 
-// ============= v18.10: 仓鼠 7 形态 SVG 自绘 (每个独立可视化) =============
-// 每个形态有独立 SVG 插画, 越高阶越华丽: 蛋→宝宝→蝴蝶结→眼镜→学士帽→战甲→王冠披风
-// SVG viewBox 48×48; 共用基础: 头/耳朵/眼睛/腮红/鼻嘴 (HAMSTER_BASE 函数)
+// viewBox 48×48; 7阶进化: 蛋→宝宝→小仓鼠→学习→智慧→战神→王者
+
 // 颜色随形态进化: 浅橙(baby)→标准(cute)→蓝学(study)→紫智(wisdom)→红战(warrior)→金王(king)
 function _hamsterBase(furColor, faceColor, hasHelmet) {
   return `

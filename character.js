@@ -1128,6 +1128,33 @@ const CHAMUI = {
       </g>
     ` : '';
 
+    // === 珍珠项链 (颈部锁骨弧) ===
+    const pearl = has.pearl ? (() => {
+      const pearls = [0,1,2,3,4,5,6].map(i => {
+        const t = i / 6;
+        const px = (75 + t * 70).toFixed(1);
+        const py = (130 + 12 * Math.sin(Math.PI * t)).toFixed(1);
+        const r = i === 3 ? 5.5 : 4.5;
+        const hx = (75 + t * 70 - r * 0.3).toFixed(1);
+        const hy = (130 + 12 * Math.sin(Math.PI * t) - r * 0.35).toFixed(1);
+        const hr = (r * 0.28).toFixed(1);
+        return `<circle cx="${px}" cy="${py}" r="${r}" fill="url(#pearlGrad)" stroke="#C0A888" stroke-width="0.7"/>
+                <circle cx="${hx}" cy="${hy}" r="${hr}" fill="white" opacity="0.75"/>`;
+      }).join('');
+      return `
+      <defs>
+        <radialGradient id="pearlGrad" cx="35%" cy="30%">
+          <stop offset="0%" stop-color="#FDFAF5"/>
+          <stop offset="45%" stop-color="#EDE5D0"/>
+          <stop offset="100%" stop-color="#C8B89A"/>
+        </radialGradient>
+      </defs>
+      <g filter="url(#eqShadow)">
+        <path d="M 75 130 Q 110 142 145 130" fill="none" stroke="#D8C8A0" stroke-width="1.5"/>
+        ${pearls}
+      </g>`;
+    })() : '';
+
     // === 头顶悬浮 (z=9) ===
     const diamond = has.diamond ? `
       <g transform="translate(110, ${A.headTop[1] - 18})">
@@ -1567,6 +1594,7 @@ const CHAMUI = {
         ${crystal}
         ${phone}
         ${glasses}
+        ${pearl}
         ${heroMask}
         ${headphone}
         ${ear}

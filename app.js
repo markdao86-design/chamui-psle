@@ -259,7 +259,7 @@ function renderDashboard() {
   renderAchievementWall();  // v18 Phase 5.1
   renderReviewCard();  // v18 Phase 5.3
   renderWeeklyCoach();
-  renderMasterTipCard();
+  // renderMasterTipCard(); // v18.71: 已合并到 wowCard
   renderDragonProgress();  // v18.55
   renderErrorBankCard();   // v18.59
   renderEquipment();
@@ -739,57 +739,68 @@ function submitThinkAnswer(weekN, userAnswer) {
   renderAll();
 }
 
-// v18.13: 每日 Wow 事实卡 — 先猜后揭晓 (Loewenstein curiosity gap 强化)
+// v18.71: 每日 Wow 事实卡 — 英语知识(先猜后揭晓) + 名师秘诀(合并展示)
 function renderWowCard() {
   const card = document.getElementById('wowCard');
-  if (!card || !window.getTodayWowFact) return;
-  const wow = window.getTodayWowFact(state.currentWeek);
-  if (!wow) {
-    card.style.display = 'none';
-    return;
-  }
+  if (!card || !window.ENGLISH_WOW_FACTS) return;
   card.style.display = '';
-  card.style.borderLeftColor = wow.subjectColor || '#A788E0';
-  // v18.13: 当日揭晓状态 — 不同 hook 重置
-  const today = new Date().toISOString().slice(0, 10);
-  if (!state.wowGuessedToday || state.wowGuessedToday.date !== today || state.wowGuessedToday.hook !== wow.hook) {
-    state.wowGuessedToday = { date: today, hook: wow.hook, revealed: false };
+  card.style.borderLeftColor = '#6FB8A0';
+
+  const d = new Date();
+  const epochDay = Math.floor(d.getTime() / 86400000);
+  const len = window.ENGLISH_WOW_FACTS.length;
+  const idx = ((epochDay % len) + len) % len;
+  const wow = window.ENGLISH_WOW_FACTS[idx];
+  const today = d.toISOString().slice(0, 10);
+
+  // 迁移旧数据格式（原来是单对象 {date, hook, revealed}）
+  if (!state.wowGuessedToday || typeof state.wowGuessedToday.revealed !== 'undefined') {
+    state.wowGuessedToday = {};
   }
-  const revealed = !!state.wowGuessedToday.revealed;
+  const wowKey = 'wow_' + today;
+  const revealed = !!(state.wowGuessedToday[wowKey]);
+
+  // 今日名师秘诀
+  const tip = window.getTodayMasterTip ? window.getTodayMasterTip(state.currentWeek) : null;
+  const tipColor = tip ? (tip.dailySubjectColor || '#6FB8A0') : '#6FB8A0';
+
   card.innerHTML = `
-    <div class="wow-header">
-      <span class="wow-tag" style="color:${wow.subjectColor};border-color:${wow.subjectColor}">
-        🤯 ${wow.subjectIcon} ${wow.subject} · ${wow.tag}
-      </span>
-      ${revealed ? '<span class="wow-toggle">已揭晓 ✓</span>' : '<span class="wow-toggle">🤔 先想想</span>'}
-    </div>
-    <div class="wow-hook">${escapeHtml(wow.hook)}</div>
-    ${revealed ? `
-      <div class="wow-body">${escapeHtml(wow.body)}</div>
-    ` : `
-      <div class="wow-quiz">
-        <div class="wow-quiz-prompt">💭 先思考 5 秒, 然后点揭晓:</div>
-        <button class="btn btn-primary wow-quiz-btn" onclick="event.stopPropagation(); revealWowAnswer()">💡 揭晓答案 (+2 分)</button>
+    <div style="font-size:11px;color:#6FB8A0;font-weight:600;margin-bottom:10px;letter-spacing:0.5px">🧠 今日学习思考 · 2条</div>
+    <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(111,184,160,0.18)">
+      <div class="wow-header">
+        <span class="wow-tag" style="color:#6FB8A0;border-color:#6FB8A0">📚 英语 · ${wow.tag}</span>
+        ${revealed ? '<span class="wow-toggle">已揭晓 ✓</span>' : '<span class="wow-toggle">🤔 先想想</span>'}
       </div>
-    `}
+      <div class="wow-hook">${escapeHtml(wow.hook)}</div>
+      ${revealed
+        ? `<div class="wow-body">${escapeHtml(wow.body)}</div>`
+        : `<div class="wow-quiz">
+             <div class="wow-quiz-prompt">💭 先思考 5 秒, 然后点揭晓:</div>
+             <button class="btn btn-primary wow-quiz-btn" onclick="event.stopPropagation(); revealWowAnswer()">💡 揭晓答案 (+2 分)</button>
+           </div>`}
+    </div>
+    ${tip ? `
+    <div>
+      <div class="wow-header">
+        <span class="wow-tag" style="color:${tipColor};border-color:${tipColor}">🌟 名师秘诀 · ${escapeHtml(tip.dailySubject)}</span>
+      </div>
+      <div class="wow-hook" style="color:${tipColor}">${escapeHtml(tip.subject)} — ${escapeHtml(tip.title)}</div>
+      <div class="wow-body">${escapeHtml(tip.content)}</div>
+    </div>` : ''}
   `;
-  card.onclick = null;  // v18.13: 不再点卡展开/收起, 必须用按钮揭晓
+  card.onclick = null;
 }
 
 function revealWowAnswer() {
   const today = new Date().toISOString().slice(0, 10);
-  const wow = window.getTodayWowFact(state.currentWeek);
-  if (!wow) return;
-  if (state.wowGuessedToday && state.wowGuessedToday.revealed) return;  // 防重复
-  state.wowGuessedToday = { date: today, hook: wow.hook, revealed: true };
+  const wowKey = 'wow_' + today;
+  if (!state.wowGuessedToday) state.wowGuessedToday = {};
+  if (state.wowGuessedToday[wowKey]) return;  // 防重复
+  state.wowGuessedToday[wowKey] = true;
   state.totalPoints = (state.totalPoints || 0) + 2;
   state.logs.push({ reason: '💡 揭晓 Wow 答案', points: 2, week: state.currentWeek, timestamp: Date.now() });
   state.wowSeenCount = (state.wowSeenCount || 0) + 1;
-  // v18 Phase 5.3: enqueue 复习
-  if (window.enqueueReview) {
-    const id = wow.subjectKey === 'science' ? 'w' + wow.week : (wow.tag + '_' + (window.ENGLISH_WOW_FACTS.indexOf(window.ENGLISH_WOW_FACTS.find(w => w.hook === wow.hook))));
-    window.enqueueReview(state, 'wow', id);
-  }
+  if (window.enqueueReview) window.enqueueReview(state, 'wow', 'eng_' + wowKey);
   _trackQuest('wow-1', 1);
   playSound('ding');
   saveState(state);
