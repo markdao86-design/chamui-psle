@@ -546,8 +546,8 @@ const CHAMUI = {
         <rect x="174.5" y="117.5" width="21" height="69" fill="url(#fuselageGrad)" rx="2.5"/>
 
         <!-- 机身分界线 -->
-        <rect x="174.5" y="144" width="21" height="1.5" fill="#6366F1" opacity="0.5"/>
-        <rect x="174.5" y="158" width="21" height="1.5" fill="#6366F1" opacity="0.3"/>
+        <rect x="174.5" y="144" width="21" height="1.5" fill="#991B1B" opacity="0.75"/>
+        <rect x="174.5" y="158" width="21" height="1.5" fill="#991B1B" opacity="0.55"/>
 
         <!-- 蓝色窗口1 (上) -->
         <rect x="177" y="122" width="16" height="8" fill="#2563EB" rx="1.5" stroke="#1D4ED8" stroke-width="0.7"/>
@@ -728,14 +728,22 @@ const CHAMUI = {
     ` : '';
 
     const bag = has.bag ? `
-      <!-- 书包带子从两肩到腰 (在身体后侧) -->
-      <path d="M ${A.shoulderL[0]+6} ${A.shoulderL[1]+1} L ${A.waistL[0]-4} ${A.waistL[1]-4}"
-            stroke="#8B4513" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <path d="M ${A.shoulderR[0]-6} ${A.shoulderR[1]+1} L ${A.waistR[0]+4} ${A.waistR[1]-4}"
-            stroke="#8B4513" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <!-- 书包本体 (从背后两侧露出) -->
-      <ellipse cx="65" cy="${tpl.bodyTop+45}" rx="8" ry="22" fill="#FF9F45" stroke="#2D3047" stroke-width="2.5"/>
-      <ellipse cx="155" cy="${tpl.bodyTop+45}" rx="8" ry="22" fill="#FF9F45" stroke="#2D3047" stroke-width="2.5"/>
+      <!-- 书包放脚边 (左脚旁, 渲染在身体之前) -->
+      <g>
+        <!-- 袋体阴影 -->
+        <ellipse cx="72" cy="${tpl.legBottom+4}" rx="18" ry="4" fill="#2D3047" opacity="0.18"/>
+        <!-- 主袋体 -->
+        <rect x="54" y="${tpl.legBottom-30}" width="34" height="34" fill="#FF9F45" stroke="#2D3047" stroke-width="2" rx="6"/>
+        <!-- 前袋口 -->
+        <rect x="59" y="${tpl.legBottom-22}" width="24" height="20" fill="#FF8C2D" stroke="#2D3047" stroke-width="1.5" rx="4"/>
+        <!-- 拉链 -->
+        <line x1="60" y1="${tpl.legBottom-17}" x2="82" y2="${tpl.legBottom-17}" stroke="#2D3047" stroke-width="1.2" stroke-dasharray="2.5,2"/>
+        <circle cx="60" cy="${tpl.legBottom-17}" r="2.2" fill="#2D3047"/>
+        <!-- 顶提手 -->
+        <path d="M 63,${tpl.legBottom-30} Q 71,${tpl.legBottom-37} 79,${tpl.legBottom-30}" fill="none" stroke="#2D3047" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- 侧面肩带 -->
+        <path d="M 54,${tpl.legBottom-20} Q 45,${tpl.legBottom-8} 50,${tpl.legBottom+2}" fill="none" stroke="#8B4513" stroke-width="3" stroke-linecap="round"/>
+      </g>
     ` : '';
 
     // === 身体 (z=4) — 已包含在 body 变量 ===
@@ -1747,8 +1755,8 @@ const CHAMUI = {
         ${dragonBody}
         ${cape}
         ${galaxyCape}
-        ${bag}
         ${body}
+        ${bag}
         ${monthking}
         ${medalGold}
         ${badge_p6}
