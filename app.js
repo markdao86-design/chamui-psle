@@ -3300,23 +3300,30 @@ async function _buildEssayInnerHtml(forPage) {
   }
   const total = cards.length;
   const filed = cards.filter(c => c.has).length;
-  const grid = cards.map(c => `
+  // v18.84: 每完成10篇解锁下一批, 减轻压迫感
+  const visibleCount = Math.min(total, (Math.floor(filed / 10) + 1) * 10);
+  const locked = total - visibleCount;
+  const grid = cards.slice(0, visibleCount).map(c => `
     <div class="essay-card ${c.has ? 'essay-saved' : 'essay-empty'}" onclick="${c.has ? `viewPolishedEssay(${c.week})` : `openCompositionModal(${c.week})`}">
       <div class="essay-week">W${c.week}</div>
       <div class="essay-theme">${escapeHtml(c.theme)}</div>
       <div class="essay-status">${c.has ? '✅ 已精修' : '⬜ 未上传'}</div>
     </div>
   `).join('');
+  const lockedMsg = locked > 0
+    ? `<div class="essay-locked-tip">🔒 还有 <b>${locked}</b> 篇 · 每完成 10 篇自动解锁下一批，专注当前就好</div>`
+    : (filed === total && total > 0 ? `<div class="essay-locked-tip" style="color:#4ECDC4">🎉 全部 ${total} 篇已完成！</div>` : '');
   return `
     <div class="kt-inner">
       <div class="kt-header">
         <div>
           <div class="kt-title">📚 作文模板库</div>
-          <div class="kt-progress">已存 <b>${filed}/${total}</b> · 点已精修看模板, 点未上传去写</div>
+          <div class="kt-progress">已存 <b>${filed}/${visibleCount}</b> · 点已精修看模板, 点未上传去写</div>
         </div>
         ${forPage ? '' : '<button class="vocab-modal-close" onclick="closeEssayLibrary()">×</button>'}
       </div>
       <div class="essay-grid">${grid}</div>
+      ${lockedMsg}
     </div>`;
 }
 // v18.49: page 形态 — 直接渲染到 #essayPageContent
