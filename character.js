@@ -1241,18 +1241,50 @@ const CHAMUI = {
       </g>`;
     })() : '';
 
-    // === 头顶悬浮 (z=9) ===
+    // === v18.80 晶石群背景装饰 (渲染在角色身体之前) ===
     const diamond = has.diamond ? `
-      <g transform="translate(110, ${A.headTop[1] - 18})">
-        <animateTransform attributeName="transform" type="translate"
-                         values="110,${A.headTop[1] - 18};110,${A.headTop[1] - 24};110,${A.headTop[1] - 18}" dur="1.6s" repeatCount="indefinite"/>
-        <polygon points="0,-9 -10,-2 -6,8 6,8 10,-2" fill="#4ECDC4" stroke="#2D3047" stroke-width="1.5"/>
-        <polygon points="0,-9 -6,-2 0,3 6,-2" fill="#A0E8F0"/>
-        <line x1="-10" y1="-2" x2="10" y2="-2" stroke="#2D3047" stroke-width="1"/>
-        <text x="-15" y="-9" font-size="8" fill="#FFE66D">
-          <animate attributeName="opacity" values="1;0.3;1" dur="1s" repeatCount="indefinite"/>✨</text>
-        <text x="11" y="-8" font-size="8" fill="#FFE66D">
-          <animate attributeName="opacity" values="0.3;1;0.3" dur="1s" repeatCount="indefinite"/>✨</text>
+      <g opacity="0.72">
+        <!-- 主钻石: 右上方背景 -->
+        <g filter="url(#eqShadow)">
+          <animateTransform attributeName="transform" type="translate"
+                           values="148,22; 148,15; 148,22" dur="2.6s" repeatCount="indefinite"/>
+          <polygon points="0,-16 -13,-2 -9,14 9,14 13,-2" fill="#2DD4C0" opacity="0.25"/>
+          <polygon points="0,-15 -12,-1 -8,12 8,12 12,-1" fill="#4ECDC4" stroke="#2D3047" stroke-width="1.2"/>
+          <polygon points="0,-15 -7,-1 0,5 7,-1" fill="#A0E8F0" opacity="0.85"/>
+          <line x1="-12" y1="-1" x2="12" y2="-1" stroke="#2D3047" stroke-width="0.8" opacity="0.5"/>
+          <circle cx="5" cy="-11" r="1.5" fill="white" opacity="0.9">
+            <animate attributeName="opacity" values="0.9;0.2;0.9" dur="1.3s" repeatCount="indefinite"/>
+          </circle>
+          <text x="9" y="-17" font-size="8" fill="#FFE66D" opacity="0.8">
+            <animate attributeName="opacity" values="0.8;0.15;0.8" dur="1.0s" repeatCount="indefinite"/>✨</text>
+        </g>
+        <!-- 次钻石: 左上方背景 -->
+        <g>
+          <animateTransform attributeName="transform" type="translate"
+                           values="68,40; 68,46; 68,40" dur="3.1s" repeatCount="indefinite"/>
+          <polygon points="0,-11 -9,-1 -6,9 6,9 9,-1" fill="#4ECDC4" stroke="#2D3047" stroke-width="1" opacity="0.9"/>
+          <polygon points="0,-11 -5,-1 0,3.5 5,-1" fill="#A0E8F0" opacity="0.8"/>
+          <line x1="-9" y1="-1" x2="9" y2="-1" stroke="#2D3047" stroke-width="0.7" opacity="0.5"/>
+          <circle cx="-3" cy="-8" r="1" fill="white" opacity="0.85">
+            <animate attributeName="opacity" values="0.85;0.1;0.85" dur="1.7s" repeatCount="indefinite"/>
+          </circle>
+        </g>
+        <!-- 小钻石: 右侧中部背景 -->
+        <g>
+          <animateTransform attributeName="transform" type="translate"
+                           values="178,95; 178,90; 178,95" dur="2.0s" repeatCount="indefinite"/>
+          <polygon points="0,-8 -7,0 -5,7 5,7 7,0" fill="#4ECDC4" stroke="#2D3047" stroke-width="0.8" opacity="0.85"/>
+          <polygon points="0,-8 -4,0 0,2.5 4,0" fill="#A0E8F0" opacity="0.75"/>
+          <text x="-4" y="-9" font-size="7" fill="#FFE66D" opacity="0.7">
+            <animate attributeName="opacity" values="0.7;0.1;0.7" dur="0.9s" repeatCount="indefinite"/>✨</text>
+        </g>
+        <!-- 微钻石: 左侧中部背景 -->
+        <g>
+          <animateTransform attributeName="transform" type="translate"
+                           values="50,98; 50,102; 50,98" dur="2.4s" repeatCount="indefinite"/>
+          <polygon points="0,-6 -5,0 -3,5 3,5 5,0" fill="#4ECDC4" stroke="#2D3047" stroke-width="0.7" opacity="0.7"/>
+          <polygon points="0,-6 -3,0 0,2 3,0" fill="#A0E8F0" opacity="0.65"/>
+        </g>
       </g>
     ` : '';
 
@@ -1675,6 +1707,7 @@ const CHAMUI = {
         </defs>
         ${fireBackground}
         ${cometTrail}
+        ${diamond}
         ${dragonBody}
         ${cape}
         ${galaxyCape}
@@ -1718,7 +1751,6 @@ const CHAMUI = {
         ${masterCrown}
         ${streak100}
         ${streak7}
-        ${diamond}
         ${planet}
         ${streak30}
         ${rainbow}
