@@ -1492,18 +1492,19 @@ const CHAMUI = {
       </g>
     ` : '';
 
-    // v18.62: 蛋糕 3D 立体 (3 层立体阴影 + 多色奶油 + 真实蜡烛火苗)
+    // v18.85: 蛋糕放右脚边 (去掉双手托盘)
     const cake = has.cake ? `
       <g filter="url(#eqShadowBig)">
-        <g transform="translate(${A.chest[0]}, ${A.chest[1]+5})">
+        <!-- 地面阴影 -->
+        <ellipse cx="162" cy="${tpl.legBottom+2}" rx="22" ry="4" fill="#2D3047" opacity="0.15"/>
+        <g transform="translate(162, ${tpl.legBottom-14})">
           <animateTransform attributeName="transform" type="translate"
-                           values="${A.chest[0]},${A.chest[1]+5}; ${A.chest[0]},${A.chest[1]+2}; ${A.chest[0]},${A.chest[1]+5}" dur="2s" repeatCount="indefinite"/>
+                           values="0,0; 0,-4; 0,0" dur="2s" repeatCount="indefinite" additive="sum"/>
           <!-- 盘子 (银色 3D 椭圆) -->
           <ellipse cx="0" cy="16" rx="24" ry="5" fill="url(#metalSilver)" stroke="#2D3047" stroke-width="2"/>
           <ellipse cx="0" cy="14" rx="22" ry="3" fill="#FFF" opacity="0.8"/>
           <!-- 蛋糕底层 (黄色海绵, 立体感) -->
           <rect x="-18" y="3" width="36" height="13" fill="#FFE066" stroke="#2D3047" stroke-width="2" rx="2"/>
-          <!-- 底层高光面 -->
           <rect x="-17" y="3" width="34" height="3" fill="#FFFAEC" opacity="0.6" rx="1"/>
           <!-- 奶油波纹层 (3 朵奶油花) -->
           <ellipse cx="-12" cy="3" rx="5" ry="3" fill="#FFFAEC" stroke="#2D3047" stroke-width="1.5"/>
@@ -1543,12 +1544,6 @@ const CHAMUI = {
           <circle cx="-4" cy="-9" r="1.2" fill="#FFA500"/>
           <circle cx="4" cy="-9" r="1.2" fill="#A788E0"/>
         </g>
-        <!-- 双手托盘底 -->
-        <ellipse cx="${A.handL[0]+5}" cy="${A.handL[1]-5}" rx="7" ry="4.5" fill="${skinColor}" stroke="#2D3047" stroke-width="1.5"/>
-        <ellipse cx="${A.handR[0]-5}" cy="${A.handR[1]-5}" rx="7" ry="4.5" fill="${skinColor}" stroke="#2D3047" stroke-width="1.5"/>
-        <!-- 拇指 (露出托盘上方) -->
-        <ellipse cx="${A.handL[0]+8}" cy="${A.handL[1]-8}" rx="2" ry="3" fill="${skinColor}" stroke="#2D3047" stroke-width="1"/>
-        <ellipse cx="${A.handR[0]-8}" cy="${A.handR[1]-8}" rx="2" ry="3" fill="${skinColor}" stroke="#2D3047" stroke-width="1"/>
       </g>
     ` : '';
 
