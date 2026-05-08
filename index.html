@@ -4080,6 +4080,55 @@ p { font-size: 14px; line-height: 1.6; }
   50% { transform: scale(1.04); }
 }
 
+/* v18.78: 名师秘诀配套练习题 */
+.tip-qs-section {
+  margin-top: 10px;
+  border-top: 1px dashed rgba(111,184,160,0.25);
+  padding-top: 10px;
+}
+.tip-qs-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6FB8A0;
+  margin-bottom: 8px;
+  letter-spacing: 0.4px;
+}
+.tip-q-item { margin-bottom: 10px; }
+.tip-q-item:last-child { margin-bottom: 0; }
+.tip-q-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+.tip-q-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tip-q-opt {
+  font-size: 12px;
+  padding: 5px 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--color-text);
+}
+.tip-q-opt:hover { border-color: #6FB8A0; color: #6FB8A0; }
+.tip-q-opt.tq-correct { background: #E8F5E9; border-color: #52C788; color: #2E7D32; font-weight: 700; cursor: default; }
+.tip-q-opt.tq-wrong { background: #FFEBEE; border-color: #EF5350; color: #C62828; cursor: default; }
+.tip-q-opt.tq-dimmed { opacity: 0.4; cursor: default; }
+.tip-q-exp {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--color-text-light);
+  line-height: 1.4;
+  font-style: italic;
+}
+
 /* v17.3: Streak 规则卡 (替代原 progress 在 hero-right) */
 .streak-rules-card {
   background: linear-gradient(135deg, #FFE6F0 0%, #FFF8E7 100%);

@@ -764,6 +764,45 @@ function renderWowCard() {
   const tip = window.getTodayMasterTip ? window.getTodayMasterTip(state.currentWeek) : null;
   const tipColor = tip ? (tip.dailySubjectColor || '#6FB8A0') : '#6FB8A0';
 
+  // 计算今日 tip 在其 pool 中的 idx（用于构造唯一题目 key）
+  let tipQIdx = 0;
+  if (tip && tip.dailySubject) {
+    const tipPool = tip.dailySubject === '英语' ? window.ENGLISH_MASTER_TIPS
+      : tip.dailySubject === '科学' ? window.SCIENCE_MASTER_TIPS
+      : tip.dailySubject === '数学' ? window.MATH_MASTER_TIPS
+      : window.CHINESE_MASTER_TIPS;
+    if (tipPool) tipQIdx = ((epochDay % tipPool.length) + tipPool.length) % tipPool.length;
+  }
+  const tipKey = `tip_${today}_${tip ? tip.dailySubject : 'x'}_${tipQIdx}`;
+  if (!state.tipQsAnswered) state.tipQsAnswered = {};
+
+  function _buildTipQHtml() {
+    if (!tip || !tip.qs || !tip.qs.length) return '';
+    const qsHtml = tip.qs.map((q, qi) => {
+      const answeredVal = state.tipQsAnswered[tipKey + '_' + qi];
+      const answered = answeredVal !== undefined;
+      const optsHtml = q.opts.map((opt, oi) => {
+        let cls = 'tip-q-opt';
+        if (answered) {
+          if (oi === q.ans) cls += ' tq-correct';
+          else if (oi === answeredVal) cls += ' tq-wrong';
+          else cls += ' tq-dimmed';
+        }
+        const click = answered ? '' : `onclick="event.stopPropagation();submitTipQ('${tipKey}',${qi},${oi},${q.ans})"`;
+        return `<button class="${cls}" ${click}>${escapeHtml(opt)}</button>`;
+      }).join('');
+      return `<div class="tip-q-item">
+        <div class="tip-q-text">${escapeHtml(q.q)}</div>
+        <div class="tip-q-opts">${optsHtml}</div>
+        ${answered && q.exp ? `<div class="tip-q-exp">💡 ${escapeHtml(q.exp)}</div>` : ''}
+      </div>`;
+    }).join('');
+    return `<div class="tip-qs-section">
+      <div class="tip-qs-title">✏️ 马上练 · ${tip.qs.length}题 (+3分/题)</div>
+      ${qsHtml}
+    </div>`;
+  }
+
   card.innerHTML = `
     <div style="font-size:11px;color:#6FB8A0;font-weight:600;margin-bottom:10px;letter-spacing:0.5px">🧠 今日学习思考 · 2条</div>
     <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(111,184,160,0.18)">
@@ -786,6 +825,7 @@ function renderWowCard() {
       </div>
       <div class="wow-hook" style="color:${tipColor}">${escapeHtml(tip.subject)} — ${escapeHtml(tip.title)}</div>
       <div class="wow-body">${escapeHtml(tip.content)}</div>
+      ${_buildTipQHtml()}
     </div>` : ''}
   `;
   card.onclick = null;
@@ -807,6 +847,26 @@ function revealWowAnswer() {
   _checkAndUnlockAch();
   renderAll();
 }
+
+// ============ v18.78: 名师秘诀练习题提交 ============
+function submitTipQ(tipKey, qIdx, selected, correct) {
+  const key = tipKey + '_' + qIdx;
+  if (!state.tipQsAnswered) state.tipQsAnswered = {};
+  if (state.tipQsAnswered[key] !== undefined) return;
+  state.tipQsAnswered[key] = selected;
+  if (selected === correct) {
+    state.totalPoints = (state.totalPoints || 0) + 3;
+    state.logs.push({ reason: '✏️ 名师秘诀练习', points: 3, week: state.currentWeek, timestamp: Date.now() });
+    showToast('✓ 正确！+3 分', 'success');
+    playSound('ding');
+    _checkAndUnlockAch();
+  } else {
+    showToast('✗ 答错了，看解析', 'sad');
+  }
+  saveState(state);
+  renderWowCard();
+}
+window.submitTipQ = submitTipQ;
 
 // ============ v16: 6 条铁律(每天换一条) ============
 function renderIronRule() {
