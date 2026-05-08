@@ -2225,7 +2225,7 @@ function petSay(message, duration) {
   // 防止气泡重叠 — 最少间隔 4s
   if (Date.now() - _petLastSpoke < 4000) return;
   _petLastSpoke = Date.now();
-  const card = document.querySelector('.character-card');
+  const card = document.getElementById('petWidget');
   if (!card) return;
   const old = card.querySelector('.pet-bubble');
   if (old) old.remove();

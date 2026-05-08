@@ -3242,8 +3242,9 @@ p { font-size: 14px; line-height: 1.6; }
 /* ===== v18.20: A 活的伙伴 — 对话气泡 + 庆祝动画 ===== */
 .pet-bubble {
   position: absolute;
-  top: 56px;
-  right: 68px;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 62px;
   background: rgba(28, 28, 40, 0.82);
   border: none;
   border-radius: 14px;
@@ -3264,7 +3265,8 @@ p { font-size: 14px; line-height: 1.6; }
   content: '';
   position: absolute;
   right: -8px;
-  top: 18px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 0; height: 0;
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
