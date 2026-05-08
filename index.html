@@ -3195,15 +3195,10 @@ p { font-size: 14px; line-height: 1.6; }
 .ls-bar-label { font-size: 11px; color: var(--color-text-light); font-weight: 700; }
 
 /* ===== v18 Phase 5.1: 🐣 宠物 widget ===== */
-.title-pet-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 4px 0 8px;
-}
-.character-title-big { margin: 0 !important; }
 .pet-widget {
-  position: relative;
+  position: absolute;
+  top: 56px;
+  right: 4px;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -3214,18 +3209,17 @@ p { font-size: 14px; line-height: 1.6; }
   box-shadow: none;
   transition: transform 0.15s;
   z-index: 5;
-  min-width: 44px;
-  width: 44px;
-  height: 44px;
+  min-width: 56px;
+  width: 56px;
+  height: 56px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 .pet-widget:hover { transform: scale(1.08); }
 /* v18.10: SVG 内联渲染 wrapper */
-.pet-widget .pet-svg-wrap { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; animation: pet-wobble 3s ease-in-out infinite; }
+.pet-widget .pet-svg-wrap { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; animation: pet-wobble 3s ease-in-out infinite; }
 .pet-widget .pet-svg-wrap svg { width: 100%; height: 100%; display: block; }
 /* v18.68: 情绪动画 — 类放在 #petWidget 上 */
 .pet-widget.pet-sad .pet-svg-wrap { filter: grayscale(0.6); animation: pet-sad-droop 2s ease-in-out infinite; }
@@ -4271,11 +4265,10 @@ p { font-size: 14px; line-height: 1.6; }
           <div class="character-svg" id="characterSvg"></div>
         </div>
         <div class="character-name" id="characterName">萌新佑子</div>
-        <div class="title-pet-row">
-          <div class="character-title-big" id="characterTitle">刚入门的勇士</div>
-          <div class="pet-widget" id="petWidget"></div>
-        </div>
+        <div class="character-title-big" id="characterTitle">刚入门的勇士</div>
         <span class="level-badge">LV <span id="charLevelDisplay">1</span></span>
+        <!-- v18 Phase 5.1: 🐣 宠物 widget (角色右下角浮窗) -->
+        <div class="pet-widget" id="petWidget"></div>
 
         <!-- v17.6: Streak block — 悬浮/点击看规则 -->
         <div class="streak-block streak-warm" id="streakBlock"
