@@ -952,22 +952,69 @@ function printReport() {
   window.print();
 }
 
-// ============ 智慧教练(v4 主页新模块)============
+// ============ 智慧教练(v18.77 重设计: 4科能力网格 + 弱项突出) ============
 function renderWeeklyCoach() {
   const container = document.getElementById('coachContent');
   const meta = document.getElementById('coachMeta');
+  const diagEl = document.getElementById('coachDiag');
   if (!container) return;
   const c = getWeeklyCoaching(state);
-  if (meta) meta.textContent = `W${state.currentWeek} · ${c.phase}`;
+  const subjAcc = window.getSubjectAccuracy ? window.getSubjectAccuracy(state) : {};
+  const overallAL = window.predictOverallAL ? window.predictOverallAL(state) : null;
 
-  const diagHtml = `
+  if (meta) meta.textContent = `W${state.currentWeek} · ${c.phase}${overallAL ? ` · 预测 AL${overallAL}` : ''}`;
+  if (diagEl) diagEl.textContent = c.diagnosis[0] || '';
+
+  function _accToAL(pct) {
+    if (pct >= 90) return 1; if (pct >= 85) return 2; if (pct >= 80) return 3;
+    if (pct >= 75) return 4; if (pct >= 65) return 5; if (pct >= 45) return 6;
+    if (pct >= 20) return 7; return 8;
+  }
+  const SUBJ_META = [
+    { name: '英语', icon: '📚', color: '#6FB8A0' },
+    { name: '数学', icon: '🔢', color: '#E8B86E' },
+    { name: '科学', icon: '🔬', color: '#9B8FC9' },
+    { name: '华文', icon: '✍️', color: '#E07B7B' },
+  ];
+
+  const abilityHtml = `
     <div class="coach-section">
-      <div class="coach-section-title">📊 本周诊断</div>
-      <div class="coach-diag-list">
-        ${c.diagnosis.map(d => `<div>${escapeHtml(d)}</div>`).join('')}
+      <div class="coach-section-title">📊 PSLE 能力概览${overallAL ? ` · 预测 <b style="color:var(--color-purple)">AL${overallAL}</b>` : ''}</div>
+      <div class="coach-subject-grid">
+        ${SUBJ_META.map(s => {
+          const d = subjAcc[s.name];
+          const pct = (d && d.accuracy !== null && d.accuracy !== undefined) ? d.accuracy : null;
+          const al = pct !== null ? _accToAL(pct) : null;
+          const isWeak = pct !== null && pct < 70;
+          const barColor = pct === null ? '#DDD' : pct >= 80 ? '#52C788' : pct >= 60 ? '#F59E0B' : '#EF4444';
+          const alStyle = isWeak ? 'background:#FFECEC;color:#D32F2F' : 'background:#EEF4FF;color:#1565C0';
+          return `<div class="coach-subject-card" style="border-left-color:${s.color}">
+            <div class="coach-subject-header">
+              <span style="font-weight:700">${s.icon} ${s.name}</span>
+              ${isWeak ? '<span class="coach-weak-flag">⚠ 弱项</span>' : ''}
+            </div>
+            ${pct !== null ? `
+              <div class="coach-subject-pct">${pct}<span style="font-size:11px;font-weight:400">%</span>
+                <span class="coach-subject-al" style="${alStyle}">AL${al}</span>
+              </div>
+              <div class="coach-subject-bar-wrap">
+                <div class="coach-subject-bar" style="width:${pct}%;background:${barColor}"></div>
+              </div>
+            ` : '<div class="coach-subject-pct" style="color:#BBB;font-size:12px;font-weight:400">暂无数据</div>'}
+          </div>`;
+        }).join('')}
       </div>
-    </div>
-  `;
+    </div>`;
+
+  const weakHtml = c.weakAdvice ? `
+    <div class="coach-section">
+      <div class="coach-section-title">⚡ 重点攻克</div>
+      <div class="coach-weak-detail">
+        <span class="coach-weak-subj">${escapeHtml(c.weakAdvice.subject)}</span>
+        <span class="coach-weak-pct">均 ${c.weakAdvice.avgPct}%</span>
+        <div class="coach-weak-text">${escapeHtml(c.weakAdvice.advice)}</div>
+      </div>
+    </div>` : '';
 
   const focusHtml = c.focus && c.focus.points.length ? `
     <div class="coach-section">
@@ -976,19 +1023,8 @@ function renderWeeklyCoach() {
         <div class="coach-focus-title">${escapeHtml(c.focus.title)}</div>
         <ul>${c.focus.points.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>
       </div>
-    </div>
-  ` : '';
+    </div>` : '';
 
-  const weakHtml = c.weakAdvice ? `
-    <div class="coach-section">
-      <div class="coach-section-title">💡 提升建议</div>
-      <div class="coach-weak">
-        <b>${escapeHtml(c.weakAdvice.subject)}</b> 平均 ${c.weakAdvice.avgPct}% — ${escapeHtml(c.weakAdvice.advice)}
-      </div>
-    </div>
-  ` : '';
-
-  // v16: 周日 19:30 复盘 5 步 (只有今天是周日才显示)
   let sundayHtml = '';
   if (new Date().getDay() === 0 && window.SUNDAY_REVIEW_STEPS) {
     sundayHtml = `
@@ -997,12 +1033,10 @@ function renderWeeklyCoach() {
         <ol style="margin:6px 0 0 18px;padding:0;font-size:13px;line-height:1.7">
           ${window.SUNDAY_REVIEW_STEPS.map(s => `<li>${escapeHtml(s.replace(/^[①②③④⑤]\s?/, ''))}</li>`).join('')}
         </ol>
-      </div>
-    `;
+      </div>`;
   }
 
-  // 名师秘诀已移到右栏独立卡(renderMasterTipCard),这里不再重复渲染
-  container.innerHTML = sundayHtml + diagHtml + focusHtml + weakHtml;
+  container.innerHTML = abilityHtml + weakHtml + focusHtml + sundayHtml;
 }
 
 // 计算某周拿到的总分(里程碑 + 每日打卡分 + 周复盘 + 当日 combo)

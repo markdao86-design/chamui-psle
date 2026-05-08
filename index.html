@@ -597,6 +597,94 @@ body::before {
   color: var(--color-text);
 }
 .coach-weak b { color: var(--color-warn); }
+
+/* v18.77: 4科能力网格 */
+.coach-subject-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.coach-subject-card {
+  background: white;
+  border-left: 3px solid #ccc;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.coach-subject-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.coach-weak-flag {
+  font-size: 10px;
+  font-weight: 700;
+  color: #D32F2F;
+  background: #FFECEC;
+  padding: 1px 5px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+.coach-subject-pct {
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  color: var(--color-text);
+  line-height: 1;
+}
+.coach-subject-al {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+.coach-subject-bar-wrap {
+  background: #EEEEEE;
+  border-radius: 4px;
+  height: 4px;
+  overflow: hidden;
+}
+.coach-subject-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+.coach-weak-detail {
+  background: rgba(255,159,69,0.10);
+  border: 1.5px solid var(--color-warn);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.coach-weak-subj {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--color-warn);
+}
+.coach-weak-pct {
+  font-size: 12px;
+  color: var(--color-text-light);
+}
+.coach-weak-text {
+  width: 100%;
+  font-size: 12px;
+  color: var(--color-text);
+  line-height: 1.5;
+  margin-top: 2px;
+}
+.coach-diag-line {
+  font-size: 12px;
+  color: var(--color-text-light);
+  margin-bottom: 8px;
+  text-align: center;
+}
 .coach-master {
   background: linear-gradient(135deg, var(--color-accent), #FFB6D9);
   border: 3px solid var(--color-text);
@@ -4328,6 +4416,7 @@ p { font-size: 14px; line-height: 1.6; }
         <div class="coach-meta" id="coachMeta">W? · 阶段名</div>
       </div>
       <div id="coachContent"></div>
+      <div id="coachDiag" class="coach-diag-line"></div>
       <div class="coach-actions">
         <button class="btn btn-primary" onclick="openReportModal()">📋 生成本周报告</button>
       </div>
