@@ -1069,17 +1069,98 @@ const CHAMUI = {
     // === 头顶 (z=8) — 一次只显示一个头顶装备 ===
     const hat = (has.hat && !has.crown && !has.sun && !has.streak100 && !has.phoenix
                   && skin.accessory !== 'masterCrown' && skin.accessory !== 'explorerCap' && skin.accessory !== 'labGoggles') ? `
-      <g>
-        <!-- 帽底 (压头发上, 跟随头顶弧度) -->
-        <ellipse cx="110" cy="${A.headTop[1]+5}" rx="${tpl.headR+4}" ry="3" fill="#2D3047"/>
-        <!-- 顶板 (方正) -->
-        <polygon points="${110-tpl.headR-4},${A.headTop[1]+1} ${110+tpl.headR+4},${A.headTop[1]+1} ${110+tpl.headR-2},${A.headTop[1]-6} ${110-tpl.headR+2},${A.headTop[1]-6}" fill="#2D3047"/>
-        <rect x="${110-tpl.headR-4}" y="${A.headTop[1]+1}" width="${(tpl.headR+4)*2}" height="3" fill="#1A1A2E"/>
-        <!-- 流苏 -->
-        <line x1="${110+tpl.headR-2}" y1="${A.headTop[1]-3}" x2="${110+tpl.headR+8}" y2="${A.headTop[1]+8}" stroke="#FFE66D" stroke-width="2"/>
-        <circle cx="${110+tpl.headR+8}" cy="${A.headTop[1]+8}" r="4" fill="#FFE66D" stroke="#2D3047" stroke-width="1">
-          <animate attributeName="cy" values="${A.headTop[1]+8};${A.headTop[1]+11};${A.headTop[1]+8}" dur="1.8s" repeatCount="indefinite"/>
-        </circle>
+      <g filter="url(#eqShadow)">
+        <!-- 帽底贴合头顶 -->
+        <ellipse cx="110" cy="${A.headTop[1]+3}" rx="${tpl.headR+5}" ry="5" fill="#111118"/>
+
+        <!-- 帽冠前面 (梯形主体, 深灰) -->
+        <polygon points="${110-tpl.headR-3},${A.headTop[1]+3}
+                         ${110+tpl.headR+3},${A.headTop[1]+3}
+                         ${110+tpl.headR-8},${A.headTop[1]-17}
+                         ${110-tpl.headR+8},${A.headTop[1]-17}"
+                 fill="#2B2B35" stroke="#111118" stroke-width="0.8"/>
+
+        <!-- 帽冠右侧面 (3D深度) -->
+        <polygon points="${110+tpl.headR+3},${A.headTop[1]+3}
+                         ${110+tpl.headR+10},${A.headTop[1]}
+                         ${110+tpl.headR+1},${A.headTop[1]-20}
+                         ${110+tpl.headR-8},${A.headTop[1]-17}"
+                 fill="#3E3E4C" stroke="#111118" stroke-width="0.6"/>
+
+        <!-- 金色装饰带 (帽冠底部) -->
+        <polygon points="${110-tpl.headR-3},${A.headTop[1]+1}
+                         ${110+tpl.headR+3},${A.headTop[1]+1}
+                         ${110+tpl.headR+3},${A.headTop[1]+3}
+                         ${110-tpl.headR-3},${A.headTop[1]+3}"
+                 fill="#FFD700"/>
+        <polygon points="${110+tpl.headR+3},${A.headTop[1]+1}
+                         ${110+tpl.headR+10},${A.headTop[1]-2}
+                         ${110+tpl.headR+10},${A.headTop[1]}
+                         ${110+tpl.headR+3},${A.headTop[1]+3}"
+                 fill="#F5C200"/>
+
+        <!-- 顶板前边缘 (厚度) -->
+        <polygon points="${110-tpl.headR-10},${A.headTop[1]-17}
+                         ${110+tpl.headR+10},${A.headTop[1]-17}
+                         ${110+tpl.headR+8},${A.headTop[1]-22}
+                         ${110-tpl.headR-8},${A.headTop[1]-22}"
+                 fill="#111118"/>
+
+        <!-- 顶板顶面 (主面, 带透视) -->
+        <polygon points="${110-tpl.headR-10},${A.headTop[1]-22}
+                         ${110+tpl.headR+10},${A.headTop[1]-22}
+                         ${110+tpl.headR+6},${A.headTop[1]-36}
+                         ${110-tpl.headR-6},${A.headTop[1]-36}"
+                 fill="#2A2A32" stroke="#111118" stroke-width="0.8"/>
+
+        <!-- 顶板右侧面 (3D) -->
+        <polygon points="${110+tpl.headR+10},${A.headTop[1]-17}
+                         ${110+tpl.headR+17},${A.headTop[1]-19}
+                         ${110+tpl.headR+13},${A.headTop[1]-38}
+                         ${110+tpl.headR+6},${A.headTop[1]-36}"
+                 fill="#3E3E4C" stroke="#111118" stroke-width="0.6"/>
+
+        <!-- 顶板高光 (左上角淡反光) -->
+        <polygon points="${110-tpl.headR-8},${A.headTop[1]-24}
+                         ${110+tpl.headR-4},${A.headTop[1]-24}
+                         ${110+tpl.headR-6},${A.headTop[1]-30}
+                         ${110-tpl.headR-7},${A.headTop[1]-30}"
+                 fill="white" opacity="0.06"/>
+
+        <!-- 顶板按钮 -->
+        <circle cx="110" cy="${A.headTop[1]-30}" r="3.5" fill="#111118" stroke="#3E3E4C" stroke-width="1"/>
+        <circle cx="110" cy="${A.headTop[1]-30}" r="1.5" fill="#444455"/>
+
+        <!-- 流苏绳 (按钮→右上角) -->
+        <line x1="110" y1="${A.headTop[1]-30}"
+              x2="${110+tpl.headR+10}" y2="${A.headTop[1]-22}"
+              stroke="#FFD700" stroke-width="1.8" stroke-linecap="round"/>
+
+        <!-- 流苏竖挂段 -->
+        <line x1="${110+tpl.headR+10}" y1="${A.headTop[1]-22}"
+              x2="${110+tpl.headR+13}" y2="${A.headTop[1]-2}"
+              stroke="#FFD700" stroke-width="2.2" stroke-linecap="round"/>
+
+        <!-- 流苏穗 (3条线) -->
+        <line x1="${110+tpl.headR+9}" y1="${A.headTop[1]-2}"
+              x2="${110+tpl.headR+7}" y2="${A.headTop[1]+14}"
+              stroke="#FFD700" stroke-width="1.6" stroke-linecap="round">
+          <animate attributeName="x2" values="${110+tpl.headR+7};${110+tpl.headR+5};${110+tpl.headR+7}" dur="1.8s" repeatCount="indefinite"/>
+        </line>
+        <line x1="${110+tpl.headR+13}" y1="${A.headTop[1]-2}"
+              x2="${110+tpl.headR+12}" y2="${A.headTop[1]+13}"
+              stroke="#FFD700" stroke-width="1.6" stroke-linecap="round">
+          <animate attributeName="x2" values="${110+tpl.headR+12};${110+tpl.headR+10};${110+tpl.headR+12}" dur="1.8s" repeatCount="indefinite" begin="0.1s"/>
+        </line>
+        <line x1="${110+tpl.headR+17}" y1="${A.headTop[1]-3}"
+              x2="${110+tpl.headR+17}" y2="${A.headTop[1]+12}"
+              stroke="#FFD700" stroke-width="1.6" stroke-linecap="round">
+          <animate attributeName="x2" values="${110+tpl.headR+17};${110+tpl.headR+15};${110+tpl.headR+17}" dur="1.8s" repeatCount="indefinite" begin="0.2s"/>
+        </line>
+        <!-- 流苏末端椭圆 -->
+        <ellipse cx="${110+tpl.headR+12}" cy="${A.headTop[1]+16}" rx="6" ry="4" fill="#FFD700" opacity="0.92">
+          <animate attributeName="cy" values="${A.headTop[1]+16};${A.headTop[1]+19};${A.headTop[1]+16}" dur="1.8s" repeatCount="indefinite"/>
+        </ellipse>
       </g>
     ` : '';
 
