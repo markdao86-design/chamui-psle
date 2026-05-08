@@ -1071,14 +1071,14 @@ const CHAMUI = {
                   && skin.accessory !== 'masterCrown' && skin.accessory !== 'explorerCap' && skin.accessory !== 'labGoggles') ? `
       <g>
         <!-- 帽底 (压头发上, 跟随头顶弧度) -->
-        <ellipse cx="110" cy="${A.headTop[1]+5}" rx="${tpl.headR+4}" ry="3" fill="#2D3047"/>
+        <ellipse cx="110" cy="${A.headTop[1]-3}" rx="${tpl.headR+4}" ry="3" fill="#2D3047"/>
         <!-- 顶板 (方正) -->
-        <polygon points="${110-tpl.headR-4},${A.headTop[1]+1} ${110+tpl.headR+4},${A.headTop[1]+1} ${110+tpl.headR-2},${A.headTop[1]-6} ${110-tpl.headR+2},${A.headTop[1]-6}" fill="#2D3047"/>
-        <rect x="${110-tpl.headR-4}" y="${A.headTop[1]+1}" width="${(tpl.headR+4)*2}" height="3" fill="#1A1A2E"/>
+        <polygon points="${110-tpl.headR-4},${A.headTop[1]-7} ${110+tpl.headR+4},${A.headTop[1]-7} ${110+tpl.headR-2},${A.headTop[1]-14} ${110-tpl.headR+2},${A.headTop[1]-14}" fill="#2D3047"/>
+        <rect x="${110-tpl.headR-4}" y="${A.headTop[1]-7}" width="${(tpl.headR+4)*2}" height="3" fill="#1A1A2E"/>
         <!-- 流苏 -->
-        <line x1="${110+tpl.headR-2}" y1="${A.headTop[1]-3}" x2="${110+tpl.headR+8}" y2="${A.headTop[1]+8}" stroke="#FFE66D" stroke-width="2"/>
-        <circle cx="${110+tpl.headR+8}" cy="${A.headTop[1]+8}" r="4" fill="#FFE66D" stroke="#2D3047" stroke-width="1">
-          <animate attributeName="cy" values="${A.headTop[1]+8};${A.headTop[1]+11};${A.headTop[1]+8}" dur="1.8s" repeatCount="indefinite"/>
+        <line x1="${110+tpl.headR-2}" y1="${A.headTop[1]-11}" x2="${110+tpl.headR+8}" y2="${A.headTop[1]+0}" stroke="#FFE66D" stroke-width="2"/>
+        <circle cx="${110+tpl.headR+8}" cy="${A.headTop[1]+0}" r="4" fill="#FFE66D" stroke="#2D3047" stroke-width="1">
+          <animate attributeName="cy" values="${A.headTop[1]+0};${A.headTop[1]+3};${A.headTop[1]+0}" dur="1.8s" repeatCount="indefinite"/>
         </circle>
       </g>
     ` : '';
