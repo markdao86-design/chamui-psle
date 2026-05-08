@@ -497,109 +497,148 @@ const CHAMUI = {
     // 兼容旧引用 (避免引用未定义)
     const dragonBody = goldDragonBody + silverDragonBody;
 
-    // v18.64: 火箭移到角色左侧竖向飞行 + 1.5x 大 + 特效升级
+    // v18.72: 炫酷航天飞机风格 — 蓝紫机体+助推器+三喷口 (角色左侧)
     const rocket = has.rocket ? `
       <g transform="translate(220) scale(-1, 1)">
       <g class="rocket-beside" filter="url(#eqShadowBig)">
-        <!-- 整体漂浮 -->
         <animateTransform attributeName="transform" type="translate"
-                         values="0,0; 0,-12; 0,0" dur="2s" repeatCount="indefinite"/>
-        <!-- 引擎出口光晕 (脉冲) -->
-        <circle cx="200" cy="175" r="22" fill="#FF4500" opacity="0.18">
-          <animate attributeName="r" values="16;32;16" dur="0.45s" repeatCount="indefinite"/>
-          <animate attributeName="opacity" values="0.1;0.38;0.1" dur="0.45s" repeatCount="indefinite"/>
-        </circle>
-        <!-- 旋转光环 (boost ring) -->
-        <circle cx="200" cy="175" r="30" fill="none" stroke="#FFA500" stroke-width="2" stroke-dasharray="4 5" opacity="0.5">
-          <animate attributeName="r" values="24;38;24" dur="0.9s" repeatCount="indefinite"/>
-          <animateTransform attributeName="transform" type="rotate" values="0 200 175;360 200 175" dur="2s" repeatCount="indefinite"/>
-        </circle>
-        <!-- 火箭主体: 右侧竖飞, 鼻尖朝上 (rotate90 + scale1.5) -->
-        <g transform="translate(200, 175) rotate(90) scale(1.5)">
-          <!-- 火焰 (3 层 + 动画) -->
-          <g transform="translate(40, 0)">
-            <ellipse cx="0" cy="0" rx="36" ry="14" fill="#FF4500" opacity="0.85">
-              <animate attributeName="rx" values="30;46;30" dur="0.25s" repeatCount="indefinite"/>
-              <animate attributeName="opacity" values="0.6;0.95;0.6" dur="0.25s" repeatCount="indefinite"/>
-            </ellipse>
-            <ellipse cx="-3" cy="0" rx="26" ry="9" fill="#FFA500" opacity="0.95">
-              <animate attributeName="rx" values="20;32;20" dur="0.25s" repeatCount="indefinite" begin="0.05s"/>
-            </ellipse>
-            <ellipse cx="-5" cy="0" rx="16" ry="5" fill="#FFE66D">
-              <animate attributeName="rx" values="12;20;12" dur="0.25s" repeatCount="indefinite" begin="0.1s"/>
-            </ellipse>
-            <ellipse cx="-7" cy="0" rx="8" ry="3" fill="#FFF" opacity="0.9"/>
-          </g>
-          <!-- 尾环 -->
-          <ellipse cx="0" cy="0" rx="6" ry="16" fill="#2D3047" stroke="#000" stroke-width="2"/>
-          <!-- 主体 -->
-          <rect x="-50" y="-16" width="50" height="32" fill="url(#rocketBody)" stroke="#2D3047" stroke-width="2.5" rx="6"/>
-          <ellipse cx="-25" cy="-10" rx="22" ry="3" fill="#FFF" opacity="0.7"/>
-          <rect x="-32" y="-8" width="14" height="16" fill="url(#rocketRed)" stroke="#2D3047" stroke-width="1.5"/>
-          <text x="-25" y="3" text-anchor="middle" font-size="9" font-weight="900" fill="#FFF">A+</text>
-          <circle cx="-12" cy="-2" r="6" fill="#4ECDC4" stroke="#2D3047" stroke-width="2"/>
-          <circle cx="-12" cy="-2" r="5" fill="#7DDDD5" opacity="0.7"/>
-          <ellipse cx="-13" cy="-4" rx="2" ry="1.2" fill="#FFF" opacity="0.9"/>
-          <!-- 头锥 -->
-          <polygon points="-50,-16 -50,16 -68,0" fill="url(#metalRed)" stroke="#2D3047" stroke-width="2.5"/>
-          <polygon points="-50,-16 -50,-8 -65,-3 -68,0" fill="#FFCCCC" opacity="0.6"/>
-          <!-- 翼 -->
-          <polygon points="-30,-16 -38,-30 -18,-16" fill="url(#metalRed)" stroke="#2D3047" stroke-width="2"/>
-          <polygon points="-30,16 -38,30 -18,16" fill="url(#metalRed)" stroke="#2D3047" stroke-width="2"/>
-          <!-- 铆钉 -->
-          <circle cx="-44" cy="-12" r="1.5" fill="#FFF"/>
-          <circle cx="-44" cy="12" r="1.5" fill="#FFF"/>
-          <circle cx="-5" cy="-12" r="1.5" fill="#FFF"/>
-          <circle cx="-5" cy="12" r="1.5" fill="#FFF"/>
-        </g>
-        <!-- 速度线 (引擎尾部向下 3 条) -->
-        <line x1="193" y1="185" x2="190" y2="250" stroke="#FFE66D" stroke-width="3" stroke-linecap="round">
-          <animate attributeName="opacity" values="0;1;0" dur="0.4s" repeatCount="indefinite"/>
+                         values="0,0; 0,-11; 0,0" dur="2.2s" repeatCount="indefinite"/>
+
+        <!-- 引擎光晕 -->
+        <ellipse cx="185" cy="205" rx="28" ry="10" fill="url(#engineGlow)">
+          <animate attributeName="rx" values="22;40;22" dur="0.6s" repeatCount="indefinite"/>
+          <animate attributeName="ry" values="7;16;7" dur="0.6s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.6;1;0.6" dur="0.6s" repeatCount="indefinite"/>
+        </ellipse>
+
+        <!-- 左助推器 -->
+        <ellipse cx="172" cy="192" rx="5" ry="13" fill="#FF3D00" opacity="0.9">
+          <animate attributeName="ry" values="9;17;9" dur="0.28s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse cx="172" cy="190" rx="3.5" ry="8" fill="#FF9100">
+          <animate attributeName="ry" values="5;11;5" dur="0.28s" repeatCount="indefinite" begin="0.06s"/>
+        </ellipse>
+        <ellipse cx="172" cy="188" rx="2" ry="5" fill="#FFD740">
+          <animate attributeName="ry" values="3;7;3" dur="0.28s" repeatCount="indefinite" begin="0.12s"/>
+        </ellipse>
+        <rect x="166" y="110" width="12" height="76" fill="url(#boosterGrad)" rx="5" stroke="#B71C1C" stroke-width="1.2"/>
+        <ellipse cx="172" cy="110" rx="6" ry="10" fill="#FF8A65"/>
+        <ellipse cx="172" cy="108" rx="4" ry="3" fill="#FFCCBC" opacity="0.6"/>
+        <rect x="167" y="128" width="10" height="2.5" fill="#FFF3E0" opacity="0.55"/>
+        <rect x="167" y="150" width="10" height="2.5" fill="#FFF3E0" opacity="0.4"/>
+
+        <!-- 右助推器 -->
+        <ellipse cx="198" cy="192" rx="5" ry="13" fill="#FF3D00" opacity="0.9">
+          <animate attributeName="ry" values="9;17;9" dur="0.28s" repeatCount="indefinite" begin="0.09s"/>
+        </ellipse>
+        <ellipse cx="198" cy="190" rx="3.5" ry="8" fill="#FF9100">
+          <animate attributeName="ry" values="5;11;5" dur="0.28s" repeatCount="indefinite" begin="0.15s"/>
+        </ellipse>
+        <ellipse cx="198" cy="188" rx="2" ry="5" fill="#FFD740">
+          <animate attributeName="ry" values="3;7;3" dur="0.28s" repeatCount="indefinite" begin="0.21s"/>
+        </ellipse>
+        <rect x="192" y="110" width="12" height="76" fill="url(#boosterGrad)" rx="5" stroke="#B71C1C" stroke-width="1.2"/>
+        <ellipse cx="198" cy="110" rx="6" ry="10" fill="#FF8A65"/>
+        <ellipse cx="198" cy="108" rx="4" ry="3" fill="#FFCCBC" opacity="0.6"/>
+        <rect x="193" y="128" width="10" height="2.5" fill="#FFF3E0" opacity="0.55"/>
+        <rect x="193" y="150" width="10" height="2.5" fill="#FFF3E0" opacity="0.4"/>
+
+        <!-- 助推连接杆 -->
+        <rect x="175" y="122" width="20" height="3.5" fill="#78909C" rx="1.5"/>
+        <rect x="175" y="152" width="20" height="3.5" fill="#78909C" rx="1.5"/>
+
+        <!-- 三角翼 (在机身后面) -->
+        <polygon points="178,158 158,182 178,180" fill="#78909C" stroke="#455A64" stroke-width="1.2"/>
+        <polygon points="178,158 158,174 166,172" fill="#B0BEC5" opacity="0.7"/>
+        <polygon points="192,158 212,182 192,180" fill="#78909C" stroke="#455A64" stroke-width="1.2"/>
+        <polygon points="192,158 212,174 204,172" fill="#B0BEC5" opacity="0.7"/>
+
+        <!-- 机身主体 (外燃料箱: 橙色下部) -->
+        <rect x="177" y="148" width="16" height="40" fill="url(#shuttleTank)" rx="2" stroke="#E65100" stroke-width="1"/>
+        <line x1="185" y1="148" x2="185" y2="188" stroke="#BF6A00" stroke-width="0.8" opacity="0.5"/>
+        <rect x="178" y="160" width="14" height="2" fill="#FFD54F" opacity="0.45"/>
+
+        <!-- 机身上部 (白色轨道飞行器) -->
+        <rect x="177" y="106" width="16" height="45" fill="url(#shuttleBody)" rx="3" stroke="#607D8B" stroke-width="1.2"/>
+        <!-- 黑色热防护贴片 -->
+        <rect x="178" y="138" width="14" height="5" fill="#37474F" rx="1" opacity="0.85"/>
+        <rect x="178" y="130" width="14" height="2.5" fill="#607D8B" opacity="0.5"/>
+        <!-- 驾驶舱窗口 -->
+        <rect x="180" y="112" width="10" height="7" fill="#1565C0" rx="2" stroke="#0D47A1" stroke-width="0.8"/>
+        <rect x="181" y="113" width="4" height="5" fill="#42A5F5" rx="1"/>
+        <rect x="186" y="113" width="3" height="5" fill="#29B6F6" rx="1"/>
+        <ellipse cx="182.5" cy="114.5" rx="1.5" ry="1" fill="white" opacity="0.5"/>
+        <!-- 机翼前缘黑色隔热 -->
+        <polygon points="178,148 158,182 162,182 178,153" fill="#263238" opacity="0.6"/>
+        <polygon points="192,148 212,182 208,182 192,153" fill="#263238" opacity="0.6"/>
+
+        <!-- 鼻锥 (深蓝紫) -->
+        <polygon points="185,68 178,106 192,106" fill="url(#shuttleNose)" stroke="#1A237E" stroke-width="1.2"/>
+        <!-- 鼻锥分型线 -->
+        <line x1="185" y1="68" x2="185" y2="106" stroke="#3949AB" stroke-width="0.6" opacity="0.6"/>
+        <!-- 顶部整流帽 -->
+        <ellipse cx="185" cy="70" rx="4" ry="6" fill="#283593"/>
+        <ellipse cx="184" cy="68" rx="1.5" ry="2" fill="#7986CB" opacity="0.7"/>
+
+        <!-- 主引擎出口 (3口) -->
+        <path d="M179,188 L182,198 L188,198 L191,188 Z" fill="#37474F" stroke="#263238" stroke-width="0.8"/>
+        <ellipse cx="185" cy="188" rx="6" ry="2" fill="#546E7A"/>
+        <!-- 主引擎火焰 -->
+        <ellipse cx="185" cy="204" rx="9" ry="20" fill="#FF3D00" opacity="0.85">
+          <animate attributeName="ry" values="15;24;15" dur="0.3s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse cx="185" cy="202" rx="6" ry="13" fill="#FF9100">
+          <animate attributeName="ry" values="9;17;9" dur="0.3s" repeatCount="indefinite" begin="0.07s"/>
+        </ellipse>
+        <ellipse cx="185" cy="200" rx="3.5" ry="8" fill="#FFD740">
+          <animate attributeName="ry" values="5;11;5" dur="0.3s" repeatCount="indefinite" begin="0.14s"/>
+        </ellipse>
+        <ellipse cx="185" cy="198" rx="1.8" ry="4" fill="#FFF9C4"/>
+
+        <!-- 速度线 -->
+        <line x1="179" y1="224" x2="177" y2="248" stroke="#FFE66D" stroke-width="2.5" stroke-linecap="round">
+          <animate attributeName="opacity" values="0;1;0" dur="0.38s" repeatCount="indefinite"/>
         </line>
-        <line x1="200" y1="185" x2="200" y2="255" stroke="#FFA500" stroke-width="2.5" stroke-linecap="round">
-          <animate attributeName="opacity" values="0;1;0" dur="0.4s" repeatCount="indefinite" begin="0.15s"/>
+        <line x1="185" y1="228" x2="185" y2="252" stroke="#FFA500" stroke-width="2" stroke-linecap="round">
+          <animate attributeName="opacity" values="0;1;0" dur="0.38s" repeatCount="indefinite" begin="0.12s"/>
         </line>
-        <line x1="207" y1="185" x2="210" y2="248" stroke="#FF6B6B" stroke-width="2" stroke-linecap="round">
-          <animate attributeName="opacity" values="0;1;0" dur="0.4s" repeatCount="indefinite" begin="0.28s"/>
+        <line x1="191" y1="224" x2="193" y2="248" stroke="#FF6B6B" stroke-width="2" stroke-linecap="round">
+          <animate attributeName="opacity" values="0;1;0" dur="0.38s" repeatCount="indefinite" begin="0.24s"/>
         </line>
-        <!-- 烟雾粒子 -->
-        <circle cx="200" cy="232" r="7" fill="#FFF" opacity="0.4">
+
+        <!-- 烟雾 -->
+        <circle cx="185" cy="240" r="8" fill="#CFD8DC" opacity="0.4">
           <animate attributeName="opacity" values="0.4;0;0.4" dur="1.2s" repeatCount="indefinite"/>
-          <animate attributeName="r" values="5;16;5" dur="1.2s" repeatCount="indefinite"/>
-          <animate attributeName="cy" values="232;256;232" dur="1.2s" repeatCount="indefinite"/>
+          <animate attributeName="r" values="6;18;6" dur="1.2s" repeatCount="indefinite"/>
+          <animate attributeName="cy" values="240;264;240" dur="1.2s" repeatCount="indefinite"/>
         </circle>
-        <circle cx="193" cy="242" r="5" fill="#DDD" opacity="0.35">
-          <animate attributeName="opacity" values="0.35;0;0.35" dur="1.5s" repeatCount="indefinite" begin="0.35s"/>
-          <animate attributeName="cy" values="242;258;242" dur="1.5s" repeatCount="indefinite" begin="0.35s"/>
+        <circle cx="178" cy="248" r="5" fill="#ECEFF1" opacity="0.35">
+          <animate attributeName="opacity" values="0.35;0;0.35" dur="1.6s" repeatCount="indefinite" begin="0.4s"/>
+          <animate attributeName="cy" values="248;268;248" dur="1.6s" repeatCount="indefinite" begin="0.4s"/>
         </circle>
-        <circle cx="207" cy="238" r="4" fill="#FFA500" opacity="0.35">
-          <animate attributeName="opacity" values="0.35;0;0.35" dur="1.8s" repeatCount="indefinite" begin="0.7s"/>
-          <animate attributeName="cy" values="238;255;238" dur="1.8s" repeatCount="indefinite" begin="0.7s"/>
-        </circle>
-        <!-- 星光粒子 (火箭周围飞舞) -->
-        <circle cx="175" cy="115" r="2.5" fill="#FFE66D">
+
+        <!-- 星光粒子 -->
+        <circle cx="162" cy="118" r="2.5" fill="#FFE66D">
           <animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite"/>
-          <animate attributeName="cy" values="115;100;115" dur="1.8s" repeatCount="indefinite"/>
+          <animate attributeName="cy" values="118;100;118" dur="1.8s" repeatCount="indefinite"/>
           <animate attributeName="r" values="1.5;3.5;1.5" dur="1.8s" repeatCount="indefinite"/>
         </circle>
-        <circle cx="226" cy="130" r="2" fill="#FFA500">
+        <circle cx="210" cy="132" r="2" fill="#90CAF9">
           <animate attributeName="opacity" values="0;1;0" dur="2.2s" repeatCount="indefinite" begin="0.5s"/>
-          <animate attributeName="cy" values="130;116;130" dur="2.2s" repeatCount="indefinite" begin="0.5s"/>
+          <animate attributeName="cy" values="132;114;132" dur="2.2s" repeatCount="indefinite" begin="0.5s"/>
         </circle>
-        <circle cx="219" cy="85" r="1.8" fill="#FFF">
+        <circle cx="214" cy="90" r="1.8" fill="#FFF">
           <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" begin="1s"/>
           <animate attributeName="r" values="1;3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
         </circle>
-        <circle cx="180" cy="148" r="2" fill="#4ECDC4">
+        <circle cx="160" cy="152" r="2" fill="#CE93D8">
           <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" begin="0.8s"/>
-          <animate attributeName="cy" values="148;132;148" dur="2s" repeatCount="indefinite" begin="0.8s"/>
+          <animate attributeName="cy" values="152;134;152" dur="2s" repeatCount="indefinite" begin="0.8s"/>
         </circle>
-        <text x="163" y="102" font-size="13" fill="#FFE66D">
-          <animate attributeName="opacity" values="0;1;0" dur="2.5s" repeatCount="indefinite" begin="0.2s"/>✨
-        </text>
-        <text x="220" y="150" font-size="10" fill="#FFB6D9">
-          <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" begin="1.3s"/>✦
-        </text>
+        <text x="155" y="104" font-size="13" fill="#FFE66D">
+          <animate attributeName="opacity" values="0;1;0" dur="2.5s" repeatCount="indefinite" begin="0.2s"/>✨</text>
+        <text x="212" y="148" font-size="9" fill="#90CAF9">
+          <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" begin="1.3s"/>✦</text>
       </g>
       </g>
     ` : '';
@@ -1561,6 +1600,31 @@ const CHAMUI = {
             <stop offset="50%" stop-color="#E8E8E8"/>
             <stop offset="100%" stop-color="#888"/>
           </linearGradient>
+          <linearGradient id="shuttleBody" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#B0BEC5"/>
+            <stop offset="40%" stop-color="#ECEFF1"/>
+            <stop offset="100%" stop-color="#90A4AE"/>
+          </linearGradient>
+          <linearGradient id="shuttleNose" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#5C6BC0"/>
+            <stop offset="50%" stop-color="#3949AB"/>
+            <stop offset="100%" stop-color="#1A237E"/>
+          </linearGradient>
+          <linearGradient id="shuttleTank" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#F57F17"/>
+            <stop offset="40%" stop-color="#FF8F00"/>
+            <stop offset="100%" stop-color="#E65100"/>
+          </linearGradient>
+          <linearGradient id="boosterGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#EF5350"/>
+            <stop offset="50%" stop-color="#FF7043"/>
+            <stop offset="100%" stop-color="#D32F2F"/>
+          </linearGradient>
+          <radialGradient id="engineGlow" cx="50%" cy="50%">
+            <stop offset="0%" stop-color="#FFEB3B" stop-opacity="0.9"/>
+            <stop offset="50%" stop-color="#FF9800" stop-opacity="0.7"/>
+            <stop offset="100%" stop-color="#FF3D00" stop-opacity="0"/>
+          </radialGradient>
         </defs>
         ${fireBackground}
         ${cometTrail}
