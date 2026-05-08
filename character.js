@@ -499,7 +499,7 @@ const CHAMUI = {
 
     // v18.73: 蓝紫渐变航天飞机 (鼻锥+双助推+白机身+遮阳板+蓝窗+4引擎+金焰)
     const rocket = has.rocket ? `
-      <g transform="translate(220) scale(-1, 1)">
+      <g transform="translate(200) scale(-1, 1)">
       <g class="rocket-beside" filter="url(#eqShadowBig)">
         <animateTransform attributeName="transform" type="translate"
                          values="0,0; 0,-11; 0,0" dur="2.2s" repeatCount="indefinite"/>
