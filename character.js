@@ -1241,50 +1241,86 @@ const CHAMUI = {
       </g>`;
     })() : '';
 
-    // === v18.80 晶石群背景装饰 (渲染在角色身体之前) ===
+    // === v18.81 心形晶钻背景装饰 (渲染在角色身体之前) ===
     const diamond = has.diamond ? `
-      <g opacity="0.72">
-        <!-- 主钻石: 右上方背景 -->
-        <g filter="url(#eqShadow)">
-          <animateTransform attributeName="transform" type="translate"
-                           values="148,22; 148,15; 148,22" dur="2.6s" repeatCount="indefinite"/>
-          <polygon points="0,-16 -13,-2 -9,14 9,14 13,-2" fill="#2DD4C0" opacity="0.25"/>
-          <polygon points="0,-15 -12,-1 -8,12 8,12 12,-1" fill="#4ECDC4" stroke="#2D3047" stroke-width="1.2"/>
-          <polygon points="0,-15 -7,-1 0,5 7,-1" fill="#A0E8F0" opacity="0.85"/>
-          <line x1="-12" y1="-1" x2="12" y2="-1" stroke="#2D3047" stroke-width="0.8" opacity="0.5"/>
-          <circle cx="5" cy="-11" r="1.5" fill="white" opacity="0.9">
-            <animate attributeName="opacity" values="0.9;0.2;0.9" dur="1.3s" repeatCount="indefinite"/>
-          </circle>
-          <text x="9" y="-17" font-size="8" fill="#FFE66D" opacity="0.8">
-            <animate attributeName="opacity" values="0.8;0.15;0.8" dur="1.0s" repeatCount="indefinite"/>✨</text>
+      <defs>
+        <radialGradient id="dHrtFill" cx="38%" cy="36%" r="58%">
+          <stop offset="0%"   stop-color="white"   stop-opacity="0.95"/>
+          <stop offset="22%"  stop-color="#EDE9FE" stop-opacity="0.9"/>
+          <stop offset="48%"  stop-color="#C4B5FD" stop-opacity="0.85"/>
+          <stop offset="76%"  stop-color="#8B5CF6" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#4C1D95" stop-opacity="0.95"/>
+        </radialGradient>
+        <radialGradient id="dHrtGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="white"   stop-opacity="0.85"/>
+          <stop offset="55%"  stop-color="#DDD6FE" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <!-- 心形晶钻主体: 浮动于角色背后 -->
+      <g transform="translate(110,105)" opacity="0.68">
+        <animateTransform attributeName="transform" type="translate"
+                         values="0,0; 0,-6; 0,0" dur="4.0s" repeatCount="indefinite" additive="sum"/>
+        <path d="M 0,52 C -9,42 -60,15 -60,-21 C -60,-54 -30,-63 0,-42 C 30,-63 60,-54 60,-21 C 60,15 9,42 0,52 Z"
+              fill="url(#dHrtFill)" stroke="#7C3AED" stroke-width="1.2"/>
+        <!-- 右侧粉色刻面 -->
+        <path d="M 0,52 C 9,42 60,15 60,-21 L 0,-42 Z" fill="#F9A8D4" opacity="0.22"/>
+        <!-- 左侧蓝紫刻面 -->
+        <path d="M 0,52 C -9,42 -60,15 -60,-21 L 0,-42 Z" fill="#A5B4FC" opacity="0.22"/>
+        <!-- 刻面切割线 -->
+        <line x1="0"   y1="52"  x2="-60" y2="-21" stroke="white" stroke-width="0.7" opacity="0.4"/>
+        <line x1="0"   y1="52"  x2="60"  y2="-21" stroke="white" stroke-width="0.7" opacity="0.4"/>
+        <line x1="0"   y1="52"  x2="0"   y2="-42" stroke="white" stroke-width="0.5" opacity="0.3"/>
+        <line x1="-60" y1="-21" x2="60"  y2="-21" stroke="white" stroke-width="0.7" opacity="0.4"/>
+        <line x1="-60" y1="-21" x2="0"   y2="-42" stroke="white" stroke-width="0.6" opacity="0.35"/>
+        <line x1="60"  y1="-21" x2="0"   y2="-42" stroke="white" stroke-width="0.6" opacity="0.35"/>
+        <line x1="-30" y1="15"  x2="0"   y2="-42" stroke="white" stroke-width="0.5" opacity="0.25"/>
+        <line x1="30"  y1="15"  x2="0"   y2="-42" stroke="white" stroke-width="0.5" opacity="0.25"/>
+        <!-- 内部发光核心 -->
+        <circle cx="-8" cy="-22" fill="url(#dHrtGlow)" opacity="0.7">
+          <animate attributeName="r"       values="14;22;14" dur="2.2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.7;0.35;0.7" dur="2.2s" repeatCount="indefinite"/>
+        </circle>
+        <!-- 高光反射点 -->
+        <circle cx="-20" cy="-38" r="4" fill="white" opacity="0.6">
+          <animate attributeName="opacity" values="0.6;0.15;0.6" dur="1.6s" repeatCount="indefinite"/>
+        </circle>
+        <!-- 光芒射线 -->
+        <g stroke="white" stroke-width="1.2">
+          <line x1="-8" y1="-46" x2="-8"  y2="-60"><animate attributeName="opacity" values="0.65;0.1;0.65" dur="1.8s" repeatCount="indefinite"/></line>
+          <line x1="14" y1="-44" x2="24"  y2="-58"><animate attributeName="opacity" values="0.6;0.1;0.6"  dur="2.1s" repeatCount="indefinite"/></line>
+          <line x1="-30" y1="-40" x2="-42" y2="-52"><animate attributeName="opacity" values="0.6;0.1;0.6" dur="1.5s" repeatCount="indefinite"/></line>
+          <line x1="62"  y1="-21" x2="76"  y2="-21"><animate attributeName="opacity" values="0.5;0.1;0.5" dur="2.4s" repeatCount="indefinite"/></line>
+          <line x1="-62" y1="-21" x2="-76" y2="-21"><animate attributeName="opacity" values="0.5;0.1;0.5" dur="2.0s" repeatCount="indefinite"/></line>
         </g>
-        <!-- 次钻石: 左上方背景 -->
-        <g>
-          <animateTransform attributeName="transform" type="translate"
-                           values="68,40; 68,46; 68,40" dur="3.1s" repeatCount="indefinite"/>
-          <polygon points="0,-11 -9,-1 -6,9 6,9 9,-1" fill="#4ECDC4" stroke="#2D3047" stroke-width="1" opacity="0.9"/>
-          <polygon points="0,-11 -5,-1 0,3.5 5,-1" fill="#A0E8F0" opacity="0.8"/>
-          <line x1="-9" y1="-1" x2="9" y2="-1" stroke="#2D3047" stroke-width="0.7" opacity="0.5"/>
-          <circle cx="-3" cy="-8" r="1" fill="white" opacity="0.85">
-            <animate attributeName="opacity" values="0.85;0.1;0.85" dur="1.7s" repeatCount="indefinite"/>
-          </circle>
-        </g>
-        <!-- 小钻石: 右侧中部背景 -->
-        <g>
-          <animateTransform attributeName="transform" type="translate"
-                           values="178,95; 178,90; 178,95" dur="2.0s" repeatCount="indefinite"/>
-          <polygon points="0,-8 -7,0 -5,7 5,7 7,0" fill="#4ECDC4" stroke="#2D3047" stroke-width="0.8" opacity="0.85"/>
-          <polygon points="0,-8 -4,0 0,2.5 4,0" fill="#A0E8F0" opacity="0.75"/>
-          <text x="-4" y="-9" font-size="7" fill="#FFE66D" opacity="0.7">
-            <animate attributeName="opacity" values="0.7;0.1;0.7" dur="0.9s" repeatCount="indefinite"/>✨</text>
-        </g>
-        <!-- 微钻石: 左侧中部背景 -->
-        <g>
-          <animateTransform attributeName="transform" type="translate"
-                           values="50,98; 50,102; 50,98" dur="2.4s" repeatCount="indefinite"/>
-          <polygon points="0,-6 -5,0 -3,5 3,5 5,0" fill="#4ECDC4" stroke="#2D3047" stroke-width="0.7" opacity="0.7"/>
-          <polygon points="0,-6 -3,0 0,2 3,0" fill="#A0E8F0" opacity="0.65"/>
-        </g>
+      </g>
+      <!-- 小浮动心形: 右上 -->
+      <g transform="translate(168,26)">
+        <animateTransform attributeName="transform" type="translate"
+                         values="0,0; 0,-6; 0,0" dur="3.2s" repeatCount="indefinite" additive="sum"/>
+        <path d="M 0,8 C -2,6 -10,2 -10,-3 C -10,-8 -4,-9 0,-6 C 4,-9 10,-8 10,-3 C 10,2 2,6 0,8 Z"
+              fill="#A855F7" opacity="0.75"/>
+      </g>
+      <!-- 小浮动心形: 左下 -->
+      <g transform="translate(35,158)">
+        <animateTransform attributeName="transform" type="translate"
+                         values="0,0; 0,6; 0,0" dur="2.8s" repeatCount="indefinite" additive="sum"/>
+        <path d="M 0,8 C -2,6 -10,2 -10,-3 C -10,-8 -4,-9 0,-6 C 4,-9 10,-8 10,-3 C 10,2 2,6 0,8 Z"
+              fill="#F472B6" opacity="0.7"/>
+      </g>
+      <!-- 星形闪烁: 左上 -->
+      <g transform="translate(50,32)">
+        <animateTransform attributeName="transform" type="translate"
+                         values="0,0; 0,-4; 0,0" dur="2.5s" repeatCount="indefinite" additive="sum"/>
+        <text font-size="14" fill="#E9D5FF" text-anchor="middle" dominant-baseline="central">
+          <animate attributeName="opacity" values="0.8;0.15;0.8" dur="1.4s" repeatCount="indefinite"/>✦</text>
+      </g>
+      <!-- 星形闪烁: 右侧 -->
+      <g transform="translate(196,95)">
+        <animateTransform attributeName="transform" type="translate"
+                         values="0,0; 0,-4; 0,0" dur="3.0s" repeatCount="indefinite" additive="sum"/>
+        <text font-size="11" fill="#DDD6FE" text-anchor="middle" dominant-baseline="central">
+          <animate attributeName="opacity" values="0.7;0.1;0.7" dur="1.7s" repeatCount="indefinite"/>✦</text>
       </g>
     ` : '';
 

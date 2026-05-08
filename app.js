@@ -2412,13 +2412,19 @@ function _startPetIdleTalk() {
       petSay(_generatePetMessage());
     }, 60000 + Math.random() * 30000);
   }, 30000);
-  // 冷笑话: 每 5 分钟一条, 不重复
-  _jokeTimer = setInterval(() => {
-    if (document.hidden) return;
-    const dash = document.getElementById('page-dashboard');
-    if (!dash || !dash.classList.contains('active')) return;
-    petSay(_nextColdJoke(), 7000);
-  }, 5 * 60 * 1000);
+  // 冷笑话: 60s 后第一条, 之后每 5 分钟一条, 不重复
+  setTimeout(() => {
+    if (!document.hidden) {
+      const dash = document.getElementById('page-dashboard');
+      if (dash && dash.classList.contains('active')) petSay(_nextColdJoke(), 7000);
+    }
+    _jokeTimer = setInterval(() => {
+      if (document.hidden) return;
+      const dash = document.getElementById('page-dashboard');
+      if (!dash || !dash.classList.contains('active')) return;
+      petSay(_nextColdJoke(), 7000);
+    }, 5 * 60 * 1000);
+  }, 60000);
 }
 
 // ============ v18.20: E 数字跳动 + 彩虹扫过 ============
