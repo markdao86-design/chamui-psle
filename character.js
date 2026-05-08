@@ -1257,8 +1257,8 @@ const CHAMUI = {
           <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
         </radialGradient>
       </defs>
-      <!-- 心形晶钻主体: 浮动于角色背后 -->
-      <g transform="translate(110,105)" opacity="0.68">
+      <!-- 心形晶钻主体: 角色右侧 -->
+      <g transform="translate(188,118)" opacity="0.82">
         <animateTransform attributeName="transform" type="translate"
                          values="0,0; 0,-6; 0,0" dur="4.0s" repeatCount="indefinite" additive="sum"/>
         <path d="M 0,52 C -9,42 -60,15 -60,-21 C -60,-54 -30,-63 0,-42 C 30,-63 60,-54 60,-21 C 60,15 9,42 0,52 Z"
@@ -1294,29 +1294,29 @@ const CHAMUI = {
           <line x1="-62" y1="-21" x2="-76" y2="-21"><animate attributeName="opacity" values="0.5;0.1;0.5" dur="2.0s" repeatCount="indefinite"/></line>
         </g>
       </g>
-      <!-- 小浮动心形: 右上 -->
-      <g transform="translate(168,26)">
+      <!-- 小浮动心形: 主心右上方 -->
+      <g transform="translate(228,58)">
         <animateTransform attributeName="transform" type="translate"
                          values="0,0; 0,-6; 0,0" dur="3.2s" repeatCount="indefinite" additive="sum"/>
         <path d="M 0,8 C -2,6 -10,2 -10,-3 C -10,-8 -4,-9 0,-6 C 4,-9 10,-8 10,-3 C 10,2 2,6 0,8 Z"
-              fill="#A855F7" opacity="0.75"/>
+              fill="#A855F7" opacity="0.8"/>
       </g>
-      <!-- 小浮动心形: 左下 -->
-      <g transform="translate(35,158)">
+      <!-- 小浮动心形: 主心左下方 -->
+      <g transform="translate(162,188)">
         <animateTransform attributeName="transform" type="translate"
                          values="0,0; 0,6; 0,0" dur="2.8s" repeatCount="indefinite" additive="sum"/>
         <path d="M 0,8 C -2,6 -10,2 -10,-3 C -10,-8 -4,-9 0,-6 C 4,-9 10,-8 10,-3 C 10,2 2,6 0,8 Z"
-              fill="#F472B6" opacity="0.7"/>
+              fill="#F472B6" opacity="0.75"/>
       </g>
-      <!-- 星形闪烁: 左上 -->
-      <g transform="translate(50,32)">
+      <!-- 星形闪烁: 主心左上 -->
+      <g transform="translate(148,62)">
         <animateTransform attributeName="transform" type="translate"
                          values="0,0; 0,-4; 0,0" dur="2.5s" repeatCount="indefinite" additive="sum"/>
         <text font-size="14" fill="#E9D5FF" text-anchor="middle" dominant-baseline="central">
           <animate attributeName="opacity" values="0.8;0.15;0.8" dur="1.4s" repeatCount="indefinite"/>✦</text>
       </g>
-      <!-- 星形闪烁: 右侧 -->
-      <g transform="translate(196,95)">
+      <!-- 星形闪烁: 主心右侧 -->
+      <g transform="translate(242,118)">
         <animateTransform attributeName="transform" type="translate"
                          values="0,0; 0,-4; 0,0" dur="3.0s" repeatCount="indefinite" additive="sum"/>
         <text font-size="11" fill="#DDD6FE" text-anchor="middle" dominant-baseline="central">
