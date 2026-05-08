@@ -1078,16 +1078,54 @@ const CHAMUI = {
     const hat = (has.hat && !has.crown && !has.sun && !has.streak100 && !has.phoenix
                   && skin.accessory !== 'masterCrown' && skin.accessory !== 'explorerCap' && skin.accessory !== 'labGoggles') ? `
       <g>
-        <!-- 帽底 (压头发上, 跟随头顶弧度) -->
-        <ellipse cx="110" cy="${A.headTop[1]-3}" rx="${tpl.headR+4}" ry="3" fill="#2D3047"/>
-        <!-- 顶板 (方正) -->
-        <polygon points="${110-tpl.headR-4},${A.headTop[1]-7} ${110+tpl.headR+4},${A.headTop[1]-7} ${110+tpl.headR-2},${A.headTop[1]-14} ${110-tpl.headR+2},${A.headTop[1]-14}" fill="#2D3047"/>
-        <rect x="${110-tpl.headR-4}" y="${A.headTop[1]-7}" width="${(tpl.headR+4)*2}" height="3" fill="#1A1A2E"/>
-        <!-- 流苏 -->
-        <line x1="${110+tpl.headR-2}" y1="${A.headTop[1]-11}" x2="${110+tpl.headR+8}" y2="${A.headTop[1]+0}" stroke="#FFE66D" stroke-width="2"/>
-        <circle cx="${110+tpl.headR+8}" cy="${A.headTop[1]+0}" r="4" fill="#FFE66D" stroke="#2D3047" stroke-width="1">
-          <animate attributeName="cy" values="${A.headTop[1]+0};${A.headTop[1]+3};${A.headTop[1]+0}" dur="1.8s" repeatCount="indefinite"/>
+        <!-- 帽顶板: 宽平黑色方板, 两侧超出头部 -->
+        <rect x="${110-tpl.headR-16}" y="${A.headTop[1]-17}"
+              width="${(tpl.headR+16)*2}" height="6"
+              fill="#1A1A2E" rx="1"/>
+        <!-- 板顶高光 -->
+        <rect x="${110-tpl.headR-16}" y="${A.headTop[1]-17}"
+              width="${(tpl.headR+16)*2}" height="2"
+              fill="#3D3D5C" opacity="0.7" rx="1"/>
+        <!-- 帽身: 梯形暗色筒身, 连接顶板与头顶 -->
+        <polygon points="${110-tpl.headR-4},${A.headTop[1]-11}
+                         ${110+tpl.headR+4},${A.headTop[1]-11}
+                         ${110+tpl.headR},${A.headTop[1]-2}
+                         ${110-tpl.headR},${A.headTop[1]-2}"
+                 fill="#2D3047"/>
+        <!-- 帽底椭圆 (贴合头顶弧度) -->
+        <ellipse cx="110" cy="${A.headTop[1]-2}" rx="${tpl.headR+1}" ry="3.5" fill="#1A1A2E"/>
+        <!-- 流苏绳: 从顶板右角垂下 -->
+        <line x1="${110+tpl.headR+10}" y1="${A.headTop[1]-14}"
+              x2="${110+tpl.headR+13}" y2="${A.headTop[1]+10}"
+              stroke="#B8860B" stroke-width="1.8"/>
+        <!-- 流苏球 -->
+        <circle cx="${110+tpl.headR+13}" cy="${A.headTop[1]+10}" r="4"
+                fill="#FFD700" stroke="#2D3047" stroke-width="1">
+          <animate attributeName="cy"
+                   values="${A.headTop[1]+10};${A.headTop[1]+14};${A.headTop[1]+10}"
+                   dur="1.8s" repeatCount="indefinite"/>
         </circle>
+        <!-- 流苏穗 (3根) -->
+        <g stroke="#D4A017" stroke-width="1.3" stroke-linecap="round">
+          <line x1="${110+tpl.headR+10}" y1="${A.headTop[1]+14}"
+                x2="${110+tpl.headR+7}"  y2="${A.headTop[1]+23}">
+            <animate attributeName="y2"
+                     values="${A.headTop[1]+23};${A.headTop[1]+27};${A.headTop[1]+23}"
+                     dur="1.8s" repeatCount="indefinite"/>
+          </line>
+          <line x1="${110+tpl.headR+13}" y1="${A.headTop[1]+14}"
+                x2="${110+tpl.headR+13}" y2="${A.headTop[1]+24}">
+            <animate attributeName="y2"
+                     values="${A.headTop[1]+24};${A.headTop[1]+28};${A.headTop[1]+24}"
+                     dur="1.8s" repeatCount="indefinite" begin="0.1s"/>
+          </line>
+          <line x1="${110+tpl.headR+16}" y1="${A.headTop[1]+14}"
+                x2="${110+tpl.headR+19}" y2="${A.headTop[1]+23}">
+            <animate attributeName="y2"
+                     values="${A.headTop[1]+23};${A.headTop[1]+27};${A.headTop[1]+23}"
+                     dur="1.8s" repeatCount="indefinite" begin="0.2s"/>
+          </line>
+        </g>
       </g>
     ` : '';
 
