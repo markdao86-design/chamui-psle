@@ -3908,9 +3908,11 @@ function openPetModal() {
       <div class="pet-form-meta">${f.name} (累计打卡 ≥${f.minStreak} 天)${isCurrent ? ' ← 你在这' : ''}</div>
     </div>`;
   }).join('');
-  const gundamStatus = streak >= 45
-    ? '<div class="pet-next" style="color:#2255CC">🤖 命运高达已解锁! 双宠物一起陪你!</div>'
-    : `<div class="pet-next">🤖 命运高达 (累计打卡 ≥45 天 · 还差 ${45 - streak} 天)</div>`;
+  const gundamUnlocked = streak >= 45;
+  const gundamCard = `<div class="pet-form-item ${gundamUnlocked ? 'unlocked' : 'locked'}" style="background:${gundamUnlocked ? window.GUNDAM_PET.bg : '#E0E0E0'}">
+    <div class="pet-form-svg" style="${gundamUnlocked ? '' : 'filter:grayscale(1);opacity:0.5'}">${window.GUNDAM_PET.svg}</div>
+    <div class="pet-form-meta">🤖 命运高达 (累计打卡 ≥45 天)${gundamUnlocked ? ' ✅ 已解锁' : ` · 还差 ${45 - streak} 天`}</div>
+  </div>`;
   modal.innerHTML = `
     <div class="pet-modal-inner">
       <div class="pet-modal-header">
@@ -3921,11 +3923,10 @@ function openPetModal() {
         <div class="pet-current"><div class="pet-current-svg">${form.svg}</div>${form.name} · 心情 ${state.pet.happiness}/100</div>
         <div class="pet-desc">${escapeHtml(form.desc)}</div>
         ${nextForm ? `<div class="pet-next">下一形态: <b>${nextForm.name}</b> (累计打卡 ≥ ${nextForm.minStreak} 天 · 还差 ${Math.max(0, nextForm.minStreak - streak)} 天)</div>` : '<div class="pet-next">已最高形态! 🎉</div>'}
-        ${gundamStatus}
         <div class="pet-rename">
           <button class="btn btn-secondary" onclick="renamePet()">✏️ 改名</button>
         </div>
-        <div class="pet-forms-list">${formsList}</div>
+        <div class="pet-forms-list">${formsList}${gundamCard}</div>
       </div>
     </div>
   `;
