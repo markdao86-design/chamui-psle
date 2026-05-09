@@ -85,7 +85,11 @@ const CHAMUI = {
     // v18.58: mini-game 局数装备 (玩得多有奖)
     { id: 'gr50',     icon: '🎮', name: '练习生',     condition: 'game-runs', value: 50,  hint: 'Mini-game 累计 50 局 (v18.58)' },
     { id: 'gr200',    icon: '🎯', name: '神射手',     condition: 'game-runs', value: 200, hint: 'Mini-game 累计 200 局 (v18.58)' },
-    { id: 'gr500',    icon: '🎰', name: 'mini-game 王', condition: 'game-runs', value: 500, hint: 'Mini-game 累计 500 局 (v18.58)' }
+    { id: 'gr500',    icon: '🎰', name: 'mini-game 王', condition: 'game-runs', value: 500, hint: 'Mini-game 累计 500 局 (v18.58)' },
+    // v18.86: 打卡周次装备 — 光打卡也能拿到
+    { id: 'wk30', icon: '🧭', name: '探险指南针', condition: 'week', value: 30, hint: '打卡到第30周自动解锁' },
+    { id: 'wk36', icon: '🌱', name: '成长之芽',   condition: 'week', value: 36, hint: '打卡到第36周自动解锁' },
+    { id: 'wk50', icon: '⚓', name: '半程之锚',   condition: 'week', value: 50, hint: '打卡到第50周自动解锁' },
   ],
 
   getLevelInfo(points) {
@@ -131,6 +135,8 @@ const CHAMUI = {
         return state.monthlyTestPass >= eq.value;
       case 'streak-days':
         return !!(state.dailyStreak && (state.dailyStreak.bestEver || 0) >= eq.value);
+      case 'week':
+        return (state.currentWeek || 1) >= eq.value;
       case 'kt-stars': {
         const ks = state.knowledgeStars || {};
         const total = Object.values(ks).reduce((s, e) => s + (e.stars || 0), 0);
@@ -1370,6 +1376,44 @@ const CHAMUI = {
       </g>
     ` : '';
 
+    // === v18.86 周次里程碑装备 (打卡到对应周自动解锁) ===
+    // wk30: 指南针徽章 (右臂)
+    const wk30 = has.wk30 ? `
+      <g transform="translate(148,146)">
+        <circle r="9" fill="#F59E0B" stroke="#2D3047" stroke-width="1.5"/>
+        <circle r="6.5" fill="#FEF3C7"/>
+        <line x1="0" y1="-5" x2="0" y2="5" stroke="#6B7280" stroke-width="0.8"/>
+        <line x1="-5" y1="0" x2="5" y2="0" stroke="#6B7280" stroke-width="0.8"/>
+        <polygon points="0,-5 -1.5,0 1.5,0" fill="#DC2626"/>
+        <polygon points="0,5 -1.5,0 1.5,0" fill="#374151"/>
+        <circle r="1.5" fill="#2D3047"/>
+      </g>
+    ` : '';
+
+    // wk36: 成长之芽 (左肩上方)
+    const wk36 = has.wk36 ? `
+      <g transform="translate(70,115)">
+        <line x1="0" y1="0" x2="0" y2="-14" stroke="#16A34A" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M 0,-7 Q -8,-11 -5,-16 Q -1,-9 0,-7 Z" fill="#22C55E"/>
+        <path d="M 0,-9 Q 8,-13 5,-18 Q 1,-11 0,-9 Z" fill="#4ADE80"/>
+        <ellipse cx="0" cy="-16" rx="2.5" ry="3.5" fill="#86EFAC" transform="rotate(-8 0 -16)">
+          <animate attributeName="ry" values="3.5;4.5;3.5" dur="2.0s" repeatCount="indefinite"/>
+        </ellipse>
+      </g>
+    ` : '';
+
+    // wk50: 半程之锚 (左腰)
+    const wk50 = has.wk50 ? `
+      <g transform="translate(72,172)" stroke="#1D4ED8" stroke-linecap="round">
+        <circle cx="0" cy="-8" r="4" fill="none" stroke-width="1.8"/>
+        <line x1="-8" y1="-5" x2="8" y2="-5" stroke-width="2"/>
+        <line x1="0" y1="-5" x2="0" y2="8" stroke-width="2.2"/>
+        <path d="M -7,5 Q 0,11 7,5" fill="none" stroke-width="2"/>
+        <line x1="-7" y1="5" x2="-4" y2="2" stroke-width="1.8"/>
+        <line x1="7"  y1="5" x2="4"  y2="2" stroke-width="1.8"/>
+      </g>
+    ` : '';
+
     // === 全身光环 (z=10) ===
     const rainbow = has.rainbow ? `
       <g opacity="0.55">
@@ -1797,6 +1841,9 @@ const CHAMUI = {
         ${badge_3}
         ${star}
         ${lightning}
+        ${wk30}
+        ${wk36}
+        ${wk50}
         ${scholarSash}
         ${apple}
         ${cup}

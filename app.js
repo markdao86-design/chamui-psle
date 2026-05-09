@@ -33,6 +33,7 @@ async function init() {
   refreshPhotoKeyCache().then(() => renderAll()).catch(() => {});
   // v18 Phase 5.1: 每日抽奖检查 + 成就 init 检查
   setTimeout(() => {
+    _checkDailyLoginBonus();   // v18.86: 每日登录 +5 分
     _checkDailyDrawOnInit();
     _checkAndUnlockAch();
   }, 800);
@@ -43,10 +44,16 @@ async function init() {
   // 订阅 Firestore 远端变化
   if (typeof subscribeFirestore === 'function' && isFbReady && isFbReady()) {
     subscribeFirestore(remoteData => {
-      state = Object.assign(getDefaultState(), remoteData);
-      if (!state.daily) state.daily = {};
-      if (!state.scores) state.scores = {};
-      recalcTotalPoints(state);
+      const remoteState = Object.assign(getDefaultState(), remoteData);
+      if (!remoteState.daily) remoteState.daily = {};
+      if (!remoteState.scores) remoteState.scores = {};
+      recalcTotalPoints(remoteState);
+      // v18.86 防回退: 云端积分比本地少时, 保留本地并重推云端
+      if (remoteState.totalPoints < (state.totalPoints || 0)) {
+        saveState(state);
+        return;
+      }
+      state = remoteState;
       renderAll();
       showToast('☁️ 已收到远程更新', 'success');
     });
@@ -2316,8 +2323,8 @@ let _petBubbleTimer = null;
 let _petLastSpoke = 0;
 function petSay(message, duration) {
   if (!message) return;
-  // 防止气泡重叠 — 最少间隔 4s
-  if (Date.now() - _petLastSpoke < 4000) return;
+  // 防止气泡重叠 — 最少间隔 2s
+  if (Date.now() - _petLastSpoke < 2000) return;
   _petLastSpoke = Date.now();
   const card = document.getElementById('petWidget');
   if (!card) return;
@@ -2333,6 +2340,31 @@ function petSay(message, duration) {
     setTimeout(() => bubble.remove(), 400);
   }, dur);
 }
+
+// v18.86: QQ宠物式表情动作
+const _PET_EXPR_LIST = ['pet-nod', 'pet-think', 'pet-jump', 'pet-peek', 'pet-dance'];
+let _exprTimer = null;
+function petExpress(expr, dur) {
+  const w = document.getElementById('petWidget');
+  if (!w) return;
+  _PET_EXPR_LIST.forEach(c => w.classList.remove(c));
+  void w.offsetWidth;
+  w.classList.add(expr);
+  setTimeout(() => { if (w) w.classList.remove(expr); }, dur || 1500);
+}
+function _doRandomExpr() {
+  if (!document.hidden) {
+    const dash = document.getElementById('page-dashboard');
+    if (dash && dash.classList.contains('active')) {
+      petExpress(_PET_EXPR_LIST[Math.floor(Math.random() * _PET_EXPR_LIST.length)], 1500);
+    }
+  }
+  _exprTimer = setTimeout(_doRandomExpr, 8000 + Math.random() * 6000);
+}
+// 返回页面时探头点头
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) setTimeout(() => petExpress('pet-peek', 1200), 500);
+});
 
 function petCelebrate(message) {
   const w = document.getElementById('petWidget');
@@ -3698,6 +3730,18 @@ function _checkAndUnlockAch() {
     };
     showNext();
   }
+}
+
+// ============ v18.86: 每日登录 +5 分自动奖励 ============
+function _checkDailyLoginBonus() {
+  const todayKey = new Date().toISOString().slice(0, 10);
+  if ((state.lastLoginDate || '') === todayKey) return;
+  state.lastLoginDate = todayKey;
+  state.logs = state.logs || [];
+  state.logs.push({ reason: '每日登录奖励', points: 5, week: state.currentWeek || 1, timestamp: Date.now() });
+  recalcTotalPoints(state);
+  saveState(state);
+  setTimeout(() => petSay('🌟 今日登录 +5 分! 每天打开 App 就有哦～', 5000), 1200);
 }
 
 // ============ v18 Phase 5.1: 🎁 每日抽奖 ============

@@ -3086,6 +3086,9 @@ function getDefaultState() {
     // v18 Phase 5.1: 🎁 每日登录抽奖
     dailyDraws: { fragments: 0, consecutive: 0, lastDrawDate: null },
 
+    // v18.86: 每日登录 +5 分 bonus
+    lastLoginDate: null,
+
     // v18 Phase 5.3: 🔁 间隔重复 — { 'wow:eng_5': { firstSeen, lastReviewed, intervalDays, correctStreak } }
     spacedRepetition: { reviews: {} },
 
