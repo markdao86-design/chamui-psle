@@ -1048,7 +1048,11 @@ function renderWeeklyCoach() {
 
   const abilityHtml = `
     <div class="coach-section">
-      <div class="coach-section-title">📊 PSLE 能力概览${overallAL ? ` · 预测 <b style="color:var(--color-purple)">AL${overallAL}</b>` : ''}</div>
+      <div class="coach-section-title">📊 PSLE 能力概览${overallAL ? ` · 预测 <b style="color:var(--color-purple)">AL${overallAL}</b> <span style="font-size:11px;font-weight:400;color:var(--color-text-light)">(4科加权综合)</span>` : ''}</div>
+      <div style="font-size:11px;color:var(--color-text-light);margin:-4px 0 8px;line-height:1.5">
+        综合AL = 数学25% + 英语25% + 科学20% + 华文10% + 知识树⭐20%<br>
+        各科AL基于 mini-game 实战正确率: AL1≥90% · AL2≥85% · AL3≥80% · AL4≥75% · AL5≥65% · AL6≥45%
+      </div>
       <div class="coach-subject-grid">
         ${SUBJ_META.map(s => {
           const d = subjAcc[s.name];
@@ -1057,6 +1061,7 @@ function renderWeeklyCoach() {
           const isWeak = pct !== null && pct < 70;
           const barColor = pct === null ? '#DDD' : pct >= 80 ? '#52C788' : pct >= 60 ? '#F59E0B' : '#EF4444';
           const alStyle = isWeak ? 'background:#FFECEC;color:#D32F2F' : 'background:#EEF4FF;color:#1565C0';
+          const detail = d ? `${d.correct}/${d.total} 对 · ${d.runs}局游戏` : '';
           return `<div class="coach-subject-card" style="border-left-color:${s.color}">
             <div class="coach-subject-header">
               <span style="font-weight:700">${s.icon} ${s.name}</span>
@@ -1069,11 +1074,31 @@ function renderWeeklyCoach() {
               <div class="coach-subject-bar-wrap">
                 <div class="coach-subject-bar" style="width:${pct}%;background:${barColor}"></div>
               </div>
-            ` : '<div class="coach-subject-pct" style="color:#BBB;font-size:12px;font-weight:400">暂无数据</div>'}
+              <div style="font-size:11px;color:var(--color-text-light);margin-top:2px">${detail}</div>
+            ` : '<div class="coach-subject-pct" style="color:#BBB;font-size:12px;font-weight:400">暂无数据 — 玩 mini-game 积累</div>'}
           </div>`;
         }).join('')}
       </div>
     </div>`;
+
+  // 错题摘要
+  const wrongItems = (state.wrongAnswers || []).slice(-20);
+  const errorHtml = wrongItems.length > 0 ? `
+    <div class="coach-section">
+      <div class="coach-section-title">❌ 错题本 <span style="font-size:12px;font-weight:400;color:var(--color-text-light)">(最近 ${wrongItems.length} 题 · 云端同步)</span></div>
+      <div style="max-height:200px;overflow-y:auto;font-size:12px;line-height:1.7">
+        ${wrongItems.map(w => {
+          const subj = w.gameKey === 'math' ? '🔢数学' : w.gameKey === 'grammar' ? '✏️语法' : w.gameKey === 'cloze' ? '📝完形' : w.gameKey === 'unit' ? '⚗️单位' : w.gameKey === 'knowledge' ? '🌳知识树' : '📚' + (w.gameKey || '');
+          const retries = w.retries || 0;
+          return `<div style="padding:3px 0;border-bottom:1px solid #f0f0f0">
+            <span style="color:var(--color-text-light)">${subj}</span>
+            <b>${escapeHtml(w.q || '')}</b>
+            ${w.correctAns ? `<span style="color:#52C788;margin-left:4px">正确: ${escapeHtml(String(w.correctAns))}</span>` : ''}
+            ${retries > 0 ? `<span style="color:var(--color-danger);margin-left:4px">重试${retries}次</span>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : '';
 
   const weakHtml = c.weakAdvice ? `
     <div class="coach-section">
@@ -1105,7 +1130,7 @@ function renderWeeklyCoach() {
       </div>`;
   }
 
-  container.innerHTML = abilityHtml + weakHtml + focusHtml + sundayHtml;
+  container.innerHTML = abilityHtml + errorHtml + weakHtml + focusHtml + sundayHtml;
 }
 
 // 计算某周拿到的总分(里程碑 + 每日打卡分 + 周复盘 + 当日 combo)
