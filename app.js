@@ -1048,9 +1048,9 @@ function renderWeeklyCoach() {
 
   const abilityHtml = `
     <div class="coach-section">
-      <div class="coach-section-title">📊 PSLE 能力概览${overallAL ? ` · 预测 <b style="color:var(--color-purple)">AL${overallAL}</b> <span style="font-size:11px;font-weight:400;color:var(--color-text-light)">(4科加权综合)</span>` : ''}</div>
+      <div class="coach-section-title">📊 PSLE 能力概览${overallAL ? ` · 预测 <b style="color:var(--color-purple)">AL${overallAL}</b> <span style="font-size:11px;font-weight:400;color:var(--color-text-light)">(4科AL之和)</span>` : ''}</div>
       <div style="font-size:11px;color:var(--color-text-light);margin:-4px 0 8px;line-height:1.5">
-        综合AL = 数学25% + 英语25% + 科学20% + 华文10% + 知识树⭐20%<br>
+        综合AL = 数学AL + 英语AL + 科学AL + 华文AL（总分4-32, 越低越好）<br>
         各科AL基于 mini-game 实战正确率: AL1≥90% · AL2≥85% · AL3≥80% · AL4≥75% · AL5≥65% · AL6≥45%
       </div>
       <div class="coach-subject-grid">
@@ -2360,7 +2360,6 @@ let _petBubbleTimer = null;
 let _petLastSpoke = 0;
 function petSay(message, duration) {
   if (!message) return;
-  // 防止气泡重叠 — 最少间隔 2s
   if (Date.now() - _petLastSpoke < 2000) return;
   _petLastSpoke = Date.now();
   const card = document.getElementById('petWidget');
@@ -2369,8 +2368,15 @@ function petSay(message, duration) {
   if (old) old.remove();
   const bubble = document.createElement('div');
   bubble.className = 'pet-bubble';
-  bubble.textContent = message;
+  const span = document.createElement('span');
+  span.className = 'bubble-text';
+  span.textContent = message;
+  bubble.appendChild(span);
   card.appendChild(bubble);
+  // 短文字不滚动
+  if (span.scrollWidth <= bubble.clientWidth) {
+    span.classList.add('no-scroll');
+  }
   const dur = duration || 4500;
   setTimeout(() => {
     bubble.classList.add('fade-out');
@@ -2505,7 +2511,7 @@ function _startPetIdleTalk() {
       petSay(_generatePetMessage());
     }, 60000 + Math.random() * 30000);
   }, 30000);
-  // 冷笑话: 45s 后第一条, 之后每 2 分钟一条, 不重复
+  // 冷笑话: 10s 后第一条, 之后每 2 分钟一条, 不重复
   setTimeout(() => {
     if (!document.hidden) {
       const dash = document.getElementById('page-dashboard');
@@ -2517,7 +2523,7 @@ function _startPetIdleTalk() {
       if (!dash || !dash.classList.contains('active')) return;
       petSay(_nextColdJoke(), 6000);
     }, 2 * 60 * 1000);
-  }, 45000);
+  }, 10000);
 }
 
 // ============ v18.20: E 数字跳动 + 彩虹扫过 ============
@@ -3923,7 +3929,7 @@ function showFutureSelfModal() {
           <div class="fs-cap-note">🏆 预测已超 ${(window.ULTIMATE_PRIZE_POINTS || 30000).toLocaleString()} 分终极奖线! SGD ${window.ULTIMATE_PRIZE_SGD || 1500} 等价已达成 (后续分数仍累积)</div>
         ` : ''}
         <div class="fs-summary">
-          <div>📊 预测 PSLE 成绩 ≈ <b>AL ${p.predAL}</b></div>
+          <div>📊 预测 PSLE 成绩 ≈ <b>${p.predAL !== null ? 'AL ' + p.predAL : '暂无'}</b></div>
           <div>⚔️ 预测分数装备 <b>${p.predEqCount}/29</b> 件 (按分数解锁)</div>
           <div>📅 还有 <b>${p.daysLeft}</b> 天 · 平均日加分 <b>${p.avgDaily}</b></div>
         </div>

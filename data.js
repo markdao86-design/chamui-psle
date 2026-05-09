@@ -1046,52 +1046,34 @@ function predictFutureSelf(state) {
   const predEqCount = window.CHAMUI ? window.CHAMUI.equipment.filter(e =>
     e.condition === 'points' && e.value <= predictedTotal
   ).length : 0;
-  // v18.52: PSLE AL 综合预测 — 用 4 科 mini-game 实战正确率加权 (而非 app 积分)
-  // 原因: app 积分主要反映"是否打卡", PSLE AL 应反映"做题对错率". PSLE 真实 AL 范围 1-9.
-  const predAL = window.predictOverallAL ? window.predictOverallAL(state) : 6;
+  // v18.98: AL 总分 = 4 科 AL 之和
+  const predAL = window.predictOverallAL ? window.predictOverallAL(state) : null;
   return { predictedTotal, predLv, predEqCount, predAL, daysLeft, avgDaily: Math.round(avgDaily * 10) / 10, breakRate };
 }
 
-// v18.52: 4 科 mini-game 加权综合 AL 预测 (PSLE AL 1-9 真实范围)
-// 权重: 数学 30% + 英语 30% + 科学 25% + 华文 15% (PSLE 4 科 AL 等权但英数偏重)
+// v18.98: AL 总分 = 4 科 AL 之和 (每科 AL 1-8, 总分 4-32, 越低越好)
 function predictOverallAL(state) {
-  if (!window.getSubjectAccuracy) return 6;  // 冷启动
-  const bySubj = window.getSubjectAccuracy(state);  // returns { '数学': {accuracy, correct, total}, '英语':..., '科学':... }
-  // v18.53: 5 项加权 — 4 科 mini-game (60%) + 知识树 ⭐ (20%) + 留 20% 给未参考项
-  const groups = [
-    { name: '数学', weight: 0.25, data: bySubj['数学'] },
-    { name: '英语', weight: 0.25, data: bySubj['英语'] },
-    { name: '科学', weight: 0.20, data: bySubj['科学'] },
-    { name: '华文', weight: 0.10, data: bySubj['华文'] }
-  ];
-  let totalAccPct = 0, totalW = 0;
-  for (const g of groups) {
-    if (!g.data || !g.data.total) continue;
-    const acc = g.data.correct / g.data.total;  // 0-1
-    totalAccPct += acc * g.weight;
-    totalW += g.weight;
+  if (!window.getSubjectAccuracy) return null;
+  const bySubj = window.getSubjectAccuracy(state);
+  const subjects = ['数学', '英语', '科学', '华文'];
+  let sum = 0, count = 0;
+  for (const s of subjects) {
+    const d = bySubj[s];
+    if (!d || !d.total) continue;
+    sum += _accToALNum(d.accuracy);
+    count++;
   }
-  // v18.55: 加入知识树 ⭐ 绝对完成度 (权重 20%)
-  // 修 v18.53 bug: 之前用平均⭐/3, 1 节点拿 3⭐ 就 = 知识树 100%, 严重虚高 AL
-  // 现在用 totalStars / (35×3) — 105⭐ 全拿才 = 100%, 真实反映学习深度
-  const ks = state.knowledgeStars || {};
-  const starEntries = Object.values(ks);
-  if (starEntries.length > 0) {
-    const totalStars = starEntries.reduce((s, e) => s + (e.stars || 0), 0);
-    const ktAcc = totalStars / (35 * 3);  // 0-1, 105⭐ 满分
-    totalAccPct += ktAcc * 0.20;
-    totalW += 0.20;
-  }
-  if (totalW === 0) return 6;  // 冷启动默认 AL 6
-  const wAcc = totalAccPct / totalW;  // 0-1
-  // PSLE AL 真实分布: AL 1=≥90%, 2=85-89, 3=80-84, 4=75-79, 5=65-74, 6=45-64, 7=20-44, 8=<20
-  if (wAcc >= 0.90) return 1;
-  if (wAcc >= 0.85) return 2;
-  if (wAcc >= 0.80) return 3;
-  if (wAcc >= 0.75) return 4;
-  if (wAcc >= 0.65) return 5;
-  if (wAcc >= 0.45) return 6;
-  if (wAcc >= 0.20) return 7;
+  if (count === 0) return null;
+  return sum;
+}
+function _accToALNum(pct) {
+  if (pct >= 90) return 1;
+  if (pct >= 85) return 2;
+  if (pct >= 80) return 3;
+  if (pct >= 75) return 4;
+  if (pct >= 65) return 5;
+  if (pct >= 45) return 6;
+  if (pct >= 20) return 7;
   return 8;
 }
 window.predictOverallAL = predictOverallAL;
@@ -2147,18 +2129,22 @@ function getSubjectAccuracy(state) {
     const subj = SUBJECT_OF_GAME[gameKey];
     const gs = stats[gameKey];
     if (!gs) return;
-    // 优先用累积统计(无上限)，兼容旧数据用 recent 回算
     let tc, ta, runs;
     if (gs.cumTotal > 0) {
       tc = gs.cumCorrect || 0;
       ta = gs.cumTotal;
       runs = gs.cumRuns || 0;
     } else {
+      // 兼容旧数据: 从 recent 初始化 cumulative
       const recent = gs.recent || [];
       if (recent.length === 0) return;
       tc = recent.reduce((s, r) => s + r.correct, 0);
       ta = recent.reduce((s, r) => s + r.total, 0);
       runs = recent.length;
+      // 写回 cumulative 以便后续不再受 recent cap 限制
+      gs.cumCorrect = tc;
+      gs.cumTotal = ta;
+      gs.cumRuns = runs;
     }
     if (ta === 0) return;
     if (!bySubject[subj]) bySubject[subj] = { correct: 0, total: 0, runs: 0 };
