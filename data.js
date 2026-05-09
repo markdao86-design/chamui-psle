@@ -590,46 +590,74 @@ function getTodayWowFact(weekN, dateOverride) {
 }
 
 // 颜色随形态进化: 浅橙(baby)→标准(cute)→蓝学(study)→紫智(wisdom)→红战(warrior)→金王(king)
-function _hamsterBase(furColor, faceColor, hasHelmet) {
+function _hamsterBase(furColor, bellyColor, hasHelmet) {
+  const gid = 'hg' + Math.random().toString(36).slice(2,7);
   return `
-    ${hasHelmet ? '' : `<ellipse cx="13" cy="15" rx="4" ry="5" fill="${furColor}"/><ellipse cx="35" cy="15" rx="4" ry="5" fill="${furColor}"/><ellipse cx="13" cy="15" rx="2" ry="3" fill="#FFB6D9"/><ellipse cx="35" cy="15" rx="2" ry="3" fill="#FFB6D9"/>`}
-    <circle cx="24" cy="26" r="14" fill="${furColor}"/>
-    <ellipse cx="24" cy="30" rx="9" ry="6" fill="${faceColor}"/>
-    <circle cx="15" cy="29" r="2" fill="#FFB6D9" opacity="0.75"/>
-    <circle cx="33" cy="29" r="2" fill="#FFB6D9" opacity="0.75"/>
-    <ellipse cx="24" cy="28" rx="1" ry="0.8" fill="#D67C7C"/>
-    <path d="M22 30 Q24 31.5 26 30" fill="none" stroke="#5D3D2D" stroke-width="0.6" stroke-linecap="round"/>`;
+    <defs>
+      <radialGradient id="${gid}" cx="50%" cy="60%" r="55%">
+        <stop offset="0%" stop-color="${bellyColor}"/>
+        <stop offset="80%" stop-color="${furColor}"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="24" cy="33" rx="14" ry="12.5" fill="url(#${gid})"/>
+    <ellipse cx="24" cy="35" rx="9" ry="8" fill="${bellyColor}"/>
+    <ellipse cx="24" cy="19" rx="13" ry="12" fill="${furColor}"/>
+    <ellipse cx="24" cy="21" rx="9.5" ry="8.5" fill="${bellyColor}" opacity="0.82"/>
+    ${!hasHelmet ? `
+    <ellipse cx="12" cy="9" rx="5" ry="5.5" fill="${furColor}"/>
+    <ellipse cx="12" cy="9" rx="3.2" ry="3.5" fill="#F5B0B0" opacity="0.65"/>
+    <ellipse cx="36" cy="9" rx="5" ry="5.5" fill="${furColor}"/>
+    <ellipse cx="36" cy="9" rx="3.2" ry="3.5" fill="#F5B0B0" opacity="0.65"/>` : ''}
+    <circle cx="13" cy="23" r="3.5" fill="#FFAAAA" opacity="0.28"/>
+    <circle cx="35" cy="23" r="3.5" fill="#FFAAAA" opacity="0.28"/>
+    <ellipse cx="20.5" cy="33" rx="3" ry="2.2" fill="${furColor}" transform="rotate(12 20.5 33)"/>
+    <ellipse cx="27.5" cy="33" rx="3" ry="2.2" fill="${furColor}" transform="rotate(-12 27.5 33)"/>
+    <ellipse cx="22.5" cy="32.5" rx="1.6" ry="1.2" fill="${bellyColor}" opacity="0.65"/>
+    <ellipse cx="25.5" cy="32.5" rx="1.6" ry="1.2" fill="${bellyColor}" opacity="0.65"/>
+    <ellipse cx="18" cy="43.5" rx="4.2" ry="2.2" fill="${furColor}"/>
+    <ellipse cx="30" cy="43.5" rx="4.2" ry="2.2" fill="${furColor}"/>
+    <ellipse cx="18" cy="44" rx="2.5" ry="1.3" fill="${bellyColor}" opacity="0.55"/>
+    <ellipse cx="30" cy="44" rx="2.5" ry="1.3" fill="${bellyColor}" opacity="0.55"/>
+    <ellipse cx="24" cy="24.5" rx="1.4" ry="1" fill="#E87878"/>
+    <path d="M22 26 Q24 27.5 26 26" fill="none" stroke="#8B5E3C" stroke-width="0.6" stroke-linecap="round"/>
+    <line x1="7" y1="21" x2="14" y2="22.5" stroke="#C8A070" stroke-width="0.4" opacity="0.5"/>
+    <line x1="7" y1="24" x2="14" y2="24" stroke="#C8A070" stroke-width="0.4" opacity="0.5"/>
+    <line x1="41" y1="21" x2="34" y2="22.5" stroke="#C8A070" stroke-width="0.4" opacity="0.5"/>
+    <line x1="41" y1="24" x2="34" y2="24" stroke="#C8A070" stroke-width="0.4" opacity="0.5"/>`;
 }
 // 4套表情层 — CSS class 切换 (.ham-face-normal默认显示, 其余CSS隐藏)
 function _hamsterFace(furColor) {
   return `
     <g class="ham-face-normal">
-      <circle cx="19" cy="24" r="1.6" fill="#2D2D2D"/>
-      <circle cx="29" cy="24" r="1.6" fill="#2D2D2D"/>
-      <circle cx="19.4" cy="23.5" r="0.4" fill="white"/>
-      <circle cx="29.4" cy="23.5" r="0.4" fill="white"/>
+      <circle cx="18" cy="18" r="4" fill="#3D1F0A"/>
+      <circle cx="30" cy="18" r="4" fill="#3D1F0A"/>
+      <circle cx="19.3" cy="16.5" r="1.5" fill="white" opacity="0.92"/>
+      <circle cx="31.3" cy="16.5" r="1.5" fill="white" opacity="0.92"/>
+      <circle cx="16.8" cy="19.5" r="0.6" fill="white" opacity="0.55"/>
+      <circle cx="28.8" cy="19.5" r="0.6" fill="white" opacity="0.55"/>
     </g>
     <g class="ham-face-happy">
-      <path d="M16 27 Q19 21 22 27" fill="none" stroke="#2D2D2D" stroke-width="1.8" stroke-linecap="round"/>
-      <path d="M26 27 Q29 21 32 27" fill="none" stroke="#2D2D2D" stroke-width="1.8" stroke-linecap="round"/>
-      <path d="M19 30 Q24 33 29 30" fill="none" stroke="#5D3D2D" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M14 19 Q18 13.5 22 19" fill="none" stroke="#3D1F0A" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M26 19 Q30 13.5 34 19" fill="none" stroke="#3D1F0A" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M20 26 Q24 28.5 28 26" fill="none" stroke="#8B5E3C" stroke-width="0.8" stroke-linecap="round"/>
     </g>
     <g class="ham-face-excited">
-      <circle cx="19" cy="24" r="2.5" fill="#2D2D2D"/>
-      <circle cx="29" cy="24" r="2.5" fill="#2D2D2D"/>
-      <circle cx="19.7" cy="23.2" r="0.8" fill="white" opacity="0.9"/>
-      <circle cx="29.7" cy="23.2" r="0.8" fill="white" opacity="0.9"/>
-      <ellipse cx="24" cy="32" rx="2.5" ry="2" fill="#5D3D2D"/>
-      <text x="10" y="14" font-size="4" fill="#FFD700">✦</text>
-      <text x="31" y="13" font-size="3" fill="#FFD700">✦</text>
+      <circle cx="18" cy="18" r="5" fill="#3D1F0A"/>
+      <circle cx="30" cy="18" r="5" fill="#3D1F0A"/>
+      <circle cx="19.6" cy="16" r="1.8" fill="white" opacity="0.95"/>
+      <circle cx="31.6" cy="16" r="1.8" fill="white" opacity="0.95"/>
+      <text x="12" y="10" font-size="4" fill="#FFD700">&#x2726;</text>
+      <text x="33" y="9" font-size="3" fill="#FFD700">&#x2726;</text>
+      <ellipse cx="24" cy="27" rx="2.5" ry="2" fill="#5D3D2D"/>
     </g>
     <g class="ham-face-sleepy">
-      <circle cx="19" cy="24" r="1.6" fill="#2D2D2D"/>
-      <circle cx="29" cy="24" r="1.6" fill="#2D2D2D"/>
-      <ellipse cx="19" cy="22.8" rx="2.2" ry="1.8" fill="${furColor}"/>
-      <ellipse cx="29" cy="22.8" rx="2.2" ry="1.8" fill="${furColor}"/>
-      <path d="M22 30 Q24 30.5 26 30" fill="none" stroke="#5D3D2D" stroke-width="0.6" stroke-linecap="round"/>
-      <text x="33" y="20" font-size="5" fill="#AAAAAA" opacity="0.7">z</text>
+      <circle cx="18" cy="18" r="4" fill="#3D1F0A"/>
+      <circle cx="30" cy="18" r="4" fill="#3D1F0A"/>
+      <ellipse cx="18" cy="16.5" rx="4.8" ry="3.5" fill="${furColor}"/>
+      <ellipse cx="30" cy="16.5" rx="4.8" ry="3.5" fill="${furColor}"/>
+      <path d="M22 26 L26 26" stroke="#8B5E3C" stroke-width="0.5" stroke-linecap="round"/>
+      <text x="34" y="13" font-size="5" fill="#AAAAAA" opacity="0.7">z</text>
+      <text x="37" y="9" font-size="3.5" fill="#AAAAAA" opacity="0.5">z</text>
     </g>`;
 }
 
@@ -648,16 +676,16 @@ const PET_FORMS = [
     bg: 'linear-gradient(135deg, #FFE6F0 0%, #FFB6D9 100%)',
     desc: '刚出生的小仓鼠, 软软的好可爱',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      ${_hamsterBase('#FFD8A8', '#FFF5E6', false)}
-      ${_hamsterFace('#FFD8A8')}
+      ${_hamsterBase('#E8B87A', '#FFF5E6', false)}
+      ${_hamsterFace('#E8B87A')}
     </svg>` },
 
   { idx: 2, name: '小仓鼠', minStreak: 7,
     bg: 'linear-gradient(135deg, #FFE066 0%, #FFB347 100%)',
     desc: '系上蝴蝶结, 会塞食物到腮帮子了',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      ${_hamsterBase('#F4B860', '#FFF5E6', false)}
-      ${_hamsterFace('#F4B860')}
+      ${_hamsterBase('#D4884A', '#FFF3E0', false)}
+      ${_hamsterFace('#D4884A')}
       <path d="M14 8 L20 5 L22 11 L17 13 Z" fill="#FF6B9D" stroke="#C3447A" stroke-width="0.6"/>
       <path d="M34 8 L28 5 L26 11 L31 13 Z" fill="#FF6B9D" stroke="#C3447A" stroke-width="0.6"/>
       <circle cx="24" cy="10" r="2.2" fill="#C3447A"/>
@@ -667,11 +695,11 @@ const PET_FORMS = [
     bg: 'linear-gradient(135deg, #B3E5FC 0%, #4ECDC4 100%)',
     desc: '戴上眼镜, 很爱读书',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      ${_hamsterBase('#F4B860', '#FFF5E6', false)}
-      ${_hamsterFace('#F4B860')}
-      <circle cx="19" cy="24" r="3.6" fill="none" stroke="#2D2D2D" stroke-width="1.3" opacity="0.8"/>
-      <circle cx="29" cy="24" r="3.6" fill="none" stroke="#2D2D2D" stroke-width="1.3" opacity="0.8"/>
-      <line x1="22.6" y1="24" x2="25.4" y2="24" stroke="#2D2D2D" stroke-width="1.1"/>
+      ${_hamsterBase('#D4884A', '#FFF3E0', false)}
+      ${_hamsterFace('#D4884A')}
+      <circle cx="18" cy="18" r="5.2" fill="none" stroke="#2D2D2D" stroke-width="1.2" opacity="0.8"/>
+      <circle cx="30" cy="18" r="5.2" fill="none" stroke="#2D2D2D" stroke-width="1.2" opacity="0.8"/>
+      <line x1="23.2" y1="18" x2="24.8" y2="18" stroke="#2D2D2D" stroke-width="1"/>
       <rect x="18" y="38" width="12" height="7" fill="#4A90E2" stroke="#2D2D2D" stroke-width="0.7" rx="0.5"/>
       <rect x="18.6" y="38.6" width="10.8" height="5.8" fill="#FFF" stroke="none"/>
       <line x1="24" y1="38" x2="24" y2="45" stroke="#2D2D2D" stroke-width="0.6"/>
@@ -683,32 +711,27 @@ const PET_FORMS = [
     bg: 'linear-gradient(135deg, #E1BEE7 0%, #A788E0 100%)',
     desc: '戴上学士帽, 智力满分',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      ${_hamsterBase('#F4B860', '#FFF5E6', false)}
-      ${_hamsterFace('#F4B860')}
-      <polygon points="6,10 42,10 38,14 10,14" fill="#2D2D2D"/>
-      <rect x="11" y="9" width="26" height="2.5" fill="#1A1A1A" rx="0.4"/>
-      <rect x="22" y="6" width="4" height="4" fill="#2D2D2D"/>
-      <line x1="34" y1="10" x2="38" y2="16" stroke="#FFD700" stroke-width="0.9"/>
-      <circle cx="38" cy="16.5" r="2" fill="#FFD700" stroke="#B8860B" stroke-width="0.4"/>
-      <rect x="33" y="34" width="5" height="11" fill="#FFFAEC" stroke="#8B6F47" stroke-width="0.6" transform="rotate(15 35.5 39.5)"/>
-      <line x1="33" y1="36" x2="38" y2="36" stroke="#8B6F47" stroke-width="0.4" transform="rotate(15 35.5 39.5)"/>
-      <line x1="33" y1="39" x2="38" y2="39" stroke="#8B6F47" stroke-width="0.4" transform="rotate(15 35.5 39.5)"/>
+      ${_hamsterBase('#D4884A', '#FFF3E0', false)}
+      ${_hamsterFace('#D4884A')}
+      <polygon points="6,6 42,6 38,10 10,10" fill="#2D2D2D"/>
+      <rect x="11" y="5" width="26" height="2.5" fill="#1A1A1A" rx="0.4"/>
+      <rect x="22" y="2" width="4" height="4" fill="#2D2D2D"/>
+      <line x1="34" y1="6" x2="38" y2="12" stroke="#FFD700" stroke-width="0.9"/>
+      <circle cx="38" cy="12.5" r="2" fill="#FFD700" stroke="#B8860B" stroke-width="0.4"/>
     </svg>` },
 
   { idx: 5, name: '战神仓鼠', minStreak: 60,
     bg: 'linear-gradient(135deg, #FF9F45 0%, #FF5757 100%)',
     desc: '披上红色战袍, PSLE 战无不胜',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      <path d="M6 28 Q2 42 10 46 L38 46 Q46 42 42 28 Q40 36 24 36 Q8 36 6 28 Z" fill="#C13030" stroke="#7A1A1A" stroke-width="0.7"/>
-      <path d="M6 28 L24 32 L42 28 L40 30 L24 34 L8 30 Z" fill="#FFD700" opacity="0.7"/>
-      ${_hamsterBase('#E89060', '#FFE5C2', true)}
-      ${_hamsterFace('#E89060')}
-      <path d="M8 16 Q24 4 40 16 L40 19 Q24 14 8 19 Z" fill="#8B7355" stroke="#5D4A2D" stroke-width="0.8"/>
-      <path d="M8 16 Q24 4 40 16" fill="none" stroke="#FFD700" stroke-width="0.6"/>
-      <rect x="22" y="2" width="4" height="6" fill="#FFD700" stroke="#8B6F00" stroke-width="0.4"/>
-      <polygon points="22,2 26,2 24,-1" fill="#FF5757"/>
-      <path d="M14 22 L16 20 L17 23 Z" fill="#5D2D1D"/>
-      <path d="M34 22 L32 20 L31 23 Z" fill="#5D2D1D"/>
+      <path d="M6 30 Q2 42 10 46 L38 46 Q46 42 42 30 Q40 38 24 38 Q8 38 6 30 Z" fill="#C13030" stroke="#7A1A1A" stroke-width="0.7"/>
+      <path d="M6 30 L24 34 L42 30 L40 32 L24 36 L8 32 Z" fill="#FFD700" opacity="0.7"/>
+      ${_hamsterBase('#C06830', '#FFE5C2', true)}
+      ${_hamsterFace('#C06830')}
+      <path d="M8 12 Q24 0 40 12 L40 15 Q24 10 8 15 Z" fill="#8B7355" stroke="#5D4A2D" stroke-width="0.8"/>
+      <path d="M8 12 Q24 0 40 12" fill="none" stroke="#FFD700" stroke-width="0.6"/>
+      <rect x="22" y="-2" width="4" height="6" fill="#FFD700" stroke="#8B6F00" stroke-width="0.4"/>
+      <polygon points="22,-2 26,-2 24,-5" fill="#FF5757"/>
     </svg>` },
 
   { idx: 6, name: '仓鼠王者', minStreak: 100,
@@ -723,8 +746,8 @@ const PET_FORMS = [
       <path d="M5 28 L11 30 L24 32 L37 30 L43 28" fill="none" stroke="#FFD700" stroke-width="0.8"/>
       <circle cx="13" cy="42" r="1.4" fill="#FFD700"/>
       <circle cx="35" cy="42" r="1.4" fill="#FFD700"/>
-      ${_hamsterBase('#F4C140', '#FFF8DC', false)}
-      ${_hamsterFace('#F4C140')}
+      ${_hamsterBase('#D4A030', '#FFF8DC', false)}
+      ${_hamsterFace('#D4A030')}
       <path d="M9 13 L14 4 L18 11 L24 3 L30 11 L34 4 L39 13 Z" fill="#FFD700" stroke="#8B6F00" stroke-width="0.7"/>
       <rect x="9" y="13" width="30" height="2" fill="#FFA500" stroke="#8B6F00" stroke-width="0.4"/>
       <circle cx="24" cy="9" r="1.8" fill="#FF1744" stroke="#8B0000" stroke-width="0.3"/>

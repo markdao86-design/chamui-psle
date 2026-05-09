@@ -39,6 +39,8 @@ async function init() {
   }, 800);
   // v18.20 A: 启动仓鼠周期性鼓励
   if (typeof _startPetIdleTalk === 'function') _startPetIdleTalk();
+  // v18.93: 登录→happy表情
+  setTimeout(() => petExpress('pet-happy', 3000), 1200);
   // v18.27: 启动闹铃 (打开 App 时检查 + 每 60s)
   if (typeof _startAlarmChecker === 'function') _startAlarmChecker();
   // 订阅 Firestore 远端变化
@@ -2341,10 +2343,28 @@ function petSay(message, duration) {
   }, dur);
 }
 
-// v18.88: QQ宠物式表情动作 — 含面部表情切换类
+// v18.93: 表情自动反应系统 — 按活动切换(登录→happy, 答对→excited, 闲置2min→sleepy)
 const _PET_EXPR_LIST = ['pet-nod', 'pet-think', 'pet-jump', 'pet-peek', 'pet-dance', 'pet-excited', 'pet-sleepy'];
 let _exprTimer = null;
+let _petLastActivity = Date.now();
+let _petIdleTimer = null;
+function _petTrackActivity() {
+  _petLastActivity = Date.now();
+  const w = document.getElementById('petWidget');
+  if (w && w.classList.contains('pet-sleepy')) {
+    w.classList.remove('pet-sleepy');
+  }
+}
+function _petCheckIdle() {
+  const w = document.getElementById('petWidget');
+  if (!w || document.hidden) return;
+  const idle = Date.now() - _petLastActivity;
+  if (idle >= 120000) {
+    w.classList.add('pet-sleepy');
+  }
+}
 function petExpress(expr, dur) {
+  _petTrackActivity();
   const w = document.getElementById('petWidget');
   if (!w) return;
   _PET_EXPR_LIST.forEach(c => w.classList.remove(c));
@@ -2356,15 +2376,20 @@ function petExpress(expr, dur) {
 function _doRandomExpr() {
   if (!document.hidden) {
     const dash = document.getElementById('page-dashboard');
-    if (dash && dash.classList.contains('active')) {
+    const idle = Date.now() - _petLastActivity;
+    if (dash && dash.classList.contains('active') && idle < 120000) {
       petExpress(_PET_EXPR_LIST[Math.floor(Math.random() * _PET_EXPR_LIST.length)], 1500);
     }
   }
   _exprTimer = setTimeout(_doRandomExpr, 8000 + Math.random() * 6000);
 }
-// 返回页面时探头点头
+// 闲置检测: 每30s检查, 超2min→sleepy
+_petIdleTimer = setInterval(_petCheckIdle, 30000);
+// 用户交互→重置活跃时间
+['click', 'touchstart', 'keydown', 'scroll'].forEach(e => document.addEventListener(e, _petTrackActivity, { passive: true }));
+// 返回页面时→happy探头
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) setTimeout(() => petExpress('pet-peek', 1200), 500);
+  if (!document.hidden) { _petTrackActivity(); setTimeout(() => petExpress('pet-peek', 1200), 500); }
 });
 
 function petCelebrate(message) {
@@ -3064,7 +3089,7 @@ function submitErrorBankAnswer(optIdx) {
   const isCorrect = optIdx === item.ans;
   _handleErrorBankResult(isCorrect, item, () => {
     if (isCorrect) {
-      g.correct++;
+      g.correct++; petExpress('pet-excited', 800);
       // 从错题本移除
       window.removeFromErrorBank(state, item.id);
       g.removed.push(item.id);
@@ -3987,7 +4012,7 @@ function submitUnitAnswer() {
   if (!inp || inp.value === '') return;
   const val = parseInt(inp.value);
   const q = g.qs[g.idx];
-  if (val === q.ans) { g.correct++; playSound('ding'); }
+  if (val === q.ans) { g.correct++; playSound('ding'); petExpress('pet-excited', 800); }
   else {
     g.wrong++; playSound('sad');
     showToast(`❌ 应是 ${q.ans}`, 'sad');  // v18.33
@@ -4086,7 +4111,7 @@ function submitMcqAnswer(idx) {
   if (!g) return;
   const q = g.qs[g.idx];
   const isCorrect = idx === q.ans;
-  if (isCorrect) { g.correct++; playSound('ding'); } else { g.wrong++; playSound('sad'); }
+  if (isCorrect) { g.correct++; playSound('ding'); petExpress('pet-excited', 800); } else { g.wrong++; playSound('sad'); }
   // v18.59: 错题入错题本
   if (!isCorrect && window.addToErrorBank) {
     window.addToErrorBank(state, {
@@ -4228,7 +4253,7 @@ function sciClassifyPick(itemIdx, catIdx) {
   const g = _sciGameState;
   if (!g) return;
   g.picks[itemIdx] = catIdx;
-  if (catIdx === g.item.items[itemIdx].c) { g.correct++; playSound('ding'); }
+  if (catIdx === g.item.items[itemIdx].c) { g.correct++; playSound('ding'); petExpress('pet-excited', 800); }
   else { g.wrong++; playSound('sad'); }
   _renderSciGame();
 }
@@ -4352,7 +4377,7 @@ function submitMathAnswer() {
   if (!input || input.value === '') return;
   const val = parseInt(input.value);
   const q = g.qs[g.idx];
-  if (val === q.ans) { g.correct++; playSound('ding'); }
+  if (val === q.ans) { g.correct++; playSound('ding'); petExpress('pet-excited', 800); }
   else {
     g.wrong++; playSound('sad');
     showToast(`❌ 应是 ${q.ans}`, 'sad');  // v18.33: 错答显示正确答案
