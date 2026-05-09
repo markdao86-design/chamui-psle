@@ -1061,7 +1061,7 @@ function renderWeeklyCoach() {
           const isWeak = pct !== null && pct < 70;
           const barColor = pct === null ? '#DDD' : pct >= 80 ? '#52C788' : pct >= 60 ? '#F59E0B' : '#EF4444';
           const alStyle = isWeak ? 'background:#FFECEC;color:#D32F2F' : 'background:#EEF4FF;color:#1565C0';
-          const detail = d ? `${d.correct}/${d.total} 对 · ${d.runs}局游戏` : '';
+          const detail = d ? `答对 ${d.correct} 题 / 共 ${d.total} 题 · 已练 ${d.runs} 局` : '';
           return `<div class="coach-subject-card" style="border-left-color:${s.color}">
             <div class="coach-subject-header">
               <span style="font-weight:700">${s.icon} ${s.name}</span>
@@ -2199,6 +2199,16 @@ function _checkVocabPair() {
     }
   } else {
     g.wrong += 1;
+    if (window.addToErrorBank) {
+      const enWord = g.pairs[g.selectedEn];
+      const zhWord = g.zhShuffled[g.selectedZh];
+      window.addToErrorBank(state, {
+        gameKey: 'vocab', type: 'match',
+        q: enWord.en + ' ≠ ' + zhWord.zh,
+        correctAns: enWord.en + ' = ' + enWord.zh,
+        explain: enWord.en + ' 的意思是 ' + enWord.zh
+      });
+    }
     setTimeout(() => {
       if (_vocabGameState) {
         _vocabGameState.selectedEn = null;
@@ -2935,7 +2945,8 @@ function submitKnowledgePractice() {
       if (g.answers[i] !== q.ans) {
         window.addToErrorBank(state, {
           gameKey: 'knowledge', type: 'mcq', subj: g.subj, nodeId: g.nodeId,
-          q: q.q, opts: q.opts, ans: q.ans, explain: q.explain || ''
+          q: q.q, opts: q.opts, ans: q.ans, correctAns: q.opts[q.ans],
+          explain: q.explain || ''
         });
       }
     });
@@ -4041,6 +4052,13 @@ function submitUnitAnswer() {
   else {
     g.wrong++; playSound('sad');
     showToast(`❌ 应是 ${q.ans}`, 'sad');  // v18.33
+    if (window.addToErrorBank) {
+      window.addToErrorBank(state, {
+        gameKey: 'unit', type: 'math',
+        q: q.q, correctAns: q.ans, diff: q.diff || 3,
+        explain: '正确答案: ' + q.ans
+      });
+    }
   }
   g.idx++;
   if (g.idx >= g.qs.length) {
@@ -4142,6 +4160,7 @@ function submitMcqAnswer(idx) {
     window.addToErrorBank(state, {
       gameKey: g.key, type: 'mcq',
       q: q[g.qField] || '', opts: q.opts, ans: q.ans,
+      correctAns: q.opts[q.ans],
       explain: q.explain || _generateMcqExplain(q)
     });
   }
@@ -4279,7 +4298,18 @@ function sciClassifyPick(itemIdx, catIdx) {
   if (!g) return;
   g.picks[itemIdx] = catIdx;
   if (catIdx === g.item.items[itemIdx].c) { g.correct++; playSound('ding'); petExpress('pet-excited', 800); }
-  else { g.wrong++; playSound('sad'); }
+  else {
+    g.wrong++; playSound('sad');
+    if (window.addToErrorBank) {
+      const itm = g.item.items[itemIdx];
+      window.addToErrorBank(state, {
+        gameKey: 'scilab', type: 'classify',
+        q: itm.name + ' → ' + g.item.categories[catIdx],
+        correctAns: g.item.categories[itm.c],
+        explain: itm.name + ' 属于 ' + g.item.categories[itm.c]
+      });
+    }
+  }
   _renderSciGame();
 }
 function _finishSciGame() {
@@ -4410,7 +4440,7 @@ function submitMathAnswer() {
     if (window.addToErrorBank) {
       window.addToErrorBank(state, {
         gameKey: 'math', type: 'math',
-        q: q.q, ans: q.ans, diff: q.diff || 4,
+        q: q.q, correctAns: q.ans, diff: q.diff || 4,
         explain: '正确答案: ' + q.ans
       });
     }
@@ -4536,6 +4566,14 @@ function clickEditingWord(word) {
   } else {
     g.wrong++;
     playSound('sad');
+    if (window.addToErrorBank) {
+      window.addToErrorBank(state, {
+        gameKey: 'editing', type: 'editing',
+        q: '点错词: ' + word,
+        correctAns: g.para.errors.map(e => e.word).join(', '),
+        explain: '本段错词: ' + g.para.errors.map(e => e.word + '→' + e.fix).join(', ')
+      });
+    }
   }
   _renderEditingGame();
 }
@@ -5136,7 +5174,7 @@ function _renderAbilityOverview(state) {
     const allRecent = games.flatMap(g => (stats[g] && stats[g].recent) || []);
     const trend = _abTrend(allRecent.length > 0 ? allRecent.slice(-2) : []);
     const label = acc !== null
-      ? `<span style="font-weight:700">${acc}%</span> <small style="color:var(--color-text-light)">${a.correct}/${a.total} · ${a.runs}局</small>`
+      ? `<span style="font-weight:700">${acc}%</span> <small style="color:var(--color-text-light)">答对${a.correct}/${a.total}题 · ${a.runs}局</small>`
       : '<span style="color:var(--color-text-light);font-size:12px">暂无数据</span>';
     return `
       <div class="ab-subj-row ${rc}">
