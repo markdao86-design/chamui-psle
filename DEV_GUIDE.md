@@ -1,6 +1,6 @@
 # chamui-psle 开发说明文档
 
-> 最后更新: 2026-05-09 (v19.0)  
+> 最后更新: 2026-05-09 (v19.1)  
 > 部署: https://chamui-psle.web.app  
 > GitHub: https://github.com/markdao86-design/chamui-psle
 
@@ -259,6 +259,8 @@ python build.py && node qa_check.js && npx firebase deploy --only hosting
 | v18.98 | AL=各科之和+气泡滚动 |
 | v18.99 | 训练中心重构+错题本整合+积分重平衡(打卡>>游戏)+难度6级 |
 | v19.0 | 新增科学MCQ+华文MCQ+难度梯度积分+答对永久去重(mastered) |
+| v19.1 | 仓鼠12阶形态+200+情感对话+3新表情(sad/angry/proud)+对话频率20-30s |
+| v19.1b | 命运高达45天解锁+双宠物同时显示+积分统一rewardMap修复 |
 
 ---
 
@@ -307,3 +309,109 @@ python build.py && node qa_check.js && npx firebase deploy --only hosting
 4. ⚡ 重点攻克 + 🎯 本周重点
 
 错题本入口在训练中心, 主页独立卡片已隐藏。
+
+---
+
+## 13. 宠物情感系统 (v19.1)
+
+### 仓鼠 12 阶形态
+
+| idx | 名称 | 累计打卡天 |
+|---|---|---|
+| 0 | 仓鼠蛋 | 0 |
+| 1 | 仓鼠宝宝 | 3 |
+| 2 | 探索仓鼠 | 7 |
+| 3 | 小仓鼠 | 14 |
+| 4 | 好奇仓鼠 | 21 |
+| 5 | 学习仓鼠 | 30 |
+| 6 | 努力仓鼠 | 45 |
+| 7 | 智慧仓鼠 | 60 |
+| 8 | 勇气仓鼠 | 90 |
+| 9 | 战神仓鼠 | 120 |
+| 10 | 传说仓鼠 | 160 |
+| 11 | 仓鼠王者 | 200 |
+
+命运高达: 累计打卡 ≥45 天解锁, 与仓鼠并排显示 (双宠物)
+
+### 情感对话系统
+
+- **频率**: 每 20-30 秒一句 (冷笑话穿插每 3 分钟)
+- **文案池**: 200+ 句, 按 7 个场景分类
+- **搞笑为主 (50-70%) + 激将为辅 (30-35%)**
+
+场景检测逻辑 (`_detectPetScene()`):
+1. 全勤 → perfect (excited 表情)
+2. 懒惰 (今天没打卡) → lazy (sad/angry 表情)
+3. 错误率高 (最近2局≤40%) → errors (angry 表情)
+4. 好表现 (最近1局≥80%) → good (excited/proud 表情)
+5. 错题本≥5题 → errorBank (angry 表情)
+6. 夜晚/早晨/周末 → 时段特殊对话
+7. 默认 → idle (搞笑闲聊)
+
+### 表情系统 (7 种)
+
+| CSS class | SVG group | 触发 |
+|---|---|---|
+| (默认) | ham-face-normal | 无特殊 |
+| pet-happy | ham-face-happy | 心情好 |
+| pet-excited | ham-face-excited | 全勤/好表现 |
+| pet-sleepy | ham-face-sleepy | 闲置2min/夜晚 |
+| pet-sad | ham-face-sad | 懒惰/心情低 |
+| pet-angry | ham-face-angry | 激将/错误率高 |
+| pet-proud | ham-face-proud | 表现好/骄傲 |
+
+### 关键函数
+
+| 函数 | 文件 | 用途 |
+|---|---|---|
+| `_detectPetScene()` | app.js | 智能场景检测 |
+| `_generatePetMessage()` | app.js | 按场景选对话+切表情 |
+| `_startPetIdleTalk()` | app.js | 启动定时对话 (20-30s) |
+| `PET_DIALOGUES` | data.js | 200+句对话池 (7场景) |
+| `_hamsterFace(furColor)` | data.js | 7种表情SVG层 |
+
+---
+
+## 14. 积分统一设计 (v19.1b 修复)
+
+**全部 10 个 mini-game 统一使用 rewardMap:**
+
+```js
+const rewardMap = { 3: 2, 4: 3, 5: 5, 6: 7 };
+// 满分: rewardMap[diff]
+// 7+/70%+: rewardMap[diff] - 1 (min 1)
+```
+
+每个游戏从 `state.gameStats[key].difficulty` 读取当前难度。
+
+**其他积分来源:**
+- 每日登录: +5
+- 每 slot 打卡: 1-3 分
+- 全勤奖: +15
+- 每日任务: 3-12 分
+- 错题答对: +2/题
+
+---
+
+## 15. 部署注意事项
+
+```bash
+# Node v24 与 Firebase CLI 不兼容, 需要用 Node 20:
+eval "$(fnm env)" && fnm use 20 && node "C:/Users/Eric/AppData/Roaming/npm/node_modules/firebase-tools/lib/bin/firebase.js" deploy --only hosting
+
+# 或者如果 Node 24 网络正常时也可直接:
+npx firebase deploy --only hosting
+
+# build + QA (必须全过才能部署)
+python build.py && node qa_check.js
+```
+
+---
+
+## 16. 待开发 TODO
+
+1. **照片云端存储 + 家长审核**: 孩子打卡上传的照片保存到 Firebase Storage, 家长每周检查, 不过关扣分
+2. **照片查看**: 当前照片存 IndexedDB 本地, 需要同步到云端让家长能看到
+3. **家长审核面板**: 家长入口查看本周所有照片, 通过/驳回, 驳回扣分
+4. **错题本扩展** 到 vocab/listen/editing/scilab
+5. **季节事件** (PSLE 100 天倒计时装备)
