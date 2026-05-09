@@ -1460,7 +1460,7 @@ function renderCheckinPage() {
       const vocabAvailable = window.getVocabForWeek && window.getVocabForWeek(week) !== null;
       const vocabBtn = (isVocabTask && vocabAvailable)
         ? `<button class="vocab-btn" onclick="event.stopPropagation(); openVocabModal(${week})" title="本周学科词表">📚</button>
-           <button class="vocab-game-btn" onclick="event.stopPropagation(); openVocabGame(${week})" title="🎮 词汇连连看 (赢 +10 + 1 宝箱)">🎮</button>`
+           <button class="vocab-game-btn" onclick="event.stopPropagation(); openVocabGame(${week})" title="🎮 词汇连连看 (赢 2-7 分 + 1 宝箱)">🎮</button>`
         : '';
       // v16.3: 听力资源按钮 — 任务含 CNA938 / okto / Listening / 听力 时出现
       const isListenTask = /CNA938|okto|Listening|听力|🎧/.test(t.task);
@@ -2232,7 +2232,9 @@ function _checkVocabPair() {
       // v18.24: 递减奖励
       const playNum = _bumpDailyGameCount('vocab');
       const mult = _getGameMultiplier(playNum);
-      const points = Math.floor(3 * mult);
+      const vDiff = (state.gameStats && state.gameStats.vocab && state.gameStats.vocab.difficulty) || 3;
+      const vRewardMap = { 3: 2, 4: 3, 5: 5, 6: 7 };
+      const points = Math.floor((g.wrong === 0 ? (vRewardMap[vDiff] || 2) : Math.max(1, (vRewardMap[vDiff] || 2) - 1)) * mult);
       state.totalPoints += points;
       if (!state.mysteryBoxes) state.mysteryBoxes = { available: 0, opened: 0, totalSlotsAtLastEarn: 0, history: [] };
       // 仅第 1 次 give box
@@ -4305,9 +4307,11 @@ function _finishUnitGame() {
   if (window.recordGameRun) diffR = window.recordGameRun(state, 'unit', g.correct, g.qs.length);
   const playNum = _bumpDailyGameCount('unit');
   const mult = _getGameMultiplier(playNum);
+  const unitDiff = (state.gameStats && state.gameStats.unit && state.gameStats.unit.difficulty) || 3;
+  const unitRewardMap = { 3: 2, 4: 3, 5: 5, 6: 7 };
   let baseR = 0;
-  if (g.correct >= 10) baseR = 3;
-  else if (g.correct >= 7) baseR = 2;
+  if (g.correct >= 10) baseR = unitRewardMap[unitDiff] || 2;
+  else if (g.correct >= 7) baseR = Math.max(1, (unitRewardMap[unitDiff] || 2) - 1);
   const reward = Math.floor(baseR * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
   if (reward > 0) {
     state.totalPoints += reward;
@@ -4563,10 +4567,12 @@ function _finishSciGame() {
   if (window.recordGameRun) diffR = window.recordGameRun(state, 'scilab', g.correct, total);
   const playNum = _bumpDailyGameCount('scilab');
   const mult = _getGameMultiplier(playNum);
+  const sciDiff = (state.gameStats && state.gameStats.scilab && state.gameStats.scilab.difficulty) || 3;
+  const sciRewardMap = { 3: 2, 4: 3, 5: 5, 6: 7 };
   let baseR = 0;
   const acc = g.correct / total;
-  if (acc >= 1) baseR = 4;
-  else if (acc >= 0.7) baseR = 2;
+  if (acc >= 1) baseR = sciRewardMap[sciDiff] || 2;
+  else if (acc >= 0.7) baseR = Math.max(1, (sciRewardMap[sciDiff] || 2) - 1);
   const reward = Math.floor(baseR * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
   if (reward > 0) {
     state.totalPoints += reward;
@@ -4707,9 +4713,11 @@ function _finishMathGame() {
   // v18.24: 递减奖励
   const playNum = _bumpDailyGameCount('math');
   const mult = _getGameMultiplier(playNum);
+  const mathDiff = (state.gameStats && state.gameStats.math && state.gameStats.math.difficulty) || 4;
+  const mathRewardMap = { 3: 2, 4: 3, 5: 5, 6: 7 };
   let baseReward = 0;
-  if (g.correct >= 10) baseReward = 3;
-  else if (g.correct >= 7) baseReward = 2;
+  if (g.correct >= 10) baseReward = mathRewardMap[mathDiff] || 3;
+  else if (g.correct >= 7) baseReward = Math.max(1, (mathRewardMap[mathDiff] || 3) - 1);
   const reward = Math.floor(baseReward * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
   if (reward > 0) {
     state.totalPoints += reward;
@@ -4793,7 +4801,9 @@ function clickEditingWord(word) {
       // 全对 v18.24 递减
       const playNum = _bumpDailyGameCount('editing');
       const mult = _getGameMultiplier(playNum);
-      const points = Math.floor(3 * mult);
+      const editDiff = (state.gameStats && state.gameStats.editing && state.gameStats.editing.difficulty) || 3;
+      const editRewardMap = { 3: 2, 4: 3, 5: 5, 6: 7 };
+      const points = Math.floor((editRewardMap[editDiff] || 2) * mult);
       state.totalPoints += points;
       if (!state.mysteryBoxes) state.mysteryBoxes = { available: 0, opened: 0, totalSlotsAtLastEarn: 0, history: [] };
       if (playNum === 1) state.mysteryBoxes.available += 1;
@@ -4897,9 +4907,11 @@ function submitListenAnswers() {
   // v18.24: 递减奖励
   const playNum = _bumpDailyGameCount('listen');
   const mult = _getGameMultiplier(playNum);
+  const listenDiff = (state.gameStats && state.gameStats.listen && state.gameStats.listen.difficulty) || 3;
+  const listenRewardMap = { 3: 2, 4: 3, 5: 5, 6: 7 };
   let baseReward = 0;
-  if (correct >= 5) baseReward = 3;
-  else if (correct >= 3) baseReward = 2;
+  if (correct >= 5) baseReward = listenRewardMap[listenDiff] || 2;
+  else if (correct >= 3) baseReward = Math.max(1, (listenRewardMap[listenDiff] || 2) - 1);
   const reward = Math.floor(baseReward * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
   if (reward > 0) {
     state.totalPoints += reward;
