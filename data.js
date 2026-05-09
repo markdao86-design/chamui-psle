@@ -1375,6 +1375,13 @@ function recordGameRun(state, gameKey, correct, total) {
   const acc = total > 0 ? correct / total : 0;
   s.recent.push({ date: new Date().toISOString().slice(0,10), correct, total, accuracy: acc });
   if (s.recent.length > 5) s.recent.shift();
+  // 累积统计(无上限)
+  if (!s.cumCorrect) s.cumCorrect = 0;
+  if (!s.cumTotal) s.cumTotal = 0;
+  if (!s.cumRuns) s.cumRuns = 0;
+  s.cumCorrect += correct;
+  s.cumTotal += total;
+  s.cumRuns += 1;
   let levelChanged = null;
   const last3 = s.recent.slice(-3);
   const last2 = s.recent.slice(-2);
@@ -1397,23 +1404,59 @@ function getDifficulty(state, gameKey) {
   return Math.max(minFloor, state.gameStats[gameKey].difficulty || minFloor);
 }
 
-// 从池中按难度采样: 主难度 70% + ±1 难度 30%
+// 从池中按难度采样: 主难度 70% + ±1 难度 30%  (v18.97: 优先选未答题)
+const _usedQIndex = {};
 function _sampleByDiff(pool, diff, n) {
+  const poolKey = pool === MATH_QUESTIONS ? 'math' : pool === GRAMMAR_QUESTIONS ? 'grammar' : pool === CLOZE_QUESTIONS ? 'cloze' : pool === UNIT_CONVERSIONS ? 'unit' : pool === EDITING_PARAGRAPHS ? 'editing' : pool === LISTEN_DICTATIONS ? 'listen' : pool === SCIENCE_CLASSIFY ? 'scilab' : 'other';
+  if (!_usedQIndex[poolKey]) _usedQIndex[poolKey] = new Set();
+  const used = _usedQIndex[poolKey];
+
   const main = pool.filter(p => p.diff === diff);
   const near = pool.filter(p => Math.abs(p.diff - diff) === 1);
-  const out = [];
+  const combined = [...main, ...near, ...pool.filter(p => Math.abs(p.diff - diff) > 1)];
+
+  // 分为未用过 vs 已用过
+  const fresh = combined.filter((_, i) => !used.has(combined.indexOf(pool[pool.indexOf(combined[i])])));
+  const stale = combined.filter((_, i) => used.has(combined.indexOf(pool[pool.indexOf(combined[i])])));
+
+  // 简化: 用 pool index 标记
+  const freshMain = main.filter(q => !used.has(pool.indexOf(q)));
+  const freshNear = near.filter(q => !used.has(pool.indexOf(q)));
+  const staleMain = main.filter(q => used.has(pool.indexOf(q)));
+  const staleNear = near.filter(q => used.has(pool.indexOf(q)));
+
   const shuffle = arr => arr.map(x => [Math.random(), x]).sort((a,b) => a[0]-b[0]).map(x => x[1]);
-  const m = shuffle(main);
-  const ne = shuffle(near);
+  const out = [];
   const mainCount = Math.ceil(n * 0.7);
-  for (let i = 0; i < mainCount && i < m.length; i++) out.push(m[i]);
-  for (let i = 0; out.length < n && i < ne.length; i++) out.push(ne[i]);
-  // 不够再从全池补
+
+  // 优先从未用过的题中选
+  const fm = shuffle(freshMain);
+  const fn = shuffle(freshNear);
+  for (let i = 0; i < mainCount && i < fm.length; i++) out.push(fm[i]);
+  for (let i = 0; out.length < n && i < fn.length; i++) out.push(fn[i]);
+
+  // 不够则用已用过的(洗牌后重来)
   if (out.length < n) {
-    const all = shuffle(pool.filter(p => !out.includes(p)));
-    for (let i = 0; out.length < n && i < all.length; i++) out.push(all[i]);
+    const sm = shuffle(staleMain);
+    for (let i = 0; out.length < n && i < sm.length; i++) out.push(sm[i]);
   }
-  return out.slice(0, n);
+  if (out.length < n) {
+    const sn = shuffle(staleNear);
+    for (let i = 0; out.length < n && i < sn.length; i++) out.push(sn[i]);
+  }
+  // 再不够从全池补
+  if (out.length < n) {
+    const rest = shuffle(pool.filter(p => !out.includes(p)));
+    for (let i = 0; out.length < n && i < rest.length; i++) out.push(rest[i]);
+  }
+
+  const result = out.slice(0, n);
+  // 标记为已用
+  result.forEach(q => used.add(pool.indexOf(q)));
+  // 所有题用完则重置(循环)
+  if (used.size >= pool.length) used.clear();
+
+  return result;
 }
 
 function getMathQuestionsByDiff(diff, n) {
@@ -2102,15 +2145,26 @@ function getSubjectAccuracy(state) {
   const bySubject = {};
   Object.keys(SUBJECT_OF_GAME).forEach(gameKey => {
     const subj = SUBJECT_OF_GAME[gameKey];
-    const recent = (stats[gameKey] && stats[gameKey].recent) || [];
-    if (recent.length === 0) return;
-    const tc = recent.reduce((s, r) => s + r.correct, 0);
-    const ta = recent.reduce((s, r) => s + r.total, 0);
+    const gs = stats[gameKey];
+    if (!gs) return;
+    // 优先用累积统计(无上限)，兼容旧数据用 recent 回算
+    let tc, ta, runs;
+    if (gs.cumTotal > 0) {
+      tc = gs.cumCorrect || 0;
+      ta = gs.cumTotal;
+      runs = gs.cumRuns || 0;
+    } else {
+      const recent = gs.recent || [];
+      if (recent.length === 0) return;
+      tc = recent.reduce((s, r) => s + r.correct, 0);
+      ta = recent.reduce((s, r) => s + r.total, 0);
+      runs = recent.length;
+    }
     if (ta === 0) return;
     if (!bySubject[subj]) bySubject[subj] = { correct: 0, total: 0, runs: 0 };
     bySubject[subj].correct += tc;
     bySubject[subj].total += ta;
-    bySubject[subj].runs += recent.length;
+    bySubject[subj].runs += runs;
   });
   Object.keys(bySubject).forEach(s => {
     bySubject[s].accuracy = bySubject[s].total > 0
