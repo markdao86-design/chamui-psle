@@ -2286,7 +2286,7 @@ function renderPetWidget() {
   const happy = state.pet.happiness || 0;
   const isSad = happy < 30;
   const inAshes = window.isStreakInAshes && window.isStreakInAshes(state);
-  w.style.background = (isSad || inAshes) ? '#E8E8E8' : (form.bg || 'white');
+  w.style.background = 'transparent';
   // v18.68: 连续100天解锁高达宠物切换按钮
   const streak = (state.dailyStreak && state.dailyStreak.bestEver) || 0;
   const gundamUnlocked = streak >= 100;
