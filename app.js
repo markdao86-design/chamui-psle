@@ -3900,7 +3900,7 @@ function openMiniGameHub() {
           📚<br><b>词汇连连看</b><br><small>6×6 配对</small>${status('vocab')}
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openMathGame()">
-          ➗<br><b>数学速算</b><br><small>30 秒答 10 题</small>${status('math')}
+          ➗<br><b>数学速算</b><br><small>2 分钟 10 题</small>${status('math')}
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openEditingGame()">
           ✏️<br><b>Editing 找错</b><br><small>50 词找 5 错</small>${status('editing')}
@@ -3909,7 +3909,7 @@ function openMiniGameHub() {
           🎧<br><b>听写练习</b><br><small>听 1 段填 5 词</small>${status('listen')}
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openUnitGame()">
-          ⚗️<br><b>单位换算</b><br><small>30 秒 10 题</small>${status('unit')}
+          ⚗️<br><b>单位换算</b><br><small>90 秒 10 题</small>${status('unit')}
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openGrammarGame()">
           ✏️<br><b>Grammar MCQ</b><br><small>10 题语法</small>${status('grammar')}
@@ -3938,7 +3938,7 @@ function openUnitGame() {
   if (!_checkGameDailyLock('unit')) return;  // v18.38
   const diff = window.getDifficulty ? window.getDifficulty(state, 'unit') : 1;
   const qs = window.getUnitByDiff(diff, 10);
-  _unitGameState = { qs, idx: 0, correct: 0, wrong: 0, timeLeft: 45, diff };
+  _unitGameState = { qs, idx: 0, correct: 0, wrong: 0, timeLeft: 90, diff };
   _renderUnitGame();
   if (_unitTimer) clearInterval(_unitTimer);
   _unitTimer = setInterval(() => {
@@ -4291,7 +4291,7 @@ function openMathGame() {
   const diff = window.getDifficulty ? window.getDifficulty(state, 'math') : 1;
   const qs = window.getMathQuestionsByDiff ? window.getMathQuestionsByDiff(diff, 10)
            : (window.getDailyMathQuestions ? window.getDailyMathQuestions(10) : [...window.MATH_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10));
-  _mathGameState = { qs, idx: 0, correct: 0, wrong: 0, startedAt: Date.now(), timeLeft: 30, diff };
+  _mathGameState = { qs, idx: 0, correct: 0, wrong: 0, startedAt: Date.now(), timeLeft: 120, diff };
   _renderMathGame();
   // v18.11: 计时器只更新 stats 文字, 不重渲染 input (避免 iPad 键盘跳)
   if (_mathTimer) clearInterval(_mathTimer);
@@ -4395,7 +4395,7 @@ function _finishMathGame() {
     <div class="mg-inner">
       <div class="mg-result-icon">${g.correct >= 10 ? '🎉' : g.correct >= 7 ? '👍' : '🤔'}</div>
       <div class="mg-result-title">${g.correct >= 10 ? '全对!' : '完成!'} (今日第 ${playNum} 次)</div>
-      <div class="mg-result-stats">${g.correct}/10 对 · ${g.wrong} 错 · ${30 - g.timeLeft}s 用时</div>
+      <div class="mg-result-stats">${g.correct}/10 对 · ${g.wrong} 错 · ${120 - g.timeLeft}s 用时</div>
       <div class="mg-result-reward">+${reward} 分 · ${_getMultiplierLabel(playNum)}</div>
       <button class="btn btn-primary" onclick="closeMathGame()">知道了!</button>
     </div>
