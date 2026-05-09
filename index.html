@@ -3292,11 +3292,11 @@ p { font-size: 14px; line-height: 1.6; }
 }
 .ls-bar-label { font-size: 11px; color: var(--color-text-light); font-weight: 700; }
 
-/* ===== v18 Phase 5.1: 🐣 宠物 widget ===== */
+/* ===== v18.88: 🐹 宠物 widget — 升级为独立小动物伙伴(类QQ宠物) ===== */
 .pet-widget {
   position: absolute;
-  top: 56px;
-  right: 4px;
+  bottom: 72px;
+  right: 2px;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -3307,24 +3307,23 @@ p { font-size: 14px; line-height: 1.6; }
   box-shadow: none;
   transition: transform 0.15s;
   z-index: 5;
-  min-width: 56px;
-  width: 56px;
-  height: 56px;
+  width: 88px;
+  height: 96px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
 }
-.pet-widget:hover { transform: scale(1.08); }
-/* v18.10: SVG 内联渲染 wrapper */
-.pet-widget .pet-svg-wrap { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; animation: pet-wobble 3s ease-in-out infinite; }
+.pet-widget:hover { transform: scale(1.06); }
+/* v18.88: SVG wrapper 升级到 88×88 */
+.pet-widget .pet-svg-wrap { width: 88px; height: 88px; display: flex; align-items: center; justify-content: center; animation: pet-wobble 3.2s ease-in-out infinite; }
 .pet-widget .pet-svg-wrap svg { width: 100%; height: 100%; display: block; }
 /* v18.68: 情绪动画 — 类放在 #petWidget 上 */
 .pet-widget.pet-sad .pet-svg-wrap { filter: grayscale(0.6); animation: pet-sad-droop 2s ease-in-out infinite; }
 .pet-widget.pet-happy .pet-svg-wrap { animation: pet-happy-bounce 0.7s ease-in-out 4; }
 .pet-widget.pet-gundam .pet-svg-wrap { animation: pet-gundam-float 2.5s ease-in-out infinite; }
 @keyframes pet-sad-droop { 0%,100% { transform:translateY(0) scale(1); } 50% { transform:translateY(2px) scale(0.97); } }
-@keyframes pet-happy-bounce { 0%,100% { transform:scale(1) translateY(0); } 30% { transform:scale(1.12) translateY(-6px); } 60% { transform:scale(1.06) translateY(-3px); } }
+@keyframes pet-happy-bounce { 0%,100% { transform:scale(1) translateY(0); } 30% { transform:scale(1.12) translateY(-8px); } 60% { transform:scale(1.06) translateY(-4px); } }
 @keyframes pet-gundam-float { 0%,100% { transform:translateY(0) scale(1); } 50% { transform:translateY(-5px) scale(1.03); } }
 .pet-widget .pet-emoji { font-size: 26px; line-height: 1; animation: pet-wobble 3s ease-in-out infinite; }
 .pet-widget .pet-emoji.pet-sad { filter: grayscale(0.7); animation: none; }
@@ -3332,9 +3331,17 @@ p { font-size: 14px; line-height: 1.6; }
 .pet-widget .pet-form-name { display: none; }
 @keyframes pet-wobble {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-3px) rotate(-4deg); }
-  75% { transform: translateY(-3px) rotate(4deg); }
+  30% { transform: translateY(-4px) rotate(-3deg); }
+  70% { transform: translateY(-4px) rotate(3deg); }
 }
+/* v18.88: 表情层 CSS 切换 — ham-face-* 元素 */
+.ham-face-happy, .ham-face-excited, .ham-face-sleepy { display: none; }
+.pet-widget.pet-happy   .ham-face-normal  { display: none; }
+.pet-widget.pet-happy   .ham-face-happy   { display: block; }
+.pet-widget.pet-excited .ham-face-normal  { display: none; }
+.pet-widget.pet-excited .ham-face-excited { display: block; }
+.pet-widget.pet-sleepy  .ham-face-normal  { display: none; }
+.pet-widget.pet-sleepy  .ham-face-sleepy  { display: block; }
 #page-dashboard .character-card { position: relative; }
 
 /* ===== v18.20: A 活的伙伴 — 对话气泡 + 庆祝动画 ===== */
@@ -3342,10 +3349,9 @@ p { font-size: 14px; line-height: 1.6; }
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  right: 62px;
+  right: 94px;
   background: transparent;
   border: 1.5px solid rgba(255,255,255,0.6);
-  border-radius: 20px;
   padding: 6px 16px;
   font-size: 12px;
   font-weight: 700;

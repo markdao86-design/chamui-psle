@@ -2341,8 +2341,8 @@ function petSay(message, duration) {
   }, dur);
 }
 
-// v18.86: QQ宠物式表情动作
-const _PET_EXPR_LIST = ['pet-nod', 'pet-think', 'pet-jump', 'pet-peek', 'pet-dance'];
+// v18.88: QQ宠物式表情动作 — 含面部表情切换类
+const _PET_EXPR_LIST = ['pet-nod', 'pet-think', 'pet-jump', 'pet-peek', 'pet-dance', 'pet-excited', 'pet-sleepy'];
 let _exprTimer = null;
 function petExpress(expr, dur) {
   const w = document.getElementById('petWidget');
@@ -2350,7 +2350,8 @@ function petExpress(expr, dur) {
   _PET_EXPR_LIST.forEach(c => w.classList.remove(c));
   void w.offsetWidth;
   w.classList.add(expr);
-  setTimeout(() => { if (w) w.classList.remove(expr); }, dur || 1500);
+  const d = dur || (expr === 'pet-sleepy' ? 3000 : expr === 'pet-excited' ? 2000 : 1500);
+  setTimeout(() => { if (w) w.classList.remove(expr); }, d);
 }
 function _doRandomExpr() {
   if (!document.hidden) {
@@ -2916,7 +2917,7 @@ function submitKnowledgePractice() {
     state.logs.push({ reason: `📝 知识练习: ${g.nodeId} ${score}/${total} (${stars}⭐)`, points: pointsAwarded, week: state.currentWeek, timestamp: Date.now() });
   }
   saveState(state);
-  if (stars === 3) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 50); playSound('tada'); }
+  if (stars === 3) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 50); playSound('tada'); petExpress('pet-excited', 2200); }
   else if (stars > 0) playSound('ding');
   else playSound('sad');
   if (newRec.stars > prev.stars) showToast(`🎉 ${node_name(g.nodeId)} 升级到 ${newRec.stars} ⭐!`, 'happy');
@@ -4021,7 +4022,7 @@ function _finishUnitGame() {
       <div class="mg-result-reward">+${reward} 分 · ${_getMultiplierLabel(playNum)}</div>
       <button class="btn btn-primary" onclick="closeUnitGame()">知道了!</button>
     </div>`;
-  if (g.correct >= 10 && mult > 0) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 40); playSound('tada'); }
+  if (g.correct >= 10 && mult > 0) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 40); playSound('tada'); petExpress('pet-excited', 2200); }
   if (diffR && diffR.levelChanged === 'up') { showToast(`🆙 单位换算难度升到 Lv ${diffR.newDiff}!`, 'happy'); playSound('tada'); }
   if (diffR && diffR.levelChanged === 'down') showToast(`📉 单位换算难度降到 Lv ${diffR.newDiff}`, 'sad');
   _unitGameState = null;
@@ -4164,7 +4165,7 @@ function _finishMcqGame() {
       <div class="mg-result-reward">+${reward} 分 · ${_getMultiplierLabel(playNum)}</div>
       <button class="btn btn-primary" onclick="closeMcqGame()">知道了!</button>
     </div>`;
-  if (g.correct >= 10 && mult > 0) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 40); playSound('tada'); }
+  if (g.correct >= 10 && mult > 0) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 40); playSound('tada'); petExpress('pet-excited', 2200); }
   if (diffR && diffR.levelChanged === 'up') { showToast(`🆙 ${g.title} 难度升到 Lv ${diffR.newDiff}!`, 'happy'); playSound('tada'); }
   if (diffR && diffR.levelChanged === 'down') showToast(`📉 ${g.title} 难度降到 Lv ${diffR.newDiff}`, 'sad');
   _mcqGameState = null;
@@ -4399,7 +4400,7 @@ function _finishMathGame() {
       <button class="btn btn-primary" onclick="closeMathGame()">知道了!</button>
     </div>
   `;
-  if (g.correct >= 10 && mult > 0) { spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40); playSound('tada'); }
+  if (g.correct >= 10 && mult > 0) { spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40); playSound('tada'); petExpress('pet-excited', 2200); }
   // v18.25: 难度变化提示
   if (diffResult && diffResult.levelChanged === 'up') { showToast(`🆙 数学难度升到 Lv ${diffResult.newDiff}!`, 'happy'); playSound('tada'); }
   if (diffResult && diffResult.levelChanged === 'down') showToast(`📉 数学难度降到 Lv ${diffResult.newDiff}, 继续努力`, 'sad');
