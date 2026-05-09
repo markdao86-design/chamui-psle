@@ -300,7 +300,7 @@ const def8 = W.getDefaultState();
 assert(def8.pet && def8.pet.formIdx === 0, 'v18: 默认 pet.formIdx=0');
 assert(def8.achievements && Array.isArray(def8.achievements.unlocked), 'v18: achievements.unlocked array');
 assert(def8.dailyDraws && def8.dailyDraws.fragments === 0, 'v18: dailyDraws.fragments=0');
-assert(W.PET_FORMS && W.PET_FORMS.length === 7, `v18: PET_FORMS 7 形态 (实际 ${W.PET_FORMS && W.PET_FORMS.length})`);
+assert(W.PET_FORMS && W.PET_FORMS.length === 12, `v19.1: PET_FORMS 12 形态 (实际 ${W.PET_FORMS && W.PET_FORMS.length})`);
 // v18.10: SVG 字段验证
 assert(W.PET_FORMS.every(f => typeof f.svg === 'string' && f.svg.includes('<svg')), 'v18.10: 每个形态有 svg 字符串');
 assert(W.PET_FORMS.every(f => !f.emoji), 'v18.10: 已迁移, 不再有 emoji 字段');
@@ -311,10 +311,10 @@ const ts8 = W.getDefaultState();
 ts8.daily = {};
 for (let i = 1; i <= 14; i++) ts8.daily[i] = { Mon: { E1: true } };
 const form7 = W.getCurrentPetForm(ts8);
-assert(form7 && form7.idx === 2, `v19: 14天打卡 → 形态 2 小仓鼠 (实际 ${form7 && form7.idx})`);
+assert(form7 && form7.idx === 3, `v19.1: 14天打卡 → 形态 3 小仓鼠 (实际 ${form7 && form7.idx})`);
 for (let i = 15; i <= 200; i++) ts8.daily[i] = { Mon: { E1: true } };
 const form100 = W.getCurrentPetForm(ts8);
-assert(form100 && form100.idx === 6, `v19: 200天打卡 → 形态 6 仓鼠王者 (实际 ${form100 && form100.idx})`);
+assert(form100 && form100.idx === 11, `v19.1: 200天打卡 → 形态 11 仓鼠王者 (实际 ${form100 && form100.idx})`);
 assert(W.ACHIEVEMENTS && W.ACHIEVEMENTS.length >= 28, `v18: ACHIEVEMENTS ≥28 (实际 ${W.ACHIEVEMENTS && W.ACHIEVEMENTS.length})`);
 // 模拟解锁 streak_7
 const ts9 = W.getDefaultState();

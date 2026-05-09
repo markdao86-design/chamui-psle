@@ -2396,8 +2396,8 @@ function renderPetWidget() {
   else if (happy >= 70) w.classList.add('pet-happy');
   w.style.position = 'relative';
   w.innerHTML = `<div class="pet-svg-wrap">${form.svg}</div>${switchBtn}`;
-  w.classList.toggle('pet-king', form.idx >= 6);
-  w.classList.toggle('pet-warrior', form.idx === 5);
+  w.classList.toggle('pet-king', form.idx >= 11);
+  w.classList.toggle('pet-warrior', form.idx === 9);
   w.setAttribute('data-name', `${state.pet.name || '球球'} · ${form.name} ${isSad ? '😢' : ''}`);
   w.title = `${state.pet.name || '球球'} (${form.name})\n心情 ${happy}/100\n点击查看详情/改名`;
   w.onclick = openPetModal;
@@ -2446,7 +2446,7 @@ function petSay(message, duration) {
 }
 
 // v18.93: 表情自动反应系统 — 按活动切换(登录→happy, 答对→excited, 闲置2min→sleepy)
-const _PET_EXPR_LIST = ['pet-nod', 'pet-think', 'pet-jump', 'pet-peek', 'pet-dance', 'pet-excited', 'pet-sleepy'];
+const _PET_EXPR_LIST = ['pet-nod', 'pet-think', 'pet-jump', 'pet-peek', 'pet-dance', 'pet-excited', 'pet-sleepy', 'pet-sad', 'pet-angry', 'pet-proud'];
 let _exprTimer = null;
 let _petLastActivity = Date.now();
 let _petIdleTimer = null;
@@ -2536,33 +2536,168 @@ const _COLD_JOKES = [
   '问：什么时候鱼最幸运？答：被钓上来那天，因为它终于"上岸"了！🎣',
   '老师问世界上最圆的东西是什么。小明说：是我的饼干，因为我还没来得及咬 🍪',
 ];
+
+// v19.1: 智能场景检测 + 情感对话
+function _detectPetScene() {
+  if (!state) return 'idle';
+  const today = new Date().toISOString().slice(0, 10);
+
+  // 计算今天打卡 slot 数
+  const cw = state.currentWeek || 1;
+  const weekData = state.daily && state.daily[cw];
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const todayName = dayNames[new Date().getDay()];
+  const todayData = weekData && weekData[todayName];
+  let todaySlots = 0;
+  let totalSlots = 0;
+  if (todayData) {
+    for (const k of Object.keys(todayData)) {
+      totalSlots++;
+      if (todayData[k]) todaySlots++;
+    }
+  }
+
+  // 全勤检测
+  if (todaySlots > 0 && todaySlots >= totalSlots && totalSlots >= 3) return 'perfect';
+
+  // 懒惰检测: 今天没打卡
+  if (todaySlots === 0) {
+    const lastDate = state.dailyStreak?.lastDate;
+    if (lastDate) {
+      const daysSince = Math.floor((Date.now() - new Date(lastDate).getTime()) / 86400000);
+      if (daysSince >= 2) return 'lazy';
+    }
+    return 'lazy';
+  }
+
+  // 错误率高: 任何游戏最近2局 ≤40%
+  if (state.gameStats) {
+    for (const key of Object.keys(state.gameStats)) {
+      const gs = state.gameStats[key];
+      if (gs.recent && gs.recent.length >= 2) {
+        const last2 = gs.recent.slice(-2);
+        const avg = last2.reduce((s, r) => s + (r.correct / r.total), 0) / 2;
+        if (avg <= 0.4) return 'errors';
+      }
+    }
+  }
+
+  // 好表现: 任何游戏最近1局 ≥80%
+  if (state.gameStats) {
+    for (const key of Object.keys(state.gameStats)) {
+      const gs = state.gameStats[key];
+      if (gs.recent && gs.recent.length >= 1) {
+        const last = gs.recent[gs.recent.length - 1];
+        if (last.correct / last.total >= 0.8) return 'good';
+      }
+    }
+  }
+
+  // 错题本提醒: ≥5题
+  if (state.wrongAnswers && state.wrongAnswers.length >= 5) return 'errorBank';
+
+  // 时段检测
+  const hour = new Date().getHours();
+  if (hour >= 22 || hour < 6) return 'night';
+  if (hour < 9) return 'morning';
+  const dow = new Date().getDay();
+  if (dow === 0 || dow === 6) return 'weekend';
+
+  return 'idle';
+}
+
+function _pickFromPool(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+let _lastPetEmotion = 'normal';
 function _generatePetMessage() {
   if (!state) return null;
-  const lv = window.CHAMUI ? window.CHAMUI.getLevelInfo(state.totalPoints).lv : 1;
-  const next = window.CHAMUI ? window.CHAMUI.getNextLevelInfo(state.totalPoints) : null;
-  const streak = state.dailyStreak?.days || 0;
-  const totalSlotsToday = window._countTodaySlots ? window._countTodaySlots(state) : 0;
-  const pool = [];
-  if (streak === 0) pool.push('🔥 今天打 1 个项目就点燃火焰!');
-  if (streak >= 1 && streak < 7) pool.push(`🔥 已经 ${streak} 天了, 别断哦`);
-  if (streak >= 7) pool.push(`🛡️ ${streak} 天勇者! 你超棒`);
-  if (next) {
-    const need = next.minPoints - state.totalPoints;
-    if (need > 0 && need < 50) pool.push(`✨ 还差 ${need} 分就升 Lv ${next.lv}!`);
+  const scene = _detectPetScene();
+  const D = window.PET_DIALOGUES;
+  let msg = null;
+  let emotion = 'normal';
+
+  switch (scene) {
+    case 'lazy': {
+      // 搞笑50% + 激将35% + 鼓励15%
+      const r = Math.random();
+      if (r < 0.50) msg = _pickFromPool(D.lazy.funny);
+      else if (r < 0.85) msg = _pickFromPool(D.lazy.challenge);
+      else msg = _pickFromPool(D.lazy.encourage);
+      emotion = r < 0.50 ? 'sad' : 'angry';
+      break;
+    }
+    case 'errors': {
+      // 搞笑45% + 激将35% + 安抚20%
+      const r = Math.random();
+      if (r < 0.45) msg = _pickFromPool(D.errors.funny);
+      else if (r < 0.80) msg = _pickFromPool(D.errors.challenge);
+      else msg = _pickFromPool(D.errors.comfort);
+      emotion = r < 0.45 ? 'normal' : 'angry';
+      break;
+    }
+    case 'good': {
+      // 搞笑50% + 激将30% + 骄傲20%
+      const r = Math.random();
+      if (r < 0.50) msg = _pickFromPool(D.good.funny);
+      else if (r < 0.80) msg = _pickFromPool(D.good.challenge);
+      else msg = _pickFromPool(D.good.proud);
+      emotion = r < 0.50 ? 'excited' : 'proud';
+      break;
+    }
+    case 'errorBank': {
+      // 搞笑55% + 激将45%
+      const r = Math.random();
+      if (r < 0.55) msg = _pickFromPool(D.errorBank.funny);
+      else msg = _pickFromPool(D.errorBank.challenge);
+      emotion = 'angry';
+      break;
+    }
+    case 'perfect':
+      msg = _pickFromPool(D.perfect);
+      emotion = 'excited';
+      break;
+    case 'night':
+      msg = _pickFromPool(D.special.night);
+      emotion = 'sleepy';
+      break;
+    case 'morning':
+      msg = _pickFromPool(D.special.morning);
+      emotion = 'happy';
+      break;
+    case 'weekend':
+      msg = _pickFromPool(D.special.weekend);
+      emotion = 'happy';
+      break;
+    default: {
+      // 搞笑70% + 陪伴30%
+      const r = Math.random();
+      if (r < 0.70) msg = _pickFromPool(D.idle.funny);
+      else msg = _pickFromPool(D.idle.companion);
+      emotion = 'normal';
+      break;
+    }
   }
-  if (totalSlotsToday === 0) pool.push('📚 今天还没开始呢, 加油!');
-  if (totalSlotsToday >= 3) pool.push('💪 今天好猛, 继续!');
-  pool.push('🐹 我陪你学!');
-  pool.push('💡 加油, 一点点就升级了');
-  pool.push('🌟 你比昨天更厉害了');
-  return pool[Math.floor(Math.random() * pool.length)];
+
+  // 切换表情
+  if (emotion !== _lastPetEmotion) {
+    _lastPetEmotion = emotion;
+    const w = document.getElementById('petWidget');
+    if (w) {
+      w.classList.remove('pet-sad', 'pet-angry', 'pet-proud', 'pet-happy', 'pet-excited', 'pet-sleepy');
+      if (emotion !== 'normal') w.classList.add('pet-' + emotion);
+    }
+  }
+
+  return msg;
 }
 
 let _jokeTimer = null;
 function _startPetIdleTalk() {
   if (_petBubbleTimer) clearInterval(_petBubbleTimer);
   if (_jokeTimer) clearInterval(_jokeTimer);
-  // 鼓励话: 30s 后第一次, 之后每 60-90s 一次
+  // v19.1: 情感对话 — 15s 后第一次, 之后每 20-30s 一次
   setTimeout(() => {
     petSay(_generatePetMessage());
     _petBubbleTimer = setInterval(() => {
@@ -2570,9 +2705,9 @@ function _startPetIdleTalk() {
       const dash = document.getElementById('page-dashboard');
       if (!dash || !dash.classList.contains('active')) return;
       petSay(_generatePetMessage());
-    }, 60000 + Math.random() * 30000);
-  }, 30000);
-  // 冷笑话: 10s 后第一条, 之后每 2 分钟一条, 不重复
+    }, 20000 + Math.random() * 10000);
+  }, 15000);
+  // 冷笑话: 穿插在情感对话中, 每 3 分钟一条
   setTimeout(() => {
     if (!document.hidden) {
       const dash = document.getElementById('page-dashboard');
@@ -2583,8 +2718,8 @@ function _startPetIdleTalk() {
       const dash = document.getElementById('page-dashboard');
       if (!dash || !dash.classList.contains('active')) return;
       petSay(_nextColdJoke(), 6000);
-    }, 2 * 60 * 1000);
-  }, 10000);
+    }, 3 * 60 * 1000);
+  }, 45000);
 }
 
 // ============ v18.20: E 数字跳动 + 彩虹扫过 ============

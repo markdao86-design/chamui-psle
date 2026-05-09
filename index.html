@@ -3321,9 +3321,13 @@ p { font-size: 14px; line-height: 1.6; }
 .pet-widget .pet-svg-wrap svg { width: 100%; height: 100%; display: block; }
 /* v18.68: 情绪动画 — 类放在 #petWidget 上 */
 .pet-widget.pet-sad .pet-svg-wrap { filter: grayscale(0.6); animation: pet-sad-droop 2s ease-in-out infinite; }
+.pet-widget.pet-angry .pet-svg-wrap { animation: pet-angry-shake 0.5s ease-in-out 3; }
+.pet-widget.pet-proud .pet-svg-wrap { animation: pet-proud-glow 1.5s ease-in-out infinite; }
 .pet-widget.pet-happy .pet-svg-wrap { animation: pet-happy-bounce 0.7s ease-in-out 4; }
 .pet-widget.pet-gundam .pet-svg-wrap { animation: pet-gundam-float 2.5s ease-in-out infinite; }
 @keyframes pet-sad-droop { 0%,100% { transform:translateY(0) scale(1); } 50% { transform:translateY(2px) scale(0.97); } }
+@keyframes pet-angry-shake { 0%,100% { transform:rotate(0) scale(1); } 25% { transform:rotate(-5deg) scale(1.05); } 75% { transform:rotate(5deg) scale(1.05); } }
+@keyframes pet-proud-glow { 0%,100% { transform:scale(1); filter:brightness(1); } 50% { transform:scale(1.06); filter:brightness(1.15); } }
 @keyframes pet-happy-bounce { 0%,100% { transform:scale(1) translateY(0); } 30% { transform:scale(1.12) translateY(-8px); } 60% { transform:scale(1.06) translateY(-4px); } }
 @keyframes pet-gundam-float { 0%,100% { transform:translateY(0) scale(1); } 50% { transform:translateY(-5px) scale(1.03); } }
 .pet-widget .pet-emoji { font-size: 26px; line-height: 1; animation: pet-wobble 3s ease-in-out infinite; }
@@ -3336,13 +3340,19 @@ p { font-size: 14px; line-height: 1.6; }
   70% { transform: translateY(-4px) rotate(3deg); }
 }
 /* v18.88: 表情层 CSS 切换 — ham-face-* 元素 */
-.ham-face-happy, .ham-face-excited, .ham-face-sleepy { display: none; }
+.ham-face-happy, .ham-face-excited, .ham-face-sleepy, .ham-face-sad, .ham-face-angry, .ham-face-proud { display: none; }
 .pet-widget.pet-happy   .ham-face-normal  { display: none; }
 .pet-widget.pet-happy   .ham-face-happy   { display: block; }
 .pet-widget.pet-excited .ham-face-normal  { display: none; }
 .pet-widget.pet-excited .ham-face-excited { display: block; }
 .pet-widget.pet-sleepy  .ham-face-normal  { display: none; }
 .pet-widget.pet-sleepy  .ham-face-sleepy  { display: block; }
+.pet-widget.pet-sad     .ham-face-normal  { display: none; }
+.pet-widget.pet-sad     .ham-face-sad     { display: block; }
+.pet-widget.pet-angry   .ham-face-normal  { display: none; }
+.pet-widget.pet-angry   .ham-face-angry   { display: block; }
+.pet-widget.pet-proud   .ham-face-normal  { display: none; }
+.pet-widget.pet-proud   .ham-face-proud   { display: block; }
 #page-dashboard .character-card { position: relative; }
 
 /* ===== v18.20: A 活的伙伴 — 对话气泡 + 庆祝动画 ===== */

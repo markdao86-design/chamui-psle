@@ -657,7 +657,35 @@ function _hamsterFace(furColor) {
       <ellipse cx="30" cy="16.5" rx="4.8" ry="3.5" fill="${furColor}"/>
       <path d="M22 26 L26 26" stroke="#8B5E3C" stroke-width="0.5" stroke-linecap="round"/>
       <text x="34" y="13" font-size="5" fill="#AAAAAA" opacity="0.7">z</text>
-      <text x="37" y="9" font-size="3.5" fill="#AAAAAA" opacity="0.5">z</text>
+    </g>
+    <g class="ham-face-sad">
+      <circle cx="18" cy="18" r="4" fill="#3D1F0A"/>
+      <circle cx="30" cy="18" r="4" fill="#3D1F0A"/>
+      <circle cx="19.3" cy="16.5" r="1.5" fill="white" opacity="0.92"/>
+      <circle cx="31.3" cy="16.5" r="1.5" fill="white" opacity="0.92"/>
+      <path d="M20 27 Q24 24.5 28 27" fill="none" stroke="#8B5E3C" stroke-width="0.8" stroke-linecap="round"/>
+      <ellipse cx="14" cy="24" rx="1" ry="1.8" fill="#87CEEB" opacity="0.7"/>
+      <ellipse cx="34" cy="24" rx="1" ry="1.8" fill="#87CEEB" opacity="0.7"/>
+    </g>
+    <g class="ham-face-angry">
+      <circle cx="18" cy="18" r="4" fill="#3D1F0A"/>
+      <circle cx="30" cy="18" r="4" fill="#3D1F0A"/>
+      <circle cx="19.3" cy="16.5" r="1.2" fill="white" opacity="0.9"/>
+      <circle cx="31.3" cy="16.5" r="1.2" fill="white" opacity="0.9"/>
+      <line x1="14" y1="13" x2="21" y2="15" stroke="#3D1F0A" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="34" y1="13" x2="27" y2="15" stroke="#3D1F0A" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M20 26 Q24 28 28 26" fill="none" stroke="#8B5E3C" stroke-width="0.9" stroke-linecap="round"/>
+      <circle cx="13" cy="22" r="3.5" fill="#FF6B6B" opacity="0.35"/>
+      <circle cx="35" cy="22" r="3.5" fill="#FF6B6B" opacity="0.35"/>
+    </g>
+    <g class="ham-face-proud">
+      <path d="M14 19 Q18 14 22 19" fill="none" stroke="#3D1F0A" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M26 19 Q30 14 34 19" fill="none" stroke="#3D1F0A" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M19 26 Q24 29 29 26" fill="none" stroke="#8B5E3C" stroke-width="0.9" stroke-linecap="round"/>
+      <text x="10" y="10" font-size="4" fill="#FFD700">&#x2726;</text>
+      <text x="35" y="10" font-size="3.5" fill="#FFD700">&#x2726;</text>
+      <circle cx="13" cy="22" r="3.5" fill="#FFB6C1" opacity="0.4"/>
+      <circle cx="35" cy="22" r="3.5" fill="#FFB6C1" opacity="0.4"/>
     </g>`;
 }
 
@@ -672,7 +700,7 @@ const PET_FORMS = [
       <circle cx="24" cy="38" r="1" fill="#D9A86A" opacity="0.4"/>
     </svg>` },
 
-  { idx: 1, name: '仓鼠宝宝', minStreak: 5,
+  { idx: 1, name: '仓鼠宝宝', minStreak: 3,
     bg: 'linear-gradient(135deg, #FFE6F0 0%, #FFB6D9 100%)',
     desc: '刚出生的小仓鼠, 软软的好可爱',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -680,7 +708,18 @@ const PET_FORMS = [
       ${_hamsterFace('#E8B87A')}
     </svg>` },
 
-  { idx: 2, name: '小仓鼠', minStreak: 14,
+  { idx: 2, name: '探索仓鼠', minStreak: 7,
+    bg: 'linear-gradient(135deg, #E0F7FA 0%, #80DEEA 100%)',
+    desc: '背上小书包, 开始探索世界了',
+    svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+      ${_hamsterBase('#E0A060', '#FFF3E0', false)}
+      ${_hamsterFace('#E0A060')}
+      <rect x="16" y="30" width="16" height="12" rx="3" fill="#4ECDC4" stroke="#2BA89A" stroke-width="0.7"/>
+      <rect x="20" y="28" width="8" height="3" rx="1.5" fill="#2BA89A"/>
+      <circle cx="24" cy="35" r="2" fill="#FFF" opacity="0.7"/>
+    </svg>` },
+
+  { idx: 3, name: '小仓鼠', minStreak: 14,
     bg: 'linear-gradient(135deg, #FFE066 0%, #FFB347 100%)',
     desc: '系上蝴蝶结, 会塞食物到腮帮子了',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -691,7 +730,19 @@ const PET_FORMS = [
       <circle cx="24" cy="10" r="2.2" fill="#C3447A"/>
     </svg>` },
 
-  { idx: 3, name: '学习仓鼠', minStreak: 30,
+  { idx: 4, name: '好奇仓鼠', minStreak: 21,
+    bg: 'linear-gradient(135deg, #FFF9C4 0%, #FFE082 100%)',
+    desc: '拿着放大镜, 对什么都好奇',
+    svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+      ${_hamsterBase('#D49050', '#FFF3E0', false)}
+      ${_hamsterFace('#D49050')}
+      <circle cx="36" cy="30" r="6" fill="none" stroke="#8B6F00" stroke-width="1.5"/>
+      <circle cx="36" cy="30" r="4.5" fill="rgba(135,206,235,0.25)"/>
+      <line x1="32" y1="35" x2="28" y2="40" stroke="#8B6F00" stroke-width="1.5" stroke-linecap="round"/>
+      <text x="6" y="12" font-size="5" fill="#FFD700">?</text>
+    </svg>` },
+
+  { idx: 5, name: '学习仓鼠', minStreak: 30,
     bg: 'linear-gradient(135deg, #B3E5FC 0%, #4ECDC4 100%)',
     desc: '戴上眼镜, 很爱读书',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -707,7 +758,18 @@ const PET_FORMS = [
       <line x1="25.2" y1="40.5" x2="28" y2="40.5" stroke="#2D2D2D" stroke-width="0.4"/>
     </svg>` },
 
-  { idx: 4, name: '智慧仓鼠', minStreak: 60,
+  { idx: 6, name: '努力仓鼠', minStreak: 45,
+    bg: 'linear-gradient(135deg, #FFCCBC 0%, #FF8A65 100%)',
+    desc: '系上头巾, 拼命努力中',
+    svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+      ${_hamsterBase('#C87840', '#FFE5C2', false)}
+      ${_hamsterFace('#C87840')}
+      <path d="M10 8 Q24 4 38 8 L38 12 Q24 8 10 12 Z" fill="#FF5722" stroke="#BF360C" stroke-width="0.5"/>
+      <path d="M38 8 L44 14 L42 16 L38 12" fill="#FF5722" stroke="#BF360C" stroke-width="0.4"/>
+      <text x="20" y="11" font-size="3.5" fill="#FFF" font-weight="bold">必胜</text>
+    </svg>` },
+
+  { idx: 7, name: '智慧仓鼠', minStreak: 60,
     bg: 'linear-gradient(135deg, #E1BEE7 0%, #A788E0 100%)',
     desc: '戴上学士帽, 智力满分',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -720,7 +782,19 @@ const PET_FORMS = [
       <circle cx="38" cy="12.5" r="2" fill="#FFD700" stroke="#B8860B" stroke-width="0.4"/>
     </svg>` },
 
-  { idx: 5, name: '战神仓鼠', minStreak: 120,
+  { idx: 8, name: '勇气仓鼠', minStreak: 90,
+    bg: 'linear-gradient(135deg, #C8E6C9 0%, #66BB6A 100%)',
+    desc: '手持宝剑, 勇往直前',
+    svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+      ${_hamsterBase('#C87840', '#FFE5C2', false)}
+      ${_hamsterFace('#C87840')}
+      <rect x="37" y="8" width="2" height="20" fill="#B0BEC5" stroke="#546E7A" stroke-width="0.4"/>
+      <rect x="34" y="27" width="8" height="2.5" rx="1" fill="#8D6E63"/>
+      <polygon points="38,8 37,5 39,5" fill="#FFD700"/>
+      <path d="M10 10 Q8 6 12 6 Q16 6 14 10" fill="#4CAF50" stroke="#2E7D32" stroke-width="0.5"/>
+    </svg>` },
+
+  { idx: 9, name: '战神仓鼠', minStreak: 120,
     bg: 'linear-gradient(135deg, #FF9F45 0%, #FF5757 100%)',
     desc: '披上红色战袍, PSLE 战无不胜',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -734,7 +808,21 @@ const PET_FORMS = [
       <polygon points="22,-2 26,-2 24,-5" fill="#FF5757"/>
     </svg>` },
 
-  { idx: 6, name: '仓鼠王者', minStreak: 200,
+  { idx: 10, name: '传说仓鼠', minStreak: 160,
+    bg: 'linear-gradient(135deg, #B388FF 0%, #7C4DFF 100%)',
+    desc: '披上星光斗篷, 闪闪发光',
+    svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 20 Q4 40 12 46 L36 46 Q44 40 40 20 Q38 32 24 34 Q10 32 8 20 Z" fill="#5C6BC0" stroke="#303F9F" stroke-width="0.7"/>
+      <circle cx="14" cy="36" r="1" fill="#FFD700"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/></circle>
+      <circle cx="34" cy="38" r="0.8" fill="#FFD700"><animate attributeName="opacity" values="1;0.3;1" dur="1.8s" repeatCount="indefinite"/></circle>
+      <circle cx="20" cy="42" r="0.6" fill="#FFF"><animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/></circle>
+      ${_hamsterBase('#B8860B', '#FFF8DC', false)}
+      ${_hamsterFace('#B8860B')}
+      <circle cx="12" cy="10" r="1.5" fill="#FFD700"><animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite"/></circle>
+      <circle cx="36" cy="8" r="1" fill="#FFF"><animate attributeName="opacity" values="0;1;0" dur="2.5s" repeatCount="indefinite" begin="0.5s"/></circle>
+    </svg>` },
+
+  { idx: 11, name: '仓鼠王者', minStreak: 200,
     bg: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B6B 100%)',
     desc: 'PSLE 终极守护神兽 — 戴上王冠披上紫袍',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -758,7 +846,240 @@ const PET_FORMS = [
     </svg>` }
 ];
 
-// v18.68: 命运高达 (连续打卡100天仓鼠满级后解锁的第二宠物)
+// v19.1: 情感对话系统 — 200+ 句, 按场景分类, 搞笑为主+激将为辅
+const PET_DIALOGUES = {
+  // 场景1: 懒惰 (今天没打卡 / ≥2天没来)
+  lazy: {
+    funny: [
+      '🐹 我刚学会的新技能：等主人等到长蘑菇',
+      '😴 我都睡了三觉了你还没来…',
+      '🐹 我在这里写日记：第X天，主人失踪中',
+      '🌿 我身上都要长草了…来浇浇水吧',
+      '🐹 我已经把你的座位让给蜘蛛了，要抢回来吗？',
+      '📺 我一个人把Netflix都看完了，你呢？',
+      '🐹 再不来我要跟隔壁家仓鼠混了',
+      '🦗 *蟋蟀叫声* 太安静了…这是被抛弃了吗',
+      '🐹 我开始怀疑我是不是一个人住…',
+      '🍿 我看了三部电影等你，爆米花都凉了',
+      '🐹 我试着自己做题…结果把计算器按坏了',
+      '📱 我给你发了99条消息你都没看！（其实我没有手）',
+      '🐹 我已经跟书架上的书聊天了，它们不理我',
+      '🌙 我数了1032只羊等你，一只都没等到',
+      '🐹 我刚问墙壁PSLE怎么考，它没回答',
+    ],
+    challenge: [
+      '😤 哼，你不来我就自己学了！等我超过你',
+      '😏 隔壁家孩子今天做了10题呢…你确定不来？',
+      '🫣 再不来我要退化回蛋了！你忍心吗？',
+      '😤 我的进化条在倒退了…你看到了吗',
+      '💀 你再不来，我要变成化石仓鼠了',
+      '😏 据我观察，学霸今天已经刷了20题',
+      '🏃 别人家的宠物都在陪主人学习了…就我闲着',
+      '😤 我要给你打差评了：主人活跃度 0 分',
+      '🫣 你不会是…放弃PSLE了吧？？？',
+      '😏 我赌你今天不会来。证明我错了？',
+    ],
+    encourage: [
+      '🥺 就打1个项目嘛…我想看你',
+      '💭 我相信你今天一定会来的',
+      '🌱 哪怕做一题也是进步呀',
+      '🐹 打开app只需要3秒，我帮你计时了',
+      '💪 昨天的你很厉害，今天继续吧',
+      '🌈 每次你来我都超开心的',
+      '🐹 不用做很多，来看看我也行',
+      '☀️ 新的一天，来打个招呼？',
+    ]
+  },
+  // 场景2: 错误率高 (最近2局 ≤40%)
+  errors: {
+    funny: [
+      '🐹 没事！就算爱因斯坦小时候数学也只考了…算了他考了100分',
+      '🤔 这些题是不是故意刁难你？我去投诉出题老师',
+      '🐹 我觉得答案选C，为什么？因为C是仓鼠的C！',
+      '😂 别灰心，我连题目都看不懂（因为我是仓鼠）',
+      '🐹 错了不可怕，可怕的是…算了，其实错了也不可怕',
+      '🤣 你知道吗？我刚才偷偷答了一题，也错了',
+      '🐹 据科学研究，答错的题记得最牢！恭喜你记忆力升级！',
+      '😅 没关系，我见过的学霸也经常在这里翻车',
+      '🐹 这题要是我来答…我会选最好看的那个选项',
+      '🤡 别看我是仓鼠，我也会安慰人的：加油！（完）',
+      '🐹 错题就像打游戏遇到boss，打不过就升级再来',
+      '😂 我帮你分析了一下：你错的都是难题！说明简单题你都会',
+    ],
+    challenge: [
+      '😏 这题连我都会…再试一次？',
+      '🔥 你上次比这难的都过了！',
+      '💪 错3次以内=正常，超过才要担心',
+      '😏 你可是要考AL1的人，这点小题不在话下',
+      '🔥 错了就对了！说明你在挑战难题',
+      '😤 这些题等着，下次我们回来收拾它们',
+      '💪 别怕错，怕的是不敢再试',
+      '😏 学霸也是从错题里长出来的，你在进化中',
+      '🔥 这题不服你？再战一次让它服',
+      '💪 加把劲！你离突破就差一点点',
+    ],
+    comfort: [
+      '🫂 没关系！错了才知道哪里不会',
+      '💡 每道错题都是进步的台阶',
+      '🌊 浪花拍礁石才能变珍珠',
+      '🐹 我帮你记到错题本了，下次再战！',
+      '🎯 先去复习错题本再回来？',
+      '💡 慢慢来，比站着不动快',
+      '🐹 你已经比昨天进步了，我看得到',
+      '🌟 不会的题变成会的题，就是你的超能力',
+    ]
+  },
+  // 场景3: 表现好 (最近1局 ≥80%)
+  good: {
+    funny: [
+      '🎉 太厉害了！我要给你跳个舞！（原地转圈）',
+      '🐹 我要把你的成绩贴到我的仓鼠窝墙上！',
+      '😱 你是不是偷偷找了家教？怎么突然这么猛',
+      '🐹 我去跟隔壁仓鼠炫耀了：我主人超厉害！',
+      '🤯 你这正确率…我怀疑你是AI假扮的',
+      '🐹 我正在写推荐信：此学生答题如有神助',
+      '😎 我就说嘛，跟着我学肯定行的！（虽然我什么都没教）',
+      '🐹 你厉害得我都想站起来鼓掌了（但我腿太短了）',
+      '🏆 颁奖典礼现在开始！获奖者是——你！观众是——我！',
+      '🐹 我决定今天多吃一粒瓜子庆祝你的胜利',
+      '🤩 这分数我要截图发朋友圈…如果仓鼠有朋友圈的话',
+      '🐹 你这水平，PSLE出题老师看了都害怕',
+    ],
+    challenge: [
+      '🚀 太简单了吧？升级试试更难的！',
+      '💎 正确率这么高，难度该加了',
+      '😏 果然是我的主人，这题都不在话下',
+      '👑 你今天的表现配得上王冠',
+      '🏆 这正确率，名校在向你招手',
+      '🚀 diff 5 不够你打的，升级！',
+      '😏 满分？那说明题太简单了，来点难的',
+      '💎 这个正确率，你确定不去参加奥数？',
+    ],
+    proud: [
+      '⭐ 你是我见过最聪明的主人！',
+      '🌟 继续这样PSLE稳了！',
+      '😎 果然是我的主人，AL1稳了',
+      '🌟 我为你骄傲！（骄傲到毛都竖起来了）',
+      '⭐ 你今天发光了，我需要戴墨镜',
+      '🌟 这就是传说中的…天才吧？',
+    ]
+  },
+  // 场景4: 错题本提醒 (≥5题未复习)
+  errorBank: {
+    funny: [
+      '📓 错题本里的题在开party，你要不要去管管？',
+      '🐛 那些错题在偷偷长大…快趁它们还小灭掉！',
+      '📓 错题们在本子里聊天：她会来复习我们吗？',
+      '🐹 我偷看了你的错题本…感觉它们在嘲笑你',
+      '📓 错题们正在密谋在PSLE时集体出现',
+      '🐹 你的错题本比我的体重还重了',
+      '📓 错题们说：我们想你了，来看看我们吧',
+      '🐹 错题本在角落哭泣：为什么没人理我',
+    ],
+    challenge: [
+      '😤 那些错题在嘲笑你呢！去教训它们！',
+      '⚔️ 错题是boss，你是勇者，开打！',
+      '😤 错题们在说：她肯定不敢来…你忍得了？',
+      '🔥 消灭错题=升级打怪，你是主角！',
+      '⚔️ 错题本里有宝藏，打败boss才能拿',
+      '💪 每消灭1道错题+2分，去赚钱！',
+    ]
+  },
+  // 场景5: 全勤
+  perfect: [
+    '🤩 全勤！你是传说！（疯狂转圈转圈转圈）',
+    '🎊 今天全做完了？？你不是人类吧！',
+    '🏅 完美的一天！我要记到日记里',
+    '🤩 全部打卡？我激动得跑了8公里！（仓鼠轮上）',
+    '🎊 你今天是不是开了挂？全!勤!啊!',
+    '🏅 给你颁发"超级勤奋奖"！奖品是我的一个拥抱',
+    '🤩 这就是全勤的力量！PSLE都在抖',
+    '🎊 我要放烟花庆祝！💥🎆（想象中的）',
+    '🏅 打卡全勤的人运气一定很好！（我编的但我相信）',
+    '🤩 今天的你就像开了全buff的角色，无敌！',
+  ],
+  // 场景6: 日常闲聊 (无特殊状态, 搞笑为主)
+  idle: {
+    funny: [
+      '🐹 知道吗？仓鼠一天能跑8公里…不过我选择躺平',
+      '💭 PSLE考完你想去哪里玩？我想去零食店',
+      '🐹 我刚才在想一个问题：为什么书包这么重但成绩这么轻',
+      '🐹 我刚偷吃了一粒瓜子，别告诉任何人',
+      '💭 如果PSLE考吃瓜子我一定是AL1',
+      '🐹 今天的我和昨天一样可爱…不，更可爱了',
+      '🎵 ♪ 学习使我快乐 ♪（其实是瓜子使我快乐）',
+      '🐹 你觉得我胖了吗？是你一直喂我知识喂的',
+      '💭 我梦见我变成了学霸仓鼠…醒来还是学渣仓鼠',
+      '🐹 我正在研究一个课题：如何让主人多陪我5分钟',
+      '😂 刚才有只蚊子飞过来，我跟它聊了会天…太寂寞了',
+      '🐹 我在写小说，主角是一只陪主人考PSLE的仓鼠',
+      '💭 你说仓鼠能考大学吗？我觉得我有潜力',
+      '🐹 我今天的运动量：从笼子左边滚到右边',
+      '🤔 为什么1+1=2？我觉得1+1应该=11才对嘛',
+      '🐹 据说学习能让脑子变大…难怪我头这么大',
+      '💭 我跟你说个秘密：我其实是清华仓鼠转学来的',
+      '🐹 我正在想人生的意义…答案是瓜子',
+      '😂 我刚才照镜子被自己帅到了，一不小心摔了个跟头',
+      '🐹 你知道为什么我这么聪明吗？因为我每天吃坚果补脑',
+      '💭 我决定今天开始减肥…从明天开始',
+      '🐹 如果有仓鼠奥运会我一定拿跑轮金牌',
+      '🌈 下雨了记得带伞…不过仓鼠不用带，因为我不出门',
+      '🐹 我在学你做的题…第一题就放弃了',
+      '💭 你觉得我适合当YouTuber吗？《仓鼠陪你学PSLE》',
+      '🐹 我觉得我转圈的样子很像在做瑜伽',
+      '🤣 我今天学了个新词叫"拖延症"…明天再用',
+      '🐹 你上次给我取的名字…我其实不太喜欢（开玩笑啦）',
+      '💭 如果可以变成人类，我想去食堂大吃一顿',
+      '🐹 哈哈哈！我刚想到一个冷笑话但我忘了',
+    ],
+    companion: [
+      '📖 我在旁边看书陪你（虽然是倒着看的）',
+      '☕ 学累了可以休息一下，我也正好打个盹',
+      '🎵 要不要我哼首歌？（嗯嗯嗯～）',
+      '🐹 我在这儿呢，加油',
+      '☀️ 你学习的样子真好看',
+      '🐹 我就默默陪着你，不说话',
+      '📖 有你在就很安心',
+      '🌙 不管多晚，我都陪你',
+    ]
+  },
+  // 场景7: 特殊时刻
+  special: {
+    evolve: [
+      '✨ 我…我感觉到力量了！我在进化！！！',
+      '🌟 谢谢你照顾我，我变强了！',
+      '✨ 哇！这是…这是新形态？？我好帅！',
+      '🌟 是你的努力让我进化的！我们是最佳搭档！',
+      '✨ 我能感受到你的坚持…它变成了我的力量！',
+    ],
+    milestone: [
+      '🔥 连续这么多天了！你太可靠了',
+      '🛡️ 有你陪伴，我什么都不怕',
+      '🔥 打卡天数又创新高！我的仓鼠轮都转不过你',
+      '🛡️ 你的坚持就是我最好的铠甲',
+    ],
+    night: [
+      '🌙 这么晚了还在学？早点休息哦',
+      '😴 我困了…但你还没睡我也不睡',
+      '🌙 夜深了，做完这题就去睡吧',
+      '😴 你的眼睛比星星还亮…因为它们该闭上了',
+      '🌙 明天还要早起呢，学完快去休息',
+    ],
+    weekend: [
+      '🎮 周末也来了？你真的很拼！',
+      '☀️ 今天天气好，学完出去玩！',
+      '🎮 周末还在学习，佩服佩服！（给你磕个头）',
+      '☀️ 周末学完奖励自己一个冰淇淋！',
+    ],
+    morning: [
+      '☀️ 早上好！新的一天冲冲冲！',
+      '🌅 起得好早！学霸就是不一样',
+      '☀️ 早起的仓鼠有瓜子吃！（早起的学生有分拿）',
+      '🌅 这么早？我还在打哈欠呢…',
+    ]
+  }
+};
+
 const GUNDAM_PET = {
   idx: 'gundam', name: '命运高达', minStreak: 100,
   bg: 'radial-gradient(ellipse at center, #0A1628 0%, #1A3A6B 60%, #CC2200 100%)',
@@ -5100,6 +5421,7 @@ window.VOCAB_MEANINGS = VOCAB_MEANINGS;
 window.getVocabMeaning = getVocabMeaning;
 // v18 Phase 5.1
 window.PET_FORMS = PET_FORMS;
+window.PET_DIALOGUES = PET_DIALOGUES;
 window.getCurrentPetForm = getCurrentPetForm;
 window._countCompletedDays = _countCompletedDays;
 window.feedPet = feedPet;
