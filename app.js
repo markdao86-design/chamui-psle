@@ -1021,7 +1021,7 @@ function printReport() {
   window.print();
 }
 
-// ============ 智慧教练(v18.77 重设计: 4科能力网格 + 弱项突出) ============
+// ============ 训练中心(v18.99: 教练+错题整合) ============
 function renderWeeklyCoach() {
   const container = document.getElementById('coachContent');
   const meta = document.getElementById('coachMeta');
@@ -1046,6 +1046,7 @@ function renderWeeklyCoach() {
     { name: '华文', icon: '✍️', color: '#E07B7B' },
   ];
 
+  // 1. 能力概览
   const abilityHtml = `
     <div class="coach-section">
       <div class="coach-section-title">📊 PSLE 能力概览${overallAL ? ` · 预测 <b style="color:var(--color-purple)">AL${overallAL}</b> <span style="font-size:11px;font-weight:400;color:var(--color-text-light)">(4科AL之和)</span>` : ''}</div>
@@ -1081,25 +1082,59 @@ function renderWeeklyCoach() {
       </div>
     </div>`;
 
-  // 错题摘要
-  const wrongItems = (state.wrongAnswers || []).slice(-20);
-  const errorHtml = wrongItems.length > 0 ? `
-    <div class="coach-section">
-      <div class="coach-section-title">❌ 错题本 <span style="font-size:12px;font-weight:400;color:var(--color-text-light)">(最近 ${wrongItems.length} 题 · 云端同步)</span></div>
-      <div style="max-height:200px;overflow-y:auto;font-size:12px;line-height:1.7">
-        ${wrongItems.map(w => {
-          const subj = w.gameKey === 'math' ? '🔢数学' : w.gameKey === 'grammar' ? '✏️语法' : w.gameKey === 'cloze' ? '📝完形' : w.gameKey === 'unit' ? '⚗️单位' : w.gameKey === 'knowledge' ? '🌳知识树' : '📚' + (w.gameKey || '');
-          const retries = w.retries || 0;
-          return `<div style="padding:3px 0;border-bottom:1px solid #f0f0f0">
-            <span style="color:var(--color-text-light)">${subj}</span>
-            <b>${escapeHtml(w.q || '')}</b>
-            ${w.correctAns ? `<span style="color:#52C788;margin-left:4px">正确: ${escapeHtml(String(w.correctAns))}</span>` : ''}
-            ${retries > 0 ? `<span style="color:var(--color-danger);margin-left:4px">重试${retries}次</span>` : ''}
-          </div>`;
-        }).join('')}
-      </div>
-    </div>` : '';
+  // 2. 今日训练统计
+  const stats = state.gameStats || {};
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const todayLogs = (state.logs || []).filter(l => l.timestamp && new Date(l.timestamp).toISOString().slice(0, 10) === todayKey);
+  const todayPoints = todayLogs.reduce((s, l) => s + (l.points || 0), 0);
+  const todayGames = Object.keys(state._dailyGameCounts || {}).reduce((s, k) => s + ((state._dailyGameCounts[k] || {})[todayKey] || 0), 0);
+  const todayGameLogs = todayLogs.filter(l => (l.reason || '').includes('🎮'));
+  const todayErrorLogs = todayLogs.filter(l => (l.reason || '').includes('📓'));
 
+  const trainStatHtml = `
+    <div class="coach-section">
+      <div class="coach-section-title">📈 今日训练统计</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px;text-align:center">
+        <div style="background:#F0FFF4;border-radius:8px;padding:8px 4px">
+          <div style="font-size:18px;font-weight:900;color:#2E7D32">+${todayPoints}</div>
+          <div style="color:#666">今日积分</div>
+        </div>
+        <div style="background:#EEF2FF;border-radius:8px;padding:8px 4px">
+          <div style="font-size:18px;font-weight:900;color:#1565C0">${todayGames}</div>
+          <div style="color:#666">游戏局数</div>
+        </div>
+        <div style="background:#FFF8E1;border-radius:8px;padding:8px 4px">
+          <div style="font-size:18px;font-weight:900;color:#E65100">${todayErrorLogs.length}</div>
+          <div style="color:#666">错题消灭</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--color-text-light);margin-top:6px;line-height:1.5">
+        💡 积分来源: 打卡主线(slot+全勤奖)为主 > 错题训练(+2/题) > mini-game(+3/满分局)
+      </div>
+    </div>`;
+
+  // 3. 错题训练
+  const wrongItems = state.wrongAnswers || [];
+  const errByGame = {};
+  wrongItems.forEach(w => { errByGame[w.gameKey] = (errByGame[w.gameKey] || 0) + 1; });
+  const errSummary = Object.entries(errByGame).map(([k, v]) => {
+    const label = k === 'math' ? '🔢数学' : k === 'grammar' ? '✏️语法' : k === 'cloze' ? '📝完形' : k === 'unit' ? '⚗️单位' : k === 'knowledge' ? '🌳知识树' : k === 'editing' ? '🔍Editing' : '📚' + k;
+    return `${label} ${v}题`;
+  }).join(' · ');
+
+  const errorHtml = `
+    <div class="coach-section">
+      <div class="coach-section-title">❌ 错题训练 <span style="font-size:13px;font-weight:700;color:${wrongItems.length > 0 ? 'var(--color-danger)' : 'var(--color-success)'}">${wrongItems.length > 0 ? wrongItems.length + ' 题待攻克' : '全部消灭!'}</span></div>
+      ${wrongItems.length > 0 ? `
+        <div style="font-size:12px;color:var(--color-text-light);margin-bottom:8px">${errSummary}</div>
+        <div style="text-align:center">
+          <button class="btn btn-primary" onclick="openErrorBank()" style="font-size:14px;padding:10px 24px">🎯 开始错题训练 (+2分/答对)</button>
+        </div>
+        <div style="font-size:11px;color:var(--color-text-light);margin-top:6px;text-align:center">答对自动移除 · 答错留着反复练 · 每答对1题+2积分</div>
+      ` : '<div style="text-align:center;padding:12px;color:var(--color-success);font-weight:600">🏆 错题本空空如也, 继续保持!</div>'}
+    </div>`;
+
+  // 4. 重点攻克 + 本周重点
   const weakHtml = c.weakAdvice ? `
     <div class="coach-section">
       <div class="coach-section-title">⚡ 重点攻克</div>
@@ -1130,7 +1165,7 @@ function renderWeeklyCoach() {
       </div>`;
   }
 
-  container.innerHTML = abilityHtml + errorHtml + weakHtml + focusHtml + sundayHtml;
+  container.innerHTML = abilityHtml + trainStatHtml + errorHtml + weakHtml + focusHtml + sundayHtml;
 }
 
 // 计算某周拿到的总分(里程碑 + 每日打卡分 + 周复盘 + 当日 combo)
@@ -2174,7 +2209,7 @@ function _checkVocabPair() {
       // v18.24: 递减奖励
       const playNum = _bumpDailyGameCount('vocab');
       const mult = _getGameMultiplier(playNum);
-      const points = Math.floor(10 * mult);
+      const points = Math.floor(3 * mult);
       state.totalPoints += points;
       if (!state.mysteryBoxes) state.mysteryBoxes = { available: 0, opened: 0, totalSlotsAtLastEarn: 0, history: [] };
       // 仅第 1 次 give box
@@ -2373,11 +2408,14 @@ function petSay(message, duration) {
   span.textContent = message;
   bubble.appendChild(span);
   card.appendChild(bubble);
-  // 短文字不滚动
+  let dur;
   if (span.scrollWidth <= bubble.clientWidth) {
     span.classList.add('no-scroll');
+    dur = duration || 4500;
+  } else {
+    // 滚动时长 = 动画时长, 气泡与文字同时消失
+    dur = 10000;
   }
-  const dur = duration || 4500;
   setTimeout(() => {
     bubble.classList.add('fade-out');
     setTimeout(() => bubble.remove(), 400);
@@ -3132,11 +3170,11 @@ function submitErrorBankAnswer(optIdx) {
   _handleErrorBankResult(isCorrect, item, () => {
     if (isCorrect) {
       g.correct++; petExpress('pet-excited', 800);
-      // 从错题本移除
       window.removeFromErrorBank(state, item.id);
       g.removed.push(item.id);
+      state.totalPoints = (state.totalPoints || 0) + 2;
+      state.logs.push({ reason: '📓 错题复习答对', points: 2, week: state.currentWeek, timestamp: Date.now() });
     } else {
-      // 答错: retries++, 留在本里
       const w = (state.wrongAnswers || []).find(w => w.id === item.id);
       if (w) w.retries = (w.retries || 0) + 1;
     }
@@ -3158,6 +3196,8 @@ function submitErrorBankMath() {
       g.correct++;
       window.removeFromErrorBank(state, item.id);
       g.removed.push(item.id);
+      state.totalPoints = (state.totalPoints || 0) + 2;
+      state.logs.push({ reason: '📓 错题复习答对', points: 2, week: state.currentWeek, timestamp: Date.now() });
     } else {
       const w = (state.wrongAnswers || []).find(w => w.id === item.id);
       if (w) w.retries = (w.retries || 0) + 1;
@@ -4080,8 +4120,8 @@ function _finishUnitGame() {
   const playNum = _bumpDailyGameCount('unit');
   const mult = _getGameMultiplier(playNum);
   let baseR = 0;
-  if (g.correct >= 10) baseR = 8;
-  else if (g.correct >= 7) baseR = 5;
+  if (g.correct >= 10) baseR = 3;
+  else if (g.correct >= 7) baseR = 2;
   const reward = Math.floor(baseR * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
   if (reward > 0) {
     state.totalPoints += reward;
@@ -4224,8 +4264,8 @@ function _finishMcqGame() {
   const playNum = _bumpDailyGameCount(g.key);
   const mult = _getGameMultiplier(playNum);
   let baseR = 0;
-  if (g.correct >= 10) baseR = 8;
-  else if (g.correct >= 7) baseR = 5;
+  if (g.correct >= 10) baseR = 3;
+  else if (g.correct >= 7) baseR = 2;
   const reward = Math.floor(baseR * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
   if (reward > 0) {
     state.totalPoints += reward;
@@ -4328,8 +4368,8 @@ function _finishSciGame() {
   const mult = _getGameMultiplier(playNum);
   let baseR = 0;
   const acc = g.correct / total;
-  if (acc >= 1) baseR = 10;
-  else if (acc >= 0.7) baseR = 5;
+  if (acc >= 1) baseR = 4;
+  else if (acc >= 0.7) baseR = 2;
   const reward = Math.floor(baseR * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
   if (reward > 0) {
     state.totalPoints += reward;
@@ -4469,8 +4509,8 @@ function _finishMathGame() {
   const playNum = _bumpDailyGameCount('math');
   const mult = _getGameMultiplier(playNum);
   let baseReward = 0;
-  if (g.correct >= 10) baseReward = 8;
-  else if (g.correct >= 7) baseReward = 5;
+  if (g.correct >= 10) baseReward = 3;
+  else if (g.correct >= 7) baseReward = 2;
   const reward = Math.floor(baseReward * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
   if (reward > 0) {
     state.totalPoints += reward;
@@ -4554,7 +4594,7 @@ function clickEditingWord(word) {
       // 全对 v18.24 递减
       const playNum = _bumpDailyGameCount('editing');
       const mult = _getGameMultiplier(playNum);
-      const points = Math.floor(10 * mult);
+      const points = Math.floor(3 * mult);
       state.totalPoints += points;
       if (!state.mysteryBoxes) state.mysteryBoxes = { available: 0, opened: 0, totalSlotsAtLastEarn: 0, history: [] };
       if (playNum === 1) state.mysteryBoxes.available += 1;
@@ -4659,8 +4699,8 @@ function submitListenAnswers() {
   const playNum = _bumpDailyGameCount('listen');
   const mult = _getGameMultiplier(playNum);
   let baseReward = 0;
-  if (correct >= 5) baseReward = 10;
-  else if (correct >= 3) baseReward = 5;
+  if (correct >= 5) baseReward = 3;
+  else if (correct >= 3) baseReward = 2;
   const reward = Math.floor(baseReward * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
   if (reward > 0) {
     state.totalPoints += reward;

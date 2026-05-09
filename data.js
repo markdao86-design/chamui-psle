@@ -93,7 +93,7 @@ const WEEKLY_REVIEW_POINTS = 5;
 // v4 — 两层加分体系:
 // A. 时长加权 slot 分:段3=1, 段1/2=2, 周末 AM/PM=3;难章周(⭐)所有 slot +1 baseline
 // B. 必做关键 slot:难章 🔬 教材精读/概念图/实验/综合测试 自动标记;不做 → 周完成 80% 不发 +5 复盘奖
-const DAY_COMBO_POINTS = 5;
+const DAY_COMBO_POINTS = 15;
 const KEY_SLOT_KEYWORDS = /教材精读|概念图|实验|开放题|综合测试|高频题型|总模考|模考|限时|Synthesis|周诊断/;
 
 // 时长基底 + 难章周 +1
@@ -1187,7 +1187,18 @@ const MATH_QUESTIONS = [
   { q: 'Average of 78, 82, 95, 67, 88', ans: 82, diff: 4 },
   { q: '20% discount on $85, pay?', ans: 68, diff: 3 },
   { q: '(15² - 12²) ÷ 9', ans: 9, diff: 5 },
-  { q: 'Area of triangle base 12 height 8', ans: 48, diff: 3 }
+  { q: 'Area of triangle base 12 height 8', ans: 48, diff: 3 },
+  // diff 6: 超 PSLE 竞赛级
+  { q: '1+2+3+...+100 =?', ans: 5050, diff: 6 },
+  { q: '连续整数 1-50 中, 能被 3 整除的有几个?', ans: 16, diff: 6 },
+  { q: '甲乙速度比 3:5, 同时同向, 甲先走 16km, 乙追上需走几 km?', ans: 40, diff: 6 },
+  { q: '正方形边长 10, 内切圆面积 (π=3.14, 取整)', ans: 78, diff: 6 },
+  { q: '水池 A 管 6h 满, B 管 4h 满, 同开几小时满? (×10取整, 2.4h=24)', ans: 24, diff: 6 },
+  { q: '三角形三边 5,12,13, 面积=?', ans: 30, diff: 6 },
+  { q: '100 以内最大质数', ans: 97, diff: 6 },
+  { q: '一根绳对折 3 次后剪 1 刀, 共几段?', ans: 9, diff: 6 },
+  { q: '鸡兔共 35 头 94 脚, 兔几只?', ans: 12, diff: 6 },
+  { q: '1×2+2×3+3×4+...+9×10 =?', ans: 330, diff: 6 }
 ];
 
 // v18.3: 25 段 PSLE Editing 5 类错(主谓/时态/拼写/介词/冠词), 每段 ~50 词 5 错
@@ -1367,7 +1378,7 @@ function recordGameRun(state, gameKey, correct, total) {
   let levelChanged = null;
   const last3 = s.recent.slice(-3);
   const last2 = s.recent.slice(-2);
-  if (s.difficulty < 5 && last3.length === 3 && last3.every(r => r.accuracy >= 0.8)) {
+  if (s.difficulty < 6 && last3.length === 3 && last3.every(r => r.accuracy >= 0.8)) {
     s.difficulty++;
     levelChanged = 'up';
     s.recent = [];
@@ -1896,7 +1907,13 @@ const UNIT_CONVERSIONS = [
   { q: '0.005 km = ? cm', ans: 500, diff: 5 },
   { q: '12500 g = ? kg (×100, 即 12.5 输 1250)', ans: 1250, diff: 5 },
   { q: '3 days = ? hours', ans: 72, diff: 5 },
-  { q: '1 week = ? hours', ans: 168, diff: 5 }
+  { q: '1 week = ? hours', ans: 168, diff: 5 },
+  // diff 6: 超 PSLE 复合换算
+  { q: '72 km/h = ? m/s (×10取整, 20输200)', ans: 200, diff: 6 },
+  { q: '3.5 m² = ? cm²', ans: 35000, diff: 6 },
+  { q: '2 h 15 min 30 s = ? s', ans: 8130, diff: 6 },
+  { q: '0.008 km² = ? m²', ans: 8000, diff: 6 },
+  { q: '1.5 L/min 流 2.5 h = ? L', ans: 225, diff: 6 }
 ];
 
 // 2. Grammar MCQ (~40 道)
@@ -1949,7 +1966,13 @@ const GRAMMAR_QUESTIONS = [
   { q: 'Between you and ___, this is a secret.', opts: ['I','me','my','myself'], ans: 1, diff: 5, tag: '代词-between后宾格' },
   // === 修饰主谓陷阱 (article + pronoun 联动) ===
   { q: 'A group of students ___ waiting outside.', opts: ['is','are','was','have'], ans: 0, diff: 5, tag: '主谓-集合主语' },
-  { q: 'One of the books ___ missing.', opts: ['is','are','were','being'], ans: 0, diff: 5, tag: '主谓-one of' }
+  { q: 'One of the books ___ missing.', opts: ['is','are','were','being'], ans: 0, diff: 5, tag: '主谓-one of' },
+  // diff 6: 超 PSLE (竞赛/高阶语法)
+  { q: 'Were it not for the rain, we ___ the match.', opts: ['would have won','won','had won','will win'], ans: 0, diff: 6, tag: '虚拟-倒装' },
+  { q: 'Scarcely ___ the house when it started raining.', opts: ['had I left','I had left','I left','did I leave'], ans: 0, diff: 6, tag: '倒装-scarcely' },
+  { q: 'The committee ___ divided in their opinions.', opts: ['is','are','was','were'], ans: 1, diff: 6, tag: '集合名词-意义复数' },
+  { q: 'He demanded that she ___ the report immediately.', opts: ['submit','submits','submitted','submitting'], ans: 0, diff: 6, tag: '虚拟-demand that' },
+  { q: 'So profound ___ his speech that everyone was moved.', opts: ['was','is','had been','being'], ans: 0, diff: 6, tag: 'so...that倒装' }
 ];
 
 // 3. Cloze 单空填 (~40 道)
@@ -1992,7 +2015,11 @@ const CLOZE_QUESTIONS = [
   { sentence: 'Despite ___ the fastest runner in the school, Ahmad lost the race because he tripped over a stone.', opts: ['being','been','to be','is'], ans: 0, diff: 5, tag: 'context-grammar-despite' },
   { sentence: 'The librarian, ___ patience with the noisy children was wearing thin, finally asked them to leave.', opts: ['who','whom','whose','which'], ans: 2, diff: 5, tag: 'context-grammar-whose' },
   { sentence: 'If I ___ harder for the test, I would not have failed it.', opts: ['studied','had studied','have studied','study'], ans: 1, diff: 5, tag: 'context-grammar-conditional3' },
-  { sentence: 'The detective examined the crime scene ___, looking for any clue that might have been overlooked.', opts: ['meticulously','barely','randomly','quickly'], ans: 0, diff: 5, tag: 'context-vocab-adv' }
+  { sentence: 'The detective examined the crime scene ___, looking for any clue that might have been overlooked.', opts: ['meticulously','barely','randomly','quickly'], ans: 0, diff: 5, tag: 'context-vocab-adv' },
+  // diff 6: 超 PSLE (学术/竞赛级)
+  { sentence: 'The phenomenon, ___ scientists had long theorized about, was finally observed in the laboratory.', opts: ['which','that','what','whom'], ans: 0, diff: 6, tag: 'context-relative-clause' },
+  { sentence: 'Had the government ___ stricter measures earlier, the outbreak could have been contained.', opts: ['implemented','implementing','implement','to implement'], ans: 0, diff: 6, tag: 'context-subjunctive-inversion' },
+  { sentence: 'The CEO was ___ criticized for her decision that she eventually resigned from her position.', opts: ['so severely','such severely','very severely','too severely'], ans: 0, diff: 6, tag: 'context-so...that' }
 ];
 
 // v18.40: PSLE 高华阅读理解题库 (新加坡 PSLE 高级华文 Paper 2 风格)
