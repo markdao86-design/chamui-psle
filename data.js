@@ -1081,7 +1081,7 @@ const PET_DIALOGUES = {
 };
 
 const GUNDAM_PET = {
-  idx: 'gundam', name: '命运高达', minStreak: 100,
+  idx: 'gundam', name: '命运高达', minStreak: 45,
   bg: 'radial-gradient(ellipse at center, #0A1628 0%, #1A3A6B 60%, #CC2200 100%)',
   desc: '连续百日苦练，从仓鼠王者觉醒的终极战神伙伴！展翅飞翔，PSLE 必胜！',
   svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -1131,7 +1131,7 @@ function _countCompletedDays(state) {
 }
 function getCurrentPetForm(state) {
   const completedDays = _countCompletedDays(state);
-  if (state.activePetType === 'gundam' && completedDays >= 100) {
+  if (state.activePetType === 'gundam' && completedDays >= 45) {
     return GUNDAM_PET;
   }
   let form = PET_FORMS[0];

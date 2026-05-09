@@ -2382,34 +2382,40 @@ function renderPetWidget() {
   const isSad = happy < 30;
   const inAshes = window.isStreakInAshes && window.isStreakInAshes(state);
   w.style.background = 'transparent';
-  // v18.68: 连续100天解锁高达宠物切换按钮
-  const streak = (state.dailyStreak && state.dailyStreak.bestEver) || 0;
-  const gundamUnlocked = streak >= 100;
-  const isGundam = state.activePetType === 'gundam';
-  const switchBtn = gundamUnlocked
-    ? `<button onclick="event.stopPropagation(); switchPet()" style="position:absolute;top:2px;right:2px;font-size:10px;padding:2px 6px;background:rgba(0,100,200,0.85);border:1px solid #003388;border-radius:8px;cursor:pointer;font-weight:700;color:#FFF" title="切换宠物 (仓鼠 ↔ 高达)">${isGundam ? '🐹' : '🤖'}</button>`
-    : '';
-  // v18.68: 情绪动画类
-  w.classList.remove('pet-happy', 'pet-sad', 'pet-gundam');
-  if (isGundam) w.classList.add('pet-gundam');
-  else if (isSad || inAshes) w.classList.add('pet-sad');
+  // v19.1: 累计45天解锁高达, 双宠物同时显示
+  const completedDays = window._countCompletedDays ? window._countCompletedDays(state) : 0;
+  const gundamUnlocked = completedDays >= 45;
+  // 情绪动画类
+  w.classList.remove('pet-happy', 'pet-sad', 'pet-gundam', 'pet-angry', 'pet-proud', 'pet-excited', 'pet-sleepy');
+  if (isSad || inAshes) w.classList.add('pet-sad');
   else if (happy >= 70) w.classList.add('pet-happy');
   w.style.position = 'relative';
-  w.innerHTML = `<div class="pet-svg-wrap">${form.svg}</div>${switchBtn}`;
+  w.innerHTML = `<div class="pet-svg-wrap">${form.svg}</div>`;
   w.classList.toggle('pet-king', form.idx >= 11);
   w.classList.toggle('pet-warrior', form.idx === 9);
   w.setAttribute('data-name', `${state.pet.name || '球球'} · ${form.name} ${isSad ? '😢' : ''}`);
   w.title = `${state.pet.name || '球球'} (${form.name})\n心情 ${happy}/100\n点击查看详情/改名`;
   w.onclick = openPetModal;
+  // 双宠物: 高达解锁后显示在仓鼠左侧
+  let gundamEl = document.getElementById('petGundam');
+  if (gundamUnlocked) {
+    if (!gundamEl) {
+      gundamEl = document.createElement('div');
+      gundamEl.id = 'petGundam';
+      gundamEl.className = 'pet-widget pet-gundam-buddy';
+      w.parentElement.appendChild(gundamEl);
+    }
+    gundamEl.style.display = '';
+    gundamEl.innerHTML = `<div class="pet-svg-wrap">${window.GUNDAM_PET.svg}</div>`;
+    gundamEl.title = '命运高达 · PSLE必胜战友';
+    gundamEl.onclick = () => showToast('🤖 命运高达: PSLE必胜！我和仓鼠一起守护你', 'happy');
+  } else if (gundamEl) {
+    gundamEl.style.display = 'none';
+  }
 }
-// v18.68: 切换宠物 (仓鼠 / 命运高达)
+// v19.1: switchPet deprecated — 双宠物同时显示
 function switchPet() {
-  const streak = (state.dailyStreak && state.dailyStreak.bestEver) || 0;
-  if (streak < 100) { showToast('🤖 连续打卡100天解锁命运高达!', 'info'); return; }
-  state.activePetType = (state.activePetType === 'gundam') ? 'hamster' : 'gundam';
-  saveState(state);
-  renderAll();
-  showToast(state.activePetType === 'gundam' ? '🤖 切到命运高达' : '🐹 切到仓鼠伙伴', 'happy');
+  showToast('🐹🤖 仓鼠和高达现在一起陪你了!', 'happy');
 }
 window.switchPet = switchPet;
 
@@ -3902,6 +3908,9 @@ function openPetModal() {
       <div class="pet-form-meta">${f.name} (累计打卡 ≥${f.minStreak} 天)${isCurrent ? ' ← 你在这' : ''}</div>
     </div>`;
   }).join('');
+  const gundamStatus = streak >= 45
+    ? '<div class="pet-next" style="color:#2255CC">🤖 命运高达已解锁! 双宠物一起陪你!</div>'
+    : `<div class="pet-next">🤖 命运高达 (累计打卡 ≥45 天 · 还差 ${45 - streak} 天)</div>`;
   modal.innerHTML = `
     <div class="pet-modal-inner">
       <div class="pet-modal-header">
@@ -3912,6 +3921,7 @@ function openPetModal() {
         <div class="pet-current"><div class="pet-current-svg">${form.svg}</div>${form.name} · 心情 ${state.pet.happiness}/100</div>
         <div class="pet-desc">${escapeHtml(form.desc)}</div>
         ${nextForm ? `<div class="pet-next">下一形态: <b>${nextForm.name}</b> (累计打卡 ≥ ${nextForm.minStreak} 天 · 还差 ${Math.max(0, nextForm.minStreak - streak)} 天)</div>` : '<div class="pet-next">已最高形态! 🎉</div>'}
+        ${gundamStatus}
         <div class="pet-rename">
           <button class="btn btn-secondary" onclick="renamePet()">✏️ 改名</button>
         </div>
