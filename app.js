@@ -704,7 +704,7 @@ function renderThinkPuzzleCard(week) {
           return `<button class="think-opt-btn" onclick="submitThinkAnswer(${puzzle.week}, '${letter}')">${escapeHtml(opt)}</button>`;
         }).join('')}
       </div>
-      <div class="think-tip">🧠 答错也加 5 分 — 思考过程比答对更重要</div>
+      <div class="think-tip">🧠 能力才是目标 — 答对 +10 分, 答错 +0 分但要认真读解析</div>
     `;
   } else {
     // 已答 — 显示结果 + 解释
@@ -718,7 +718,7 @@ function renderThinkPuzzleCard(week) {
       <div class="think-question">${escapeHtml(puzzle.question)}</div>
       <div class="think-result">
         你选了 <b>${answer.answer}</b> · 正确答案 <b>${puzzle.correct}</b>
-        <span class="think-points">${answer.correct ? '+10 分' : '+5 分'}</span>
+        <span class="think-points">${answer.correct ? '+10 分' : '+0 分'}</span>
       </div>
       <div class="think-explanation">${escapeHtml(puzzle.explanation)}</div>
     `;
@@ -739,7 +739,7 @@ function submitThinkAnswer(weekN, userAnswer) {
     spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 30);
     playSound('tada');
   } else {
-    showToast(`🤔 思考题 +5 分 — 看下面的解释吧`, 'success');
+    showToast(`🤔 答错了 — 读下面的解析, 理解才能进步`, 'warn');
     playSound('sad');
   }
   _checkAndUnlockAch();

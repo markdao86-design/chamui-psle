@@ -2876,14 +2876,17 @@ function submitThinkPuzzleAnswer(state, weekN, userAnswer) {
   const correct = userAnswer === puzzle.correct;
   const record = { answer: userAnswer, correct, ts: Date.now() };
   state.thinkPuzzleAnswers[weekN] = record;
-  // 答对答错都给分, 重点是思考过程; 答对 +10, 答错 +5
-  state.totalPoints += correct ? 10 : 5;
-  state.logs.push({
-    reason: `🤔 思考题 W${weekN} ${correct ? '答对' : '思考奖励'}`,
-    points: correct ? 10 : 5,
-    week: weekN,
-    timestamp: Date.now()
-  });
+  // v18.87: 答对才给分 — 能力达成才是奖励; 答对 +10, 答错 0
+  const pts = correct ? 10 : 0;
+  if (pts > 0) {
+    state.totalPoints += pts;
+    state.logs.push({
+      reason: `🤔 思考题 W${weekN} 答对`,
+      points: pts,
+      week: weekN,
+      timestamp: Date.now()
+    });
+  }
   return record;
 }
 
