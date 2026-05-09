@@ -3614,7 +3614,7 @@ p { font-size: 14px; line-height: 1.6; }
 .pet-desc { font-size: 13px; text-align: center; color: var(--color-text-light); margin: 8px 0; }
 .pet-next { background: #FFF8E7; padding: 8px; border-radius: 8px; font-size: 13px; text-align: center; margin: 8px 0; }
 .pet-rename { text-align: center; margin: 10px 0; }
-.pet-forms-list { display: flex; flex-direction: column; gap: 6px; }
+.pet-forms-list { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .pet-form-item { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border: 2px solid var(--color-text); border-radius: 10px; background: white; }
 .pet-form-item.locked { opacity: 0.5; filter: grayscale(0.6); }
 .pet-form-item.current { background: #FFE066 !important; border-width: 3px; }
