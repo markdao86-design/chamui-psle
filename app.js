@@ -3758,13 +3758,13 @@ function openPetModal() {
   if (!modal) return;
   const form = window.getCurrentPetForm(state);
   const nextForm = window.PET_FORMS.find(f => f.idx === form.idx + 1);
-  const streak = (state.dailyStreak && state.dailyStreak.bestEver) || 0;
+  const streak = window._countCompletedDays ? window._countCompletedDays(state) : 0;
   const formsList = window.PET_FORMS.map(f => {
     const unlocked = streak >= f.minStreak;
     const isCurrent = f.idx === form.idx;
     return `<div class="pet-form-item ${unlocked ? 'unlocked' : 'locked'} ${isCurrent ? 'current' : ''}" style="background:${f.bg || 'white'}">
       <div class="pet-form-svg">${f.svg}</div>
-      <div class="pet-form-meta">${f.name} (连续打卡 ≥${f.minStreak} 天)${isCurrent ? ' ← 你在这' : ''}</div>
+      <div class="pet-form-meta">${f.name} (累计打卡 ≥${f.minStreak} 天)${isCurrent ? ' ← 你在这' : ''}</div>
     </div>`;
   }).join('');
   modal.innerHTML = `
@@ -3776,7 +3776,7 @@ function openPetModal() {
       <div class="pet-modal-body">
         <div class="pet-current"><div class="pet-current-svg">${form.svg}</div>${form.name} · 心情 ${state.pet.happiness}/100</div>
         <div class="pet-desc">${escapeHtml(form.desc)}</div>
-        ${nextForm ? `<div class="pet-next">下一形态: <b>${nextForm.name}</b> (连续打卡 ≥ ${nextForm.minStreak} 天 · 还差 ${Math.max(0, nextForm.minStreak - streak)} 天)</div>` : '<div class="pet-next">已最高形态! 🎉</div>'}
+        ${nextForm ? `<div class="pet-next">下一形态: <b>${nextForm.name}</b> (累计打卡 ≥ ${nextForm.minStreak} 天 · 还差 ${Math.max(0, nextForm.minStreak - streak)} 天)</div>` : '<div class="pet-next">已最高形态! 🎉</div>'}
         <div class="pet-rename">
           <button class="btn btn-secondary" onclick="renamePet()">✏️ 改名</button>
         </div>

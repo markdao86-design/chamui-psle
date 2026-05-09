@@ -672,7 +672,7 @@ const PET_FORMS = [
       <circle cx="24" cy="38" r="1" fill="#D9A86A" opacity="0.4"/>
     </svg>` },
 
-  { idx: 1, name: '仓鼠宝宝', minStreak: 3,
+  { idx: 1, name: '仓鼠宝宝', minStreak: 5,
     bg: 'linear-gradient(135deg, #FFE6F0 0%, #FFB6D9 100%)',
     desc: '刚出生的小仓鼠, 软软的好可爱',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -680,7 +680,7 @@ const PET_FORMS = [
       ${_hamsterFace('#E8B87A')}
     </svg>` },
 
-  { idx: 2, name: '小仓鼠', minStreak: 7,
+  { idx: 2, name: '小仓鼠', minStreak: 14,
     bg: 'linear-gradient(135deg, #FFE066 0%, #FFB347 100%)',
     desc: '系上蝴蝶结, 会塞食物到腮帮子了',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -691,7 +691,7 @@ const PET_FORMS = [
       <circle cx="24" cy="10" r="2.2" fill="#C3447A"/>
     </svg>` },
 
-  { idx: 3, name: '学习仓鼠', minStreak: 14,
+  { idx: 3, name: '学习仓鼠', minStreak: 30,
     bg: 'linear-gradient(135deg, #B3E5FC 0%, #4ECDC4 100%)',
     desc: '戴上眼镜, 很爱读书',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -707,7 +707,7 @@ const PET_FORMS = [
       <line x1="25.2" y1="40.5" x2="28" y2="40.5" stroke="#2D2D2D" stroke-width="0.4"/>
     </svg>` },
 
-  { idx: 4, name: '智慧仓鼠', minStreak: 30,
+  { idx: 4, name: '智慧仓鼠', minStreak: 60,
     bg: 'linear-gradient(135deg, #E1BEE7 0%, #A788E0 100%)',
     desc: '戴上学士帽, 智力满分',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -720,7 +720,7 @@ const PET_FORMS = [
       <circle cx="38" cy="12.5" r="2" fill="#FFD700" stroke="#B8860B" stroke-width="0.4"/>
     </svg>` },
 
-  { idx: 5, name: '战神仓鼠', minStreak: 60,
+  { idx: 5, name: '战神仓鼠', minStreak: 120,
     bg: 'linear-gradient(135deg, #FF9F45 0%, #FF5757 100%)',
     desc: '披上红色战袍, PSLE 战无不胜',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -734,7 +734,7 @@ const PET_FORMS = [
       <polygon points="22,-2 26,-2 24,-5" fill="#FF5757"/>
     </svg>` },
 
-  { idx: 6, name: '仓鼠王者', minStreak: 100,
+  { idx: 6, name: '仓鼠王者', minStreak: 200,
     bg: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B6B 100%)',
     desc: 'PSLE 终极守护神兽 — 戴上王冠披上紫袍',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -799,14 +799,22 @@ const GUNDAM_PET = {
     <rect x="24" y="30" width="3" height="9" fill="#1A44AA" stroke="#0A2266" stroke-width="0.6" rx="0.5"/>
   </svg>`
 };
+function _countCompletedDays(state) {
+  let count = 0;
+  Object.values(state.daily || {}).forEach(weekData => {
+    Object.values(weekData || {}).forEach(dayData => {
+      if (dayData && Object.values(dayData).some(v => v === true)) count++;
+    });
+  });
+  return count;
+}
 function getCurrentPetForm(state) {
-  const streak = (state.dailyStreak && state.dailyStreak.bestEver) || 0;
-  // v18.68: 连续100天仓鼠王者 → 解锁高达, 若选了高达模式则显示
-  if (state.activePetType === 'gundam' && streak >= 100) {
+  const completedDays = _countCompletedDays(state);
+  if (state.activePetType === 'gundam' && completedDays >= 100) {
     return GUNDAM_PET;
   }
   let form = PET_FORMS[0];
-  for (const f of PET_FORMS) if (streak >= f.minStreak) form = f;
+  for (const f of PET_FORMS) if (completedDays >= f.minStreak) form = f;
   return form;
 }
 window.GUNDAM_PET = GUNDAM_PET;
@@ -5093,6 +5101,7 @@ window.getVocabMeaning = getVocabMeaning;
 // v18 Phase 5.1
 window.PET_FORMS = PET_FORMS;
 window.getCurrentPetForm = getCurrentPetForm;
+window._countCompletedDays = _countCompletedDays;
 window.feedPet = feedPet;
 window.petBreaksHappiness = petBreaksHappiness;
 window.ACHIEVEMENTS = ACHIEVEMENTS;

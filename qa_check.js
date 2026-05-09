@@ -307,12 +307,14 @@ assert(W.PET_FORMS.every(f => !f.emoji), 'v18.10: 已迁移, 不再有 emoji 字
 const streaks = W.PET_FORMS.map(f => f.minStreak);
 assert(streaks.every((s, i) => i === 0 || s > streaks[i-1]), 'v18.10: minStreak 单调递增');
 const ts8 = W.getDefaultState();
-ts8.dailyStreak = { days: 7, bestEver: 7, freezeTokens: 0, lastDate: null, brokenAt: null };
+// v19.0: 仓鼠进化改为累计打卡天数
+ts8.daily = {};
+for (let i = 1; i <= 14; i++) ts8.daily[i] = { Mon: { E1: true } };
 const form7 = W.getCurrentPetForm(ts8);
-assert(form7 && form7.idx === 2, `v18: streak 7 → 形态 2 小鸟 (实际 ${form7 && form7.idx})`);
-ts8.dailyStreak.bestEver = 100;
+assert(form7 && form7.idx === 2, `v19: 14天打卡 → 形态 2 小仓鼠 (实际 ${form7 && form7.idx})`);
+for (let i = 15; i <= 200; i++) ts8.daily[i] = { Mon: { E1: true } };
 const form100 = W.getCurrentPetForm(ts8);
-assert(form100 && form100.idx === 6, 'v18: streak 100 → 形态 6 神龙');
+assert(form100 && form100.idx === 6, `v19: 200天打卡 → 形态 6 仓鼠王者 (实际 ${form100 && form100.idx})`);
 assert(W.ACHIEVEMENTS && W.ACHIEVEMENTS.length >= 28, `v18: ACHIEVEMENTS ≥28 (实际 ${W.ACHIEVEMENTS && W.ACHIEVEMENTS.length})`);
 // 模拟解锁 streak_7
 const ts9 = W.getDefaultState();
