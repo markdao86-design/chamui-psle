@@ -1356,7 +1356,8 @@ const VOCAB_HARD = [
 // ============= v18.25: 难度自适应 helper =============
 // v18.54: math game minFloor=4 (孩子 90+, 直接起 P6 难). 其他 game 保持 3 (英语弱).
 function _gameMinFloor(gameKey) {
-  return gameKey === 'math' ? 4 : 3;
+  if (gameKey === 'math' || gameKey === 'scimcq' || gameKey === 'chinese') return 4;
+  return 3;
 }
 function recordGameRun(state, gameKey, correct, total) {
   const minFloor = _gameMinFloor(gameKey);
@@ -1398,14 +1399,43 @@ function getDifficulty(state, gameKey) {
 }
 
 // 从池中按难度采样: 主难度 70% + ±1 难度 30%  (v18.97: 优先选未答题)
+// v19.0: 答对的题永久排除 (mastered), 全 pool 都 mastered 才重置
 const _usedQIndex = {};
+let _masteredQs = {};  // { poolKey: Set<qIndex> } — 从 state.masteredQs 加载
+function _loadMastered(state) {
+  if (!state || !state.masteredQs) return;
+  Object.entries(state.masteredQs).forEach(([k, arr]) => {
+    _masteredQs[k] = new Set(arr);
+  });
+}
+function _markMastered(poolKey, pool, q) {
+  if (!_masteredQs[poolKey]) _masteredQs[poolKey] = new Set();
+  _masteredQs[poolKey].add(pool.indexOf(q));
+}
+function _saveMastered(state) {
+  if (!state) return;
+  state.masteredQs = {};
+  Object.entries(_masteredQs).forEach(([k, s]) => {
+    state.masteredQs[k] = [...s];
+  });
+}
+window._loadMastered = _loadMastered;
+window._markMastered = _markMastered;
+window._saveMastered = _saveMastered;
+
 function _sampleByDiff(pool, diff, n) {
-  const poolKey = pool === MATH_QUESTIONS ? 'math' : pool === GRAMMAR_QUESTIONS ? 'grammar' : pool === CLOZE_QUESTIONS ? 'cloze' : pool === UNIT_CONVERSIONS ? 'unit' : pool === EDITING_PARAGRAPHS ? 'editing' : pool === LISTEN_DICTATIONS ? 'listen' : pool === SCIENCE_CLASSIFY ? 'scilab' : 'other';
+  const poolKey = pool === MATH_QUESTIONS ? 'math' : pool === GRAMMAR_QUESTIONS ? 'grammar' : pool === CLOZE_QUESTIONS ? 'cloze' : pool === UNIT_CONVERSIONS ? 'unit' : pool === EDITING_PARAGRAPHS ? 'editing' : pool === LISTEN_DICTATIONS ? 'listen' : pool === SCIENCE_CLASSIFY ? 'scilab' : pool === SCIENCE_MCQ ? 'scimcq' : pool === CHINESE_MCQ ? 'chinese' : 'other';
   if (!_usedQIndex[poolKey]) _usedQIndex[poolKey] = new Set();
   const used = _usedQIndex[poolKey];
+  const mastered = _masteredQs[poolKey] || new Set();
 
-  const main = pool.filter(p => p.diff === diff);
-  const near = pool.filter(p => Math.abs(p.diff - diff) === 1);
+  // 排除已掌握的题
+  const available = pool.filter((_, i) => !mastered.has(i));
+  // 如果全部掌握则重置(重新出所有题)
+  const effectivePool = available.length >= n ? available : pool;
+
+  const main = effectivePool.filter(p => p.diff === diff);
+  const near = effectivePool.filter(p => Math.abs(p.diff - diff) === 1);
   const combined = [...main, ...near, ...pool.filter(p => Math.abs(p.diff - diff) > 1)];
 
   // 分为未用过 vs 已用过
@@ -2112,6 +2142,132 @@ function getChineseReadingByDiff(diff) {
   return arr[0] || CHINESE_READING[0];
 }
 
+// ============= v19.0: 科学 MCQ (PSLE AL1 级, diff 4-6) =============
+const SCIENCE_MCQ = [
+  // Diff 4: PSLE 标准
+  { q: 'Which of the following is NOT needed for seed germination?', opts: ['Water','Air','Light','Warmth'], ans: 2, diff: 4, explain: 'Seeds need water, air and warmth to germinate. Light is NOT needed.' },
+  { q: 'What is the function of the cell membrane?', opts: ['Support and protect','Control what enters/leaves cell','Carry out photosynthesis','Store genetic info'], ans: 1, diff: 4, explain: 'Cell membrane is selectively permeable - controls entry/exit of substances.' },
+  { q: 'In a fair test on plant growth, the controlled variables are:', opts: ['Amount of sunlight only','All factors except the one being tested','Amount of water only','The result we measure'], ans: 1, diff: 4, explain: 'Controlled variables = everything kept the same EXCEPT the independent variable.' },
+  { q: 'Which process converts light energy to chemical energy?', opts: ['Respiration','Photosynthesis','Digestion','Evaporation'], ans: 1, diff: 4, explain: 'Photosynthesis: light energy → chemical energy (stored in food/glucose).' },
+  { q: 'What happens to a shadow when the light source moves closer to the object?', opts: ['Shadow gets smaller','Shadow gets bigger','Shadow disappears','Shadow stays same'], ans: 1, diff: 4, explain: 'Light source closer → bigger shadow (more light blocked by same object).' },
+  { q: 'Which organ produces bile to help digest fats?', opts: ['Stomach','Liver','Small intestine','Pancreas'], ans: 1, diff: 4, explain: 'Liver produces bile; bile stored in gallbladder; breaks fat into small droplets.' },
+  { q: 'A metal spoon feels cold because:', opts: ['Metal has lower temperature','Metal is a good conductor','Metal absorbs cold','Metal is heavy'], ans: 1, diff: 4, explain: 'Good conductor → conducts heat away from hand quickly → feels cold.' },
+  { q: 'The independent variable in an experiment is:', opts: ['What we keep constant','What we change on purpose','What we measure','The conclusion'], ans: 1, diff: 4, explain: 'IV = the ONE factor we deliberately change to test its effect.' },
+  { q: 'Plants make food in the:', opts: ['Roots','Stem','Leaves','Flowers'], ans: 2, diff: 4, explain: 'Leaves contain chloroplasts for photosynthesis (food-making).' },
+  { q: 'Which type of reproduction requires two parents?', opts: ['Budding','Binary fission','Sexual reproduction','Spore formation'], ans: 2, diff: 4, explain: 'Sexual reproduction needs male + female gametes (two parents).' },
+  { q: 'Friction can be reduced by:', opts: ['Making surfaces rougher','Adding lubricant','Increasing weight','Using rubber'], ans: 1, diff: 4, explain: 'Lubricant (oil/grease) creates a thin layer between surfaces → less friction.' },
+  { q: 'In a food chain: grass → rabbit → fox, the rabbit is a:', opts: ['Producer','Primary consumer','Secondary consumer','Decomposer'], ans: 1, diff: 4, explain: 'Rabbit eats producer (grass) directly = primary consumer (herbivore).' },
+  { q: 'Water changes from liquid to gas during:', opts: ['Condensation','Freezing','Evaporation','Melting'], ans: 2, diff: 4, explain: 'Evaporation = liquid → gas (gains heat energy).' },
+  { q: 'An electric circuit needs all EXCEPT:', opts: ['Energy source','Conductor wire','Switch','Magnet'], ans: 3, diff: 4, explain: 'Basic circuit needs: energy source + conductor + component. Magnet not needed.' },
+  { q: 'The function of white blood cells is to:', opts: ['Carry oxygen','Fight germs','Carry nutrients','Produce hormones'], ans: 1, diff: 4, explain: 'White blood cells = immune defense, destroy pathogens/germs.' },
+  { q: 'Which material is a good insulator of heat?', opts: ['Copper','Aluminium','Wood','Iron'], ans: 2, diff: 4, explain: 'Wood is a poor conductor = good insulator (traps heat/cold).' },
+  { q: 'Xylem in plants transports:', opts: ['Food from leaves','Water from roots','Oxygen from leaves','Carbon dioxide'], ans: 1, diff: 4, explain: 'Xylem = one-way transport of water + minerals from roots upward.' },
+  { q: 'Which force slows down a moving object?', opts: ['Gravity','Friction','Push','Magnetic force'], ans: 1, diff: 4, explain: 'Friction acts opposite to motion direction → slows object down.' },
+  { q: 'The boiling point of water is:', opts: ['0°C','50°C','100°C','200°C'], ans: 2, diff: 4, explain: 'Water boils at 100°C at standard atmospheric pressure.' },
+  { q: 'In pollination, pollen is transferred from:', opts: ['Stigma to anther','Anther to stigma','Root to leaf','Leaf to flower'], ans: 1, diff: 4, explain: 'Pollination: pollen from anther (male) → stigma (female part).' },
+  { q: 'A complete circuit must have:', opts: ['A gap in the wire','A closed loop with energy source','Only batteries','Only a switch'], ans: 1, diff: 4, explain: 'Complete circuit = closed loop allowing current to flow from source through components and back.' },
+  { q: 'Which is an example of conduction?', opts: ['Sun heating Earth','Hot air rising','Metal spoon getting hot in soup','Heating water in a kettle from bottom'], ans: 2, diff: 4, explain: 'Conduction = heat through direct contact (spoon touches hot soup).' },
+  { q: 'The dependent variable is:', opts: ['What we change','What we observe/measure','What we keep same','Our hypothesis'], ans: 1, diff: 4, explain: 'DV = what we measure/observe as a result of changing the IV.' },
+  { q: 'Decomposers are important because they:', opts: ['Make food from sunlight','Break down dead matter into nutrients','Eat other animals','Produce oxygen'], ans: 1, diff: 4, explain: 'Decomposers break down dead organisms → return nutrients to soil.' },
+  { q: 'Which organ absorbs most nutrients from food?', opts: ['Stomach','Large intestine','Small intestine','Mouth'], ans: 2, diff: 4, explain: 'Small intestine has villi (large surface area) for nutrient absorption.' },
+  { q: 'Light travels in:', opts: ['Curved lines','Straight lines','Zigzag lines','Circular paths'], ans: 1, diff: 4, explain: 'Light travels in straight lines (rectilinear propagation).' },
+  { q: 'An object floats when:', opts: ['It is heavy','Upthrust equals weight','It is large','Upthrust is less than weight'], ans: 1, diff: 4, explain: 'Floating: upthrust (buoyant force) = weight of object.' },
+  { q: 'Condensation occurs when water vapour:', opts: ['Gains heat','Loses heat and becomes liquid','Freezes into ice','Evaporates'], ans: 1, diff: 4, explain: 'Condensation = gas → liquid (water vapour cools down, loses heat).' },
+  { q: 'In a parallel circuit, if one bulb blows:', opts: ['All bulbs go out','Other bulbs still work','Battery stops','Wires melt'], ans: 1, diff: 4, explain: 'Parallel: each branch independent; one blowing doesn\'t affect others.' },
+  { q: 'Adaptation that helps a cactus survive in desert:', opts: ['Large leaves','Thick waxy stem','Many flowers','Deep tap root only'], ans: 1, diff: 4, explain: 'Thick waxy stem stores water + reduces water loss (no large leaves).' },
+  // Diff 5: PSLE 高频陷阱
+  { q: 'A whale is classified as a mammal because it:', opts: ['Lives in water','Has fins','Gives birth to live young and nurses them','Is very large'], ans: 2, diff: 5, explain: 'Whale = mammal (live birth + milk + warm-blooded + lungs). NOT fish despite living in water.' },
+  { q: 'A bat is classified as:', opts: ['Bird (it flies)','Insect (it has wings)','Mammal (fur + live birth)','Reptile'], ans: 2, diff: 5, explain: 'Bat = mammal (body hair, live birth, nurses young). Wings ≠ bird.' },
+  { q: 'Mushrooms are NOT plants because they:', opts: ['Are small','Cannot make their own food','Grow in soil','Are colourful'], ans: 1, diff: 5, explain: 'Mushrooms = fungi. No chlorophyll → cannot photosynthesize → not plants.' },
+  { q: 'A penguin is classified as a:', opts: ['Mammal','Fish','Bird','Reptile'], ans: 2, diff: 5, explain: 'Penguin = bird (feathers + lays eggs + beak). Cannot fly but still a bird.' },
+  { q: 'During photosynthesis, plants take in CO₂ and release O₂. During respiration, plants:', opts: ['Also release O₂','Take in O₂ and release CO₂','Do not respire','Only respire at night'], ans: 1, diff: 5, explain: 'Plants respire 24/7 (take in O₂, release CO₂). Photosynthesis only in light.' },
+  { q: 'Germination does NOT need light. Why?', opts: ['Seeds hate light','Seeds use stored food, not photosynthesis','Light kills seeds','Seeds are underground always'], ans: 1, diff: 5, explain: 'Germination uses food stored in seed (cotyledon). Photosynthesis starts AFTER germination.' },
+  { q: 'Why does a metal handle of a pot get hot but a plastic handle does not?', opts: ['Metal is heavier','Metal conducts heat better','Plastic is colder','Metal attracts heat'], ans: 1, diff: 5, explain: 'Metal = good conductor (transfers heat to hand). Plastic = insulator.' },
+  { q: 'In evaporation, water particles gain energy and:', opts: ['Move slower','Escape from the surface','Become ice','Move to the bottom'], ans: 1, diff: 5, explain: 'Evaporation: surface particles gain enough energy to escape as gas.' },
+  { q: 'A dolphin breathes using:', opts: ['Gills','Lungs','Skin','Both gills and lungs'], ans: 1, diff: 5, explain: 'Dolphin = mammal → uses lungs to breathe air (surfaces regularly).' },
+  { q: 'If a plant is placed in the dark for 48 hours:', opts: ['It dies immediately','It cannot photosynthesize but still respires','It produces more food','It grows faster'], ans: 1, diff: 5, explain: 'No light → no photosynthesis. But respiration continues 24/7.' },
+  { q: 'Mass and weight: on the Moon, an astronaut\'s:', opts: ['Mass and weight both decrease','Mass stays same, weight decreases','Mass decreases, weight stays','Both stay same'], ans: 1, diff: 5, explain: 'Mass = amount of matter (constant). Weight = mass × gravity (Moon gravity is 1/6 Earth).' },
+  { q: 'A crocodile is a reptile, not an amphibian, because it:', opts: ['Lives in water','Has scales and lays hard-shelled eggs on land','Is cold-blooded','Eats meat'], ans: 1, diff: 5, explain: 'Reptile features: scales + hard-shelled eggs on land (vs amphibian: moist skin, eggs in water).' },
+  { q: 'In a series circuit with 2 identical bulbs, adding a 3rd bulb makes all bulbs:', opts: ['Brighter','Dimmer','Same brightness','Turn off'], ans: 1, diff: 5, explain: 'Series: more resistance → less current → all bulbs dimmer.' },
+  { q: 'Transpiration pull helps water move up because:', opts: ['Roots push water up','Water evaporates from leaves creating suction','Gravity pulls water up','Wind blows water up'], ans: 1, diff: 5, explain: 'Transpiration: water evaporates from leaf stomata → creates pulling force up xylem.' },
+  { q: 'An iron nail rusts faster in:', opts: ['Dry air only','Salt water + air','Oil','Vacuum'], ans: 1, diff: 5, explain: 'Rusting needs water + oxygen. Salt water speeds it up (salt = catalyst).' },
+  { q: 'Why do we see lightning before hearing thunder?', opts: ['Lightning is louder','Light travels faster than sound','Sound travels faster','They happen at different times'], ans: 1, diff: 5, explain: 'Light speed (300,000 km/s) >> sound speed (340 m/s). Same event, light arrives first.' },
+  { q: 'Breathing and respiration are:', opts: ['The same thing','Different: breathing=physical, respiration=chemical','Both chemical','Both physical'], ans: 1, diff: 5, explain: 'Breathing = physical (inhale/exhale). Respiration = chemical (glucose + O₂ → energy + CO₂ + H₂O).' },
+  { q: 'A spider is NOT an insect because:', opts: ['It is too small','It has 8 legs (insects have 6)','It cannot fly','It lives outside'], ans: 1, diff: 5, explain: 'Insects: 6 legs + 3 body parts. Spiders: 8 legs + 2 body parts = arachnid.' },
+  { q: 'Heat from the Sun reaches Earth by:', opts: ['Conduction','Convection','Radiation','All three'], ans: 2, diff: 5, explain: 'Space is vacuum → no particles for conduction/convection. Only radiation works.' },
+  { q: 'In a food web, if all frogs die, the insect population will:', opts: ['Decrease','Increase','Stay same','Disappear'], ans: 1, diff: 5, explain: 'Frogs eat insects. No frogs → no predator → insect population increases.' },
+  { q: 'A seed dispersed by wind would likely have:', opts: ['Heavy hard shell','Wings or light fluffy structures','Hooks and spines','Bright edible fruit'], ans: 1, diff: 5, explain: 'Wind dispersal: light + large surface area (wings/parachutes like dandelion).' },
+  { q: 'Arteries carry blood:', opts: ['Towards the heart','Away from the heart','Only to the brain','Only to the lungs'], ans: 1, diff: 5, explain: 'Arteries = AWAY from heart (thick walls, high pressure). Veins = toward heart.' },
+  { q: 'The greenhouse effect causes global warming because:', opts: ['Ozone blocks sunlight','CO₂ traps heat in atmosphere','Trees produce too much O₂','Water evaporates too fast'], ans: 1, diff: 5, explain: 'CO₂/methane trap infrared radiation → heat cannot escape → temperature rises.' },
+  { q: 'Chlorophyll is found in:', opts: ['All cells','Only root cells','Chloroplasts in green parts','The nucleus'], ans: 2, diff: 5, explain: 'Chlorophyll is inside chloroplasts, found in green parts (mainly leaves).' },
+  { q: 'A compass needle points North because:', opts: ['It is magnetic and aligns with Earth\'s magnetic field','Gravity pulls it North','It is made of gold','Wind pushes it'], ans: 0, diff: 5, explain: 'Compass needle = magnet; aligns with Earth\'s magnetic field (N pole → geographic North).' },
+  { q: 'Plants respire:', opts: ['Only at night','Only during the day','24 hours a day','Only when there is no light'], ans: 2, diff: 5, explain: 'Respiration is continuous (24/7). Photosynthesis only occurs with light.' },
+  { q: 'Water expands when it freezes. This is why:', opts: ['Ice floats on water','Ice sinks','Water gets heavier','Ice is colder'], ans: 0, diff: 5, explain: 'Ice is less dense than liquid water (expands) → floats. Unique property of water.' },
+  { q: 'Vaccines work by:', opts: ['Killing all bacteria immediately','Training immune system to recognize pathogen','Providing antibiotics','Increasing body temperature'], ans: 1, diff: 5, explain: 'Vaccines = weakened/dead pathogen → immune system learns → faster response next time.' },
+  { q: 'Energy cannot be created or destroyed, only:', opts: ['Converted from one form to another','Increased','Multiplied','Stored permanently'], ans: 0, diff: 5, explain: 'Law of conservation of energy: total energy constant, only changes form.' },
+  { q: 'The main difference between animal and plant cells is that plant cells have:', opts: ['Nucleus only','Cell wall + chloroplasts + large vacuole','Mitochondria','Cell membrane'], ans: 1, diff: 5, explain: 'Plant-only: cell wall (rigid) + chloroplasts (photosynthesis) + large central vacuole.' },
+  // Diff 6: 超 PSLE 竞赛级
+  { q: 'In a complex food web, removing ONE species affects others because:', opts: ['Only its prey is affected','Multiple food chains are interconnected','Nothing changes','Only predators are affected'], ans: 1, diff: 6, explain: 'Food web = interconnected chains; removing one species has cascading effects on multiple others.' },
+  { q: 'Why do astronauts float in the International Space Station?', opts: ['No gravity in space','They are in freefall (orbiting)','They are too far from Earth','Space suit makes them light'], ans: 1, diff: 6, explain: 'ISS orbits Earth = continuous freefall. Gravity still exists but station + astronauts fall together.' },
+  { q: 'In a circuit with 2 bulbs in parallel, the total current from battery is:', opts: ['Same as through 1 bulb','Less than through 1 bulb','Sum of currents through each bulb','Zero'], ans: 2, diff: 6, explain: 'Parallel: total current splits; battery supplies sum of branch currents (more paths = more total current).' },
+  { q: 'A thermos flask reduces heat loss by conduction, convection, AND radiation through:', opts: ['Thick walls only','Vacuum between walls + shiny coating','Plastic material','Heavy weight'], ans: 1, diff: 6, explain: 'Vacuum blocks conduction/convection. Silver/shiny surface reflects radiation back.' },
+  { q: 'If all decomposers disappeared, the main consequence would be:', opts: ['Animals would grow bigger','Dead matter accumulates + nutrients not recycled to soil','More food for plants','Cleaner environment'], ans: 1, diff: 6, explain: 'No decomposers → dead matter piles up, nutrients locked in dead bodies, soil becomes infertile.' },
+  { q: 'During exercise, your breathing rate increases because:', opts: ['You need more CO₂','Muscles need more O₂ for increased respiration','Lungs need exercise','Brain tells you to'], ans: 1, diff: 6, explain: 'More muscle respiration → more O₂ needed + more CO₂ produced → faster breathing to exchange gases.' },
+  { q: 'Two magnets repel. The poles facing each other are:', opts: ['N-S','N-N or S-S','N-neutral','No poles involved'], ans: 1, diff: 6, explain: 'Like poles repel (N-N or S-S). Unlike poles attract (N-S).' },
+  { q: 'A plant in a sealed bell jar in light will eventually die because:', opts: ['Too much O₂','CO₂ runs out for photosynthesis','Too much light','No space to grow'], ans: 1, diff: 6, explain: 'Sealed jar: CO₂ used up by photosynthesis, not replenished → photosynthesis stops → no food → dies.' },
+  { q: 'The ozone layer protects Earth by absorbing:', opts: ['Visible light','Infrared radiation','Harmful UV radiation','Radio waves'], ans: 2, diff: 6, explain: 'Ozone (O₃) layer absorbs most ultraviolet radiation from Sun → protects life on Earth.' },
+  { q: 'In a lever, mechanical advantage increases when:', opts: ['Load moves closer to pivot','Effort moves further from pivot','Both A and B','Neither'], ans: 2, diff: 6, explain: 'MA = effort arm / load arm. Longer effort arm OR shorter load arm = more MA.' }
+];
+function getSciMcqByDiff(diff, n) { return _sampleByDiff(SCIENCE_MCQ, diff, n || 10); }
+
+// ============= v19.0: 华文 MCQ (PSLE 高华级, diff 4-6) =============
+const CHINESE_MCQ = [
+  // Diff 4: PSLE 标准
+  { q: '"画蛇添足"这个成语的意思是：', opts: ['做事很快','多此一举，弄巧成拙','画画技术很好','蛇很危险'], ans: 1, diff: 4, explain: '画蛇添足=做多余的事反而坏事（典故：画蛇比赛加脚反输）' },
+  { q: '"一（）千金"，括号里应填：', opts: ['字','言','诺','笔'], ans: 2, diff: 4, explain: '一诺千金=一个承诺价值千金，形容说话算数' },
+  { q: '"他跑得很快"中的"得"用法正确吗？', opts: ['正确，"得"用于补语','错误，应该用"的"','错误，应该用"地"','都可以'], ans: 0, diff: 4, explain: '"得"用于动词后接补语（跑得快）；"的"用于名词前；"地"用于动词前' },
+  { q: '"亡羊补牢"告诉我们：', opts: ['羊丢了就找不回来','出了问题及时补救还不晚','不要养羊','围墙要建高'], ans: 1, diff: 4, explain: '亡羊补牢=出了问题赶紧补救，为时未晚' },
+  { q: '下列哪个词语用错了？"这件事让我感到很（　）。"', opts: ['高兴','伤心','桌子','紧张'], ans: 2, diff: 4, explain: '"桌子"是名词，不能用来形容感受' },
+  { q: '"守株待兔"比喻：', opts: ['很有耐心','不劳而获，等天上掉馅饼','保护大自然','跑得很快'], ans: 1, diff: 4, explain: '守株待兔=不主动努力，坐等好事降临（讽刺不劳而获）' },
+  { q: '"虽然……但是……"是什么关系的关联词？', opts: ['因果关系','转折关系','递进关系','并列关系'], ans: 1, diff: 4, explain: '虽然…但是…=转折关系（前后意思相反）' },
+  { q: '"他（　）地走在回家的路上。"应填：', opts: ['高兴','高兴的','高兴地','高兴得'], ans: 2, diff: 4, explain: '"地"用于修饰动词（高兴地走）；"的"修饰名词；"得"接补语' },
+  { q: '"囫囵吞枣"形容：', opts: ['吃东西很快','学习不求甚解','很会吃枣','肚子很饿'], ans: 1, diff: 4, explain: '囫囵吞枣=读书/学习不加分析理解，笼统接受' },
+  { q: '量词搭配正确的是：', opts: ['一条裤子','一个裤子','一张裤子','一棵裤子'], ans: 0, diff: 4, explain: '裤子用"条"（长条形物品）' },
+  { q: '"坚持不懈"的意思是：', opts: ['很坚硬','坚持到底不放松','不开心','做事很慢'], ans: 1, diff: 4, explain: '坚持不懈=做事持之以恒，始终不松懈' },
+  { q: '"破釜沉舟"比喻：', opts: ['船坏了','下定决心，不留退路','做饭','游泳'], ans: 1, diff: 4, explain: '破釜沉舟=下定决心拼到底，不给自己留退路（项羽典故）' },
+  { q: '"不但……而且……"表示：', opts: ['转折','递进','因果','假设'], ans: 1, diff: 4, explain: '不但…而且…=递进关系（后面比前面更进一步）' },
+  { q: '"一日三秋"形容：', opts: ['时间过得很快','非常思念','一天很长','秋天来了'], ans: 1, diff: 4, explain: '一日三秋=一天不见如隔三年，形容思念之切' },
+  { q: '"他的成绩（　）了很大的进步。"应填：', opts: ['取得','取的','取地','取'], ans: 0, diff: 4, explain: '取得进步=固定搭配（动词+得+宾语）' },
+  // Diff 5: 高华 Paper 2
+  { q: '"明知山有虎，偏向虎山行"使用了什么修辞手法？', opts: ['比喻','拟人','对偶','夸张'], ans: 2, diff: 5, explain: '对偶=结构相同、字数相等的两句对称排列' },
+  { q: '"春风又绿江南岸"中"绿"的词性用法是：', opts: ['名词','形容词','动词（使动用法）','副词'], ans: 2, diff: 5, explain: '"绿"此处为使动用法=使…变绿（形容词活用为动词）' },
+  { q: '阅读："她的眼泪像断了线的珠子"使用了：', opts: ['夸张','拟人','比喻','排比'], ans: 2, diff: 5, explain: '有"像"字=明喻（比喻的一种），把眼泪比作珠子' },
+  { q: '"塞翁失马"这个成语想告诉我们：', opts: ['不要养马','好事坏事可以互相转化','马很重要','住在边塞不好'], ans: 1, diff: 5, explain: '塞翁失马，焉知非福=祸福相依，坏事可能变好事' },
+  { q: '"鹤立鸡群"中运用了什么修辞？', opts: ['比喻（把优秀的人比作鹤）','拟人','反问','夸张'], ans: 0, diff: 5, explain: '把才能出众的人比作鹤站在鸡群中=比喻（暗喻）' },
+  { q: '"不以规矩，不能成方圆"说明：', opts: ['画画要用工具','做事要遵守规则','规矩是圆的','方圆很重要'], ans: 1, diff: 5, explain: '强调规则/纪律的重要性（没有规矩就无法成事）' },
+  { q: '"忽如一夜春风来，千树万树梨花开"实际描写的是：', opts: ['春天','梨花','雪景','秋天'], ans: 2, diff: 5, explain: '用梨花比喻雪花（唐·岑参《白雪歌》），描写边塞雪景' },
+  { q: '"他的话如同一盆冷水浇在我头上"属于：', opts: ['夸张','比喻','拟人','对比'], ans: 1, diff: 5, explain: '把打击人的话比作冷水=比喻（形象表达失望/打击感）' },
+  { q: '"班门弄斧"告诫我们：', opts: ['要多练习斧头','不要在行家面前卖弄本领','鲁班很厉害','斧头很危险'], ans: 1, diff: 5, explain: '班门弄斧=在行家面前显示本领，不自量力' },
+  { q: '近义词辨析："安静"和"寂静"的区别：', opts: ['完全相同','寂静程度更深，常形容环境','安静更深','没有区别'], ans: 1, diff: 5, explain: '寂静=更深层的安静（无声），常用于夜晚/荒野/空旷处' },
+  { q: '"风声鹤唳"形容：', opts: ['风景优美','非常害怕，草木皆兵','动物叫声','天气很好'], ans: 1, diff: 5, explain: '风声鹤唳=惊恐万分，把风声鹤鸣都当成敌人追来（典故：淝水之战）' },
+  { q: '"排比"修辞的作用是：', opts: ['使文章更短','增强气势和节奏感','让人困惑','减少字数'], ans: 1, diff: 5, explain: '排比=结构相似的句子连用→增强语势、加深感情' },
+  { q: '"望梅止渴"的故事与谁有关？', opts: ['刘备','诸葛亮','曹操','孙权'], ans: 2, diff: 5, explain: '曹操行军途中用"前方有梅林"激励渴兵=用想象解决实际问题' },
+  { q: '"即使……也……"与"虽然……但是……"的区别是：', opts: ['完全一样','前者是假设让步，后者是事实转折','没有区别','前者表因果'], ans: 1, diff: 5, explain: '即使…也…=假设条件（未发生）；虽然…但是…=已有事实的转折' },
+  { q: '"他（　）聪明，（　）努力。"应填：', opts: ['不但…而且…','虽然…但是…','因为…所以…','如果…就…'], ans: 0, diff: 5, explain: '聪明+努力=递进关系（两者并存且递进）→不但…而且…' },
+  // Diff 6: 超 PSLE
+  { q: '"学而不思则罔，思而不学则殆"出自：', opts: ['《孟子》','《论语》','《庄子》','《三字经》'], ans: 1, diff: 6, explain: '出自《论语·为政》，孔子论学习与思考的关系' },
+  { q: '"三人行，必有我师"中"行"的意思是：', opts: ['走路','行为','同行/一起','行业'], ans: 2, diff: 6, explain: '三人同行=三个人在一起（行=同行、结伴）' },
+  { q: '"温故而知新"中"故"指：', opts: ['故事','过去学过的知识','原因','所以'], ans: 1, diff: 6, explain: '温故知新=复习旧知识能得到新理解（故=旧的/学过的）' },
+  { q: '文言文"之"在"吾欲之南海"中的意思是：', opts: ['的','他','到/去','代词'], ans: 2, diff: 6, explain: '"之"在此为动词=到、去（我想去南海）' },
+  { q: '"借代"修辞——"巾帼不让须眉"中"巾帼"代指：', opts: ['帽子','女性','男性','战士'], ans: 1, diff: 6, explain: '巾帼=古代妇女头巾→代指女性；须眉=胡须眉毛→代指男性' },
+  { q: '"欲穷千里目，更上一层楼"的深层含义是：', opts: ['描写登楼看景','要看得更远就要站得更高（追求更高境界）','楼很高','视力很好'], ans: 1, diff: 6, explain: '表面写登楼远望，深层寓意=要有更高成就就要不断提升自己' },
+  { q: '"设问"和"反问"的区别是：', opts: ['完全一样','设问自问自答，反问答案在问中','没有区别','前者不需要回答'], ans: 1, diff: 6, explain: '设问=先提问后自己回答；反问=用问句表达确定意思（无需回答）' },
+  { q: '"己所不欲，勿施于人"体现的核心思想是：', opts: ['自私','将心比心（换位思考）','不要做任何事','多管闲事'], ans: 1, diff: 6, explain: '自己不想要的不要强加给别人=儒家"恕"道（换位思考/同理心）' },
+  { q: '"倒叙"写作手法的作用是：', opts: ['让文章更长','制造悬念，吸引读者','节省时间','按时间顺序','让文章更乱'], ans: 1, diff: 6, explain: '倒叙=先写结果/高潮再回到开头→制造悬念，激发好奇心' },
+  { q: '"知之为知之，不知为不知，是知也"最后一个"知"意为：', opts: ['知道','智慧','知识','朋友'], ans: 1, diff: 6, explain: '最后的"知"通"智"=这才是真正的智慧（诚实面对自己的无知）' }
+];
+function getChineseMcqByDiff(diff, n) { return _sampleByDiff(CHINESE_MCQ, diff, n || 10); }
+
 // 4. Science 分类 (~10 题, 每题 5-8 项)
 const SCIENCE_CLASSIFY = [
   { topic: '动物分类: 脊椎 vs 无脊椎', cats: ['脊椎动物','无脊椎动物'], diff: 1,
@@ -2146,7 +2302,8 @@ function getSciClassifyByDiff(diff) { const arr = _sampleByDiff(SCIENCE_CLASSIFY
 const SUBJECT_OF_GAME = {
   math: '数学', unit: '数学',
   grammar: '英语', cloze: '英语', editing: '英语', vocab: '英语', listen: '英语',
-  scilab: '科学'
+  scilab: '科学', scimcq: '科学',
+  chinese: '华文'
 };
 
 function getSubjectAccuracy(state) {
@@ -4979,10 +5136,14 @@ window.UNIT_CONVERSIONS = UNIT_CONVERSIONS;
 window.GRAMMAR_QUESTIONS = GRAMMAR_QUESTIONS;
 window.CLOZE_QUESTIONS = CLOZE_QUESTIONS;
 window.SCIENCE_CLASSIFY = SCIENCE_CLASSIFY;
+window.SCIENCE_MCQ = SCIENCE_MCQ;
+window.CHINESE_MCQ = CHINESE_MCQ;
 window.getUnitByDiff = getUnitByDiff;
 window.getGrammarByDiff = getGrammarByDiff;
 window.getClozeByDiff = getClozeByDiff;
 window.getSciClassifyByDiff = getSciClassifyByDiff;
+window.getSciMcqByDiff = getSciMcqByDiff;
+window.getChineseMcqByDiff = getChineseMcqByDiff;
 // v18.31: 作文
 window.PSLE_COMPOSITIONS = PSLE_COMPOSITIONS;
 window.getCompositionPrompt = getCompositionPrompt;

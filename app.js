@@ -23,6 +23,7 @@ async function init() {
     state = loadState();
   }
   recalcTotalPoints(state);
+  if (window._loadMastered) window._loadMastered(state);
   // 启动时若当前真实日期在本周内,默认选今天
   const today = todayDayKeyForWeek(state.currentWeek);
   if (today) selectedDay = today;
@@ -274,20 +275,9 @@ function renderDashboard() {
   renderEquipment();
 }
 
-// v18.59: 错题本入口卡 (主页)
 function renderErrorBankCard() {
   const card = document.getElementById('errorBankCard');
-  if (!card) return;
-  const count = (state.wrongAnswers || []).length;
-  const byGame = window.errorBankByGame ? window.errorBankByGame(state) : {};
-  const breakdown = Object.entries(byGame).map(([k,v]) => `${k}:${v}`).join(' · ') || '空';
-  card.innerHTML = count > 0
-    ? `<div class="card-title">📓 错题本 <span style="background:#FF6B6B;color:white;padding:2px 10px;border-radius:12px;font-size:13px;margin-left:6px">${count}</span></div>
-       <p style="color:var(--color-text-light);font-size:12px;margin-bottom:8px">${breakdown}</p>
-       <button class="btn btn-primary" onclick="openErrorBank()" style="width:100%">🎯 立即复习 (${count} 题)</button>`
-    : `<div class="card-title">📓 错题本</div>
-       <p style="color:var(--color-text-light);font-size:13px;margin:8px 0">✨ 当前没有错题! 答错的题会自动收进来反复练。</p>
-       <button class="btn btn-secondary" onclick="openErrorBank()" style="width:100%">查看说明</button>`;
+  if (card) card.style.display = 'none';
 }
 window.renderErrorBankCard = renderErrorBankCard;
 
@@ -863,6 +853,18 @@ function submitTipQ(tipKey, qIdx, selected, correct) {
   if (!state.tipQsAnswered) state.tipQsAnswered = {};
   if (state.tipQsAnswered[key] !== undefined) return;
   state.tipQsAnswered[key] = selected;
+  // v18.99b: 计入各科 gameStats
+  const tipSubj = tipKey.includes('英语') ? 'grammar' : tipKey.includes('科学') ? 'scilab' : tipKey.includes('数学') ? 'math' : null;
+  if (tipSubj) {
+    if (!state.gameStats) state.gameStats = {};
+    if (!state.gameStats[tipSubj]) state.gameStats[tipSubj] = { difficulty: 3, recent: [] };
+    const tgs = state.gameStats[tipSubj];
+    if (!tgs.cumCorrect) tgs.cumCorrect = 0;
+    if (!tgs.cumTotal) tgs.cumTotal = 0;
+    if (!tgs.cumRuns) tgs.cumRuns = 0;
+    tgs.cumCorrect += (selected === correct ? 1 : 0);
+    tgs.cumTotal += 1;
+  }
   if (selected === correct) {
     state.totalPoints = (state.totalPoints || 0) + 3;
     state.logs.push({ reason: '✏️ 名师秘诀练习', points: 3, week: state.currentWeek, timestamp: Date.now() });
@@ -1122,6 +1124,22 @@ function renderWeeklyCoach() {
     return `${label} ${v}题`;
   }).join(' · ');
 
+  let errorListHtml = '';
+  if (wrongItems.length > 0) {
+    errorListHtml = `<div style="max-height:200px;overflow-y:auto;font-size:12px;line-height:1.7;margin-top:8px;border-top:1px solid #f0f0f0;padding-top:8px">
+      ${wrongItems.slice(-20).map(w => {
+        const subj = w.gameKey === 'math' ? '🔢' : w.gameKey === 'grammar' ? '✏️' : w.gameKey === 'cloze' ? '📝' : w.gameKey === 'unit' ? '⚗️' : w.gameKey === 'knowledge' ? '🌳' : w.gameKey === 'editing' ? '🔍' : '📚';
+        const retries = w.retries || 0;
+        const correctAns = w.type === 'mcq' && w.opts ? String.fromCharCode(65 + w.ans) + '. ' + (w.opts[w.ans] || '') : w.ans;
+        return `<div style="padding:3px 0;border-bottom:1px solid #f5f5f5">
+          <span>${subj}</span> <b>${escapeHtml((w.q || '').slice(0, 50))}</b>
+          <span style="color:#52C788;margin-left:4px">答案: ${escapeHtml(String(correctAns).slice(0, 30))}</span>
+          ${retries > 0 ? `<span style="color:var(--color-danger);margin-left:4px">重试${retries}次</span>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
   const errorHtml = `
     <div class="coach-section">
       <div class="coach-section-title">❌ 错题训练 <span style="font-size:13px;font-weight:700;color:${wrongItems.length > 0 ? 'var(--color-danger)' : 'var(--color-success)'}">${wrongItems.length > 0 ? wrongItems.length + ' 题待攻克' : '全部消灭!'}</span></div>
@@ -1131,7 +1149,12 @@ function renderWeeklyCoach() {
           <button class="btn btn-primary" onclick="openErrorBank()" style="font-size:14px;padding:10px 24px">🎯 开始错题训练 (+2分/答对)</button>
         </div>
         <div style="font-size:11px;color:var(--color-text-light);margin-top:6px;text-align:center">答对自动移除 · 答错留着反复练 · 每答对1题+2积分</div>
-      ` : '<div style="text-align:center;padding:12px;color:var(--color-success);font-weight:600">🏆 错题本空空如也, 继续保持!</div>'}
+        ${errorListHtml}
+      ` : `<div style="text-align:center;padding:12px">
+        <div style="color:var(--color-success);font-weight:600;margin-bottom:8px">🏆 错题本空空如也, 继续保持!</div>
+        <div style="font-size:11px;color:var(--color-text-light);margin-bottom:10px">在 mini-game 或知识树中答错的题会自动收录到这里</div>
+        <button class="btn btn-secondary" onclick="openErrorBank()" style="font-size:13px;padding:8px 20px">📓 查看错题本</button>
+      </div>`}
     </div>`;
 
   // 4. 重点攻克 + 本周重点
@@ -2983,6 +3006,17 @@ function submitKnowledgePractice() {
   const total = g.qs.length;
   const score = g.answers.reduce((s, a, i) => s + (a === g.qs[i].ans ? 1 : 0), 0);
   g.submitted = true;
+  // v18.99b: 知识树答题计入各科 gameStats
+  const ktGameKey = (g.subj || '').includes('科学') ? 'scilab' : 'grammar';
+  if (!state.gameStats) state.gameStats = {};
+  if (!state.gameStats[ktGameKey]) state.gameStats[ktGameKey] = { difficulty: 3, recent: [] };
+  const ktGs = state.gameStats[ktGameKey];
+  if (!ktGs.cumCorrect) ktGs.cumCorrect = 0;
+  if (!ktGs.cumTotal) ktGs.cumTotal = 0;
+  if (!ktGs.cumRuns) ktGs.cumRuns = 0;
+  ktGs.cumCorrect += score;
+  ktGs.cumTotal += total;
+  ktGs.cumRuns += 1;
   // v18.59: 错题入错题本
   if (window.addToErrorBank) {
     g.qs.forEach((q, i) => {
@@ -4001,13 +4035,19 @@ function openMiniGameHub() {
         <span class="mgh-title">🎮 Mini-game 大厅</span>
         <button class="vocab-modal-close" onclick="closeMiniGameHub()">×</button>
       </div>
-      <div class="mgh-rules">⚠️ 防沉迷: <b>每 game 每天 1 次, 满奖, 第 2 次锁定</b> · 8 game 全玩 ≈ 20-25 min</div>
+      <div class="mgh-rules">⚠️ 防沉迷: <b>每 game 每天 1 次, 满奖, 第 2 次锁定</b> · 10 game 全玩 ≈ 25-30 min</div>
       <div class="mgh-grid">
         <button class="mgh-game" onclick="closeMiniGameHub(); openVocabGame(${state.currentWeek})">
           📚<br><b>词汇连连看</b><br><small>6×6 配对</small>${status('vocab')}
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openMathGame()">
           ➗<br><b>数学速算</b><br><small>10 题限时</small>${status('math')}
+        </button>
+        <button class="mgh-game" onclick="closeMiniGameHub(); openSciMcqGame()">
+          🧬<br><b>科学 MCQ</b><br><small>10 题概念</small>${status('scimcq')}
+        </button>
+        <button class="mgh-game" onclick="closeMiniGameHub(); openChineseMcqGame()">
+          🇨🇳<br><b>华文 MCQ</b><br><small>10 题选择</small>${status('chinese')}
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openEditingGame()">
           ✏️<br><b>Editing 找错</b><br><small>50 词找 5 错</small>${status('editing')}
@@ -4153,17 +4193,18 @@ function closeUnitGame() {
 let _mcqGameState = null;
 function openGrammarGame() { _openMcqGame('grammar', 'Grammar 选择题', 'q'); }
 function openClozeGame() { _openMcqGame('cloze', 'Cloze 单空填', 'sentence'); }
+function openSciMcqGame() { _openMcqGame('scimcq', '科学 MCQ', 'q'); }
+function openChineseMcqGame() { _openMcqGame('chinese', '华文 MCQ', 'q'); }
 function _openMcqGame(key, title, qField) {
-  if (!_checkGameDailyLock(key)) return;  // v18.38
-  const diff = window.getDifficulty ? window.getDifficulty(state, key) : 1;
-  const fn = key === 'grammar' ? window.getGrammarByDiff : window.getClozeByDiff;
+  if (!_checkGameDailyLock(key)) return;
+  const diff = window.getDifficulty ? window.getDifficulty(state, key) : 4;
+  const fn = key === 'grammar' ? window.getGrammarByDiff : key === 'cloze' ? window.getClozeByDiff : key === 'scimcq' ? window.getSciMcqByDiff : key === 'chinese' ? window.getChineseMcqByDiff : window.getGrammarByDiff;
   const rawQs = fn(diff, 10);
-  // v18.33: 每题洗牌 opts + remap ans (修 "all A" bug)
   const qs = rawQs.map(q => {
     const correctOpt = q.opts[q.ans];
     const shuffled = [...q.opts].sort(() => Math.random() - 0.5);
     const newAns = shuffled.indexOf(correctOpt);
-    return Object.assign({}, q, { opts: shuffled, ans: newAns });
+    return Object.assign({}, q, { opts: shuffled, ans: newAns, _orig: q });
   });
   _mcqGameState = { key, title, qField, qs, idx: 0, correct: 0, wrong: 0, diff, lastFeedback: null };
   _renderMcqGame();
@@ -4200,7 +4241,15 @@ function submitMcqAnswer(idx) {
   if (!g) return;
   const q = g.qs[g.idx];
   const isCorrect = idx === q.ans;
-  if (isCorrect) { g.correct++; playSound('ding'); petExpress('pet-excited', 800); } else { g.wrong++; playSound('sad'); }
+  if (isCorrect) {
+    g.correct++; playSound('ding'); petExpress('pet-excited', 800);
+    // v19.0: 答对的题标记为 mastered (不再出)
+    const poolMap = { grammar: window.GRAMMAR_QUESTIONS, cloze: window.CLOZE_QUESTIONS, scimcq: window.SCIENCE_MCQ, chinese: window.CHINESE_MCQ };
+    if (poolMap[g.key] && window._markMastered) {
+      window._markMastered(g.key, poolMap[g.key], q._orig || q);
+      window._saveMastered(state);
+    }
+  } else { g.wrong++; playSound('sad'); }
   // v18.59: 错题入错题本
   if (!isCorrect && window.addToErrorBank) {
     window.addToErrorBank(state, {
@@ -4263,9 +4312,11 @@ function _finishMcqGame() {
   if (window.recordGameRun) diffR = window.recordGameRun(state, g.key, g.correct, g.qs.length);
   const playNum = _bumpDailyGameCount(g.key);
   const mult = _getGameMultiplier(playNum);
+  // v19.0: 难度梯度积分 (高难度答对奖更多)
+  const rewardMap = { 3: 2, 4: 3, 5: 5, 6: 7 };
   let baseR = 0;
-  if (g.correct >= 10) baseR = 3;
-  else if (g.correct >= 7) baseR = 2;
+  if (g.correct >= 10) baseR = rewardMap[g.diff] || 3;
+  else if (g.correct >= 7) baseR = Math.max(1, (rewardMap[g.diff] || 3) - 1);
   const reward = Math.floor(baseR * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
   if (reward > 0) {
     state.totalPoints += reward;
@@ -4402,6 +4453,8 @@ window.submitUnitAnswer = submitUnitAnswer;
 window.closeUnitGame = closeUnitGame;
 window.openGrammarGame = openGrammarGame;
 window.openClozeGame = openClozeGame;
+window.openSciMcqGame = openSciMcqGame;
+window.openChineseMcqGame = openChineseMcqGame;
 window.submitMcqAnswer = submitMcqAnswer;
 window.closeMcqGame = closeMcqGame;
 window.openSciClassifyGame = openSciClassifyGame;
@@ -5487,7 +5540,6 @@ function renderPsleAbilityCard() {
     _renderAbilityOverview(state) +
     _renderGameBreakdown(state) +
     _renderKnowledgeTreeSummary(state) +
-    _renderErrorBankAnalysis(state) +
     _renderImprovementPlan(state);
 }
 
