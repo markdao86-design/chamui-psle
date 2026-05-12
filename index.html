@@ -1490,7 +1490,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 .day-tab {
   background: var(--color-card);
-  border: 3px solid var(--color-text);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-tight);
   padding: 8px 4px;
   cursor: pointer;
@@ -1498,11 +1498,13 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   text-align: center;
   transition: transform 0.15s, background 0.15s;
   box-shadow: 0 3px 0 rgba(0,0,0,0.08);
+  color: var(--color-text);
 }
 .day-tab:hover { transform: translateY(-2px); background: var(--color-bg); }
 .day-tab.active {
-  background: var(--color-primary);
-  color: white;
+  background: rgba(0,212,255,0.15);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
   transform: translateY(-2px);
   box-shadow: 0 5px 0 rgba(0,0,0,0.15);
 }
@@ -1667,15 +1669,15 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 /* ===== v3 上头版反馈 ===== */
 .day-tab.complete {
-  background: linear-gradient(135deg, var(--color-success), var(--color-secondary));
-  color: white;
-  border-color: var(--color-success);
+  background: rgba(0,255,136,0.1);
+  color: var(--color-success);
+  border-color: rgba(0,255,136,0.3);
 }
 .day-tab.complete .day-tab-date,
-.day-tab.complete .day-tab-count { color: white; opacity: 0.9; }
+.day-tab.complete .day-tab-count { color: var(--color-success); opacity: 0.8; }
 .day-tab.complete.active {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-warn));
-  border-color: var(--color-primary);
+  background: rgba(0,255,136,0.15);
+  border-color: var(--color-success);
 }
 
 .combo-banner {
