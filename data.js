@@ -3825,7 +3825,7 @@ const WEEK_TASKS = [{"week":1,"date":"5.4-5.10","theme":"P3 Diversity(动+植+�
       w.days.Mon.E1 = `📖 Comp OE 精练 — PEEL 模板 (W${wn} 第1篇: Point→Evidence→Explain→Link)`;
     }
     if (w.days.Tue && w.days.Tue.E1) {
-      w.days.Tue.E1 = `📖 Comp OE + Inference — PEEL 刻意练习 (W${wn})`;
+      w.days.Tue.E1 = `📖 Comp Factual(关键词定位) + OE(PEEL) 混合练 (W${wn})`;
     }
     if (w.days.Thu && w.days.Thu.E1) {
       w.days.Thu.E1 = `📖 Cloze + Comp OE — PEEL 限时练 (W${wn})`;
@@ -3839,6 +3839,20 @@ const WEEK_TASKS = [{"week":1,"date":"5.4-5.10","theme":"P3 Diversity(动+植+�
     // v19.3: 每周五 S2 改为英语 Paper 2 限时模拟
     if (w.days.Fri && w.days.Fri.S2) {
       w.days.Fri.S2 = `📖 英语 Paper 2 限时模拟 (Grammar+Cloze+Editing+Comp OE)`;
+    }
+    // v19.3: Mon/Wed/Fri VC 改为 PSLE Cloze 高频词 + Phrasal Verbs
+    if (w.days.Mon && w.days.Mon.VC) {
+      w.days.Mon.VC = `📚 PSLE Cloze 高频词 + Phrasal Verbs (W${wn})`;
+    }
+    if (w.days.Wed && w.days.Wed.VC) {
+      w.days.Wed.VC = `📚 PSLE Cloze 高频词 + Phrasal Verbs (W${wn})`;
+    }
+    if (w.days.Fri && w.days.Fri.VC) {
+      w.days.Fri.VC = `📚 PSLE Cloze 高频词 + Phrasal Verbs (W${wn})`;
+    }
+    // v19.3: 周四 ED 加入 Visual Text 练习
+    if (w.days.Thu && w.days.Thu.ED) {
+      w.days.Thu.ED = `✏️ Editing 4段 + Visual Text 1篇 (广告/通知/海报) (W${wn})`;
     }
   }
 })();
