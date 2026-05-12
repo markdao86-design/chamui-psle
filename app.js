@@ -303,18 +303,9 @@ function renderDashboard() {
     `;
   }
 
-  // v17.6: renderIronRule() 已移除
-  renderWowCard();  // v17.1
-  renderMysteryBoxCard();  // v17.5
-  renderDailyQuestCard();  // v17.7 Phase 3
+  // v19.3: 精简主页 — 只渲染宠物, 其余卡片已隐藏
   renderPetWidget();  // v18 Phase 5.1
-  renderAchievementWall();  // v18 Phase 5.1
-  renderReviewCard();  // v18 Phase 5.3
-  renderWeeklyCoach();
-  // renderMasterTipCard(); // v18.71: 已合并到 wowCard
-  renderDragonProgress();  // v18.55
-  renderErrorBankCard();   // v18.59
-  renderEquipment();
+  renderMysteryBoxCard();  // tab badge count only
 }
 
 function renderErrorBankCard() {
@@ -1620,9 +1611,9 @@ function renderCheckinPage() {
     }).join('');
     // v19.2: tier-based combo + expand buttons
     if (tier1AllDone && tier2AllDone && allDoneToday) {
-      slotsHtml += `<div class="combo-banner">🔥 完美日! 核心 +${CORE_COMBO} · 建议 +${EXTEND_COMBO} · 完美 +${PERFECT_COMBO} = 全勤 +${CORE_COMBO + EXTEND_COMBO + PERFECT_COMBO}!</div>`;
+      slotsHtml += `<div class="combo-banner">🔥 完美日! 主线 +${CORE_COMBO} · 支线 +${EXTEND_COMBO} · 完美 +${PERFECT_COMBO} = 全勤 +${CORE_COMBO + EXTEND_COMBO + PERFECT_COMBO}!</div>`;
     } else if (tier1AllDone) {
-      slotsHtml += `<div class="combo-banner" style="background:linear-gradient(135deg,rgba(0,255,136,0.08),rgba(0,212,255,0.06))">🎯 核心全勤! +${CORE_COMBO} 分!</div>`;
+      slotsHtml += `<div class="combo-banner" style="background:linear-gradient(135deg,rgba(0,255,136,0.08),rgba(0,212,255,0.06))">🎯 主线全勤! +${CORE_COMBO} 分!</div>`;
       if (!showTier2) {
         slotsHtml += `<button class="tier-expand-btn" onclick="event.stopPropagation(); sessionStorage.setItem('${expandedKey}','2'); renderCheckinPage()">🎁 解锁支线挑战 (+${tier2Tasks.length} 项)</button>`;
       } else if (tier2AllDone && !showTier3 && !pastBedtime) {
@@ -1632,7 +1623,7 @@ function renderCheckinPage() {
       }
     } else {
       const coreLeft = tier1Tasks.filter(t => !getDailyCheck(state, week, selectedDay, t.slot)).length;
-      slotsHtml += `<div class="combo-hint">🎯 核心还差 <b>${coreLeft}</b> 个 → 全勾拿 <b>+${CORE_COMBO}</b> 核心全勤奖</div>`;
+      slotsHtml += `<div class="combo-hint">🎯 主线还差 <b>${coreLeft}</b> 个 → 全勾拿 <b>+${CORE_COMBO}</b> 主线全勤奖</div>`;
     }
   }
 
@@ -6327,10 +6318,10 @@ function renderAdminPage() {
     const isAdd = log.points > 0;
     const date = new Date(log.timestamp).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     return `
-      <div style="background: white; border: 2px solid ${isAdd ? 'var(--color-success)' : 'var(--color-danger)'}; border-radius: 8px; padding: 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+      <div style="background: var(--color-card); border: 2px solid ${isAdd ? 'var(--color-success)' : 'var(--color-danger)'}; border-radius: 8px; padding: 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; color: #1a1a1a;">
         <div>
           <b>${escapeHtml(log.reason)}</b><br>
-          <span style="font-size: 11px; color: var(--color-text-light);">W${log.week} · ${date}</span>
+          <span style="font-size: 11px; color: #444;">W${log.week} · ${date}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-family: ZCOOL KuaiLe, cursive; font-size: 22px; color: ${isAdd ? 'var(--color-success)' : 'var(--color-danger)'};">${isAdd ? '+' : ''}${log.points}</span>
