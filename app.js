@@ -307,7 +307,11 @@ function renderDashboard() {
         ${fireLevel ? `<span class="power-badge" style="background:rgba(255,107,53,0.15);color:#FF6B35;border-color:rgba(255,107,53,0.3)">${fireLevel}</span>` : ''}
         <span class="power-badge" style="background:rgba(56,189,248,0.12);color:#38BDF8;border-color:rgba(56,189,248,0.3)">幸运 ${luckyStars}</span>
       </div>
+      <div style="font-size:10px;color:var(--color-text-light);margin-bottom:6px">
+        ⚔️战力 = 打卡+游戏的综合实力 · ${fireLevel ? '🔥连续打卡越久火焰越旺 · ' : ''}幸运★ = 游戏答对时有几率获得额外加分
+      </div>
       <div class="chapter-badge">${chapter.title}</div>
+      <div style="font-size:10px;color:var(--color-text-light);margin:3px 0">积分达标自动升章 → 解锁新装备+称号</div>
       <div style="margin-top:4px;display:flex;flex-direction:column;gap:2px">${nextEqHtml}${nextTarget}</div>
     `;
   }
