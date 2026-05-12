@@ -398,11 +398,11 @@ body::before {
 
 .character-display {
   position: relative;
-  height: 250px;
+  height: 320px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 2px;
+  margin-bottom: 6px;
 }
 .character-display::before {
   content: '';
@@ -476,13 +476,19 @@ body::before {
   letter-spacing: 1px;
   text-shadow: 0 1px 2px rgba(74,144,199,0.15);
 }
-.big-score-block {
+.score-beat-row {
+  display: flex;
+  gap: 8px;
   margin-top: 6px;
+  align-items: stretch;
+}
+.big-score-block {
+  flex: 1;
   background: linear-gradient(135deg, var(--color-card) 0%, var(--color-card-soft) 100%);
   border: 1px solid rgba(0,212,255,0.15);
   border-top: 2px solid var(--color-primary);
   border-radius: var(--radius-bubble);
-  padding: 12px 16px;
+  padding: 10px 12px;
   text-align: center;
   box-shadow: 0 2px 8px rgba(74,144,199,0.10);
   transition: transform 0.2s;
@@ -517,15 +523,19 @@ body::before {
 }
 
 .beat-block {
-  margin-top: 8px;
+  flex: 1;
   background: rgba(0,212,255,0.06);
   border: 1px solid rgba(0,212,255,0.15);
-  border-radius: var(--radius-tight);
+  border-top: 2px solid var(--color-primary);
+  border-radius: var(--radius-bubble);
   padding: 10px 12px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 4px;
   backdrop-filter: blur(4px);
+  text-align: center;
 }
 .beat-rocket {
   font-size: 32px;
@@ -3296,9 +3306,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 /* v18.4: 角色卡极紧凑 */
 #page-dashboard .character-card { padding: 10px 12px !important; }
 #page-dashboard .character-svg { width: 130px !important; height: 130px !important; }
-#page-dashboard .big-score-block { padding: 6px 10px !important; margin-top: 5px !important; }
+#page-dashboard .big-score-block { padding: 6px 8px !important; margin-top: 0 !important; }
 #page-dashboard .big-score-num { font-size: 28px !important; }
-#page-dashboard .beat-block { padding: 5px 8px !important; margin-top: 5px !important; font-size: 11px !important; }
+#page-dashboard .beat-block { padding: 6px 8px !important; margin-top: 0 !important; font-size: 11px !important; }
 #page-dashboard .character-name { font-size: 17px !important; margin: 2px 0 0 !important; }
 #page-dashboard .character-title-big { font-size: 13px !important; margin: 2px 0 !important; }
 /* 减小 daily quest / mini-game hub / 成就墙 卡内边距 */
@@ -3315,11 +3325,11 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 /* ===== v17.6: 全局放大 + 角色卡缩短 + streak hover hint ===== */
 /* 角色卡缩短: SVG 缩小, padding 减少 */
-#page-dashboard .character-svg { width: 220px !important; height: 220px !important; }
+#page-dashboard .character-svg { width: 300px !important; height: 300px !important; }
 #page-dashboard .character-card { padding: 16px !important; }
-#page-dashboard .big-score-block { padding: 10px 14px !important; margin-top: 6px !important; }
+#page-dashboard .big-score-block { padding: 10px 12px !important; margin-top: 0 !important; }
 #page-dashboard .big-score-num { font-size: 38px !important; }
-#page-dashboard .beat-block { padding: 8px 12px !important; margin-top: 6px !important; font-size: 13px !important; }
+#page-dashboard .beat-block { padding: 8px 12px !important; margin-top: 0 !important; font-size: 13px !important; }
 
 /* 全局字体放大 — 主要元素 +2-4px */
 .card-title { font-size: 19px !important; }
@@ -4730,18 +4740,19 @@ p { font-size: 14px; line-height: 1.6; }
           <div class="streak-hover-hint">📋 悬浮/点击看规则</div>
         </div>
 
-        <!-- 大字总分 -->
-        <div class="big-score-block">
-          <div class="big-score-num" id="bigScoreNum" title="来源: 打卡/游戏/知识树/错题 · 用途: 兑换装备/解锁龙">0</div>
-          <div class="big-score-label">⭐ 总积分</div>
-          <div class="crystal-score-line" id="crystalScoreLine" title="来源: 成就解锁 · 用途: 装备进化">💎 <span id="bigCrystalNum">0</span> 水晶</div>
-        </div>
-        <!-- 击败比例 -->
-        <div class="beat-block" id="beatBlock">
-          <div class="beat-rocket">🚀</div>
-          <div class="beat-text">
-            打败了全新加坡 <b id="beatPct">0</b><span style="font-size:14px;">%</span> 同年级同学
-            <div class="beat-count">约 <b id="beatCount">0</b> 名小学生(共 <span id="beatTotal">50000</span> 名)</div>
+        <!-- 积分 + 击败 一排 -->
+        <div class="score-beat-row">
+          <div class="big-score-block">
+            <div class="big-score-num" id="bigScoreNum" title="来源: 打卡/游戏/知识树/错题 · 用途: 兑换装备/解锁龙">0</div>
+            <div class="big-score-label">⭐ 总积分</div>
+            <div class="crystal-score-line" id="crystalScoreLine" title="来源: 成就解锁 · 用途: 装备进化">💎 <span id="bigCrystalNum">0</span> 水晶</div>
+          </div>
+          <div class="beat-block" id="beatBlock">
+            <div class="beat-rocket">🚀</div>
+            <div class="beat-text">
+              打败了全新加坡 <b id="beatPct">0</b><span style="font-size:14px;">%</span> 同年级同学
+              <div class="beat-count">约 <b id="beatCount">0</b> 名小学生(共 <span id="beatTotal">50000</span> 名)</div>
+            </div>
           </div>
         </div>
         <!-- v19.3: 进度环 CTA -->
