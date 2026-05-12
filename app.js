@@ -6318,10 +6318,10 @@ function renderAdminPage() {
     const isAdd = log.points > 0;
     const date = new Date(log.timestamp).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     return `
-      <div style="background: var(--color-card); border: 1px solid ${isAdd ? 'rgba(0,255,136,0.3)' : 'rgba(255,51,102,0.3)'}; border-radius: 8px; padding: 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; color: var(--color-text);">
+      <div style="background: var(--color-card); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; color: #FFFFFF;">
         <div>
-          <b>${escapeHtml(log.reason)}</b><br>
-          <span style="font-size: 11px; color: var(--color-text-light);">W${log.week} · ${date}</span>
+          <b style="color:#FFFFFF;">${escapeHtml(log.reason)}</b><br>
+          <span style="font-size: 11px; color: #94A3B8;">W${log.week} · ${date}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-family: ZCOOL KuaiLe, cursive; font-size: 22px; color: ${isAdd ? 'var(--color-success)' : 'var(--color-danger)'};">${isAdd ? '+' : ''}${log.points}</span>
