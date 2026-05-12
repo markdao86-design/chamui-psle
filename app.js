@@ -1620,9 +1620,9 @@ function renderCheckinPage() {
     }).join('');
     // v19.2: tier-based combo + expand buttons
     if (tier1AllDone && tier2AllDone && allDoneToday) {
-      slotsHtml += `<div class="combo-banner">🔥 完美日! 核心 +${CORE_COMBO} · 建议 +${EXTEND_COMBO} · 完美 +${PERFECT_COMBO} = 全勤 +${CORE_COMBO + EXTEND_COMBO + PERFECT_COMBO}!</div>`;
+      slotsHtml += `<div class="combo-banner">🔥 完美日! 主线 +${CORE_COMBO} · 支线 +${EXTEND_COMBO} · 完美 +${PERFECT_COMBO} = 全勤 +${CORE_COMBO + EXTEND_COMBO + PERFECT_COMBO}!</div>`;
     } else if (tier1AllDone) {
-      slotsHtml += `<div class="combo-banner" style="background:linear-gradient(135deg,rgba(0,255,136,0.08),rgba(0,212,255,0.06))">🎯 核心全勤! +${CORE_COMBO} 分!</div>`;
+      slotsHtml += `<div class="combo-banner" style="background:linear-gradient(135deg,rgba(0,255,136,0.08),rgba(0,212,255,0.06))">🎯 主线全勤! +${CORE_COMBO} 分!</div>`;
       if (!showTier2) {
         slotsHtml += `<button class="tier-expand-btn" onclick="event.stopPropagation(); sessionStorage.setItem('${expandedKey}','2'); renderCheckinPage()">🎁 解锁支线挑战 (+${tier2Tasks.length} 项)</button>`;
       } else if (tier2AllDone && !showTier3 && !pastBedtime) {
@@ -1632,7 +1632,7 @@ function renderCheckinPage() {
       }
     } else {
       const coreLeft = tier1Tasks.filter(t => !getDailyCheck(state, week, selectedDay, t.slot)).length;
-      slotsHtml += `<div class="combo-hint">🎯 核心还差 <b>${coreLeft}</b> 个 → 全勾拿 <b>+${CORE_COMBO}</b> 核心全勤奖</div>`;
+      slotsHtml += `<div class="combo-hint">🎯 主线还差 <b>${coreLeft}</b> 个 → 全勾拿 <b>+${CORE_COMBO}</b> 主线全勤奖</div>`;
     }
   }
 
