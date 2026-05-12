@@ -349,46 +349,20 @@ body::before {
 }
 
 .character-card::before {
-  /* 角色身后的柔光 */
-  content: '';
-  position: absolute;
-  top: 15%;
-  left: 50%;
-  transform: translate(-50%, -10%);
-  width: 220px;
-  height: 220px;
-  background: radial-gradient(circle, rgba(56,189,248,0.28) 0%, rgba(0,212,255,0.12) 35%, transparent 65%);
-  pointer-events: none;
-  animation: char-glow 5s ease-in-out infinite;
+  content: none;
 }
 .character-card::after {
-  /* 装饰: 飘浮的云朵和星星 */
-  content: '☁️ ✦ ⭐ ☁️ ✦';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-image:
-    radial-gradient(circle at 12% 18%, rgba(255,255,255,0.85) 2px, transparent 3px),
-    radial-gradient(circle at 88% 22%, rgba(255,255,255,0.7) 2.5px, transparent 3.5px),
-    radial-gradient(circle at 22% 75%, rgba(255,255,255,0.6) 2px, transparent 3px),
-    radial-gradient(circle at 80% 82%, rgba(255,255,255,0.7) 2.5px, transparent 3.5px),
-    radial-gradient(circle at 50% 8%, rgba(255,255,255,0.5) 1.5px, transparent 2.5px),
-    radial-gradient(circle at 6% 50%, rgba(255,255,255,0.6) 2px, transparent 3px),
-    radial-gradient(circle at 95% 50%, rgba(255,255,255,0.7) 2px, transparent 3px);
-  color: transparent;
-  pointer-events: none;
-  z-index: 0;
+  content: none;
 }
 .character-card > * {
   position: relative;
   z-index: 1;
 }
 @keyframes char-glow {
-  0%, 100% { opacity: 0.55; transform: translate(-50%, -10%) scale(1); }
-  50% { opacity: 0.85; transform: translate(-50%, -10%) scale(1.08); }
+  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.1); }
 }
 
-/* 蓝色调的飘浮云朵 (右上角 + 左下角) */
-.character-card::before { z-index: 0; }
 .cloud-deco {
   position: absolute;
   pointer-events: none;
@@ -408,6 +382,19 @@ body::before {
   align-items: center;
   justify-content: center;
   margin-bottom: 2px;
+}
+.character-display::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(56,189,248,0.3) 0%, rgba(0,212,255,0.12) 35%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+  animation: char-glow 5s ease-in-out infinite;
 }
 .character-display::after {
   content: '';
@@ -4649,7 +4636,9 @@ p { font-size: 14px; line-height: 1.6; }
         <div class="big-score-block">
           <div class="big-score-num" id="bigScoreNum">0</div>
           <div class="big-score-label">⭐ 总积分</div>
+          <div style="font-size:11px;color:var(--color-text-light);margin-top:2px;">来源: 打卡/游戏/知识树/错题 · 用途: 兑换装备/解锁龙</div>
           <div class="crystal-score-line" id="crystalScoreLine">💎 <span id="bigCrystalNum">0</span> 水晶</div>
+          <div style="font-size:11px;color:var(--color-text-light);margin-top:1px;">来源: 抽奖碎片合成 · 用途: 兑换稀有皮肤</div>
         </div>
         <!-- 击败比例 -->
         <div class="beat-block" id="beatBlock">
