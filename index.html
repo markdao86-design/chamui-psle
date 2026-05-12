@@ -4647,9 +4647,9 @@ p { font-size: 14px; line-height: 1.6; }
     <span class="app-subtitle" style="font-size:11px;color:var(--color-text-light);font-weight:400;margin-left:8px;">PSLE 4-6 分陪练 · 打卡是养成, 能力才是目标</span>
   </div>
   <div class="app-stats">
-    <div class="stat-pill points">⭐ <span id="totalPoints">0</span> 分</div>
-    <div class="stat-pill crystals">💎 <span id="totalCrystals">0</span></div>
-    <div class="stat-pill level">Lv<span id="currentLevel">1</span></div>
+    <div class="stat-pill points" title="来源: 打卡/游戏/知识树/错题 · 用途: 兑换装备/解锁龙/SGD">⭐ <span id="totalPoints">0</span> 分</div>
+    <div class="stat-pill crystals" title="来源: 成就解锁 · 用途: 装备进化">💎 <span id="totalCrystals">0</span></div>
+    <div class="stat-pill level" title="12级: 打卡累积分越多等级越高">Lv<span id="currentLevel">1</span></div>
     <!-- v18.48: 宝箱挪到顶部, 跟分数同列 -->
     <div class="stat-pill mystery-pill" id="mysteryTabBtn" onclick="openMysteryBoxModal()" title="🎁 神秘宝箱 + 抽奖碎片">
       🎁 <span id="mysteryTabCount">0</span>
@@ -4694,16 +4694,14 @@ p { font-size: 14px; line-height: 1.6; }
           <div class="streak-label">今天打 1 个项目, 点燃火焰</div>
           <div class="streak-hover-hint">📋 悬浮/点击看规则</div>
         </div>
-        <!-- 大字总分 (精简: 分数已在header显示) -->
-        <div class="big-score-block" style="display:none">
-          <div class="big-score-num" id="bigScoreNum">0</div>
+        <!-- 大字总分 -->
+        <div class="big-score-block">
+          <div class="big-score-num" id="bigScoreNum" title="来源: 打卡/游戏/知识树/错题 · 用途: 兑换装备/解锁龙">0</div>
           <div class="big-score-label">⭐ 总积分</div>
-          <div style="font-size:11px;color:var(--color-text-light);margin-top:2px;">来源: 打卡/游戏/知识树/错题 · 用途: 兑换装备/解锁龙</div>
-          <div class="crystal-score-line" id="crystalScoreLine">💎 <span id="bigCrystalNum">0</span> 水晶</div>
-          <div style="font-size:11px;color:var(--color-text-light);margin-top:1px;">来源: 抽奖碎片合成 · 用途: 兑换稀有皮肤</div>
+          <div class="crystal-score-line" id="crystalScoreLine" title="来源: 成就解锁 · 用途: 装备进化">💎 <span id="bigCrystalNum">0</span> 水晶</div>
         </div>
-        <!-- 击败比例 (移到折叠区) -->
-        <div class="beat-block" id="beatBlock" style="display:none">>
+        <!-- 击败比例 -->
+        <div class="beat-block" id="beatBlock">>
           <div class="beat-rocket">🚀</div>
           <div class="beat-text">
             打败了全新加坡 <b id="beatPct">0</b><span style="font-size:14px;">%</span> 同年级同学
