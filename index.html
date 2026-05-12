@@ -564,6 +564,18 @@ body::before {
 }
 .collapse-toggle::-webkit-details-marker { display: none; }
 .dashboard-collapse[open] .collapse-toggle { margin-bottom: 12px; }
+.more-tabs-menu {
+  display: none;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 8px;
+  margin: 0 16px 8px;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.more-tabs-menu.show { display: flex; }
+.tab-more-btn { position: relative; }
 .daily-slot-list {
   margin-top: 12px;
   padding: 10px 12px;
@@ -4600,15 +4612,15 @@ p { font-size: 14px; line-height: 1.6; }
 <nav class="tabs">
   <button class="tab-btn active" data-page="dashboard">🏠 主页</button>
   <button class="tab-btn" data-page="checkin">✅ 打卡</button>
-  <button class="tab-btn" data-page="history">📊 PSLE 能力</button>
-  <!-- v18.49: 知识树/作文 改为 data-page (不再 modal) -->
-  <button class="tab-btn" data-page="knowledge" title="知识树 — 4 学科 PSLE 大纲">🌳 知识树</button>
-  <button class="tab-btn" data-page="essay" title="73 周 PSLE 作文模板库">📝 作文</button>
-  <!-- v18.50: 题库 改为 page (不再 modal) -->
-  <button class="tab-btn paper-bank-tab" data-page="paperbank" title="PSLE 真题 + P5/P6 名校 prelim 4 学科">📚 题库</button>
-  <!-- v18.47: 管理移到末尾 -->
-  <button class="tab-btn" data-page="admin">⚙️ 管理</button>
+  <button class="tab-btn" data-page="history">📊 能力</button>
+  <button class="tab-btn tab-more-btn" onclick="document.getElementById('moreTabsMenu').classList.toggle('show')">📂 更多 ▾</button>
 </nav>
+<div class="more-tabs-menu" id="moreTabsMenu">
+  <button class="tab-btn" data-page="knowledge">🌳 知识树</button>
+  <button class="tab-btn" data-page="essay">📝 作文</button>
+  <button class="tab-btn paper-bank-tab" data-page="paperbank">📚 题库</button>
+  <button class="tab-btn" data-page="admin">⚙️ 管理</button>
+</div>
 
 <main class="main-container">
   <!-- 主页 -->
@@ -4632,16 +4644,16 @@ p { font-size: 14px; line-height: 1.6; }
           <div class="streak-label">今天打 1 个项目, 点燃火焰</div>
           <div class="streak-hover-hint">📋 悬浮/点击看规则</div>
         </div>
-        <!-- 大字总分 -->
-        <div class="big-score-block">
+        <!-- 大字总分 (精简: 分数已在header显示) -->
+        <div class="big-score-block" style="display:none">
           <div class="big-score-num" id="bigScoreNum">0</div>
           <div class="big-score-label">⭐ 总积分</div>
           <div style="font-size:11px;color:var(--color-text-light);margin-top:2px;">来源: 打卡/游戏/知识树/错题 · 用途: 兑换装备/解锁龙</div>
           <div class="crystal-score-line" id="crystalScoreLine">💎 <span id="bigCrystalNum">0</span> 水晶</div>
           <div style="font-size:11px;color:var(--color-text-light);margin-top:1px;">来源: 抽奖碎片合成 · 用途: 兑换稀有皮肤</div>
         </div>
-        <!-- 击败比例 -->
-        <div class="beat-block" id="beatBlock">
+        <!-- 击败比例 (移到折叠区) -->
+        <div class="beat-block" id="beatBlock" style="display:none">>
           <div class="beat-rocket">🚀</div>
           <div class="beat-text">
             打败了全新加坡 <b id="beatPct">0</b><span style="font-size:14px;">%</span> 同年级同学
@@ -4670,8 +4682,8 @@ p { font-size: 14px; line-height: 1.6; }
     </div>
 
     <!-- v18 Phase 5.1: 🏆 成就墙 -->
-    <details class="dashboard-collapse" open>
-      <summary class="collapse-toggle">📋 更多详情 (点击折叠)</summary>
+    <details class="dashboard-collapse">
+      <summary class="collapse-toggle">📋 更多详情 (点击展开)</summary>
     <div class="card achievement-wall-card" id="achievementWallCard"></div>
 
     <!-- v17.6: 今日铁律已删除 (用户反馈) -->
