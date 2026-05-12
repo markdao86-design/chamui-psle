@@ -48,6 +48,7 @@ async function init() {
     _checkDailyDrawOnInit();
     _checkAndUnlockAch();
     _checkFTUE();              // v19.3: 首次引导
+    _checkCloudIntegrity();    // v19.3: 云端积分对比
   }, 800);
   // v18.20 A: 启动仓鼠周期性鼓励
   if (typeof _startPetIdleTalk === 'function') _startPetIdleTalk();
@@ -4377,9 +4378,11 @@ window.verifyPointsIntegrity = verifyPointsIntegrity;
 
 // v19.3: 登录时云端对比 — 防本地数据回退
 async function _checkCloudIntegrity() {
-  if (!window.isFbReady || !isFbReady()) return;
+  if (!window.isFbReady || !isFbReady() || !window.getFbDoc) return;
+  const fbDoc = getFbDoc();
+  if (!fbDoc) return;
   try {
-    const snap = await window._fbDoc.get();
+    const snap = await fbDoc.get();
     if (!snap.exists) return;
     const cloud = snap.data();
     const localPts = state.totalPoints || 0;
@@ -6490,6 +6493,18 @@ window._reviewNextWeek = _reviewNextWeek;
 
 // ============ 管理页 ============
 function renderAdminPage() {
+  // v19.3: 积分完整性校验展示
+  const integrityEl = document.getElementById('adminIntegrity');
+  if (integrityEl) {
+    const v = verifyPointsIntegrity();
+    integrityEl.innerHTML = `
+      <div style="padding:10px 12px;border-radius:8px;background:${v.ok ? 'rgba(0,255,136,0.08)' : 'rgba(255,51,102,0.12)'};border:1px solid ${v.ok ? 'var(--color-success)' : 'var(--color-danger)'};margin-bottom:12px;font-size:13px;color:var(--color-text)">
+        <b>${v.detail}</b><br>
+        实际: ${v.actual} | 预期下限: ${v.expectedMin} | 终身: ${v.lifetime} | 差: +${v.drift}<br>
+        <span style="color:var(--color-text-light)">slot基础=${v.slotCalc} + logs=${v.logTotal} | 日志${v.logCount}条</span>
+      </div>`;
+  }
+
   // 异步渲染照片 gallery
   renderPhotoGallery(state.currentWeek).catch(e => console.error(e));
   // v19.2: 家长周审面板

@@ -5783,6 +5783,7 @@ window.loadStateAsync = loadStateAsync;
 window.subscribeFirestore = subscribeFirestore;
 window.initFirebase = initFirebase;
 window.isFbReady = isFbReady;
+window.getFbDoc = function() { return _fbDoc; };
 window.getFbStatus = getFbStatus;
 window.onFbStatusChange = onFbStatusChange;
 window.photoPut = photoPut;
