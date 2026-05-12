@@ -398,11 +398,11 @@ body::before {
 
 .character-display {
   position: relative;
-  height: 320px;
+  height: 290px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 .character-display::before {
   content: '';
@@ -410,8 +410,8 @@ body::before {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 200px;
-  height: 200px;
+  width: 260px;
+  height: 260px;
   background: radial-gradient(circle, rgba(56,189,248,0.3) 0%, rgba(0,212,255,0.12) 35%, transparent 65%);
   pointer-events: none;
   z-index: 0;
@@ -581,63 +581,48 @@ body::before {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(99,102,241,0.5);
 }
-.cta-ring-wrapper {
+.cta-checkin-compact {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 16px auto 8px;
-  width: 130px;
-  height: 130px;
-  position: relative;
+  gap: 10px;
+  margin: 10px auto 4px;
+  padding: 10px 20px;
+  background: rgba(0,212,255,0.1);
+  border: 1px solid rgba(0,212,255,0.3);
+  border-radius: 24px;
   cursor: pointer;
-  transition: transform 0.15s;
-  border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.4), 0 4px 16px rgba(99,102,241,0.3);
+  transition: transform 0.15s, box-shadow 0.15s;
 }
-.cta-ring-wrapper:hover { transform: scale(1.05); box-shadow: 0 0 0 4px rgba(99,102,241,0.6), 0 6px 24px rgba(99,102,241,0.4); }
-.cta-ring-wrapper:active { transform: scale(0.96); }
-.cta-ring-svg {
-  width: 120px;
-  height: 120px;
+.cta-checkin-compact:hover { transform: scale(1.03); box-shadow: 0 0 12px rgba(0,212,255,0.3); }
+.cta-checkin-compact:active { transform: scale(0.97); }
+.cta-mini-ring {
+  width: 32px;
+  height: 32px;
   transform: rotate(-90deg);
+  flex-shrink: 0;
 }
-.cta-ring-bg {
+.cta-mini-ring .cta-ring-bg {
   fill: none;
   stroke: rgba(255,255,255,0.08);
-  stroke-width: 8;
+  stroke-width: 3;
 }
-.cta-ring-fill {
+.cta-mini-ring .cta-ring-fill {
   fill: none;
-  stroke: #6366F1;
-  stroke-width: 8;
+  stroke: var(--color-primary);
+  stroke-width: 3;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.6s ease;
 }
-.cta-ring-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-}
-.cta-ring-num {
-  display: block;
-  font-size: 22px;
+.cta-compact-num {
+  font-size: 16px;
   font-weight: 700;
   color: var(--color-text);
 }
-.cta-ring-label {
-  display: block;
-  font-size: 11px;
-  color: var(--color-text-light);
-  margin-top: 2px;
-}
-.cta-ring-hint {
-  text-align: center;
-  font-size: 12px;
+.cta-compact-label {
+  font-size: 14px;
   font-weight: 600;
-  color: #6366F1;
-  margin-top: 6px;
+  color: var(--color-primary);
   animation: ctaPulse 2s ease-in-out infinite;
 }
 @keyframes ctaPulse { 0%,100% { opacity: 0.7; } 50% { opacity: 1; } }
@@ -4755,18 +4740,15 @@ p { font-size: 14px; line-height: 1.6; }
             </div>
           </div>
         </div>
-        <!-- v19.3: 进度环 CTA -->
-        <div class="cta-ring-wrapper" id="ctaRingWrapper" onclick="document.querySelector('[data-page=checkin]').click()">
-          <svg class="cta-ring-svg" viewBox="0 0 100 100">
-            <circle class="cta-ring-bg" cx="50" cy="50" r="42" />
-            <circle class="cta-ring-fill" id="ctaRingFill" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264" />
+        <!-- v19.3: 紧凑打卡按钮 -->
+        <div class="cta-checkin-compact" id="ctaRingWrapper" onclick="document.querySelector('[data-page=checkin]').click()">
+          <svg class="cta-mini-ring" viewBox="0 0 36 36">
+            <circle class="cta-ring-bg" cx="18" cy="18" r="15" />
+            <circle class="cta-ring-fill" id="ctaRingFill" cx="18" cy="18" r="15" stroke-dasharray="94.2" stroke-dashoffset="94.2" />
           </svg>
-          <div class="cta-ring-text">
-            <span class="cta-ring-num" id="ctaRingNum">0/7</span>
-            <span class="cta-ring-label">今日打卡</span>
-          </div>
+          <span class="cta-compact-num" id="ctaRingNum">0/7</span>
+          <span class="cta-compact-label">▶ 开始打卡</span>
         </div>
-        <div class="cta-ring-hint">▶ 点击开始打卡</div>
         <!-- v19.3: 每日任务单 (已移除,打卡页有完整列表) -->
       </div>
       

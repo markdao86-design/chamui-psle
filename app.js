@@ -341,7 +341,7 @@ function renderDailySlotList() {
   const ringFill = document.getElementById('ctaRingFill');
   const ringNum = document.getElementById('ctaRingNum');
   if (ringFill && ringNum) {
-    const circumference = 264;
+    const circumference = 94.2;
     const pct = total > 0 ? completed / total : 0;
     ringFill.style.strokeDashoffset = circumference * (1 - pct);
     ringNum.textContent = `${completed}/${total}`;
@@ -1944,6 +1944,32 @@ function toggleDailyCheck(week, day, slot, evt) {
   setDailyCheck(state, week, day, slot, !wasChecked);
   recalcTotalPoints(state);
 
+  // v19.3: 积分审计 — 计算真实奖励(含暴击/装备加成)并写入 log
+  let reward = { pts: slotPoints(week, slot), isCrit: false, base: slotPoints(week, slot) };
+  if (!wasChecked) {
+    if (window.calcSlotReward) reward = window.calcSlotReward(state, slot, week);
+    const critExtra = reward.pts - (reward.base || slotPoints(week, slot));
+    if (critExtra > 0) {
+      state.totalPoints += critExtra;
+      if (!state.lifetimeEarned || state.totalPoints > state.lifetimeEarned) state.lifetimeEarned = state.totalPoints;
+    }
+    state.logs.push({
+      reason: `✅ 打卡 W${week} ${day} ${slot}${reward.isCrit ? ' 💥暴击' : ''} +${reward.pts}`,
+      points: critExtra,
+      type: 'slot',
+      week: state.currentWeek,
+      timestamp: Date.now()
+    });
+  } else {
+    state.logs.push({
+      reason: `↩️ 取消 W${week} ${day} ${slot}`,
+      points: 0,
+      type: 'slot_undo',
+      week: state.currentWeek,
+      timestamp: Date.now()
+    });
+  }
+
   // v17.1: 打勾(非取消)时累加 daily streak
   let streakBump = null;
   if (!wasChecked && window.bumpDailyStreak) {
@@ -1976,8 +2002,6 @@ function toggleDailyCheck(week, day, slot, evt) {
 
   const newDayComplete = isDayComplete(state, week, day);
   const newOnTrack = (calcWeekCompletion(week, state) || {}).onTrack;
-  // v19.2: 使用新积分引擎 (含暴击)
-  const reward = !wasChecked && window.calcSlotReward ? window.calcSlotReward(state, slot, week) : { pts: slotPoints(week, slot), isCrit: false };
   const pts = reward.pts;
 
   if (!wasChecked) {
@@ -4320,6 +4344,60 @@ function _checkDailyLoginBonus() {
   saveState(state);
   setTimeout(() => petSay('🌟 今日登录 +5 分! 每天打开 App 就有哦～', 5000), 1200);
 }
+
+// ============ v19.3: 积分完整性校验 ============
+function verifyPointsIntegrity() {
+  const logTotal = (state.logs || []).reduce((s, l) => s + (l.points || 0), 0);
+  const slotCalc = (function() {
+    let t = 0;
+    const weeksTouched = new Set();
+    Object.keys(state.daily || {}).forEach(w => weeksTouched.add(parseInt(w)));
+    Object.keys(state.weekly || {}).forEach(w => weeksTouched.add(parseInt(w)));
+    weeksTouched.forEach(week => { t += calcWeekDailyPoints(week, state).total; });
+    Object.entries(state.weekly || {}).forEach(([weekStr, weekData]) => {
+      if (!weekData.checkin) return;
+      const items = getWeeklyCheckinTemplate(parseInt(weekStr));
+      items.forEach(item => { if (weekData.checkin[item.id]) t += item.points; });
+    });
+    return t;
+  })();
+  const expectedMin = slotCalc + logTotal;
+  const actual = state.totalPoints || 0;
+  const lifetime = state.lifetimeEarned || 0;
+  const drift = actual - expectedMin;
+  return {
+    ok: drift >= 0 && actual <= lifetime,
+    actual, expectedMin, lifetime, drift,
+    logCount: (state.logs || []).length,
+    logTotal, slotCalc,
+    detail: drift < 0 ? '⚠️ 积分低于预期(可能丢失)' : drift > 100 ? '⚠️ 积分高于预期较多(暴击/buff累积)' : '✅ 正常'
+  };
+}
+window.verifyPointsIntegrity = verifyPointsIntegrity;
+
+// v19.3: 登录时云端对比 — 防本地数据回退
+async function _checkCloudIntegrity() {
+  if (!window.isFbReady || !isFbReady()) return;
+  try {
+    const snap = await window._fbDoc.get();
+    if (!snap.exists) return;
+    const cloud = snap.data();
+    const localPts = state.totalPoints || 0;
+    const cloudPts = cloud.totalPoints || 0;
+    const cloudLifetime = cloud.lifetimeEarned || 0;
+    if (cloudPts > localPts + 5) {
+      console.warn(`⚠️ 云端积分(${cloudPts})高于本地(${localPts}), 恢复云端数据`);
+      Object.assign(state, cloud);
+      state.totalPoints = Math.max(localPts, cloudPts);
+      state.lifetimeEarned = Math.max(state.lifetimeEarned || 0, cloudLifetime);
+      saveState(state);
+      showToast(`☁️ 已从云端恢复最新积分 (${state.totalPoints})`, 'success');
+    } else if (localPts > cloudPts + 5) {
+      console.log(`本地(${localPts})高于云端(${cloudPts}), 将同步到云端`);
+    }
+  } catch (e) { console.warn('云端校验失败:', e); }
+}
+
 
 // ============ v19.3: FTUE 首次使用引导 ============
 function _checkFTUE() {
