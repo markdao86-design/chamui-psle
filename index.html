@@ -4701,9 +4701,6 @@ p { font-size: 14px; line-height: 1.6; }
         <div class="character-display">
           <div class="character-svg" id="characterSvg"></div>
         </div>
-        <div class="character-name" id="characterName">萌新佑子</div>
-        <div class="character-title-big" id="characterTitle">刚入门的勇士</div>
-        <span class="level-badge">LV <span id="charLevelDisplay">1</span></span>
         <!-- v18 Phase 5.1: 🐣 宠物 widget (角色右下角浮窗) -->
         <div class="pet-widget" id="petWidget"></div>
 
@@ -4715,6 +4712,11 @@ p { font-size: 14px; line-height: 1.6; }
           <div class="streak-label">今天打 1 个项目, 点燃火焰</div>
           <div class="streak-hover-hint">📋 悬浮/点击看规则</div>
         </div>
+
+        <!-- 角色名+称号+LV (移到streak下方, 减少与streak间距) -->
+        <div class="character-name" id="characterName">萌新佑子</div>
+        <div class="character-title-big" id="characterTitle">刚入门的勇士</div>
+        <span class="level-badge">LV <span id="charLevelDisplay">1</span></span>
         <!-- 大字总分 -->
         <div class="big-score-block">
           <div class="big-score-num" id="bigScoreNum" title="来源: 打卡/游戏/知识树/错题 · 用途: 兑换装备/解锁龙">0</div>
