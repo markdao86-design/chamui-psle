@@ -54,6 +54,12 @@ const CHAMUI = {
     { id: 'comet',    icon: '☄️', name: '彗星轨迹',   condition: 'points',    value: 4350, hint: '累积 4350 分' },
     { id: 'unicorn',  icon: '🦄', name: '独角兽伙伴', condition: 'points',    value: 4750, hint: '累积 4750 分(神兽级)' },
     { id: 'medal',    icon: '🥇', name: '金牌得主',   condition: 'points',    value: 5300, hint: '累积 5300 分(冲刺王)' },
+    // v19.2: 死区填补装备 (5300-10000)
+    { id: 'holy_sword', icon: '🗡️', name: '圣剑',    condition: 'points',    value: 6000, hint: '累积 6000 分 · ⚔️ 暴击率 +12%' },
+    { id: 'castle',   icon: '🏰', name: '城堡盾',     condition: 'points',    value: 6800, hint: '累积 6800 分 · ⚔️ 全局 +20%' },
+    { id: 'wolf',     icon: '🐺', name: '狼伙伴',     condition: 'points',    value: 7600, hint: '累积 7600 分 · ⚔️ combo ×1.3' },
+    { id: 'ocean',    icon: '🌊', name: '海洋之心',   condition: 'points',    value: 8500, hint: '累积 8500 分 · ⚔️ 每日 +8' },
+    { id: 'trident',  icon: '🔱', name: '三叉戟',     condition: 'points',    value: 9200, hint: '累积 9200 分 · ⚔️ mini-game +5' },
     // v18.55: 双层龙 — 银龙(打卡线) + 金龙(深学线)
     { id: 'silver_dragon', icon: '🐲', name: '银龙伙伴', condition: 'points', value: 10000, hint: '累积 10000 分 = SGD 500 (打卡之王 — 习惯养成奖励)' },
     { id: 'dragon',   icon: '🐉', name: '金龙伙伴',   condition: 'points',    value: 30000, hint: '105/105 ⭐ + ≥10000 分 = SGD 1500 (传说级 — 真本事奖励, 知识树全 3⭐ 才解锁)' },

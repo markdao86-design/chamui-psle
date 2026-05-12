@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "chamui-psle",
     "public": ".",
     "ignore": [
       "firebase.json",

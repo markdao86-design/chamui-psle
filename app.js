@@ -24,6 +24,8 @@ async function init() {
   }
   recalcTotalPoints(state);
   if (window._loadMastered) window._loadMastered(state);
+  // v19.2: 一次性修复仓鼠形态倒退 (之前已解锁 formIdx=3)
+  if (state.pet && state.pet.formIdx < 3) { state.pet.formIdx = 3; saveState(state); }
   // 启动时若当前真实日期在本周内,默认选今天
   const today = todayDayKeyForWeek(state.currentWeek);
   if (today) selectedDay = today;
@@ -31,12 +33,21 @@ async function init() {
   renderAll();
   updateSyncBadge(typeof getFbStatus === 'function' ? getFbStatus() : 'local');
   // 异步拉照片 key cache,完了再 rerender
-  refreshPhotoKeyCache().then(() => renderAll()).catch(() => {});
+  refreshPhotoKeyCache().then(() => {
+    renderAll();
+    // v19.2: 自动补传本地照片到云端 (供家长远程审核)
+    if (window.syncLocalPhotosToCloud && isFbReady()) {
+      window.syncLocalPhotosToCloud().then(n => {
+        if (n > 0) { showToast(`☁️ 已补传 ${n} 张照片到云端`, 'success'); renderAll(); }
+      }).catch(e => console.warn('补传失败:', e));
+    }
+  }).catch(() => {});
   // v18 Phase 5.1: 每日抽奖检查 + 成就 init 检查
   setTimeout(() => {
     _checkDailyLoginBonus();   // v18.86: 每日登录 +5 分
     _checkDailyDrawOnInit();
     _checkAndUnlockAch();
+    _checkFTUE();              // v19.3: 首次引导
   }, 800);
   // v18.20 A: 启动仓鼠周期性鼓励
   if (typeof _startPetIdleTalk === 'function') _startPetIdleTalk();
@@ -261,6 +272,37 @@ function renderDashboard() {
   document.getElementById('monthPoints').textContent = monthPoints;
   document.getElementById('streakWeeks').textContent = state.streakBonusCount;
 
+  // v19.2: 战力 + 章节 + 下一目标
+  const powerEl = document.getElementById('powerChapterBar');
+  if (powerEl && window.getCharacterPower && window.getCurrentChapter) {
+    const power = window.getCharacterPower(state);
+    const chapter = window.getCurrentChapter(points);
+    const nextCh = window.getNextChapter(points);
+    const streakDays = (state.dailyStreak && state.dailyStreak.days) || 0;
+    const sMult = window.getStreakMultiplier(streakDays, power.streakBoost);
+    const critPct = Math.round(power.critChance * 100);
+    let nextTarget = '';
+    if (nextCh) {
+      nextTarget = `<span style="font-size:11px;color:var(--color-text-light)">下一章: ${nextCh.title} (差 ${nextCh.pts - points} 分)</span>`;
+    }
+    const nextEq = window.CHAMUI ? window.CHAMUI.equipment
+      .filter(e => e.condition === 'points' && e.value > points)
+      .sort((a,b) => a.value - b.value)[0] : null;
+    const nextEqHtml = nextEq ? `<span style="font-size:11px;color:var(--color-text-light)">下一装备: ${nextEq.icon} ${nextEq.name} (差 ${nextEq.value - points} 分)</span>` : '';
+    // v19.3: 火焰等级+幸运星 (具象化)
+    const fireLevel = streakDays >= 30 ? '🔥🔥🔥🔥🔥' : streakDays >= 21 ? '🔥🔥🔥🔥' : streakDays >= 14 ? '🔥🔥🔥' : streakDays >= 7 ? '🔥🔥' : streakDays >= 3 ? '🔥' : '';
+    const luckyStars = critPct >= 25 ? '★★★★★' : critPct >= 21 ? '★★★★☆' : critPct >= 16 ? '★★★☆☆' : critPct >= 11 ? '★★☆☆☆' : '★☆☆☆☆';
+    powerEl.innerHTML = `
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:4px">
+        <span class="power-badge">⚔️ 战力 ${power.powerScore}</span>
+        ${fireLevel ? `<span class="power-badge" style="background:rgba(255,107,53,0.15);color:#FF6B35;border-color:rgba(255,107,53,0.3)">${fireLevel}</span>` : ''}
+        <span class="power-badge" style="background:rgba(168,85,247,0.12);color:#A855F7;border-color:rgba(168,85,247,0.3)">幸运 ${luckyStars}</span>
+      </div>
+      <div class="chapter-badge">${chapter.title}</div>
+      <div style="margin-top:4px;display:flex;flex-direction:column;gap:2px">${nextEqHtml}${nextTarget}</div>
+    `;
+  }
+
   // v17.6: renderIronRule() 已移除
   renderWowCard();  // v17.1
   renderMysteryBoxCard();  // v17.5
@@ -332,37 +374,37 @@ function renderDragonProgress() {
     </div>
 
     <!-- 银龙契约卡 -->
-    <div style="display:flex;align-items:center;gap:10px;padding:8px;background:${silverDone ? 'linear-gradient(135deg,#F5F5F5,#E0E0E0)' : '#FAFAFA'};border:2px solid ${silverDone ? '#888' : '#DDD'};border-radius:10px;margin-bottom:8px">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px;background:${silverDone ? 'linear-gradient(135deg,rgba(192,192,192,0.15),rgba(128,128,128,0.1))' : 'var(--color-card-soft)'};border:2px solid ${silverDone ? 'rgba(192,192,192,0.5)' : 'var(--color-border)'};border-radius:10px;margin-bottom:8px">
       <div style="flex-shrink:0">${silverIcon}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:900;color:${silverDone ? '#444' : '#888'}">🐲 银龙 · 守护契约 ${silverDone ? '<span style="color:#2E7D32">✅ 已觉醒</span>' : ''}</div>
-        <div style="font-size:11px;color:#666;margin:2px 0 4px">${silverDone ? '永久 +10% mini-game 奖励 · 称号: 银龙骑士' : '⚡ 力量值 (积分)'}</div>
-        ${silverDone ? '' : `<div style="background:#E0E0E0;border-radius:6px;height:8px;overflow:hidden;border:1px solid #999">
-          <div style="background:linear-gradient(90deg,#999,#ddd);height:100%;width:${silverPct}%;transition:width 0.5s"></div>
+        <div style="font-size:13px;font-weight:900;color:${silverDone ? '#C0C0C0' : 'var(--color-text-light)'}">🐲 银龙 · 守护契约 ${silverDone ? '<span style="color:#00FF88">✅ 已觉醒</span>' : ''}</div>
+        <div style="font-size:11px;color:var(--color-text-light);margin:2px 0 4px">${silverDone ? '永久 +10% mini-game 奖励 · 称号: 银龙骑士' : '⚡ 力量值 (积分)'}</div>
+        ${silverDone ? '' : `<div style="background:var(--color-card-soft);border-radius:6px;height:8px;overflow:hidden;border:1px solid rgba(192,192,192,0.3)">
+          <div style="background:linear-gradient(90deg,#C0C0C0,#E0E0E0);height:100%;width:${silverPct}%;transition:width 0.5s"></div>
         </div>
-        <div style="font-size:10px;color:#666;margin-top:2px;display:flex;justify-content:space-between">
+        <div style="font-size:10px;color:var(--color-text-light);margin-top:2px;display:flex;justify-content:space-between">
           <span>${pts.toLocaleString()} / 10,000</span><span><b>${silverPct}%</b></span>
         </div>`}
       </div>
     </div>
 
     <!-- 金龙契约卡 -->
-    <div style="display:flex;align-items:center;gap:10px;padding:8px;background:${goldDone ? 'linear-gradient(135deg,#FFF3C4,#FFD700)' : 'linear-gradient(135deg,#FFFEF5,#FFF8E0)'};border:2px solid ${goldDone ? '#DAA520' : '#E5C870'};border-radius:10px;${goldDone ? 'box-shadow:0 0 16px rgba(255,215,0,0.4)' : ''}">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px;background:${goldDone ? 'linear-gradient(135deg,rgba(255,215,0,0.15),rgba(218,165,32,0.1))' : 'linear-gradient(135deg,rgba(255,215,0,0.05),rgba(255,183,0,0.03))'};border:2px solid ${goldDone ? '#DAA520' : 'rgba(218,165,32,0.3)'};border-radius:10px;${goldDone ? 'box-shadow:0 0 16px rgba(255,215,0,0.4)' : ''}">
       <div style="flex-shrink:0">${goldIcon}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:900;color:#7A5C00">🐉 金龙 · 传说契约 ${goldDone ? '<span style="color:#B8860B">👑 已觉醒</span>' : ''}</div>
+        <div style="font-size:13px;font-weight:900;color:#FFD700">🐉 金龙 · 传说契约 ${goldDone ? '<span style="color:#FFD700">👑 已觉醒</span>' : ''}</div>
         ${goldDone
-          ? '<div style="font-size:11px;color:#5D4500">永久 +20% 奖励 · 称号: 金龙之王 · 第二宠物解锁</div>'
-          : `<div style="font-size:10px;color:#7A5C00;margin:2px 0 4px">⚡ 力量值 ${pts}/10000 · ✨ 智慧值 ${totalStars}/105 ⭐ (双门槛)</div>
+          ? '<div style="font-size:11px;color:var(--color-text-light)">永久 +20% 奖励 · 称号: 金龙之王 · 第二宠物解锁</div>'
+          : `<div style="font-size:10px;color:#FFD700;margin:2px 0 4px">⚡ 力量值 ${pts}/10000 · ✨ 智慧值 ${totalStars}/105 ⭐ (双门槛)</div>
              <div style="display:flex;gap:6px;align-items:center;margin-bottom:3px">
-               <span style="font-size:9px;color:#7A5C00;min-width:14px">⚡</span>
-               <div style="flex:1;background:#FFF;border-radius:6px;height:8px;overflow:hidden;border:1px solid #DAA520">
+               <span style="font-size:9px;color:#FFD700;min-width:14px">⚡</span>
+               <div style="flex:1;background:var(--color-card-soft);border-radius:6px;height:8px;overflow:hidden;border:1px solid rgba(218,165,32,0.4)">
                  <div style="background:linear-gradient(90deg,#FFA500,#FFD700);height:100%;width:${goldPtsPct}%"></div>
                </div>
              </div>
              <div style="display:flex;gap:6px;align-items:center">
-               <span style="font-size:9px;color:#7A5C00;min-width:14px">✨</span>
-               <div style="flex:1;background:#FFF;border-radius:6px;height:8px;overflow:hidden;border:1px solid #DAA520">
+               <span style="font-size:9px;color:#FFD700;min-width:14px">✨</span>
+               <div style="flex:1;background:var(--color-card-soft);border-radius:6px;height:8px;overflow:hidden;border:1px solid rgba(218,165,32,0.4)">
                  <div style="background:linear-gradient(90deg,#FF8C00,#FFD700);height:100%;width:${goldStarPct}%"></div>
                </div>
              </div>`}
@@ -857,7 +899,7 @@ function submitTipQ(tipKey, qIdx, selected, correct) {
   const tipSubj = tipKey.includes('英语') ? 'grammar' : tipKey.includes('科学') ? 'scilab' : tipKey.includes('数学') ? 'math' : null;
   if (tipSubj) {
     if (!state.gameStats) state.gameStats = {};
-    if (!state.gameStats[tipSubj]) state.gameStats[tipSubj] = { difficulty: 3, recent: [] };
+    if (!state.gameStats[tipSubj]) state.gameStats[tipSubj] = { difficulty: 4, recent: [] };
     const tgs = state.gameStats[tipSubj];
     if (!tgs.cumCorrect) tgs.cumCorrect = 0;
     if (!tgs.cumTotal) tgs.cumTotal = 0;
@@ -949,7 +991,7 @@ function renderReportHtml(r) {
     <tr><td>${DAY_LABELS[it.day]} ${it.slot}</td><td>${escapeHtml(it.task)}</td><td><b>${it.score}/${it.max}</b> (${it.pct}%)</td></tr>
   `).join('');
   const missedRows = r.missed.map(m => `
-    <li>${m.dayLabel} ${m.slot} <span style="color:#666">— ${escapeHtml(m.task)}</span></li>
+    <li>${m.dayLabel} ${m.slot} <span style="color:var(--color-text-light)">— ${escapeHtml(m.task)}</span></li>
   `).join('');
   const keyMissingRows = r.keySlotsMissing.map(k => `
     <li><b style="color:#FF9F45">🎯 必做</b> ${DAY_LABELS[k.day]} ${k.slot} — ${escapeHtml(k.task)}</li>
@@ -959,11 +1001,11 @@ function renderReportHtml(r) {
     ? `<ul>${r.coachFocus.points.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>` : '';
   const weakHtml = r.coachWeakAdvice
     ? `<p><b>弱项:${escapeHtml(r.coachWeakAdvice.subject)}</b> 平均 ${r.coachWeakAdvice.avgPct}%</p><p>${escapeHtml(r.coachWeakAdvice.advice)}</p>`
-    : '<p style="color:#666">暂无明显弱项;继续保持各科均衡</p>';
+    : '<p style="color:var(--color-text-light)">暂无明显弱项;继续保持各科均衡</p>';
   const nextHtml = r.nextWeek ? `
     <p><b>W${r.nextWeek.week} ${escapeHtml(r.nextWeek.dateRange)} — ${escapeHtml(r.nextWeek.theme)}${r.nextWeek.isHard ? ' ⭐ 难章周' : ''}</b></p>
     ${r.nextWeek.focus.length ? `<ul>${r.nextWeek.focus.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>` : ''}
-  ` : '<p style="color:#666">已是最后一周</p>';
+  ` : '<p style="color:var(--color-text-light)">已是最后一周</p>';
 
   return `
     <div class="report-doc">
@@ -974,10 +1016,10 @@ function renderReportHtml(r) {
 
       <h2>1️⃣ 本周完成情况</h2>
       <div class="report-grid">
-        <div><b>完成率</b><div style="font-size:36px">${r.completion.percent}%</div><div style="color:#666">${r.completion.done}/${r.completion.total} 个项目</div></div>
-        <div><b>本周得分</b><div style="font-size:36px;color:#FF6B6B">${r.points.weekTotal}</div><div style="color:#666">项目分 ${r.points.slot} + 全勤 ${r.points.combo} + 复盘 ${r.points.review}</div></div>
-        <div><b>累计 / 等级</b><div style="font-size:24px">⭐ ${r.points.grandTotal}</div><div style="color:#666">Lv${r.level.lv} ${escapeHtml(r.level.name)}</div></div>
-        <div><b>击败同岛同学</b><div style="font-size:24px;color:#A788E0">${r.beat.pct}%</div><div style="color:#666">约 ${r.beat.count.toLocaleString('en-US')} 名</div></div>
+        <div><b>完成率</b><div style="font-size:36px">${r.completion.percent}%</div><div style="color:var(--color-text-light)">${r.completion.done}/${r.completion.total} 个项目</div></div>
+        <div><b>本周得分</b><div style="font-size:36px;color:#FF6B6B">${r.points.weekTotal}</div><div style="color:var(--color-text-light)">项目分 ${r.points.slot} + 全勤 ${r.points.combo} + 复盘 ${r.points.review}</div></div>
+        <div><b>累计 / 等级</b><div style="font-size:24px">⭐ ${r.points.grandTotal}</div><div style="color:var(--color-text-light)">Lv${r.level.lv} ${escapeHtml(r.level.name)}</div></div>
+        <div><b>击败同岛同学</b><div style="font-size:24px;color:#A788E0">${r.beat.pct}%</div><div style="color:var(--color-text-light)">约 ${r.beat.count.toLocaleString('en-US')} 名</div></div>
       </div>
 
       <h2>2️⃣ 教练诊断</h2>
@@ -1063,7 +1105,7 @@ function renderWeeklyCoach() {
           const al = pct !== null ? _accToAL(pct) : null;
           const isWeak = pct !== null && pct < 70;
           const barColor = pct === null ? '#DDD' : pct >= 80 ? '#52C788' : pct >= 60 ? '#F59E0B' : '#EF4444';
-          const alStyle = isWeak ? 'background:#FFECEC;color:#D32F2F' : 'background:#EEF4FF;color:#1565C0';
+          const alStyle = isWeak ? 'background:rgba(255,51,102,0.12);color:#FF3366' : 'background:rgba(0,212,255,0.1);color:#00D4FF';
           const detail = d ? `答对 ${d.correct} 题 / 共 ${d.total} 题 · 已练 ${d.runs} 局` : '';
           return `<div class="coach-subject-card" style="border-left-color:${s.color}">
             <div class="coach-subject-header">
@@ -1078,7 +1120,7 @@ function renderWeeklyCoach() {
                 <div class="coach-subject-bar" style="width:${pct}%;background:${barColor}"></div>
               </div>
               <div style="font-size:11px;color:var(--color-text-light);margin-top:2px">${detail}</div>
-            ` : '<div class="coach-subject-pct" style="color:#BBB;font-size:12px;font-weight:400">暂无数据 — 玩 mini-game 积累</div>'}
+            ` : '<div class="coach-subject-pct" style="color:var(--color-text-dim);font-size:12px;font-weight:400">暂无数据 — 玩 mini-game 积累</div>'}
           </div>`;
         }).join('')}
       </div>
@@ -1089,27 +1131,43 @@ function renderWeeklyCoach() {
   const todayKey = new Date().toISOString().slice(0, 10);
   const todayLogs = (state.logs || []).filter(l => l.timestamp && new Date(l.timestamp).toISOString().slice(0, 10) === todayKey);
   const todayPoints = todayLogs.reduce((s, l) => s + (l.points || 0), 0);
-  const todayGames = Object.keys(state._dailyGameCounts || {}).reduce((s, k) => s + ((state._dailyGameCounts[k] || {})[todayKey] || 0), 0);
-  const todayGameLogs = todayLogs.filter(l => (l.reason || '').includes('🎮'));
   const todayErrorLogs = todayLogs.filter(l => (l.reason || '').includes('📓'));
+
+  // 今日各科游戏正确率
+  const _gameSubjLabel = { math:'🔢数学', unit:'🔢单位', grammar:'✏️语法', cloze:'📝完形', editing:'🔍Editing', vocab:'📚词汇', listen:'🎧听力', scimcq:'🔬科学', scilab:'🧪分类', chinese:'🇨🇳华文' };
+  const todayGameDetails = [];
+  Object.entries(stats).forEach(([gk, gs]) => {
+    if (!gs.recent) return;
+    gs.recent.forEach(r => {
+      if (r.date === todayKey) todayGameDetails.push({ game: gk, correct: r.correct, total: r.total, accuracy: r.accuracy });
+    });
+  });
+  const todayGamesCount = todayGameDetails.length;
+  const todayGameHtml = todayGameDetails.length > 0
+    ? todayGameDetails.map(g => {
+        const pct = Math.round((g.accuracy || 0) * 100);
+        const color = pct >= 80 ? '#00FF88' : pct >= 60 ? '#FFB800' : '#FF3366';
+        return `<span style="display:inline-block;background:var(--color-card-soft);border-radius:4px;padding:2px 6px;margin:2px;font-size:11px">${_gameSubjLabel[g.game] || g.game} <b style="color:${color}">${g.correct}/${g.total} (${pct}%)</b></span>`;
+      }).join('')
+    : '<span style="color:var(--color-text-light)">今天还没玩游戏</span>';
 
   const trainStatHtml = `
     <div class="coach-section">
       <div class="coach-section-title">📈 今日训练统计</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px;text-align:center">
-        <div style="background:#F0FFF4;border-radius:8px;padding:8px 4px">
-          <div style="font-size:18px;font-weight:900;color:#2E7D32">+${todayPoints}</div>
-          <div style="color:#666">今日积分</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;text-align:center">
+        <div style="background:rgba(0,255,136,0.08);border-radius:8px;padding:8px 4px">
+          <div style="font-size:18px;font-weight:900;color:#00FF88">+${todayPoints}</div>
+          <div style="color:var(--color-text-light)">今日积分</div>
         </div>
-        <div style="background:#EEF2FF;border-radius:8px;padding:8px 4px">
-          <div style="font-size:18px;font-weight:900;color:#1565C0">${todayGames}</div>
-          <div style="color:#666">游戏局数</div>
-        </div>
-        <div style="background:#FFF8E1;border-radius:8px;padding:8px 4px">
-          <div style="font-size:18px;font-weight:900;color:#E65100">${todayErrorLogs.length}</div>
-          <div style="color:#666">错题消灭</div>
+        <div style="background:rgba(255,183,0,0.08);border-radius:8px;padding:8px 4px">
+          <div style="font-size:18px;font-weight:900;color:#FFB800">${todayErrorLogs.length}</div>
+          <div style="color:var(--color-text-light)">错题消灭</div>
         </div>
       </div>
+      ${todayGamesCount > 0 ? `<div style="margin-top:8px;padding:8px;background:rgba(0,212,255,0.06);border-radius:8px">
+        <div style="font-size:12px;font-weight:700;color:var(--color-primary);margin-bottom:4px">🎮 今日游戏 (${todayGamesCount} 局)</div>
+        <div style="line-height:1.8">${todayGameHtml}</div>
+      </div>` : ''}
       <div style="font-size:11px;color:var(--color-text-light);margin-top:6px;line-height:1.5">
         💡 积分来源: 打卡主线(slot+全勤奖)为主 > 错题训练(+2/题) > mini-game(+3/满分局)
       </div>
@@ -1378,7 +1436,7 @@ function renderCheckinPage() {
   // v18.52: 95% 休息提示 (防沉迷第3闸 — 软提醒, 不扣分)
   const wkComp = calcWeekCompletion(week, state);
   const restBanner = (wkComp && wkComp.percent >= 95)
-    ? `<div class="rest-banner" style="background:linear-gradient(135deg,#FFF8E7,#FFE0B2);border:2px dashed #FF9800;border-radius:10px;padding:12px;margin:8px 0;text-align:center;font-size:13px;color:#5D4037">🛋️ <b>本周已完成 ${wkComp.percent}%</b> · 剩下的可以休息了, 大脑也需要 recovery · PSLE 是马拉松不是冲刺</div>`
+    ? `<div class="rest-banner" style="background:linear-gradient(135deg,rgba(255,183,0,0.08),rgba(255,107,53,0.06));border:2px dashed rgba(255,152,0,0.4);border-radius:10px;padding:12px;margin:8px 0;text-align:center;font-size:13px;color:var(--color-text)">🛋️ <b>本周已完成 ${wkComp.percent}%</b> · 剩下的可以休息了, 大脑也需要 recovery · PSLE 是马拉松不是冲刺</div>`
     : '';
 
   // === 2) 日期 Tab ===
@@ -1408,6 +1466,20 @@ function renderCheckinPage() {
   // === 3) 当日任务列表 ===
   const dayTasks = getDailyTasks(week, selectedDay);
   const allDoneToday = dayTasks.length > 0 && dayTasks.every(t => getDailyCheck(state, week, selectedDay, t.slot));
+
+  // v19.2: 分层逻辑
+  const tier1Tasks = dayTasks.filter(t => (SLOT_TIER[t.slot] || 3) === 1);
+  const tier2Tasks = dayTasks.filter(t => (SLOT_TIER[t.slot] || 3) === 2);
+  const tier3Tasks = dayTasks.filter(t => (SLOT_TIER[t.slot] || 3) === 3);
+  const tier1AllDone = tier1Tasks.length > 0 && tier1Tasks.every(t => getDailyCheck(state, week, selectedDay, t.slot));
+  const tier2AllDone = tier2Tasks.length > 0 && tier2Tasks.every(t => getDailyCheck(state, week, selectedDay, t.slot));
+  const now = new Date();
+  const pastBedtime = now.getHours() > BEDTIME_HOUR || (now.getHours() === BEDTIME_HOUR && now.getMinutes() >= BEDTIME_MIN);
+  const expandedKey = `tier_expanded_${selectedDay}`;
+  const manualExpand = sessionStorage.getItem(expandedKey);
+  const showTier2 = tier1AllDone || manualExpand >= '2';
+  const showTier3 = (tier2AllDone && tier1AllDone && !pastBedtime) || manualExpand >= '3';
+
   // v18.23: 周末按 上午/下午/晚上 分段, 段间显示休息/外课说明
   const SECTION_BY_SLOT = {
     WSE: 'AM', WSF: 'AM', WSS: 'AM', WSL: 'AM',
@@ -1448,8 +1520,11 @@ function renderCheckinPage() {
       const tip = getTaskTip(t.task);
       const sc = getScore(state, week, selectedDay, t.slot);
       const cloudInfo = state.cloudPhotos && state.cloudPhotos[photoKey(week, selectedDay, t.slot)];
-      const verifyBadge = cloudInfo ? (cloudInfo.verified ? '✅' : '☁️') : '';
-      const photoBtn = (hasPhoto || cloudInfo)
+      const isRejected = cloudInfo && cloudInfo.rejected;
+      const verifyBadge = cloudInfo ? (isRejected ? '❌' : cloudInfo.verified ? '✅' : '☁️') : '';
+      const photoBtn = isRejected
+        ? `<button class="photo-btn has-photo" style="border-color:var(--color-danger);color:var(--color-danger)" onclick="event.stopPropagation(); pickPhotoForSlot(${week}, '${selectedDay}', '${t.slot}')" title="照片被驳回,请重新上传">❌📷</button>`
+        : (hasPhoto || cloudInfo)
         ? `<button class="photo-btn has-photo" onclick="event.stopPropagation(); viewPhoto(${week}, '${selectedDay}', '${t.slot}')" title="看作业照">📸${verifyBadge}</button>`
         : `<button class="photo-btn" onclick="event.stopPropagation(); pickPhotoForSlot(${week}, '${selectedDay}', '${t.slot}')" title="传作业照">📷</button>`;
       const scoreBtn = sc
@@ -1515,14 +1590,19 @@ function renderCheckinPage() {
           ktHintHtml = _buildKtHintCard(hit.node, ktKey, hit.idx, state);
         }
       }
+      const tier = SLOT_TIER[t.slot] || 3;
+      const tierHidden = (tier === 2 && !showTier2) || (tier === 3 && !showTier3);
+      const tierClass = tier === 1 ? 'tier-core' : tier === 2 ? 'tier-extend' : 'tier-bonus';
+      const sizeClass = (SLOT_BASE_POINTS[t.slot] || 2) >= 7 ? 'task-large' : 'task-small';
       return sectionHeader + `
-        <div class="checkin-item ${checked ? 'checked' : ''} ${isKey ? 'key-slot' : ''}" data-slot="${t.slot}"
+        <div class="checkin-item ${checked ? 'checked' : ''} ${isKey ? 'key-slot' : ''} ${tierClass} ${sizeClass}" data-slot="${t.slot}" data-tier="${tier}"
+             ${tierHidden ? 'style="display:none"' : ''}
              onclick="toggleDailyCheck(${week}, '${selectedDay}', '${t.slot}', event)">
           <div class="checkin-content">
             <div class="check-circle"></div>
             <div class="checkin-info">
               <div class="checkin-title">${escapeHtml(t.task)} ${keyChip}</div>
-              <div class="checkin-desc">⏰ ${escapeHtml(t.time)}</div>
+              <div class="checkin-desc">⏰ ${escapeHtml(t.time)} · <span class="pts-preview">⚔️ +${pts}</span></div>
               ${tipLine}
               ${listenTipLine}
               ${compTipLine}
@@ -1538,12 +1618,21 @@ function renderCheckinPage() {
         </div>
       ` + ktHintHtml;
     }).join('');
-    // Day combo banner
-    if (allDoneToday) {
-      slotsHtml += `<div class="combo-banner">🔥 当日全勾!额外 +${DAY_COMBO_POINTS} 分全勤奖!</div>`;
+    // v19.2: tier-based combo + expand buttons
+    if (tier1AllDone && tier2AllDone && allDoneToday) {
+      slotsHtml += `<div class="combo-banner">🔥 完美日! 核心 +${CORE_COMBO} · 建议 +${EXTEND_COMBO} · 完美 +${PERFECT_COMBO} = 全勤 +${CORE_COMBO + EXTEND_COMBO + PERFECT_COMBO}!</div>`;
+    } else if (tier1AllDone) {
+      slotsHtml += `<div class="combo-banner" style="background:linear-gradient(135deg,rgba(0,255,136,0.08),rgba(0,212,255,0.06))">🎯 核心全勤! +${CORE_COMBO} 分!</div>`;
+      if (!showTier2) {
+        slotsHtml += `<button class="tier-expand-btn" onclick="event.stopPropagation(); sessionStorage.setItem('${expandedKey}','2'); renderCheckinPage()">🎁 解锁支线挑战 (+${tier2Tasks.length} 项)</button>`;
+      } else if (tier2AllDone && !showTier3 && !pastBedtime) {
+        slotsHtml += `<button class="tier-expand-btn" onclick="event.stopPropagation(); sessionStorage.setItem('${expandedKey}','3'); renderCheckinPage()">🔮 解锁隐藏关卡 (+${tier3Tasks.length} 项)</button>`;
+      } else if (pastBedtime && !showTier3) {
+        slotsHtml += `<div class="combo-hint">🌙 21:30 到了, 该休息了! 明天继续 💪</div>`;
+      }
     } else {
-      const left = dayTasks.length - dayTasks.filter(t => getDailyCheck(state, week, selectedDay, t.slot)).length;
-      slotsHtml += `<div class="combo-hint">💡 还差 <b>${left}</b> 个,全勾再拿 <b>+${DAY_COMBO_POINTS}</b> 分全勤奖</div>`;
+      const coreLeft = tier1Tasks.filter(t => !getDailyCheck(state, week, selectedDay, t.slot)).length;
+      slotsHtml += `<div class="combo-hint">🎯 核心还差 <b>${coreLeft}</b> 个 → 全勾拿 <b>+${CORE_COMBO}</b> 核心全勤奖</div>`;
     }
   }
 
@@ -1579,7 +1668,12 @@ function renderCheckinPage() {
     `;
   }
 
-  list.innerHTML = goalBanner + restBanner + dayTabs + `<div class="day-slots">${slotsHtml}</div>` + summary + adminHtml;
+  // v19.3: 情绪安全阀
+  const safetyValve = `<div style="text-align:center;margin-top:16px;padding:12px;border-radius:10px;background:var(--color-card-soft)">
+    <button onclick="_emotionSafeExit()" style="background:none;border:none;color:var(--color-text-light);font-size:13px;cursor:pointer;padding:8px 16px">🐹 今天状态不好? 点这里休息</button>
+  </div>`;
+
+  list.innerHTML = goalBanner + restBanner + dayTabs + `<div class="day-slots">${slotsHtml}</div>` + safetyValve + summary + adminHtml;
 }
 
 function countDayDone(week, day) {
@@ -1757,6 +1851,14 @@ function _renderMindmap(subjectName, data) {
     <div class="mindmap-legend">💡 看完点击下方每个气泡对应的卡片, 知道<b>为什么</b>错 + <b>怎么练</b></div>`;
 }
 
+// v19.3: 情绪安全阀 — 不扣分, 不断streak, 仅降低当日期望
+function _emotionSafeExit() {
+  petSay('🐹 没关系! 休息也是变强的一部分。今天就到这里吧, 明天我们继续!', 8000);
+  showToast('🌙 已切换为休息模式 — 今天不扣分', 'success');
+  if (window.petExpress) petExpress('pet-happy', 3000);
+}
+window._emotionSafeExit = _emotionSafeExit;
+
 function selectDay(day) {
   selectedDay = day;
   renderCheckinPage();
@@ -1811,15 +1913,28 @@ function toggleDailyCheck(week, day, slot, evt) {
 
   const newDayComplete = isDayComplete(state, week, day);
   const newOnTrack = (calcWeekCompletion(week, state) || {}).onTrack;
-  const pts = slotPoints(week, slot);
+  // v19.2: 使用新积分引擎 (含暴击)
+  const reward = !wasChecked && window.calcSlotReward ? window.calcSlotReward(state, slot, week) : { pts: slotPoints(week, slot), isCrit: false };
+  const pts = reward.pts;
 
   if (!wasChecked) {
-    // 浮动 +N 动画(高分 slot 用大字)
-    spawnFloatPoints(`+${pts}`, evt, pts >= 3);
+    // v19.2: 暴击闪光
+    if (reward.isCrit) {
+      const flash = document.createElement('div');
+      flash.className = 'crit-flash';
+      document.body.appendChild(flash);
+      setTimeout(() => flash.remove(), 700);
+      spawnFloatPoints(`💥 专注暴击! +${pts}`, evt, true);
+      if (typeof petCelebrate === 'function') petCelebrate('💥 你的专注触发了暴击!');
+    } else {
+      // v19.3: 显示装备加成具体数字
+      const equipBonus = pts - reward.base;
+      const bonusText = equipBonus > 0 ? ` (装备+${equipBonus})` : '';
+      spawnFloatPoints(`+${pts}${bonusText}`, evt, pts >= 8);
+      if (typeof petCelebrate === 'function') petCelebrate(pts >= 10 ? '💪 大任务完成!' : '👍 干得好!');
+    }
     // 大分数块脉动
     pulseScoreBlock();
-    // v18.20 A+E: 仓鼠庆祝 + 彩虹扫过
-    if (typeof petCelebrate === 'function') petCelebrate('💪 干得漂亮!');
     if (typeof _rainbowSweep === 'function') _rainbowSweep();
     // v17.5 Phase 2: 新宝箱提示 (在 streak 庆祝之前)
     if (newBoxes > 0) {
@@ -1860,6 +1975,8 @@ function toggleDailyCheck(week, day, slot, evt) {
       }, 400);
     }
     checkLevelUp(oldPoints, state.totalPoints);
+    // v19.2: 打卡后触发奖励关 (延迟 1.2s 让打卡动画先播完)
+    setTimeout(() => _triggerGameReward(week, selectedDay, slot), 1200);
   } else {
     showToast(`↩️ 取消勾选`, 'warn');
     if (oldDayComplete && !newDayComplete) {
@@ -1871,6 +1988,88 @@ function toggleDailyCheck(week, day, slot, evt) {
   }
 
   renderAll();
+}
+
+// ============ v19.2: 打卡后奖励关触发 ============
+const SLOT_TO_GAME = {
+  'Comprehension': ['grammar', 'cloze'], 'Grammar': ['grammar'], 'Editing': ['editing'],
+  '作文': ['grammar', 'vocab'], 'Cloze': ['cloze'], '听力': ['listen'], '口试': ['listen', 'vocab'],
+  '🔬': ['scimcq', 'scilab'], '➗': ['math', 'unit'],
+  '华文': ['chinese'], 'Vocabulary': ['vocab'], 'vocab': ['vocab']
+};
+const GAME_WEIGHT = { grammar:5, cloze:5, editing:5, vocab:4, listen:4, scimcq:3, scilab:2, math:2, unit:1, chinese:1 };
+const GAME_NAMES = { grammar:'Grammar MCQ', cloze:'Cloze 完形', editing:'Editing 找错', vocab:'词汇连连看', listen:'听写练习', scimcq:'科学 MCQ', scilab:'科学分类', math:'数学速算', unit:'单位换算', chinese:'华文 MCQ' };
+
+function _triggerGameReward(week, day, slot) {
+  if (!state._gameTriggersToday) state._gameTriggersToday = { date: new Date().toISOString().slice(0,10), count: 0, bossUsed: false };
+  const todayKey = new Date().toISOString().slice(0,10);
+  if (state._gameTriggersToday.date !== todayKey) state._gameTriggersToday = { date: todayKey, count: 0, bossUsed: false };
+  if (state._gameTriggersToday.count >= 3) return;
+
+  const tier = SLOT_TIER[slot] || 3;
+  if (tier !== 1) return;
+
+  const dayTasks = getDailyTasks(week, day);
+  const coreTasks = dayTasks.filter(t => (SLOT_TIER[t.slot] || 3) === 1);
+  const coreAllDone = coreTasks.every(t => getDailyCheck(state, week, day, t.slot));
+
+  // v19.3: 只在核心全完后触发, 不中途弹出
+  if (!coreAllDone) return;
+
+  let isBoss = false;
+  if (!state._gameTriggersToday.bossUsed) {
+    isBoss = true;
+  } else if (state._gameTriggersToday.count >= 2) {
+    return;
+  }
+
+  const wt = getWeekTasks(week);
+  const taskText = (wt && wt.days[day] && wt.days[day][slot]) || '';
+  let candidates = [];
+  for (const [keyword, games] of Object.entries(SLOT_TO_GAME)) {
+    if (taskText.includes(keyword)) candidates.push(...games);
+  }
+  if (candidates.length === 0) candidates = Object.keys(GAME_WEIGHT);
+  candidates = [...new Set(candidates)];
+  const todayPlayed = state.gameDailyCount ? Object.keys(state.gameDailyCount.counts || {}).filter(k => (state.gameDailyCount.counts[k] || 0) > 0) : [];
+  candidates = candidates.filter(g => !todayPlayed.includes(g));
+  if (candidates.length === 0) return;
+
+  candidates.sort((a, b) => (GAME_WEIGHT[b] || 1) - (GAME_WEIGHT[a] || 1));
+  const picked = candidates[0];
+  const diff = (state.gameStats && state.gameStats[picked] && state.gameStats[picked].difficulty) || 4;
+  const bossDiff = Math.min(6, diff + 1);
+  const rMap = { 3: 4, 4: 6, 5: 10, 6: 15 };
+  const reward = isBoss ? (rMap[bossDiff] || 6) * 3 : rMap[diff] || 6;
+
+  state._gameTriggersToday.count++;
+  if (isBoss) state._gameTriggersToday.bossUsed = true;
+
+  const title = isBoss ? `⚔️ BOSS 关! ${GAME_NAMES[picked] || picked}` : `🎮 奖励关! ${GAME_NAMES[picked] || picked}`;
+  const desc = isBoss ? `难度 Lv${bossDiff} · 满分可赢 +${reward} 分!` : `赢 +${reward} 分!`;
+  const listEl = document.getElementById('checkinList');
+  if (!listEl) return;
+  const existing = listEl.querySelector('.game-reward-card');
+  if (existing) existing.remove();
+  const card = document.createElement('div');
+  card.className = 'game-reward-card';
+  card.style.cssText = 'margin:16px 0;padding:20px;background:linear-gradient(135deg,rgba(0,212,255,0.08),rgba(168,85,247,0.06));border:2px solid var(--color-primary);border-radius:14px;text-align:center;animation:fadeIn 0.4s';
+  card.innerHTML = `
+    <div style="font-size:18px;font-weight:900;color:var(--color-primary);margin-bottom:6px">${title}</div>
+    <div style="font-size:13px;color:var(--color-text-light);margin-bottom:14px">${desc}</div>
+    <button onclick="this.parentElement.remove(); _startTriggeredGame('${picked}', ${isBoss})" style="padding:12px 24px;font-size:15px;font-weight:700;background:linear-gradient(135deg,var(--color-primary),#0099CC);color:white;border:none;border-radius:10px;cursor:pointer;margin-right:8px">接受挑战!</button>
+    <button onclick="this.parentElement.remove()" style="padding:10px 14px;font-size:13px;background:var(--color-card-soft);color:var(--color-text-light);border:1px solid var(--color-border);border-radius:8px;cursor:pointer">跳过</button>
+  `;
+  const daySlots = listEl.querySelector('.day-slots');
+  if (daySlots) daySlots.appendChild(card);
+  else listEl.appendChild(card);
+}
+
+function _startTriggeredGame(gameKey, isBoss) {
+  const openers = { grammar: 'openGrammarGame', cloze: 'openClozeGame', editing: 'openEditingGame', vocab: 'openVocabGame', listen: 'openListeningGame', scimcq: 'openScimcqGame', scilab: 'openScilabGame', math: 'openMathGame', unit: 'openUnitGame', chinese: 'openChineseGame' };
+  const fn = openers[gameKey];
+  if (fn && typeof window[fn] === 'function') window[fn](state.currentWeek);
+  else if (fn && typeof eval(fn) === 'function') eval(fn + '(' + state.currentWeek + ')');
 }
 
 // 浮动 "+N" 数字反馈
@@ -2232,8 +2431,8 @@ function _checkVocabPair() {
       // v18.24: 递减奖励
       const playNum = _bumpDailyGameCount('vocab');
       const mult = _getGameMultiplier(playNum);
-      const vDiff = (state.gameStats && state.gameStats.vocab && state.gameStats.vocab.difficulty) || 3;
-      const vRewardMap = { 3: 2, 4: 3, 5: 5, 6: 7 };
+      const vDiff = (state.gameStats && state.gameStats.vocab && state.gameStats.vocab.difficulty) || 4;
+      const vRewardMap = { 3: 4, 4: 6, 5: 10, 6: 15 };
       const points = Math.floor((g.wrong === 0 ? (vRewardMap[vDiff] || 2) : Math.max(1, (vRewardMap[vDiff] || 2) - 1)) * mult);
       state.totalPoints += points;
       if (!state.mysteryBoxes) state.mysteryBoxes = { available: 0, opened: 0, totalSlotsAtLastEarn: 0, history: [] };
@@ -2378,8 +2577,9 @@ function renderPetWidget() {
   const w = document.getElementById('petWidget');
   if (!w || !window.getCurrentPetForm) return;
   if (!state.pet) state.pet = { name: '球球', formIdx: 0, spawnedAt: Date.now(), feedCount: 0, happiness: 100, lastFedDate: null };
-  const form = window.getCurrentPetForm(state);
-  state.pet.formIdx = form.idx;
+  const calcForm = window.getCurrentPetForm(state);
+  state.pet.formIdx = Math.max(state.pet.formIdx || 0, calcForm.idx);
+  const form = window.PET_FORMS[state.pet.formIdx] || calcForm;
   const happy = state.pet.happiness || 0;
   const isSad = happy < 30;
   const inAshes = window.isStreakInAshes && window.isStreakInAshes(state);
@@ -2705,27 +2905,24 @@ let _jokeTimer = null;
 function _startPetIdleTalk() {
   if (_petBubbleTimer) clearInterval(_petBubbleTimer);
   if (_jokeTimer) clearInterval(_jokeTimer);
-  // v19.1: 情感对话 — 15s 后第一次, 之后每 20-30s 一次
+  // v19.3: 学习中静默 — 只在主页且核心已完成(或非打卡页)时说话
+  function _canPetTalk() {
+    if (document.hidden) return false;
+    const checkin = document.getElementById('page-checkin');
+    if (checkin && checkin.classList.contains('active')) return false;
+    const dash = document.getElementById('page-dashboard');
+    return dash && dash.classList.contains('active');
+  }
   setTimeout(() => {
-    petSay(_generatePetMessage());
+    if (_canPetTalk()) petSay(_generatePetMessage());
     _petBubbleTimer = setInterval(() => {
-      if (document.hidden) return;
-      const dash = document.getElementById('page-dashboard');
-      if (!dash || !dash.classList.contains('active')) return;
-      petSay(_generatePetMessage());
-    }, 20000 + Math.random() * 10000);
+      if (_canPetTalk()) petSay(_generatePetMessage());
+    }, 25000 + Math.random() * 15000);
   }, 15000);
-  // 冷笑话: 穿插在情感对话中, 每 3 分钟一条
   setTimeout(() => {
-    if (!document.hidden) {
-      const dash = document.getElementById('page-dashboard');
-      if (dash && dash.classList.contains('active')) petSay(_nextColdJoke(), 6000);
-    }
+    if (_canPetTalk()) petSay(_nextColdJoke(), 6000);
     _jokeTimer = setInterval(() => {
-      if (document.hidden) return;
-      const dash = document.getElementById('page-dashboard');
-      if (!dash || !dash.classList.contains('active')) return;
-      petSay(_nextColdJoke(), 6000);
+      if (_canPetTalk()) petSay(_nextColdJoke(), 6000);
     }, 3 * 60 * 1000);
   }, 45000);
 }
@@ -3152,7 +3349,7 @@ function submitKnowledgePractice() {
   // v18.99b: 知识树答题计入各科 gameStats
   const ktGameKey = (g.subj || '').includes('科学') ? 'scilab' : 'grammar';
   if (!state.gameStats) state.gameStats = {};
-  if (!state.gameStats[ktGameKey]) state.gameStats[ktGameKey] = { difficulty: 3, recent: [] };
+  if (!state.gameStats[ktGameKey]) state.gameStats[ktGameKey] = { difficulty: 4, recent: [] };
   const ktGs = state.gameStats[ktGameKey];
   if (!ktGs.cumCorrect) ktGs.cumCorrect = 0;
   if (!ktGs.cumTotal) ktGs.cumTotal = 0;
@@ -3189,11 +3386,11 @@ function submitKnowledgePractice() {
     lastDate: new Date().toISOString().slice(0, 10)
   };
   state.knowledgeStars[g.nodeId] = newRec;
-  // 第一次完成给 +5 分; 每升 1 ⭐ 额外 +5; 满分 3⭐ 额外 +10
+  // v19.2: 知识树积分提升 (8/6/12)
   let pointsAwarded = 0;
-  if (isFirstTime) pointsAwarded += 5;
-  if (newRec.stars > prev.stars) pointsAwarded += 5 * (newRec.stars - prev.stars);
-  if (newRec.stars === 3 && prev.stars < 3) pointsAwarded += 10;
+  if (isFirstTime) pointsAwarded += 8;
+  if (newRec.stars > prev.stars) pointsAwarded += 6 * (newRec.stars - prev.stars);
+  if (newRec.stars === 3 && prev.stars < 3) pointsAwarded += 12;
   if (pointsAwarded > 0) {
     state.totalPoints = (state.totalPoints || 0) + pointsAwarded;
     state.logs.push({ reason: `📝 知识练习: ${g.nodeId} ${score}/${total} (${stars}⭐)`, points: pointsAwarded, week: state.currentWeek, timestamp: Date.now() });
@@ -3268,7 +3465,7 @@ function openErrorBank() {
         </div>
         <button class="vocab-modal-close" onclick="closeErrorBank()">×</button>
       </div>
-      <div style="background:#FFF3E0;border:2px dashed #FF9800;border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;color:#5D4037">
+      <div style="background:rgba(255,107,53,0.1);border:2px dashed var(--color-accent);border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;color:var(--color-text-light)">
         💡 错题反复练 = 真正消灭弱点。每次答对一题, 自动从错题本删掉。答错继续留着。
       </div>
       <div class="eb-stats">${breakdown}</div>
@@ -3329,7 +3526,7 @@ function _renderErrorBankReview() {
         </div>
         <button class="vocab-modal-close" onclick="closeErrorBank()">×</button>
       </div>
-      <div style="background:#E3F2FD;color:#0D47A1;font-size:11px;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:8px">${tag}${item.subj ? ' · ' + escapeHtml(item.subj) : ''}${item.retries ? ' · 已重做 ' + item.retries + ' 次' : ''}</div>
+      <div style="background:rgba(0,212,255,0.1);color:var(--color-primary);font-size:11px;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:8px">${tag}${item.subj ? ' · ' + escapeHtml(item.subj) : ''}${item.retries ? ' · 已重做 ' + item.retries + ' 次' : ''}</div>
       <div class="cn-q-text" style="margin-bottom:16px">${escapeHtml(item.q)}</div>
       ${answerArea}
       <div id="ebFeedback" style="min-height:24px;margin-top:12px;font-size:13px"></div>
@@ -3347,13 +3544,23 @@ function submitErrorBankAnswer(optIdx) {
   _handleErrorBankResult(isCorrect, item, () => {
     if (isCorrect) {
       g.correct++; petExpress('pet-excited', 800);
-      window.removeFromErrorBank(state, item.id);
-      g.removed.push(item.id);
+      // v19.3: Leitner间隔 — 答对4次才真删
+      const w = (state.wrongAnswers || []).find(w => w.id === item.id);
+      if (w) {
+        w.correctStreak = (w.correctStreak || 0) + 1;
+        if (w.correctStreak >= 4) {
+          window.removeFromErrorBank(state, item.id);
+          g.removed.push(item.id);
+        } else {
+          const intervals = [1, 3, 7];
+          w.nextReview = Date.now() + (intervals[w.correctStreak - 1] || 7) * 86400000;
+        }
+      }
       state.totalPoints = (state.totalPoints || 0) + 2;
       state.logs.push({ reason: '📓 错题复习答对', points: 2, week: state.currentWeek, timestamp: Date.now() });
     } else {
       const w = (state.wrongAnswers || []).find(w => w.id === item.id);
-      if (w) w.retries = (w.retries || 0) + 1;
+      if (w) { w.retries = (w.retries || 0) + 1; w.correctStreak = 0; }
     }
     saveState(state);
     g.idx++;
@@ -3371,13 +3578,22 @@ function submitErrorBankMath() {
   _handleErrorBankResult(isCorrect, item, () => {
     if (isCorrect) {
       g.correct++;
-      window.removeFromErrorBank(state, item.id);
-      g.removed.push(item.id);
+      const w = (state.wrongAnswers || []).find(w => w.id === item.id);
+      if (w) {
+        w.correctStreak = (w.correctStreak || 0) + 1;
+        if (w.correctStreak >= 4) {
+          window.removeFromErrorBank(state, item.id);
+          g.removed.push(item.id);
+        } else {
+          const intervals = [1, 3, 7];
+          w.nextReview = Date.now() + (intervals[w.correctStreak - 1] || 7) * 86400000;
+        }
+      }
       state.totalPoints = (state.totalPoints || 0) + 2;
       state.logs.push({ reason: '📓 错题复习答对', points: 2, week: state.currentWeek, timestamp: Date.now() });
     } else {
       const w = (state.wrongAnswers || []).find(w => w.id === item.id);
-      if (w) w.retries = (w.retries || 0) + 1;
+      if (w) { w.retries = (w.retries || 0) + 1; w.correctStreak = 0; }
     }
     saveState(state);
     g.idx++;
@@ -3899,11 +4115,13 @@ function _rainbowSweep() {
 function openPetModal() {
   const modal = document.getElementById('petModal');
   if (!modal) return;
-  const form = window.getCurrentPetForm(state);
+  const calcForm = window.getCurrentPetForm(state);
+  const formIdx = Math.max(state.pet ? state.pet.formIdx || 0 : 0, calcForm.idx);
+  const form = window.PET_FORMS[formIdx] || calcForm;
   const nextForm = window.PET_FORMS.find(f => f.idx === form.idx + 1);
   const streak = window._countCompletedDays ? window._countCompletedDays(state) : 0;
   const formsList = window.PET_FORMS.map(f => {
-    const unlocked = streak >= f.minStreak;
+    const unlocked = streak >= f.minStreak || f.idx <= formIdx;
     const isCurrent = f.idx === form.idx;
     return `<div class="pet-form-item ${unlocked ? 'unlocked' : 'locked'} ${isCurrent ? 'current' : ''}" style="background:${f.bg || 'white'}">
       <div class="pet-form-svg">${f.svg}</div>
@@ -3911,7 +4129,7 @@ function openPetModal() {
     </div>`;
   }).join('');
   const gundamUnlocked = streak >= 45;
-  const gundamCard = `<div class="pet-form-item ${gundamUnlocked ? 'unlocked' : 'locked'}" style="background:${gundamUnlocked ? window.GUNDAM_PET.bg : '#E0E0E0'}">
+  const gundamCard = `<div class="pet-form-item ${gundamUnlocked ? 'unlocked' : 'locked'}" style="background:${gundamUnlocked ? window.GUNDAM_PET.bg : 'var(--color-card-soft)'}">
     <div class="pet-form-svg" style="${gundamUnlocked ? '' : 'filter:grayscale(1);opacity:0.5'}">${window.GUNDAM_PET.svg}</div>
     <div class="pet-form-meta">🤖 命运高达 (累计打卡 ≥45 天)${gundamUnlocked ? ' ✅ 已解锁' : ` · 还差 ${45 - streak} 天`}</div>
   </div>`;
@@ -4003,6 +4221,11 @@ function _checkAndUnlockAch() {
   if (!window.checkAchievements) return;
   const newly = window.checkAchievements(state);
   if (newly.length > 0) {
+    // v19.3: 每个成就解锁给💎水晶
+    newly.forEach(a => {
+      const crystalReward = (a.cat === 'PSLE' || a.cat === '隐藏') ? 20 : 10;
+      state.craftCrystals = (state.craftCrystals || 0) + crystalReward;
+    });
     saveState(state);
     // 一个一个弹(避免堆叠) — 显示第 1 个,用户关掉自动弹下一个
     const queue = [...newly];
@@ -4032,6 +4255,34 @@ function _checkDailyLoginBonus() {
   recalcTotalPoints(state);
   saveState(state);
   setTimeout(() => petSay('🌟 今日登录 +5 分! 每天打开 App 就有哦～', 5000), 1200);
+}
+
+// ============ v19.3: FTUE 首次使用引导 ============
+function _checkFTUE() {
+  if (state.ftueDay >= 3) return;
+  if (!state.ftueDay) state.ftueDay = 0;
+  const totalSlotsDone = Object.values(state.daily || {}).reduce((s, w) => {
+    return s + Object.values(w || {}).reduce((s2, d) => s2 + Object.keys(d || {}).length, 0);
+  }, 0);
+  if (totalSlotsDone === 0 && state.ftueDay === 0) {
+    state.ftueDay = 1;
+    saveState(state);
+    setTimeout(() => {
+      petSay('🐹 嘿! 我是你的学习伙伴! 今天先试试完成 1 项主线任务吧 — 很简单的!', 10000);
+    }, 2000);
+  } else if (totalSlotsDone >= 1 && state.ftueDay === 1) {
+    state.ftueDay = 2;
+    saveState(state);
+    setTimeout(() => {
+      petSay('🎉 太棒了! 你已经解锁了装备系统! 每完成任务 → 拿积分 → 解锁装备 → 变强!', 10000);
+    }, 1500);
+  } else if (totalSlotsDone >= 5 && state.ftueDay === 2) {
+    state.ftueDay = 3;
+    saveState(state);
+    setTimeout(() => {
+      petSay('⚔️ 你已经掌握了所有技能! 现在开始真正的冒险吧! 每天完成主线任务 → 战力越来越强!', 10000);
+    }, 1500);
+  }
 }
 
 // ============ v18 Phase 5.1: 🎁 每日抽奖 ============
@@ -4307,8 +4558,8 @@ function _finishUnitGame() {
   if (window.recordGameRun) diffR = window.recordGameRun(state, 'unit', g.correct, g.qs.length);
   const playNum = _bumpDailyGameCount('unit');
   const mult = _getGameMultiplier(playNum);
-  const unitDiff = (state.gameStats && state.gameStats.unit && state.gameStats.unit.difficulty) || 3;
-  const unitRewardMap = { 3: 2, 4: 3, 5: 5, 6: 7 };
+  const unitDiff = (state.gameStats && state.gameStats.unit && state.gameStats.unit.difficulty) || 4;
+  const unitRewardMap = { 3: 4, 4: 6, 5: 10, 6: 15 };
   let baseR = 0;
   if (g.correct >= 10) baseR = unitRewardMap[unitDiff] || 2;
   else if (g.correct >= 7) baseR = Math.max(1, (unitRewardMap[unitDiff] || 2) - 1);
@@ -4463,7 +4714,7 @@ function _finishMcqGame() {
   const playNum = _bumpDailyGameCount(g.key);
   const mult = _getGameMultiplier(playNum);
   // v19.0: 难度梯度积分 (高难度答对奖更多)
-  const rewardMap = { 3: 2, 4: 3, 5: 5, 6: 7 };
+  const rewardMap = { 3: 4, 4: 6, 5: 10, 6: 15 };
   let baseR = 0;
   if (g.correct >= 10) baseR = rewardMap[g.diff] || 3;
   else if (g.correct >= 7) baseR = Math.max(1, (rewardMap[g.diff] || 3) - 1);
@@ -4567,8 +4818,8 @@ function _finishSciGame() {
   if (window.recordGameRun) diffR = window.recordGameRun(state, 'scilab', g.correct, total);
   const playNum = _bumpDailyGameCount('scilab');
   const mult = _getGameMultiplier(playNum);
-  const sciDiff = (state.gameStats && state.gameStats.scilab && state.gameStats.scilab.difficulty) || 3;
-  const sciRewardMap = { 3: 2, 4: 3, 5: 5, 6: 7 };
+  const sciDiff = (state.gameStats && state.gameStats.scilab && state.gameStats.scilab.difficulty) || 4;
+  const sciRewardMap = { 3: 4, 4: 6, 5: 10, 6: 15 };
   let baseR = 0;
   const acc = g.correct / total;
   if (acc >= 1) baseR = sciRewardMap[sciDiff] || 2;
@@ -4714,7 +4965,7 @@ function _finishMathGame() {
   const playNum = _bumpDailyGameCount('math');
   const mult = _getGameMultiplier(playNum);
   const mathDiff = (state.gameStats && state.gameStats.math && state.gameStats.math.difficulty) || 4;
-  const mathRewardMap = { 3: 2, 4: 3, 5: 5, 6: 7 };
+  const mathRewardMap = { 3: 4, 4: 6, 5: 10, 6: 15 };
   let baseReward = 0;
   if (g.correct >= 10) baseReward = mathRewardMap[mathDiff] || 3;
   else if (g.correct >= 7) baseReward = Math.max(1, (mathRewardMap[mathDiff] || 3) - 1);
@@ -4801,8 +5052,8 @@ function clickEditingWord(word) {
       // 全对 v18.24 递减
       const playNum = _bumpDailyGameCount('editing');
       const mult = _getGameMultiplier(playNum);
-      const editDiff = (state.gameStats && state.gameStats.editing && state.gameStats.editing.difficulty) || 3;
-      const editRewardMap = { 3: 2, 4: 3, 5: 5, 6: 7 };
+      const editDiff = (state.gameStats && state.gameStats.editing && state.gameStats.editing.difficulty) || 4;
+      const editRewardMap = { 3: 4, 4: 6, 5: 10, 6: 15 };
       const points = Math.floor((editRewardMap[editDiff] || 2) * mult);
       state.totalPoints += points;
       if (!state.mysteryBoxes) state.mysteryBoxes = { available: 0, opened: 0, totalSlotsAtLastEarn: 0, history: [] };
@@ -4907,8 +5158,8 @@ function submitListenAnswers() {
   // v18.24: 递减奖励
   const playNum = _bumpDailyGameCount('listen');
   const mult = _getGameMultiplier(playNum);
-  const listenDiff = (state.gameStats && state.gameStats.listen && state.gameStats.listen.difficulty) || 3;
-  const listenRewardMap = { 3: 2, 4: 3, 5: 5, 6: 7 };
+  const listenDiff = (state.gameStats && state.gameStats.listen && state.gameStats.listen.difficulty) || 4;
+  const listenRewardMap = { 3: 4, 4: 6, 5: 10, 6: 15 };
   let baseReward = 0;
   if (correct >= 5) baseReward = listenRewardMap[listenDiff] || 2;
   else if (correct >= 3) baseReward = Math.max(1, (listenRewardMap[listenDiff] || 2) - 1);
@@ -5938,10 +6189,132 @@ async function renderPhotoGallery(weekNum) {
   `;
 }
 
+// ============ v19.2: 家长周审照片面板 ============
+let _reviewWeek = null;
+function renderParentReview(weekNum) {
+  const container = document.getElementById('parentReviewPanel');
+  if (!container) return;
+  if (_reviewWeek === null) _reviewWeek = weekNum;
+  const wk = _reviewWeek;
+
+  const cp = state.cloudPhotos || {};
+  // 找出所有有照片的周
+  const allWeeks = [...new Set(Object.keys(cp).map(k => parseInt(k.split('_')[0])))].sort((a,b) => b-a);
+  const totalPhotos = Object.keys(cp).length;
+  const totalPending = Object.values(cp).filter(v => !v.reviewed).length;
+
+  // 周导航栏
+  let navHtml = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <button class="btn btn-secondary" style="font-size:12px;padding:3px 8px" onclick="_reviewPrevWeek()">◀</button>
+    <span style="font-weight:700;font-size:14px">W${wk}</span>
+    <button class="btn btn-secondary" style="font-size:12px;padding:3px 8px" onclick="_reviewNextWeek()">▶</button>
+    <span style="font-size:12px;color:var(--color-text-light)">全部 ${totalPhotos} 张 · ${totalPending} 张待审</span>
+  </div>`;
+
+  const weekPrefix = `${wk}_`;
+  const entries = Object.entries(cp).filter(([k]) => k.startsWith(weekPrefix));
+
+  if (entries.length === 0) {
+    container.innerHTML = navHtml + `<p style="color:var(--color-text-light);font-style:italic;text-align:center;padding:16px">☁️ W${wk} 还没有云端照片</p>`;
+    return;
+  }
+
+  const pending = entries.filter(([, v]) => !v.reviewed);
+  const reviewed = entries.filter(([, v]) => v.reviewed);
+
+  let html = navHtml + `<div style="margin-bottom:12px;font-size:13px;color:var(--color-text-light)">W${wk} · 共 ${entries.length} 张 · <b style="color:var(--color-primary)">${pending.length} 张待审</b></div>`;
+
+  if (pending.length > 0) {
+    html += `<div class="photo-gallery" style="margin-bottom:16px">`;
+    pending.forEach(([key, info]) => {
+      const parts = key.split('_');
+      const week = parseInt(parts[0]);
+      const day = parts[1];
+      const slot = parts.slice(2).join('_');
+      const tasks = getDailyTasks(week, day);
+      const t = tasks.find(x => x.slot === slot);
+      const taskText = t ? t.task : slot;
+      const uploadDate = new Date(info.uploadedAt).toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+      html += `
+        <div class="gallery-cell" style="border:3px solid var(--color-primary);position:relative">
+          <img src="${info.url}" alt="${escapeAttr(taskText)}" loading="lazy" style="cursor:pointer" onclick="window.open('${info.url}','_blank')">
+          <div class="gallery-cap">
+            <b>${DAY_LABELS[day] || day} ${slot}</b>
+            <div class="gallery-task">${escapeHtml(taskText)}</div>
+            <div style="font-size:11px;color:var(--color-text-light)">${uploadDate}</div>
+          </div>
+          <div style="display:flex;gap:6px;padding:6px;justify-content:center">
+            <button class="btn btn-success" style="font-size:12px;padding:4px 10px" onclick="_parentApprove(${week},'${day}','${slot}')">✅ 通过</button>
+            <button class="btn btn-danger" style="font-size:12px;padding:4px 10px" onclick="_parentReject(${week},'${day}','${slot}')">❌ 驳回</button>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (reviewed.length > 0) {
+    html += `<details style="margin-top:8px"><summary style="cursor:pointer;font-size:13px;color:var(--color-text-light)">已审核 (${reviewed.length} 张)</summary><div class="photo-gallery" style="margin-top:8px">`;
+    reviewed.forEach(([key, info]) => {
+      const parts = key.split('_');
+      const week = parseInt(parts[0]);
+      const day = parts[1];
+      const slot = parts.slice(2).join('_');
+      const tasks = getDailyTasks(week, day);
+      const t = tasks.find(x => x.slot === slot);
+      const taskText = t ? t.task : slot;
+      const badge = info.rejected
+        ? `<span style="color:var(--color-danger);font-weight:700">❌ 驳回</span>${info.rejectReason ? ` · ${escapeHtml(info.rejectReason)}` : ''}`
+        : `<span style="color:var(--color-success);font-weight:700">✅ 通过</span>`;
+      html += `
+        <div class="gallery-cell" style="border:2px solid ${info.rejected ? 'var(--color-danger)' : 'var(--color-success)'};opacity:0.85">
+          <img src="${info.url}" alt="${escapeAttr(taskText)}" loading="lazy" onclick="window.open('${info.url}','_blank')" style="cursor:pointer">
+          <div class="gallery-cap">
+            <b>${DAY_LABELS[day] || day} ${slot}</b> · ${badge}
+            <div class="gallery-task">${escapeHtml(taskText)}</div>
+          </div>
+        </div>`;
+    });
+    html += `</div></details>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function _parentApprove(week, day, slot) {
+  if (!requireAdminAuth()) return;
+  window.approveCloudPhoto(week, day, slot);
+  showToast('✅ 已通过审核', 'success');
+}
+
+function _parentReject(week, day, slot) {
+  if (!requireAdminAuth()) return;
+  const reason = prompt('驳回原因(可留空):') || '';
+  const tasks = getDailyTasks(week, day);
+  const t = tasks.find(x => x.slot === slot);
+  const taskText = t ? t.task : slot;
+  const pts = slotPoints(week, slot);
+  window.rejectCloudPhoto(week, day, slot, reason);
+  showToast(`❌ 已驳回「${taskText}」— 扣除 ${pts} 分`, 'danger');
+}
+
+window._parentApprove = _parentApprove;
+window._parentReject = _parentReject;
+
+function _reviewPrevWeek() {
+  if (_reviewWeek > 1) { _reviewWeek--; renderParentReview(_reviewWeek); }
+}
+function _reviewNextWeek() {
+  if (_reviewWeek < 73) { _reviewWeek++; renderParentReview(_reviewWeek); }
+}
+window._reviewPrevWeek = _reviewPrevWeek;
+window._reviewNextWeek = _reviewNextWeek;
+
 // ============ 管理页 ============
 function renderAdminPage() {
   // 异步渲染照片 gallery
   renderPhotoGallery(state.currentWeek).catch(e => console.error(e));
+  // v19.2: 家长周审面板
+  renderParentReview(state.currentWeek);
 
   const logList = document.getElementById('adminLogList');
   if (state.logs.length === 0) {
