@@ -323,6 +323,25 @@ function renderDashboard() {
   renderDragonProgress();  // v18.55
   renderErrorBankCard();   // v18.59
   renderEquipment();
+  renderDailySlotList();
+}
+
+// v19.3: 每日任务单 (主页 CTA 下方)
+function renderDailySlotList() {
+  const el = document.getElementById('dailySlotList');
+  if (!el) return;
+  const dayKey = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()];
+  const wn = state.currentWeek || 1;
+  const wt = window.WEEK_TASKS && window.WEEK_TASKS[wn - 1];
+  if (!wt || !wt.days || !wt.days[dayKey]) { el.innerHTML = ''; return; }
+  const slots = wt.days[dayKey];
+  const done = (state.daily && state.daily[wn] && state.daily[wn][dayKey]) || {};
+  let html = '<div style="font-weight:600;margin-bottom:6px">📋 今日任务</div>';
+  for (const [key, desc] of Object.entries(slots)) {
+    const isDone = done[key];
+    html += `<div class="daily-slot-item ${isDone ? 'done' : ''}"><span class="daily-slot-check">${isDone ? '✅' : '⬜'}</span><span>${desc}</span></div>`;
+  }
+  el.innerHTML = html;
 }
 
 function renderErrorBankCard() {
@@ -1300,16 +1319,36 @@ function renderEquipment() {
     const status = !unlocked ? eq.hint
       : equipped ? '✓ 穿戴中(点击卸下)'
       : '👜 已收藏(点击穿戴)';
+    const evoLv = (state.equipEvolutions && state.equipEvolutions[eq.id]) || 0;
+    const canEvo = unlocked && eq.condition === 'points' && evoLv < 3;
+    const evoCost = canEvo ? Math.round(eq.value * [0.5, 1.0, 2.0][evoLv]) : 0;
+    const evoBtn = canEvo ? `<button class="evo-btn" onclick="event.stopPropagation(); doEvolve('${eq.id}')" title="💎 花费 ${evoCost} 水晶进化">⬆ Lv${evoLv + 1}</button>` : '';
+    const evoTag = evoLv > 0 ? `<span class="evo-tag">+${evoLv}</span>` : '';
     return `
       <div class="equipment-item ${cls}" style="${cursor}" ${click} title="${unlocked ? (equipped ? '点击卸下' : '点击穿戴') : '未解锁'}">
-        <span class="equipment-icon">${eq.icon}</span>
+        <span class="equipment-icon">${eq.icon}${evoTag}</span>
         <div class="equipment-name">${eq.name}</div>
         <div class="equipment-condition">${status}</div>
+        ${evoBtn}
       </div>
     `;
   }).join('');
   renderSkinGrid();
 }
+
+// v19.3: 装备进化 (消耗💎水晶)
+function doEvolve(equipId) {
+  if (!window.evolveEquipment) return;
+  const result = window.evolveEquipment(state, equipId);
+  if (result.success) {
+    showToast(`⬆ 进化成功! Lv${result.newLevel} (花费 💎${result.cost})`, 'success');
+    renderEquipment();
+    renderHeader();
+  } else {
+    showToast(result.reason, 'warn');
+  }
+}
+window.doEvolve = doEvolve;
 
 // v16.8: 点击装备 → 切换穿戴/卸下 (state.equipmentDisabled 数组里有 = 卸下)
 function toggleEquipment(equipId) {
@@ -1914,6 +1953,9 @@ function toggleDailyCheck(week, day, slot, evt) {
     if (hr >= 22 || hr < 2) state._lateNightChecked = true;
     if (hr < 6) state._earlyMorningChecked = true;
     playSound('ding');
+    // v19.3: 角色点头动画
+    const charSvg = document.getElementById('characterSvg');
+    if (charSvg) { charSvg.classList.add('char-nod'); setTimeout(() => charSvg.classList.remove('char-nod'), 400); }
   }
   saveState(state);
   // v18 Phase 5.1: 检查成就(在保存后调,避免新成就改 state 没存)
@@ -5958,6 +6000,43 @@ function renderPsleAbilityCard() {
     _renderGameBreakdown(state) +
     _renderKnowledgeTreeSummary(state) +
     _renderImprovementPlan(state);
+  renderRadarChart();
+}
+
+// v19.3: 能力雷达图 (SVG, 模考分数驱动)
+function renderRadarChart() {
+  const el = document.getElementById('radarChart');
+  if (!el) return;
+  const scores = state.scores || {};
+  const subjects = ['英语', '科学', '数学', '华文'];
+  const subjectKeys = ['english', 'science', 'math', 'chinese'];
+  const vals = subjectKeys.map(k => {
+    const arr = (scores[k] || []).map(s => s.score / s.max * 100);
+    return arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 50;
+  });
+  const cx = 100, cy = 100, r = 70;
+  const angles = vals.map((_, i) => (Math.PI * 2 * i / vals.length) - Math.PI / 2);
+  const points = vals.map((v, i) => {
+    const rr = r * v / 100;
+    return `${cx + rr * Math.cos(angles[i])},${cy + rr * Math.sin(angles[i])}`;
+  }).join(' ');
+  const gridLines = [25, 50, 75, 100].map(pct => {
+    const gr = r * pct / 100;
+    const gpts = angles.map(a => `${cx + gr * Math.cos(a)},${cy + gr * Math.sin(a)}`).join(' ');
+    return `<polygon points="${gpts}" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>`;
+  }).join('');
+  const labels = subjects.map((s, i) => {
+    const lr = r + 16;
+    const x = cx + lr * Math.cos(angles[i]);
+    const y = cy + lr * Math.sin(angles[i]);
+    return `<text x="${x}" y="${y}" text-anchor="middle" fill="var(--color-text-light)" font-size="11">${s}</text>`;
+  }).join('');
+  el.innerHTML = `<svg width="200" height="200" viewBox="0 0 200 200">
+    ${gridLines}
+    <polygon points="${points}" fill="rgba(99,102,241,0.25)" stroke="#6366F1" stroke-width="2"/>
+    ${labels}
+  </svg>
+  <div style="font-size:11px;color:var(--color-text-light);margin-top:4px">基于模考/真题成绩,未录入科目默认 50%</div>`;
 }
 
 // ============ 各科分数追踪(v4 历史页新增)============

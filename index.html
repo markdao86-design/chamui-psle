@@ -403,11 +403,11 @@ body::before {
 
 .character-display {
   position: relative;
-  height: 200px;
+  height: 250px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 8px;
+  margin-bottom: 2px;
 }
 .character-display::after {
   content: '';
@@ -423,8 +423,8 @@ body::before {
 }
 
 .character-svg {
-  width: 180px;
-  height: 180px;
+  width: 220px;
+  height: 220px;
   animation: idle-bounce 3s ease-in-out infinite;
   filter: drop-shadow(0 0 20px rgba(56,189,248,0.3)) drop-shadow(0 8px 16px rgba(0,0,0,0.3));
 }
@@ -436,15 +436,15 @@ body::before {
 
 .character-name {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 22px;
   color: var(--color-primary);
-  margin-bottom: 4px;
+  margin-bottom: 0;
 }
 
 .character-title {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-text-light);
-  margin-bottom: 12px;
+  margin-bottom: 4px;
   font-weight: 500;
 }
 
@@ -469,7 +469,7 @@ body::before {
   text-shadow: 0 1px 2px rgba(74,144,199,0.15);
 }
 .big-score-block {
-  margin-top: 10px;
+  margin-top: 6px;
   background: linear-gradient(135deg, var(--color-card) 0%, var(--color-card-soft) 100%);
   border: 1px solid rgba(0,212,255,0.15);
   border-top: 2px solid var(--color-primary);
@@ -562,6 +562,61 @@ body::before {
 .cta-checkin-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(99,102,241,0.5);
+}
+.dashboard-collapse { margin-top: 16px; }
+.collapse-toggle {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-light);
+  padding: 8px 12px;
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  list-style: none;
+  text-align: center;
+}
+.collapse-toggle::-webkit-details-marker { display: none; }
+.dashboard-collapse[open] .collapse-toggle { margin-bottom: 12px; }
+.daily-slot-list {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  font-size: 13px;
+}
+.daily-slot-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.daily-slot-item:last-child { border-bottom: none; }
+.daily-slot-item.done { opacity: 0.5; text-decoration: line-through; }
+.daily-slot-check { font-size: 16px; }
+@keyframes char-nod {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+  60% { transform: translateY(2px); }
+}
+.char-nod { animation: char-nod 0.4s ease; }
+.evo-btn {
+  font-size: 10px;
+  padding: 2px 6px;
+  border: 1px solid rgba(168,85,247,0.4);
+  border-radius: 4px;
+  background: rgba(168,85,247,0.15);
+  color: #C084FC;
+  cursor: pointer;
+  margin-top: 4px;
+}
+.evo-btn:hover { background: rgba(168,85,247,0.3); }
+.evo-tag {
+  font-size: 9px;
+  font-weight: 700;
+  color: #C084FC;
+  position: relative;
+  top: -4px;
 }
 
 /* ===== 智慧教练 card ===== */
@@ -3036,8 +3091,8 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 /* ===== v17.1: Daily Streak block ===== */
 .streak-block {
-  margin: 6px auto 8px;
-  padding: 8px 12px;
+  margin: 4px auto 4px;
+  padding: 6px 10px;
   border-radius: var(--radius-tight);
   border: 1px solid var(--color-border);
   text-align: center;
@@ -4608,6 +4663,8 @@ p { font-size: 14px; line-height: 1.6; }
         <button class="cta-checkin-btn" id="ctaCheckinBtn" onclick="document.querySelector('[data-page=checkin]').click()">
           ▶ 开始今日打卡
         </button>
+        <!-- v19.3: 每日任务单 -->
+        <div class="daily-slot-list" id="dailySlotList"></div>
       </div>
       
       <div class="hero-right-column">
@@ -4624,6 +4681,8 @@ p { font-size: 14px; line-height: 1.6; }
     </div>
 
     <!-- v18 Phase 5.1: 🏆 成就墙 -->
+    <details class="dashboard-collapse" open>
+      <summary class="collapse-toggle">📋 更多详情 (点击折叠)</summary>
     <div class="card achievement-wall-card" id="achievementWallCard"></div>
 
     <!-- v17.6: 今日铁律已删除 (用户反馈) -->
@@ -4693,6 +4752,7 @@ p { font-size: 14px; line-height: 1.6; }
       </p>
       <div class="equipment-grid" id="equipmentGrid"></div>
     </div>
+    </details>
   </div>
 
   <!-- 打卡页 -->
@@ -4723,6 +4783,8 @@ p { font-size: 14px; line-height: 1.6; }
     <div class="card" id="psleAbilityCard">
       <div class="card-title">🎯 PSLE 实战能力分析</div>
       <div class="card-subtitle" style="font-size:12px;color:var(--color-text-light);margin-bottom:8px">本 app 主目的: 帮你考到 PSLE AL 4-6 (顶级 5-15%) · 这里看你当前能力距离目标多远</div>
+      <!-- v19.3: 能力雷达图 (模考驱动) -->
+      <div id="radarChart" style="text-align:center;margin:12px 0"></div>
       <div id="psleAbilityContent"></div>
     </div>
 
