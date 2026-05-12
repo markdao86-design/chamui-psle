@@ -550,6 +550,54 @@ body::before {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(99,102,241,0.5);
 }
+.cta-ring-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 16px auto 8px;
+  width: 120px;
+  height: 120px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.cta-ring-wrapper:hover { transform: scale(1.05); }
+.cta-ring-svg {
+  width: 120px;
+  height: 120px;
+  transform: rotate(-90deg);
+}
+.cta-ring-bg {
+  fill: none;
+  stroke: rgba(255,255,255,0.08);
+  stroke-width: 8;
+}
+.cta-ring-fill {
+  fill: none;
+  stroke: #6366F1;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease;
+}
+.cta-ring-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.cta-ring-num {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.cta-ring-label {
+  display: block;
+  font-size: 11px;
+  color: var(--color-text-light);
+  margin-top: 2px;
+}
 .dashboard-collapse { margin-top: 16px; }
 .collapse-toggle {
   cursor: pointer;
@@ -1501,6 +1549,8 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .toast.success { background: var(--color-success); color: white; }
 .toast.warn { background: var(--color-warn); color: white; }
 .toast.danger { background: var(--color-danger); color: white; }
+.toast.crit { background: linear-gradient(135deg, #6366F1, #EC4899); color: white; font-weight: 700; box-shadow: 0 4px 20px rgba(99,102,241,0.5); animation: toastSlideIn 0.4s ease, critPulse 0.6s ease 0.4s; }
+@keyframes critPulse { 0%,100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.08); } }
 
 @keyframes toastSlideIn {
   from { transform: translateX(120%); opacity: 0; }
@@ -4660,10 +4710,17 @@ p { font-size: 14px; line-height: 1.6; }
             <div class="beat-count">约 <b id="beatCount">0</b> 名小学生(共 <span id="beatTotal">50000</span> 名)</div>
           </div>
         </div>
-        <!-- v19.3: CTA 按钮 -->
-        <button class="cta-checkin-btn" id="ctaCheckinBtn" onclick="document.querySelector('[data-page=checkin]').click()">
-          ▶ 开始今日打卡
-        </button>
+        <!-- v19.3: 进度环 CTA -->
+        <div class="cta-ring-wrapper" id="ctaRingWrapper" onclick="document.querySelector('[data-page=checkin]').click()">
+          <svg class="cta-ring-svg" viewBox="0 0 100 100">
+            <circle class="cta-ring-bg" cx="50" cy="50" r="42" />
+            <circle class="cta-ring-fill" id="ctaRingFill" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264" />
+          </svg>
+          <div class="cta-ring-text">
+            <span class="cta-ring-num" id="ctaRingNum">0/7</span>
+            <span class="cta-ring-label">今日打卡</span>
+          </div>
+        </div>
         <!-- v19.3: 每日任务单 -->
         <div class="daily-slot-list" id="dailySlotList"></div>
       </div>

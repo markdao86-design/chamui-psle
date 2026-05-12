@@ -326,16 +326,29 @@ function renderDashboard() {
   renderDailySlotList();
 }
 
-// v19.3: 每日任务单 (主页 CTA 下方)
+// v19.3: 每日任务单 (主页 CTA 下方) + 进度环
 function renderDailySlotList() {
   const el = document.getElementById('dailySlotList');
-  if (!el) return;
   const dayKey = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()];
   const wn = state.currentWeek || 1;
   const wt = window.WEEK_TASKS && window.WEEK_TASKS[wn - 1];
-  if (!wt || !wt.days || !wt.days[dayKey]) { el.innerHTML = ''; return; }
+  if (!wt || !wt.days || !wt.days[dayKey]) { if (el) el.innerHTML = ''; return; }
   const slots = wt.days[dayKey];
   const done = (state.daily && state.daily[wn] && state.daily[wn][dayKey]) || {};
+  const total = Object.keys(slots).length;
+  const completed = Object.keys(slots).filter(k => done[k]).length;
+  // 进度环
+  const ringFill = document.getElementById('ctaRingFill');
+  const ringNum = document.getElementById('ctaRingNum');
+  if (ringFill && ringNum) {
+    const circumference = 264;
+    const pct = total > 0 ? completed / total : 0;
+    ringFill.style.strokeDashoffset = circumference * (1 - pct);
+    ringNum.textContent = `${completed}/${total}`;
+    if (pct >= 1) ringFill.style.stroke = '#10B981';
+  }
+  // 任务列表
+  if (!el) return;
   let html = '<div style="font-weight:600;margin-bottom:6px">📋 今日任务</div>';
   for (const [key, desc] of Object.entries(slots)) {
     const isDone = done[key];
@@ -1975,6 +1988,7 @@ function toggleDailyCheck(week, day, slot, evt) {
       document.body.appendChild(flash);
       setTimeout(() => flash.remove(), 700);
       spawnFloatPoints(`💥 专注暴击! +${pts}`, evt, true);
+      showToast(`💥 暴击! +${pts} 分`, 'crit');
       if (typeof petCelebrate === 'function') petCelebrate('💥 你的专注触发了暴击!');
     } else {
       // v19.3: 显示装备加成具体数字
@@ -6631,14 +6645,16 @@ function showLevelUpAnimation(newLevel) {
 // ============ Toast ============
 function showToast(msg, type = 'success') {
   const t = document.createElement('div');
-  t.className = `toast ${type}`;
+  const isCrit = type === 'crit';
+  t.className = `toast ${isCrit ? 'crit' : type}`;
   t.textContent = msg;
+  if (isCrit) t.style.fontSize = '18px';
   document.getElementById('toastContainer').appendChild(t);
   setTimeout(() => {
     t.style.opacity = '0';
     t.style.transition = 'opacity 0.3s';
     setTimeout(() => t.remove(), 300);
-  }, 2200);
+  }, isCrit ? 4000 : 2200);
 }
 
 // ============ 工具 ============
