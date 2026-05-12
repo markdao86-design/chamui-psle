@@ -3394,10 +3394,10 @@ function submitKnowledgePractice() {
     lastDate: new Date().toISOString().slice(0, 10)
   };
   state.knowledgeStars[g.nodeId] = newRec;
-  // v19.2: 知识树积分提升 (8/6/12)
+  // v19.3: 知识树积分提升 (首次8 + 每⭐15 + 满⭐12)
   let pointsAwarded = 0;
   if (isFirstTime) pointsAwarded += 8;
-  if (newRec.stars > prev.stars) pointsAwarded += 6 * (newRec.stars - prev.stars);
+  if (newRec.stars > prev.stars) pointsAwarded += 15 * (newRec.stars - prev.stars);
   if (newRec.stars === 3 && prev.stars < 3) pointsAwarded += 12;
   if (pointsAwarded > 0) {
     state.totalPoints = (state.totalPoints || 0) + pointsAwarded;

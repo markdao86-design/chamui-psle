@@ -158,10 +158,10 @@ const SLOT_TIME = {
   AM: '上午 9:00-12:00 (周末)',
   PM: '下午 14:00-19:30 (周六)',
   E1: '16:30-17:30 英语主项 (1h)',
-  OR: '17:30-17:55 Oral 口语 (25min)',
+  OR: '17:30-18:05 Oral 口语+录音回听 (35min)',
   VC: '18:10-18:25 学科词汇 (15min)',
   LS: '19:00-19:10 听力 (10min)',
-  ED: '19:30-19:48 Editing (18min)',
+  ED: '19:30-19:55 Editing 精练 (25min)',
   S2: '20:00-20:40 段2 主科 (40min)',
   VB: '21:00-21:30 Vocab/华文 (30min)',
   // v18.22: 周末新作息 slot keys
@@ -189,7 +189,7 @@ const DAY_KEYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 // ============= v19.2: 时间比例积分 (大任务大回报) =============
 const SLOT_BASE_POINTS = {
   E1: 10, S2: 7,
-  VB: 5, OR: 4, ED: 3, VC: 3, LS: 2,
+  VB: 5, OR: 5, ED: 4, VC: 3, LS: 2,
   WSF: 8, WSS: 7, WSM: 7, WSE: 7, WSR: 5, WSV: 4, WSL: 2,
   WUR: 5, WUM: 7, WUS: 7, WUE1: 8, WUE2: 6, WUP: 3,
   AM: 10, PM: 8
@@ -218,6 +218,7 @@ const CRIT_CHANCE_BASE = 0.08;
 const CRIT_CHANCE_MAX = 0.25;
 const CRIT_MULT_BASE = 2;
 const CRIT_MULT_MAX = 2;
+const DAILY_POINTS_CAP = 300;
 
 // ============= v19.3: Streak 加成 (加法, 返回0-1.0) =============
 function getStreakMultiplier(days, boost) {
@@ -324,7 +325,7 @@ function getCharacterPower(state) {
   }
 
   const powerScore = Math.round((1 + globalPct) * (1 + critChance) * critMult * 10);
-  return { globalPct, critChance: Math.min(critChance, CRIT_CHANCE_MAX), critMult: Math.min(critMult, CRIT_MULT_MAX), dailyBonus, comboBonus, gameBonus, streakBoost, powerScore };
+  return { globalPct: Math.min(globalPct, 0.80), critChance: Math.min(critChance, CRIT_CHANCE_MAX), critMult: Math.min(critMult, CRIT_MULT_MAX), dailyBonus, comboBonus, gameBonus, streakBoost, powerScore };
 }
 
 // 打卡时计算单 slot 实际积分 (含暴击判定)
@@ -343,7 +344,12 @@ function calcSlotReward(state, slotKey, weekNum) {
     isCrit = Math.random() < Math.min(power.critChance, CRIT_CHANCE_MAX);
   }
   const critBonus = isCrit ? Math.min(power.critMult, CRIT_MULT_MAX) * 0.5 : 0;
-  const pts = Math.round(base * (1 + power.globalPct + streakBonus + critBonus));
+  let pts = Math.round(base * (1 + power.globalPct + streakBonus + critBonus));
+  // v19.3: 日上限 300pts soft cap
+  const todayEarned = (state._todayEarned || 0);
+  if (todayEarned + pts > DAILY_POINTS_CAP) {
+    pts = Math.max(1, DAILY_POINTS_CAP - todayEarned);
+  }
   return { pts, isCrit, base, globalPct: power.globalPct, streakBonus, critBonus };
 }
 
@@ -3802,13 +3808,13 @@ const WEEK_TASKS = [{"week":1,"date":"5.4-5.10","theme":"P3 Diversity(动+植+�
     const wn = i + 1;
     if (wn >= 27) break;
     if (w.days.Mon && w.days.Mon.E1) {
-      w.days.Mon.E1 = `📖 Comprehension OE 精练 (W${wn} 第1篇)`;
+      w.days.Mon.E1 = `📖 Comp OE 精练 — PEEL 模板 (W${wn} 第1篇: Point→Evidence→Explain→Link)`;
     }
     if (w.days.Tue && w.days.Tue.E1) {
-      w.days.Tue.E1 = `📖 Comprehension OE + Inference 专项 (W${wn})`;
+      w.days.Tue.E1 = `📖 Comp OE + Inference — PEEL 刻意练习 (W${wn})`;
     }
     if (w.days.Thu && w.days.Thu.E1) {
-      w.days.Thu.E1 = `📖 Cloze + Comp OE 混合练 (W${wn})`;
+      w.days.Thu.E1 = `📖 Cloze + Comp OE — PEEL 限时练 (W${wn})`;
     }
     if (w.days.Wed && w.days.Wed.E1) {
       w.days.Wed.E1 = `✏️ 作文 Composition (W${wn} 主题)`;
@@ -3816,8 +3822,58 @@ const WEEK_TASKS = [{"week":1,"date":"5.4-5.10","theme":"P3 Diversity(动+植+�
     if (w.days.Fri && w.days.Fri.E1) {
       w.days.Fri.E1 = `✏️ 作文重写 + Grammar 复习 (W${wn})`;
     }
+    // v19.3: 每周五 S2 改为英语 Paper 2 限时模拟
+    if (w.days.Fri && w.days.Fri.S2) {
+      w.days.Fri.S2 = `📖 英语 Paper 2 限时模拟 (Grammar+Cloze+Editing+Comp OE)`;
+    }
   }
 })();
+
+// ============= v19.3: 知识树⭐衰减 (每 56 天未复习 -1) =============
+function decayKnowledgeStars(state) {
+  if (!state.knowledgeStars) return;
+  const now = Date.now();
+  const DECAY_DAYS = 56;
+  for (const nodeId of Object.keys(state.knowledgeStars)) {
+    const rec = state.knowledgeStars[nodeId];
+    if (!rec || !rec.lastDate || rec.stars <= 0) continue;
+    const lastMs = new Date(rec.lastDate + 'T00:00:00').getTime();
+    const daysSince = Math.floor((now - lastMs) / 86400000);
+    if (daysSince >= DECAY_DAYS) {
+      const decays = Math.floor(daysSince / DECAY_DAYS);
+      rec.stars = Math.max(0, rec.stars - decays);
+    }
+  }
+}
+
+// ============= v19.3: SRS 错题间隔复习 (1→3→7→14→30 天) =============
+const SRS_INTERVALS = [1, 3, 7, 14, 30];
+
+function scheduleWrongAnswer(entry) {
+  if (!entry.interval) entry.interval = 0;
+  entry.interval = Math.min(entry.interval, SRS_INTERVALS.length - 1);
+  const days = SRS_INTERVALS[entry.interval];
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  entry.nextReviewDate = d.toISOString().slice(0, 10);
+}
+
+function promoteSRS(entry) {
+  entry.interval = Math.min((entry.interval || 0) + 1, SRS_INTERVALS.length - 1);
+  scheduleWrongAnswer(entry);
+}
+
+function demoteSRS(entry) {
+  entry.interval = 0;
+  entry.retries = (entry.retries || 0) + 1;
+  scheduleWrongAnswer(entry);
+}
+
+function getOverdueReviews(state) {
+  if (!state.wrongAnswers || !state.wrongAnswers.length) return [];
+  const today = new Date().toISOString().slice(0, 10);
+  return state.wrongAnswers.filter(e => e.nextReviewDate && e.nextReviewDate <= today);
+}
 
 // ============= 默认数据结构 (v2) =============
 function getDefaultState() {
@@ -5624,6 +5680,7 @@ window.CRIT_CHANCE_BASE = CRIT_CHANCE_BASE;
 window.CRIT_CHANCE_MAX = CRIT_CHANCE_MAX;
 window.CRIT_MULT_BASE = CRIT_MULT_BASE;
 window.CRIT_MULT_MAX = CRIT_MULT_MAX;
+window.DAILY_POINTS_CAP = DAILY_POINTS_CAP;
 window.EQUIPMENT_BUFFS = EQUIPMENT_BUFFS;
 window.EVO_COST_MULT = EVO_COST_MULT;
 window.EVO_POWER_MULT = EVO_POWER_MULT;
@@ -5634,6 +5691,11 @@ window.getStreakMultiplier = getStreakMultiplier;
 window.getCharacterPower = getCharacterPower;
 window.calcSlotReward = calcSlotReward;
 window.evolveEquipment = evolveEquipment;
+window.decayKnowledgeStars = decayKnowledgeStars;
+window.scheduleWrongAnswer = scheduleWrongAnswer;
+window.promoteSRS = promoteSRS;
+window.demoteSRS = demoteSRS;
+window.getOverdueReviews = getOverdueReviews;
 window.getCurrentChapter = getCurrentChapter;
 window.getNextChapter = getNextChapter;
 window.aggregateScores = aggregateScores;
