@@ -1322,7 +1322,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 var(--color-text); }
 .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--color-text); }
-.btn-primary { background: var(--color-primary); color: white; }
+.btn-primary { background: rgba(0,212,255,0.15); color: var(--color-primary); border: 1px solid rgba(0,212,255,0.3); }
 .btn-success { background: var(--color-primary); color: #0F172A; }
 .btn-warn { background: var(--color-warn); color: white; }
 .btn-danger { background: var(--color-danger); color: white; }
@@ -4207,7 +4207,6 @@ p { font-size: 14px; line-height: 1.6; }
   font-size: 15px !important;
   padding: 10px 20px !important;
   font-weight: 900 !important;
-  animation: wow-quiz-pulse 2s ease-in-out infinite;
 }
 @keyframes wow-quiz-pulse {
   0%, 100% { transform: scale(1); }
