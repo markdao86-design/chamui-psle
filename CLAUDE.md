@@ -172,3 +172,4 @@ python build.py && node qa_check.js   # 149 必过
 ---
 
 > 任何不在此文件的细节, 看 [HANDOFF.md](HANDOFF.md) 和 [CHANGELOG.md](CHANGELOG.md)。
+> **开发进度 + 未完成项**: 见 [DEV_SESSION_NOTES.md](DEV_SESSION_NOTES.md) (每次 session 结束更新)。
