@@ -335,7 +335,7 @@ body::before {
 .character-card {
   background:
     radial-gradient(ellipse at 20% 20%, rgba(0,212,255,0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(168,85,247,0.04) 0%, transparent 45%),
+    radial-gradient(ellipse at 80% 80%, rgba(56,189,248,0.04) 0%, transparent 45%),
     linear-gradient(140deg, rgba(15,23,42,0.9) 0%, rgba(30,41,59,0.8) 45%, var(--color-card) 100%);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-bubble);
@@ -353,12 +353,12 @@ body::before {
   /* 角色身后的柔光 */
   content: '';
   position: absolute;
-  top: 28%;
+  top: 20%;
   left: 50%;
   transform: translateX(-50%);
-  width: 220px;
-  height: 220px;
-  background: radial-gradient(circle, rgba(74,144,199,0.18) 0%, transparent 65%);
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(56,189,248,0.25) 0%, rgba(0,212,255,0.1) 40%, transparent 70%);
   pointer-events: none;
   animation: char-glow 5s ease-in-out infinite;
 }
@@ -410,12 +410,24 @@ body::before {
   justify-content: center;
   margin-bottom: 16px;
 }
+.character-display::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 180px;
+  height: 24px;
+  background: radial-gradient(ellipse, rgba(56,189,248,0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
 
 .character-svg {
   width: 240px;
   height: 240px;
   animation: idle-bounce 3s ease-in-out infinite;
-  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.15));
+  filter: drop-shadow(0 0 20px rgba(56,189,248,0.3)) drop-shadow(0 8px 16px rgba(0,0,0,0.3));
 }
 
 @keyframes idle-bounce {
