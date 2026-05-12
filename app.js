@@ -134,6 +134,8 @@ function renderHeader() {
   document.getElementById('totalPoints').textContent = state.totalPoints;
   document.getElementById('currentLevel').textContent = CHAMUI.getLevelInfo(state.totalPoints).lv;
   document.getElementById('currentWeek').textContent = state.currentWeek;
+  const crystalEl = document.getElementById('totalCrystals');
+  if (crystalEl) crystalEl.textContent = state.craftCrystals || 0;
   renderStreakBlock();  // v17.1
 }
 
@@ -240,6 +242,12 @@ function renderDashboard() {
   // 大字总分 + 击败比例
   const bigScoreEl = document.getElementById('bigScoreNum');
   if (bigScoreEl) bigScoreEl.textContent = points;
+  // v19.3: 💎水晶双货币显示
+  const crystals = state.craftCrystals || 0;
+  const crystalHeaderEl = document.getElementById('totalCrystals');
+  if (crystalHeaderEl) crystalHeaderEl.textContent = crystals;
+  const bigCrystalEl = document.getElementById('bigCrystalNum');
+  if (bigCrystalEl) bigCrystalEl.textContent = crystals;
   const beatPct = studentBeatPercent(points);
   const beatCnt = studentBeatCount(points);
   const beatPctEl = document.getElementById('beatPct');

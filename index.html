@@ -134,6 +134,7 @@ body::before {
 }
 
 .stat-pill.points { background: var(--color-accent); }
+.stat-pill.crystals { background: rgba(168,85,247,0.15); color: #C084FC; border: 1px solid rgba(168,85,247,0.3); }
 .stat-pill.level { background: rgba(0,255,136,0.12); color: var(--color-success); border: 1px solid rgba(0,255,136,0.25); }
 .stat-pill.week { background: rgba(56,189,248,0.12); color: var(--color-purple); border: 1px solid rgba(56,189,248,0.25); }
 
@@ -489,6 +490,12 @@ body::before {
   margin-top: 4px;
   letter-spacing: 1px;
 }
+.crystal-score-line {
+  font-size: 13px;
+  font-weight: 600;
+  color: #C084FC;
+  margin-top: 4px;
+}
 
 .beat-block {
   margin-top: 12px;
@@ -524,6 +531,26 @@ body::before {
   font-size: 11px;
   color: var(--color-text-light);
   margin-top: 2px;
+}
+.cta-checkin-btn {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px 0;
+  font-size: 18px;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--color-primary), #6366F1);
+  color: #fff;
+  cursor: pointer;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.cta-checkin-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99,102,241,0.5);
 }
 
 /* ===== 智慧教练 card ===== */
@@ -4504,6 +4531,7 @@ p { font-size: 14px; line-height: 1.6; }
   </div>
   <div class="app-stats">
     <div class="stat-pill points">⭐ <span id="totalPoints">0</span> 分</div>
+    <div class="stat-pill crystals">💎 <span id="totalCrystals">0</span></div>
     <div class="stat-pill level">Lv<span id="currentLevel">1</span></div>
     <!-- v18.48: 宝箱挪到顶部, 跟分数同列 -->
     <div class="stat-pill mystery-pill" id="mysteryTabBtn" onclick="openMysteryBoxModal()" title="🎁 神秘宝箱 + 抽奖碎片">
@@ -4553,6 +4581,7 @@ p { font-size: 14px; line-height: 1.6; }
         <div class="big-score-block">
           <div class="big-score-num" id="bigScoreNum">0</div>
           <div class="big-score-label">⭐ 总积分</div>
+          <div class="crystal-score-line" id="crystalScoreLine">💎 <span id="bigCrystalNum">0</span> 水晶</div>
         </div>
         <!-- 击败比例 -->
         <div class="beat-block" id="beatBlock">
@@ -4562,6 +4591,10 @@ p { font-size: 14px; line-height: 1.6; }
             <div class="beat-count">约 <b id="beatCount">0</b> 名小学生(共 <span id="beatTotal">50000</span> 名)</div>
           </div>
         </div>
+        <!-- v19.3: CTA 按钮 -->
+        <button class="cta-checkin-btn" id="ctaCheckinBtn" onclick="document.querySelector('[data-page=checkin]').click()">
+          ▶ 开始今日打卡
+        </button>
       </div>
       
       <div class="hero-right-column">
