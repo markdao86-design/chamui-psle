@@ -1228,7 +1228,7 @@ function renderWeeklyCoach() {
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <span style="font-weight:700;color:var(--color-danger)">❌ ${wrongItems.length} 题待攻克</span>
           <span style="font-size:11px;color:var(--color-text-light)">${errSummary}</span>
-          <button class="btn btn-primary" onclick="openErrorBank()" style="font-size:12px;padding:6px 14px;margin-left:auto">🎯 开始训练</button>
+          <button class="btn btn-primary" onclick="openErrorBank()" style="font-size:12px;padding:6px 14px;margin-left:auto">🎯 开始训练 (+2分/答对)</button>
         </div>
       ` : `<div style="display:flex;align-items:center;gap:8px">
         <span style="color:var(--color-success);font-weight:600">✅ 错题全部消灭!</span>
