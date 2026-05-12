@@ -403,23 +403,18 @@ body::before {
 
 .character-display {
   position: relative;
-  width: 260px;
-  height: 260px;
+  height: 280px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 16px;
-  background: radial-gradient(circle, rgba(0,212,255,0.12) 0%, rgba(15,23,42,0.9) 70%);
-  border-radius: 50%;
-  border: 2px solid rgba(0,212,255,0.25);
-  box-shadow: 0 0 24px rgba(0,212,255,0.15), inset 0 0 40px rgba(0,212,255,0.05);
+  margin-bottom: 16px;
 }
 
 .character-svg {
   width: 240px;
   height: 240px;
   animation: idle-bounce 3s ease-in-out infinite;
-  filter: drop-shadow(0 4px 12px rgba(0,212,255,0.3)) drop-shadow(0 0 20px rgba(0,212,255,0.15));
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.15));
 }
 
 @keyframes idle-bounce {
@@ -4570,43 +4565,98 @@ p { font-size: 14px; line-height: 1.6; }
       </div>
       
       <div class="hero-right-column">
-        <!-- v19.3: 精简主页 — 只保留CTA + 宠物气泡 -->
-        <div id="powerChapterBar" style="margin-top:10px;padding:12px 14px;background:var(--color-card-soft);border-radius:var(--radius);"></div>
-        <button class="btn btn-primary dashboard-cta" onclick="switchPage('checkin')" style="width:100%;padding:16px;font-size:17px;font-weight:900;margin-top:14px;border-radius:12px;background:linear-gradient(135deg,var(--color-primary),#0099CC);letter-spacing:1px">⚔️ 开始今日打卡</button>
-        <!-- 隐藏元素 (保留 DOM 给 JS 不报错) -->
+        <!-- v17.4: Wow 卡 移到 hero 右栏 (代替原 streak-rules 位置) — 第一屏右侧大卡 -->
         <div class="card wow-card-big" id="wowCard" style="display:none"></div>
+
+        <!-- 名师秘诀 -->
         <div class="master-tip-card" id="masterTipCard" style="display:none"></div>
+
+        <!-- v18.5: 间隔重复 + 每日任务 + mini-game 大厅 全部移到右栏 (填充空白) -->
         <div class="card review-card" id="reviewCard" style="display:none"></div>
-        <div class="card daily-quest-card" id="dailyQuestCard" style="display:none"></div>
+        <div class="card daily-quest-card" id="dailyQuestCard"></div>
+        <div class="card mini-game-hub-card">
+          <div class="mgh-row">
+            <div class="mgh-icon">🎮</div>
+            <div class="mgh-info">
+              <div class="mgh-title">Mini-game 大厅</div>
+              <div class="mgh-sub">10 个游戏 — 词汇/数学/科学MCQ/华文/Editing/听写/单位/Grammar/Cloze/科学分类</div>
+            </div>
+            <button class="btn btn-primary" onclick="openMiniGameHub()">🎮 玩</button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- v19.3: 以下卡片隐藏 (保留 DOM, JS 不报错) -->
-    <div class="card achievement-wall-card" id="achievementWallCard" style="display:none"></div>
-    <div class="card coach-card" style="display:none">
+    <!-- v18 Phase 5.1: 🏆 成就墙 -->
+    <div class="card achievement-wall-card" id="achievementWallCard"></div>
+
+    <!-- v17.6: 今日铁律已删除 (用户反馈) -->
+
+    <!-- 智慧教练:本周诊断 + 重点 + 提升建议 + 名师秘诀 -->
+    <div class="card coach-card">
       <div class="coach-header">
         <div class="coach-title">🎓 本周智慧教练</div>
         <div class="coach-meta" id="coachMeta">W? · 阶段名</div>
       </div>
       <div id="coachContent"></div>
       <div id="coachDiag" class="coach-diag-line"></div>
-    </div>
-    <div class="card progress-card-section" style="display:none">
-      <div class="progress-section">
-        <div class="progress-bar-container"><div class="progress-bar-fill" id="progressBar" style="width:0%"></div></div>
-        <div class="progress-text" id="progressText"></div>
-        <span id="progressPercentage" style="display:none">0%</span>
-        <div class="progress-stats">
-          <div class="progress-stat"><div class="progress-stat-value" id="weekPoints">0</div><div class="progress-stat-label">本周加分</div></div>
-          <div class="progress-stat"><div class="progress-stat-value" id="monthPoints">0</div><div class="progress-stat-label">本月积分</div></div>
-          <div class="progress-stat"><div class="progress-stat-value" id="streakWeeks">0</div><div class="progress-stat-label">无问题周</div></div>
-        </div>
+      <div class="coach-actions">
+        <button class="btn btn-primary" onclick="openReportModal()">📋 生成本周报告</button>
       </div>
     </div>
-    <div class="card" id="errorBankCard" style="display:none"></div>
-    <div class="card" id="dragonProgressCard" style="display:none"></div>
-    <div class="card" style="display:none"><div class="skin-grid" id="skinGrid"></div></div>
-    <div class="card" style="display:none"><div class="equipment-grid" id="equipmentGrid"></div></div>
+
+    <!-- v17.3: 升级进度 (从顶部移到第二屏) -->
+    <div class="card progress-card-section">
+      <div class="card-title">📈 升级进度 + 周月统计 <button class="btn btn-secondary" style="float:right;font-size:13px;padding:4px 10px" onclick="showFutureSelfModal()">🌅 看 W73 的我</button></div>
+      <div class="progress-section">
+        <div class="progress-header">
+          <div class="progress-label">距下一级</div>
+          <span id="progressPercentage" style="font-weight:700;color:var(--color-primary);font-size:16px">0%</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+        </div>
+        <div class="progress-text" id="progressText">距离下一级还差 30 分</div>
+        <div class="progress-stats">
+          <div class="progress-stat">
+            <div class="progress-stat-value" id="weekPoints">0</div>
+            <div class="progress-stat-label">本周加分</div>
+          </div>
+          <div class="progress-stat">
+            <div class="progress-stat-value" id="monthPoints">0</div>
+            <div class="progress-stat-label">本月积分</div>
+          </div>
+          <div class="progress-stat">
+            <div class="progress-stat-value" id="streakWeeks">0</div>
+            <div class="progress-stat-label">无问题周</div>
+          </div>
+        </div>
+        <!-- v19.2: 战力 + 章节 + 下一目标 -->
+        <div id="powerChapterBar" style="margin-top:10px;padding:8px 12px;background:var(--color-bg);border-radius:var(--radius);"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👕 皮肤更衣室</div>
+      <p style="color: var(--color-text-light); font-size: 13px; margin-bottom: 4px;">
+        点击已解锁的皮肤穿上!不同皮肤有专属配色和饰品。
+      </p>
+      <div class="skin-grid" id="skinGrid"></div>
+    </div>
+
+    <!-- v18.59: 错题本入口卡 -->
+    <div class="card" id="errorBankCard"></div>
+
+    <!-- v18.55: 双层龙进度卡 -->
+    <div class="card" id="dragonProgressCard"></div>
+
+    <div class="card">
+      <div class="card-title">⚔️ 装备收集</div>
+      <p style="color: var(--color-text-light); font-size: 13px; margin-bottom: 12px;">
+        每达成条件解锁一件装备,佑子会变得越来越强大!
+      </p>
+      <div class="equipment-grid" id="equipmentGrid"></div>
+    </div>
   </div>
 
   <!-- 打卡页 -->

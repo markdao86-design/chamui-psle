@@ -270,7 +270,7 @@ const CHAMUI = {
     const eyes = sad ? `
       <ellipse cx="90" cy="78" rx="3" ry="6" fill="#2D3047"/>
       <ellipse cx="130" cy="78" rx="3" ry="6" fill="#2D3047"/>
-      <path d="M 80 68 L 95 74 M 125 74 L 140 68" stroke="#2D3047" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M 80 68 L 95 74 M 125 74 L 140 68" stroke="#8090A0" stroke-width="2.5" fill="none" stroke-linecap="round"/>
     ` : `
       <ellipse cx="90" cy="78" rx="7" ry="10" fill="#2D3047"/>
       <ellipse cx="130" cy="78" rx="7" ry="10" fill="#2D3047"/>
@@ -279,9 +279,9 @@ const CHAMUI = {
     `;
 
     const mouth = sad ? `
-      <path d="M 95 108 Q 110 100 125 108" stroke="#2D3047" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M 95 108 Q 110 100 125 108" stroke="#8090A0" stroke-width="3" fill="none" stroke-linecap="round"/>
     ` : `
-      <path d="M 88 98 Q 110 122 132 98 Q 132 104 110 110 Q 88 104 88 98 Z" fill="#2D3047" stroke="#2D3047" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M 88 98 Q 110 122 132 98 Q 132 104 110 110 Q 88 104 88 98 Z" fill="#2D3047" stroke="#8090A0" stroke-width="2.5" stroke-linejoin="round"/>
       <path d="M 92 100 L 128 100 L 124 104 L 96 104 Z" fill="white"/>
       <ellipse cx="110" cy="110" rx="9" ry="3.5" fill="#FF6B6B"/>
     `;
@@ -303,9 +303,9 @@ const CHAMUI = {
 
       <!-- 腿 -->
       <rect x="${91 - 8}" y="${tpl.legTop}" width="16" height="${tpl.legBottom - tpl.legTop - 2}" rx="4"
-            fill="${pantsColor}" stroke="#2D3047" stroke-width="2.5"/>
+            fill="${pantsColor}" stroke="#8090A0" stroke-width="2.5"/>
       <rect x="${129 - 8}" y="${tpl.legTop}" width="16" height="${tpl.legBottom - tpl.legTop - 2}" rx="4"
-            fill="${pantsColor}" stroke="#2D3047" stroke-width="2.5"/>
+            fill="${pantsColor}" stroke="#8090A0" stroke-width="2.5"/>
       <!-- 鞋 -->
       <ellipse cx="91" cy="${tpl.legBottom}" rx="13" ry="5" fill="#2D3047"/>
       <ellipse cx="129" cy="${tpl.legBottom}" rx="13" ry="5" fill="#2D3047"/>
@@ -319,33 +319,33 @@ const CHAMUI = {
                L ${110 + bodyHalfBot - 4} ${tpl.bodyBottom + 2}
                Q ${110 + bodyHalfBot + 2} ${tpl.bodyBottom} ${110 + bodyHalfBot} ${tpl.bodyBottom - 8}
                Q ${110 + bodyHalfTop + 4} ${tpl.bodyTop + 8} ${110 + bodyHalfTop} ${tpl.bodyTop + 2} Z"
-            fill="${shirtColor}" stroke="#2D3047" stroke-width="3"/>
+            fill="${shirtColor}" stroke="#8090A0" stroke-width="3"/>
       <!-- 领口 V (自然过渡到脖子) -->
       <path d="M ${110 - 12} ${tpl.bodyTop + 2} Q 110 ${tpl.bodyTop + 14} ${110 + 12} ${tpl.bodyTop + 2}"
-            stroke="#2D3047" stroke-width="2.5" fill="${skinColor}"/>
+            stroke="#8090A0" stroke-width="2.5" fill="${skinColor}"/>
 
       <!-- 胳膊 (从肩膀向下到手, 弧形) -->
       <path d="M ${110 - bodyHalfTop + 2} ${tpl.shoulderY + 2}
                Q ${A.handL[0] - 6} ${(tpl.shoulderY + A.handL[1]) / 2} ${A.handL[0] + 6} ${A.handL[1] - 4}
                L ${A.handL[0] + 14} ${A.handL[1] - 6}
                Q ${110 - bodyHalfTop + 12} ${tpl.shoulderY + 8} ${110 - bodyHalfTop + 4} ${tpl.shoulderY + 4} Z"
-            fill="${shirtColor}" stroke="#2D3047" stroke-width="2.5"/>
+            fill="${shirtColor}" stroke="#8090A0" stroke-width="2.5"/>
       <path d="M ${110 + bodyHalfTop - 2} ${tpl.shoulderY + 2}
                Q ${A.handR[0] + 6} ${(tpl.shoulderY + A.handR[1]) / 2} ${A.handR[0] - 6} ${A.handR[1] - 4}
                L ${A.handR[0] - 14} ${A.handR[1] - 6}
                Q ${110 + bodyHalfTop - 12} ${tpl.shoulderY + 8} ${110 + bodyHalfTop - 4} ${tpl.shoulderY + 4} Z"
-            fill="${shirtColor}" stroke="#2D3047" stroke-width="2.5"/>
+            fill="${shirtColor}" stroke="#8090A0" stroke-width="2.5"/>
       <!-- 手 -->
-      <circle cx="${A.handL[0]}" cy="${A.handL[1]}" r="8" fill="${skinColor}" stroke="#2D3047" stroke-width="2.5"/>
-      <circle cx="${A.handR[0]}" cy="${A.handR[1]}" r="8" fill="${skinColor}" stroke="#2D3047" stroke-width="2.5"/>
+      <circle cx="${A.handL[0]}" cy="${A.handL[1]}" r="8" fill="${skinColor}" stroke="#8090A0" stroke-width="2.5"/>
+      <circle cx="${A.handR[0]}" cy="${A.handR[1]}" r="8" fill="${skinColor}" stroke="#8090A0" stroke-width="2.5"/>
 
       <!-- 脖子 -->
       <rect x="${110 - 7}" y="${tpl.neckTop}" width="14" height="${tpl.neckBottom - tpl.neckTop}"
-            fill="${skinColor}" stroke="#2D3047" stroke-width="2.5"/>
+            fill="${skinColor}" stroke="#8090A0" stroke-width="2.5"/>
 
       <!-- 头 -->
       <ellipse cx="110" cy="${tpl.headCY}" rx="${tpl.headR}" ry="${tpl.headRy}"
-               fill="${skinColor}" stroke="#2D3047" stroke-width="3"/>
+               fill="${skinColor}" stroke="#8090A0" stroke-width="3"/>
 
       <!-- 头发 -->
       ${hair}
@@ -709,7 +709,7 @@ const CHAMUI = {
                Q ${A.shoulderL[0]-15} ${tpl.bodyBottom-30} ${A.shoulderL[0]-25} ${tpl.legBottom+5}
                L ${A.shoulderR[0]+25} ${tpl.legBottom+5}
                Q ${A.shoulderR[0]+15} ${tpl.bodyBottom-30} ${A.shoulderR[0]-4} ${A.shoulderR[1]+2} Z"
-            fill="#A788E0" stroke="#2D3047" stroke-width="2.5" opacity="0.92">
+            fill="#A788E0" stroke="#8090A0" stroke-width="2.5" opacity="0.92">
         <animateTransform attributeName="transform" type="rotate" values="-1.2 110 ${A.shoulderL[1]};1.2 110 ${A.shoulderL[1]};-1.2 110 ${A.shoulderL[1]}" dur="3.5s" repeatCount="indefinite"/>
       </path>
       <!-- 披风褶皱阴影 -->
@@ -717,7 +717,7 @@ const CHAMUI = {
       <path d="M ${A.shoulderL[0]-10} ${tpl.bodyBottom-20} L ${A.shoulderL[0]-22} ${tpl.legBottom-2}" stroke="#7A56C4" stroke-width="1.5" fill="none" opacity="0.5"/>
       <path d="M ${A.shoulderR[0]+10} ${tpl.bodyBottom-20} L ${A.shoulderR[0]+22} ${tpl.legBottom-2}" stroke="#7A56C4" stroke-width="1.5" fill="none" opacity="0.5"/>
       <!-- 披风扣 (在锁骨位置) -->
-      <circle cx="110" cy="${A.shoulderL[1]+4}" r="3" fill="#FFE66D" stroke="#2D3047" stroke-width="1.5"/>
+      <circle cx="110" cy="${A.shoulderL[1]+4}" r="3" fill="#FFE66D" stroke="#8090A0" stroke-width="1.5"/>
     ` : '';
 
     const galaxyCape = has.galaxy ? `
@@ -725,13 +725,13 @@ const CHAMUI = {
                Q ${A.shoulderL[0]-22} ${tpl.bodyBottom-30} ${A.shoulderL[0]-32} ${tpl.legBottom+8}
                L ${A.shoulderR[0]+32} ${tpl.legBottom+8}
                Q ${A.shoulderR[0]+22} ${tpl.bodyBottom-30} ${A.shoulderR[0]-4} ${A.shoulderR[1]+2} Z"
-            fill="url(#galaxyGrad)" stroke="#2D3047" stroke-width="2.5" opacity="0.95">
+            fill="url(#galaxyGrad)" stroke="#8090A0" stroke-width="2.5" opacity="0.95">
         <animateTransform attributeName="transform" type="rotate" values="-2 110 ${A.shoulderL[1]};2 110 ${A.shoulderL[1]};-2 110 ${A.shoulderL[1]}" dur="3.5s" repeatCount="indefinite"/>
       </path>
       <text x="${A.shoulderL[0]-15}" y="${tpl.bodyBottom-15}" font-size="9" fill="#FFE66D">✦</text>
       <text x="${A.shoulderR[0]+10}" y="${tpl.bodyBottom-25}" font-size="11" fill="white">★</text>
       <text x="100" y="${tpl.legTop+5}" font-size="9" fill="#FFE66D">✧</text>
-      <circle cx="110" cy="${A.shoulderL[1]+4}" r="3" fill="#FFE66D" stroke="#2D3047" stroke-width="1.5"/>
+      <circle cx="110" cy="${A.shoulderL[1]+4}" r="3" fill="#FFE66D" stroke="#8090A0" stroke-width="1.5"/>
       <defs>
         <linearGradient id="galaxyGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="#A788E0"/><stop offset="50%" stop-color="#4338a0"/><stop offset="100%" stop-color="#1a0d40"/>
@@ -745,14 +745,14 @@ const CHAMUI = {
         <!-- 袋体阴影 -->
         <ellipse cx="72" cy="${tpl.legBottom+4}" rx="18" ry="4" fill="#2D3047" opacity="0.18"/>
         <!-- 主袋体 -->
-        <rect x="54" y="${tpl.legBottom-30}" width="34" height="34" fill="#FF9F45" stroke="#2D3047" stroke-width="2" rx="6"/>
+        <rect x="54" y="${tpl.legBottom-30}" width="34" height="34" fill="#FF9F45" stroke="#8090A0" stroke-width="2" rx="6"/>
         <!-- 前袋口 -->
-        <rect x="59" y="${tpl.legBottom-22}" width="24" height="20" fill="#FF8C2D" stroke="#2D3047" stroke-width="1.5" rx="4"/>
+        <rect x="59" y="${tpl.legBottom-22}" width="24" height="20" fill="#FF8C2D" stroke="#8090A0" stroke-width="1.5" rx="4"/>
         <!-- 拉链 -->
-        <line x1="60" y1="${tpl.legBottom-17}" x2="82" y2="${tpl.legBottom-17}" stroke="#2D3047" stroke-width="1.2" stroke-dasharray="2.5,2"/>
+        <line x1="60" y1="${tpl.legBottom-17}" x2="82" y2="${tpl.legBottom-17}" stroke="#8090A0" stroke-width="1.2" stroke-dasharray="2.5,2"/>
         <circle cx="60" cy="${tpl.legBottom-17}" r="2.2" fill="#2D3047"/>
         <!-- 顶提手 -->
-        <path d="M 63,${tpl.legBottom-30} Q 71,${tpl.legBottom-37} 79,${tpl.legBottom-30}" fill="none" stroke="#2D3047" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M 63,${tpl.legBottom-30} Q 71,${tpl.legBottom-37} 79,${tpl.legBottom-30}" fill="none" stroke="#8090A0" stroke-width="2.5" stroke-linecap="round"/>
         <!-- 侧面肩带 -->
         <path d="M 54,${tpl.legBottom-20} Q 45,${tpl.legBottom-8} 50,${tpl.legBottom+2}" fill="none" stroke="#8B4513" stroke-width="3" stroke-linecap="round"/>
       </g>
@@ -765,8 +765,8 @@ const CHAMUI = {
       <!-- 月度王徽章: 挂带 + 圆牌 -->
       <path d="M ${A.shoulderL[0]+8} ${A.shoulderL[1]+5} L ${A.chest[0]} ${A.chest[1]+2}
                L ${A.shoulderR[0]-8} ${A.shoulderR[1]+5}" stroke="#C13030" stroke-width="3" fill="none"/>
-      <circle cx="${A.chest[0]}" cy="${A.chest[1]+10}" r="11" fill="#FFE66D" stroke="#2D3047" stroke-width="2.5"/>
-      <circle cx="${A.chest[0]}" cy="${A.chest[1]+10}" r="6.5" fill="#FF6B6B" stroke="#2D3047" stroke-width="1.5"/>
+      <circle cx="${A.chest[0]}" cy="${A.chest[1]+10}" r="11" fill="#FFE66D" stroke="#8090A0" stroke-width="2.5"/>
+      <circle cx="${A.chest[0]}" cy="${A.chest[1]+10}" r="6.5" fill="#FF6B6B" stroke="#8090A0" stroke-width="1.5"/>
       <text x="${A.chest[0]-3.5}" y="${A.chest[1]+13.5}" font-size="9" font-weight="bold" fill="white">王</text>
     ` : '';
 
@@ -775,7 +775,7 @@ const CHAMUI = {
       <path d="M ${110-8} ${tpl.neckBottom-2} L ${A.chest[0]-2} ${A.chest[1]-2}
                L ${A.chest[0]+2} ${A.chest[1]-2} L ${110+8} ${tpl.neckBottom-2}"
             stroke="#FFE66D" stroke-width="4" fill="none"/>
-      <circle cx="${A.chest[0]}" cy="${A.chest[1]+8}" r="13" fill="#FFD700" stroke="#2D3047" stroke-width="2.5"/>
+      <circle cx="${A.chest[0]}" cy="${A.chest[1]+8}" r="13" fill="#FFD700" stroke="#8090A0" stroke-width="2.5"/>
       <circle cx="${A.chest[0]}" cy="${A.chest[1]+8}" r="9" fill="#FFA500" stroke="#FFE66D" stroke-width="1"/>
       <text x="${A.chest[0]-5}" y="${A.chest[1]+12}" font-size="11" font-weight="900" fill="#8B6F00">1</text>
     ` : '';
@@ -783,7 +783,7 @@ const CHAMUI = {
     const lightning = has.lightning ? `
       <!-- 右臂袖标: 黄底闪电符号 -->
       <rect x="${A.shoulderR[0]-3}" y="${A.shoulderR[1]+10}" width="20" height="14"
-            fill="#FFE66D" stroke="#2D3047" stroke-width="2" rx="3"
+            fill="#FFE66D" stroke="#8090A0" stroke-width="2" rx="3"
             transform="rotate(15 ${A.shoulderR[0]+7} ${A.shoulderR[1]+17})"/>
       <text x="${A.shoulderR[0]+1}" y="${A.shoulderR[1]+22}" font-size="12" fill="#2D3047" font-weight="900"
             transform="rotate(15 ${A.shoulderR[0]+7} ${A.shoulderR[1]+17})">⚡</text>
@@ -792,7 +792,7 @@ const CHAMUI = {
     const star = has.star ? `
       <g transform="translate(${A.chest[0] + 18} ${A.chest[1] - 5})">
         <polygon points="0,-9 2.6,-3 9,-3 4,1.5 6,8 0,4.5 -6,8 -4,1.5 -9,-3 -2.6,-3"
-                 fill="#FFE66D" stroke="#2D3047" stroke-width="1.5"/>
+                 fill="#FFE66D" stroke="#8090A0" stroke-width="1.5"/>
         <polygon points="0,-5 1.4,-1.5 5,-1.5 2.2,1 3.3,4.5 0,2.5 -3.3,4.5 -2.2,1 -5,-1.5 -1.4,-1.5"
                  fill="#FFA500"/>
       </g>
@@ -800,16 +800,16 @@ const CHAMUI = {
 
     const badge_p6 = has.badge_p6 ? `
       <g transform="translate(${A.chest[0] - 22} ${A.chest[1] + 4})">
-        <polygon points="-6,-4 6,-4 4,4 -4,4" fill="#C13030" stroke="#2D3047" stroke-width="1.5"/>
-        <polygon points="-4,4 -6,12 0,8 6,12 4,4" fill="#0D7C3E" stroke="#2D3047" stroke-width="1.5"/>
-        <circle cx="0" cy="0" r="5" fill="#FFE66D" stroke="#2D3047" stroke-width="1.5"/>
+        <polygon points="-6,-4 6,-4 4,4 -4,4" fill="#C13030" stroke="#8090A0" stroke-width="1.5"/>
+        <polygon points="-4,4 -6,12 0,8 6,12 4,4" fill="#0D7C3E" stroke="#8090A0" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="5" fill="#FFE66D" stroke="#8090A0" stroke-width="1.5"/>
         <text x="-3" y="2.5" font-size="6" font-weight="900" fill="#2D3047">P6</text>
       </g>
     ` : '';
 
     const badge_2 = has.badge_2 ? `
       <g transform="translate(${A.chest[0] + 22} ${A.chest[1] + 4})">
-        <circle cx="0" cy="0" r="6" fill="#FF6B9D" stroke="#2D3047" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="6" fill="#FF6B9D" stroke="#8090A0" stroke-width="1.5"/>
         <circle cx="-3" cy="-3" r="2.5" fill="#FFB6D9"/>
         <circle cx="3" cy="-3" r="2.5" fill="#FFB6D9"/>
         <circle cx="-3" cy="3" r="2.5" fill="#FFB6D9"/>
@@ -820,9 +820,9 @@ const CHAMUI = {
 
     const badge_3 = has.badge_3 ? `
       <g transform="translate(${A.chest[0]} ${A.chest[1] + 22})">
-        <path d="M -5 -8 L 5 -8 L 8 0 L 0 8 L -8 0 Z" fill="#7B2CBF" stroke="#2D3047" stroke-width="1.5"/>
-        <polygon points="-5,8 -8,15 -3,12" fill="#7B2CBF" stroke="#2D3047" stroke-width="1"/>
-        <polygon points="5,8 8,15 3,12" fill="#7B2CBF" stroke="#2D3047" stroke-width="1"/>
+        <path d="M -5 -8 L 5 -8 L 8 0 L 0 8 L -8 0 Z" fill="#7B2CBF" stroke="#8090A0" stroke-width="1.5"/>
+        <polygon points="-5,8 -8,15 -3,12" fill="#7B2CBF" stroke="#8090A0" stroke-width="1"/>
+        <polygon points="5,8 8,15 3,12" fill="#7B2CBF" stroke="#8090A0" stroke-width="1"/>
         <text x="-3" y="3" font-size="7" font-weight="900" fill="white">★</text>
       </g>
     ` : '';
@@ -833,7 +833,7 @@ const CHAMUI = {
                L ${A.waistL[0]+6} ${A.waistL[1]-2}
                L ${A.waistL[0]+12} ${A.waistL[1]+4}
                L ${A.shoulderR[0]+2} ${A.shoulderR[1]+10} Z"
-            fill="#FFD700" stroke="#2D3047" stroke-width="2" opacity="0.92"/>
+            fill="#FFD700" stroke="#8090A0" stroke-width="2" opacity="0.92"/>
       <text x="${(A.shoulderR[0]+A.waistL[0])/2-4}" y="${(A.shoulderR[1]+A.waistL[1])/2+4}" font-size="10"
             fill="#2D3047" font-weight="900">学</text>
     ` : '';
@@ -843,37 +843,37 @@ const CHAMUI = {
     const gripL = `<path d="M ${A.handL[0]-6} ${A.handL[1]-4} Q ${A.handL[0]} ${A.handL[1]-7} ${A.handL[0]+6} ${A.handL[1]-4}
                               Q ${A.handL[0]+8} ${A.handL[1]+1} ${A.handL[0]+6} ${A.handL[1]+5}
                               Q ${A.handL[0]} ${A.handL[1]+8} ${A.handL[0]-6} ${A.handL[1]+5} Z"
-                      fill="${skinColor}" stroke="#2D3047" stroke-width="1.5"/>`;
+                      fill="${skinColor}" stroke="#8090A0" stroke-width="1.5"/>`;
     const gripR = `<path d="M ${A.handR[0]-6} ${A.handR[1]-4} Q ${A.handR[0]} ${A.handR[1]-7} ${A.handR[0]+6} ${A.handR[1]-4}
                               Q ${A.handR[0]+8} ${A.handR[1]+1} ${A.handR[0]+6} ${A.handR[1]+5}
                               Q ${A.handR[0]} ${A.handR[1]+8} ${A.handR[0]-6} ${A.handR[1]+5} Z"
-                      fill="${skinColor}" stroke="#2D3047" stroke-width="1.5"/>`;
+                      fill="${skinColor}" stroke="#8090A0" stroke-width="1.5"/>`;
 
     // v18.62: 剑 3D 立体感 (银色金属渐变 + 高光 + 红宝石护手)
     const sword = has.sword ? `
       <g filter="url(#eqShadow)">
         <g transform="translate(${A.handR[0]}, ${A.handR[1]}) rotate(20)">
           <!-- 剑身 (银色金属渐变, 加宽) -->
-          <rect x="-4" y="-58" width="8" height="56" rx="1" fill="url(#metalSilver)" stroke="#2D3047" stroke-width="2"/>
+          <rect x="-4" y="-58" width="8" height="56" rx="1" fill="url(#metalSilver)" stroke="#8090A0" stroke-width="2"/>
           <!-- 剑身高光中线 -->
           <line x1="0" y1="-58" x2="0" y2="-3" stroke="#FFF" stroke-width="1.2" opacity="0.85"/>
           <!-- 剑刃边缘加深 (3D 厚度) -->
           <line x1="-4" y1="-58" x2="-4" y2="-3" stroke="#888" stroke-width="0.8"/>
           <line x1="4" y1="-58" x2="4" y2="-3" stroke="#888" stroke-width="0.8"/>
           <!-- 剑尖 (双层金属) -->
-          <polygon points="-5,-58 5,-58 0,-72" fill="url(#metalSilver)" stroke="#2D3047" stroke-width="2"/>
+          <polygon points="-5,-58 5,-58 0,-72" fill="url(#metalSilver)" stroke="#8090A0" stroke-width="2"/>
           <polygon points="-2,-60 2,-60 0,-68" fill="#FFF" opacity="0.9"/>
           <!-- 护手 (金色, 加宽) -->
-          <rect x="-9" y="-3" width="18" height="5" rx="1" fill="url(#metalGold)" stroke="#2D3047" stroke-width="1.8"/>
+          <rect x="-9" y="-3" width="18" height="5" rx="1" fill="url(#metalGold)" stroke="#8090A0" stroke-width="1.8"/>
           <!-- 护手装饰星 -->
           <circle cx="-7" cy="-1" r="1.5" fill="#FFA500"/>
           <circle cx="7" cy="-1" r="1.5" fill="#FFA500"/>
           <!-- 剑柄 (红色皮革缠绕) -->
-          <rect x="-3" y="2" width="6" height="10" fill="url(#metalRed)" stroke="#2D3047" stroke-width="1.5"/>
+          <rect x="-3" y="2" width="6" height="10" fill="url(#metalRed)" stroke="#8090A0" stroke-width="1.5"/>
           <line x1="-3" y1="5" x2="3" y2="6" stroke="#A03030" stroke-width="1"/>
           <line x1="-3" y1="8" x2="3" y2="9" stroke="#A03030" stroke-width="1"/>
           <!-- 红宝石 (球形) -->
-          <circle cx="0" cy="14" r="3.5" fill="url(#appleSphere)" stroke="#2D3047" stroke-width="1.5"/>
+          <circle cx="0" cy="14" r="3.5" fill="url(#appleSphere)" stroke="#8090A0" stroke-width="1.5"/>
           <ellipse cx="-1" cy="13" rx="1" ry="0.8" fill="#FFF" opacity="0.9"/>
         </g>
         ${gripR}
@@ -921,13 +921,13 @@ const CHAMUI = {
       <g>
         <g transform="translate(${A.handR[0]}, ${A.handR[1]}) rotate(-10)">
           <rect x="-3" y="-30" width="6" height="30" rx="2" fill="#2D3047"/>
-          <ellipse cx="0" cy="-35" rx="9" ry="11" fill="#FFD700" stroke="#2D3047" stroke-width="2"/>
-          <line x1="-7" y1="-39" x2="7" y2="-39" stroke="#2D3047" stroke-width="0.7"/>
-          <line x1="-7" y1="-35" x2="7" y2="-35" stroke="#2D3047" stroke-width="0.7"/>
-          <line x1="-7" y1="-31" x2="7" y2="-31" stroke="#2D3047" stroke-width="0.7"/>
-          <line x1="-5" y1="-44" x2="-5" y2="-26" stroke="#2D3047" stroke-width="0.7"/>
-          <line x1="0" y1="-46" x2="0" y2="-24" stroke="#2D3047" stroke-width="0.7"/>
-          <line x1="5" y1="-44" x2="5" y2="-26" stroke="#2D3047" stroke-width="0.7"/>
+          <ellipse cx="0" cy="-35" rx="9" ry="11" fill="#FFD700" stroke="#8090A0" stroke-width="2"/>
+          <line x1="-7" y1="-39" x2="7" y2="-39" stroke="#8090A0" stroke-width="0.7"/>
+          <line x1="-7" y1="-35" x2="7" y2="-35" stroke="#8090A0" stroke-width="0.7"/>
+          <line x1="-7" y1="-31" x2="7" y2="-31" stroke="#8090A0" stroke-width="0.7"/>
+          <line x1="-5" y1="-44" x2="-5" y2="-26" stroke="#8090A0" stroke-width="0.7"/>
+          <line x1="0" y1="-46" x2="0" y2="-24" stroke="#8090A0" stroke-width="0.7"/>
+          <line x1="5" y1="-44" x2="5" y2="-26" stroke="#8090A0" stroke-width="0.7"/>
         </g>
         ${gripR}
       </g>
@@ -936,7 +936,7 @@ const CHAMUI = {
     const tube = (has.tube && !has.shield && !has.note && !has.cert) ? `
       <g>
         <g transform="translate(${A.handL[0]}, ${A.handL[1]}) rotate(-12)">
-          <rect x="-5" y="-28" width="10" height="28" rx="2" fill="#4ECDC4" stroke="#2D3047" stroke-width="2" opacity="0.85"/>
+          <rect x="-5" y="-28" width="10" height="28" rx="2" fill="#4ECDC4" stroke="#8090A0" stroke-width="2" opacity="0.85"/>
           <rect x="-6" y="-30" width="12" height="4" fill="#2D3047" rx="1"/>
           <ellipse cx="0" cy="-12" rx="2.5" ry="2" fill="white" opacity="0.9">
             <animate attributeName="cy" values="-5;-25;-5" dur="2s" repeatCount="indefinite"/>
@@ -953,8 +953,8 @@ const CHAMUI = {
       <g>
         <g transform="translate(${A.handL[0]-3}, ${A.handL[1]-3})">
           <path d="M 0 -16 Q -18 -16 -18 -3 Q -18 17 0 24 Q 18 17 18 -3 Q 18 -16 0 -16 Z"
-                fill="#4ECDC4" stroke="#2D3047" stroke-width="2.5"/>
-          <path d="M 0 -8 L -8 -1 L 0 11 L 8 -1 Z" fill="#FFE66D" stroke="#2D3047" stroke-width="1"/>
+                fill="#4ECDC4" stroke="#8090A0" stroke-width="2.5"/>
+          <path d="M 0 -8 L -8 -1 L 0 11 L 8 -1 Z" fill="#FFE66D" stroke="#8090A0" stroke-width="1"/>
           <circle cx="0" cy="-1" r="2" fill="#FF6B6B"/>
         </g>
         ${gripL}
@@ -964,7 +964,7 @@ const CHAMUI = {
     const note = (has.note && !has.shield && !has.tube && !has.cert) ? `
       <g>
         <g transform="translate(${A.handL[0]+2}, ${A.handL[1]+2}) rotate(-8)">
-          <rect x="-10" y="-13" width="20" height="16" fill="#FFF8E7" stroke="#2D3047" stroke-width="2" rx="1.5"/>
+          <rect x="-10" y="-13" width="20" height="16" fill="#FFF8E7" stroke="#8090A0" stroke-width="2" rx="1.5"/>
           <line x1="-8" y1="-9" x2="8" y2="-9" stroke="#FF6B6B" stroke-width="1"/>
           <line x1="-8" y1="-5" x2="6" y2="-5" stroke="#999" stroke-width="0.7"/>
           <line x1="-8" y1="-1" x2="7" y2="-1" stroke="#999" stroke-width="0.7"/>
@@ -980,7 +980,7 @@ const CHAMUI = {
           <line x1="-7" y1="-7" x2="9" y2="-7" stroke="#8B6F47" stroke-width="0.7"/>
           <line x1="-7" y1="-3" x2="9" y2="-3" stroke="#8B6F47" stroke-width="0.7"/>
           <line x1="-7" y1="1" x2="6" y2="1" stroke="#8B6F47" stroke-width="0.7"/>
-          <circle cx="6" cy="2" r="3.5" fill="#FF6B6B" stroke="#2D3047" stroke-width="0.8"/>
+          <circle cx="6" cy="2" r="3.5" fill="#FF6B6B" stroke="#8090A0" stroke-width="0.8"/>
           <text x="4" y="4" font-size="5" fill="white">★</text>
         </g>
         ${gripL}
@@ -995,7 +995,7 @@ const CHAMUI = {
           <ellipse cx="0" cy="9" rx="13" ry="4" fill="url(#metalGold)" stroke="#B8860B" stroke-width="1.5"/>
           <ellipse cx="0" cy="8" rx="11" ry="2" fill="#B8860B"/>
           <!-- 水晶球 (3D 球面渐变, 加大) -->
-          <circle cx="0" cy="-2" r="13" fill="url(#crystalSphere)" stroke="#2D3047" stroke-width="2"/>
+          <circle cx="0" cy="-2" r="13" fill="url(#crystalSphere)" stroke="#8090A0" stroke-width="2"/>
           <!-- 大反光斑 (左上) -->
           <ellipse cx="-4" cy="-7" rx="5" ry="3.5" fill="white" opacity="0.75"/>
           <!-- 小反光点 -->
@@ -1029,14 +1029,14 @@ const CHAMUI = {
     // === 头部贴脸装饰 (z=7) ===
     const glasses = has.glasses ? `
       <g>
-        <ellipse cx="${A.eyeL[0]}" cy="${A.eyeL[1]}" rx="11" ry="9" fill="white" fill-opacity="0.15" stroke="#2D3047" stroke-width="2"/>
-        <ellipse cx="${A.eyeR[0]}" cy="${A.eyeR[1]}" rx="11" ry="9" fill="white" fill-opacity="0.15" stroke="#2D3047" stroke-width="2"/>
-        <line x1="${A.eyeL[0]+11}" y1="${A.eyeL[1]}" x2="${A.eyeR[0]-11}" y2="${A.eyeR[1]}" stroke="#2D3047" stroke-width="2"/>
+        <ellipse cx="${A.eyeL[0]}" cy="${A.eyeL[1]}" rx="11" ry="9" fill="white" fill-opacity="0.15" stroke="#8090A0" stroke-width="2"/>
+        <ellipse cx="${A.eyeR[0]}" cy="${A.eyeR[1]}" rx="11" ry="9" fill="white" fill-opacity="0.15" stroke="#8090A0" stroke-width="2"/>
+        <line x1="${A.eyeL[0]+11}" y1="${A.eyeL[1]}" x2="${A.eyeR[0]-11}" y2="${A.eyeR[1]}" stroke="#8090A0" stroke-width="2"/>
         <!-- 镜腿到耳后 -->
         <path d="M ${A.eyeL[0]-11} ${A.eyeL[1]-1} Q ${A.earL[0]-2} ${A.earL[1]-4} ${A.earL[0]-1} ${A.earL[1]+2}"
-              stroke="#2D3047" stroke-width="2" fill="none"/>
+              stroke="#8090A0" stroke-width="2" fill="none"/>
         <path d="M ${A.eyeR[0]+11} ${A.eyeR[1]-1} Q ${A.earR[0]+2} ${A.earR[1]-4} ${A.earR[0]+1} ${A.earR[1]+2}"
-              stroke="#2D3047" stroke-width="2" fill="none"/>
+              stroke="#8090A0" stroke-width="2" fill="none"/>
         <!-- 镜片高光 -->
         <ellipse cx="${A.eyeL[0]-3}" cy="${A.eyeL[1]-3}" rx="3" ry="2" fill="white" opacity="0.6"/>
         <ellipse cx="${A.eyeR[0]-3}" cy="${A.eyeR[1]-3}" rx="3" ry="2" fill="white" opacity="0.6"/>
@@ -1048,7 +1048,7 @@ const CHAMUI = {
                Q 110 ${A.eyeL[1]-12} ${A.eyeR[0]+14} ${A.eyeR[1]-7}
                Q ${A.eyeR[0]+18} ${A.eyeR[1]+8} 110 ${A.eyeR[1]+12}
                Q ${A.eyeL[0]-18} ${A.eyeL[1]+8} ${A.eyeL[0]-14} ${A.eyeL[1]-7} Z"
-            fill="#FF6B6B" stroke="#2D3047" stroke-width="2.5" opacity="0.92"/>
+            fill="#FF6B6B" stroke="#8090A0" stroke-width="2.5" opacity="0.92"/>
       <ellipse cx="${A.eyeL[0]}" cy="${A.eyeL[1]}" rx="8" ry="8" fill="white"/>
       <ellipse cx="${A.eyeR[0]}" cy="${A.eyeR[1]}" rx="8" ry="8" fill="white"/>
       <ellipse cx="${A.eyeL[0]}" cy="${A.eyeL[1]}" rx="5" ry="6" fill="#2D3047"/>
@@ -1059,14 +1059,14 @@ const CHAMUI = {
       <g>
         <!-- 头带弧形 -->
         <path d="M ${A.earL[0]-2} ${A.earL[1]-12} Q 110 ${A.headTop[1]-8} ${A.earR[0]+2} ${A.earR[1]-12}"
-              stroke="#2D3047" stroke-width="6" fill="none"/>
+              stroke="#8090A0" stroke-width="6" fill="none"/>
         <path d="M ${A.earL[0]-2} ${A.earL[1]-12} Q 110 ${A.headTop[1]-6} ${A.earR[0]+2} ${A.earR[1]-12}"
               stroke="#FF6B6B" stroke-width="3" fill="none"/>
         <!-- 左耳罩贴耳 -->
-        <ellipse cx="${A.earL[0]-3}" cy="${A.earL[1]+2}" rx="9" ry="13" fill="#FF6B6B" stroke="#2D3047" stroke-width="2.5"/>
+        <ellipse cx="${A.earL[0]-3}" cy="${A.earL[1]+2}" rx="9" ry="13" fill="#FF6B6B" stroke="#8090A0" stroke-width="2.5"/>
         <ellipse cx="${A.earL[0]-3}" cy="${A.earL[1]+2}" rx="5" ry="9" fill="#2D3047" opacity="0.6"/>
         <!-- 右耳罩贴耳 -->
-        <ellipse cx="${A.earR[0]+3}" cy="${A.earR[1]+2}" rx="9" ry="13" fill="#FF6B6B" stroke="#2D3047" stroke-width="2.5"/>
+        <ellipse cx="${A.earR[0]+3}" cy="${A.earR[1]+2}" rx="9" ry="13" fill="#FF6B6B" stroke="#8090A0" stroke-width="2.5"/>
         <ellipse cx="${A.earR[0]+3}" cy="${A.earR[1]+2}" rx="5" ry="9" fill="#2D3047" opacity="0.6"/>
       </g>
     ` : '';
@@ -1077,10 +1077,10 @@ const CHAMUI = {
               stroke="#FFD700" stroke-width="7" fill="none"/>
         <path d="M ${A.earL[0]-3} ${A.earL[1]-14} Q 110 ${A.headTop[1]-8} ${A.earR[0]+3} ${A.earR[1]-14}"
               stroke="#FFA500" stroke-width="3" fill="none"/>
-        <ellipse cx="${A.earL[0]-4}" cy="${A.earL[1]+3}" rx="10" ry="14" fill="#FFD700" stroke="#2D3047" stroke-width="2.5"/>
+        <ellipse cx="${A.earL[0]-4}" cy="${A.earL[1]+3}" rx="10" ry="14" fill="#FFD700" stroke="#8090A0" stroke-width="2.5"/>
         <ellipse cx="${A.earL[0]-4}" cy="${A.earL[1]+3}" rx="6" ry="10" fill="#8B6F00" opacity="0.6"/>
         <text x="${A.earL[0]-7}" y="${A.earL[1]+7}" font-size="9" fill="#FFE66D">♪</text>
-        <ellipse cx="${A.earR[0]+4}" cy="${A.earR[1]+3}" rx="10" ry="14" fill="#FFD700" stroke="#2D3047" stroke-width="2.5"/>
+        <ellipse cx="${A.earR[0]+4}" cy="${A.earR[1]+3}" rx="10" ry="14" fill="#FFD700" stroke="#8090A0" stroke-width="2.5"/>
         <ellipse cx="${A.earR[0]+4}" cy="${A.earR[1]+3}" rx="6" ry="10" fill="#8B6F00" opacity="0.6"/>
         <text x="${A.earR[0]+1}" y="${A.earR[1]+7}" font-size="9" fill="#FFE66D">♫</text>
       </g>
@@ -1112,7 +1112,7 @@ const CHAMUI = {
               stroke="#B8860B" stroke-width="1.8"/>
         <!-- 流苏球 -->
         <circle cx="${110+tpl.headR+13}" cy="${A.headTop[1]+10}" r="4"
-                fill="#FFD700" stroke="#2D3047" stroke-width="1">
+                fill="#FFD700" stroke="#8090A0" stroke-width="1">
           <animate attributeName="cy"
                    values="${A.headTop[1]+10};${A.headTop[1]+14};${A.headTop[1]+10}"
                    dur="1.8s" repeatCount="indefinite"/>
@@ -1151,14 +1151,14 @@ const CHAMUI = {
                  L ${110+tpl.headR*0.55} ${A.headTop[1]-2}
                  L ${110+tpl.headR-4} ${A.headTop[1]-12}
                  L ${110+tpl.headR+2} ${A.headTop[1]+6} Z"
-              fill="#FFE66D" stroke="#2D3047" stroke-width="2.5"/>
+              fill="#FFE66D" stroke="#8090A0" stroke-width="2.5"/>
         <!-- 底环 -->
         <rect x="${110-tpl.headR-2}" y="${A.headTop[1]+5}" width="${(tpl.headR+2)*2}" height="6"
-              fill="#FFA500" stroke="#2D3047" stroke-width="2"/>
+              fill="#FFA500" stroke="#8090A0" stroke-width="2"/>
         <!-- 宝石 -->
-        <circle cx="${110-tpl.headR+4}" cy="${A.headTop[1]-7}" r="3" fill="#FF6B6B" stroke="#2D3047" stroke-width="1"/>
-        <circle cx="110" cy="${A.headTop[1]-12}" r="4" fill="#FF6B6B" stroke="#2D3047" stroke-width="1"/>
-        <circle cx="${110+tpl.headR-4}" cy="${A.headTop[1]-7}" r="3" fill="#FF6B6B" stroke="#2D3047" stroke-width="1"/>
+        <circle cx="${110-tpl.headR+4}" cy="${A.headTop[1]-7}" r="3" fill="#FF6B6B" stroke="#8090A0" stroke-width="1"/>
+        <circle cx="110" cy="${A.headTop[1]-12}" r="4" fill="#FF6B6B" stroke="#8090A0" stroke-width="1"/>
+        <circle cx="${110+tpl.headR-4}" cy="${A.headTop[1]-7}" r="3" fill="#FF6B6B" stroke="#8090A0" stroke-width="1"/>
         <text x="105" y="${A.headTop[1]-14}" font-size="10" fill="#FFE66D" opacity="0.9">
           <animate attributeName="opacity" values="0.9;0.3;0.9" dur="1.5s" repeatCount="indefinite"/>✨
         </text>
@@ -1178,7 +1178,7 @@ const CHAMUI = {
         </g>
         <!-- 底环 (套头上) -->
         <rect x="${110-tpl.headR-2}" y="${A.headTop[1]+5}" width="${(tpl.headR+2)*2}" height="5"
-              fill="#FFA500" stroke="#2D3047" stroke-width="2"/>
+              fill="#FFA500" stroke="#8090A0" stroke-width="2"/>
       </g>
     ` : '';
 
@@ -1186,11 +1186,11 @@ const CHAMUI = {
       <g>
         <!-- 凤凰羽 (头顶后插) -->
         <path d="M 105 ${A.headTop[1]-2} Q 95 ${A.headTop[1]-15} 90 ${A.headTop[1]-25}
-                 Q 92 ${A.headTop[1]-15} 100 ${A.headTop[1]-8} Z" fill="#FF6B6B" stroke="#2D3047" stroke-width="1.5"/>
+                 Q 92 ${A.headTop[1]-15} 100 ${A.headTop[1]-8} Z" fill="#FF6B6B" stroke="#8090A0" stroke-width="1.5"/>
         <path d="M 110 ${A.headTop[1]-2} Q 105 ${A.headTop[1]-20} 105 ${A.headTop[1]-32}
-                 Q 110 ${A.headTop[1]-20} 113 ${A.headTop[1]-5} Z" fill="#FFA500" stroke="#2D3047" stroke-width="1.5"/>
+                 Q 110 ${A.headTop[1]-20} 113 ${A.headTop[1]-5} Z" fill="#FFA500" stroke="#8090A0" stroke-width="1.5"/>
         <path d="M 115 ${A.headTop[1]-2} Q 125 ${A.headTop[1]-15} 130 ${A.headTop[1]-25}
-                 Q 128 ${A.headTop[1]-15} 120 ${A.headTop[1]-8} Z" fill="#FFE066" stroke="#2D3047" stroke-width="1.5"/>
+                 Q 128 ${A.headTop[1]-15} 120 ${A.headTop[1]-8} Z" fill="#FFE066" stroke="#8090A0" stroke-width="1.5"/>
         <!-- 火焰小颗 -->
         <circle cx="105" cy="${A.headTop[1]-32}" r="2" fill="#FF6B6B" opacity="0.8">
           <animate attributeName="cy" values="${A.headTop[1]-32};${A.headTop[1]-38};${A.headTop[1]-32}" dur="1s" repeatCount="indefinite"/>
@@ -1207,12 +1207,12 @@ const CHAMUI = {
                  L ${110+tpl.headR*0.4} ${A.headTop[1]-4}
                  L ${110+tpl.headR-4} ${A.headTop[1]-16}
                  L ${110+tpl.headR+4} ${A.headTop[1]+8} Z"
-              fill="#FFD700" stroke="#2D3047" stroke-width="2.5"/>
+              fill="#FFD700" stroke="#8090A0" stroke-width="2.5"/>
         <rect x="${110-tpl.headR-4}" y="${A.headTop[1]+7}" width="${(tpl.headR+4)*2}" height="7"
-              fill="#FFA500" stroke="#2D3047" stroke-width="2"/>
-        <circle cx="${110-tpl.headR+4}" cy="${A.headTop[1]-10}" r="3" fill="#FF6B6B" stroke="#2D3047" stroke-width="1"/>
-        <circle cx="110" cy="${A.headTop[1]-19}" r="4.5" fill="#4ECDC4" stroke="#2D3047" stroke-width="1.5"/>
-        <circle cx="${110+tpl.headR-4}" cy="${A.headTop[1]-10}" r="3" fill="#FF6B6B" stroke="#2D3047" stroke-width="1"/>
+              fill="#FFA500" stroke="#8090A0" stroke-width="2"/>
+        <circle cx="${110-tpl.headR+4}" cy="${A.headTop[1]-10}" r="3" fill="#FF6B6B" stroke="#8090A0" stroke-width="1"/>
+        <circle cx="110" cy="${A.headTop[1]-19}" r="4.5" fill="#4ECDC4" stroke="#8090A0" stroke-width="1.5"/>
+        <circle cx="${110+tpl.headR-4}" cy="${A.headTop[1]-10}" r="3" fill="#FF6B6B" stroke="#8090A0" stroke-width="1"/>
         <text x="100" y="${A.headTop[1]-22}" font-size="11" fill="#FFE66D">
           <animate attributeName="opacity" values="1;0.4;1" dur="1.2s" repeatCount="indefinite"/>✨</text>
         <text x="120" y="${A.headTop[1]-20}" font-size="10" fill="#FFE66D">
@@ -1222,20 +1222,20 @@ const CHAMUI = {
 
     const explorerCap = (skin.accessory === 'explorerCap') ? `
       <g>
-        <ellipse cx="110" cy="${A.headTop[1]+6}" rx="${tpl.headR+8}" ry="5" fill="#8B7355" stroke="#2D3047" stroke-width="2.5"/>
+        <ellipse cx="110" cy="${A.headTop[1]+6}" rx="${tpl.headR+8}" ry="5" fill="#8B7355" stroke="#8090A0" stroke-width="2.5"/>
         <path d="M ${110-tpl.headR+2} ${A.headTop[1]+6} Q 110 ${A.headTop[1]-15} ${110+tpl.headR-2} ${A.headTop[1]+6} Z"
-              fill="#8B7355" stroke="#2D3047" stroke-width="2.5"/>
+              fill="#8B7355" stroke="#8090A0" stroke-width="2.5"/>
         <rect x="${110-tpl.headR+2}" y="${A.headTop[1]+1}" width="${(tpl.headR-2)*2}" height="5" fill="#5A4632"/>
       </g>
     ` : '';
 
     const labGoggles = (skin.accessory === 'labGoggles') ? `
       <g opacity="0.92">
-        <ellipse cx="${A.eyeL[0]}" cy="${A.headTop[1]+8}" rx="13" ry="8" fill="#4ECDC4" stroke="#2D3047" stroke-width="2.5" opacity="0.7"/>
-        <ellipse cx="${A.eyeR[0]}" cy="${A.headTop[1]+8}" rx="13" ry="8" fill="#4ECDC4" stroke="#2D3047" stroke-width="2.5" opacity="0.7"/>
-        <line x1="${A.eyeL[0]+13}" y1="${A.headTop[1]+8}" x2="${A.eyeR[0]-13}" y2="${A.headTop[1]+8}" stroke="#2D3047" stroke-width="3"/>
-        <path d="M ${A.eyeL[0]-13} ${A.headTop[1]+8} L ${A.earL[0]-2} ${A.earL[1]-2}" stroke="#2D3047" stroke-width="2.5"/>
-        <path d="M ${A.eyeR[0]+13} ${A.headTop[1]+8} L ${A.earR[0]+2} ${A.earR[1]-2}" stroke="#2D3047" stroke-width="2.5"/>
+        <ellipse cx="${A.eyeL[0]}" cy="${A.headTop[1]+8}" rx="13" ry="8" fill="#4ECDC4" stroke="#8090A0" stroke-width="2.5" opacity="0.7"/>
+        <ellipse cx="${A.eyeR[0]}" cy="${A.headTop[1]+8}" rx="13" ry="8" fill="#4ECDC4" stroke="#8090A0" stroke-width="2.5" opacity="0.7"/>
+        <line x1="${A.eyeL[0]+13}" y1="${A.headTop[1]+8}" x2="${A.eyeR[0]-13}" y2="${A.headTop[1]+8}" stroke="#8090A0" stroke-width="3"/>
+        <path d="M ${A.eyeL[0]-13} ${A.headTop[1]+8} L ${A.earL[0]-2} ${A.earL[1]-2}" stroke="#8090A0" stroke-width="2.5"/>
+        <path d="M ${A.eyeR[0]+13} ${A.headTop[1]+8} L ${A.earR[0]+2} ${A.earR[1]-2}" stroke="#8090A0" stroke-width="2.5"/>
       </g>
     ` : '';
 
@@ -1267,7 +1267,7 @@ const CHAMUI = {
     const streak7 = has.streak7 ? `
       <g transform="translate(${A.shoulderL[0]+3}, ${A.shoulderL[1]+8})">
         <path d="M 0 -8 Q -8 -8 -8 -2 Q -8 6 0 10 Q 8 6 8 -2 Q 8 -8 0 -8 Z"
-              fill="#4ECDC4" stroke="#2D3047" stroke-width="2"/>
+              fill="#4ECDC4" stroke="#8090A0" stroke-width="2"/>
         <text x="-3" y="3" font-size="8" font-weight="900" fill="white">7</text>
       </g>
     ` : '';
@@ -1386,7 +1386,7 @@ const CHAMUI = {
     // wk30: 指南针徽章 (右臂)
     const wk30 = has.wk30 ? `
       <g transform="translate(148,146)">
-        <circle r="9" fill="#F59E0B" stroke="#2D3047" stroke-width="1.5"/>
+        <circle r="9" fill="#F59E0B" stroke="#8090A0" stroke-width="1.5"/>
         <circle r="6.5" fill="#FEF3C7"/>
         <line x1="0" y1="-5" x2="0" y2="5" stroke="#6B7280" stroke-width="0.8"/>
         <line x1="-5" y1="0" x2="5" y2="0" stroke="#6B7280" stroke-width="0.8"/>
@@ -1465,12 +1465,12 @@ const CHAMUI = {
           <animateTransform attributeName="transform" type="translate"
                            values="${A.handR[0]+6},${A.handR[1]-16}; ${A.handR[0]+6},${A.handR[1]-19}; ${A.handR[0]+6},${A.handR[1]-16}" dur="3s" repeatCount="indefinite"/>
           <!-- 苹果本体 (3D 球面渐变, 大尺寸) -->
-          <circle cx="0" cy="0" r="11" fill="url(#appleSphere)" stroke="#2D3047" stroke-width="2"/>
+          <circle cx="0" cy="0" r="11" fill="url(#appleSphere)" stroke="#8090A0" stroke-width="2"/>
           <!-- 咬过的缺口 (右上, 内露白色果肉) -->
-          <path d="M 5 -8 Q 11 -5 8 1 Q 6 -2 4 -3 Q 4 -6 5 -8 Z" fill="#FFFAEC" stroke="#2D3047" stroke-width="1"/>
+          <path d="M 5 -8 Q 11 -5 8 1 Q 6 -2 4 -3 Q 4 -6 5 -8 Z" fill="#FFFAEC" stroke="#8090A0" stroke-width="1"/>
           <ellipse cx="6.5" cy="-4" rx="0.5" ry="0.3" fill="#5D3A1A"/>
           <!-- 叶子 (双层带描边) -->
-          <path d="M 0 -11 L -2 -16 L 4 -17 L 1 -13 Z" fill="#5DAA66" stroke="#2D3047" stroke-width="1"/>
+          <path d="M 0 -11 L -2 -16 L 4 -17 L 1 -13 Z" fill="#5DAA66" stroke="#8090A0" stroke-width="1"/>
           <path d="M 0 -11 L -1 -14 L 2.5 -15 Z" fill="#7DDD80" opacity="0.7"/>
           <!-- 茎 -->
           <line x1="0" y1="-11" x2="0" y2="-8" stroke="#5D3A1A" stroke-width="1.5"/>
@@ -1484,7 +1484,7 @@ const CHAMUI = {
     ` : has.apple ? `
       <!-- 已被武器占用右手, 退化为腰带挂饰 -->
       <g transform="translate(${A.waistL[0]+4}, ${A.waistL[1]+4})">
-        <circle cx="0" cy="2" r="5" fill="#FF6B6B" stroke="#2D3047" stroke-width="1.5"/>
+        <circle cx="0" cy="2" r="5" fill="#FF6B6B" stroke="#8090A0" stroke-width="1.5"/>
         <path d="M 0 -3 L -1 -6 L 1.5 -6.5 Z" fill="#6BCB77"/>
       </g>
     ` : '';
@@ -1496,14 +1496,14 @@ const CHAMUI = {
           <!-- 杯底椭圆阴影 -->
           <ellipse cx="0" cy="7" rx="8" ry="2" fill="#2D3047" opacity="0.3"/>
           <!-- 杯体 (青色釉面渐变) -->
-          <rect x="-7" y="-10" width="14" height="16" fill="url(#cupSphere)" stroke="#2D3047" stroke-width="2.5" rx="2"/>
+          <rect x="-7" y="-10" width="14" height="16" fill="url(#cupSphere)" stroke="#8090A0" stroke-width="2.5" rx="2"/>
           <!-- 釉面反光带 -->
           <rect x="-5" y="-9" width="3" height="13" fill="#FFF" opacity="0.5" rx="1"/>
           <!-- 杯口 (椭圆 3D) -->
-          <ellipse cx="0" cy="-10" rx="7" ry="2.5" fill="#FFF" stroke="#2D3047" stroke-width="2"/>
+          <ellipse cx="0" cy="-10" rx="7" ry="2.5" fill="#FFF" stroke="#8090A0" stroke-width="2"/>
           <ellipse cx="0" cy="-10" rx="6" ry="1.8" fill="#2A8077"/>
           <!-- 把手 (双线带阴影感) -->
-          <path d="M 7 -6 Q 13 -2 7 3" fill="none" stroke="#2D3047" stroke-width="3" stroke-linecap="round"/>
+          <path d="M 7 -6 Q 13 -2 7 3" fill="none" stroke="#8090A0" stroke-width="3" stroke-linecap="round"/>
           <path d="M 7 -5 Q 11 -2 7 2" fill="none" stroke="#4ECDC4" stroke-width="1.5" stroke-linecap="round"/>
           <!-- 热气 (3 道飘动) -->
           <path d="M -3 -12 Q -1 -18 -4 -22" fill="none" stroke="#BBB" stroke-width="2" opacity="0.7" stroke-linecap="round">
@@ -1522,8 +1522,8 @@ const CHAMUI = {
     const cup = has.cup ? (cupHeld || `
       <!-- 退化为腰带挂饰 -->
       <g transform="translate(${A.waistR[0]-2}, ${A.waistR[1]+2})">
-        <rect x="-4" y="-6" width="8" height="11" fill="#4ECDC4" stroke="#2D3047" stroke-width="1.5" rx="1.5"/>
-        <ellipse cx="0" cy="-6" rx="4" ry="1.2" fill="#fff" stroke="#2D3047" stroke-width="1"/>
+        <rect x="-4" y="-6" width="8" height="11" fill="#4ECDC4" stroke="#8090A0" stroke-width="1.5" rx="1.5"/>
+        <ellipse cx="0" cy="-6" rx="4" ry="1.2" fill="#fff" stroke="#8090A0" stroke-width="1"/>
       </g>
     `) : '';
 
@@ -1532,9 +1532,9 @@ const CHAMUI = {
       <g transform="translate(${A.handL[0]+10}, ${A.handL[1]-30})">
         <animateTransform attributeName="transform" type="translate"
                          values="${A.handL[0]+10},${A.handL[1]-30}; ${A.handL[0]+12},${A.handL[1]-32}; ${A.handL[0]+10},${A.handL[1]-30}" dur="2.5s" repeatCount="indefinite"/>
-        <circle cx="0" cy="0" r="6" fill="#D4A574" stroke="#2D3047" stroke-width="2"/>
+        <circle cx="0" cy="0" r="6" fill="#D4A574" stroke="#8090A0" stroke-width="2"/>
         <!-- 咬痕 -->
-        <path d="M -2 -5 Q 0 -3 -1 -1 Q -3 -3 -4 -5 Z" fill="#FFFAEC" stroke="#2D3047" stroke-width="1"/>
+        <path d="M -2 -5 Q 0 -3 -1 -1 Q -3 -3 -4 -5 Z" fill="#FFFAEC" stroke="#8090A0" stroke-width="1"/>
         <!-- 巧克力豆 -->
         <circle cx="2" cy="-1" r="1" fill="#5D3A1A"/>
         <circle cx="-2" cy="2" r="1" fill="#5D3A1A"/>
@@ -1551,30 +1551,30 @@ const CHAMUI = {
           <animateTransform attributeName="transform" type="translate"
                            values="0,0; 0,-4; 0,0" dur="2s" repeatCount="indefinite" additive="sum"/>
           <!-- 盘子 (银色 3D 椭圆) -->
-          <ellipse cx="0" cy="16" rx="24" ry="5" fill="url(#metalSilver)" stroke="#2D3047" stroke-width="2"/>
+          <ellipse cx="0" cy="16" rx="24" ry="5" fill="url(#metalSilver)" stroke="#8090A0" stroke-width="2"/>
           <ellipse cx="0" cy="14" rx="22" ry="3" fill="#FFF" opacity="0.8"/>
           <!-- 蛋糕底层 (黄色海绵, 立体感) -->
-          <rect x="-18" y="3" width="36" height="13" fill="#FFE066" stroke="#2D3047" stroke-width="2" rx="2"/>
+          <rect x="-18" y="3" width="36" height="13" fill="#FFE066" stroke="#8090A0" stroke-width="2" rx="2"/>
           <rect x="-17" y="3" width="34" height="3" fill="#FFFAEC" opacity="0.6" rx="1"/>
           <!-- 奶油波纹层 (3 朵奶油花) -->
-          <ellipse cx="-12" cy="3" rx="5" ry="3" fill="#FFFAEC" stroke="#2D3047" stroke-width="1.5"/>
-          <ellipse cx="0" cy="3" rx="5" ry="3" fill="#FFFAEC" stroke="#2D3047" stroke-width="1.5"/>
-          <ellipse cx="12" cy="3" rx="5" ry="3" fill="#FFFAEC" stroke="#2D3047" stroke-width="1.5"/>
+          <ellipse cx="-12" cy="3" rx="5" ry="3" fill="#FFFAEC" stroke="#8090A0" stroke-width="1.5"/>
+          <ellipse cx="0" cy="3" rx="5" ry="3" fill="#FFFAEC" stroke="#8090A0" stroke-width="1.5"/>
+          <ellipse cx="12" cy="3" rx="5" ry="3" fill="#FFFAEC" stroke="#8090A0" stroke-width="1.5"/>
           <!-- 蛋糕中层 (粉色) -->
-          <rect x="-13" y="-6" width="26" height="10" fill="#FFB6D9" stroke="#2D3047" stroke-width="2" rx="2"/>
+          <rect x="-13" y="-6" width="26" height="10" fill="#FFB6D9" stroke="#8090A0" stroke-width="2" rx="2"/>
           <rect x="-12" y="-6" width="24" height="3" fill="#FFD4E5" opacity="0.7" rx="1"/>
           <!-- 中层奶油花 (2 朵) -->
-          <ellipse cx="-7" cy="-6" rx="4" ry="2.5" fill="#FFFAEC" stroke="#2D3047" stroke-width="1.5"/>
-          <ellipse cx="7" cy="-6" rx="4" ry="2.5" fill="#FFFAEC" stroke="#2D3047" stroke-width="1.5"/>
+          <ellipse cx="-7" cy="-6" rx="4" ry="2.5" fill="#FFFAEC" stroke="#8090A0" stroke-width="1.5"/>
+          <ellipse cx="7" cy="-6" rx="4" ry="2.5" fill="#FFFAEC" stroke="#8090A0" stroke-width="1.5"/>
           <!-- 蛋糕上层 (青色, 小) -->
-          <rect x="-8" y="-13" width="16" height="7" fill="#A0F0E5" stroke="#2D3047" stroke-width="2" rx="2"/>
+          <rect x="-8" y="-13" width="16" height="7" fill="#A0F0E5" stroke="#8090A0" stroke-width="2" rx="2"/>
           <rect x="-7" y="-13" width="14" height="2" fill="#FFF" opacity="0.6" rx="1"/>
           <!-- 大樱桃 (3D 球) -->
-          <circle cx="0" cy="-15" r="3.5" fill="url(#appleSphere)" stroke="#2D3047" stroke-width="1.5"/>
+          <circle cx="0" cy="-15" r="3.5" fill="url(#appleSphere)" stroke="#8090A0" stroke-width="1.5"/>
           <ellipse cx="-1" cy="-16" rx="1" ry="0.7" fill="#FFF" opacity="0.9"/>
           <line x1="0" y1="-18" x2="-1" y2="-22" stroke="#5D3A1A" stroke-width="1.2"/>
           <!-- 蜡烛 (蓝白条纹) -->
-          <rect x="-1.5" y="-26" width="3" height="8" fill="#FFF" stroke="#2D3047" stroke-width="1"/>
+          <rect x="-1.5" y="-26" width="3" height="8" fill="#FFF" stroke="#8090A0" stroke-width="1"/>
           <line x1="-1.5" y1="-22" x2="1.5" y2="-22" stroke="#FF6B6B" stroke-width="0.8"/>
           <line x1="-1.5" y1="-25" x2="1.5" y2="-25" stroke="#FF6B6B" stroke-width="0.8"/>
           <!-- 蜡烛火苗 (3 层 + 跳动) -->
@@ -1587,10 +1587,10 @@ const CHAMUI = {
           </ellipse>
           <ellipse cx="0" cy="-30" rx="0.8" ry="1.8" fill="#FFF"/>
           <!-- 装饰糖珠 (六颗 3D 球) -->
-          <circle cx="-15" cy="9" r="1.5" fill="#4ECDC4" stroke="#2D3047" stroke-width="0.5"/>
-          <circle cx="15" cy="9" r="1.5" fill="#A788E0" stroke="#2D3047" stroke-width="0.5"/>
-          <circle cx="-9" cy="-2" r="1.3" fill="#FF6B6B" stroke="#2D3047" stroke-width="0.5"/>
-          <circle cx="9" cy="-2" r="1.3" fill="#6BCB77" stroke="#2D3047" stroke-width="0.5"/>
+          <circle cx="-15" cy="9" r="1.5" fill="#4ECDC4" stroke="#8090A0" stroke-width="0.5"/>
+          <circle cx="15" cy="9" r="1.5" fill="#A788E0" stroke="#8090A0" stroke-width="0.5"/>
+          <circle cx="-9" cy="-2" r="1.3" fill="#FF6B6B" stroke="#8090A0" stroke-width="0.5"/>
+          <circle cx="9" cy="-2" r="1.3" fill="#6BCB77" stroke="#8090A0" stroke-width="0.5"/>
           <circle cx="-4" cy="-9" r="1.2" fill="#FFA500"/>
           <circle cx="4" cy="-9" r="1.2" fill="#A788E0"/>
         </g>
@@ -1600,8 +1600,8 @@ const CHAMUI = {
     // === 腿/腕 (z=6) ===
     const sock = has.sock ? `
       <g>
-        <rect x="${91-9}" y="${tpl.legBottom-13}" width="18" height="10" rx="2" fill="#FFB6D9" stroke="#2D3047" stroke-width="2"/>
-        <rect x="${129-9}" y="${tpl.legBottom-13}" width="18" height="10" rx="2" fill="#FFB6D9" stroke="#2D3047" stroke-width="2"/>
+        <rect x="${91-9}" y="${tpl.legBottom-13}" width="18" height="10" rx="2" fill="#FFB6D9" stroke="#8090A0" stroke-width="2"/>
+        <rect x="${129-9}" y="${tpl.legBottom-13}" width="18" height="10" rx="2" fill="#FFB6D9" stroke="#8090A0" stroke-width="2"/>
         <line x1="${91-7}" y1="${tpl.legBottom-9}" x2="${91+7}" y2="${tpl.legBottom-9}" stroke="#FF6B6B" stroke-width="1.5"/>
         <line x1="${129-7}" y1="${tpl.legBottom-9}" x2="${129+7}" y2="${tpl.legBottom-9}" stroke="#FF6B6B" stroke-width="1.5"/>
       </g>
@@ -1611,7 +1611,7 @@ const CHAMUI = {
       <g>
         <path d="M ${91-15} ${tpl.legBottom+4} Q ${91-15} ${tpl.legBottom-8} ${91} ${tpl.legBottom-8}
                  Q ${91+15} ${tpl.legBottom-8} ${91+15} ${tpl.legBottom+4} Z"
-              fill="#C13030" stroke="#2D3047" stroke-width="2.5"/>
+              fill="#C13030" stroke="#8090A0" stroke-width="2.5"/>
         <path d="M ${91-13} ${tpl.legBottom-2} Q ${91-10} ${tpl.legBottom-12} ${91-7} ${tpl.legBottom-4}
                  Q ${91-3} ${tpl.legBottom-14} ${91} ${tpl.legBottom-6}
                  Q ${91+3} ${tpl.legBottom-12} ${91+7} ${tpl.legBottom-3}
@@ -1619,7 +1619,7 @@ const CHAMUI = {
               fill="#FFE066" opacity="0.85"/>
         <path d="M ${129-15} ${tpl.legBottom+4} Q ${129-15} ${tpl.legBottom-8} ${129} ${tpl.legBottom-8}
                  Q ${129+15} ${tpl.legBottom-8} ${129+15} ${tpl.legBottom+4} Z"
-              fill="#C13030" stroke="#2D3047" stroke-width="2.5"/>
+              fill="#C13030" stroke="#8090A0" stroke-width="2.5"/>
         <path d="M ${129-13} ${tpl.legBottom-2} Q ${129-10} ${tpl.legBottom-12} ${129-7} ${tpl.legBottom-4}
                  Q ${129-3} ${tpl.legBottom-14} ${129} ${tpl.legBottom-6}
                  Q ${129+3} ${tpl.legBottom-12} ${129+7} ${tpl.legBottom-3}
@@ -1640,7 +1640,7 @@ const CHAMUI = {
         <line x1="${A.handR[0]+7}" y1="${A.handR[1]-9}" x2="${A.handR[0]+12}" y2="${A.handR[1]-9}" stroke="#666" stroke-width="0.5"/>
         <line x1="${A.handR[0]+7}" y1="${A.handR[1]-5}" x2="${A.handR[0]+12}" y2="${A.handR[1]-5}" stroke="#666" stroke-width="0.5"/>
         <!-- 表壳外框 (银色金属) -->
-        <circle cx="${A.handR[0]}" cy="${A.handR[1]-7}" r="9" fill="url(#metalSilver)" stroke="#2D3047" stroke-width="2"/>
+        <circle cx="${A.handR[0]}" cy="${A.handR[1]-7}" r="9" fill="url(#metalSilver)" stroke="#8090A0" stroke-width="2"/>
         <!-- 表盘 -->
         <circle cx="${A.handR[0]}" cy="${A.handR[1]-7}" r="7" fill="#1A1A2E" stroke="#666" stroke-width="0.8"/>
         <!-- 12 / 3 / 6 / 9 刻度 -->
@@ -1665,11 +1665,11 @@ const CHAMUI = {
     const trophy = has.trophy ? `
       <g transform="translate(192, ${tpl.legBottom-10})">
         <ellipse cx="0" cy="14" rx="14" ry="3" fill="#2D3047" opacity="0.3"/>
-        <rect x="-9" y="8" width="18" height="6" fill="#FFA500" stroke="#2D3047" stroke-width="2"/>
-        <rect x="-2.5" y="-12" width="5" height="20" fill="#FFA500" stroke="#2D3047" stroke-width="2"/>
-        <path d="M -12 -18 Q -12 -3 0 -3 Q 12 -3 12 -18 Z" fill="#FFE66D" stroke="#2D3047" stroke-width="2"/>
-        <path d="M -12 -16 Q -16 -16 -16 -10 Q -16 -3 -12 -3" fill="none" stroke="#2D3047" stroke-width="1.5"/>
-        <path d="M 12 -16 Q 16 -16 16 -10 Q 16 -3 12 -3" fill="none" stroke="#2D3047" stroke-width="1.5"/>
+        <rect x="-9" y="8" width="18" height="6" fill="#FFA500" stroke="#8090A0" stroke-width="2"/>
+        <rect x="-2.5" y="-12" width="5" height="20" fill="#FFA500" stroke="#8090A0" stroke-width="2"/>
+        <path d="M -12 -18 Q -12 -3 0 -3 Q 12 -3 12 -18 Z" fill="#FFE66D" stroke="#8090A0" stroke-width="2"/>
+        <path d="M -12 -16 Q -16 -16 -16 -10 Q -16 -3 -12 -3" fill="none" stroke="#8090A0" stroke-width="1.5"/>
+        <path d="M 12 -16 Q 16 -16 16 -10 Q 16 -3 12 -3" fill="none" stroke="#8090A0" stroke-width="1.5"/>
         <text x="-3" y="-9" font-size="11" font-weight="bold" fill="#2D3047">★</text>
       </g>
     ` : '';
@@ -1685,35 +1685,35 @@ const CHAMUI = {
           <!-- 影子 -->
           <ellipse cx="0" cy="36" rx="60" ry="6" fill="#2D3047" opacity="0.2"/>
           <!-- 后腿 (奔跑姿势) -->
-          <rect x="32" y="14" width="6" height="22" fill="white" stroke="#2D3047" stroke-width="2" rx="2">
+          <rect x="32" y="14" width="6" height="22" fill="white" stroke="#8090A0" stroke-width="2" rx="2">
             <animateTransform attributeName="transform" type="rotate" values="-10 35 14;10 35 14;-10 35 14" dur="0.6s" repeatCount="indefinite"/>
           </rect>
-          <rect x="20" y="16" width="6" height="20" fill="white" stroke="#2D3047" stroke-width="2" rx="2">
+          <rect x="20" y="16" width="6" height="20" fill="white" stroke="#8090A0" stroke-width="2" rx="2">
             <animateTransform attributeName="transform" type="rotate" values="10 23 16;-10 23 16;10 23 16" dur="0.6s" repeatCount="indefinite"/>
           </rect>
           <!-- 前腿 (奔跑姿势) -->
-          <rect x="-26" y="14" width="6" height="22" fill="white" stroke="#2D3047" stroke-width="2" rx="2">
+          <rect x="-26" y="14" width="6" height="22" fill="white" stroke="#8090A0" stroke-width="2" rx="2">
             <animateTransform attributeName="transform" type="rotate" values="10 -23 14;-10 -23 14;10 -23 14" dur="0.6s" repeatCount="indefinite"/>
           </rect>
-          <rect x="-38" y="16" width="6" height="20" fill="white" stroke="#2D3047" stroke-width="2" rx="2">
+          <rect x="-38" y="16" width="6" height="20" fill="white" stroke="#8090A0" stroke-width="2" rx="2">
             <animateTransform attributeName="transform" type="rotate" values="-10 -35 16;10 -35 16;-10 -35 16" dur="0.6s" repeatCount="indefinite"/>
           </rect>
           <!-- 身体主干 -->
-          <ellipse cx="0" cy="14" rx="48" ry="18" fill="white" stroke="#2D3047" stroke-width="2.5"/>
+          <ellipse cx="0" cy="14" rx="48" ry="18" fill="white" stroke="#8090A0" stroke-width="2.5"/>
           <!-- 鬃毛 (彩虹色, 动画飘动) -->
-          <path d="M -30 0 Q -32 -8 -28 -14 Q -22 -10 -20 -2" fill="#FFB6D9" stroke="#2D3047" stroke-width="1.5">
+          <path d="M -30 0 Q -32 -8 -28 -14 Q -22 -10 -20 -2" fill="#FFB6D9" stroke="#8090A0" stroke-width="1.5">
             <animateTransform attributeName="transform" type="rotate" values="-3 -25 -2;3 -25 -2;-3 -25 -2" dur="1.2s" repeatCount="indefinite"/>
           </path>
-          <path d="M -38 -2 Q -42 -10 -36 -16 Q -30 -12 -28 -4" fill="#A788E0" stroke="#2D3047" stroke-width="1.5"/>
+          <path d="M -38 -2 Q -42 -10 -36 -16 Q -30 -12 -28 -4" fill="#A788E0" stroke="#8090A0" stroke-width="1.5"/>
           <!-- 头部 (左侧) -->
-          <ellipse cx="-46" cy="0" rx="11" ry="13" fill="white" stroke="#2D3047" stroke-width="2"/>
+          <ellipse cx="-46" cy="0" rx="11" ry="13" fill="white" stroke="#8090A0" stroke-width="2"/>
           <!-- 独角 (彩虹螺纹) -->
-          <polygon points="-50,-12 -42,-12 -46,-30" fill="#FFE66D" stroke="#2D3047" stroke-width="2"/>
+          <polygon points="-50,-12 -42,-12 -46,-30" fill="#FFE66D" stroke="#8090A0" stroke-width="2"/>
           <line x1="-49" y1="-16" x2="-43" y2="-16" stroke="#FF6B6B" stroke-width="1.2"/>
           <line x1="-48" y1="-21" x2="-44" y2="-21" stroke="#A788E0" stroke-width="1.2"/>
           <!-- 耳朵 -->
-          <ellipse cx="-49" cy="-8" rx="2.5" ry="4" fill="white" stroke="#2D3047" stroke-width="1.5"/>
-          <ellipse cx="-43" cy="-8" rx="2.5" ry="4" fill="white" stroke="#2D3047" stroke-width="1.5"/>
+          <ellipse cx="-49" cy="-8" rx="2.5" ry="4" fill="white" stroke="#8090A0" stroke-width="1.5"/>
+          <ellipse cx="-43" cy="-8" rx="2.5" ry="4" fill="white" stroke="#8090A0" stroke-width="1.5"/>
           <!-- 眼睛 -->
           <ellipse cx="-46" cy="-1" rx="1.5" ry="2" fill="#2D3047"/>
           <circle cx="-46" cy="-2" r="0.8" fill="white"/>
@@ -1725,7 +1725,7 @@ const CHAMUI = {
           </path>
           <path d="M 50 8 Q 64 4 66 -8" stroke="#A788E0" stroke-width="3" fill="none" stroke-linecap="round"/>
           <!-- 鞍 (角色坐在上面) -->
-          <ellipse cx="0" cy="-2" rx="22" ry="6" fill="#A788E0" stroke="#2D3047" stroke-width="2"/>
+          <ellipse cx="0" cy="-2" rx="22" ry="6" fill="#A788E0" stroke="#8090A0" stroke-width="2"/>
           <!-- 缰绳 -->
           <path d="M -35 -4 Q -25 -8 -10 -6" stroke="#FF6B6B" stroke-width="1.5" fill="none"/>
         </g>
