@@ -4779,21 +4779,17 @@ p { font-size: 14px; line-height: 1.6; }
     <!-- v18 Phase 5.1: 🏆 成就墙 -->
     <details class="dashboard-collapse">
       <summary class="collapse-toggle">📋 更多详情 (点击展开)</summary>
-    <div class="card achievement-wall-card" id="achievementWallCard"></div>
 
     <!-- v17.6: 今日铁律已删除 (用户反馈) -->
 
     <!-- 智慧教练:本周诊断 + 重点 + 提升建议 + 名师秘诀 -->
     <div class="card coach-card">
-      <div class="coach-header">
-        <div class="coach-title">🎓 本周智慧教练</div>
-        <div class="coach-meta" id="coachMeta">W? · 阶段名</div>
+      <div class="coach-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="coach-title" style="font-size:15px">🎓 智慧教练 <span id="coachMeta" style="font-size:11px;color:var(--color-text-light);font-weight:400">W?</span></div>
+        <button class="btn btn-secondary" onclick="openReportModal()" style="font-size:11px;padding:4px 10px">📋 报告</button>
       </div>
       <div id="coachContent"></div>
-      <div id="coachDiag" class="coach-diag-line"></div>
-      <div class="coach-actions">
-        <button class="btn btn-primary" onclick="openReportModal()">📋 生成本周报告</button>
-      </div>
+      <div id="coachDiag" class="coach-diag-line" style="display:none"></div>
     </div>
 
     <!-- v17.3: 升级进度 (从顶部移到第二屏) -->
@@ -4826,6 +4822,9 @@ p { font-size: 14px; line-height: 1.6; }
         <div id="powerChapterBar" style="margin-top:10px;padding:8px 12px;background:var(--color-bg);border-radius:var(--radius);"></div>
       </div>
     </div>
+
+    <!-- 成就墙 (移至更衣室前) -->
+    <div class="card achievement-wall-card" id="achievementWallCard"></div>
 
     <div class="card">
       <div class="card-title">👕 皮肤更衣室</div>

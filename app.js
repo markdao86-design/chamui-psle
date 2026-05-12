@@ -1135,14 +1135,10 @@ function renderWeeklyCoach() {
     { name: '华文', icon: '✍️', color: '#E07B7B' },
   ];
 
-  // 1. 能力概览
+  // 1. 能力概览 (紧凑版)
   const abilityHtml = `
     <div class="coach-section">
-      <div class="coach-section-title">📊 PSLE 能力概览${overallAL ? ` · 预测 <b style="color:var(--color-purple)">AL${overallAL}</b> <span style="font-size:11px;font-weight:400;color:var(--color-text-light)">(4科AL之和)</span>` : ''}</div>
-      <div style="font-size:11px;color:var(--color-text-light);margin:-4px 0 8px;line-height:1.5">
-        综合AL = 数学AL + 英语AL + 科学AL + 华文AL（总分4-32, 越低越好）<br>
-        各科AL基于 mini-game 实战正确率: AL1≥90% · AL2≥85% · AL3≥80% · AL4≥75% · AL5≥65% · AL6≥45%
-      </div>
+      <div class="coach-section-title">📊 PSLE 能力概览${overallAL ? ` · 预测 <b style="color:var(--color-purple)">AL${overallAL}</b>` : ''}</div>
       <div class="coach-subject-grid">
         ${SUBJ_META.map(s => {
           const d = subjAcc[s.name];
@@ -1151,21 +1147,17 @@ function renderWeeklyCoach() {
           const isWeak = pct !== null && pct < 70;
           const barColor = pct === null ? '#DDD' : pct >= 80 ? '#52C788' : pct >= 60 ? '#F59E0B' : '#EF4444';
           const alStyle = isWeak ? 'background:rgba(255,51,102,0.12);color:#FF3366' : 'background:rgba(0,212,255,0.1);color:#00D4FF';
-          const detail = d ? `答对 ${d.correct} 题 / 共 ${d.total} 题 · 已练 ${d.runs} 局` : '';
           return `<div class="coach-subject-card" style="border-left-color:${s.color}">
-            <div class="coach-subject-header">
+            <div style="display:flex;align-items:center;justify-content:space-between">
               <span style="font-weight:700">${s.icon} ${s.name}</span>
               ${isWeak ? '<span class="coach-weak-flag">⚠ 弱项</span>' : ''}
             </div>
             ${pct !== null ? `
-              <div class="coach-subject-pct">${pct}<span style="font-size:11px;font-weight:400">%</span>
+              <div class="coach-subject-pct">${pct}<span style="font-size:11px">%</span>
                 <span class="coach-subject-al" style="${alStyle}">AL${al}</span>
               </div>
-              <div class="coach-subject-bar-wrap">
-                <div class="coach-subject-bar" style="width:${pct}%;background:${barColor}"></div>
-              </div>
-              <div style="font-size:11px;color:var(--color-text-light);margin-top:2px">${detail}</div>
-            ` : '<div class="coach-subject-pct" style="color:var(--color-text-dim);font-size:12px;font-weight:400">暂无数据 — 玩 mini-game 积累</div>'}
+              <div class="coach-subject-bar-wrap"><div class="coach-subject-bar" style="width:${pct}%;background:${barColor}"></div></div>
+            ` : '<div style="color:var(--color-text-light);font-size:11px">暂无数据 — 玩 mini-game 积累</div>'}
           </div>`;
         }).join('')}
       </div>
@@ -1197,24 +1189,11 @@ function renderWeeklyCoach() {
     : '<span style="color:var(--color-text-light)">今天还没玩游戏</span>';
 
   const trainStatHtml = `
-    <div class="coach-section">
-      <div class="coach-section-title">📈 今日训练统计</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;text-align:center">
-        <div style="background:rgba(0,255,136,0.08);border-radius:8px;padding:8px 4px">
-          <div style="font-size:18px;font-weight:900;color:#00FF88">+${todayPoints}</div>
-          <div style="color:var(--color-text-light)">今日积分</div>
-        </div>
-        <div style="background:rgba(255,183,0,0.08);border-radius:8px;padding:8px 4px">
-          <div style="font-size:18px;font-weight:900;color:#FFB800">${todayErrorLogs.length}</div>
-          <div style="color:var(--color-text-light)">错题消灭</div>
-        </div>
-      </div>
-      ${todayGamesCount > 0 ? `<div style="margin-top:8px;padding:8px;background:rgba(0,212,255,0.06);border-radius:8px">
-        <div style="font-size:12px;font-weight:700;color:var(--color-primary);margin-bottom:4px">🎮 今日游戏 (${todayGamesCount} 局)</div>
-        <div style="line-height:1.8">${todayGameHtml}</div>
-      </div>` : ''}
-      <div style="font-size:11px;color:var(--color-text-light);margin-top:6px;line-height:1.5">
-        💡 积分来源: 打卡主线(slot+全勤奖)为主 > 错题训练(+2/题) > mini-game(+3/满分局)
+    <div class="coach-section" style="padding:8px 12px">
+      <div style="display:flex;align-items:center;gap:12px;font-size:13px">
+        <span style="color:#00FF88;font-weight:700">+${todayPoints} 分</span>
+        <span style="color:#FFB800">错题消灭 ${todayErrorLogs.length}</span>
+        ${todayGamesCount > 0 ? `<span style="color:var(--color-primary)">🎮 ${todayGamesCount} 局</span>` : ''}
       </div>
     </div>`;
 
@@ -1244,48 +1223,42 @@ function renderWeeklyCoach() {
   }
 
   const errorHtml = `
-    <div class="coach-section">
-      <div class="coach-section-title">❌ 错题训练 <span style="font-size:13px;font-weight:700;color:${wrongItems.length > 0 ? 'var(--color-danger)' : 'var(--color-success)'}">${wrongItems.length > 0 ? wrongItems.length + ' 题待攻克' : '全部消灭!'}</span></div>
+    <div class="coach-section" style="padding:8px 12px">
       ${wrongItems.length > 0 ? `
-        <div style="font-size:12px;color:var(--color-text-light);margin-bottom:8px">${errSummary}</div>
-        <div style="text-align:center">
-          <button class="btn btn-primary" onclick="openErrorBank()" style="font-size:14px;padding:10px 24px">🎯 开始错题训练 (+2分/答对)</button>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-weight:700;color:var(--color-danger)">❌ ${wrongItems.length} 题待攻克</span>
+          <span style="font-size:11px;color:var(--color-text-light)">${errSummary}</span>
+          <button class="btn btn-primary" onclick="openErrorBank()" style="font-size:12px;padding:6px 14px;margin-left:auto">🎯 开始训练</button>
         </div>
-        <div style="font-size:11px;color:var(--color-text-light);margin-top:6px;text-align:center">答对自动移除 · 答错留着反复练 · 每答对1题+2积分</div>
-        ${errorListHtml}
-      ` : `<div style="text-align:center;padding:12px">
-        <div style="color:var(--color-success);font-weight:600;margin-bottom:8px">🏆 错题本空空如也, 继续保持!</div>
-        <div style="font-size:11px;color:var(--color-text-light);margin-bottom:10px">在 mini-game 或知识树中答错的题会自动收录到这里</div>
-        <button class="btn btn-secondary" onclick="openErrorBank()" style="font-size:13px;padding:8px 20px">📓 查看错题本</button>
+      ` : `<div style="display:flex;align-items:center;gap:8px">
+        <span style="color:var(--color-success);font-weight:600">✅ 错题全部消灭!</span>
+        <button class="btn btn-secondary" onclick="openErrorBank()" style="font-size:11px;padding:4px 10px">📓 查看</button>
       </div>`}
     </div>`;
 
-  // 4. 重点攻克 + 本周重点
+  // 4. 重点攻克 + 本周重点 (紧凑合并)
   const weakHtml = c.weakAdvice ? `
-    <div class="coach-section">
-      <div class="coach-section-title">⚡ 重点攻克</div>
-      <div class="coach-weak-detail">
+    <div class="coach-section" style="padding:8px 12px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-weight:700">⚡ 弱项:</span>
         <span class="coach-weak-subj">${escapeHtml(c.weakAdvice.subject)}</span>
-        <span class="coach-weak-pct">均 ${c.weakAdvice.avgPct}%</span>
-        <div class="coach-weak-text">${escapeHtml(c.weakAdvice.advice)}</div>
+        <span style="font-size:12px;color:var(--color-text-light)">均 ${c.weakAdvice.avgPct}%</span>
       </div>
+      <div style="font-size:12px;color:var(--color-text);margin-top:4px">${escapeHtml(c.weakAdvice.advice)}</div>
     </div>` : '';
 
   const focusHtml = c.focus && c.focus.points.length ? `
-    <div class="coach-section">
-      <div class="coach-section-title">🎯 本周重点</div>
-      <div class="coach-focus">
-        <div class="coach-focus-title">${escapeHtml(c.focus.title)}</div>
-        <ul>${c.focus.points.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>
-      </div>
+    <div class="coach-section" style="padding:8px 12px">
+      <div style="font-weight:700;margin-bottom:4px">🎯 ${escapeHtml(c.focus.title)}</div>
+      <ul style="margin:0;padding-left:18px;font-size:12px;line-height:1.6">${c.focus.points.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>
     </div>` : '';
 
   let sundayHtml = '';
   if (new Date().getDay() === 0 && window.SUNDAY_REVIEW_STEPS) {
     sundayHtml = `
-      <div class="coach-section sunday-review-section">
-        <div class="coach-section-title">🗓️ 今天周日 19:30-21:00 复盘时间(1.5h)</div>
-        <ol style="margin:6px 0 0 18px;padding:0;font-size:13px;line-height:1.7">
+      <div class="coach-section" style="padding:8px 12px">
+        <div style="font-weight:700;margin-bottom:4px">🗓️ 周日复盘 19:30-21:00</div>
+        <ol style="margin:0 0 0 18px;padding:0;font-size:12px;line-height:1.6">
           ${window.SUNDAY_REVIEW_STEPS.map(s => `<li>${escapeHtml(s.replace(/^[①②③④⑤]\s?/, ''))}</li>`).join('')}
         </ol>
       </div>`;
