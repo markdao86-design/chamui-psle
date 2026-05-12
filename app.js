@@ -1232,8 +1232,10 @@ function renderWeeklyCoach() {
         </div>
       ` : `<div style="display:flex;align-items:center;gap:8px">
         <span style="color:var(--color-success);font-weight:600">✅ 错题全部消灭!</span>
-        <button class="btn btn-secondary" onclick="openErrorBank()" style="font-size:11px;padding:4px 10px">📓 查看</button>
       </div>`}
+      <div style="margin-top:6px">
+        <button class="btn btn-secondary" onclick="openErrorBank()" style="font-size:12px;padding:5px 12px">📓 查看错题集 (错题详情·原因·改错记录)</button>
+      </div>
     </div>`;
 
   // 4. 重点攻克 + 本周重点 (紧凑合并)
