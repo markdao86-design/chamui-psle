@@ -5530,10 +5530,12 @@ function recalcTotalPoints(state) {
     total += log.points;
   });
 
-  state.totalPoints = total;
+  // v19.3: recalc 是下限估算(不含暴击/buff), 取 max 防止回退
+  const prevTotal = state.totalPoints || 0;
+  state.totalPoints = Math.max(total, prevTotal);
   // v19.3: lifetimeEarned 只增不减
-  if (!state.lifetimeEarned || total > state.lifetimeEarned) state.lifetimeEarned = total;
-  return total;
+  if (!state.lifetimeEarned || state.totalPoints > state.lifetimeEarned) state.lifetimeEarned = state.totalPoints;
+  return state.totalPoints;
 }
 
 // ============= IndexedDB 照片存证 (v3 方案 A 防虚假打卡) =============
