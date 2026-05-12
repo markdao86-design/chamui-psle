@@ -336,10 +336,15 @@ function calcSlotReward(state, slotKey, weekNum) {
   const streakDays = (state.dailyStreak && state.dailyStreak.days) || 0;
   const streakBonus = getStreakMultiplier(streakDays, power.streakBoost);
   // 精通触发: 最近game正确率≥90%保底暴击, 否则随机(概率≤25%)
+  // v19.3: 弱科"挑战者暴击" — 英语相关slot 40-70%正确率也有40%暴击概率
+  const WEAK_SUBJECT_SLOTS = ['E1', 'OR', 'ED', 'LS', 'VC'];
   let isCrit = false;
   const gs = state.gameStats && state.gameStats[slotKey];
-  if (gs && gs.recent && gs.recent.length > 0 && gs.recent[gs.recent.length - 1] >= 90) {
+  const lastScore = (gs && gs.recent && gs.recent.length > 0) ? gs.recent[gs.recent.length - 1] : -1;
+  if (lastScore >= 90) {
     isCrit = true;
+  } else if (WEAK_SUBJECT_SLOTS.includes(slotKey) && lastScore >= 40 && lastScore <= 70) {
+    isCrit = Math.random() < 0.40;
   } else {
     isCrit = Math.random() < Math.min(power.critChance, CRIT_CHANCE_MAX);
   }
@@ -605,16 +610,18 @@ function bumpDailyStreak(state) {
       s.days += 1;  // 用券保住 streak
       brokenInfo = { usedFreeze: true, prevDays: s.days - 1 };
     } else {
-      // v19.3: 衰减制 — 断1天降一档, 不归零
+      // v19.3: 宽容衰减 — 断1-3天恢复到之前50%, 超3天降一档
       const prev = s.days;
       if (prev > (s.bestEver || 0)) s.bestEver = prev;
       s.brokenAt = Date.now();
-      if (prev >= 21) s.days = 14;
+      const daysMissed = Math.floor((new Date(today + 'T00:00:00') - new Date(s.lastDate + 'T00:00:00')) / 86400000);
+      if (daysMissed <= 3) {
+        s.days = Math.max(1, Math.round(prev * 0.5));
+      } else if (prev >= 21) s.days = 14;
       else if (prev >= 14) s.days = 7;
       else if (prev >= 7) s.days = 3;
-      else if (prev >= 3) s.days = 1;
       else s.days = 1;
-      brokenInfo = { usedFreeze: false, prevDays: prev };
+      brokenInfo = { usedFreeze: false, prevDays: prev, daysMissed };
     }
   }
   s.lastDate = today;
@@ -1458,7 +1465,19 @@ const ACHIEVEMENTS = [
   { id: 'wk_60', icon:'⭐', name:'W60 星光', desc:'打卡到第 60 周',                        cat:'PSLE', cond:s=>(s.currentWeek||1)>=60 },
   { id: 'wk_65', icon:'🎖️', name:'W65 荣耀', desc:'打卡到第 65 周 (PSLE 倒计时)',         cat:'PSLE', cond:s=>(s.currentWeek||1)>=65 },
   { id: 'wk_70', icon:'🏆', name:'W70 冠军', desc:'打卡到第 70 周 (笔试前)',               cat:'PSLE', cond:s=>(s.currentWeek||1)>=70 },
-  { id: 'wk_73', icon:'👑', name:'W73 PSLE 王', desc:'打卡到 W73 PSLE 笔试周!',           cat:'PSLE', cond:s=>(s.currentWeek||1)>=73 }
+  { id: 'wk_73', icon:'👑', name:'W73 PSLE 王', desc:'打卡到 W73 PSLE 笔试周!',           cat:'PSLE', cond:s=>(s.currentWeek||1)>=73 },
+  // v19.3: 月度勋章 (中期目标, 填补银龙→金龙真空期)
+  { id: 'month_1', icon:'🏅', name:'第 1 月毕业', desc:'坚持满 1 个月 (W4+)', cat:'月度', cond:s=>(s.currentWeek||1)>=4 },
+  { id: 'month_2', icon:'🏅', name:'第 2 月毕业', desc:'坚持满 2 个月 (W8+)', cat:'月度', cond:s=>(s.currentWeek||1)>=8 },
+  { id: 'month_3', icon:'🥈', name:'第 3 月毕业', desc:'坚持满 3 个月 (W13+)', cat:'月度', cond:s=>(s.currentWeek||1)>=13 },
+  { id: 'month_4', icon:'🥈', name:'第 4 月毕业', desc:'坚持满 4 个月 — 银龙近在眼前!', cat:'月度', cond:s=>(s.currentWeek||1)>=17 },
+  { id: 'month_5', icon:'🥇', name:'第 5 月毕业', desc:'坚持满 5 个月 (W22+)', cat:'月度', cond:s=>(s.currentWeek||1)>=22 },
+  { id: 'month_6', icon:'🥇', name:'半年勋章',   desc:'坚持满 6 个月 — 半程英雄!', cat:'月度', cond:s=>(s.currentWeek||1)>=26 },
+  { id: 'month_8', icon:'🏆', name:'第 8 月毕业', desc:'坚持满 8 个月 (W35+)', cat:'月度', cond:s=>(s.currentWeek||1)>=35 },
+  { id: 'month_10',icon:'🏆', name:'第 10 月毕业',desc:'坚持满 10 个月 (W44+)', cat:'月度', cond:s=>(s.currentWeek||1)>=44 },
+  { id: 'month_12',icon:'💎', name:'一年勋章',   desc:'坚持满 1 年 — 传说级坚持!', cat:'月度', cond:s=>(s.currentWeek||1)>=52 },
+  { id: 'month_15',icon:'💎', name:'15 月勋章',  desc:'坚持满 15 个月 (W65+)', cat:'月度', cond:s=>(s.currentWeek||1)>=65 },
+  { id: 'month_17',icon:'👑', name:'全程毕业',   desc:'17 个月全程坚持到 PSLE!', cat:'月度', cond:s=>(s.currentWeek||1)>=73 }
 ];
 
 // 检查并解锁新成就 — 返回新解锁的成就数组
