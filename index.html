@@ -1927,18 +1927,18 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   100% { opacity: 0; transform: translate(-50%, -180%) scale(0.95); }
 }
 
-/* slot 卡片 +N badge 风格(沿用原 .checkin-points,但调亮) */
+/* slot 卡片 +N badge 风格 — 统一玻璃风格 */
 .checkin-item .checkin-points {
-  background: var(--color-accent);
-  color: var(--color-text);
-  border: 3px solid var(--color-text);
+  background: rgba(255,107,53,0.12);
+  color: var(--color-accent);
+  border: 1px solid rgba(255,107,53,0.25);
   border-radius: 999px;
   padding: 4px 12px;
   font-family: 'Fredoka', sans-serif;
   font-weight: 700;
   font-size: 16px;
   white-space: nowrap;
-  box-shadow: 0 2px 0 var(--color-text);
+  box-shadow: none;
 }
 .checkin-item.checked .checkin-points {
   background: rgba(255,184,0,0.15);
