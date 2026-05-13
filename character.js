@@ -1975,7 +1975,6 @@ const CHAMUI = {
         ${dragonBody}
         ${cape}
         ${galaxyCape}
-        ${auroraCape}
         ${body}
         ${bag}
         ${monthking}
@@ -2007,6 +2006,7 @@ const CHAMUI = {
         ${phone}
         ${glasses}
         ${pearl}
+        ${auroraCape}
         ${heroMask}
         ${headphone}
         ${ear}
