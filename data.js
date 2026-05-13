@@ -5381,16 +5381,22 @@ async function loadStateAsync() {
     try {
       const snap = await _fbDoc.get();
       if (snap.exists) {
-        const merged = Object.assign(getDefaultState(), snap.data());
+        const cloudData = snap.data();
+        const local = loadState();
+        // v19.3: 服务端强制版本 — 如果 Firebase 有更新的 _serverVersion, 以 Firebase 为准
+        const cloudVer = cloudData._serverVersion || 0;
+        const localVer = local._serverVersion || 0;
+        const useCloud = cloudVer > localVer;
+        const base = useCloud ? cloudData : local;
+        const merged = Object.assign(getDefaultState(), base);
+        if (useCloud) merged._serverVersion = cloudVer;
         if (!merged.daily) merged.daily = {};
         if (!merged.scores) merged.scores = {};
         merged.version = 2;
-        // 同时更新本地缓存
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch (e) {}
         setFbStatus('synced');
         return merged;
       } else {
-        // Firestore 为空 → 用本地的初始化它(首次同步)
         const local = loadState();
         try { await _fbDoc.set(local); setFbStatus('synced'); } catch (e) { console.warn(e); }
         return local;
