@@ -1319,9 +1319,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 .checkin-item {
   background: var(--color-card);
-  border: 3px solid var(--color-text);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-tight);
-  padding: 16px;
+  padding: 14px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1332,17 +1332,18 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 
 .checkin-item:hover {
-  transform: translateX(4px);
-  box-shadow: -4px 4px 0 var(--color-text);
+  box-shadow: 0 0 8px rgba(0,212,255,0.15);
+  border-color: rgba(0,212,255,0.3);
 }
 
 .checkin-item.checked {
-  background: rgba(255,184,0,0.06);
-  border-left: 4px solid var(--color-warn);
-  color: var(--color-text-light);
+  background: rgba(255,184,0,0.04);
+  border: 1px solid rgba(255,184,0,0.2);
+  border-left: 3px solid var(--color-warn);
+  color: var(--color-text-dim);
   text-decoration: line-through;
   text-decoration-thickness: 2px;
-  opacity: 0.75;
+  opacity: 0.55;
 }
 
 .checkin-item.special {
@@ -1365,7 +1366,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .check-circle {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--color-text);
+  border: 2px solid var(--color-text-light);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1868,9 +1869,10 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   transition: all 0.2s;
 }
 .tier-expand-btn:hover { transform: scale(1.02); box-shadow: 0 2px 8px rgba(0,212,255,0.3); }
+.checkin-item.tier-core { border-left: 3px solid var(--color-primary); }
 .checkin-item.tier-extend { border-left: 3px solid var(--color-accent); }
 .checkin-item.tier-bonus { border-left: 3px solid var(--color-purple); opacity: 0.85; }
-.checkin-item.task-large { padding: 16px 14px; border-left-width: 4px; background: linear-gradient(135deg, rgba(0,212,255,0.04), transparent); }
+.checkin-item.task-large { padding: 16px 14px; background: linear-gradient(135deg, rgba(0,212,255,0.04), transparent); }
 .checkin-item.task-small { padding: 10px 14px; font-size: 14px; }
 .pts-preview { color: var(--color-primary); font-weight: 700; font-size: 11px; }
 /* v19.2: crit flash */
