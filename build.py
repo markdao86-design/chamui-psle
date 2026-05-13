@@ -3,6 +3,7 @@
 import os
 import sys
 import io
+import re
 
 # Windows 控制台默认 GBK 编码,强制 UTF-8 输出避免 emoji 乱码
 if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
@@ -19,13 +20,13 @@ char = read('character.js')
 data = read('data.js')
 app  = read('app.js')
 
-OLD = '<script src="character.js"></script>\n<script src="data.js"></script>\n<script src="app.js"></script>'
+PATTERN = r'<script src="character\.js[^"]*"></script>\n<script src="data\.js[^"]*"></script>\n<script src="app\.js[^"]*"></script>'
 NEW = f'<script>\n{char}\n\n{data}\n\n{app}\n</script>'
 
-if OLD not in html:
+if not re.search(PATTERN, html):
     raise SystemExit('❌ 找不到要替换的 <script src="..."> 三连;index.html 结构变了?')
 
-merged = html.replace(OLD, NEW)
+merged = re.sub(PATTERN, lambda m: NEW, html)
 out_path = os.path.join(ROOT, 'chamui_app_single.html')
 with open(out_path, 'w', encoding='utf-8') as f:
     f.write(merged)
