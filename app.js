@@ -4322,13 +4322,13 @@ function openPetModal() {
   const formsList = window.PET_FORMS.map(f => {
     const unlocked = streak >= f.minStreak || f.idx <= formIdx;
     const isCurrent = f.idx === form.idx;
-    return `<div class="pet-form-item ${unlocked ? 'unlocked' : 'locked'} ${isCurrent ? 'current' : ''}" style="background:${f.bg || 'white'}">
+    return `<div class="pet-form-item ${unlocked ? 'unlocked' : 'locked'} ${isCurrent ? 'current' : ''}">
       <div class="pet-form-svg">${f.svg}</div>
       <div class="pet-form-meta">${f.name} (累计打卡 ≥${f.minStreak} 天)${isCurrent ? ' ← 你在这' : ''}</div>
     </div>`;
   }).join('');
   const gundamUnlocked = streak >= 45;
-  const gundamCard = `<div class="pet-form-item ${gundamUnlocked ? 'unlocked' : 'locked'}" style="background:${gundamUnlocked ? window.GUNDAM_PET.bg : 'var(--color-card-soft)'}">
+  const gundamCard = `<div class="pet-form-item ${gundamUnlocked ? 'unlocked' : 'locked'}">
     <div class="pet-form-svg" style="${gundamUnlocked ? '' : 'filter:grayscale(1);opacity:0.5'}">${window.GUNDAM_PET.svg}</div>
     <div class="pet-form-meta">🤖 命运高达 (累计打卡 ≥45 天)${gundamUnlocked ? ' ✅ 已解锁' : ` · 还差 ${45 - streak} 天`}</div>
   </div>`;
