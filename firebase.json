@@ -18,5 +18,11 @@
       "package-lock.json",
       "chamui_app_single.html"
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": {
+    "rules": "storage.rules"
   }
 }

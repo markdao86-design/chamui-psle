@@ -1653,7 +1653,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   transform: translateY(-2px);
   box-shadow: 0 5px 0 rgba(0,0,0,0.15);
 }
-.day-tab.today { border-color: var(--color-warn); border-width: 4px; }
+.day-tab.today { border-color: var(--color-primary); border-width: 3px; box-shadow: 0 0 12px rgba(0,212,255,0.3); }
 .day-tab-name { font-weight: 700; font-size: 13px; }
 .day-tab-date { font-size: 11px; opacity: 0.7; }
 .day-tab-count {
@@ -1814,10 +1814,10 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 /* ===== v3 上头版反馈 ===== */
 .day-tab.complete {
-  background: linear-gradient(135deg, rgba(255,184,0,0.2) 0%, rgba(255,107,53,0.1) 100%);
-  color: var(--color-warn);
-  border: 2px solid var(--color-warn);
-  box-shadow: 0 0 10px rgba(255,184,0,0.2), 0 3px 0 rgba(0,0,0,0.08);
+  background: linear-gradient(135deg, rgba(0,255,136,0.12) 0%, rgba(16,185,129,0.08) 100%);
+  color: var(--color-success);
+  border: 2px solid rgba(0,255,136,0.5);
+  box-shadow: 0 0 8px rgba(0,255,136,0.15), 0 3px 0 rgba(0,0,0,0.08);
   position: relative;
 }
 .day-tab.complete::after {
@@ -1827,7 +1827,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   right: -6px;
   width: 18px;
   height: 18px;
-  background: var(--color-warn);
+  background: var(--color-success);
   color: #0F172A;
   font-size: 11px;
   font-weight: 900;
@@ -1838,11 +1838,11 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   line-height: 1;
 }
 .day-tab.complete .day-tab-date,
-.day-tab.complete .day-tab-count { color: var(--color-warn); opacity: 1; font-weight: 700; }
+.day-tab.complete .day-tab-count { color: var(--color-success); opacity: 1; font-weight: 700; }
 .day-tab.complete.active {
-  background: linear-gradient(135deg, rgba(255,184,0,0.3) 0%, rgba(255,107,53,0.15) 100%);
-  border-color: var(--color-warn);
-  box-shadow: 0 0 14px rgba(255,184,0,0.3), 0 5px 0 rgba(0,0,0,0.15);
+  background: linear-gradient(135deg, rgba(0,255,136,0.2) 0%, rgba(16,185,129,0.12) 100%);
+  border-color: var(--color-success);
+  box-shadow: 0 0 14px rgba(0,255,136,0.25), 0 5px 0 rgba(0,0,0,0.15);
 }
 
 .combo-banner {
