@@ -5534,10 +5534,8 @@ function recalcTotalPoints(state) {
     total += log.points;
   });
 
-  // v19.3: recalc 是下限估算(不含暴击/buff), 取 max 防止回退
-  const prevTotal = state.totalPoints || 0;
-  state.totalPoints = Math.max(total, prevTotal);
-  // v19.3: lifetimeEarned 只增不减
+  // v19.3: 允许积分下降(修复toggle刷分漏洞), lifetimeEarned 只增不减
+  state.totalPoints = Math.max(0, total);
   if (!state.lifetimeEarned || state.totalPoints > state.lifetimeEarned) state.lifetimeEarned = state.totalPoints;
   return state.totalPoints;
 }

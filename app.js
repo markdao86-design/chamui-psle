@@ -1905,6 +1905,16 @@ function selectDay(day) {
 }
 
 function toggleDailyCheck(week, day, slot, evt) {
+  // v19.3: 防连点冷却 2s
+  const cooldownKey = `${week}_${day}_${slot}`;
+  const now = Date.now();
+  if (!toggleDailyCheck._lastToggle) toggleDailyCheck._lastToggle = {};
+  if (toggleDailyCheck._lastToggle[cooldownKey] && now - toggleDailyCheck._lastToggle[cooldownKey] < 2000) {
+    showToast('⏳ 操作太快, 请稍等', 'warn');
+    return;
+  }
+  toggleDailyCheck._lastToggle[cooldownKey] = now;
+
   const oldPoints = state.totalPoints;
   const oldDayComplete = isDayComplete(state, week, day);
   const oldOnTrack = (calcWeekCompletion(week, state) || {}).onTrack;
@@ -1927,7 +1937,10 @@ function toggleDailyCheck(week, day, slot, evt) {
   // v19.3: 积分审计 — 计算真实奖励(含暴击/装备加成)并写入 log
   let reward = { pts: slotPoints(week, slot), isCrit: false, base: slotPoints(week, slot) };
   if (!wasChecked) {
-    if (window.calcSlotReward) reward = window.calcSlotReward(state, slot, week);
+    // 只有当前周才给暴击/buff加成
+    if (week === state.currentWeek && window.calcSlotReward) {
+      reward = window.calcSlotReward(state, slot, week);
+    }
     const critExtra = reward.pts - (reward.base || slotPoints(week, slot));
     if (critExtra > 0) {
       state.totalPoints += critExtra;
@@ -1941,9 +1954,22 @@ function toggleDailyCheck(week, day, slot, evt) {
       timestamp: Date.now()
     });
   } else {
+    // v19.3: 取消时找到对应的打卡log并扣回暴击分
+    let undoAmount = 0;
+    for (let i = state.logs.length - 1; i >= 0; i--) {
+      const log = state.logs[i];
+      if (log.type === 'slot' && log.reason && log.reason.includes(`W${week} ${day} ${slot}`)) {
+        undoAmount = log.points || 0;
+        state.logs.splice(i, 1);
+        break;
+      }
+    }
+    if (undoAmount > 0) {
+      state.totalPoints = Math.max(0, state.totalPoints - undoAmount);
+    }
     state.logs.push({
       reason: `↩️ 取消 W${week} ${day} ${slot}`,
-      points: 0,
+      points: -undoAmount,
       type: 'slot_undo',
       week: state.currentWeek,
       timestamp: Date.now()
