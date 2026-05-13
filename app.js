@@ -56,6 +56,9 @@ async function init() {
   }
   // v19.2: 一次性修复仓鼠形态倒退 (之前已解锁 formIdx=3)
   if (state.pet && state.pet.formIdx < 3) { state.pet.formIdx = 3; saveState(state); }
+  // v19.3: 每日 mini-game 局数重置
+  const _today = new Date().toDateString();
+  if (state._lastGameDate !== _today) { state._lastGameDate = _today; state.gameDailyCount = 0; saveState(state); }
   // 启动时若当前真实日期在本周内,默认选今天
   const today = todayDayKeyForWeek(state.currentWeek);
   if (today) selectedDay = today;
@@ -351,6 +354,7 @@ function renderDashboard() {
   renderMysteryBoxCard();  // v17.5
   renderDailyQuestCard();  // v17.7 Phase 3
   renderPetWidget();  // v18 Phase 5.1
+  renderGameHubCard(); // v19.3: 每日挑战入口
   renderAchievementWall();  // v18 Phase 5.1
   renderReviewCard();  // v18 Phase 5.3
   renderWeeklyCoach();
@@ -2713,6 +2717,59 @@ function _playTone(ctx, freq, dur, wave, vol, delay) {
   osc.start(t);
   osc.stop(t + dur);
 }
+
+// ============ v19.3: 每日挑战 mini-game 入口 ============
+const _GAME_LABELS_HUB = { grammar: 'Grammar MCQ', cloze: 'Cloze 完形填空', vocab: '词汇连连看', math: '数学挑战' };
+const _GAME_SUBJECTS = { grammar: 'PSLE英语Paper2', cloze: 'PSLE英语Paper2', vocab: 'PSLE英语词汇', math: 'PSLE数学' };
+
+function getTodayGameType() {
+  const d = new Date().getDay(); // 0=Sun
+  return ['grammar', 'cloze', 'grammar', 'vocab', 'cloze', 'math', 'grammar'][d];
+}
+
+function renderGameHubCard() {
+  let el = document.getElementById('gameHubCard');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'gameHubCard';
+    const heroSection = document.querySelector('.hero-section');
+    if (heroSection) heroSection.parentNode.insertBefore(el, heroSection.nextSibling);
+    else return;
+  }
+  const gameType = getTodayGameType();
+  const played = state.gameDailyCount || 0;
+  const max = 2;
+  const diff = (state.gameStats && state.gameStats[gameType]) ? state.gameStats[gameType].difficulty : 4;
+
+  if (played >= max) {
+    el.innerHTML = `<div class="game-hub-card exhausted">
+      <div class="game-hub-title">✅ 今日挑战已完成!</div>
+      <div class="game-hub-sub">明天再来 · 已玩 ${played}/${max} 局</div>
+    </div>`;
+  } else {
+    el.innerHTML = `<div class="game-hub-card">
+      <div class="game-hub-title">⚔️ 每日挑战 · ${_GAME_LABELS_HUB[gameType]}</div>
+      <div class="game-hub-sub">${_GAME_SUBJECTS[gameType]}重点 · 难度 Lv${diff} · 剩余 ${max - played}/${max} 局</div>
+      <button class="game-hub-btn" onclick="startDailyGame()">开始挑战!</button>
+    </div>`;
+  }
+}
+
+function startDailyGame() {
+  const played = state.gameDailyCount || 0;
+  if (played >= 2) { showToast('⏳ 今日 2 局已用完，明天再来!', 'warn'); return; }
+  const gameType = getTodayGameType();
+  state.gameDailyCount = played + 1;
+  saveState(state);
+  switch (gameType) {
+    case 'grammar': openGrammarGame(); break;
+    case 'cloze': openClozeGame(); break;
+    case 'vocab': openVocabGame(state.currentWeek); break;
+    case 'math': openMathGame(); break;
+    default: openGrammarGame();
+  }
+}
+window.startDailyGame = startDailyGame;
 
 // ============ v18 Phase 5.1: 🐣 宠物 widget ============
 function renderPetWidget() {
