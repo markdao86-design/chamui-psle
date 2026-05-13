@@ -5447,9 +5447,8 @@ function isEmptyDefaultState(s) {
 // 默认情况下,空默认值 state 拒绝写 Firestore(防止意外覆盖云端历史)
 function saveState(state, options) {
   options = options || {};
-  // v18.34: 防 logs 无限增长 (73 周 511 天 × 5 = 2500+ 条会撑爆 Firestore 1MB 文档)
   if (state.logs && state.logs.length > 1000) {
-    state.logs = state.logs.slice(-1000);  // 只保留最近 1000 条
+    state.logs = state.logs.slice(-1000);
   }
   let ok = true;
   try {
@@ -5458,17 +5457,38 @@ function saveState(state, options) {
     console.error('保存数据失败', e);
     ok = false;
   }
-  // 镜像写到 Firestore(不阻塞)— 加安全闸
   if (_fbReady && _fbDoc) {
     if (isEmptyDefaultState(state) && !options.force) {
-      console.warn('🛡️ 拒绝写空默认值到 Firestore(防止覆盖云端历史)。如确需重置,请传 saveState(state, {force: true})');
-      // 不改 fbStatus
+      console.warn('🛡️ 拒绝写空默认值到 Firestore');
     } else {
       setFbStatus('syncing');
-      _fbDoc.set(state).then(
-        () => setFbStatus('synced'),
-        e => { console.warn('Firestore 写入失败:', e); setFbStatus('error'); }
-      );
+      // v19.3: 先读 Firebase _serverVersion, 如果比本地高则不覆盖
+      _fbDoc.get().then(snap => {
+        if (snap.exists) {
+          const cloudVer = snap.data()._serverVersion || 0;
+          const localVer = state._serverVersion || 0;
+          if (cloudVer > localVer) {
+            console.warn('🛡️ Firebase _serverVersion 更新, 不覆盖。正在重新加载正确数据...');
+            const merged = Object.assign(getDefaultState(), snap.data());
+            merged._serverVersion = cloudVer;
+            if (!merged.daily) merged.daily = {};
+            if (!merged.scores) merged.scores = {};
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch (e) {}
+            setFbStatus('synced');
+            if (typeof renderAll === 'function') { Object.assign(state, merged); renderAll(); }
+            return;
+          }
+        }
+        _fbDoc.set(state).then(
+          () => setFbStatus('synced'),
+          e => { console.warn('Firestore 写入失败:', e); setFbStatus('error'); }
+        );
+      }).catch(e => {
+        _fbDoc.set(state).then(
+          () => setFbStatus('synced'),
+          e2 => { console.warn('Firestore 写入失败:', e2); setFbStatus('error'); }
+        );
+      });
     }
   }
   return ok;
