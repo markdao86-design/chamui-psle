@@ -1814,15 +1814,17 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 /* ===== v3 上头版反馈 ===== */
 .day-tab.complete {
-  background: rgba(255,184,0,0.1);
+  background: linear-gradient(135deg, rgba(255,184,0,0.2) 0%, rgba(255,107,53,0.1) 100%);
   color: var(--color-warn);
-  border-color: rgba(255,184,0,0.3);
+  border: 2px solid var(--color-warn);
+  box-shadow: 0 0 10px rgba(255,184,0,0.2), 0 3px 0 rgba(0,0,0,0.08);
 }
 .day-tab.complete .day-tab-date,
-.day-tab.complete .day-tab-count { color: var(--color-warn); opacity: 0.8; }
+.day-tab.complete .day-tab-count { color: var(--color-warn); opacity: 1; font-weight: 700; }
 .day-tab.complete.active {
-  background: rgba(255,184,0,0.15);
+  background: linear-gradient(135deg, rgba(255,184,0,0.3) 0%, rgba(255,107,53,0.15) 100%);
   border-color: var(--color-warn);
+  box-shadow: 0 0 14px rgba(255,184,0,0.3), 0 5px 0 rgba(0,0,0,0.15);
 }
 
 .combo-banner {
