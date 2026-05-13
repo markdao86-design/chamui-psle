@@ -239,10 +239,26 @@ const CHAMUI = {
     const sad = state.sadUntil && Date.now() < state.sadUntil;
 
     const disabled = new Set(state.equipmentDisabled || []);
+    const evos = state.equipEvolutions || {};
     const has = {};
     this.equipment.forEach(eq => {
       has[eq.id] = this.checkEquipmentUnlocked(eq.id, state) && !disabled.has(eq.id);
     });
+
+    function evoGlow(equipId, cx, cy, radius) {
+      const lv = evos[equipId] || 0;
+      if (!lv || !has[equipId]) return '';
+      const colors = ['rgba(0,212,255,0.4)', 'rgba(168,100,255,0.5)', 'rgba(255,215,0,0.6)'];
+      const sizes = [1.3, 1.6, 2.0];
+      const r = radius * sizes[lv-1];
+      const dur = (2.5 - lv * 0.4).toFixed(1);
+      return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${colors[lv-1]}" stroke-width="${lv + 1}" opacity="0.6">
+        <animate attributeName="r" values="${(r*0.85).toFixed(1)};${(r*1.15).toFixed(1)};${(r*0.85).toFixed(1)}" dur="${dur}s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.4;0.8;0.4" dur="${dur}s" repeatCount="indefinite"/>
+      </circle>` + (lv >= 3 ? `<circle cx="${cx}" cy="${cy}" r="${(r*0.6).toFixed(1)}" fill="none" stroke="rgba(255,215,0,0.3)" stroke-width="1" opacity="0.5">
+        <animate attributeName="r" values="${(r*0.5).toFixed(1)};${(r*0.8).toFixed(1)};${(r*0.5).toFixed(1)}" dur="${(parseFloat(dur)*0.7).toFixed(1)}s" repeatCount="indefinite"/>
+      </circle>` : '');
+    }
 
     const skin = this.getActiveSkin(state);
     const autoShirt = level.lv <= 3 ? '#FFE066' : level.lv <= 6 ? '#FF9F45' : level.lv <= 8 ? '#A788E0' : '#FF6B6B';
@@ -703,7 +719,7 @@ const CHAMUI = {
     ` : '';
 
     // === 后披风/挂件 (z=2) ===
-    const cape = (has.cape && !has.galaxy) ? `
+    const cape = (has.cape && !has.galaxy && !has.aurora) ? `
       <!-- 披风从两肩后伸出, 飘到腿后 -->
       <path d="M ${A.shoulderL[0]+4} ${A.shoulderL[1]+2}
                Q ${A.shoulderL[0]-15} ${tpl.bodyBottom-30} ${A.shoulderL[0]-25} ${tpl.legBottom+5}
@@ -720,7 +736,7 @@ const CHAMUI = {
       <circle cx="110" cy="${A.shoulderL[1]+4}" r="3" fill="#FFE66D" stroke="#8090A0" stroke-width="1.5"/>
     ` : '';
 
-    const galaxyCape = has.galaxy ? `
+    const galaxyCape = (has.galaxy && !has.aurora) ? `
       <path d="M ${A.shoulderL[0]+4} ${A.shoulderL[1]+2}
                Q ${A.shoulderL[0]-22} ${tpl.bodyBottom-30} ${A.shoulderL[0]-32} ${tpl.legBottom+8}
                L ${A.shoulderR[0]+32} ${tpl.legBottom+8}
@@ -737,6 +753,97 @@ const CHAMUI = {
           <stop offset="0%" stop-color="#A788E0"/><stop offset="50%" stop-color="#4338a0"/><stop offset="100%" stop-color="#1a0d40"/>
         </linearGradient>
       </defs>
+    ` : '';
+
+    const auroraCape = has.aurora ? `
+      <!-- 极光斗篷: 青紫渐变+流光动画, 比银河披风更大 -->
+      <path d="M ${A.shoulderL[0]+4} ${A.shoulderL[1]+2}
+               Q ${A.shoulderL[0]-26} ${tpl.bodyBottom-30} ${A.shoulderL[0]-36} ${tpl.legBottom+10}
+               L ${A.shoulderR[0]+36} ${tpl.legBottom+10}
+               Q ${A.shoulderR[0]+26} ${tpl.bodyBottom-30} ${A.shoulderR[0]-4} ${A.shoulderR[1]+2} Z"
+            fill="url(#auroraGrad)" stroke="rgba(0,212,255,0.6)" stroke-width="2" opacity="0.92">
+        <animateTransform attributeName="transform" type="rotate" values="-2 110 ${A.shoulderL[1]};2 110 ${A.shoulderL[1]};-2 110 ${A.shoulderL[1]}" dur="3s" repeatCount="indefinite"/>
+      </path>
+      <!-- 极光流光条 (绿色波) -->
+      <path d="M ${A.shoulderL[0]-10} ${tpl.bodyBottom-25} Q 110 ${tpl.bodyBottom-10} ${A.shoulderR[0]+10} ${tpl.bodyBottom-25}"
+            stroke="rgba(0,255,136,0.5)" stroke-width="2" fill="none" opacity="0.7">
+        <animate attributeName="opacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite"/>
+      </path>
+      <!-- 极光流光条 (紫色波) -->
+      <path d="M ${A.shoulderL[0]-20} ${tpl.legTop} Q 110 ${tpl.legTop+10} ${A.shoulderR[0]+20} ${tpl.legTop}"
+            stroke="rgba(168,100,255,0.4)" stroke-width="1.5" fill="none" opacity="0.6">
+        <animate attributeName="opacity" values="0.2;0.7;0.2" dur="2.5s" repeatCount="indefinite" begin="0.5s"/>
+      </path>
+      <!-- 极光粒子 -->
+      <circle cx="${A.shoulderL[0]-15}" cy="${tpl.bodyBottom-15}" r="2" fill="#00D4FF" opacity="0.8">
+        <animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="${A.shoulderR[0]+12}" cy="${tpl.bodyBottom-20}" r="1.5" fill="#A788E0" opacity="0.7">
+        <animate attributeName="opacity" values="0;1;0" dur="2.2s" repeatCount="indefinite" begin="0.6s"/>
+      </circle>
+      <circle cx="110" cy="${tpl.legTop+5}" r="1.8" fill="#00FF88" opacity="0.6">
+        <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" begin="1s"/>
+      </circle>
+      <!-- 斗篷扣 (青色宝石) -->
+      <circle cx="110" cy="${A.shoulderL[1]+4}" r="4" fill="#00D4FF" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
+      <circle cx="110" cy="${A.shoulderL[1]+4}" r="1.5" fill="white" opacity="0.9"/>
+      <defs>
+        <linearGradient id="auroraGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#00D4FF"/>
+          <stop offset="35%" stop-color="#0088AA"/>
+          <stop offset="65%" stop-color="#6B3FA0"/>
+          <stop offset="100%" stop-color="#1A0D40"/>
+        </linearGradient>
+      </defs>
+    ` : '';
+
+    const nebulaDust = has.nebula ? `
+      <!-- 星云粉尘: 紫色粒子环绕身体 -->
+      <g opacity="0.8">
+        <circle cx="${A.shoulderL[0]-18}" cy="${tpl.bodyTop+20}" r="3" fill="#A788E0" opacity="0.6">
+          <animate attributeName="cy" values="${tpl.bodyTop+20};${tpl.bodyTop+10};${tpl.bodyTop+20}" dur="3s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.3;0.8;0.3" dur="3s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="${A.shoulderR[0]+15}" cy="${tpl.bodyBottom-30}" r="2.5" fill="#7C3AED" opacity="0.5">
+          <animate attributeName="cy" values="${tpl.bodyBottom-30};${tpl.bodyBottom-40};${tpl.bodyBottom-30}" dur="2.5s" repeatCount="indefinite" begin="0.5s"/>
+          <animate attributeName="opacity" values="0.2;0.7;0.2" dur="2.5s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+        <circle cx="${A.shoulderL[0]-8}" cy="${tpl.legTop}" r="2" fill="#C4B5FD" opacity="0.5">
+          <animate attributeName="cy" values="${tpl.legTop};${tpl.legTop-8};${tpl.legTop}" dur="2.8s" repeatCount="indefinite" begin="1s"/>
+          <animate attributeName="opacity" values="0.2;0.6;0.2" dur="2.8s" repeatCount="indefinite" begin="1s"/>
+        </circle>
+        <circle cx="110" cy="${tpl.headCY-55}" r="2" fill="#E9D5FF" opacity="0.4">
+          <animate attributeName="opacity" values="0;0.7;0" dur="2s" repeatCount="indefinite" begin="0.3s"/>
+        </circle>
+        <circle cx="${A.shoulderR[0]+22}" cy="${tpl.bodyTop+40}" r="1.8" fill="#A78BFA" opacity="0.5">
+          <animate attributeName="opacity" values="0.2;0.8;0.2" dur="2.2s" repeatCount="indefinite" begin="0.8s"/>
+          <animate attributeName="cy" values="${tpl.bodyTop+40};${tpl.bodyTop+32};${tpl.bodyTop+40}" dur="2.2s" repeatCount="indefinite" begin="0.8s"/>
+        </circle>
+        <!-- 星云薄纱 (半透明弧) -->
+        <path d="M ${A.shoulderL[0]-20} ${tpl.bodyBottom-20} Q 110 ${tpl.bodyTop} ${A.shoulderR[0]+20} ${tpl.bodyBottom-20}"
+              stroke="rgba(167,136,224,0.2)" stroke-width="8" fill="none" stroke-linecap="round"/>
+      </g>
+    ` : '';
+
+    const orbitRing = has.orbit ? `
+      <!-- 轨道飞船: 头顶环形轨道+小卫星 -->
+      <g>
+        <ellipse cx="110" cy="${tpl.headCY-10}" rx="55" ry="12" fill="none" stroke="rgba(0,212,255,0.3)" stroke-width="1.5" stroke-dasharray="4 3" transform="rotate(-15 110 ${tpl.headCY-10})"/>
+        <!-- 卫星 (沿轨道运动) -->
+        <circle cx="0" cy="0" r="4" fill="#4ECDC4" stroke="#FFF" stroke-width="1">
+          <animateMotion dur="4s" repeatCount="indefinite" rotate="auto">
+            <mpath href="#orbitPath${tpl.bodyBottom}"/>
+          </animateMotion>
+        </circle>
+        <circle cx="0" cy="0" r="2" fill="#FFE66D">
+          <animateMotion dur="4s" repeatCount="indefinite" rotate="auto" begin="-2s">
+            <mpath href="#orbitPath${tpl.bodyBottom}"/>
+          </animateMotion>
+        </circle>
+        <defs>
+          <path id="orbitPath${tpl.bodyBottom}" d="M 55 ${tpl.headCY-10} A 55 12 -15 1 1 55 ${tpl.headCY-10 + 0.01}" fill="none" transform="rotate(-15 110 ${tpl.headCY-10})"/>
+        </defs>
+      </g>
     ` : '';
 
     const bag = has.bag ? `
@@ -1834,10 +1941,12 @@ const CHAMUI = {
         </defs>
         ${fireBackground}
         ${cometTrail}
+        ${nebulaDust}
         ${diamond}
         ${dragonBody}
         ${cape}
         ${galaxyCape}
+        ${auroraCape}
         ${body}
         ${bag}
         ${monthking}
@@ -1887,6 +1996,16 @@ const CHAMUI = {
         ${trophy}
         ${rocket}
         ${unicorn}
+        ${orbitRing}
+        ${evoGlow('sword', A.handR[0], A.handR[1] - 30, 20)}
+        ${evoGlow('magic', A.handR[0], A.handR[1] - 30, 18)}
+        ${evoGlow('galaxy', 110, A.shoulderL[1] + 30, 40)}
+        ${evoGlow('aurora', 110, A.shoulderL[1] + 30, 45)}
+        ${evoGlow('diamond', A.chest[0], A.chest[1], 16)}
+        ${evoGlow('crystal', A.handL[0], A.handL[1], 14)}
+        ${evoGlow('rocket', 185, 130, 30)}
+        ${evoGlow('pearl', A.chest[0], tpl.neckBottom, 14)}
+        ${evoGlow('unicorn', 170, tpl.legBottom - 20, 25)}
       </svg>
     `;
   }
