@@ -3541,9 +3541,9 @@ p { font-size: 14px; line-height: 1.6; }
 
 /* ===== v18.88: 🐹 宠物 widget — 升级为独立小动物伙伴(类QQ宠物) ===== */
 .pet-widget {
-  position: absolute;
-  bottom: 72px;
-  right: 2px;
+  position: relative;
+  bottom: auto;
+  right: auto;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -3561,6 +3561,7 @@ p { font-size: 14px; line-height: 1.6; }
   align-items: center;
   justify-content: flex-end;
   overflow: visible;
+  margin: 8px auto 0;
 }
 .pet-widget:hover { transform: scale(1.06); }
 /* v19.1: 双宠物 — 高达伙伴在仓鼠左侧 */
@@ -4753,8 +4754,6 @@ p { font-size: 14px; line-height: 1.6; }
         <div class="character-display">
           <div class="character-svg" id="characterSvg"></div>
         </div>
-        <!-- v18 Phase 5.1: 🐣 宠物 widget (角色右下角浮窗) -->
-        <div class="pet-widget" id="petWidget"></div>
 
         <!-- 角色名+称号+LV -->
         <div class="character-name" id="characterName">萌新佑子</div>
@@ -4769,6 +4768,9 @@ p { font-size: 14px; line-height: 1.6; }
           <div class="streak-label">今天打 1 个项目, 点燃火焰</div>
           <div class="streak-hover-hint">📋 悬浮/点击看规则</div>
         </div>
+
+        <!-- v19.3: 宠物移到 streak 下方 -->
+        <div class="pet-widget" id="petWidget"></div>
 
         <!-- 积分 + 击败 一排 -->
         <div class="score-beat-row">
