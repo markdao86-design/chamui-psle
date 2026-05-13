@@ -756,72 +756,85 @@ const CHAMUI = {
     ` : '';
 
     const auroraCape = has.aurora ? `
-      <!-- 极光斗篷: 宽大飘逸+水平极光渐变+流光动画 -->
-      <!-- 左翼 -->
-      <path d="M ${A.shoulderL[0]+6} ${A.shoulderL[1]}
-               Q ${A.shoulderL[0]-30} ${tpl.bodyBottom-40} ${A.shoulderL[0]-42} ${tpl.legBottom+12}
-               L ${A.shoulderL[0]-10} ${tpl.legBottom+12}
-               Q ${A.shoulderL[0]-5} ${tpl.bodyBottom-10} ${A.shoulderL[0]+6} ${A.shoulderL[1]} Z"
-            fill="url(#auroraGradL)" stroke="rgba(0,212,255,0.7)" stroke-width="1.5" opacity="0.88">
-        <animateTransform attributeName="transform" type="rotate" values="-2.5 ${A.shoulderL[0]} ${A.shoulderL[1]};1.5 ${A.shoulderL[0]} ${A.shoulderL[1]};-2.5 ${A.shoulderL[0]} ${A.shoulderL[1]}" dur="3.5s" repeatCount="indefinite"/>
+      <!-- 极光斗篷: 明亮双翼+强发光效果 -->
+      <!-- 外层辉光 (大范围柔光) -->
+      <ellipse cx="110" cy="${tpl.bodyBottom}" rx="75" ry="50" fill="none" stroke="rgba(0,212,255,0.2)" stroke-width="4" opacity="0.6">
+        <animate attributeName="opacity" values="0.3;0.7;0.3" dur="3s" repeatCount="indefinite"/>
+      </ellipse>
+      <!-- 左翼 (明亮青色) -->
+      <path d="M ${A.shoulderL[0]+8} ${A.shoulderL[1]+5}
+               Q ${A.shoulderL[0]-20} ${tpl.bodyBottom-30} ${A.shoulderL[0]-40} ${tpl.legBottom+8}
+               Q ${A.shoulderL[0]-20} ${tpl.legBottom+15} ${A.shoulderL[0]} ${tpl.legBottom+5}
+               Q ${A.shoulderL[0]+5} ${tpl.bodyBottom} ${A.shoulderL[0]+8} ${A.shoulderL[1]+5} Z"
+            fill="url(#auroraGradL)" stroke="rgba(0,212,255,0.9)" stroke-width="2" opacity="0.95"
+            filter="url(#auroraGlow)">
+        <animateTransform attributeName="transform" type="rotate" values="-3 ${A.shoulderL[0]} ${A.shoulderL[1]};2 ${A.shoulderL[0]} ${A.shoulderL[1]};-3 ${A.shoulderL[0]} ${A.shoulderL[1]}" dur="3s" repeatCount="indefinite"/>
       </path>
-      <!-- 右翼 -->
-      <path d="M ${A.shoulderR[0]-6} ${A.shoulderR[1]}
-               Q ${A.shoulderR[0]+30} ${tpl.bodyBottom-40} ${A.shoulderR[0]+42} ${tpl.legBottom+12}
-               L ${A.shoulderR[0]+10} ${tpl.legBottom+12}
-               Q ${A.shoulderR[0]+5} ${tpl.bodyBottom-10} ${A.shoulderR[0]-6} ${A.shoulderR[1]} Z"
-            fill="url(#auroraGradR)" stroke="rgba(0,212,255,0.7)" stroke-width="1.5" opacity="0.88">
-        <animateTransform attributeName="transform" type="rotate" values="2.5 ${A.shoulderR[0]} ${A.shoulderR[1]};-1.5 ${A.shoulderR[0]} ${A.shoulderR[1]};2.5 ${A.shoulderR[0]} ${A.shoulderR[1]}" dur="3.5s" repeatCount="indefinite"/>
+      <!-- 右翼 (明亮紫色) -->
+      <path d="M ${A.shoulderR[0]-8} ${A.shoulderR[1]+5}
+               Q ${A.shoulderR[0]+20} ${tpl.bodyBottom-30} ${A.shoulderR[0]+40} ${tpl.legBottom+8}
+               Q ${A.shoulderR[0]+20} ${tpl.legBottom+15} ${A.shoulderR[0]} ${tpl.legBottom+5}
+               Q ${A.shoulderR[0]-5} ${tpl.bodyBottom} ${A.shoulderR[0]-8} ${A.shoulderR[1]+5} Z"
+            fill="url(#auroraGradR)" stroke="rgba(168,100,255,0.9)" stroke-width="2" opacity="0.95"
+            filter="url(#auroraGlow)">
+        <animateTransform attributeName="transform" type="rotate" values="3 ${A.shoulderR[0]} ${A.shoulderR[1]};-2 ${A.shoulderR[0]} ${A.shoulderR[1]};3 ${A.shoulderR[0]} ${A.shoulderR[1]}" dur="3s" repeatCount="indefinite"/>
       </path>
-      <!-- 底部连接弧 -->
-      <path d="M ${A.shoulderL[0]-10} ${tpl.legBottom+12} Q 110 ${tpl.legBottom+20} ${A.shoulderR[0]+10} ${tpl.legBottom+12}"
-            fill="rgba(0,212,255,0.15)" stroke="rgba(0,212,255,0.4)" stroke-width="1"/>
-      <!-- 流光横条 (青绿) -->
-      <path d="M ${A.shoulderL[0]-30} ${tpl.bodyBottom-10} Q 110 ${tpl.bodyBottom+5} ${A.shoulderR[0]+30} ${tpl.bodyBottom-10}"
-            stroke="rgba(0,255,200,0.6)" stroke-width="2.5" fill="none" stroke-linecap="round">
-        <animate attributeName="opacity" values="0.3;0.9;0.3" dur="2s" repeatCount="indefinite"/>
+      <!-- 中央连接光带 -->
+      <path d="M ${A.shoulderL[0]} ${tpl.legBottom+5} Q 110 ${tpl.legBottom+18} ${A.shoulderR[0]} ${tpl.legBottom+5}"
+            fill="rgba(0,212,255,0.2)" stroke="rgba(0,212,255,0.6)" stroke-width="2" stroke-linecap="round"/>
+      <!-- 流光条 -->
+      <path d="M ${A.shoulderL[0]-30} ${tpl.bodyBottom-5} Q 110 ${tpl.bodyBottom+10} ${A.shoulderR[0]+30} ${tpl.bodyBottom-5}"
+            stroke="#00D4FF" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.8">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="1.8s" repeatCount="indefinite"/>
       </path>
-      <!-- 流光横条 (紫) -->
-      <path d="M ${A.shoulderL[0]-35} ${tpl.legTop+5} Q 110 ${tpl.legTop+15} ${A.shoulderR[0]+35} ${tpl.legTop+5}"
-            stroke="rgba(168,100,255,0.5)" stroke-width="2" fill="none" stroke-linecap="round">
-        <animate attributeName="opacity" values="0.2;0.8;0.2" dur="2.8s" repeatCount="indefinite" begin="0.6s"/>
+      <path d="M ${A.shoulderL[0]-35} ${tpl.legTop+8} Q 110 ${tpl.legTop+18} ${A.shoulderR[0]+35} ${tpl.legTop+8}"
+            stroke="#A78BFA" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7">
+        <animate attributeName="opacity" values="0.3;0.9;0.3" dur="2.2s" repeatCount="indefinite" begin="0.5s"/>
       </path>
-      <!-- 极光粒子 (6颗) -->
-      <circle cx="${A.shoulderL[0]-25}" cy="${tpl.bodyBottom}" r="2.5" fill="#00D4FF">
-        <animate attributeName="opacity" values="0;1;0" dur="1.6s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="${tpl.bodyBottom};${tpl.bodyBottom-12};${tpl.bodyBottom}" dur="1.6s" repeatCount="indefinite"/>
+      <!-- 极光粒子 (8颗, 明亮) -->
+      <circle cx="${A.shoulderL[0]-25}" cy="${tpl.bodyBottom-5}" r="3" fill="#00D4FF">
+        <animate attributeName="opacity" values="0.2;1;0.2" dur="1.5s" repeatCount="indefinite"/>
+        <animate attributeName="cy" values="${tpl.bodyBottom-5};${tpl.bodyBottom-18};${tpl.bodyBottom-5}" dur="1.5s" repeatCount="indefinite"/>
       </circle>
-      <circle cx="${A.shoulderR[0]+22}" cy="${tpl.bodyBottom-10}" r="2" fill="#A788E0">
-        <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" begin="0.4s"/>
-        <animate attributeName="cy" values="${tpl.bodyBottom-10};${tpl.bodyBottom-22};${tpl.bodyBottom-10}" dur="2s" repeatCount="indefinite" begin="0.4s"/>
+      <circle cx="${A.shoulderR[0]+22}" cy="${tpl.bodyBottom-10}" r="2.5" fill="#A78BFA">
+        <animate attributeName="opacity" values="0.2;1;0.2" dur="1.8s" repeatCount="indefinite" begin="0.3s"/>
+        <animate attributeName="cy" values="${tpl.bodyBottom-10};${tpl.bodyBottom-25};${tpl.bodyBottom-10}" dur="1.8s" repeatCount="indefinite" begin="0.3s"/>
       </circle>
-      <circle cx="${A.shoulderL[0]-35}" cy="${tpl.legTop}" r="2" fill="#00FF88">
-        <animate attributeName="opacity" values="0;0.9;0" dur="2.2s" repeatCount="indefinite" begin="0.8s"/>
+      <circle cx="${A.shoulderL[0]-35}" cy="${tpl.legTop+5}" r="2.5" fill="#00FF88">
+        <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" begin="0.7s"/>
       </circle>
-      <circle cx="${A.shoulderR[0]+32}" cy="${tpl.legTop+10}" r="1.8" fill="#FFE66D">
-        <animate attributeName="opacity" values="0;0.8;0" dur="1.8s" repeatCount="indefinite" begin="1.2s"/>
+      <circle cx="${A.shoulderR[0]+32}" cy="${tpl.legTop+12}" r="2" fill="#FFE66D">
+        <animate attributeName="opacity" values="0;1;0" dur="1.6s" repeatCount="indefinite" begin="1s"/>
       </circle>
-      <circle cx="${A.shoulderL[0]-18}" cy="${tpl.legBottom}" r="2.2" fill="#00D4FF">
-        <animate attributeName="opacity" values="0;1;0" dur="2.5s" repeatCount="indefinite" begin="0.2s"/>
+      <circle cx="${A.shoulderL[0]-15}" cy="${tpl.legBottom-5}" r="2.5" fill="#00D4FF">
+        <animate attributeName="opacity" values="0;1;0" dur="2.2s" repeatCount="indefinite" begin="0.2s"/>
       </circle>
-      <circle cx="${A.shoulderR[0]+15}" cy="${tpl.legBottom-5}" r="1.8" fill="#C4B5FD">
-        <animate attributeName="opacity" values="0;0.9;0" dur="2s" repeatCount="indefinite" begin="1s"/>
+      <circle cx="${A.shoulderR[0]+10}" cy="${tpl.legBottom}" r="2" fill="#C4B5FD">
+        <animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite" begin="1.3s"/>
       </circle>
-      <!-- 斗篷扣 (青色宝石, 在身体前层会再渲染一次) -->
-      <circle cx="110" cy="${A.shoulderL[1]+4}" r="5" fill="#00D4FF" stroke="white" stroke-width="2"/>
-      <circle cx="110" cy="${A.shoulderL[1]+4}" r="2" fill="white" opacity="0.9"/>
+      <circle cx="110" cy="${tpl.legBottom+12}" r="2" fill="#00D4FF">
+        <animate attributeName="opacity" values="0;0.8;0" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+      </circle>
+      <circle cx="${A.shoulderL[0]-30}" cy="${tpl.bodyBottom+15}" r="1.8" fill="#8B5CF6">
+        <animate attributeName="opacity" values="0;0.9;0" dur="1.5s" repeatCount="indefinite" begin="0.8s"/>
+      </circle>
+      <!-- 肩扣 (发光宝石) -->
+      <circle cx="110" cy="${A.shoulderL[1]+6}" r="5" fill="#00D4FF" stroke="white" stroke-width="2" filter="url(#auroraGlow)"/>
+      <circle cx="110" cy="${A.shoulderL[1]+6}" r="2" fill="white"/>
       <defs>
-        <linearGradient id="auroraGradL" x1="1" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.9"/>
-          <stop offset="40%" stop-color="#0EA5E9" stop-opacity="0.8"/>
-          <stop offset="70%" stop-color="#7C3AED" stop-opacity="0.7"/>
-          <stop offset="100%" stop-color="#4338CA" stop-opacity="0.6"/>
+        <filter id="auroraGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <linearGradient id="auroraGradL" x1="1" y1="0" x2="0" y2="0.8">
+          <stop offset="0%" stop-color="#00D4FF"/>
+          <stop offset="50%" stop-color="#0EA5E9"/>
+          <stop offset="100%" stop-color="#7C3AED"/>
         </linearGradient>
-        <linearGradient id="auroraGradR" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.9"/>
-          <stop offset="40%" stop-color="#06B6D4" stop-opacity="0.8"/>
-          <stop offset="70%" stop-color="#8B5CF6" stop-opacity="0.7"/>
-          <stop offset="100%" stop-color="#6D28D9" stop-opacity="0.6"/>
+        <linearGradient id="auroraGradR" x1="0" y1="0" x2="1" y2="0.8">
+          <stop offset="0%" stop-color="#8B5CF6"/>
+          <stop offset="50%" stop-color="#A78BFA"/>
+          <stop offset="100%" stop-color="#00D4FF"/>
         </linearGradient>
       </defs>
     ` : '';
