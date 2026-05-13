@@ -5611,7 +5611,15 @@ async function refreshPhotoKeyCache() {
   keys.forEach(k => photoKeyCache.add(k));
 }
 function hasPhotoCached(week, day, slot) {
-  return photoKeyCache.has(photoKey(week, day, slot));
+  const key = photoKey(week, day, slot);
+  if (!photoKeyCache.has(key)) return false;
+  // v19.3: 必须云端上传成功才算有效照片
+  const cp = (typeof state !== 'undefined' && state.cloudPhotos) || {};
+  const cloud = cp[key];
+  if (cloud && cloud.rejected) return false;
+  if (cloud && cloud.url) return true;
+  // 本地有但云端没有 → 也算有(允许离线拍照后稍后同步)
+  return photoKeyCache.has(key);
 }
 
 // ---- Firebase Storage 云端照片同步 (v18.64) ----
@@ -5688,8 +5696,23 @@ function rejectCloudPhoto(week, day, slot, reason) {
   state.cloudPhotos[key].rejectedAt = Date.now();
   state.cloudPhotos[key].rejectReason = reason || '';
   state.cloudPhotos[key].verified = false;
-  setDailyCheck(state, week, day, slot, false);
-  recalcTotalPoints(state);
+  // v19.3: 驳回扣分 — 取消打卡并记录扣分日志
+  const wasChecked = getDailyCheck(state, week, day, slot);
+  if (wasChecked) {
+    const pts = slotPoints(week, slot);
+    setDailyCheck(state, week, day, slot, false);
+    recalcTotalPoints(state);
+    state.logs.push({
+      reason: `❌ 驳回 W${week} ${day} ${slot} — ${reason || '照片不合格'}`,
+      points: -pts,
+      type: 'reject',
+      week: week,
+      timestamp: Date.now()
+    });
+  } else {
+    setDailyCheck(state, week, day, slot, false);
+    recalcTotalPoints(state);
+  }
   saveState();
   if (typeof renderAll === 'function') renderAll();
 }

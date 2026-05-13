@@ -2266,18 +2266,18 @@ function _doPhotoUpload(week, day, slot, useCamera) {
       const blob = await compressImage(file);
       await photoPut(week, day, slot, blob);
       await refreshPhotoKeyCache();
-      // 如果 Firebase 已就绪，同步上传到 Storage
+      // v19.3: 必须上传云端成功才算有效
       if (typeof photoUploadCloud === 'function' && isFbReady()) {
         showToast('☁️ 正在同步到云端…', 'success');
         try {
           await photoUploadCloud(week, day, slot, blob);
-          showToast(`📸 已存证并同步云端 (${Math.round(blob.size / 1024)} KB)`, 'success');
+          showToast(`✅ 照片已上传成功 (${Math.round(blob.size / 1024)} KB) — 现在可以打卡`, 'success');
         } catch (err) {
-          console.warn('云端同步失败(本地已保存):', err);
-          showToast(`📸 已本地存证 (${Math.round(blob.size / 1024)} KB) — 云端同步失败`, 'warn');
+          console.warn('云端同步失败:', err);
+          showToast('❌ 云端上传失败，请检查网络后重试。照片已本地保存，联网后会自动同步。', 'danger');
         }
       } else {
-        showToast(`📸 已存证 (${Math.round(blob.size / 1024)} KB)`, 'success');
+        showToast(`📸 照片已本地保存 (${Math.round(blob.size / 1024)} KB) — 联网后自动同步到云端`, 'warn');
       }
       renderAll();
     } catch (err) {
