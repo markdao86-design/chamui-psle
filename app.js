@@ -27,6 +27,33 @@ async function init() {
   }
   recalcTotalPoints(state);
   if (window._loadMastered) window._loadMastered(state);
+  // v19.3: 一次性积分回退修正 (5/12 toggle刷分漏洞修复)
+  if (!state._rollback_20260513) {
+    state._rollback_20260513 = true;
+    // 清除 W1 Sat WSF/WSS spam logs
+    if (state.logs) {
+      state.logs = state.logs.filter(log => {
+        const r = log.reason || '';
+        const isWSF = r.includes('W1') && r.includes('WSF');
+        const isWSS = r.includes('W1') && r.includes('WSS') && !r.includes('WSM');
+        return !isWSF && !isWSS;
+      });
+    }
+    // 移除虚假成就
+    if (state.achievements && state.achievements.unlocked) {
+      state.achievements.unlocked = state.achievements.unlocked.filter(id => {
+        if (id.startsWith('wk_')) return false;
+        if (id.startsWith('month_')) return false;
+        if (id === 'mid_3000pts') return false;
+        return true;
+      });
+    }
+    state.craftCrystals = 0;
+    state.totalPoints = 0;
+    state.lifetimeEarned = 0;
+    recalcTotalPoints(state);
+    saveState(state);
+  }
   // v19.2: 一次性修复仓鼠形态倒退 (之前已解锁 formIdx=3)
   if (state.pet && state.pet.formIdx < 3) { state.pet.formIdx = 3; saveState(state); }
   // 启动时若当前真实日期在本周内,默认选今天
@@ -73,7 +100,7 @@ async function init() {
       }
       state = remoteState;
       renderAll();
-      showToast('☁️ 已收到远程更新', 'success');
+      showToast('☁️ 已收到远程更新', 'sync');
     });
   }
 }
