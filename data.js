@@ -4076,6 +4076,8 @@ function getDefaultState() {
     knowledgeStars: {},
     // v18.59: 错题本
     wrongAnswers: [],
+    // v19.3: 照片指纹防重用
+    photoHashes: {},
     // v18.60: 双龙觉醒状态 — null 或 { unlockedAt, totalPointsAtUnlock, ceremonyDone }
     dragonsUnlocked: { silver: null, gold: null },
     // v18.60: 当前主页宠物类型 — 'hamster' (默认) 或 'gold_dragon' (拿金龙后可切)
@@ -5615,13 +5617,36 @@ async function refreshPhotoKeyCache() {
 function hasPhotoCached(week, day, slot) {
   const key = photoKey(week, day, slot);
   if (!photoKeyCache.has(key)) return false;
-  // v19.3: 必须云端上传成功才算有效照片
   const cp = (typeof state !== 'undefined' && state.cloudPhotos) || {};
   const cloud = cp[key];
   if (cloud && cloud.rejected) return false;
-  if (cloud && cloud.url) return true;
-  // 本地有但云端没有 → 也算有(允许离线拍照后稍后同步)
+  if (cloud && cloud.url) {
+    // v19.3: 照片必须是今天上传的(防旧照片打新卡)
+    const uploadDate = new Date(cloud.uploadedAt).toDateString();
+    const today = new Date().toDateString();
+    if (uploadDate !== today) return false;
+    return true;
+  }
   return photoKeyCache.has(key);
+}
+
+// v19.3: 照片指纹防重用 — FNV-1a hash 前 8KB
+async function computePhotoFingerprint(blob) {
+  const chunk = blob.slice(0, 8192);
+  const buf = await chunk.arrayBuffer();
+  const arr = new Uint8Array(buf);
+  let h = 0x811c9dc5;
+  for (let i = 0; i < arr.length; i++) {
+    h ^= arr[i];
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(36);
+}
+
+function isPhotoDuplicate(st, hash, currentKey) {
+  if (!st.photoHashes) return false;
+  const existing = st.photoHashes[hash];
+  return existing && existing !== currentKey;
 }
 
 // ---- Firebase Storage 云端照片同步 (v18.64) ----
@@ -5820,6 +5845,8 @@ window.refreshPhotoKeyCache = refreshPhotoKeyCache;
 window.hasPhotoCached = hasPhotoCached;
 window.photoUploadCloud = photoUploadCloud;
 window.syncLocalPhotosToCloud = syncLocalPhotosToCloud;
+window.computePhotoFingerprint = computePhotoFingerprint;
+window.isPhotoDuplicate = isPhotoDuplicate;
 window.verifyCloudPhoto = verifyCloudPhoto;
 window.approveCloudPhoto = approveCloudPhoto;
 window.rejectCloudPhoto = rejectCloudPhoto;

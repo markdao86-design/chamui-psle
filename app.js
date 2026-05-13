@@ -6,6 +6,9 @@
 // 全局状态(初始空,init 里 await loadStateAsync 后填)
 let state = getDefaultState();
 
+// v19.3: 打卡页显示周 (null = 跟随 state.currentWeek)
+let _displayWeek = null;
+
 // 当前选中的"日"(打卡页),Mon..Sun。默认 Mon,用户可切换
 let selectedDay = 'Mon';
 
@@ -1453,7 +1456,8 @@ window.toggleKtHint = toggleKtHint;
 
 // ============ 打卡页 (v2 — 每日) ============
 function renderCheckinPage() {
-  const week = state.currentWeek;
+  const week = _displayWeek || state.currentWeek;
+  const isViewOnly = (week !== state.currentWeek);
   const wt = getWeekTasks(week);
 
   // 标题
@@ -1635,9 +1639,9 @@ function renderCheckinPage() {
       const tierClass = tier === 1 ? 'tier-core' : tier === 2 ? 'tier-extend' : 'tier-bonus';
       const sizeClass = (SLOT_BASE_POINTS[t.slot] || 2) >= 7 ? 'task-large' : 'task-small';
       return sectionHeader + `
-        <div class="checkin-item ${checked ? 'checked' : ''} ${isKey ? 'key-slot' : ''} ${tierClass} ${sizeClass}" data-slot="${t.slot}" data-tier="${tier}"
+        <div class="checkin-item ${checked ? 'checked' : ''} ${isKey ? 'key-slot' : ''} ${tierClass} ${sizeClass}${isViewOnly ? ' view-only' : ''}" data-slot="${t.slot}" data-tier="${tier}"
              ${tierHidden ? 'style="display:none"' : ''}
-             onclick="toggleDailyCheck(${week}, '${selectedDay}', '${t.slot}', event)">
+             onclick="${isViewOnly ? `showToast('⚠️ 只读模式: 只能打卡当前周','warn')` : `toggleDailyCheck(${week}, '${selectedDay}', '${t.slot}', event)`}">
           <div class="checkin-content">
             <div class="check-circle"></div>
             <div class="checkin-info">
@@ -1919,6 +1923,12 @@ function toggleDailyCheck(week, day, slot, evt) {
   const oldDayComplete = isDayComplete(state, week, day);
   const oldOnTrack = (calcWeekCompletion(week, state) || {}).onTrack;
   const wasChecked = getDailyCheck(state, week, day, slot);
+
+  // v19.3: 禁止跨周打卡(取消不限制,防误勾无法撤销)
+  if (!wasChecked && week !== state.currentWeek) {
+    showToast('⚠️ 只能打卡当前周的任务', 'warn');
+    return;
+  }
 
   // v18.22: 打卡必须先有照片 (取消勾选不限制); 4 mini-game 走独立路径不受此限制
   if (!wasChecked) {
@@ -2290,6 +2300,17 @@ function _doPhotoUpload(week, day, slot, useCamera) {
     showToast('📤 正在压缩上传…', 'success');
     try {
       const blob = await compressImage(file);
+      // v19.3: 照片指纹防重用
+      if (window.computePhotoFingerprint) {
+        const fp = await computePhotoFingerprint(blob);
+        const slotKey = photoKey(week, day, slot);
+        if (isPhotoDuplicate(state, fp, slotKey)) {
+          showToast('❌ 这张照片已在其他任务中使用过，请拍新照片', 'danger');
+          return;
+        }
+        if (!state.photoHashes) state.photoHashes = {};
+        state.photoHashes[fp] = slotKey;
+      }
       await photoPut(week, day, slot, blob);
       await refreshPhotoKeyCache();
       // v19.3: 必须上传云端成功才算有效
@@ -6848,19 +6869,19 @@ function bindEvents() {
   });
 
   document.getElementById('prevWeekBtn').addEventListener('click', () => {
-    if (state.currentWeek > 1) {
-      state.currentWeek--;
-      selectedDay = todayDayKeyForWeek(state.currentWeek) || 'Mon';
-      saveState(state);
-      renderAll();
+    const viewW = _displayWeek || state.currentWeek;
+    if (viewW > 1) {
+      _displayWeek = viewW - 1;
+      selectedDay = todayDayKeyForWeek(_displayWeek) || 'Mon';
+      renderCheckinPage();
     }
   });
   document.getElementById('nextWeekBtn').addEventListener('click', () => {
-    if (state.currentWeek < 73) {
-      state.currentWeek++;
-      selectedDay = todayDayKeyForWeek(state.currentWeek) || 'Mon';
-      saveState(state);
-      renderAll();
+    const viewW = _displayWeek || state.currentWeek;
+    if (viewW < 73) {
+      _displayWeek = viewW + 1;
+      selectedDay = todayDayKeyForWeek(_displayWeek) || 'Mon';
+      renderCheckinPage();
     }
   });
 }

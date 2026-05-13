@@ -1873,6 +1873,10 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   border: 2px dashed var(--color-text-light);
 }
 
+/* v19.3: 跨周只读模式 */
+.checkin-item.view-only { opacity: 0.5; cursor: not-allowed; pointer-events: auto; }
+.checkin-item.view-only:hover { box-shadow: none; border-color: var(--color-border); }
+
 /* v19.2: Tier system */
 .tier-expand-btn {
   display: block;
