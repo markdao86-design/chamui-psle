@@ -83,8 +83,8 @@ body::before {
 
 /* ===== 顶栏 ===== */
 .app-header {
-  background: var(--color-card);
-  border-bottom: 4px solid var(--color-primary);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
   padding: 16px 24px;
   display: flex;
   align-items: center;
@@ -92,7 +92,8 @@ body::before {
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  backdrop-filter: blur(12px);
 }
 
 .app-logo {
@@ -163,13 +164,15 @@ body::before {
 .tabs {
   display: flex;
   gap: 8px;
-  padding: 16px 24px;
-  background: var(--color-card);
-  border-bottom: 2px solid #f0f0f0;
+  padding: 12px 24px;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
   overflow-x: auto;
   position: sticky;
   top: 76px;
   z-index: 99;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  backdrop-filter: blur(12px);
 }
 
 .tab-btn {
@@ -1588,6 +1591,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 
 .toast.success { background: var(--color-success); color: white; }
+.toast.sync { background: rgba(30, 41, 59, 0.92); border: 1px solid rgba(56,189,248,0.4); color: #94a3b8; font-size: 13px; }
 .toast.warn { background: var(--color-warn); color: white; }
 .toast.danger { background: var(--color-danger); color: white; }
 .toast.crit { background: linear-gradient(135deg, #6366F1, #EC4899); color: white; font-weight: 700; box-shadow: 0 4px 20px rgba(99,102,241,0.5); animation: toastSlideIn 0.4s ease, critPulse 0.6s ease 0.4s; }
