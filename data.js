@@ -5335,6 +5335,10 @@ function initFirebase() {
     _fbStorage = firebase.storage();
     _fbReady = true;
     setFbStatus('syncing');
+    // v19.3: 匿名认证(Storage rules 需要 auth)
+    if (firebase.auth) {
+      firebase.auth().signInAnonymously().catch(e => console.warn('匿名登录失败:', e));
+    }
     console.log('🔥 Firebase 同步已启用');
     return true;
   } catch (e) {
