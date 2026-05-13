@@ -1872,6 +1872,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .checkin-item.tier-core { border-left: 3px solid var(--color-primary); }
 .checkin-item.tier-extend { border-left: 3px solid var(--color-accent); }
 .checkin-item.tier-bonus { border-left: 3px solid var(--color-purple); opacity: 0.85; }
+.checkin-item.checked.tier-core,
+.checkin-item.checked.tier-extend,
+.checkin-item.checked.tier-bonus { border-left: 3px solid var(--color-warn); opacity: 0.55; }
 .checkin-item.task-large { padding: 16px 14px; background: linear-gradient(135deg, rgba(0,212,255,0.04), transparent); }
 .checkin-item.task-small { padding: 10px 14px; font-size: 14px; }
 .pts-preview { color: var(--color-primary); font-weight: 700; font-size: 11px; }
