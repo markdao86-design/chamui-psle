@@ -58,7 +58,7 @@ async function init() {
   if (state.pet && state.pet.formIdx < 3) { state.pet.formIdx = 3; saveState(state); }
   // v19.3: 每日 mini-game 局数重置
   const _today = new Date().toDateString();
-  if (state._lastGameDate !== _today) { state._lastGameDate = _today; state.gameDailyCount = 0; saveState(state); }
+  if (state._lastGameDate !== _today) { state._lastGameDate = _today; state.gameDailyCount = null; saveState(state); }
   // 启动时若当前真实日期在本周内,默认选今天
   const today = todayDayKeyForWeek(state.currentWeek);
   if (today) selectedDay = today;

@@ -648,18 +648,7 @@ body::before {
 }
 .collapse-toggle::-webkit-details-marker { display: none; }
 .dashboard-collapse[open] .collapse-toggle { margin-bottom: 12px; }
-.more-tabs-menu {
-  display: none;
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 8px;
-  margin: 0 16px 8px;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.more-tabs-menu.show { display: flex; }
-.tab-more-btn { position: relative; }
+.tabs { flex-wrap: wrap; }
 .daily-slot-list {
   margin-top: 12px;
   padding: 10px 12px;
@@ -4787,14 +4776,11 @@ p { font-size: 14px; line-height: 1.6; }
   <button class="tab-btn active" data-page="dashboard">🏠 主页</button>
   <button class="tab-btn" data-page="checkin">✅ 打卡</button>
   <button class="tab-btn" data-page="history">📊 能力</button>
-  <button class="tab-btn tab-more-btn" onclick="document.getElementById('moreTabsMenu').classList.toggle('show')">📂 更多 ▾</button>
-</nav>
-<div class="more-tabs-menu show" id="moreTabsMenu">
   <button class="tab-btn" data-page="knowledge">🌳 知识树</button>
   <button class="tab-btn" data-page="essay">📝 作文</button>
   <button class="tab-btn paper-bank-tab" data-page="paperbank">📚 题库</button>
   <button class="tab-btn" data-page="admin">⚙️ 管理</button>
-</div>
+</nav>
 
 <main class="main-container">
   <!-- 主页 -->
