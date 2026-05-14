@@ -6065,13 +6065,13 @@ function isFbReady() { return _fbReady; }
 function onFbStatusChange(cb) { _fbStatusListener = cb; }
 
 // 订阅 Firestore 远端变化(其它设备改动会触发)
-var _lastLocalSaveTs = 0;
+var _localWritePending = false;
 function subscribeFirestore(onUpdate) {
   if (!_fbReady || !_fbDoc) return null;
   return _fbDoc.onSnapshot(
     snap => {
-      if (snap.metadata.hasPendingWrites) return;  // 自己刚写的就别触发了
-      if (Date.now() - _lastLocalSaveTs < 3000) return;  // 本地写入窗口内忽略远端推送
+      if (snap.metadata.hasPendingWrites) return;
+      if (_localWritePending) return;
       if (snap.exists) {
         try { onUpdate(snap.data()); } catch (e) { console.warn(e); }
       }
@@ -6160,7 +6160,7 @@ function saveState(state, options) {
   if (state.logs && state.logs.length > 1000) {
     state.logs = state.logs.slice(-1000);
   }
-  _lastLocalSaveTs = Date.now();
+  _localWritePending = true;
   let ok = true;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -6171,36 +6171,16 @@ function saveState(state, options) {
   if (_fbReady && _fbDoc) {
     if (isEmptyDefaultState(state) && !options.force) {
       console.warn('🛡️ 拒绝写空默认值到 Firestore');
+      _localWritePending = false;
     } else {
       setFbStatus('syncing');
-      // v19.3: 先读 Firebase _serverVersion, 如果比本地高则不覆盖
-      _fbDoc.get().then(snap => {
-        if (snap.exists) {
-          const cloudVer = snap.data()._serverVersion || 0;
-          const localVer = state._serverVersion || 0;
-          if (cloudVer > localVer) {
-            console.warn('🛡️ Firebase _serverVersion 更新, 不覆盖。正在重新加载正确数据...');
-            const merged = Object.assign(getDefaultState(), snap.data());
-            merged._serverVersion = cloudVer;
-            if (!merged.daily) merged.daily = {};
-            if (!merged.scores) merged.scores = {};
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch (e) {}
-            setFbStatus('synced');
-            if (typeof renderAll === 'function') { Object.assign(state, merged); renderAll(); }
-            return;
-          }
-        }
-        _fbDoc.set(state).then(
-          () => setFbStatus('synced'),
-          e => { console.warn('Firestore 写入失败:', e); setFbStatus('error'); }
-        );
-      }).catch(e => {
-        _fbDoc.set(state).then(
-          () => setFbStatus('synced'),
-          e2 => { console.warn('Firestore 写入失败:', e2); setFbStatus('error'); }
-        );
-      });
+      _fbDoc.set(state).then(
+        () => { _localWritePending = false; setFbStatus('synced'); },
+        e => { _localWritePending = false; console.warn('Firestore 写入失败:', e); setFbStatus('error'); }
+      );
     }
+  } else {
+    _localWritePending = false;
   }
   return ok;
 }
