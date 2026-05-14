@@ -199,3 +199,20 @@ curl -s "https://chamui-psle.web.app/app.js?v=VERSION" | grep "关键文本"
 
 > 任何不在此文件的细节, 看 [HANDOFF.md](HANDOFF.md) 和 [CHANGELOG.md](CHANGELOG.md)。
 > **开发进度 + 未完成项**: 见 [DEV_SESSION_NOTES.md](DEV_SESSION_NOTES.md) (每次 session 结束更新)。
+
+---
+
+## 10. 新 Session 启动指令
+
+新 session 开始时, 用户会输入类似:
+
+```
+继续开发 chamui-psle (C:\Users\Eric\chamui-psle-main)
+读 CLAUDE.md 了解项目背景, 读 CHANGELOG.md 了解最近改动
+```
+
+**Claude 收到后应该**:
+1. 读 `CLAUDE.md` (本文件) — 项目全貌
+2. 读 `CHANGELOG.md` 最后 20 行 — 最近改了什么
+3. 确认当前版本号 (`index.html` 底部 `?v=` 参数)
+4. 等用户指令, 不要主动做任何改动
