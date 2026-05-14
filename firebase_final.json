@@ -1,0 +1,6235 @@
+{
+  "name": "projects/chamui-psle/databases/(default)/documents/chamui/main",
+  "fields": {
+    "wrongAnswers": {
+      "arrayValue": {
+        "values": [
+          {
+            "mapValue": {
+              "fields": {
+                "addedDate": {
+                  "stringValue": "2026-05-11"
+                },
+                "retries": {
+                  "integerValue": "0"
+                },
+                "q": {
+                  "stringValue": "点错词: got"
+                },
+                "explain": {
+                  "stringValue": "本段错词: is name→undefined, has→undefined, a award→undefined, prouded→undefined, recess→undefined"
+                },
+                "correctAns": {
+                  "stringValue": "is name, has, a award, prouded, recess"
+                },
+                "addedWeek": {
+                  "integerValue": "1"
+                },
+                "gameKey": {
+                  "stringValue": "editing"
+                },
+                "type": {
+                  "stringValue": "editing"
+                },
+                "_fp": {
+                  "stringValue": "editing|点错词: got|"
+                },
+                "id": {
+                  "stringValue": "editing|点错词: got|:1778503634440"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "correctAns": {
+                  "stringValue": "equivalent fraction = 等值分数"
+                },
+                "id": {
+                  "stringValue": "vocab|equivalent fraction ≠ 【句】拥堵|:1778590463783"
+                },
+                "_fp": {
+                  "stringValue": "vocab|equivalent fraction ≠ 【句】拥堵|"
+                },
+                "type": {
+                  "stringValue": "match"
+                },
+                "addedWeek": {
+                  "integerValue": "2"
+                },
+                "gameKey": {
+                  "stringValue": "vocab"
+                },
+                "q": {
+                  "stringValue": "equivalent fraction ≠ 【句】拥堵"
+                },
+                "explain": {
+                  "stringValue": "equivalent fraction 的意思是 等值分数"
+                },
+                "addedDate": {
+                  "stringValue": "2026-05-12"
+                },
+                "retries": {
+                  "integerValue": "0"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "correctAns": {
+                  "stringValue": "equivalent fraction = 等值分数"
+                },
+                "addedWeek": {
+                  "integerValue": "2"
+                },
+                "gameKey": {
+                  "stringValue": "vocab"
+                },
+                "type": {
+                  "stringValue": "match"
+                },
+                "_fp": {
+                  "stringValue": "vocab|equivalent fraction ≠ 四舍五入|"
+                },
+                "id": {
+                  "stringValue": "vocab|equivalent fraction ≠ 四舍五入|:1778590465274"
+                },
+                "q": {
+                  "stringValue": "equivalent fraction ≠ 四舍五入"
+                },
+                "explain": {
+                  "stringValue": "equivalent fraction 的意思是 等值分数"
+                },
+                "addedDate": {
+                  "stringValue": "2026-05-12"
+                },
+                "retries": {
+                  "integerValue": "0"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "gameStats": {
+      "mapValue": {
+        "fields": {
+          "vocab": {
+            "mapValue": {
+              "fields": {
+                "cumTotal": {
+                  "integerValue": "12"
+                },
+                "cumRuns": {
+                  "integerValue": "2"
+                },
+                "difficulty": {
+                  "integerValue": "5"
+                },
+                "cumCorrect": {
+                  "integerValue": "9"
+                },
+                "recent": {
+                  "arrayValue": {
+                    "values": [
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "date": {
+                              "stringValue": "2026-05-09"
+                            },
+                            "correct": {
+                              "integerValue": "5"
+                            },
+                            "accuracy": {
+                              "doubleValue": 0.83333333333333337
+                            },
+                            "total": {
+                              "integerValue": "6"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "total": {
+                              "integerValue": "6"
+                            },
+                            "date": {
+                              "stringValue": "2026-05-12"
+                            },
+                            "correct": {
+                              "integerValue": "4"
+                            },
+                            "accuracy": {
+                              "doubleValue": 0.66666666666666663
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "listen": {
+            "mapValue": {
+              "fields": {
+                "recent": {
+                  "arrayValue": {
+                    "values": [
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "total": {
+                              "integerValue": "5"
+                            },
+                            "correct": {
+                              "integerValue": "3"
+                            },
+                            "date": {
+                              "stringValue": "2026-05-02"
+                            },
+                            "accuracy": {
+                              "doubleValue": 0.6
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "total": {
+                              "integerValue": "5"
+                            },
+                            "accuracy": {
+                              "doubleValue": 0.4
+                            },
+                            "correct": {
+                              "integerValue": "2"
+                            },
+                            "date": {
+                              "stringValue": "2026-05-02"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "cumCorrect": {
+                  "integerValue": "5"
+                },
+                "difficulty": {
+                  "integerValue": "2"
+                },
+                "cumRuns": {
+                  "integerValue": "2"
+                },
+                "cumTotal": {
+                  "integerValue": "10"
+                }
+              }
+            }
+          },
+          "editing": {
+            "mapValue": {
+              "fields": {
+                "difficulty": {
+                  "integerValue": "5"
+                },
+                "recent": {
+                  "arrayValue": {
+                    "values": [
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "total": {
+                              "integerValue": "5"
+                            },
+                            "accuracy": {
+                              "integerValue": "1"
+                            },
+                            "correct": {
+                              "integerValue": "5"
+                            },
+                            "date": {
+                              "stringValue": "2026-05-08"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "accuracy": {
+                              "integerValue": "1"
+                            },
+                            "date": {
+                              "stringValue": "2026-05-09"
+                            },
+                            "correct": {
+                              "integerValue": "5"
+                            },
+                            "total": {
+                              "integerValue": "5"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "cumCorrect": {
+                  "integerValue": "10"
+                },
+                "cumRuns": {
+                  "integerValue": "2"
+                },
+                "cumTotal": {
+                  "integerValue": "10"
+                }
+              }
+            }
+          },
+          "cloze": {
+            "mapValue": {
+              "fields": {
+                "cumRuns": {
+                  "integerValue": "1"
+                },
+                "cumTotal": {
+                  "integerValue": "10"
+                },
+                "recent": {
+                  "arrayValue": {
+                    "values": [
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "total": {
+                              "integerValue": "10"
+                            },
+                            "accuracy": {
+                              "integerValue": "1"
+                            },
+                            "correct": {
+                              "integerValue": "10"
+                            },
+                            "date": {
+                              "stringValue": "2026-05-08"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "cumCorrect": {
+                  "integerValue": "10"
+                },
+                "difficulty": {
+                  "integerValue": "4"
+                }
+              }
+            }
+          },
+          "unit": {
+            "mapValue": {
+              "fields": {
+                "cumTotal": {
+                  "integerValue": "40"
+                },
+                "cumRuns": {
+                  "integerValue": "4"
+                },
+                "cumCorrect": {
+                  "integerValue": "20"
+                },
+                "recent": {
+                  "arrayValue": {
+                    "values": [
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "correct": {
+                              "integerValue": "10"
+                            },
+                            "date": {
+                              "stringValue": "2026-05-02"
+                            },
+                            "accuracy": {
+                              "integerValue": "1"
+                            },
+                            "total": {
+                              "integerValue": "10"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "accuracy": {
+                              "doubleValue": 0.4
+                            },
+                            "date": {
+                              "stringValue": "2026-05-02"
+                            },
+                            "correct": {
+                              "integerValue": "4"
+                            },
+                            "total": {
+                              "integerValue": "10"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "accuracy": {
+                              "integerValue": "0"
+                            },
+                            "date": {
+                              "stringValue": "2026-05-02"
+                            },
+                            "correct": {
+                              "integerValue": "0"
+                            },
+                            "total": {
+                              "integerValue": "10"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "total": {
+                              "integerValue": "10"
+                            },
+                            "accuracy": {
+                              "doubleValue": 0.6
+                            },
+                            "date": {
+                              "stringValue": "2026-05-03"
+                            },
+                            "correct": {
+                              "integerValue": "6"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "difficulty": {
+                  "integerValue": "3"
+                }
+              }
+            }
+          },
+          "grammar": {
+            "mapValue": {
+              "fields": {
+                "cumRuns": {
+                  "integerValue": "4"
+                },
+                "cumTotal": {
+                  "integerValue": "30"
+                },
+                "difficulty": {
+                  "integerValue": "5"
+                },
+                "recent": {
+                  "arrayValue": {}
+                },
+                "cumCorrect": {
+                  "integerValue": "29"
+                }
+              }
+            }
+          },
+          "math": {
+            "mapValue": {
+              "fields": {
+                "difficulty": {
+                  "integerValue": "2"
+                },
+                "cumCorrect": {
+                  "integerValue": "24"
+                },
+                "recent": {
+                  "arrayValue": {
+                    "values": [
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "correct": {
+                              "integerValue": "8"
+                            },
+                            "date": {
+                              "stringValue": "2026-05-02"
+                            },
+                            "accuracy": {
+                              "doubleValue": 0.8
+                            },
+                            "total": {
+                              "integerValue": "10"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "date": {
+                              "stringValue": "2026-05-02"
+                            },
+                            "correct": {
+                              "integerValue": "7"
+                            },
+                            "accuracy": {
+                              "doubleValue": 0.7
+                            },
+                            "total": {
+                              "integerValue": "10"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "correct": {
+                              "integerValue": "0"
+                            },
+                            "date": {
+                              "stringValue": "2026-05-02"
+                            },
+                            "accuracy": {
+                              "integerValue": "0"
+                            },
+                            "total": {
+                              "integerValue": "10"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "correct": {
+                              "integerValue": "9"
+                            },
+                            "date": {
+                              "stringValue": "2026-05-03"
+                            },
+                            "accuracy": {
+                              "doubleValue": 0.9
+                            },
+                            "total": {
+                              "integerValue": "10"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "cumTotal": {
+                  "integerValue": "40"
+                },
+                "cumRuns": {
+                  "integerValue": "4"
+                }
+              }
+            }
+          },
+          "scilab": {
+            "mapValue": {
+              "fields": {
+                "difficulty": {
+                  "integerValue": "4"
+                },
+                "recent": {
+                  "arrayValue": {
+                    "values": [
+                      {
+                        "mapValue": {
+                          "fields": {
+                            "correct": {
+                              "integerValue": "7"
+                            },
+                            "date": {
+                              "stringValue": "2026-05-09"
+                            },
+                            "accuracy": {
+                              "integerValue": "1"
+                            },
+                            "total": {
+                              "integerValue": "7"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "cumCorrect": {
+                  "integerValue": "7"
+                },
+                "cumRuns": {
+                  "integerValue": "1"
+                },
+                "cumTotal": {
+                  "integerValue": "9"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "spacedRepetition": {
+      "mapValue": {
+        "fields": {
+          "reviews": {
+            "mapValue": {
+              "fields": {
+                "wow:eng_wow_2026-05-11": {
+                  "mapValue": {
+                    "fields": {
+                      "intervalDays": {
+                        "integerValue": "3"
+                      },
+                      "firstSeen": {
+                        "integerValue": "1778501124471"
+                      },
+                      "lastReviewed": {
+                        "integerValue": "1778501124471"
+                      },
+                      "correctStreak": {
+                        "integerValue": "0"
+                      }
+                    }
+                  }
+                },
+                "wow:词汇_27": {
+                  "mapValue": {
+                    "fields": {
+                      "lastReviewed": {
+                        "integerValue": "1778246467068"
+                      },
+                      "correctStreak": {
+                        "integerValue": "1"
+                      },
+                      "intervalDays": {
+                        "integerValue": "6"
+                      },
+                      "firstSeen": {
+                        "integerValue": "1777900110313"
+                      }
+                    }
+                  }
+                },
+                "wow:eng_wow_2026-05-09": {
+                  "mapValue": {
+                    "fields": {
+                      "intervalDays": {
+                        "integerValue": "3"
+                      },
+                      "firstSeen": {
+                        "integerValue": "1778297363357"
+                      },
+                      "lastReviewed": {
+                        "integerValue": "1778297363357"
+                      },
+                      "correctStreak": {
+                        "integerValue": "0"
+                      }
+                    }
+                  }
+                },
+                "wow:Oral_25": {
+                  "mapValue": {
+                    "fields": {
+                      "correctStreak": {
+                        "integerValue": "2"
+                      },
+                      "lastReviewed": {
+                        "integerValue": "1778590780504"
+                      },
+                      "firstSeen": {
+                        "integerValue": "1777762284409"
+                      },
+                      "intervalDays": {
+                        "integerValue": "12"
+                      }
+                    }
+                  }
+                },
+                "wow:eng_wow_2026-05-08": {
+                  "mapValue": {
+                    "fields": {
+                      "intervalDays": {
+                        "integerValue": "3"
+                      },
+                      "firstSeen": {
+                        "integerValue": "1778246471817"
+                      },
+                      "lastReviewed": {
+                        "integerValue": "1778246471817"
+                      },
+                      "correctStreak": {
+                        "integerValue": "0"
+                      }
+                    }
+                  }
+                },
+                "wow:PSLE_29": {
+                  "mapValue": {
+                    "fields": {
+                      "firstSeen": {
+                        "integerValue": "1778072095625"
+                      },
+                      "intervalDays": {
+                        "integerValue": "6"
+                      },
+                      "correctStreak": {
+                        "integerValue": "1"
+                      },
+                      "lastReviewed": {
+                        "integerValue": "1778372771109"
+                      }
+                    }
+                  }
+                },
+                "wow:w1": {
+                  "mapValue": {
+                    "fields": {
+                      "firstSeen": {
+                        "integerValue": "1777682542904"
+                      },
+                      "intervalDays": {
+                        "integerValue": "12"
+                      },
+                      "correctStreak": {
+                        "integerValue": "2"
+                      },
+                      "lastReviewed": {
+                        "integerValue": "1778501127406"
+                      }
+                    }
+                  }
+                },
+                "wow:Synthesis_26": {
+                  "mapValue": {
+                    "fields": {
+                      "correctStreak": {
+                        "integerValue": "1"
+                      },
+                      "lastReviewed": {
+                        "integerValue": "1778072096768"
+                      },
+                      "firstSeen": {
+                        "integerValue": "1777766961611"
+                      },
+                      "intervalDays": {
+                        "integerValue": "6"
+                      }
+                    }
+                  }
+                },
+                "wow:eng_wow_2026-05-12": {
+                  "mapValue": {
+                    "fields": {
+                      "intervalDays": {
+                        "integerValue": "3"
+                      },
+                      "firstSeen": {
+                        "integerValue": "1778567731991"
+                      },
+                      "lastReviewed": {
+                        "integerValue": "1778567731991"
+                      },
+                      "correctStreak": {
+                        "integerValue": "0"
+                      }
+                    }
+                  }
+                },
+                "wow:eng_wow_2026-05-10": {
+                  "mapValue": {
+                    "fields": {
+                      "correctStreak": {
+                        "integerValue": "0"
+                      },
+                      "lastReviewed": {
+                        "integerValue": "1778372765437"
+                      },
+                      "firstSeen": {
+                        "integerValue": "1778372765437"
+                      },
+                      "intervalDays": {
+                        "integerValue": "3"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "version": {
+      "integerValue": "2"
+    },
+    "vocabPerfectRuns": {
+      "integerValue": "10"
+    },
+    "soundEnabled": {
+      "booleanValue": true
+    },
+    "equipmentDisabled": {
+      "arrayValue": {
+        "values": [
+          {
+            "stringValue": "planet"
+          },
+          {
+            "stringValue": "orbit"
+          },
+          {
+            "stringValue": "magic"
+          },
+          {
+            "stringValue": "watch"
+          },
+          {
+            "stringValue": "headphone"
+          },
+          {
+            "stringValue": "phone"
+          },
+          {
+            "stringValue": "sock"
+          },
+          {
+            "stringValue": "glasses"
+          },
+          {
+            "stringValue": "cookie"
+          },
+          {
+            "stringValue": "sword"
+          },
+          {
+            "stringValue": "cup"
+          },
+          {
+            "stringValue": "apple"
+          },
+          {
+            "stringValue": "note"
+          },
+          {
+            "stringValue": "sun"
+          },
+          {
+            "stringValue": "phoenix"
+          }
+        ]
+      }
+    },
+    "dailyStreak": {
+      "mapValue": {
+        "fields": {
+          "lastDate": {
+            "stringValue": "2026-05-13"
+          },
+          "bestEver": {
+            "integerValue": "12"
+          },
+          "brokenAt": {
+            "nullValue": null
+          },
+          "days": {
+            "integerValue": "12"
+          },
+          "freezeTokens": {
+            "integerValue": "1"
+          }
+        }
+      }
+    },
+    "cloudPhotos": {
+      "mapValue": {}
+    },
+    "daily": {
+      "mapValue": {
+        "fields": {
+          "73": {
+            "mapValue": {
+              "fields": {
+                "Mon": {
+                  "mapValue": {
+                    "fields": {
+                      "ED": {
+                        "booleanValue": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "50": {
+            "mapValue": {
+              "fields": {
+                "Mon": {
+                  "mapValue": {
+                    "fields": {
+                      "E1": {
+                        "booleanValue": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "2": {
+            "mapValue": {
+              "fields": {
+                "Mon": {
+                  "mapValue": {
+                    "fields": {
+                      "OR": {
+                        "booleanValue": true
+                      }
+                    }
+                  }
+                },
+                "Tue": {
+                  "mapValue": {
+                    "fields": {
+                      "LS": {
+                        "booleanValue": true
+                      },
+                      "VB": {
+                        "booleanValue": true
+                      },
+                      "OR": {
+                        "booleanValue": true
+                      },
+                      "ED": {
+                        "booleanValue": true
+                      },
+                      "VC": {
+                        "booleanValue": true
+                      },
+                      "E1": {
+                        "booleanValue": true
+                      },
+                      "S2": {
+                        "booleanValue": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "1": {
+            "mapValue": {
+              "fields": {
+                "Sat": {
+                  "mapValue": {
+                    "fields": {
+                      "WSF": {
+                        "booleanValue": true
+                      },
+                      "WSR": {
+                        "booleanValue": true
+                      },
+                      "WSS": {
+                        "booleanValue": true
+                      },
+                      "WSM": {
+                        "booleanValue": true
+                      },
+                      "WSL": {
+                        "booleanValue": true
+                      },
+                      "WSE": {
+                        "booleanValue": true
+                      }
+                    }
+                  }
+                },
+                "Tue": {
+                  "mapValue": {
+                    "fields": {
+                      "S1": {
+                        "booleanValue": true
+                      },
+                      "S2": {
+                        "booleanValue": true
+                      },
+                      "S3": {
+                        "booleanValue": true
+                      },
+                      "VB": {
+                        "booleanValue": true
+                      },
+                      "OR": {
+                        "booleanValue": true
+                      },
+                      "ED": {
+                        "booleanValue": true
+                      },
+                      "VC": {
+                        "booleanValue": true
+                      },
+                      "E1": {
+                        "booleanValue": true
+                      },
+                      "LS": {
+                        "booleanValue": true
+                      }
+                    }
+                  }
+                },
+                "Sun": {
+                  "mapValue": {
+                    "fields": {
+                      "WUS": {
+                        "booleanValue": true
+                      }
+                    }
+                  }
+                },
+                "Wed": {
+                  "mapValue": {
+                    "fields": {
+                      "LS": {
+                        "booleanValue": true
+                      },
+                      "ED": {
+                        "booleanValue": true
+                      },
+                      "OR": {
+                        "booleanValue": true
+                      },
+                      "VB": {
+                        "booleanValue": true
+                      },
+                      "S2": {
+                        "booleanValue": true
+                      },
+                      "E1": {
+                        "booleanValue": true
+                      },
+                      "VC": {
+                        "booleanValue": true
+                      }
+                    }
+                  }
+                },
+                "Thu": {
+                  "mapValue": {
+                    "fields": {
+                      "LS": {
+                        "booleanValue": true
+                      },
+                      "VB": {
+                        "booleanValue": true
+                      },
+                      "OR": {
+                        "booleanValue": true
+                      },
+                      "ED": {
+                        "booleanValue": true
+                      },
+                      "S2": {
+                        "booleanValue": true
+                      },
+                      "VC": {
+                        "booleanValue": true
+                      },
+                      "E1": {
+                        "booleanValue": true
+                      }
+                    }
+                  }
+                },
+                "Fri": {
+                  "mapValue": {
+                    "fields": {
+                      "E1": {
+                        "booleanValue": true
+                      }
+                    }
+                  }
+                },
+                "Mon": {
+                  "mapValue": {
+                    "fields": {
+                      "VC": {
+                        "booleanValue": true
+                      },
+                      "E1": {
+                        "booleanValue": true
+                      },
+                      "LS": {
+                        "booleanValue": true
+                      },
+                      "S1": {
+                        "booleanValue": true
+                      },
+                      "S2": {
+                        "booleanValue": true
+                      },
+                      "S3": {
+                        "booleanValue": true
+                      },
+                      "OR": {
+                        "booleanValue": true
+                      },
+                      "VB": {
+                        "booleanValue": true
+                      },
+                      "ED": {
+                        "booleanValue": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "marathonStreak": {
+      "integerValue": "0"
+    },
+    "mysteryBoxes": {
+      "mapValue": {
+        "fields": {
+          "history": {
+            "arrayValue": {
+              "values": [
+                {
+                  "mapValue": {
+                    "fields": {
+                      "wow": {
+                        "nullValue": null
+                      },
+                      "tier": {
+                        "stringValue": "common"
+                      },
+                      "points": {
+                        "integerValue": "6"
+                      },
+                      "ts": {
+                        "integerValue": "1778591301595"
+                      },
+                      "equipId": {
+                        "nullValue": null
+                      }
+                    }
+                  }
+                },
+                {
+                  "mapValue": {
+                    "fields": {
+                      "wow": {
+                        "stringValue": "🔗 PSLE Paper 2 顶端 10 分: Synthesis"
+                      },
+                      "points": {
+                        "integerValue": "18"
+                      },
+                      "tier": {
+                        "stringValue": "wow"
+                      },
+                      "ts": {
+                        "integerValue": "1778590476939"
+                      },
+                      "equipId": {
+                        "nullValue": null
+                      }
+                    }
+                  }
+                },
+                {
+                  "mapValue": {
+                    "fields": {
+                      "tier": {
+                        "stringValue": "common"
+                      },
+                      "points": {
+                        "integerValue": "5"
+                      },
+                      "equipId": {
+                        "nullValue": null
+                      },
+                      "ts": {
+                        "integerValue": "1778403608099"
+                      },
+                      "wow": {
+                        "nullValue": null
+                      }
+                    }
+                  }
+                },
+                {
+                  "mapValue": {
+                    "fields": {
+                      "points": {
+                        "integerValue": "15"
+                      },
+                      "tier": {
+                        "stringValue": "wow"
+                      },
+                      "equipId": {
+                        "nullValue": null
+                      },
+                      "ts": {
+                        "integerValue": "1778372820571"
+                      },
+                      "wow": {
+                        "stringValue": "🐶 \"Salary\" 来自盐 — 古罗马军人发\"盐工资\""
+                      }
+                    }
+                  }
+                },
+                {
+                  "mapValue": {
+                    "fields": {
+                      "wow": {
+                        "nullValue": null
+                      },
+                      "points": {
+                        "integerValue": "5"
+                      },
+                      "tier": {
+                        "stringValue": "common"
+                      },
+                      "ts": {
+                        "integerValue": "1778329175978"
+                      },
+                      "equipId": {
+                        "nullValue": null
+                      }
+                    }
+                  }
+                },
+                {
+                  "mapValue": {
+                    "fields": {
+                      "points": {
+                        "integerValue": "5"
+                      },
+                      "tier": {
+                        "stringValue": "common"
+                      },
+                      "ts": {
+                        "integerValue": "1778306684749"
+                      },
+                      "equipId": {
+                        "nullValue": null
+                      },
+                      "wow": {
+                        "nullValue": null
+                      }
+                    }
+                  }
+                },
+                {
+                  "mapValue": {
+                    "fields": {
+                      "wow": {
+                        "nullValue": null
+                      },
+                      "tier": {
+                        "stringValue": "common"
+                      },
+                      "points": {
+                        "integerValue": "5"
+                      },
+                      "equipId": {
+                        "nullValue": null
+                      },
+                      "ts": {
+                        "integerValue": "1778247717566"
+                      }
+                    }
+                  }
+                },
+                {
+                  "mapValue": {
+                    "fields": {
+                      "ts": {
+                        "integerValue": "1778247094606"
+                      },
+                      "equipId": {
+                        "nullValue": null
+                      },
+                      "points": {
+                        "integerValue": "5"
+                      },
+                      "tier": {
+                        "stringValue": "common"
+                      },
+                      "wow": {
+                        "nullValue": null
+                      }
+                    }
+                  }
+                },
+                {
+                  "mapValue": {
+                    "fields": {
+                      "points": {
+                        "integerValue": "107"
+                      },
+                      "tier": {
+                        "stringValue": "rare"
+                      },
+                      "ts": {
+                        "integerValue": "1778247089193"
+                      },
+                      "equipId": {
+                        "stringValue": "galaxy"
+                      },
+                      "wow": {
+                        "nullValue": null
+                      }
+                    }
+                  }
+                },
+                {
+                  "mapValue": {
+                    "fields": {
+                      "points": {
+                        "integerValue": "5"
+                      },
+                      "tier": {
+                        "stringValue": "common"
+                      },
+                      "ts": {
+                        "integerValue": "1778246583828"
+                      },
+                      "equipId": {
+                        "nullValue": null
+                      },
+                      "wow": {
+                        "nullValue": null
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "available": {
+            "integerValue": "0"
+          },
+          "totalSlotsAtLastEarn": {
+            "integerValue": "50"
+          },
+          "opened": {
+            "integerValue": "44"
+          }
+        }
+      }
+    },
+    "scores": {
+      "mapValue": {
+        "fields": {
+          "1_Mon_E1": {
+            "mapValue": {
+              "fields": {
+                "note": {
+                  "stringValue": ""
+                },
+                "savedAt": {
+                  "integerValue": "1777622596471"
+                },
+                "score": {
+                  "integerValue": "17"
+                },
+                "max": {
+                  "integerValue": "20"
+                }
+              }
+            }
+          },
+          "1_Wed_VC": {
+            "mapValue": {
+              "fields": {
+                "note": {
+                  "stringValue": ""
+                },
+                "score": {
+                  "integerValue": "20"
+                },
+                "savedAt": {
+                  "integerValue": "1777974087959"
+                },
+                "max": {
+                  "integerValue": "20"
+                }
+              }
+            }
+          },
+          "1_Wed_OR": {
+            "mapValue": {
+              "fields": {
+                "note": {
+                  "stringValue": ""
+                },
+                "max": {
+                  "integerValue": "20"
+                },
+                "score": {
+                  "integerValue": "17"
+                },
+                "savedAt": {
+                  "integerValue": "1777762256105"
+                }
+              }
+            }
+          },
+          "1_Tue_VC": {
+            "mapValue": {
+              "fields": {
+                "savedAt": {
+                  "integerValue": "1777686065661"
+                },
+                "score": {
+                  "integerValue": "20"
+                },
+                "max": {
+                  "integerValue": "20"
+                },
+                "note": {
+                  "stringValue": ""
+                }
+              }
+            }
+          },
+          "1_Thu_OR": {
+            "mapValue": {
+              "fields": {
+                "score": {
+                  "integerValue": "20"
+                },
+                "savedAt": {
+                  "integerValue": "1778329850876"
+                },
+                "max": {
+                  "integerValue": "20"
+                },
+                "note": {
+                  "stringValue": ""
+                }
+              }
+            }
+          },
+          "1_Thu_ED": {
+            "mapValue": {
+              "fields": {
+                "note": {
+                  "stringValue": ""
+                },
+                "score": {
+                  "integerValue": "11"
+                },
+                "savedAt": {
+                  "integerValue": "1778329838157"
+                },
+                "max": {
+                  "integerValue": "12"
+                }
+              }
+            }
+          },
+          "1_Wed_ED": {
+            "mapValue": {
+              "fields": {
+                "note": {
+                  "stringValue": ""
+                },
+                "savedAt": {
+                  "integerValue": "1777974263169"
+                },
+                "score": {
+                  "integerValue": "11"
+                },
+                "max": {
+                  "integerValue": "12"
+                }
+              }
+            }
+          },
+          "2_Tue_ED": {
+            "mapValue": {
+              "fields": {
+                "note": {
+                  "stringValue": ""
+                },
+                "max": {
+                  "integerValue": "12"
+                },
+                "score": {
+                  "integerValue": "11"
+                },
+                "savedAt": {
+                  "integerValue": "1778589269231"
+                }
+              }
+            }
+          },
+          "1_Wed_LS": {
+            "mapValue": {
+              "fields": {
+                "note": {
+                  "stringValue": ""
+                },
+                "max": {
+                  "integerValue": "20"
+                },
+                "savedAt": {
+                  "integerValue": "1777974091602"
+                },
+                "score": {
+                  "integerValue": "20"
+                }
+              }
+            }
+          },
+          "1_Wed_VB": {
+            "mapValue": {
+              "fields": {
+                "savedAt": {
+                  "integerValue": "1777974070791"
+                },
+                "score": {
+                  "integerValue": "20"
+                },
+                "max": {
+                  "integerValue": "20"
+                },
+                "note": {
+                  "stringValue": ""
+                }
+              }
+            }
+          },
+          "1_Mon_VC": {
+            "mapValue": {
+              "fields": {
+                "note": {
+                  "stringValue": ""
+                },
+                "max": {
+                  "integerValue": "20"
+                },
+                "score": {
+                  "integerValue": "20"
+                },
+                "savedAt": {
+                  "integerValue": "1777685432239"
+                }
+              }
+            }
+          },
+          "50_Mon_E1": {
+            "mapValue": {
+              "fields": {
+                "score": {
+                  "integerValue": "14"
+                },
+                "savedAt": {
+                  "integerValue": "1778590007236"
+                },
+                "max": {
+                  "integerValue": "15"
+                },
+                "note": {
+                  "stringValue": ""
+                }
+              }
+            }
+          },
+          "1_Tue_OR": {
+            "mapValue": {
+              "fields": {
+                "note": {
+                  "stringValue": ""
+                },
+                "score": {
+                  "integerValue": "18"
+                },
+                "savedAt": {
+                  "integerValue": "1777686010698"
+                },
+                "max": {
+                  "integerValue": "20"
+                }
+              }
+            }
+          },
+          "1_Thu_LS": {
+            "mapValue": {
+              "fields": {
+                "note": {
+                  "stringValue": ""
+                },
+                "score": {
+                  "integerValue": "20"
+                },
+                "savedAt": {
+                  "integerValue": "1778329834029"
+                },
+                "max": {
+                  "integerValue": "20"
+                }
+              }
+            }
+          },
+          "1_Wed_S2": {
+            "mapValue": {
+              "fields": {
+                "note": {
+                  "stringValue": ""
+                },
+                "savedAt": {
+                  "integerValue": "1777983751034"
+                },
+                "score": {
+                  "integerValue": "20"
+                },
+                "max": {
+                  "integerValue": "20"
+                }
+              }
+            }
+          },
+          "1_Mon_OR": {
+            "mapValue": {
+              "fields": {
+                "max": {
+                  "integerValue": "20"
+                },
+                "score": {
+                  "integerValue": "17"
+                },
+                "savedAt": {
+                  "integerValue": "1777685281649"
+                },
+                "note": {
+                  "stringValue": ""
+                }
+              }
+            }
+          },
+          "1_Thu_S2": {
+            "mapValue": {
+              "fields": {
+                "note": {
+                  "stringValue": ""
+                },
+                "max": {
+                  "integerValue": "14"
+                },
+                "score": {
+                  "integerValue": "14"
+                },
+                "savedAt": {
+                  "integerValue": "1778329804492"
+                }
+              }
+            }
+          },
+          "1_Wed_E1": {
+            "mapValue": {
+              "fields": {
+                "savedAt": {
+                  "integerValue": "1777974082509"
+                },
+                "score": {
+                  "integerValue": "29"
+                },
+                "max": {
+                  "integerValue": "40"
+                },
+                "note": {
+                  "stringValue": ""
+                }
+              }
+            }
+          },
+          "1_Mon_VB": {
+            "mapValue": {
+              "fields": {
+                "max": {
+                  "integerValue": "20"
+                },
+                "score": {
+                  "integerValue": "17"
+                },
+                "savedAt": {
+                  "integerValue": "1777622609024"
+                },
+                "note": {
+                  "stringValue": ""
+                }
+              }
+            }
+          },
+          "1_Thu_E1": {
+            "mapValue": {
+              "fields": {
+                "savedAt": {
+                  "integerValue": "1778246873246"
+                },
+                "score": {
+                  "integerValue": "14"
+                },
+                "max": {
+                  "integerValue": "15"
+                },
+                "note": {
+                  "stringValue": ""
+                }
+              }
+            }
+          },
+          "1_Thu_VC": {
+            "mapValue": {
+              "fields": {
+                "max": {
+                  "integerValue": "20"
+                },
+                "score": {
+                  "integerValue": "20"
+                },
+                "savedAt": {
+                  "integerValue": "1778329845957"
+                },
+                "note": {
+                  "stringValue": ""
+                }
+              }
+            }
+          },
+          "2_Tue_E1": {
+            "mapValue": {
+              "fields": {
+                "note": {
+                  "stringValue": ""
+                },
+                "score": {
+                  "doubleValue": 23.5
+                },
+                "savedAt": {
+                  "integerValue": "1778589224683"
+                },
+                "max": {
+                  "integerValue": "28"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "adminPassword": {
+      "stringValue": "3816"
+    },
+    "listenGameRuns": {
+      "integerValue": "2"
+    },
+    "monthlyTestPass": {
+      "integerValue": "0"
+    },
+    "logs": {
+      "arrayValue": {
+        "values": [
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对"
+                },
+                "timestamp": {
+                  "integerValue": "1777681921875"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1777681932188"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (惊喜!)"
+                },
+                "points": {
+                  "integerValue": "15"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "timestamp": {
+                  "integerValue": "1777682076331"
+                },
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(0 错)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777682080602"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (惊喜!)"
+                },
+                "points": {
+                  "integerValue": "15"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(1 错)"
+                },
+                "timestamp": {
+                  "integerValue": "1777682568940"
+                },
+                "points": {
+                  "integerValue": "10"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777682571734"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (惊喜!)"
+                },
+                "points": {
+                  "integerValue": "15"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "2"
+                },
+                "timestamp": {
+                  "integerValue": "1777683575749"
+                },
+                "reason": {
+                  "stringValue": "💡 揭晓 Wow 答案"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(0 错)"
+                },
+                "timestamp": {
+                  "integerValue": "1777683961926"
+                },
+                "points": {
+                  "integerValue": "10"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1777683965649"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "5"
+                },
+                "timestamp": {
+                  "integerValue": "1777684572707"
+                },
+                "reason": {
+                  "stringValue": "⭐ 每日任务: 看 1 个学科词汇本 (+5)"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777684972695"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对"
+                },
+                "points": {
+                  "integerValue": "10"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "timestamp": {
+                  "integerValue": "1777684974762"
+                },
+                "points": {
+                  "integerValue": "5"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(0 错)"
+                },
+                "timestamp": {
+                  "integerValue": "1777684992102"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1777685095749"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777685186328"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "points": {
+                  "integerValue": "5"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "timestamp": {
+                  "integerValue": "1777685203843"
+                },
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(0 错)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "15"
+                },
+                "timestamp": {
+                  "integerValue": "1777685218914"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (惊喜!)"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(0 错)"
+                },
+                "timestamp": {
+                  "integerValue": "1777685328105"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "timestamp": {
+                  "integerValue": "1777685329962"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(0 错)"
+                },
+                "timestamp": {
+                  "integerValue": "1777686034630"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777686050682"
+                },
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(0 错)"
+                },
+                "points": {
+                  "integerValue": "10"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1777687663300"
+                },
+                "reason": {
+                  "stringValue": "🎮 数学速算 9/10"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "🎮 数学速算 10/10"
+                },
+                "timestamp": {
+                  "integerValue": "1777687699671"
+                },
+                "points": {
+                  "integerValue": "8"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777687739759"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对"
+                },
+                "points": {
+                  "integerValue": "10"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (惊喜!)"
+                },
+                "timestamp": {
+                  "integerValue": "1777687744714"
+                },
+                "points": {
+                  "integerValue": "15"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (惊喜!)"
+                },
+                "timestamp": {
+                  "integerValue": "1777687752342"
+                },
+                "points": {
+                  "integerValue": "15"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "timestamp": {
+                  "integerValue": "1777687754228"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(4 错)"
+                },
+                "timestamp": {
+                  "integerValue": "1777687903001"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "timestamp": {
+                  "integerValue": "1777687905085"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777687944286"
+                },
+                "reason": {
+                  "stringValue": "🎮 数学速算 9/10"
+                },
+                "points": {
+                  "integerValue": "5"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对"
+                },
+                "timestamp": {
+                  "integerValue": "1777689233413"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对"
+                },
+                "timestamp": {
+                  "integerValue": "1777689242433"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对"
+                },
+                "timestamp": {
+                  "integerValue": "1777689250771"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对"
+                },
+                "timestamp": {
+                  "integerValue": "1777689259293"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对"
+                },
+                "timestamp": {
+                  "integerValue": "1777689265129"
+                },
+                "points": {
+                  "integerValue": "10"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777689271533"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对"
+                },
+                "points": {
+                  "integerValue": "10"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对"
+                },
+                "timestamp": {
+                  "integerValue": "1777689278404"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1777689279593"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (惊喜!)"
+                },
+                "points": {
+                  "integerValue": "15"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "15"
+                },
+                "timestamp": {
+                  "integerValue": "1777689282416"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (惊喜!)"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "timestamp": {
+                  "integerValue": "1777689285475"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1777689287676"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1777689289170"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "15"
+                },
+                "timestamp": {
+                  "integerValue": "1777689290486"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (惊喜!)"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "timestamp": {
+                  "integerValue": "1777689295914"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777690331773"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对"
+                },
+                "points": {
+                  "integerValue": "10"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "�� 开宝箱 (普通)"
+                },
+                "timestamp": {
+                  "integerValue": "1777690333462"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对"
+                },
+                "timestamp": {
+                  "integerValue": "1777690344298"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777690346228"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (惊喜!)"
+                },
+                "points": {
+                  "integerValue": "15"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1777690530378"
+                },
+                "reason": {
+                  "stringValue": "🎮 数学速算 10/10"
+                },
+                "points": {
+                  "integerValue": "8"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对"
+                },
+                "timestamp": {
+                  "integerValue": "1777690594198"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777690595467"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (惊喜!)"
+                },
+                "points": {
+                  "integerValue": "15"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "15"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (惊喜!)"
+                },
+                "timestamp": {
+                  "integerValue": "1777690949887"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "8"
+                },
+                "timestamp": {
+                  "integerValue": "1777702070545"
+                },
+                "reason": {
+                  "stringValue": "🎮 数学速算 10/10"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "8"
+                },
+                "timestamp": {
+                  "integerValue": "1777702147684"
+                },
+                "reason": {
+                  "stringValue": "🎮 Cloze 单空填 10/10 (第 1 次)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "🎮 科学分类 6/6 (第 1 次)"
+                },
+                "timestamp": {
+                  "integerValue": "1777702168212"
+                },
+                "points": {
+                  "integerValue": "10"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "🎮 单位换算 10/10 (第 1 次)"
+                },
+                "timestamp": {
+                  "integerValue": "1777702210965"
+                },
+                "points": {
+                  "integerValue": "8"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "🎮 Grammar 选择题 8/10 (第 1 次)"
+                },
+                "timestamp": {
+                  "integerValue": "1777702260697"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(第 1 次, 满奖 100%)"
+                },
+                "timestamp": {
+                  "integerValue": "1777702457022"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1777702498610"
+                },
+                "reason": {
+                  "stringValue": "🎮 数学速算 8/10 (第 1 次)"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "timestamp": {
+                  "integerValue": "1777702719631"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对 (第 1 次)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "5"
+                },
+                "timestamp": {
+                  "integerValue": "1777702923411"
+                },
+                "reason": {
+                  "stringValue": "🎮 听写 3/5 (第 1 次)"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "87"
+                },
+                "timestamp": {
+                  "integerValue": "1777702932334"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (神级!)"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777702960689"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "points": {
+                  "integerValue": "5"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "🎮 科学分类 6/6 (第 2 次)"
+                },
+                "timestamp": {
+                  "integerValue": "1777703049212"
+                },
+                "points": {
+                  "integerValue": "5"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "🎮 科学分类 6/6 (第 3 次)"
+                },
+                "timestamp": {
+                  "integerValue": "1777703058526"
+                },
+                "points": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "timestamp": {
+                  "integerValue": "1777703130997"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对 (第 2 次)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "4"
+                },
+                "reason": {
+                  "stringValue": "🎮 Cloze 单空填 10/10 (第 2 次)"
+                },
+                "timestamp": {
+                  "integerValue": "1777703172099"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1777703341297"
+                },
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(第 2 次, 半奖 50%)"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "2"
+                },
+                "reason": {
+                  "stringValue": "🎮 数学速算 7/10 (第 2 次)"
+                },
+                "timestamp": {
+                  "integerValue": "1777703378000"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "4"
+                },
+                "reason": {
+                  "stringValue": "🎮 Grammar 选择题 10/10 (第 2 次)"
+                },
+                "timestamp": {
+                  "integerValue": "1777703755222"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1777710266110"
+                },
+                "reason": {
+                  "stringValue": "🌳 知识树探索: Diversity 分类"
+                },
+                "points": {
+                  "integerValue": "2"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "2"
+                },
+                "reason": {
+                  "stringValue": "🌳 知识树探索: 基础 Grammar"
+                },
+                "timestamp": {
+                  "integerValue": "1777710373907"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777711188110"
+                },
+                "reason": {
+                  "stringValue": "🌳 知识树探索: 植物生命周期"
+                },
+                "points": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "2"
+                },
+                "reason": {
+                  "stringValue": "🌳 知识树探索: 作文 Composition"
+                },
+                "timestamp": {
+                  "integerValue": "1777711372763"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "30"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: sci_diversity 3/3 (3⭐)"
+                },
+                "timestamp": {
+                  "integerValue": "1777713629534"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "timestamp": {
+                  "integerValue": "1777722760143"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: eng_basics 2/3 (1⭐)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "20"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: eng_basics 3/3 (3⭐)"
+                },
+                "timestamp": {
+                  "integerValue": "1777722778870"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "2"
+                },
+                "reason": {
+                  "stringValue": "🌳 知识树探索: 四则运算"
+                },
+                "timestamp": {
+                  "integerValue": "1777722782857"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "📝 知识练习: math_basics 3/3 (3⭐)"
+                },
+                "timestamp": {
+                  "integerValue": "1777722796590"
+                },
+                "points": {
+                  "integerValue": "30"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "2"
+                },
+                "timestamp": {
+                  "integerValue": "1777722800970"
+                },
+                "reason": {
+                  "stringValue": "🌳 知识树探索: 基础词汇"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "🌳 知识树探索: 几何"
+                },
+                "timestamp": {
+                  "integerValue": "1777722803946"
+                },
+                "points": {
+                  "integerValue": "2"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: ch_basic 1/3 (0⭐)"
+                },
+                "timestamp": {
+                  "integerValue": "1777722833968"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: ch_basic 2/3 (1⭐)"
+                },
+                "timestamp": {
+                  "integerValue": "1777722853153"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "20"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: ch_basic 3/3 (3⭐)"
+                },
+                "timestamp": {
+                  "integerValue": "1777722867753"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1777727678471"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: sci_plant_lc 1/3 (0⭐)"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: sci_plant_lc 2/3 (1⭐)"
+                },
+                "timestamp": {
+                  "integerValue": "1777727687205"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1777727697628"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: sci_plant_lc 3/3 (3⭐)"
+                },
+                "points": {
+                  "integerValue": "20"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "30"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: sci_diversity 3/3 (3⭐)"
+                },
+                "timestamp": {
+                  "integerValue": "1777727711827"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1777727740086"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: eng_writing 1/3 (0⭐)"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "25"
+                },
+                "timestamp": {
+                  "integerValue": "1777727752543"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: eng_writing 3/3 (3⭐)"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "30"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: eng_basics 3/3 (3⭐)"
+                },
+                "timestamp": {
+                  "integerValue": "1777727768637"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "30"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: math_geometry 3/3 (3⭐)"
+                },
+                "timestamp": {
+                  "integerValue": "1777727788578"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777727801085"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: math_basics 3/3 (3⭐)"
+                },
+                "points": {
+                  "integerValue": "30"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "30"
+                },
+                "timestamp": {
+                  "integerValue": "1777727811616"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: ch_basic 3/3 (3⭐)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "2"
+                },
+                "timestamp": {
+                  "integerValue": "1777762284408"
+                },
+                "reason": {
+                  "stringValue": "💡 揭晓 Wow 答案"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "⭐ 每日任务: 教家人 1 个新单词/概念 (+8)"
+                },
+                "timestamp": {
+                  "integerValue": "1777762292064"
+                },
+                "points": {
+                  "integerValue": "8"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "2"
+                },
+                "timestamp": {
+                  "integerValue": "1777766961611"
+                },
+                "reason": {
+                  "stringValue": "💡 揭晓 Wow 答案"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "10"
+                },
+                "timestamp": {
+                  "integerValue": "1777769378547"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对 (第 1 次)"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1777769444650"
+                },
+                "reason": {
+                  "stringValue": "🎮 科学分类 7/7 (第 1 次)"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(第 1 次, 满奖 100%)"
+                },
+                "timestamp": {
+                  "integerValue": "1777769494977"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "8"
+                },
+                "timestamp": {
+                  "integerValue": "1777769556888"
+                },
+                "reason": {
+                  "stringValue": "🎮 Grammar 选择题 10/10 (第 1 次)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "🎮 Cloze 单空填 10/10 (第 1 次)"
+                },
+                "timestamp": {
+                  "integerValue": "1777769651138"
+                },
+                "points": {
+                  "integerValue": "8"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777769775543"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "points": {
+                  "integerValue": "5"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "timestamp": {
+                  "integerValue": "1777769777706"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "🎮 数学速算 9/10 (第 1 次)"
+                },
+                "timestamp": {
+                  "integerValue": "1777770103153"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "timestamp": {
+                  "integerValue": "1777770449389"
+                },
+                "reason": {
+                  "stringValue": "�� Editing 找错全对 (第 2 次)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "timestamp": {
+                  "integerValue": "1777899989368"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "2"
+                },
+                "reason": {
+                  "stringValue": "💡 揭晓 Wow 答案"
+                },
+                "timestamp": {
+                  "integerValue": "1777900110313"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "🎮 科学分类 7/7 (第 1 次)"
+                },
+                "timestamp": {
+                  "integerValue": "1777900362243"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "10"
+                },
+                "timestamp": {
+                  "integerValue": "1777900984341"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对 (第 1 次)"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "10"
+                },
+                "timestamp": {
+                  "integerValue": "1777901008311"
+                },
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(第 1 次, 满奖 100%)"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "🎮 Grammar 选择题 9/10 (第 1 次)"
+                },
+                "timestamp": {
+                  "integerValue": "1777901089709"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "timestamp": {
+                  "integerValue": "1777901094925"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "timestamp": {
+                  "integerValue": "1777901096673"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "💡 揭晓 Wow 答案"
+                },
+                "timestamp": {
+                  "integerValue": "1777967518317"
+                },
+                "points": {
+                  "integerValue": "2"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1777972967502"
+                },
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(第 1 次, 满奖 100%)"
+                },
+                "points": {
+                  "integerValue": "10"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "timestamp": {
+                  "integerValue": "1777973000531"
+                },
+                "points": {
+                  "integerValue": "5"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "timestamp": {
+                  "integerValue": "1777983919551"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对 (第 1 次)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "🎮 科学分类 7/7 (第 1 次)"
+                },
+                "timestamp": {
+                  "integerValue": "1777983941680"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "timestamp": {
+                  "integerValue": "1777983984898"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "⭐ 每日任务: 听 15 分钟英语 (+10)"
+                },
+                "timestamp": {
+                  "integerValue": "1777984544351"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "2"
+                },
+                "timestamp": {
+                  "integerValue": "1778072095625"
+                },
+                "reason": {
+                  "stringValue": "💡 揭晓 Wow 答案"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "💡 揭晓 Wow 答案"
+                },
+                "timestamp": {
+                  "integerValue": "1778246471817"
+                },
+                "points": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "15"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (惊喜!)"
+                },
+                "timestamp": {
+                  "integerValue": "1778246581375"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "3"
+                },
+                "timestamp": {
+                  "integerValue": "1778246581375"
+                },
+                "reason": {
+                  "stringValue": "⭐ 每日任务: 开 1 个神秘宝箱 (+3)"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "timestamp": {
+                  "integerValue": "1778246583828"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(第 1 次, 满奖 100%)"
+                },
+                "timestamp": {
+                  "integerValue": "1778247004234"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "107"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (神级!)"
+                },
+                "timestamp": {
+                  "integerValue": "1778247089194"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "5"
+                },
+                "timestamp": {
+                  "integerValue": "1778247094606"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对 (第 1 次)"
+                },
+                "timestamp": {
+                  "integerValue": "1778247464476"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1778247707207"
+                },
+                "reason": {
+                  "stringValue": "🎮 Grammar 选择题 10/10 (第 1 次)"
+                },
+                "points": {
+                  "integerValue": "8"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "timestamp": {
+                  "integerValue": "1778247717566"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1778247812321"
+                },
+                "reason": {
+                  "stringValue": "🎮 Cloze 单空填 10/10 (第 1 次)"
+                },
+                "points": {
+                  "integerValue": "8"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "每日登录奖励"
+                },
+                "timestamp": {
+                  "integerValue": "1778294104051"
+                },
+                "points": {
+                  "integerValue": "5"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "2"
+                },
+                "timestamp": {
+                  "integerValue": "1778297363357"
+                },
+                "reason": {
+                  "stringValue": "💡 揭晓 Wow 答案"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "10"
+                },
+                "timestamp": {
+                  "integerValue": "1778306679672"
+                },
+                "reason": {
+                  "stringValue": "🎮 Editing 找错全对 (第 1 次)"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "5"
+                },
+                "timestamp": {
+                  "integerValue": "1778306684750"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "✏️ 名师秘诀练习"
+                },
+                "timestamp": {
+                  "integerValue": "1778307921674"
+                },
+                "points": {
+                  "integerValue": "3"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "3"
+                },
+                "timestamp": {
+                  "integerValue": "1778307931013"
+                },
+                "reason": {
+                  "stringValue": "✏️ 名师秘诀练习"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "timestamp": {
+                  "integerValue": "1778329169617"
+                },
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W1 全对(第 1 次, 满奖 100%)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "timestamp": {
+                  "integerValue": "1778329175978"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "8"
+                },
+                "reason": {
+                  "stringValue": "🎮 Grammar 选择题 10/10 (第 1 次)"
+                },
+                "timestamp": {
+                  "integerValue": "1778329226581"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "10"
+                },
+                "timestamp": {
+                  "integerValue": "1778329961591"
+                },
+                "reason": {
+                  "stringValue": "🎮 科学分类 7/7 (第 1 次)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "每日登录奖励"
+                },
+                "timestamp": {
+                  "integerValue": "1778372758663"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1778372765437"
+                },
+                "reason": {
+                  "stringValue": "💡 揭晓 Wow 答案"
+                },
+                "points": {
+                  "integerValue": "2"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (惊喜!)"
+                },
+                "timestamp": {
+                  "integerValue": "1778372820572"
+                },
+                "points": {
+                  "integerValue": "15"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1778373812417"
+                },
+                "reason": {
+                  "stringValue": "✏️ 名师秘诀练习"
+                },
+                "points": {
+                  "integerValue": "3"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1778373817683"
+                },
+                "reason": {
+                  "stringValue": "✏️ 名师秘诀练习"
+                },
+                "points": {
+                  "integerValue": "3"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "8"
+                },
+                "timestamp": {
+                  "integerValue": "1778401757137"
+                },
+                "reason": {
+                  "stringValue": "⭐ 每日任务: 教家人 1 个新单词/概念 (+8)"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "📓 错题复习答对"
+                },
+                "timestamp": {
+                  "integerValue": "1778401781853"
+                },
+                "points": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "📓 错题复习答对"
+                },
+                "timestamp": {
+                  "integerValue": "1778401809199"
+                },
+                "points": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1778401815020"
+                },
+                "reason": {
+                  "stringValue": "📓 错题复习答对"
+                },
+                "points": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "timestamp": {
+                  "integerValue": "1778403608099"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "3"
+                },
+                "reason": {
+                  "stringValue": "✏️ 名师秘诀练习"
+                },
+                "timestamp": {
+                  "integerValue": "1778454485066"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "3"
+                },
+                "timestamp": {
+                  "integerValue": "1778454491761"
+                },
+                "reason": {
+                  "stringValue": "✏️ 名师秘诀练习"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "reason": {
+                  "stringValue": "每日登录奖励"
+                },
+                "timestamp": {
+                  "integerValue": "1778466706530"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1778501124471"
+                },
+                "reason": {
+                  "stringValue": "💡 揭晓 Wow 答案"
+                },
+                "points": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "3"
+                },
+                "reason": {
+                  "stringValue": "✏️ 名师秘诀练习"
+                },
+                "timestamp": {
+                  "integerValue": "1778501164904"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "✏️ 名师秘诀练习"
+                },
+                "timestamp": {
+                  "integerValue": "1778501178835"
+                },
+                "points": {
+                  "integerValue": "3"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1778501181471"
+                },
+                "reason": {
+                  "stringValue": "⭐ 每日任务: 教家人 1 个新单词/概念 (+8)"
+                },
+                "points": {
+                  "integerValue": "8"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "📓 错题复习答对"
+                },
+                "timestamp": {
+                  "integerValue": "1778503701994"
+                },
+                "points": {
+                  "integerValue": "2"
+                },
+                "week": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "2"
+                },
+                "timestamp": {
+                  "integerValue": "1778503706511"
+                },
+                "reason": {
+                  "stringValue": "📓 错题复习答对"
+                },
+                "points": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "5"
+                },
+                "timestamp": {
+                  "integerValue": "1778554554380"
+                },
+                "reason": {
+                  "stringValue": "每日登录奖励"
+                },
+                "week": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "2"
+                },
+                "points": {
+                  "integerValue": "2"
+                },
+                "reason": {
+                  "stringValue": "💡 揭晓 Wow 答案"
+                },
+                "timestamp": {
+                  "integerValue": "1778567731990"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1778585076269"
+                },
+                "reason": {
+                  "stringValue": "↩️ 取消 W1 Tue S2"
+                },
+                "week": {
+                  "integerValue": "1"
+                },
+                "type": {
+                  "stringValue": "slot_undo"
+                },
+                "points": {
+                  "integerValue": "0"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "✅ 打卡 W1 Tue S2 +13"
+                },
+                "timestamp": {
+                  "integerValue": "1778585111635"
+                },
+                "type": {
+                  "stringValue": "slot"
+                },
+                "points": {
+                  "integerValue": "6"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "0"
+                },
+                "type": {
+                  "stringValue": "slot_undo"
+                },
+                "reason": {
+                  "stringValue": "↩️ 取消 W1 Tue S2"
+                },
+                "timestamp": {
+                  "integerValue": "1778585137897"
+                },
+                "week": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "6"
+                },
+                "type": {
+                  "stringValue": "slot"
+                },
+                "week": {
+                  "integerValue": "1"
+                },
+                "reason": {
+                  "stringValue": "✅ 打卡 W1 Tue S2 +13"
+                },
+                "timestamp": {
+                  "integerValue": "1778585141458"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "9"
+                },
+                "type": {
+                  "stringValue": "slot"
+                },
+                "timestamp": {
+                  "integerValue": "1778589041632"
+                },
+                "reason": {
+                  "stringValue": "✅ 打卡 W2 Tue E1 +19"
+                },
+                "week": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "✅ 打卡 W2 Tue ED +8"
+                },
+                "timestamp": {
+                  "integerValue": "1778589270179"
+                },
+                "week": {
+                  "integerValue": "2"
+                },
+                "points": {
+                  "integerValue": "4"
+                },
+                "type": {
+                  "stringValue": "slot"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "2"
+                },
+                "timestamp": {
+                  "integerValue": "1778589666435"
+                },
+                "reason": {
+                  "stringValue": "📝 知识练习: ch_idiom_adv 3/3 (3⭐)"
+                },
+                "points": {
+                  "integerValue": "65"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "type": {
+                  "stringValue": "slot"
+                },
+                "points": {
+                  "integerValue": "11"
+                },
+                "timestamp": {
+                  "integerValue": "1778590008154"
+                },
+                "reason": {
+                  "stringValue": "✅ 打卡 W50 Mon E1 +21"
+                },
+                "week": {
+                  "integerValue": "50"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "✅ 打卡 W73 Mon ED +8"
+                },
+                "timestamp": {
+                  "integerValue": "1778590214551"
+                },
+                "week": {
+                  "integerValue": "73"
+                },
+                "points": {
+                  "integerValue": "4"
+                },
+                "type": {
+                  "stringValue": "slot"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "2"
+                },
+                "reason": {
+                  "stringValue": "✅ 打卡 W2 Tue S2 +14"
+                },
+                "timestamp": {
+                  "integerValue": "1778590338648"
+                },
+                "type": {
+                  "stringValue": "slot"
+                },
+                "points": {
+                  "integerValue": "7"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "2"
+                },
+                "timestamp": {
+                  "integerValue": "1778590364742"
+                },
+                "reason": {
+                  "stringValue": "✅ 打卡 W2 Tue OR +10"
+                },
+                "type": {
+                  "stringValue": "slot"
+                },
+                "points": {
+                  "integerValue": "5"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "✅ 打卡 W2 Tue LS +4"
+                },
+                "timestamp": {
+                  "integerValue": "1778590442437"
+                },
+                "week": {
+                  "integerValue": "2"
+                },
+                "type": {
+                  "stringValue": "slot"
+                },
+                "points": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "0"
+                },
+                "type": {
+                  "stringValue": "slot_undo"
+                },
+                "week": {
+                  "integerValue": "2"
+                },
+                "timestamp": {
+                  "integerValue": "1778590444457"
+                },
+                "reason": {
+                  "stringValue": "↩️ 取消 W2 Tue LS"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "2"
+                },
+                "timestamp": {
+                  "integerValue": "1778590446755"
+                },
+                "reason": {
+                  "stringValue": "✅ 打卡 W2 Tue LS 💥暴击 +6"
+                },
+                "points": {
+                  "integerValue": "4"
+                },
+                "type": {
+                  "stringValue": "slot"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "9"
+                },
+                "timestamp": {
+                  "integerValue": "1778590473947"
+                },
+                "reason": {
+                  "stringValue": "🎮 词汇连连看 W2 全对(第 1 次, 满奖 100%)"
+                },
+                "week": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "2"
+                },
+                "points": {
+                  "integerValue": "18"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (惊喜!)"
+                },
+                "timestamp": {
+                  "integerValue": "1778590476939"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "type": {
+                  "stringValue": "slot"
+                },
+                "points": {
+                  "integerValue": "3"
+                },
+                "week": {
+                  "integerValue": "2"
+                },
+                "timestamp": {
+                  "integerValue": "1778590507080"
+                },
+                "reason": {
+                  "stringValue": "✅ 打卡 W2 Tue VC +6"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1778590536639"
+                },
+                "reason": {
+                  "stringValue": "↩️ 取消 W1 Sat WSM"
+                },
+                "type": {
+                  "stringValue": "slot_undo"
+                },
+                "points": {
+                  "integerValue": "0"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1778590542917"
+                },
+                "reason": {
+                  "stringValue": "✅ 打卡 W1 Sat WSM +14"
+                },
+                "points": {
+                  "integerValue": "7"
+                },
+                "type": {
+                  "stringValue": "slot"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "0"
+                },
+                "type": {
+                  "stringValue": "slot_undo"
+                },
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1778590544111"
+                },
+                "reason": {
+                  "stringValue": "↩️ 取消 W1 Sat WSM"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1778590579172"
+                },
+                "reason": {
+                  "stringValue": "✅ 打卡 W1 Sat WSM +16"
+                },
+                "week": {
+                  "integerValue": "1"
+                },
+                "points": {
+                  "integerValue": "9"
+                },
+                "type": {
+                  "stringValue": "slot"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "2"
+                },
+                "reason": {
+                  "stringValue": "✅ 打卡 W2 Tue VB +12"
+                },
+                "timestamp": {
+                  "integerValue": "1778591283538"
+                },
+                "type": {
+                  "stringValue": "slot"
+                },
+                "points": {
+                  "integerValue": "7"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "2"
+                },
+                "points": {
+                  "integerValue": "6"
+                },
+                "reason": {
+                  "stringValue": "🎁 开宝箱 (普通)"
+                },
+                "timestamp": {
+                  "integerValue": "1778591301595"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "reason": {
+                  "stringValue": "每日登录奖励"
+                },
+                "timestamp": {
+                  "integerValue": "1778643291369"
+                },
+                "points": {
+                  "integerValue": "5"
+                },
+                "week": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "type": {
+                  "stringValue": "slot_undo"
+                },
+                "points": {
+                  "integerValue": "0"
+                },
+                "reason": {
+                  "stringValue": "↩️ 取消 W2 Tue OR"
+                },
+                "timestamp": {
+                  "integerValue": "1778643299175"
+                },
+                "week": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "7"
+                },
+                "type": {
+                  "stringValue": "slot"
+                },
+                "timestamp": {
+                  "integerValue": "1778643314549"
+                },
+                "reason": {
+                  "stringValue": "✅ 打卡 W2 Tue OR +12"
+                },
+                "week": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "0"
+                },
+                "type": {
+                  "stringValue": "slot_undo"
+                },
+                "week": {
+                  "integerValue": "2"
+                },
+                "timestamp": {
+                  "integerValue": "1778645595331"
+                },
+                "reason": {
+                  "stringValue": "↩️ 取消 W2 Tue VC"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "points": {
+                  "integerValue": "7"
+                },
+                "type": {
+                  "stringValue": "slot"
+                },
+                "week": {
+                  "integerValue": "2"
+                },
+                "timestamp": {
+                  "integerValue": "1778645608583"
+                },
+                "reason": {
+                  "stringValue": "✅ 打卡 W2 Tue VC 💥暴击 +10"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "week": {
+                  "integerValue": "1"
+                },
+                "timestamp": {
+                  "integerValue": "1778590717474"
+                },
+                "reason": {
+                  "stringValue": "✅ 打卡 W1 Sat WSF 💥暴击 +27"
+                },
+                "points": {
+                  "integerValue": "0"
+                },
+                "type": {
+                  "stringValue": "slot"
+                }
+              }
+            }
+          },
+          {
+            "mapValue": {
+              "fields": {
+                "timestamp": {
+                  "integerValue": "1778590577594"
+                },
+                "reason": {
+                  "stringValue": "✅ 打卡 W1 Sat WSS +16"
+                },
+                "week": {
+                  "integerValue": "1"
+                },
+                "type": {
+                  "stringValue": "slot"
+                },
+                "points": {
+                  "integerValue": "0"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "totalPoints": {
+      "integerValue": "2357"
+    },
+    "knowledgeStars": {
+      "mapValue": {
+        "fields": {
+          "sci_diversity": {
+            "mapValue": {
+              "fields": {
+                "bestScore": {
+                  "integerValue": "3"
+                },
+                "stars": {
+                  "integerValue": "3"
+                },
+                "lastDate": {
+                  "stringValue": "2026-05-02"
+                },
+                "attempts": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          "eng_basics": {
+            "mapValue": {
+              "fields": {
+                "attempts": {
+                  "integerValue": "3"
+                },
+                "lastDate": {
+                  "stringValue": "2026-05-08"
+                },
+                "stars": {
+                  "integerValue": "3"
+                },
+                "bestScore": {
+                  "integerValue": "3"
+                }
+              }
+            }
+          },
+          "math_geometry": {
+            "mapValue": {
+              "fields": {
+                "bestScore": {
+                  "integerValue": "3"
+                },
+                "stars": {
+                  "integerValue": "3"
+                },
+                "lastDate": {
+                  "stringValue": "2026-05-02"
+                },
+                "attempts": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          "ch_basic": {
+            "mapValue": {
+              "fields": {
+                "lastDate": {
+                  "stringValue": "2026-05-02"
+                },
+                "bestScore": {
+                  "integerValue": "3"
+                },
+                "stars": {
+                  "integerValue": "3"
+                },
+                "attempts": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          "sci_plant_lc": {
+            "mapValue": {
+              "fields": {
+                "stars": {
+                  "integerValue": "3"
+                },
+                "bestScore": {
+                  "integerValue": "3"
+                },
+                "lastDate": {
+                  "stringValue": "2026-05-02"
+                },
+                "attempts": {
+                  "integerValue": "3"
+                }
+              }
+            }
+          },
+          "ch_idiom_adv": {
+            "mapValue": {
+              "fields": {
+                "bestScore": {
+                  "integerValue": "3"
+                },
+                "stars": {
+                  "integerValue": "3"
+                },
+                "lastDate": {
+                  "stringValue": "2026-05-12"
+                },
+                "attempts": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          },
+          "math_basics": {
+            "mapValue": {
+              "fields": {
+                "attempts": {
+                  "integerValue": "1"
+                },
+                "lastDate": {
+                  "stringValue": "2026-05-02"
+                },
+                "bestScore": {
+                  "integerValue": "3"
+                },
+                "stars": {
+                  "integerValue": "3"
+                }
+              }
+            }
+          },
+          "eng_writing": {
+            "mapValue": {
+              "fields": {
+                "bestScore": {
+                  "integerValue": "3"
+                },
+                "stars": {
+                  "integerValue": "3"
+                },
+                "lastDate": {
+                  "stringValue": "2026-05-02"
+                },
+                "attempts": {
+                  "integerValue": "2"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "dailyQuests": {
+      "mapValue": {
+        "fields": {
+          "2026-05-07": {
+            "mapValue": {
+              "fields": {
+                "questId": {
+                  "stringValue": "slot-5"
+                },
+                "completed": {
+                  "booleanValue": false
+                },
+                "target": {
+                  "integerValue": "5"
+                },
+                "progress": {
+                  "integerValue": "1"
+                },
+                "claimedAt": {
+                  "nullValue": null
+                }
+              }
+            }
+          },
+          "2026-05-02": {
+            "mapValue": {
+              "fields": {
+                "completed": {
+                  "booleanValue": true
+                },
+                "questId": {
+                  "stringValue": "vocab-1"
+                },
+                "target": {
+                  "integerValue": "1"
+                },
+                "progress": {
+                  "integerValue": "1"
+                },
+                "claimedAt": {
+                  "integerValue": "1777684572707"
+                }
+              }
+            }
+          },
+          "2026-05-04": {
+            "mapValue": {
+              "fields": {
+                "claimedAt": {
+                  "nullValue": null
+                },
+                "questId": {
+                  "stringValue": "think-1"
+                },
+                "completed": {
+                  "booleanValue": false
+                },
+                "target": {
+                  "integerValue": "1"
+                },
+                "progress": {
+                  "integerValue": "0"
+                }
+              }
+            }
+          },
+          "2026-05-11": {
+            "mapValue": {
+              "fields": {
+                "claimedAt": {
+                  "integerValue": "1778501181471"
+                },
+                "target": {
+                  "integerValue": "1"
+                },
+                "progress": {
+                  "integerValue": "1"
+                },
+                "completed": {
+                  "booleanValue": true
+                },
+                "questId": {
+                  "stringValue": "feynman"
+                }
+              }
+            }
+          },
+          "2026-05-10": {
+            "mapValue": {
+              "fields": {
+                "claimedAt": {
+                  "integerValue": "1778401757137"
+                },
+                "questId": {
+                  "stringValue": "feynman"
+                },
+                "completed": {
+                  "booleanValue": true
+                },
+                "progress": {
+                  "integerValue": "1"
+                },
+                "target": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          "2026-05-03": {
+            "mapValue": {
+              "fields": {
+                "claimedAt": {
+                  "integerValue": "1777762292064"
+                },
+                "target": {
+                  "integerValue": "1"
+                },
+                "progress": {
+                  "integerValue": "1"
+                },
+                "questId": {
+                  "stringValue": "feynman"
+                },
+                "completed": {
+                  "booleanValue": true
+                }
+              }
+            }
+          },
+          "2026-05-01": {
+            "mapValue": {
+              "fields": {
+                "progress": {
+                  "integerValue": "0"
+                },
+                "target": {
+                  "integerValue": "1"
+                },
+                "completed": {
+                  "booleanValue": false
+                },
+                "questId": {
+                  "stringValue": "vocab-1"
+                },
+                "claimedAt": {
+                  "nullValue": null
+                }
+              }
+            }
+          },
+          "2026-05-12": {
+            "mapValue": {
+              "fields": {
+                "claimedAt": {
+                  "nullValue": null
+                },
+                "completed": {
+                  "booleanValue": false
+                },
+                "questId": {
+                  "stringValue": "think-1"
+                },
+                "target": {
+                  "integerValue": "1"
+                },
+                "progress": {
+                  "integerValue": "0"
+                }
+              }
+            }
+          },
+          "2026-05-06": {
+            "mapValue": {
+              "fields": {
+                "claimedAt": {
+                  "nullValue": null
+                },
+                "completed": {
+                  "booleanValue": false
+                },
+                "questId": {
+                  "stringValue": "slot-3"
+                },
+                "target": {
+                  "integerValue": "3"
+                },
+                "progress": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          "2026-05-05": {
+            "mapValue": {
+              "fields": {
+                "questId": {
+                  "stringValue": "listen-15"
+                },
+                "completed": {
+                  "booleanValue": true
+                },
+                "progress": {
+                  "integerValue": "900"
+                },
+                "target": {
+                  "integerValue": "900"
+                },
+                "claimedAt": {
+                  "integerValue": "1777984544351"
+                }
+              }
+            }
+          },
+          "2026-05-09": {
+            "mapValue": {
+              "fields": {
+                "claimedAt": {
+                  "nullValue": null
+                },
+                "completed": {
+                  "booleanValue": false
+                },
+                "questId": {
+                  "stringValue": "vocab-1"
+                },
+                "progress": {
+                  "integerValue": "0"
+                },
+                "target": {
+                  "integerValue": "1"
+                }
+              }
+            }
+          },
+          "2026-05-13": {
+            "mapValue": {
+              "fields": {
+                "progress": {
+                  "integerValue": "0"
+                },
+                "target": {
+                  "integerValue": "1"
+                },
+                "completed": {
+                  "booleanValue": false
+                },
+                "questId": {
+                  "stringValue": "think-1"
+                },
+                "claimedAt": {
+                  "nullValue": null
+                }
+              }
+            }
+          },
+          "2026-05-08": {
+            "mapValue": {
+              "fields": {
+                "claimedAt": {
+                  "integerValue": "1778246581375"
+                },
+                "progress": {
+                  "integerValue": "1"
+                },
+                "target": {
+                  "integerValue": "1"
+                },
+                "questId": {
+                  "stringValue": "box-open"
+                },
+                "completed": {
+                  "booleanValue": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "streakBonusCount": {
+      "integerValue": "0"
+    },
+    "dragonsUnlocked": {
+      "mapValue": {
+        "fields": {
+          "silver": {
+            "nullValue": null
+          },
+          "gold": {
+            "nullValue": null
+          }
+        }
+      }
+    },
+    "vocabGameRuns": {
+      "integerValue": "17"
+    },
+    "adminPageOpens": {
+      "integerValue": "75"
+    },
+    "weekly": {
+      "mapValue": {}
+    },
+    "questionBankProgress": {
+      "mapValue": {}
+    },
+    "_gameTriggersToday": {
+      "mapValue": {
+        "fields": {
+          "bossUsed": {
+            "booleanValue": true
+          },
+          "count": {
+            "integerValue": "2"
+          },
+          "date": {
+            "stringValue": "2026-05-12"
+          }
+        }
+      }
+    },
+    "totalGameRuns": {
+      "integerValue": "22"
+    },
+    "achievements": {
+      "mapValue": {
+        "fields": {
+          "unlocked": {
+            "arrayValue": {
+              "values": [
+                {
+                  "stringValue": "day_5slot"
+                },
+                {
+                  "stringValue": "vocab_perfect"
+                },
+                {
+                  "stringValue": "box_10"
+                },
+                {
+                  "stringValue": "hidden_admin"
+                },
+                {
+                  "stringValue": "hidden_midnight"
+                },
+                {
+                  "stringValue": "streak_7"
+                },
+                {
+                  "stringValue": "wow_10"
+                },
+                {
+                  "stringValue": "eq_20"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "activePetType": {
+      "stringValue": "hamster"
+    },
+    "craftCrystals": {
+      "integerValue": "0"
+    },
+    "alarmsEnabled": {
+      "booleanValue": true
+    },
+    "listeningUsage": {
+      "mapValue": {
+        "fields": {
+          "2026-05-01": {
+            "mapValue": {
+              "fields": {
+                "seconds": {
+                  "integerValue": "700"
+                }
+              }
+            }
+          },
+          "2026-05-05": {
+            "mapValue": {
+              "fields": {
+                "seconds": {
+                  "integerValue": "1620"
+                }
+              }
+            }
+          },
+          "2026-05-02": {
+            "mapValue": {
+              "fields": {
+                "seconds": {
+                  "integerValue": "1100"
+                }
+              }
+            }
+          },
+          "2026-05-06": {
+            "mapValue": {
+              "fields": {
+                "seconds": {
+                  "integerValue": "10"
+                }
+              }
+            }
+          },
+          "2026-05-09": {
+            "mapValue": {
+              "fields": {
+                "seconds": {
+                  "integerValue": "10"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "_lateNightChecked": {
+      "booleanValue": true
+    },
+    "tipQsAnswered": {
+      "mapValue": {
+        "fields": {
+          "tip_2026-05-11_英语_22_1": {
+            "integerValue": "1"
+          },
+          "tip_2026-05-09_数学_2_1": {
+            "integerValue": "2"
+          },
+          "tip_2026-05-10_华文_3_1": {
+            "integerValue": "1"
+          },
+          "tip_2026-05-10_华文_3_0": {
+            "integerValue": "1"
+          },
+          "tip_2026-05-09_数学_2_0": {
+            "integerValue": "2"
+          },
+          "tip_2026-05-12_科学_5_0": {
+            "integerValue": "3"
+          },
+          "tip_2026-05-10_英语_21_1": {
+            "integerValue": "1"
+          },
+          "tip_2026-05-11_英语_22_0": {
+            "integerValue": "1"
+          },
+          "tip_2026-05-10_英语_21_0": {
+            "integerValue": "1"
+          },
+          "tip_2026-05-12_科学_5_1": {
+            "integerValue": "2"
+          }
+        }
+      }
+    },
+    "_serverVersion": {
+      "integerValue": "1778653334885"
+    },
+    "lifetimeEarned": {
+      "integerValue": "2357"
+    },
+    "editingGameRuns": {
+      "integerValue": "21"
+    },
+    "wowGuessedToday": {
+      "mapValue": {
+        "fields": {
+          "wow_2026-05-12": {
+            "booleanValue": true
+          },
+          "wow_2026-05-08": {
+            "booleanValue": true
+          },
+          "wow_2026-05-11": {
+            "booleanValue": true
+          },
+          "wow_2026-05-09": {
+            "booleanValue": true
+          },
+          "wow_2026-05-10": {
+            "booleanValue": true
+          }
+        }
+      }
+    },
+    "mathGameRuns": {
+      "integerValue": "11"
+    },
+    "alarmShownToday": {
+      "mapValue": {
+        "fields": {
+          "shown": {
+            "arrayValue": {}
+          },
+          "date": {
+            "stringValue": "2026-05-13"
+          }
+        }
+      }
+    },
+    "wowSeenCount": {
+      "integerValue": "12"
+    },
+    "ftueDay": {
+      "integerValue": "0"
+    },
+    "gameDailyCount": {
+      "mapValue": {
+        "fields": {
+          "date": {
+            "stringValue": "2026-05-12"
+          },
+          "counts": {
+            "mapValue": {
+              "fields": {
+                "scilab": {
+                  "integerValue": "0"
+                },
+                "grammar": {
+                  "integerValue": "0"
+                },
+                "math": {
+                  "integerValue": "0"
+                },
+                "unit": {
+                  "integerValue": "0"
+                },
+                "cloze": {
+                  "integerValue": "0"
+                },
+                "vocab": {
+                  "integerValue": "1"
+                },
+                "editing": {
+                  "integerValue": "0"
+                },
+                "listen": {
+                  "integerValue": "0"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "equipEvolutions": {
+      "mapValue": {
+        "fields": {
+          "note": {
+            "integerValue": "3"
+          },
+          "bag": {
+            "integerValue": "1"
+          },
+          "hat": {
+            "integerValue": "3"
+          }
+        }
+      }
+    },
+    "activeSkin": {
+      "stringValue": "default"
+    },
+    "exchanges": {
+      "arrayValue": {}
+    },
+    "milestones": {
+      "mapValue": {
+        "fields": {
+          "W26": {
+            "booleanValue": false
+          },
+          "W14": {
+            "booleanValue": false
+          },
+          "W20": {
+            "booleanValue": false
+          }
+        }
+      }
+    },
+    "rareBoxesCount": {
+      "integerValue": "2"
+    },
+    "currentWeek": {
+      "integerValue": "2"
+    },
+    "sadUntil": {
+      "nullValue": null
+    },
+    "knowledgeExplored": {
+      "mapValue": {
+        "fields": {
+          "math_basics": {
+            "mapValue": {
+              "fields": {
+                "date": {
+                  "stringValue": "2026-05-02"
+                }
+              }
+            }
+          },
+          "eng_writing": {
+            "mapValue": {
+              "fields": {
+                "date": {
+                  "stringValue": "2026-05-02"
+                }
+              }
+            }
+          },
+          "math_geometry": {
+            "mapValue": {
+              "fields": {
+                "date": {
+                  "stringValue": "2026-05-02"
+                }
+              }
+            }
+          },
+          "ch_basic": {
+            "mapValue": {
+              "fields": {
+                "date": {
+                  "stringValue": "2026-05-02"
+                }
+              }
+            }
+          },
+          "sci_plant_lc": {
+            "mapValue": {
+              "fields": {
+                "date": {
+                  "stringValue": "2026-05-02"
+                }
+              }
+            }
+          },
+          "eng_basics": {
+            "mapValue": {
+              "fields": {
+                "date": {
+                  "stringValue": "2026-05-02"
+                }
+              }
+            }
+          },
+          "sci_diversity": {
+            "mapValue": {
+              "fields": {
+                "date": {
+                  "stringValue": "2026-05-02"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "masteredQs": {
+      "mapValue": {
+        "fields": {
+          "chinese": {
+            "arrayValue": {
+              "values": [
+                {
+                  "integerValue": "5"
+                },
+                {
+                  "integerValue": "10"
+                }
+              ]
+            }
+          },
+          "scimcq": {
+            "arrayValue": {
+              "values": [
+                {
+                  "integerValue": "9"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "lastLoginDate": {
+      "stringValue": "2026-05-13"
+    },
+    "dailyDraws": {
+      "mapValue": {
+        "fields": {
+          "fragments": {
+            "integerValue": "5"
+          },
+          "consecutive": {
+            "integerValue": "13"
+          },
+          "lastDrawDate": {
+            "stringValue": "2026-05-13"
+          }
+        }
+      }
+    },
+    "thinkPuzzleAnswers": {
+      "mapValue": {}
+    },
+    "photoHashes": {
+      "mapValue": {}
+    },
+    "pet": {
+      "mapValue": {
+        "fields": {
+          "spawnedAt": {
+            "integerValue": "1777650533015"
+          },
+          "name": {
+            "stringValue": "小趴包"
+          },
+          "happiness": {
+            "integerValue": "100"
+          },
+          "formIdx": {
+            "integerValue": "3"
+          },
+          "feedCount": {
+            "integerValue": "157"
+          },
+          "lastFedDate": {
+            "stringValue": "2026-05-13"
+          }
+        }
+      }
+    }
+  },
+  "createTime": "2026-04-30T10:11:03.217487Z",
+  "updateTime": "2026-05-13T06:27:54.830455Z"
+}
