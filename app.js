@@ -59,6 +59,20 @@ async function init() {
   // v19.3: 每日 mini-game 局数重置
   const _today = new Date().toDateString();
   if (state._lastGameDate !== _today) { state._lastGameDate = _today; state.gameDailyCount = null; saveState(state); }
+  // v19.4e: 如果复习队列为空，塞入种子复习项（确保新用户/清缓存后也有内容）
+  if (!state.spacedRepetition || !state.spacedRepetition.reviews || Object.keys(state.spacedRepetition.reviews).length === 0) {
+    state.spacedRepetition = { reviews: {} };
+    const seeds = [
+      { key: 'wow:eng_0', hook: 'PSLE Paper 2 顶端 10 分: Synthesis' },
+      { key: 'wow:eng_1', hook: 'Phrasal Verbs 是 PSLE 必考' },
+      { key: 'wow:eng_2', hook: 'Reported Speech 时态后移规则' },
+      { key: 'think:5', hook: '科学: 食物链能量流动' }
+    ];
+    seeds.forEach(s => {
+      state.spacedRepetition.reviews[s.key] = { firstSeen: Date.now() - 86400000 * 4, lastReviewed: Date.now() - 86400000 * 4, intervalDays: 3, correctStreak: 0 };
+    });
+    saveState(state);
+  }
   // 启动时若当前真实日期在本周内,默认选今天
   const today = todayDayKeyForWeek(state.currentWeek);
   if (today) selectedDay = today;
