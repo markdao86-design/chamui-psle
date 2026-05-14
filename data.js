@@ -1970,7 +1970,55 @@ const VOCAB_HARD = [
   { en: 'resilient', zh: '坚韧的', diff: 4, sent: 'Resilient students bounce back from setbacks.' },
   { en: 'inevitable', zh: '不可避免的', diff: 4, sent: 'PSLE preparation is inevitable for P6 students.' },
   { en: 'tremendous', zh: '巨大的', diff: 3, sent: 'She made tremendous progress this term.' },
-  { en: 'perspiration', zh: '汗水', diff: 3, sent: 'Hard work and perspiration lead to success.' }
+  { en: 'perspiration', zh: '汗水', diff: 3, sent: 'Hard work and perspiration lead to success.' },
+  // v19.4: PSLE English 高频词扩充 (情感/行为/描述/学术)
+  { en: 'anxious', zh: '焦虑的', diff: 3, sent: 'She felt anxious before the examination.' },
+  { en: 'reluctant', zh: '不情愿的', diff: 4, sent: 'He was reluctant to leave his friends behind.' },
+  { en: 'compassionate', zh: '有同情心的', diff: 4, sent: 'The compassionate nurse comforted the patient.' },
+  { en: 'determined', zh: '坚定的', diff: 3, sent: 'She was determined to pass with flying colours.' },
+  { en: 'devastated', zh: '崩溃的', diff: 4, sent: 'He was devastated by the unexpected news.' },
+  { en: 'bewildered', zh: '困惑的', diff: 5, sent: 'The bewildered child could not find his parents.' },
+  { en: 'diligent', zh: '勤奋的', diff: 3, sent: 'Diligent students always review their work.' },
+  { en: 'enthusiastic', zh: '热情的', diff: 4, sent: 'The enthusiastic volunteer helped at the food bank.' },
+  { en: 'remorseful', zh: '悔恨的', diff: 5, sent: 'He felt remorseful for breaking his promise.' },
+  { en: 'indignant', zh: '愤慨的', diff: 5, sent: 'She was indignant at the unfair treatment.' },
+  { en: 'stumble', zh: '绊倒', diff: 3, sent: 'He stumbled over a rock on the path.' },
+  { en: 'murmur', zh: '低语', diff: 4, sent: 'She murmured a quiet apology.' },
+  { en: 'hesitate', zh: '犹豫', diff: 3, sent: 'Do not hesitate to ask for help.' },
+  { en: 'persuade', zh: '说服', diff: 4, sent: 'She persuaded her mother to let her go.' },
+  { en: 'persevere', zh: '坚持', diff: 4, sent: 'If you persevere, you will succeed.' },
+  { en: 'scrutinize', zh: '仔细检查', diff: 5, sent: 'The teacher scrutinized every answer carefully.' },
+  { en: 'vanish', zh: '消失', diff: 3, sent: 'The magician made the coin vanish.' },
+  { en: 'exaggerate', zh: '夸大', diff: 4, sent: 'He tends to exaggerate his achievements.' },
+  { en: 'contemplate', zh: '沉思', diff: 5, sent: 'She contemplated her options carefully.' },
+  { en: 'abundant', zh: '丰富的', diff: 4, sent: 'The garden has an abundant supply of flowers.' },
+  { en: 'barren', zh: '贫瘠的', diff: 5, sent: 'The barren land had no vegetation at all.' },
+  { en: 'exquisite', zh: '精致的', diff: 5, sent: 'The exquisite artwork was admired by everyone.' },
+  { en: 'fragile', zh: '脆弱的', diff: 3, sent: 'Be careful! The glass vase is very fragile.' },
+  { en: 'immense', zh: '巨大的', diff: 4, sent: 'The immense building towered over the street.' },
+  { en: 'peculiar', zh: '奇特的', diff: 4, sent: 'There was a peculiar smell coming from the kitchen.' },
+  { en: 'serene', zh: '宁静的', diff: 4, sent: 'The lake looked serene in the morning light.' },
+  { en: 'vivid', zh: '生动的', diff: 3, sent: 'She gave a vivid description of the accident.' },
+  { en: 'weary', zh: '疲惫的', diff: 4, sent: 'After the long hike, we were all weary.' },
+  { en: 'drenched', zh: '湿透的', diff: 3, sent: 'We were drenched after the sudden downpour.' },
+  { en: 'eerie', zh: '诡异的', diff: 4, sent: 'An eerie silence filled the abandoned house.' },
+  { en: 'hostile', zh: '敌对的', diff: 4, sent: 'The hostile crowd shouted at the referee.' },
+  { en: 'consequence', zh: '后果', diff: 4, sent: 'He faced the consequences of his actions.' },
+  { en: 'emphasize', zh: '强调', diff: 4, sent: 'The teacher emphasized the importance of practice.' },
+  { en: 'significant', zh: '重要的', diff: 4, sent: 'There was a significant improvement in her grades.' },
+  { en: 'emerge', zh: '出现', diff: 4, sent: 'The sun emerged from behind the clouds.' },
+  { en: 'potential', zh: '潜力', diff: 4, sent: 'The teacher saw great potential in the student.' },
+  { en: 'remarkable', zh: '非凡的', diff: 4, sent: 'She made remarkable progress in just one term.' },
+  { en: 'aroma', zh: '香气', diff: 3, sent: 'The aroma of freshly baked bread filled the room.' },
+  { en: 'stench', zh: '恶臭', diff: 4, sent: 'The stench from the rubbish bin was unbearable.' },
+  { en: 'deafening', zh: '震耳欲聋的', diff: 4, sent: 'The deafening thunder frightened the children.' },
+  { en: 'glistening', zh: '闪烁的', diff: 4, sent: 'Glistening dewdrops covered the grass.' },
+  { en: 'scorching', zh: '灼热的', diff: 3, sent: 'The scorching sun beat down on the runners.' },
+  { en: 'frigid', zh: '严寒的', diff: 5, sent: 'The frigid wind cut through their jackets.' },
+  { en: 'coarse', zh: '粗糙的', diff: 4, sent: 'The coarse sandpaper scratched the surface.' },
+  { en: 'nevertheless', zh: '然而', diff: 4, sent: 'It rained heavily; nevertheless, they went out.' },
+  { en: 'furthermore', zh: '此外', diff: 4, sent: 'The food was cold; furthermore, it tasted bland.' },
+  { en: 'consequently', zh: '因此', diff: 4, sent: 'He was late; consequently, he missed the bus.' }
 ];
 
 // ============= v18.25: 难度自适应 helper =============
@@ -3028,6 +3076,84 @@ const SST_QUESTIONS = [
 ];
 
 function getSstByDiff(diff, n) { return _sampleByDiff(SST_QUESTIONS, diff, n || 5); }
+
+// ============= v19.4: Comprehension OE 训练 (PSLE Paper 2 Section D 风格) =============
+// 格式: passage + questions (literal/inferential/evaluative) + model answers
+// App 内无法自动批改, 用 "自评" 模式: 读题→思考→查看 model answer→打分
+const COMP_OE_PASSAGES = [
+  { id: 'comp1', title: 'The Lost Dog', diff: 3, wordCount: 180,
+    passage: 'Tom was walking home from school when he noticed a small brown dog sitting by the roadside. It looked thin and dirty, with a torn collar around its neck. The dog whimpered softly and looked up at Tom with sad eyes. Tom knelt down and gently stroked its head. He noticed a phone number on the collar tag, though it was partly scratched off. Tom took the dog home, gave it water and some leftover chicken. He spent the evening trying different number combinations until finally reaching the owner — an elderly woman named Mrs Chen who had been searching for three days. When she arrived, tears of joy streamed down her face as the dog leaped into her arms.',
+    questions: [
+      { q: 'How did Tom know the dog was lost?', type: 'literal', marks: 2, model: 'Tom knew the dog was lost because it looked thin and dirty, with a torn collar around its neck (1m). It was sitting alone by the roadside and whimpered softly, suggesting it had been without an owner for some time (1m).' },
+      { q: 'What does the phrase "tears of joy streamed down her face" tell us about Mrs Chen\'s feelings?', type: 'inferential', marks: 2, model: 'The phrase tells us that Mrs Chen was overwhelmed with happiness and relief (1m). She had been searching for her dog for three days and had probably feared she would never see it again, so finding it safe made her extremely emotional (1m).' },
+      { q: 'Do you think Tom did the right thing by taking the dog home? Give a reason.', type: 'evaluative', marks: 2, model: 'Yes, Tom did the right thing because the dog was hungry and dirty, meaning it needed immediate care (1m). He also made the effort to contact the owner using the collar tag, showing responsibility rather than just ignoring the dog\'s plight (1m).' }
+    ]},
+  { id: 'comp2', title: 'The School Garden', diff: 3, wordCount: 160,
+    passage: 'Our school started a garden project last term. Every class was given a small plot to grow vegetables. At first, many students were reluctant to get their hands dirty. However, as the weeks went by, we noticed tiny green shoots emerging from the soil. The excitement was contagious. Even the most reluctant students began checking on their plants every morning before assembly. By the end of the term, our class had harvested enough tomatoes and lettuce to make a salad for everyone. The principal praised our efforts and announced that the garden would become a permanent feature of the school.',
+    questions: [
+      { q: 'Why were many students reluctant at first?', type: 'literal', marks: 1, model: 'Many students were reluctant because they did not want to get their hands dirty (1m).' },
+      { q: 'What does "the excitement was contagious" mean?', type: 'inferential', marks: 2, model: 'It means that the feeling of excitement spread from one student to another (1m), just like how a disease spreads. When some students got excited about the growing plants, their enthusiasm influenced other students to feel the same way (1m).' },
+      { q: 'What lesson can students learn from this garden project?', type: 'evaluative', marks: 2, model: 'Students can learn that patience and perseverance lead to rewarding results (1m). Even though the work seemed unpleasant at first, sticking with it brought a sense of achievement and brought the class together (1m).' }
+    ]},
+  { id: 'comp3', title: 'The Flood', diff: 4, wordCount: 200,
+    passage: 'It had been raining incessantly for three days. The monsoon drains, which usually handled the heavy rainfall efficiently, were overwhelmed. Water began seeping into the ground-floor flats along Bukit Timah Road. Mr Lim, a retired teacher who lived alone, woke up at 5am to find murky brown water ankle-deep in his living room. His precious collection of books — accumulated over forty years of teaching — was being destroyed before his eyes. Neighbours rallied together, forming a human chain to pass sandbags and move furniture to higher ground. A young polytechnic student named Aisha waded through the floodwater to help Mr Lim carry his most treasured books to safety on the second floor of a nearby block. "Community spirit," Mr Lim said later, his voice cracking with emotion, "is what makes Singapore special."',
+    questions: [
+      { q: 'Why were the monsoon drains unable to cope with the rain?', type: 'literal', marks: 1, model: 'The monsoon drains were unable to cope because it had been raining incessantly (continuously without stopping) for three days, which was more than they could usually handle (1m).' },
+      { q: 'Why was Mr Lim particularly upset about the flood damage?', type: 'inferential', marks: 2, model: 'Mr Lim was particularly upset because his precious collection of books, which he had accumulated over forty years of teaching, was being destroyed (1m). These books likely held great sentimental value as they represented his life\'s work and passion as a teacher (1m).' },
+      { q: 'What does Mr Lim\'s final statement suggest about his values?', type: 'evaluative', marks: 2, model: 'His statement suggests that he values community spirit and togetherness above material possessions (1m). Despite losing his books, he was moved by how his neighbours and a stranger (Aisha) came together to help, showing that human connections matter more to him than things (1m).' },
+      { q: 'Give one piece of evidence that shows the community helped Mr Lim.', type: 'literal', marks: 1, model: 'Neighbours formed a human chain to pass sandbags and move furniture to higher ground (1m). OR: Aisha waded through the floodwater to help Mr Lim carry his books to safety (1m).' }
+    ]},
+  { id: 'comp4', title: 'The Exam', diff: 3, wordCount: 170,
+    passage: 'Priya stared at the mathematics paper in front of her. Question 15 — a problem involving speed, distance and time — seemed impossible. Her mind went blank. She could hear the clock ticking loudly on the wall. Twenty minutes left. She took a deep breath, remembering what her tutor had taught her: "Draw a diagram. Label what you know. The answer will come." Priya picked up her pencil and sketched a simple timeline. Slowly, the numbers began to make sense. She worked through each step carefully, checking her calculations twice. When the bell rang, she had not only solved Question 15 but had also checked the rest of her paper. Walking out of the hall, she felt a quiet confidence she had never felt before.',
+    questions: [
+      { q: 'What was Priya\'s initial reaction to Question 15?', type: 'literal', marks: 1, model: 'Priya\'s mind went blank and she felt the question was impossible (1m).' },
+      { q: 'How did Priya overcome her difficulty?', type: 'inferential', marks: 2, model: 'She remembered her tutor\'s advice to draw a diagram and label what she knew (1m). By following this strategy step by step and staying calm (taking a deep breath), she was able to work through the problem logically (1m).' },
+      { q: 'What does "a quiet confidence she had never felt before" suggest about how this experience changed Priya?', type: 'evaluative', marks: 2, model: 'It suggests that overcoming this challenge gave Priya a new belief in her own abilities (1m). Unlike before, she now knows she can handle difficult problems by staying calm and using strategies, which will help her in future exams too (1m).' }
+    ]},
+  { id: 'comp5', title: 'The Hawker', diff: 4, wordCount: 210,
+    passage: 'Uncle Tan has been selling laksa at his hawker stall for thirty-five years. Every morning at 4am, he begins preparing the coconut broth from scratch — a recipe passed down from his mother. "Young people don\'t want to do this work anymore," he said, wiping sweat from his forehead. "They think it is low-class. But I am proud of what I do." His laksa has won numerous awards, and food bloggers from around the world have featured his stall. Despite offers from restaurant chains to franchise his recipe, Uncle Tan has always refused. "If I sell the recipe, they will cut corners. Use powder instead of fresh spices. My customers will taste the difference." Now 68, Uncle Tan worries about who will take over when he retires. His two children are both engineers. "I don\'t blame them," he says. "I just hope someone who loves food will continue this tradition."',
+    questions: [
+      { q: 'At what time does Uncle Tan start preparing his laksa?', type: 'literal', marks: 1, model: 'Uncle Tan starts preparing his laksa at 4am every morning (1m).' },
+      { q: 'Why has Uncle Tan refused to franchise his recipe?', type: 'inferential', marks: 2, model: 'He refused because he believes restaurant chains will cut corners by using powder instead of fresh spices (1m). He takes pride in the quality of his food and does not want his customers to taste a lesser version of his laksa (1m).' },
+      { q: 'What does this passage suggest about the challenges facing Singapore\'s hawker culture?', type: 'evaluative', marks: 2, model: 'The passage suggests that hawker culture faces the challenge of succession — younger Singaporeans prefer professional careers and view hawker work as undesirable (1m). Without young people willing to learn traditional recipes and endure the hard work, iconic dishes like Uncle Tan\'s laksa may disappear when the current generation of hawkers retires (1m).' }
+    ]},
+  { id: 'comp6', title: 'The Bully', diff: 4, wordCount: 190,
+    passage: 'Marcus had been dreading recess every day for the past month. A group of older boys would wait near the canteen and demand his pocket money. If he refused, they would push him and call him names. He never told anyone — not his parents, not his teachers. He was afraid it would get worse. One day, his classmate Wei Ling noticed the bruises on his arm. "Marcus, who did this to you?" she asked quietly. When he finally told her everything, Wei Ling insisted they tell their form teacher, Mrs Goh. "You are not alone in this," she said firmly. Mrs Goh took immediate action. The bullies were called to the principal\'s office that very afternoon. Looking back, Marcus realised that his silence had only given the bullies more power.',
+    questions: [
+      { q: 'How long had Marcus been bullied?', type: 'literal', marks: 1, model: 'Marcus had been bullied for the past month (1m).' },
+      { q: 'Why did Marcus not tell anyone about the bullying?', type: 'inferential', marks: 2, model: 'Marcus did not tell anyone because he was afraid that if he reported it, the bullying would get worse (1m). He may also have felt ashamed or embarrassed about being unable to stand up for himself (1m).' },
+      { q: 'What does the last sentence "his silence had only given the bullies more power" mean?', type: 'evaluative', marks: 2, model: 'It means that by staying quiet and not seeking help, Marcus was unintentionally allowing the bullies to continue their behaviour without consequences (1m). Speaking up would have stopped them sooner, but his silence made them bolder and more confident that they could get away with it (1m).' }
+    ]},
+  { id: 'comp7', title: 'Technology in Schools', diff: 5, wordCount: 220,
+    passage: 'The Ministry of Education recently announced that all primary schools would be equipped with tablets for every student by 2028. Proponents argue that digital learning allows students to access a wealth of educational resources instantly and learn at their own pace. Interactive apps can make difficult concepts more engaging and provide immediate feedback. However, critics worry about the impact on children\'s eyesight and attention spans. Dr Sarah Koh, a child psychologist, warns that "excessive screen time before age 12 has been linked to difficulty concentrating and reduced physical activity." Teachers have expressed mixed feelings. Mr Ahmad, who has taught for twenty years, notes: "Technology is a tool, not a replacement for good teaching. A tablet cannot inspire a child the way a passionate teacher can." The debate highlights a fundamental question: in our rush to modernise, are we considering what children actually need to learn effectively?',
+    questions: [
+      { q: 'State one advantage of digital learning mentioned in the passage.', type: 'literal', marks: 1, model: 'Digital learning allows students to access educational resources instantly and learn at their own pace (1m). OR: Interactive apps make difficult concepts more engaging and provide immediate feedback (1m).' },
+      { q: 'What is Dr Sarah Koh concerned about?', type: 'inferential', marks: 2, model: 'Dr Koh is concerned that too much screen time before age 12 can harm children\'s ability to concentrate (1m) and lead to reduced physical activity, which could affect their overall health and development (1m).' },
+      { q: 'Do you agree with Mr Ahmad that "a tablet cannot inspire a child the way a passionate teacher can"? Explain your view.', type: 'evaluative', marks: 2, model: 'Accept any well-reasoned answer. Example (Agree): Yes, because a teacher can respond to a child\'s emotions, provide encouragement, and adapt their teaching to the moment (1m). Technology follows fixed programmes and cannot build the personal relationships that motivate students to try harder (1m).' }
+    ]},
+  { id: 'comp8', title: 'The Race', diff: 3, wordCount: 160,
+    passage: 'It was the final race of Sports Day — the 4x100 metre relay. Our class had been training every morning for two weeks. I was the last runner, the anchor. As the third runner sprinted towards me, I could see we were in second place. My heart pounded as I grabbed the baton and ran with everything I had. The wind rushed past my ears. I could hear my classmates screaming my name from the stands. With ten metres to go, I was neck and neck with the boy from Class 6A. I leaned forward and crossed the finish line. For a breathless moment, nobody knew who had won. Then the announcement came: "Winner — Class 6B!" The roar from my class was deafening.',
+    questions: [
+      { q: 'What position was the narrator\'s team in before the final leg?', type: 'literal', marks: 1, model: 'The team was in second place (1m).' },
+      { q: 'How does the writer create a sense of excitement in this passage? Give two ways.', type: 'inferential', marks: 2, model: 'The writer uses short, punchy sentences like "My heart pounded" to create urgency (1m). He also uses sensory details such as "the wind rushed past my ears" and "I could hear my classmates screaming" to put the reader in the moment (1m). (Also accept: suspense — "For a breathless moment, nobody knew who had won")' }
+    ]},
+  { id: 'comp9', title: 'The Old Tree', diff: 4, wordCount: 190,
+    passage: 'The ancient rain tree at the corner of Orchard Road had stood there for over a hundred years. Its massive canopy provided shade for generations of Singaporeans. Children climbed its gnarled roots; couples had their photographs taken beneath its branches; old men played chess in its cool shadow every afternoon. When the government announced plans to widen the road, the tree was marked for removal. A petition started by a secondary school student gathered over fifty thousand signatures in three days. Social media erupted with the hashtag #SaveOurTree. After much deliberation, the Land Transport Authority redesigned the road expansion to curve around the tree instead. "This tree is not just wood and leaves," the student wrote in her petition. "It is a piece of our collective memory."',
+    questions: [
+      { q: 'How old is the rain tree?', type: 'literal', marks: 1, model: 'The rain tree is over a hundred years old (1m).' },
+      { q: 'Why did so many people sign the petition?', type: 'inferential', marks: 2, model: 'Many people signed because the tree held sentimental value — it was part of their shared experiences and memories across generations (1m). The passage shows people of all ages using the tree (children climbing, couples photographing, old men playing chess), suggesting it was a beloved community landmark (1m).' },
+      { q: 'What does the student mean by "a piece of our collective memory"?', type: 'evaluative', marks: 2, model: 'She means the tree is not just a plant but a symbol that connects different generations of Singaporeans through shared experiences (1m). Removing it would be like erasing a part of the community\'s history and identity (1m).' }
+    ]},
+  { id: 'comp10', title: 'The New Student', diff: 3, wordCount: 170,
+    passage: 'When Xiao Ming joined our class in Term 2, he could barely speak English. He had just arrived from China and everything about Singapore school life was unfamiliar to him. During lessons, he would stare blankly at the whiteboard. At recess, he sat alone. One day, our teacher paired him with me for a science project. At first, communication was difficult. He would draw pictures to explain his ideas. Slowly, I realised he was actually brilliant at science — he just could not express it in English yet. I started teaching him simple phrases during our project meetings. By the end of term, Xiao Ming scored the highest in our science test. He stood up and said, carefully but clearly, "Thank you, everyone, for helping me." The whole class cheered.',
+    questions: [
+      { q: 'What were Xiao Ming\'s two main challenges when he first arrived?', type: 'literal', marks: 2, model: 'His two main challenges were that he could barely speak English (1m) and everything about Singapore school life was unfamiliar to him (1m).' },
+      { q: 'How did the narrator discover that Xiao Ming was good at science?', type: 'inferential', marks: 2, model: 'The narrator discovered this when they were paired for a science project. Although Xiao Ming could not express ideas in English, he drew pictures to explain them (1m), which showed the narrator that he had strong scientific understanding despite the language barrier (1m).' },
+      { q: 'What message does this story convey about judging others?', type: 'evaluative', marks: 2, model: 'The story conveys that we should not judge people\'s intelligence or abilities based on their language skills alone (1m). Someone who struggles with English may still be extremely capable in other areas, and with patience and support, they can overcome the language barrier (1m).' }
+    ]}
+];
+
+window.COMP_OE_PASSAGES = COMP_OE_PASSAGES;
 
 // v18.40: PSLE 高华阅读理解题库 (新加坡 PSLE 高级华文 Paper 2 风格)
 const CHINESE_READING = [
@@ -4197,7 +4323,59 @@ const VOCAB_MEANINGS = {
   // 实验
   'experiment':'实验','observation':'观察','hypothesis':'假设','conclusion':'结论','variable':'变量',
   'control':'对照','fair test':'公平实验','prediction':'预测',
-  'apparatus':'仪器','beaker':'烧杯','flask':'烧瓶','test tube':'试管','measuring cylinder':'量筒'
+  'apparatus':'仪器','beaker':'烧杯','flask':'烧瓶','test tube':'试管','measuring cylinder':'量筒',
+  // ====== v19.4: PSLE English 高频词汇 (Paper 2 Comprehension + Cloze + Composition) ======
+  // --- 情感/性格 (PSLE 作文高频) ---
+  'anxious':'焦虑的','enthusiastic':'热情的','reluctant':'不情愿的','determined':'坚定的','compassionate':'有同情心的',
+  'arrogant':'傲慢的','humble':'谦虚的','generous':'慷慨的','mischievous':'淘气的','obedient':'听话的',
+  'stubborn':'固执的','courageous':'勇敢的','timid':'胆小的','grateful':'感激的','devastated':'崩溃的',
+  'elated':'欣喜若狂的','furious':'暴怒的','envious':'嫉妒的','remorseful':'悔恨的','bewildered':'困惑的',
+  'indignant':'愤慨的','diligent':'勤奋的','callous':'冷酷的','jovial':'快活的','melancholy':'忧郁的',
+  'optimistic':'乐观的','pessimistic':'悲观的','resilient':'坚韧的','gullible':'轻信的','skeptical':'怀疑的',
+  // --- 动作/行为 (PSLE 高频动词) ---
+  'stumble':'绊倒','murmur':'低语','exclaim':'惊叫','hesitate':'犹豫','volunteer':'自愿','accomplish':'完成',
+  'persuade':'说服','appreciate':'感激','contemplate':'沉思','stammer':'结巴','flinch':'畏缩',
+  'embrace':'拥抱','retaliate':'报复','surrender':'投降','persevere':'坚持','accumulate':'积累',
+  'diminish':'减少','exaggerate':'夸大','intimidate':'恐吓','negotiate':'协商','procrastinate':'拖延',
+  'scrutinize':'仔细检查','trespass':'擅入','underestimate':'低估','vanish':'消失','wander':'漫步',
+  // --- 描述/修饰 (PSLE Comp 高频形容词) ---
+  'abundant':'丰富的','barren':'贫瘠的','congested':'拥挤的','desolate':'荒凉的','exquisite':'精致的',
+  'fragile':'脆弱的','gruesome':'恐怖的','hideous':'丑陋的','immense':'巨大的','jubilant':'欢欣的',
+  'keen':'敏锐的','lush':'茂盛的','meticulous':'一丝不苟的','notorious':'臭名昭著的','ominous':'不祥的',
+  'peculiar':'奇特的','quaint':'古雅的','radiant':'灿烂的','serene':'宁静的','tranquil':'平静的',
+  'unprecedented':'前所未有的','vivid':'生动的','weary':'疲惫的','zealous':'热心的','bleak':'凄凉的',
+  'colossal':'巨大的','drenched':'湿透的','eerie':'诡异的','feeble':'虚弱的','hostile':'敌对的',
+  // --- PSLE Cloze 高频 (介词搭配/短语) ---
+  'in spite of':'尽管','as a result':'结果','in addition':'此外','on the other hand':'另一方面',
+  'for instance':'例如','in conclusion':'总之','prior to':'在...之前','subsequent to':'在...之后',
+  'with regard to':'关于','in the meantime':'与此同时','to a certain extent':'在某种程度上',
+  'at the expense of':'以...为代价','in the nick of time':'在最后关头','out of the blue':'突然地',
+  'once in a blue moon':'极少地','at a loss':'不知所措','beyond doubt':'毫无疑问',
+  // --- 学术/考试词汇 (PSLE 阅读理解) ---
+  'consequence':'后果','contribute':'贡献','demonstrate':'证明','eliminate':'消除','emphasize':'强调',
+  'fundamental':'基本的','generate':'产生','illustrate':'说明','interpret':'解释','justify':'证明合理',
+  'maintain':'维持','phenomenon':'现象','principal':'主要的/校长','significant':'重要的','tendency':'趋势',
+  'ultimately':'最终','valid':'有效的','abandon':'放弃','benefit':'利益','circumstance':'情况',
+  'decade':'十年','emerge':'出现','enormous':'巨大的','inevitable':'不可避免的','initiative':'主动性',
+  'merely':'仅仅','obvious':'明显的','potential':'潜力','remarkable':'非凡的','sustain':'维持',
+  // --- 五感描写 (PSLE 作文加分词) ---
+  'aroma':'香气','fragrance':'芬芳','stench':'恶臭','pungent':'刺鼻的','sizzle':'嘶嘶声',
+  'clamour':'喧闹','din':'嘈杂','hustle and bustle':'喧嚣','deafening':'震耳欲聋的','piercing':'刺耳的',
+  'glistening':'闪烁的','crimson':'深红色','azure':'蔚蓝','silhouette':'轮廓','flicker':'闪烁',
+  'velvety':'天鹅绒般的','coarse':'粗糙的','scorching':'灼热的','frigid':'严寒的','lukewarm':'微温的',
+  // --- 惯用表达 (PSLE 作文 idioms/phrases) ---
+  'dawn upon':'恍然大悟','at the top of one\'s lungs':'声嘶力竭地','butterflies in stomach':'紧张不安',
+  'turn over a new leaf':'改过自新','a blessing in disguise':'塞翁失马','beat around the bush':'拐弯抹角',
+  'burn the midnight oil':'开夜车','keep one\'s fingers crossed':'祈求好运','see eye to eye':'意见一致',
+  'once bitten twice shy':'一朝被蛇咬','the last straw':'忍无可忍','a drop in the ocean':'九牛一毛',
+  'actions speak louder than words':'行胜于言','every cloud has a silver lining':'黑暗中总有光明',
+  // --- 连接词/过渡词 (PSLE Cloze + Comp 必备) ---
+  'nevertheless':'然而','furthermore':'此外','consequently':'因此','meanwhile':'与此同时',
+  'subsequently':'随后','moreover':'而且','henceforth':'从此以后','notwithstanding':'尽管如此',
+  'alternatively':'或者','conversely':'相反地','likewise':'同样地','nonetheless':'然而',
+  // --- 新加坡生活词汇 (PSLE 本土化) ---
+  'hawker centre':'小贩中心','void deck':'组屋底层','HDB':'组屋','kampong':'甘榜/村庄','mamak':'嘛嘛档',
+  'MRT':'地铁','kopitiam':'咖啡店','kiasu':'怕输','singlish':'新加坡式英语','durian':'榴莲'
 };
 
 // 给一个英文词返回中文 (找不到返回 word 本身)

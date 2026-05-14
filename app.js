@@ -3411,7 +3411,9 @@ function openKnowledgeNodeDetail(subj, idx) {
     editing: { name: '🔍 Editing 找错', open: 'openEditingGame()' },
     vocab:   { name: '📚 词汇连连看', open: `openVocabGame(${state.currentWeek})` },
     listen:  { name: '🎧 听写练习', open: 'openListenGame()' },
-    scilab:  { name: '🔬 科学快分类', open: 'openSciClassifyGame()' }
+    scilab:  { name: '🔬 科学快分类', open: 'openSciClassifyGame()' },
+    sst:     { name: '🔄 SST 句型转换', open: 'openSstGame()' },
+    comp_oe: { name: '📖 阅读理解 OE', open: 'openCompOeGame()' }
   };
   const g = GAME_INFO[node.game];
   const examplesHtml = (node.examples || []).map(e => `<li>${escapeHtml(e)}</li>`).join('');
@@ -7062,3 +7064,105 @@ window.requireAdminAuth = requireAdminAuth;
 window.resetAdminPassword = resetAdminPassword;
 window.clearAdminAuth = clearAdminAuth;
 window.isAdminAuthed = isAdminAuthed;
+
+// ============ v19.4: Comprehension OE 训练 ============
+let _compOeState = null;
+function openCompOeGame() {
+  const passages = window.COMP_OE_PASSAGES;
+  if (!passages || passages.length === 0) { showToast('暂无阅读材料', 'warn'); return; }
+  const diff = window.getDifficulty ? window.getDifficulty(state, 'comp_oe') : 3;
+  const pool = passages.filter(p => p.diff <= diff + 1 && p.diff >= diff - 1);
+  const chosen = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : passages[0];
+  _compOeState = { passage: chosen, qIdx: 0, scores: [], revealed: [] };
+  _renderCompOe();
+}
+function _renderCompOe() {
+  const g = _compOeState;
+  if (!g) return;
+  let modal = document.getElementById('compOeModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'compOeModal';
+    modal.className = 'mb-result-modal';
+    document.body.appendChild(modal);
+  }
+  const p = g.passage;
+  const q = p.questions[g.qIdx];
+  const totalQ = p.questions.length;
+  const isRevealed = g.revealed[g.qIdx];
+  const typeLabel = q.type === 'literal' ? '📖 Literal' : q.type === 'inferential' ? '🧠 Inferential' : '💭 Evaluative';
+  const passageHtml = g.qIdx === 0 ? `<div class="comp-passage">${escapeHtml(p.passage)}</div>` : `<div class="comp-passage-mini">📄 <em>${escapeHtml(p.title)}</em> (scroll up if needed)</div>`;
+  modal.innerHTML = `
+    <div class="mg-inner comp-oe-inner">
+      <div class="mg-stats">📖 Comprehension OE · ${p.title} · Q${g.qIdx+1}/${totalQ}</div>
+      ${g.qIdx === 0 ? `<div class="comp-passage">${escapeHtml(p.passage)}</div>` : ''}
+      <div class="comp-q-box">
+        <div class="comp-type">${typeLabel} · ${q.marks} mark${q.marks > 1 ? 's' : ''}</div>
+        <div class="comp-q">${escapeHtml(q.q)}</div>
+      </div>
+      ${isRevealed ? `
+        <div class="comp-model">
+          <div class="comp-model-label">✅ Model Answer:</div>
+          <div class="comp-model-text">${escapeHtml(q.model)}</div>
+          <div class="comp-self-score">你答对了多少?
+            <button onclick="compOeScore(0)">❌ 0分</button>
+            <button onclick="compOeScore(1)">⚠️ 1分</button>
+            ${q.marks >= 2 ? '<button onclick="compOeScore(2)">✅ 2分</button>' : ''}
+          </div>
+        </div>` : `
+        <div class="comp-think">💡 先在脑中组织答案, 再点击查看 Model Answer</div>
+        <button class="comp-reveal-btn" onclick="compOeReveal()">查看 Model Answer</button>
+      `}
+      <button class="vocab-modal-close mg-close" onclick="closeCompOe()">×</button>
+    </div>`;
+  modal.classList.add('show');
+}
+function compOeReveal() {
+  if (!_compOeState) return;
+  _compOeState.revealed[_compOeState.qIdx] = true;
+  _renderCompOe();
+}
+function compOeScore(score) {
+  const g = _compOeState;
+  if (!g) return;
+  g.scores[g.qIdx] = score;
+  g.qIdx++;
+  if (g.qIdx >= g.passage.questions.length) {
+    _finishCompOe();
+  } else {
+    _renderCompOe();
+  }
+}
+function _finishCompOe() {
+  const g = _compOeState;
+  const total = g.scores.reduce((a, b) => a + b, 0);
+  const max = g.passage.questions.reduce((a, q) => a + q.marks, 0);
+  const pct = Math.round(total / max * 100);
+  const pts = Math.round(pct / 10);
+  state.totalPoints = (state.totalPoints || 0) + pts;
+  if (window.recordGameRun) window.recordGameRun(state, 'comp_oe', total, max);
+  saveState(state);
+  const modal = document.getElementById('compOeModal');
+  if (modal) {
+    modal.innerHTML = `
+      <div class="mg-inner comp-oe-inner">
+        <div class="mg-stats">📖 Comprehension OE · 完成!</div>
+        <div class="comp-result">
+          <div class="comp-result-score">${total}/${max} marks · ${pct}%</div>
+          <div class="comp-result-pts">+${pts} 积分</div>
+          <div class="comp-result-tip">${pct >= 80 ? '🌟 优秀! 继续保持!' : pct >= 50 ? '👍 不错! 注意 model answer 的关键词' : '💪 加油! 多练 PEEL 答题模板'}</div>
+        </div>
+        <button class="game-hub-btn" onclick="closeCompOe()">关闭</button>
+      </div>`;
+  }
+  renderAll();
+}
+function closeCompOe() {
+  const m = document.getElementById('compOeModal');
+  if (m) { m.classList.remove('show'); m.innerHTML = ''; }
+  _compOeState = null;
+}
+window.openCompOeGame = openCompOeGame;
+window.compOeReveal = compOeReveal;
+window.compOeScore = compOeScore;
+window.closeCompOe = closeCompOe;
