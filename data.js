@@ -6066,12 +6066,13 @@ function onFbStatusChange(cb) { _fbStatusListener = cb; }
 
 // 订阅 Firestore 远端变化(其它设备改动会触发)
 var _localWritePending = false;
+var _lastSaveTs = 0;
 function subscribeFirestore(onUpdate) {
   if (!_fbReady || !_fbDoc) return null;
   return _fbDoc.onSnapshot(
     snap => {
       if (snap.metadata.hasPendingWrites) return;
-      if (_localWritePending) return;
+      if (_localWritePending || Date.now() - _lastSaveTs < 5000) return;
       if (snap.exists) {
         try { onUpdate(snap.data()); } catch (e) { console.warn(e); }
       }
@@ -6161,6 +6162,7 @@ function saveState(state, options) {
     state.logs = state.logs.slice(-1000);
   }
   _localWritePending = true;
+  _lastSaveTs = Date.now();
   let ok = true;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));

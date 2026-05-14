@@ -110,11 +110,6 @@ async function init() {
       if (!remoteState.daily) remoteState.daily = {};
       if (!remoteState.scores) remoteState.scores = {};
       recalcTotalPoints(remoteState);
-      // v18.86 防回退: 云端积分比本地少时, 保留本地并重推云端
-      if (remoteState.totalPoints < (state.totalPoints || 0)) {
-        saveState(state);
-        return;
-      }
       state = remoteState;
       renderAll();
       showToast('☁️ 已收到远程更新', 'sync');
