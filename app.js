@@ -2746,6 +2746,9 @@ function renderGameHubCard() {
     <div class="game-hub-title">⚔️ 每日挑战 · ${_GAME_LABELS_HUB[gameType]}</div>
     <div class="game-hub-sub">${_GAME_SUBJECTS[gameType]}重点 · 难度 Lv${diff} · ${rewardLabel}</div>
     <button class="game-hub-btn" onclick="startDailyGame()">开始挑战!</button>
+    <div style="margin-top:8px;text-align:center">
+      <a href="javascript:void(0)" onclick="openMiniGameHub()" style="font-size:12px;color:var(--color-primary)">🎮 所有游戏大厅 (12 种 mini-game)</a>
+    </div>
   </div>`;
 }
 
