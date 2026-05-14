@@ -2737,29 +2737,20 @@ function renderGameHubCard() {
     else return;
   }
   const gameType = getTodayGameType();
-  const played = state.gameDailyCount || 0;
-  const max = 2;
   const diff = (state.gameStats && state.gameStats[gameType]) ? state.gameStats[gameType].difficulty : 4;
+  const count = _getDailyGameCount(gameType);
+  const rewardLabel = count === 0 ? '🎯 满奖' : '🔄 练习模式';
 
-  if (played >= max) {
-    el.innerHTML = `<div class="game-hub-card exhausted">
-      <div class="game-hub-title">✅ 今日挑战已完成!</div>
-      <div class="game-hub-sub">明天再来 · 已玩 ${played}/${max} 局</div>
-    </div>`;
-  } else {
-    el.innerHTML = `<div class="game-hub-card">
-      <div class="game-hub-title">⚔️ 每日挑战 · ${_GAME_LABELS_HUB[gameType]}</div>
-      <div class="game-hub-sub">${_GAME_SUBJECTS[gameType]}重点 · 难度 Lv${diff} · 剩余 ${max - played}/${max} 局</div>
-      <button class="game-hub-btn" onclick="startDailyGame()">开始挑战!</button>
-    </div>`;
-  }
+  el.innerHTML = `<div class="game-hub-card">
+    <div class="game-hub-title">⚔️ 每日挑战 · ${_GAME_LABELS_HUB[gameType]}</div>
+    <div class="game-hub-sub">${_GAME_SUBJECTS[gameType]}重点 · 难度 Lv${diff} · ${rewardLabel}</div>
+    <button class="game-hub-btn" onclick="startDailyGame()">开始挑战!</button>
+  </div>`;
 }
 
 function startDailyGame() {
-  const played = state.gameDailyCount || 0;
-  if (played >= 2) { showToast('⏳ 今日 2 局已用完，明天再来!', 'warn'); return; }
   const gameType = getTodayGameType();
-  state.gameDailyCount = played + 1;
+  _bumpDailyGameCount(gameType);
   saveState(state);
   switch (gameType) {
     case 'grammar': openGrammarGame(); break;
@@ -3147,7 +3138,7 @@ function _bumpScoreNumber() {
 function _getDailyGameCount(gameKey) {
   const today = new Date().toISOString().slice(0, 10);
   if (!state.gameDailyCount || state.gameDailyCount.date !== today) {
-    state.gameDailyCount = { date: today, counts: { vocab: 0, math: 0, editing: 0, listen: 0, unit: 0, grammar: 0, cloze: 0, scilab: 0 } };
+    state.gameDailyCount = { date: today, counts: { vocab: 0, math: 0, editing: 0, listen: 0, unit: 0, grammar: 0, cloze: 0, scilab: 0, sst: 0, comp_oe: 0, scimcq: 0, chinese: 0 } };
   }
   return state.gameDailyCount.counts[gameKey] || 0;
 }
@@ -3156,20 +3147,16 @@ function _bumpDailyGameCount(gameKey) {
   state.gameDailyCount.counts[gameKey] = (state.gameDailyCount.counts[gameKey] || 0) + 1;
   return state.gameDailyCount.counts[gameKey];
 }
-// v18.38: 每 game 每天 1 次, 都满奖, 第 2 次锁定
+// v19.4: 第 1 次满奖, 之后 0 分但可继续练习
 function _getGameMultiplier(playNum) {
   return playNum === 1 ? 1 : 0;
 }
 function _getMultiplierLabel(playNum) {
-  return playNum === 1 ? '满奖 100%' : '🔒 已玩 (明日再来)';
+  return playNum === 1 ? '满奖 100%' : '练习模式 (不计分)';
 }
 // 检查游戏是否可玩, 不可玩则弹提示并返回 false
 function _checkGameDailyLock(gameKey) {
-  const count = _getDailyGameCount(gameKey);
-  if (count >= 1) {
-    showToast(`🔒 今日已玩 ${gameKey} — 换个游戏试试! 8 游戏每天各 1 次`, 'warn');
-    return false;
-  }
+  // v19.4: 取消锁定, 允许无限练习 (第 2 次起不给积分, 但能玩)
   return true;
 }
 
@@ -4683,7 +4670,7 @@ function openMiniGameHub() {
   const status = (k) => {
     const c = _getDailyGameCount(k);
     const d = window.getDifficulty ? window.getDifficulty(state, k) : 1;
-    const lockState = c >= 1 ? '<span class="mgh-lock">🔒 今日已玩</span>' : '<span class="mgh-ready">▶ 可玩 (满奖)</span>';
+    const lockState = c >= 1 ? '<span class="mgh-lock">🔄 练习模式</span>' : '<span class="mgh-ready">▶ 可玩 (满奖)</span>';
     return `<div class="mgh-status">难度 <b>${stars(d)}</b> · ${lockState}</div>`;
   };
   modal.innerHTML = `
@@ -4692,7 +4679,7 @@ function openMiniGameHub() {
         <span class="mgh-title">🎮 Mini-game 大厅</span>
         <button class="vocab-modal-close" onclick="closeMiniGameHub()">×</button>
       </div>
-      <div class="mgh-rules">⚠️ 防沉迷: <b>每 game 每天 1 次, 满奖, 第 2 次锁定</b> · 10 game 全玩 ≈ 25-30 min</div>
+      <div class="mgh-rules">📋 每 game 第 1 次满奖, 之后可继续练但不计分 · 想练多少练多少!</div>
       <div class="mgh-grid">
         <button class="mgh-game" onclick="closeMiniGameHub(); openVocabGame(${state.currentWeek})">
           📚<br><b>词汇连连看</b><br><small>6×6 配对</small>${status('vocab')}
@@ -4723,6 +4710,12 @@ function openMiniGameHub() {
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openSciClassifyGame()">
           🔬<br><b>科学快分类</b><br><small>拖项到正确类</small>${status('scilab')}
+        </button>
+        <button class="mgh-game" onclick="closeMiniGameHub(); openSstGame()">
+          🔄<br><b>SST 句型转换</b><br><small>10 题变换</small>${status('sst')}
+        </button>
+        <button class="mgh-game" onclick="closeMiniGameHub(); openCompOeGame()">
+          📖<br><b>阅读理解 OE</b><br><small>读文+自评</small>${status('comp_oe')}
         </button>
       </div>
     </div>
