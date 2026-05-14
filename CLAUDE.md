@@ -132,18 +132,43 @@ chamui-psle/
 python build.py && node qa_check.js   # 149 必过
 
 # 本地预览 (preview server already running on :8766)
-# Firebase: https://chamui-psle.web.app
-# GitHub Pages: https://markdao86-design.github.io/chamui-psle/
+# Firebase: https://chamui-psle.web.app  ← 用户实际访问地址!
+# GitHub Pages: https://markdao86-design.github.io/chamui-psle/ (备份)
 ```
+
+### ⚠️ 部署铁律 (每次改动必须全做)
+
+```bash
+# 1. QA
+node qa_check.js
+
+# 2. Build
+python build.py
+
+# 3. 更新 cache buster (index.html 底部 script 标签 ?v=X 递增!)
+#    不改版本号 = 用户浏览器继续用旧缓存 = 等于没部署
+
+# 4. Commit + Push
+git add . && git commit -m "..." && git push origin master
+
+# 5. Firebase Deploy (关键! 只 push 不 deploy = 用户看不到!)
+npx firebase deploy --only hosting
+
+# 6. 验证线上
+curl -s "https://chamui-psle.web.app/app.js?v=VERSION" | grep "关键文本"
+```
+
+**绝不能省的步骤**: cache buster 递增 + firebase deploy + curl 验证
+**用户地址**: https://chamui-psle.web.app (不是 GitHub Pages!)
 
 ---
 
-## 7. 当前规模 (v18.62b)
+## 7. 当前规模 (v19.4f)
 
-- **装备 61 件** (34 points + 10 milestone + 8 streak-days + 3 ⭐ + 3 game-runs + ...)
-- **成就 49 个** (含 15 个周次里程碑)
-- **皮肤 6 套** / **宠物 7 阶 + 金龙幼崽** (v18.60 新加)
-- **Mini-game 题库**: Math 65 / Grammar 40 / Cloze 33 / Vocab 150+ / Listen 16 / Editing 25 / SciLab 53 / Unit 50
+- **装备 69 件** (39 points + 10 milestone + 8 streak-days + 3 ⭐ + 3 game-runs + 3 week + 2 monthly + 1 streak)
+- **成就 60 个** (含周次里程碑)
+- **皮肤 6 套** / **宠物 12 阶 + 高达伙伴** (v19.1 双宠物)
+- **Mini-game 12 种**: Grammar 195 / Cloze 136 / SST 65 / Math 75 / Editing 61 / Vocab 61 / SciMCQ 70 / Chinese 40 / Listen 16 / SciClassify 10 / Unit 45 / CompOE 20篇
 - **知识树**: 35 节点 × 3 题 = 105 道 PSLE 风练习
 - **73 周作文**: 73 个 prompt
 - **QA**: 149 断言
@@ -153,10 +178,9 @@ python build.py && node qa_check.js   # 149 必过
 ## 8. 当前未做 TODO
 
 1. **错题本扩展** 到 vocab/listen/editing/scilab (v18.59 仅 hook 了 4 个 MCQ + math)
-2. **P3 周次里程碑装备** (W30/W36/W50 加 3 件 — 让"光打卡也能拿装备")
-3. **每日登录 +5 分 bonus** (持续小奖励)
-4. **季节事件** (PSLE 100 天倒计时装备 / 假期主题)
-5. **错题本分类筛选** (只复习数学/只复习语法等)
+2. **每日登录 +5 分 bonus** (持续小奖励)
+3. **季节事件** (PSLE 100 天倒计时装备 / 假期主题)
+4. **错题本分类筛选** (只复习数学/只复习语法等)
 
 ---
 
@@ -165,9 +189,11 @@ python build.py && node qa_check.js   # 149 必过
 - 中文为主, 技术词英文
 - **直接给方案 + 量化对比**, 不要太多铺垫
 - **"先验证再改"**: 大改前用 Agent 跑一遍 (避免误删 / 答案错)
-- **commit 信息要详细**: 写明 v18.XX + 痛点 + 量化效果
+- **commit 信息要详细**: 写明 vXX.XX + 痛点 + 量化效果
 - 不要 sycophancy, 用户嫌"看不懂"或"不够炫酷"时直接重做
-- **deploy.sh 已自动 git push**, 无需额外 push
+- **需求有歧义时先问, 不要自己猜**
+- **不要只跑 assert 就宣布 QA 通过** — 必须 curl 线上验证 + 考虑用户真实状态
+- **每次改动必须 firebase deploy** — git push ≠ 部署!
 
 ---
 
