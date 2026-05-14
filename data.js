@@ -1625,6 +1625,33 @@ function _accToALNum(pct) {
 }
 window.predictOverallAL = predictOverallAL;
 
+// v19.4: 模考分→AL 转换 (基于 PSLE 真实 AL 分段)
+function scoreToAL(score) {
+  if (score >= 90) return 1;
+  if (score >= 85) return 2;
+  if (score >= 80) return 3;
+  if (score >= 75) return 4;
+  if (score >= 65) return 5;
+  if (score >= 45) return 6;
+  if (score >= 20) return 7;
+  return 8;
+}
+function getMockExamSummary(state) {
+  const exams = state.mockExams || [];
+  if (exams.length === 0) return null;
+  const latest = exams[exams.length - 1];
+  const alEng = scoreToAL(latest.eng || 0);
+  const alMath = scoreToAL(latest.math || 0);
+  const alSci = scoreToAL(latest.sci || 0);
+  const alChi = scoreToAL(latest.chi || 0);
+  const totalAL = alEng + alMath + alSci + alChi;
+  const first = exams[0];
+  const firstTotal = scoreToAL(first.eng||0) + scoreToAL(first.math||0) + scoreToAL(first.sci||0) + scoreToAL(first.chi||0);
+  return { latest, alEng, alMath, alSci, alChi, totalAL, improvement: firstTotal - totalAL, count: exams.length };
+}
+window.scoreToAL = scoreToAL;
+window.getMockExamSummary = getMockExamSummary;
+
 // ============= v18.59: 错题本 (Error Bank) =============
 // 知识树/mini-game 答错的题自动入库, 反复练直到答对清空
 function addToErrorBank(state, item) {
@@ -2098,8 +2125,22 @@ function _sampleByDiff(pool, diff, n) {
 
   // 排除已掌握的题
   const available = pool.filter((_, i) => !mastered.has(i));
-  // 如果全部掌握则重置(重新出所有题)
-  const effectivePool = available.length >= n ? available : pool;
+  // v19.4: 全部掌握时生成错题变体 (换干扰项顺序 + 标 _variant)
+  let effectivePool;
+  if (available.length >= n) {
+    effectivePool = available;
+  } else {
+    // 生成变体: 对错题本优先, 否则对全 pool 洗选项
+    const wrongPool = (typeof state !== 'undefined' && state.wrongAnswers) ?
+      pool.filter((q, i) => state.wrongAnswers.some(wa => wa.gameKey === poolKey && wa.qIndex === i)) : [];
+    const variantBase = wrongPool.length >= n ? wrongPool : pool;
+    effectivePool = variantBase.map(q => {
+      if (!q.opts) return q;
+      const newOpts = [...q.opts].sort(() => Math.random() - 0.5);
+      const newAns = newOpts.indexOf(q.opts[q.ans]);
+      return Object.assign({}, q, { opts: newOpts, ans: newAns, _variant: true });
+    });
+  }
 
   const main = effectivePool.filter(p => p.diff === diff);
   const near = effectivePool.filter(p => Math.abs(p.diff - diff) === 1);
@@ -3150,6 +3191,76 @@ const COMP_OE_PASSAGES = [
       { q: 'What were Xiao Ming\'s two main challenges when he first arrived?', type: 'literal', marks: 2, model: 'His two main challenges were that he could barely speak English (1m) and everything about Singapore school life was unfamiliar to him (1m).' },
       { q: 'How did the narrator discover that Xiao Ming was good at science?', type: 'inferential', marks: 2, model: 'The narrator discovered this when they were paired for a science project. Although Xiao Ming could not express ideas in English, he drew pictures to explain them (1m), which showed the narrator that he had strong scientific understanding despite the language barrier (1m).' },
       { q: 'What message does this story convey about judging others?', type: 'evaluative', marks: 2, model: 'The story conveys that we should not judge people\'s intelligence or abilities based on their language skills alone (1m). Someone who struggles with English may still be extremely capable in other areas, and with patience and support, they can overcome the language barrier (1m).' }
+    ]},
+  // ====== v19.4d: Comp OE 扩充 10 篇 (总计 20 篇) ======
+  { id: 'comp11', title: 'The Charity Run', diff: 3, wordCount: 170,
+    passage: 'Our school organised a charity run to raise funds for the Children\'s Cancer Foundation. Each student had to find sponsors who would donate based on the number of laps completed. I managed to get five sponsors, including my grandmother who promised ten dollars per lap. On the day of the run, the sun was blazing. By the fifth lap, my legs felt like jelly. I wanted to give up. Then I thought of the children in hospital who could not even run. I pushed through the pain and completed eight laps. When I told my grandmother, she was so proud that she doubled her donation. Together, our school raised over fifteen thousand dollars.',
+    questions: [
+      { q: 'What was the purpose of the charity run?', type: 'literal', marks: 1, model: 'The purpose was to raise funds for the Children\'s Cancer Foundation (1m).' },
+      { q: 'What motivated the narrator to keep running despite wanting to give up?', type: 'inferential', marks: 2, model: 'The narrator thought of the children in hospital who could not even run (1m). This made the narrator feel that their own discomfort was small compared to what sick children faced, giving them the determination to push through (1m).' },
+      { q: 'Why do you think the grandmother doubled her donation?', type: 'evaluative', marks: 2, model: 'The grandmother was proud of the narrator\'s perseverance and effort in completing eight laps despite the heat (1m). By doubling her donation, she was rewarding the narrator\'s determination and showing that she valued effort over just results (1m).' }
+    ]},
+  { id: 'comp12', title: 'The Stray Cat', diff: 4, wordCount: 190,
+    passage: 'A thin ginger cat had been appearing at our void deck every evening for a week. Its ribs were visible beneath matted fur, and it flinched at every loud noise. My sister and I started leaving food and water for it. Gradually, it began to trust us, allowing us to stroke its head. We named it Marmalade. When we asked our parents if we could keep it, they hesitated. "Who will clean the litter box? Who will take it to the vet?" Dad asked. We made a written contract promising to share all responsibilities. Two months later, Marmalade is a healthy, playful cat who greets us at the door every day. Dad, who was the most reluctant, is now the one who sneaks Marmalade extra treats when he thinks nobody is watching.',
+    questions: [
+      { q: 'How do we know the cat was in poor condition when first found?', type: 'literal', marks: 2, model: 'The cat was thin with its ribs visible beneath matted fur (1m). It also flinched at every loud noise, suggesting it was frightened and possibly mistreated before (1m).' },
+      { q: 'Why did the children make a "written contract"?', type: 'inferential', marks: 2, model: 'They made a written contract to show their parents they were serious and responsible enough to care for a pet (1m). It addressed their parents\' concerns about who would do the work by formally committing to share responsibilities (1m).' },
+      { q: 'What is ironic about the ending?', type: 'evaluative', marks: 2, model: 'It is ironic that Dad, who was the most reluctant to keep the cat and questioned whether the children would be responsible, has now become the most attached (1m). He sneaks the cat extra treats, showing that despite his initial resistance, he has grown to love Marmalade the most (1m).' }
+    ]},
+  { id: 'comp13', title: 'Water Conservation', diff: 4, wordCount: 200,
+    passage: 'Singapore imports much of its water from Malaysia under an agreement that expires in 2061. To reduce this dependency, PUB has invested heavily in four "National Taps": local catchment, imported water, NEWater (recycled water), and desalination. Schools play a crucial role in water conservation education. At Riverside Primary, students monitor the school\'s daily water usage displayed on a digital dashboard. "When the students see the numbers go up after someone leaves a tap running, they become water ambassadors themselves," explains the principal. Despite these efforts, Singapore\'s per capita water consumption remains at 141 litres per day — higher than the PUB target of 130 litres by 2030. Experts warn that with climate change making rainfall patterns more unpredictable, every drop saved today is an investment in tomorrow\'s security.',
+    questions: [
+      { q: 'Name two of Singapore\'s four "National Taps".', type: 'literal', marks: 1, model: 'Any two of: local catchment, imported water, NEWater (recycled water), desalination (1m for naming 2).' },
+      { q: 'How does the digital dashboard help students learn about water conservation?', type: 'inferential', marks: 2, model: 'The dashboard shows real-time water usage, so when students see the numbers increase (e.g., after a tap is left running), they understand the immediate impact of waste (1m). This visual, concrete feedback turns abstract conservation messages into something personal and actionable (1m).' },
+      { q: 'Why does the writer call saving water "an investment in tomorrow\'s security"?', type: 'evaluative', marks: 2, model: 'Because climate change is making rainfall unpredictable, meaning Singapore cannot rely on nature alone for water supply (1m). Every litre saved now reduces future dependency on expensive alternatives like desalination and protects against potential water shortages (1m).' }
+    ]},
+  { id: 'comp14', title: 'The Piano Recital', diff: 3, wordCount: 160,
+    passage: 'My fingers trembled as I walked onto the stage. Three hundred people sat in the audience, including my piano teacher Mrs Wong, who had prepared me for this moment over two years. The lights were blinding. I sat down, placed my hands on the keys, and froze. My mind went completely blank — I could not remember the first note. The silence felt eternal. Then Mrs Wong\'s voice echoed in my head: "If you forget, just breathe and listen to the music inside you." I closed my eyes, took a deep breath, and my fingers found the keys on their own. The melody of Chopin\'s Nocturne flowed through me. When I finished, the applause was thunderous. But the proudest face in the crowd was Mrs Wong\'s.',
+    questions: [
+      { q: 'What happened when the narrator first sat at the piano?', type: 'literal', marks: 1, model: 'The narrator froze and could not remember the first note — their mind went completely blank (1m).' },
+      { q: 'How did Mrs Wong\'s advice help the narrator?', type: 'inferential', marks: 2, model: 'Her advice to "breathe and listen to the music inside you" helped the narrator relax and stop panicking (1m). By closing their eyes and breathing, the narrator let muscle memory take over, and their fingers found the keys automatically without conscious recall (1m).' }
+    ]},
+  { id: 'comp15', title: 'The Food Waste Problem', diff: 5, wordCount: 210,
+    passage: 'Singapore generates approximately 744,000 tonnes of food waste annually — enough to fill over 1,000 Olympic swimming pools. While some of this is unavoidable (bones, shells), studies suggest that up to 40% is perfectly edible food discarded due to cosmetic imperfections, over-ordering, or expiry date confusion. "Best before" dates indicate quality, not safety, yet most consumers throw food away the moment this date passes. Social enterprise "SG Food Rescue" redistributes surplus food from hotels and supermarkets to low-income families. Volunteer driver Mr Raj makes three trips daily: "Sometimes I collect enough food for two hundred families from just one hotel buffet. It breaks my heart to think this was headed for the bin." The government\'s "30 by 30" goal — producing 30% of nutritional needs locally by 2030 — will only succeed if consumption habits change alongside production capacity.',
+    questions: [
+      { q: 'How much food waste does Singapore generate each year?', type: 'literal', marks: 1, model: 'Singapore generates approximately 744,000 tonnes of food waste annually (1m).' },
+      { q: 'What is the difference between "best before" and actual food safety?', type: 'inferential', marks: 2, model: '"Best before" dates indicate the period during which food is at its peak quality (taste, texture), not when it becomes unsafe to eat (1m). Many consumers mistakenly believe food is dangerous after this date and throw it away, when in reality it may still be perfectly safe to consume (1m).' },
+      { q: 'Why does the writer say "30 by 30" will only succeed if consumption habits change?', type: 'evaluative', marks: 2, model: 'Because even if Singapore produces more food locally, it will not solve the problem if people continue to waste 40% of edible food (1m). Producing more without reducing waste is inefficient — the real solution requires both increasing supply and decreasing wasteful consumption (1m).' }
+    ]},
+  { id: 'comp16', title: 'Grandfather\'s Lesson', diff: 3, wordCount: 170,
+    passage: 'Every Sunday, my grandfather takes me fishing at Bedok Reservoir. We never catch much — sometimes nothing at all. My friends think it is boring. "Why don\'t you just buy fish from the market?" they ask. But fishing with Grandfather is not about the fish. It is about the stories he tells while we wait — stories of growing up in a kampong, of catching real fish in rivers that no longer exist. It is about learning patience, about sitting still in a world that never stops moving. Last Sunday, after three hours without a single bite, Grandfather smiled and said, "The best things in life cannot be rushed." I think he was not talking about fishing anymore.',
+    questions: [
+      { q: 'Where does the narrator go fishing with his grandfather?', type: 'literal', marks: 1, model: 'They go fishing at Bedok Reservoir (1m).' },
+      { q: 'Why does the narrator continue fishing despite never catching much?', type: 'inferential', marks: 2, model: 'The narrator values the time spent with grandfather — hearing stories about his past and learning life lessons like patience (1m). The activity itself is less important than the bonding and wisdom shared between them (1m).' },
+      { q: 'What do you think the grandfather meant by "The best things in life cannot be rushed"?', type: 'evaluative', marks: 2, model: 'He likely meant that important things like relationships, personal growth, and wisdom take time to develop and cannot be achieved quickly (1m). Just as fishing requires patience, life\'s most meaningful achievements — like the bond between grandfather and grandchild — grow slowly through consistent effort and presence (1m).' }
+    ]},
+  { id: 'comp17', title: 'The Group Project', diff: 4, wordCount: 190,
+    passage: 'We were assigned a group project on Singapore\'s biodiversity. I was grouped with three classmates: Mei Ling, who was hardworking; Ravi, who was creative; and Jason, who did nothing. While Mei Ling researched and I compiled the data, Jason claimed he was "too busy" with CCA. The deadline approached and his slides were still empty. Mei Ling wanted to report him. I suggested we talk to him first. When we did, Jason broke down. His parents were going through a divorce and he could barely concentrate on anything. We divided his portion among ourselves and told the teacher only that "everyone contributed." Jason never forgot our kindness. The following term, when I was hospitalised with dengue, Jason visited every day and brought all my missed homework with detailed notes.',
+    questions: [
+      { q: 'What was Jason\'s reason for not contributing to the project?', type: 'literal', marks: 1, model: 'His parents were going through a divorce and he could barely concentrate on anything (1m).' },
+      { q: 'Why did the narrator suggest talking to Jason first instead of reporting him?', type: 'inferential', marks: 2, model: 'The narrator showed empathy by wanting to understand Jason\'s situation before judging him (1m). Rather than assuming Jason was lazy, the narrator gave him a chance to explain, which revealed that Jason was going through a difficult personal crisis (1m).' },
+      { q: 'What does Jason\'s behaviour in the following term show about the impact of kindness?', type: 'evaluative', marks: 2, model: 'It shows that kindness creates lasting bonds and inspires people to pay it forward (1m). Because the group showed compassion during Jason\'s difficult time, he felt genuine gratitude and willingly went out of his way to support the narrator when they were in need (1m).' }
+    ]},
+  { id: 'comp18', title: 'Digital Detox', diff: 4, wordCount: 180,
+    passage: 'Last month, our family tried a "digital detox weekend" — no phones, tablets, or computers from Friday evening to Sunday night. The first few hours were agony. I reached for my phone at least twenty times before remembering it was locked in a drawer. By Saturday morning, something shifted. We played board games, cooked together, and took a long walk at MacRitchie Reservoir. I noticed details I had never seen before: the patterns on tree bark, the sound of water flowing over rocks. My younger brother, usually glued to his iPad, built an elaborate fort out of cardboard boxes. On Sunday night, when we finally unlocked our devices, I had forty-seven notifications. None of them seemed important anymore.',
+    questions: [
+      { q: 'How long did the digital detox last?', type: 'literal', marks: 1, model: 'The digital detox lasted from Friday evening to Sunday night — one weekend (1m).' },
+      { q: 'What does the narrator mean by "something shifted" on Saturday morning?', type: 'inferential', marks: 2, model: 'It means the narrator stopped feeling anxious about not having their phone and began to enjoy being present in the moment (1m). The discomfort of disconnection was replaced by an appreciation for real-world activities and family interaction (1m).' },
+      { q: 'What is the significance of the last sentence: "None of them seemed important anymore"?', type: 'evaluative', marks: 2, model: 'It shows that the narrator gained perspective — what felt urgent and important digitally (notifications, messages) lost its significance after experiencing meaningful real-world connections (1m). This suggests that much of our phone usage is habit rather than genuine need (1m).' }
+    ]},
+  { id: 'comp19', title: 'The Dengue Crisis', diff: 5, wordCount: 200,
+    passage: 'In 2022, Singapore recorded over 32,000 dengue cases — the highest in its history. The Aedes mosquito, which thrives in tropical climates, breeds in stagnant water as shallow as a five-cent coin. Despite regular NEA inspections and heavy fines for breeding, the virus continues to surge. Scientists point to two factors: rising temperatures that accelerate mosquito reproduction, and urbanisation that creates countless hidden breeding spots in air-conditioning trays, roof gutters, and ornamental plants. Project Wolbachia, which releases male mosquitoes infected with bacteria that prevent reproduction, has shown promise in trial areas. However, Dr Tan from NUS warns: "Technology alone cannot solve this. Every resident must check their home weekly. One careless household can undo the efforts of an entire neighbourhood."',
+    questions: [
+      { q: 'How many dengue cases were recorded in Singapore in 2022?', type: 'literal', marks: 1, model: 'Over 32,000 dengue cases were recorded (1m).' },
+      { q: 'Why is urbanisation making the dengue problem worse?', type: 'inferential', marks: 2, model: 'Urbanisation creates many hidden spots where water can collect and stagnate — such as air-conditioning trays, roof gutters, and ornamental plants (1m). These are places that are difficult to inspect regularly and provide ideal breeding grounds for Aedes mosquitoes in dense residential areas (1m).' },
+      { q: 'Do you agree with Dr Tan that "one careless household can undo the efforts of an entire neighbourhood"? Explain.', type: 'evaluative', marks: 2, model: 'Yes, because mosquitoes can breed rapidly from even a tiny amount of stagnant water — a single unattended breeding spot can produce hundreds of mosquitoes that spread to neighbouring homes (1m). This means that community-wide efforts like Wolbachia or regular checks are undermined if even one household does not participate (1m).' }
+    ]},
+  { id: 'comp20', title: 'The Art Competition', diff: 3, wordCount: 170,
+    passage: 'I spent three weeks on my painting for the National Art Competition — a watercolour of the Singapore River at sunset. I was certain I would win. On results day, my name was not on the winners\' list. Instead, first prize went to a simple charcoal sketch of an old woman selling tissue paper at a hawker centre. I was furious. My painting had more technique, more colour, more detail. Then my art teacher said something I have never forgotten: "Art is not about showing what you can do. It is about making people feel something." Looking at the winning piece again, I understood. The sketch captured loneliness, dignity, and the reality of Singapore\'s elderly in a way my pretty sunset never could. That day, I stopped painting to impress and started painting to connect.',
+    questions: [
+      { q: 'What did the narrator paint for the competition?', type: 'literal', marks: 1, model: 'The narrator painted a watercolour of the Singapore River at sunset (1m).' },
+      { q: 'Why did the simple charcoal sketch win over the narrator\'s detailed painting?', type: 'inferential', marks: 2, model: 'The sketch won because it conveyed genuine emotion — loneliness and dignity of an elderly tissue seller — which resonated with viewers (1m). While the narrator\'s painting showed technical skill, it lacked the emotional depth and social meaning that makes art truly powerful (1m).' },
+      { q: 'What lesson did the narrator learn about art (and life)?', type: 'evaluative', marks: 2, model: 'The narrator learned that the purpose of art is not to display technical skill or impress others, but to create genuine human connection and evoke emotions (1m). This applies to life too — meaningful work comes from authenticity and empathy, not from showing off abilities (1m).' }
     ]}
 ];
 
@@ -4673,6 +4784,8 @@ function getDefaultState() {
     wrongAnswers: [],
     // v19.3: 照片指纹防重用
     photoHashes: {},
+    // v19.4: 模考分追踪 — [{date, eng, math, sci, chi, note}]
+    mockExams: [],
     // v18.60: 双龙觉醒状态 — null 或 { unlockedAt, totalPointsAtUnlock, ceremonyDone }
     dragonsUnlocked: { silver: null, gold: null },
     // v18.60: 当前主页宠物类型 — 'hamster' (默认) 或 'gold_dragon' (拿金龙后可切)

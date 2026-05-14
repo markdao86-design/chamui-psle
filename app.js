@@ -355,6 +355,7 @@ function renderDashboard() {
   renderDailyQuestCard();  // v17.7 Phase 3
   renderPetWidget();  // v18 Phase 5.1
   renderGameHubCard(); // v19.3: 每日挑战入口
+  renderChallengeCard(); // v19.4: 限时挑战赛 (W15-W30)
   renderAchievementWall();  // v18 Phase 5.1
   renderReviewCard();  // v18 Phase 5.3
   renderWeeklyCoach();
@@ -4979,6 +4980,9 @@ function _finishMcqGame() {
     state.logs.push({ reason: `🎮 ${g.title} ${g.correct}/10 (第 ${playNum} 次)`, points: reward, week: state.currentWeek, timestamp: Date.now() });
   }
   saveState(state);
+  // v19.4: 更新限时挑战赛进度
+  const accuracy = Math.round(g.correct / g.qs.length * 100);
+  if (window.updateChallengeProgress) window.updateChallengeProgress(g.key, accuracy);
   const modal = document.getElementById('mcqGameModal');
   modal.innerHTML = `
     <div class="mg-inner mcq-inner">
@@ -6601,6 +6605,144 @@ function _reviewNextWeek() {
 window._reviewPrevWeek = _reviewPrevWeek;
 window._reviewNextWeek = _reviewNextWeek;
 
+// ============ v19.4: 模考分追踪 ============
+function renderMockExamTracker() {
+  const el = document.getElementById('mockExamTracker');
+  if (!el) return;
+  const exams = state.mockExams || [];
+  const summary = window.getMockExamSummary ? window.getMockExamSummary(state) : null;
+
+  let summaryHtml = '';
+  if (summary) {
+    const color = summary.totalAL <= 6 ? '#22c55e' : summary.totalAL <= 8 ? '#fbbf24' : '#ef4444';
+    summaryHtml = `
+      <div class="mock-summary" style="background:rgba(255,255,255,0.05);border-radius:10px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:20px;font-weight:700;color:${color};text-align:center;">总 AL ${summary.totalAL}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:8px;text-align:center;font-size:12px;">
+          <div>英 AL${summary.alEng}<br><small>${summary.latest.eng}分</small></div>
+          <div>数 AL${summary.alMath}<br><small>${summary.latest.math}分</small></div>
+          <div>科 AL${summary.alSci}<br><small>${summary.latest.sci}分</small></div>
+          <div>华 AL${summary.alChi}<br><small>${summary.latest.chi}分</small></div>
+        </div>
+        ${summary.improvement > 0 ? `<div style="text-align:center;margin-top:6px;color:#22c55e;font-size:12px;">📈 比首次模考进步 ${summary.improvement} 个 AL!</div>` : ''}
+        <div style="text-align:center;margin-top:4px;color:var(--color-text-light);font-size:11px;">共 ${summary.count} 次模考记录</div>
+      </div>`;
+  }
+
+  const historyHtml = exams.slice().reverse().slice(0, 5).map(e => {
+    const total = window.scoreToAL(e.eng||0) + window.scoreToAL(e.math||0) + window.scoreToAL(e.sci||0) + window.scoreToAL(e.chi||0);
+    return `<div style="font-size:11px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.06);">${e.date} · 英${e.eng} 数${e.math} 科${e.sci} 华${e.chi} · <b>AL${total}</b>${e.note ? ' · '+e.note : ''}</div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <h3 style="font-size:14px;margin-bottom:8px;">📊 模考分追踪</h3>
+    ${summaryHtml}
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px;">
+      <input type="number" id="mockEng" placeholder="英语" min="0" max="100" style="padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-size:12px;">
+      <input type="number" id="mockMath" placeholder="数学" min="0" max="100" style="padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-size:12px;">
+      <input type="number" id="mockSci" placeholder="科学" min="0" max="100" style="padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-size:12px;">
+      <input type="number" id="mockChi" placeholder="华文" min="0" max="100" style="padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-size:12px;">
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;">
+      <input type="text" id="mockNote" placeholder="备注 (如: W26总模考)" style="flex:1;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-size:12px;">
+      <button onclick="saveMockExam()" style="padding:6px 14px;border-radius:6px;background:#6366f1;color:#fff;border:none;font-size:12px;cursor:pointer;">保存</button>
+    </div>
+    ${historyHtml ? `<div style="margin-top:6px;">${historyHtml}</div>` : '<div style="font-size:11px;color:var(--color-text-light);">暂无模考记录, 输入分数后点保存</div>'}
+  `;
+}
+function saveMockExam() {
+  const eng = parseInt(document.getElementById('mockEng').value) || 0;
+  const math = parseInt(document.getElementById('mockMath').value) || 0;
+  const sci = parseInt(document.getElementById('mockSci').value) || 0;
+  const chi = parseInt(document.getElementById('mockChi').value) || 0;
+  const note = (document.getElementById('mockNote').value || '').trim();
+  if (eng === 0 && math === 0 && sci === 0 && chi === 0) { showToast('请至少输入一科分数', 'warn'); return; }
+  if (!state.mockExams) state.mockExams = [];
+  state.mockExams.push({ date: new Date().toISOString().slice(0, 10), eng, math, sci, chi, note });
+  saveState(state);
+  showToast('✅ 模考分已保存!', 'success');
+  renderMockExamTracker();
+}
+window.saveMockExam = saveMockExam;
+
+// ============ v19.4: 限时挑战赛 (W15-W30 中期激励) ============
+function getActiveChallenge() {
+  const w = state.currentWeek || 1;
+  if (w < 15 || w > 30) return null;
+  const challenges = [
+    { id: 'grammar_streak', name: '🔥 Grammar 7日连胜', game: 'grammar', days: 7, target: 80, reward: 50 },
+    { id: 'cloze_streak', name: '🧩 Cloze 7日连胜', game: 'cloze', days: 7, target: 80, reward: 50 },
+    { id: 'sst_master', name: '🔄 SST 5日全对', game: 'sst', days: 5, target: 90, reward: 80 },
+    { id: 'vocab_blitz', name: '📚 词汇连续7天', game: 'vocab', days: 7, target: 70, reward: 40 },
+  ];
+  const idx = (w - 15) % challenges.length;
+  return challenges[idx];
+}
+
+function renderChallengeCard() {
+  let el = document.getElementById('challengeCard');
+  const challenge = getActiveChallenge();
+  if (!challenge) { if (el) el.innerHTML = ''; return; }
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'challengeCard';
+    const hub = document.getElementById('gameHubCard');
+    if (hub) hub.parentNode.insertBefore(el, hub.nextSibling);
+    else return;
+  }
+  if (!state.challengeProgress) state.challengeProgress = {};
+  const prog = state.challengeProgress[challenge.id] || { streak: 0, lastDate: null, completed: false };
+  const today = new Date().toISOString().slice(0, 10);
+  const isToday = prog.lastDate === today;
+
+  if (prog.completed) {
+    el.innerHTML = `<div class="game-hub-card" style="border-color:#22c55e;">
+      <div class="game-hub-title">🏆 ${challenge.name} — 完成!</div>
+      <div class="game-hub-sub">已获得 +${challenge.reward} 奖励积分</div>
+    </div>`;
+  } else {
+    el.innerHTML = `<div class="game-hub-card" style="border-color:#f59e0b;">
+      <div class="game-hub-title">${challenge.name}</div>
+      <div class="game-hub-sub">连续 ${challenge.days} 天 ${challenge.game} 正确率 ≥${challenge.target}% · 进度 ${prog.streak}/${challenge.days} · 奖励 +${challenge.reward}分</div>
+      ${isToday ? '<div class="game-hub-sub" style="color:#22c55e;">✅ 今日已完成</div>' : '<div class="game-hub-sub" style="color:#fbbf24;">⏳ 今日尚未挑战</div>'}
+    </div>`;
+  }
+}
+
+function updateChallengeProgress(gameKey, accuracy) {
+  const challenge = getActiveChallenge();
+  if (!challenge || challenge.game !== gameKey) return;
+  if (!state.challengeProgress) state.challengeProgress = {};
+  const id = challenge.id;
+  if (!state.challengeProgress[id]) state.challengeProgress[id] = { streak: 0, lastDate: null, completed: false };
+  const prog = state.challengeProgress[id];
+  if (prog.completed) return;
+  const today = new Date().toISOString().slice(0, 10);
+  if (prog.lastDate === today) return;
+
+  if (accuracy >= challenge.target) {
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    if (prog.lastDate === yesterday || prog.streak === 0) {
+      prog.streak++;
+    } else {
+      prog.streak = 1;
+    }
+    prog.lastDate = today;
+    if (prog.streak >= challenge.days) {
+      prog.completed = true;
+      state.totalPoints = (state.totalPoints || 0) + challenge.reward;
+      state.lifetimeEarned = (state.lifetimeEarned || 0) + challenge.reward;
+      showToast(`🏆 挑战赛完成! +${challenge.reward} 分!`, 'success');
+    }
+  } else {
+    prog.streak = 0;
+    prog.lastDate = today;
+  }
+  saveState(state);
+  renderChallengeCard();
+}
+window.updateChallengeProgress = updateChallengeProgress;
+
 // ============ 管理页 ============
 function renderAdminPage() {
   // v19.3: 积分完整性校验展示
@@ -6619,6 +6761,8 @@ function renderAdminPage() {
   renderPhotoGallery(state.currentWeek).catch(e => console.error(e));
   // v19.2: 家长周审面板
   renderParentReview(state.currentWeek);
+  // v19.4: 模考分追踪
+  renderMockExamTracker();
 
   const logList = document.getElementById('adminLogList');
   if (state.logs.length === 0) {
@@ -7103,8 +7247,14 @@ function _renderCompOe() {
             ${q.marks >= 2 ? '<button onclick="compOeScore(2)">✅ 2分</button>' : ''}
           </div>
         </div>` : `
-        <div class="comp-think">💡 先在脑中组织答案, 再点击查看 Model Answer</div>
-        <button class="comp-reveal-btn" onclick="compOeReveal()">查看 Model Answer</button>
+        <div class="comp-think">💡 先在脑中组织答案 (30 秒后可查看)</div>
+        <button class="comp-reveal-btn" id="compRevealBtn" disabled onclick="compOeReveal()">⏳ 思考中... 30s</button>
+        <script>
+          (function(){
+            var btn=document.getElementById('compRevealBtn'),t=30;
+            var iv=setInterval(function(){t--;if(t<=0){clearInterval(iv);btn.disabled=false;btn.textContent='查看 Model Answer';}else{btn.textContent='⏳ 思考中... '+t+'s';}},1000);
+          })();
+        </script>
       `}
       <button class="vocab-modal-close mg-close" onclick="closeCompOe()">×</button>
     </div>`;
