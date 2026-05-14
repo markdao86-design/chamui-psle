@@ -2719,12 +2719,12 @@ function _playTone(ctx, freq, dur, wave, vol, delay) {
 }
 
 // ============ v19.3: 每日挑战 mini-game 入口 ============
-const _GAME_LABELS_HUB = { grammar: 'Grammar MCQ', cloze: 'Cloze 完形填空', vocab: '词汇连连看', math: '数学挑战' };
-const _GAME_SUBJECTS = { grammar: 'PSLE英语Paper2', cloze: 'PSLE英语Paper2', vocab: 'PSLE英语词汇', math: 'PSLE数学' };
+const _GAME_LABELS_HUB = { grammar: 'Grammar MCQ', cloze: 'Cloze 完形填空', vocab: '词汇连连看', math: '数学挑战', sst: 'SST 句型转换' };
+const _GAME_SUBJECTS = { grammar: 'PSLE英语Paper2', cloze: 'PSLE英语Paper2', vocab: 'PSLE英语词汇', math: 'PSLE数学', sst: 'PSLE英语Paper2' };
 
 function getTodayGameType() {
   const d = new Date().getDay(); // 0=Sun
-  return ['grammar', 'cloze', 'grammar', 'vocab', 'cloze', 'math', 'grammar'][d];
+  return ['grammar', 'cloze', 'sst', 'vocab', 'cloze', 'sst', 'grammar'][d];
 }
 
 function renderGameHubCard() {
@@ -2766,6 +2766,7 @@ function startDailyGame() {
     case 'cloze': openClozeGame(); break;
     case 'vocab': openVocabGame(state.currentWeek); break;
     case 'math': openMathGame(); break;
+    case 'sst': openSstGame(); break;
     default: openGrammarGame();
   }
 }
@@ -4851,10 +4852,11 @@ function openGrammarGame() { _openMcqGame('grammar', 'Grammar 选择题', 'q'); 
 function openClozeGame() { _openMcqGame('cloze', 'Cloze 单空填', 'sentence'); }
 function openSciMcqGame() { _openMcqGame('scimcq', '科学 MCQ', 'q'); }
 function openChineseMcqGame() { _openMcqGame('chinese', '华文 MCQ', 'q'); }
+function openSstGame() { _openMcqGame('sst', 'SST 句型转换', 'q'); }
 function _openMcqGame(key, title, qField) {
   if (!_checkGameDailyLock(key)) return;
   const diff = window.getDifficulty ? window.getDifficulty(state, key) : 4;
-  const fn = key === 'grammar' ? window.getGrammarByDiff : key === 'cloze' ? window.getClozeByDiff : key === 'scimcq' ? window.getSciMcqByDiff : key === 'chinese' ? window.getChineseMcqByDiff : window.getGrammarByDiff;
+  const fn = key === 'grammar' ? window.getGrammarByDiff : key === 'cloze' ? window.getClozeByDiff : key === 'scimcq' ? window.getSciMcqByDiff : key === 'chinese' ? window.getChineseMcqByDiff : key === 'sst' ? window.getSstByDiff : window.getGrammarByDiff;
   const rawQs = fn(diff, 10);
   const qs = rawQs.map(q => {
     const correctOpt = q.opts[q.ans];
@@ -4878,6 +4880,8 @@ function _renderMcqGame() {
   if (g.idx >= g.qs.length) { _finishMcqGame(); return; }
   const q = g.qs[g.idx];
   const qText = q[g.qField];
+  const ruleHtml = q.rule ? `<div class="mcq-rule">📝 ${escapeHtml(q.rule)}</div>` : '';
+  const isSst = g.key === 'sst';
   const optsHtml = q.opts.map((o, i) =>
     `<button class="mcq-opt" onclick="submitMcqAnswer(${i})">${String.fromCharCode(65+i)}. ${escapeHtml(o)}</button>`
   ).join('');
@@ -4885,8 +4889,9 @@ function _renderMcqGame() {
     <div class="mg-inner mcq-inner">
       <div class="mg-stats">${g.title} · ✅ ${g.correct} · ❌ ${g.wrong} · ${g.idx+1}/10</div>
       <div class="mg-q mcq-q">${escapeHtml(qText)}</div>
+      ${ruleHtml}
       ${q.tag ? `<div class="mcq-tag">${escapeHtml(q.tag)}</div>` : ''}
-      <div class="mcq-opts">${optsHtml}</div>
+      <div class="mcq-opts${isSst ? ' sst-opts' : ''}">${optsHtml}</div>
       <div class="mcq-feedback"></div>
       <button class="vocab-modal-close mg-close" onclick="closeMcqGame()">×</button>
     </div>`;
@@ -4900,7 +4905,7 @@ function submitMcqAnswer(idx) {
   if (isCorrect) {
     g.correct++; playSound('ding'); petExpress('pet-excited', 800);
     // v19.0: 答对的题标记为 mastered (不再出)
-    const poolMap = { grammar: window.GRAMMAR_QUESTIONS, cloze: window.CLOZE_QUESTIONS, scimcq: window.SCIENCE_MCQ, chinese: window.CHINESE_MCQ };
+    const poolMap = { grammar: window.GRAMMAR_QUESTIONS, cloze: window.CLOZE_QUESTIONS, scimcq: window.SCIENCE_MCQ, chinese: window.CHINESE_MCQ, sst: window.SST_QUESTIONS };
     if (poolMap[g.key] && window._markMastered) {
       window._markMastered(g.key, poolMap[g.key], q._orig || q);
       window._saveMastered(state);
