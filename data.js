@@ -6065,11 +6065,13 @@ function isFbReady() { return _fbReady; }
 function onFbStatusChange(cb) { _fbStatusListener = cb; }
 
 // 订阅 Firestore 远端变化(其它设备改动会触发)
+var _lastLocalSaveTs = 0;
 function subscribeFirestore(onUpdate) {
   if (!_fbReady || !_fbDoc) return null;
   return _fbDoc.onSnapshot(
     snap => {
       if (snap.metadata.hasPendingWrites) return;  // 自己刚写的就别触发了
+      if (Date.now() - _lastLocalSaveTs < 3000) return;  // 本地写入窗口内忽略远端推送
       if (snap.exists) {
         try { onUpdate(snap.data()); } catch (e) { console.warn(e); }
       }
@@ -6158,6 +6160,7 @@ function saveState(state, options) {
   if (state.logs && state.logs.length > 1000) {
     state.logs = state.logs.slice(-1000);
   }
+  _lastLocalSaveTs = Date.now();
   let ok = true;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
