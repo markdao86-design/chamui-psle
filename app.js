@@ -374,6 +374,7 @@ function renderDashboard() {
   renderCompTrackerCard(); // v19.5: 作文质量追踪
   renderWeakChallengeCard(); // v19.5: 弱科挑战
   renderFocusAreasCard();  // v19.5: 模考诊断重点
+  renderFlashcardWidget(); // v19.5: 词汇闪卡入口
   renderEquipment();
   renderDailySlotList();
 }
@@ -550,6 +551,184 @@ function submitMockExam() {
   closeModal();
   renderAll();
   showToast(`📊 已录入模考 (英${eng}/数${math}/科${sci}/华${chi})`, 'success');
+}
+
+// ============= v19.5: 词汇闪卡页 =============
+let _fcSession = null;
+
+function renderVocabPage() {
+  const el = document.getElementById('vocabPageContent');
+  if (!el) return;
+  if (_fcSession) { _renderFlashcardSession(); return; }
+  const stats = getFlashcardStats(state);
+  const due = getAllDueFlashcards(state);
+  const dueCount = Math.min(due.length, 20);
+  const pct = stats.total > 0 ? Math.round(stats.mastered / stats.total * 100) : 0;
+  el.innerHTML = `
+    <h2 style="margin:0 0 8px;font-size:18px">📇 PSLE 词汇闪卡</h2>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <span style="font-size:13px;color:var(--color-text-light)">已掌握 ${stats.mastered}/${stats.total}</span>
+      <div style="flex:1;height:6px;background:#334155;border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#10B981,#059669);transition:width .3s"></div>
+      </div>
+      <span style="font-size:12px;font-weight:600;color:#10B981">${pct}%</span>
+    </div>
+    ${dueCount > 0 ? `
+      <div class="card" style="margin-bottom:12px;border-left:3px solid #F59E0B">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-weight:600;font-size:14px">🔥 今日待复习: ${dueCount} 词</div>
+            <div style="font-size:11px;color:var(--color-text-light)">含 ${due.filter(d=>d.isNew).length} 个新词</div>
+          </div>
+          <button class="btn-primary" onclick="startFlashcardSession(null)">开始复习</button>
+        </div>
+      </div>
+    ` : `<div class="card" style="margin-bottom:12px;border-left:3px solid #10B981"><div style="font-weight:600;color:#10B981">✅ 今日复习已完成!</div></div>`}
+    <div style="font-size:14px;font-weight:600;margin-bottom:8px">卡组选择:</div>
+    <div class="fc-deck-grid">
+      ${FLASHCARD_DECKS.map(deck => {
+        const mastered = deck.words.filter(w => state.flashcardSRS && state.flashcardSRS[w] && state.flashcardSRS[w].mastered).length;
+        const deckDue = getFlashcardsDue(state, deck.id).length;
+        return `<div class="fc-deck-item" onclick="startFlashcardSession('${deck.id}')">
+          <div class="fc-deck-name">${deck.name}</div>
+          <div class="fc-deck-progress">${mastered}/${deck.words.length} 掌握${deckDue > 0 ? ` · <span style="color:#F59E0B">${deckDue}词待复习</span>` : ''}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="margin-top:16px;padding:12px;background:#1E293B;border-radius:8px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px">📊 艾宾浩斯进度</div>
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--color-text-light)">
+        <span>🆕 新词: ${stats.newCount}</span>
+        <span>📖 学习中: ${stats.learning}</span>
+        <span>✅ 已掌握: ${stats.mastered}</span>
+      </div>
+    </div>
+  `;
+}
+
+function startFlashcardSession(deckId) {
+  let words;
+  if (deckId) {
+    words = getFlashcardsDue(state, deckId).slice(0, 15);
+  } else {
+    words = getAllDueFlashcards(state).slice(0, 20).map(d => d.word);
+  }
+  if (words.length === 0) { showToast('该卡组暂无待复习词', 'info'); return; }
+  _fcSession = { words, idx: 0, flipped: false, results: [] };
+  _renderFlashcardSession();
+}
+
+function _renderFlashcardSession() {
+  const el = document.getElementById('vocabPageContent');
+  if (!el || !_fcSession) return;
+  const s = _fcSession;
+  if (s.idx >= s.words.length) { _endFlashcardSession(); return; }
+  const word = s.words[s.idx];
+  const meaning = getVocabMeaning(word);
+  const hardEntry = (window.VOCAB_HARD || []).find(v => v.en === word);
+  const sentence = hardEntry ? hardEntry.sent : '';
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <button class="btn-sm" onclick="exitFlashcardSession()">← 返回</button>
+      <span style="font-size:13px;color:var(--color-text-light)">${s.idx + 1} / ${s.words.length}</span>
+    </div>
+    <div class="fc-card ${s.flipped ? 'flipped' : ''}" onclick="flipFlashcard()">
+      <div class="fc-card-inner">
+        <div class="fc-card-front">
+          <div class="fc-card-word">${word}</div>
+          <div class="fc-card-hint">点击翻转看中文</div>
+        </div>
+        <div class="fc-card-back">
+          <div class="fc-card-meaning">${meaning}</div>
+          ${sentence ? `<div class="fc-card-sentence">${sentence}</div>` : ''}
+        </div>
+      </div>
+    </div>
+    <div class="fc-btns">
+      <button class="fc-btn-dont" onclick="answerFlashcard(false)">❌ 不认识</button>
+      <button class="fc-btn-know" onclick="answerFlashcard(true)">✅ 认识</button>
+    </div>
+    <div style="height:6px;background:#334155;border-radius:3px;margin-top:16px;overflow:hidden">
+      <div style="height:100%;width:${Math.round((s.idx / s.words.length) * 100)}%;background:#60A5FA;transition:width .3s"></div>
+    </div>
+  `;
+}
+
+function flipFlashcard() {
+  if (!_fcSession) return;
+  _fcSession.flipped = !_fcSession.flipped;
+  _renderFlashcardSession();
+}
+
+function answerFlashcard(correct) {
+  if (!_fcSession) return;
+  const word = _fcSession.words[_fcSession.idx];
+  const result = reviewFlashcard(state, word, correct);
+  _fcSession.results.push({ word, correct, pts: result.pts });
+  _fcSession.idx++;
+  _fcSession.flipped = false;
+  saveState(state);
+  _renderFlashcardSession();
+}
+
+function _endFlashcardSession() {
+  const el = document.getElementById('vocabPageContent');
+  if (!el || !_fcSession) return;
+  const s = _fcSession;
+  const correctCount = s.results.filter(r => r.correct).length;
+  const totalPts = s.results.reduce((sum, r) => sum + r.pts, 0);
+  el.innerHTML = `
+    <div style="text-align:center;padding:24px 0">
+      <div style="font-size:48px;margin-bottom:12px">🎉</div>
+      <h3 style="margin:0 0 8px">本轮完成!</h3>
+      <div style="font-size:14px;color:var(--color-text-light);margin-bottom:16px">
+        认识 ${correctCount}/${s.words.length} · 获得 +${totalPts} 积分
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button class="btn-primary" onclick="exitFlashcardSession()">返回卡组</button>
+        <button class="btn-sm" onclick="startFlashcardSession(null)">继续复习</button>
+      </div>
+    </div>
+  `;
+  _fcSession = null;
+  renderHeader();
+}
+
+function exitFlashcardSession() {
+  _fcSession = null;
+  renderVocabPage();
+}
+
+// 主页闪卡入口卡
+function renderFlashcardWidget() {
+  const el = document.getElementById('flashcardWidgetCard');
+  if (!el) return;
+  const due = getAllDueFlashcards(state);
+  const stats = getFlashcardStats(state);
+  if (due.length === 0 && stats.mastered === 0) { el.style.display = 'none'; return; }
+  const pct = stats.total > 0 ? Math.round(stats.mastered / stats.total * 100) : 0;
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:18px">📇</span>
+      <span style="font-weight:600;font-size:14px">词汇闪卡</span>
+      <span style="margin-left:auto;font-size:12px;color:${due.length > 0 ? '#F59E0B' : '#10B981'}">${due.length > 0 ? due.length + ' 词待复习' : '✅ 今日完成'}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="flex:1;height:4px;background:#334155;border-radius:2px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:#10B981"></div>
+      </div>
+      <span style="font-size:11px;color:var(--color-text-light)">${stats.mastered}/${stats.total}</span>
+    </div>
+  `;
+  el.style.display = '';
+  el.style.cursor = 'pointer';
+  el.onclick = () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelector('[data-page="vocab"]').classList.add('active');
+    document.getElementById('page-vocab').classList.add('active');
+    renderVocabPage();
+  };
 }
 
 // v18.60: 双龙 RPG 化进度卡 — 真 SVG 龙头像 + 力量/智慧值条 + 已觉醒展示
@@ -7242,6 +7421,9 @@ function bindEvents() {
       }
       if (page === 'paperbank') {
         renderPaperBankPage();
+      }
+      if (page === 'vocab') {
+        renderVocabPage();
       }
       if (page === 'admin') {
         renderPhotoGallery(state.currentWeek).catch(() => {});

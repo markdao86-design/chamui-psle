@@ -4696,6 +4696,117 @@ function getVocabMeaning(word) {
   return VOCAB_MEANINGS[word] || word;
 }
 
+// ============= v19.5: 词汇闪卡系统 (PSLE 分科 + 艾宾浩斯) =============
+const FLASHCARD_DECKS = [
+  { id: 'comp_emotions', name: '📖 情感/性格词', category: '英语阅读',
+    words: ['anxious','enthusiastic','reluctant','determined','compassionate','arrogant','humble','generous','mischievous','obedient','stubborn','courageous','timid','grateful','devastated','elated','furious','envious','remorseful','bewildered','indignant','diligent','callous','jovial','melancholy','optimistic','pessimistic','resilient','gullible','skeptical'] },
+  { id: 'comp_actions', name: '📖 动作/行为词', category: '英语阅读',
+    words: ['stumble','murmur','exclaim','hesitate','volunteer','accomplish','persuade','appreciate','contemplate','stammer','flinch','embrace','retaliate','surrender','persevere','accumulate','diminish','exaggerate','intimidate','negotiate','procrastinate','scrutinize','trespass','underestimate','vanish','wander'] },
+  { id: 'comp_descriptions', name: '📖 描写/修饰词', category: '英语阅读',
+    words: ['abundant','barren','congested','desolate','exquisite','fragile','gruesome','hideous','immense','jubilant','keen','lush','meticulous','notorious','ominous','peculiar','quaint','radiant','serene','tranquil','unprecedented','vivid','weary','zealous','bleak','colossal','drenched','eerie','feeble','hostile'] },
+  { id: 'cloze_phrases', name: '🧩 Cloze: 短语搭配', category: '英语Cloze',
+    words: ['in spite of','as a result','in addition','on the other hand','for instance','in conclusion','prior to','subsequent to','with regard to','in the meantime','to a certain extent','at the expense of','in the nick of time','out of the blue','once in a blue moon','at a loss','beyond doubt'] },
+  { id: 'cloze_connectors', name: '🧩 Cloze: 连接词', category: '英语Cloze',
+    words: ['nevertheless','furthermore','consequently','meanwhile','subsequently','moreover','henceforth','notwithstanding','alternatively','conversely','likewise','nonetheless'] },
+  { id: 'comp_academic', name: '📖 学术/考试词', category: '英语阅读',
+    words: ['consequence','contribute','demonstrate','eliminate','emphasize','fundamental','generate','illustrate','interpret','justify','maintain','phenomenon','principal','significant','tendency','ultimately','valid','abandon','benefit','circumstance','decade','emerge','enormous','inevitable','initiative','merely','obvious','potential','remarkable','sustain'] },
+  { id: 'writing_senses', name: '✒️ 五感描写词', category: '英语作文',
+    words: ['aroma','fragrance','stench','pungent','sizzle','clamour','din','hustle and bustle','deafening','piercing','glistening','crimson','azure','silhouette','flicker','velvety','coarse','scorching','frigid','lukewarm'] },
+  { id: 'writing_idioms', name: '✒️ 习语/固定表达', category: '英语作文',
+    words: ['dawn upon','at the top of one\'s lungs','butterflies in stomach','turn over a new leaf','a blessing in disguise','beat around the bush','burn the midnight oil','keep one\'s fingers crossed','see eye to eye','once bitten twice shy','the last straw','a drop in the ocean','actions speak louder than words','every cloud has a silver lining'] },
+  { id: 'sci_terms', name: '🔬 科学术语', category: '科学',
+    words: ['photosynthesis','respiration','transpiration','germination','reproduction','xylem','phloem','chlorophyll','stomata','ecosystem','habitat','food chain','food web','producer','consumer','decomposer','predator','adaptation','camouflage','evaporation','condensation','precipitation','conduction','convection','radiation','circuit','series circuit','parallel circuit','friction','gravity'] },
+  { id: 'math_terms', name: '➗ 数学术语', category: '数学',
+    words: ['perimeter','area','volume','circumference','radius','diameter','quotient','remainder','numerator','denominator','ratio','proportion','percentage','discount','profit','GST','factor','multiple','prime','composite','median','mean','mode','parallel','perpendicular','equilateral','cuboid','cylinder','sphere','prism'] },
+  { id: 'sg_local', name: '🇸🇬 新加坡本土词', category: '英语阅读',
+    words: ['hawker centre','void deck','HDB','kampong','mamak','MRT','kopitiam','kiasu','singlish','durian'] }
+];
+
+const FLASHCARD_SRS_INTERVALS = [0, 1, 3, 7, 14, 30, 60];
+
+function _getFlashcardEntry(state, word) {
+  if (!state.flashcardSRS) state.flashcardSRS = {};
+  return state.flashcardSRS[word] || null;
+}
+
+function getFlashcardsDue(state, deckId) {
+  if (!state.flashcardSRS) state.flashcardSRS = {};
+  const today = new Date().toISOString().slice(0, 10);
+  const deck = FLASHCARD_DECKS.find(d => d.id === deckId);
+  if (!deck) return [];
+  return deck.words.filter(w => {
+    const entry = state.flashcardSRS[w];
+    if (!entry) return true;
+    if (entry.mastered) return false;
+    return !entry.nextReview || entry.nextReview <= today;
+  });
+}
+
+function getAllDueFlashcards(state) {
+  if (!state.flashcardSRS) state.flashcardSRS = {};
+  const today = new Date().toISOString().slice(0, 10);
+  const due = [];
+  for (const deck of FLASHCARD_DECKS) {
+    for (const w of deck.words) {
+      const entry = state.flashcardSRS[w];
+      if (!entry) { due.push({ word: w, deckId: deck.id, isNew: true }); continue; }
+      if (entry.mastered) continue;
+      if (!entry.nextReview || entry.nextReview <= today) {
+        due.push({ word: w, deckId: deck.id, isNew: false });
+      }
+    }
+  }
+  return due;
+}
+
+function reviewFlashcard(state, word, correct) {
+  if (!state.flashcardSRS) state.flashcardSRS = {};
+  if (!state.flashcardSRS[word]) {
+    state.flashcardSRS[word] = { interval: 0, correctStreak: 0, lastReviewed: null, nextReview: null, mastered: false };
+  }
+  const entry = state.flashcardSRS[word];
+  const today = new Date().toISOString().slice(0, 10);
+  entry.lastReviewed = today;
+  let pts = 0;
+  if (correct) {
+    entry.correctStreak = (entry.correctStreak || 0) + 1;
+    entry.interval = Math.min((entry.interval || 0) + 1, FLASHCARD_SRS_INTERVALS.length - 1);
+    pts = entry.correctStreak === 1 ? 2 : 1;
+    if (FLASHCARD_SRS_INTERVALS[entry.interval] >= 30) {
+      entry.mastered = true;
+      pts += 5;
+    }
+  } else {
+    entry.correctStreak = 0;
+    entry.interval = 0;
+  }
+  const days = FLASHCARD_SRS_INTERVALS[entry.interval];
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  entry.nextReview = d.toISOString().slice(0, 10);
+  if (pts > 0) {
+    state.totalPoints = (state.totalPoints || 0) + pts;
+    if (!state.logs) state.logs = [];
+    state.logs.push({ reason: `📇 词汇闪卡 "${word}" +${pts}`, points: pts, type: 'flashcard', timestamp: Date.now() });
+  }
+  return { pts, interval: entry.interval, mastered: entry.mastered, nextReview: entry.nextReview };
+}
+
+function getFlashcardStats(state) {
+  if (!state.flashcardSRS) state.flashcardSRS = {};
+  let total = 0, newCount = 0, learning = 0, mastered = 0;
+  for (const deck of FLASHCARD_DECKS) {
+    for (const w of deck.words) {
+      total++;
+      const entry = state.flashcardSRS[w];
+      if (!entry) { newCount++; continue; }
+      if (entry.mastered) { mastered++; continue; }
+      learning++;
+    }
+  }
+  return { total, newCount, learning, mastered };
+}
+
 // 给 weekN (1..73) 返回该周对应的词表 ({subject, subjectIcon, section, weekRange}).
 // W1-W7 → math (按 section 索引顺序); W8-W17 → sci; 其它周 → null
 function getVocabForWeek(weekN) {
@@ -6831,6 +6942,13 @@ window.dailyQuestTodayKey = dailyQuestTodayKey;
 // v17.7 Phase 4
 window.VOCAB_MEANINGS = VOCAB_MEANINGS;
 window.getVocabMeaning = getVocabMeaning;
+// v19.5: 闪卡系统
+window.FLASHCARD_DECKS = FLASHCARD_DECKS;
+window.FLASHCARD_SRS_INTERVALS = FLASHCARD_SRS_INTERVALS;
+window.getFlashcardsDue = getFlashcardsDue;
+window.getAllDueFlashcards = getAllDueFlashcards;
+window.reviewFlashcard = reviewFlashcard;
+window.getFlashcardStats = getFlashcardStats;
 // v18 Phase 5.1
 window.PET_FORMS = PET_FORMS;
 window.PET_DIALOGUES = PET_DIALOGUES;
