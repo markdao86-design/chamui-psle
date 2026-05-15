@@ -5,6 +5,35 @@
 
 ---
 
+## 📅 版本历史 (v19.5)
+
+### v19.5 — 专家评审后 5 大系统改造: 学习效果与激励耦合 (2026-05-15)
+**痛点**: 组 PSLE 英语/科学/游戏化 3 位专家评审发现:
+- App 是"行为激励系统"而非"能力提升系统" — 打卡≠学了
+- 英语 65→85 缺口靠纯打卡无法弥补 (作文 40 分无训练)
+- 积分与学习质量完全脱钩
+
+| 改造 | 详情 |
+|---|---|
+| 🎯 P0-b 学习质量门槛 | `calcSlotReward` 增加 `SLOT_SUBJECT` 映射, 科目 mini-game 正确率 <60% 时该科打卡积分×0.5 |
+| ✒️ P0-a 作文质量追踪 | `state.compTracking` 追踪每周交稿/批改/重写 3 步, 主页新卡显示进度 |
+| 🎯 P1-a 弱科挑战系统 | `getWeeklyWeakChallenge` 每周检测弱科, 做 2 次弱科 game +30 bonus, `recordGameRun` 自动计入 |
+| 📊 P1-b 模考诊断闭环 | `addMockExam`→`generateFocusAreas` 月度模考输入→自动生成训练重点(紧急/关注) |
+| 🎧 P2 听力扩容 | `LISTEN_DICTATIONS` 16→51 段 (+35), 覆盖校园/交通/购物/健康/环境 5 大场景 |
+
+**新数据字段**:
+```js
+state.compTracking = { W1: { submitted, reviewed, rewritten } }
+state.weakChallenge = { week, done, bonusGiven }
+state.focusAreas = [{ subject, priority, detail }]
+```
+
+**新 UI 卡片** (主页): 作文追踪卡 / 弱科挑战卡 / 模考诊断重点卡
+
+**核心设计哲学转变**: 从"打卡就给分"→"学好才给满分"
+
+---
+
 ## 📅 版本历史 (v18.51-v18.59)
 
 ### v18.51 — P0 误导性修复 (2026-05-02)

@@ -163,15 +163,16 @@ curl -s "https://chamui-psle.web.app/app.js?v=VERSION" | grep "关键文本"
 
 ---
 
-## 7. 当前规模 (v19.4f)
+## 7. 当前规模 (v19.5)
 
 - **装备 69 件** (39 points + 10 milestone + 8 streak-days + 3 ⭐ + 3 game-runs + 3 week + 2 monthly + 1 streak)
 - **成就 60 个** (含周次里程碑)
 - **皮肤 6 套** / **宠物 12 阶 + 高达伙伴** (v19.1 双宠物)
-- **Mini-game 12 种**: Grammar 195 / Cloze 136 / SST 65 / Math 75 / Editing 61 / Vocab 61 / SciMCQ 70 / Chinese 40 / Listen 16 / SciClassify 10 / Unit 45 / CompOE 20篇
+- **Mini-game 12 种**: Grammar 195 / Cloze 136 / SST 65 / Math 75 / Editing 61 / Vocab 61 / SciMCQ 70 / Chinese 40 / **Listen 51** / SciClassify 10 / Unit 45 / CompOE 20篇
 - **知识树**: 35 节点 × 3 题 = 105 道 PSLE 风练习
 - **73 周作文**: 73 个 prompt
 - **QA**: 149 断言
+- **v19.5 新系统**: 学习质量门槛 + 作文追踪 + 弱科挑战 + 模考闭环
 
 ---
 
