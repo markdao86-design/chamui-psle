@@ -371,6 +371,9 @@ function renderDashboard() {
   // renderMasterTipCard(); // v18.71: 已合并到 wowCard
   renderDragonProgress();  // v18.55
   renderErrorBankCard();   // v18.59
+  renderCompTrackerCard(); // v19.5: 作文质量追踪
+  renderWeakChallengeCard(); // v19.5: 弱科挑战
+  renderFocusAreasCard();  // v19.5: 模考诊断重点
   renderEquipment();
   renderDailySlotList();
 }
@@ -411,6 +414,143 @@ function renderErrorBankCard() {
   if (card) card.style.display = 'none';
 }
 window.renderErrorBankCard = renderErrorBankCard;
+
+// ============= v19.5: 作文质量追踪卡 =============
+function renderCompTrackerCard() {
+  const el = document.getElementById('compTrackerCard');
+  if (!el) return;
+  const wn = state.currentWeek || 1;
+  const status = getCompStatus(state, wn);
+  const steps = [
+    { key: 'submitted', label: '交稿', icon: '📝' },
+    { key: 'reviewed', label: '批改', icon: '✏️' },
+    { key: 'rewritten', label: '重写', icon: '🔄' }
+  ];
+  const done = steps.filter(s => status[s.key]).length;
+  const pct = Math.round(done / 3 * 100);
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:18px">✒️</span>
+      <span style="font-weight:600;font-size:14px">本周作文进度</span>
+      <span style="margin-left:auto;font-size:12px;color:var(--color-text-light)">${done}/3 步</span>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      ${steps.map(s => `
+        <button class="comp-step-btn ${status[s.key] ? 'done' : ''}" onclick="markCompStep('${s.key}')" ${status[s.key] ? 'disabled' : ''}>
+          ${s.icon} ${s.label} ${status[s.key] ? '✅' : ''}
+        </button>
+      `).join('')}
+    </div>
+    <div style="height:4px;background:#eee;border-radius:2px;overflow:hidden">
+      <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#10B981,#059669);transition:width .3s"></div>
+    </div>
+    ${done < 3 ? `<div style="font-size:11px;color:#D97706;margin-top:6px">⚠️ 完成全部 3 步才获得作文 slot 全额积分</div>` : `<div style="font-size:11px;color:#059669;margin-top:6px">✅ 本周作文完成! 积分全额发放</div>`}
+  `;
+  el.style.display = '';
+}
+function markCompStep(step) {
+  setCompStep(state, state.currentWeek, step);
+  saveState(state);
+  renderAll();
+  showToast('✒️ 作文进度已更新', 'success');
+}
+
+// ============= v19.5: 弱科挑战卡 =============
+function renderWeakChallengeCard() {
+  const el = document.getElementById('weakChallengeCard');
+  if (!el) return;
+  const challenge = getWeeklyWeakChallenge(state);
+  if (!challenge) { el.style.display = 'none'; return; }
+  const progress = getWeakChallengeProgress(state);
+  const done = progress.done || 0;
+  const required = challenge.required;
+  const completed = done >= required;
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:18px">🎯</span>
+      <span style="font-weight:600;font-size:14px">弱科挑战: ${challenge.subject}</span>
+      <span style="margin-left:auto;font-size:12px;padding:2px 8px;border-radius:10px;background:${completed ? '#D1FAE5' : '#FEF3C7'};color:${completed ? '#065F46' : '#92400E'}">${done}/${required}</span>
+    </div>
+    <div style="font-size:12px;color:var(--color-text-light);margin-bottom:8px">
+      本周做 ${required} 次 ${challenge.subject} mini-game 可获 +${challenge.bonus} 分 bonus
+    </div>
+    <div style="height:4px;background:#eee;border-radius:2px;overflow:hidden">
+      <div style="height:100%;width:${Math.min(100, done/required*100)}%;background:linear-gradient(90deg,#F59E0B,#D97706);transition:width .3s"></div>
+    </div>
+    ${completed ? `<div style="font-size:11px;color:#059669;margin-top:6px">✅ 弱科挑战已完成! +${challenge.bonus} 分已发放</div>` : `<div style="font-size:11px;color:#6B7280;margin-top:6px">可玩: ${challenge.games.join(' / ')}</div>`}
+  `;
+  el.style.display = '';
+}
+
+// ============= v19.5: 模考诊断重点卡 =============
+function renderFocusAreasCard() {
+  const el = document.getElementById('focusAreasCard');
+  if (!el) return;
+  const areas = getFocusAreas(state);
+  if (!areas || areas.length === 0) {
+    // 显示"录入模考"入口
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:18px">📊</span>
+        <span style="font-weight:600;font-size:14px">月度模考诊断</span>
+      </div>
+      <div style="font-size:12px;color:var(--color-text-light);margin-bottom:8px">录入模考成绩，自动生成下月训练重点</div>
+      <button class="btn-sm" onclick="showMockExamInput()">📝 录入模考成绩</button>
+    `;
+    el.style.display = '';
+    return;
+  }
+  const priorityColor = { high: '#DC2626', medium: '#D97706' };
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:18px">📊</span>
+      <span style="font-weight:600;font-size:14px">训练重点 (模考诊断)</span>
+      <button style="margin-left:auto;font-size:11px;padding:2px 6px;border:1px solid #ddd;border-radius:4px;cursor:pointer" onclick="showMockExamInput()">更新</button>
+    </div>
+    ${areas.map(a => `
+      <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f0f0f0">
+        <span style="font-size:10px;padding:1px 5px;border-radius:3px;background:${priorityColor[a.priority] || '#6B7280'}22;color:${priorityColor[a.priority] || '#6B7280'};font-weight:600">${a.priority === 'high' ? '紧急' : '关注'}</span>
+        <span style="font-size:13px;font-weight:500">${a.subject}</span>
+        <span style="font-size:11px;color:var(--color-text-light);margin-left:auto">${a.detail}</span>
+      </div>
+    `).join('')}
+  `;
+  el.style.display = '';
+}
+
+function showMockExamInput() {
+  const html = `
+    <div style="padding:16px">
+      <h3 style="margin:0 0 12px">📝 录入本月模考成绩</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <label style="font-size:12px">英语 <input id="mockEng" type="number" min="0" max="100" placeholder="0-100" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px"></label>
+        <label style="font-size:12px">数学 <input id="mockMath" type="number" min="0" max="100" placeholder="0-100" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px"></label>
+        <label style="font-size:12px">科学 <input id="mockSci" type="number" min="0" max="100" placeholder="0-100" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px"></label>
+        <label style="font-size:12px">华文 <input id="mockChi" type="number" min="0" max="100" placeholder="0-100" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px"></label>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn-primary" onclick="submitMockExam()">提交</button>
+        <button class="btn-sm" onclick="closeModal()">取消</button>
+      </div>
+    </div>
+  `;
+  showModal(html);
+}
+function submitMockExam() {
+  const eng = parseInt(document.getElementById('mockEng').value) || 0;
+  const math = parseInt(document.getElementById('mockMath').value) || 0;
+  const sci = parseInt(document.getElementById('mockSci').value) || 0;
+  const chi = parseInt(document.getElementById('mockChi').value) || 0;
+  if (eng === 0 && math === 0 && sci === 0 && chi === 0) {
+    showToast('请至少输入一科成绩', 'warn');
+    return;
+  }
+  const areas = addMockExam(state, { eng, math, sci, chi });
+  saveState(state);
+  closeModal();
+  renderAll();
+  showToast(`📊 已录入模考 (英${eng}/数${math}/科${sci}/华${chi})`, 'success');
+}
 
 // v18.60: 双龙 RPG 化进度卡 — 真 SVG 龙头像 + 力量/智慧值条 + 已觉醒展示
 function renderDragonProgress() {
@@ -1991,6 +2131,11 @@ function toggleDailyCheck(week, day, slot, evt) {
     // 只有当前周才给暴击/buff加成
     if (week === state.currentWeek && window.calcSlotReward) {
       reward = window.calcSlotReward(state, slot, week);
+    }
+    // v19.5: 质量门槛提示
+    if (reward.qualityMult && reward.qualityMult < 1) {
+      const subj = window.SLOT_SUBJECT && window.SLOT_SUBJECT[slot];
+      setTimeout(() => showToast(`⚠️ ${subj || '该科'}正确率不足60%，积分×${reward.qualityMult} — 做 mini-game 提升!`, 'warn'), 600);
     }
     const critExtra = reward.pts - (reward.base || slotPoints(week, slot));
     if (critExtra > 0) {

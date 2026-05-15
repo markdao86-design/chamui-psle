@@ -204,6 +204,30 @@ const SLOT_TIER = {
   WUR: 1, WUM: 1, WUS: 1, WUE1: 2, WUE2: 2, WUP: 3,
   AM: 1, PM: 2
 };
+
+// ============= v19.5: Slot → 学科映射 (学习质量门槛用) =============
+const SLOT_SUBJECT = {
+  E1: '英语', OR: '英语', ED: '英语', LS: '英语', VC: '英语', VB: '英语',
+  WSE: '英语', WUE1: '英语', WUE2: '英语', WUR: '英语', WSF: '英语',
+  S2: '科学', WSS: '科学', WUS: '科学',
+  WSM: '数学', WUM: '数学',
+  WSR: null, WSV: null, WSL: '英语', WUP: null,
+  AM: null, PM: null
+};
+
+// v19.5: 学习质量门槛 — slot 对应科目正确率 <60% 则积分打折
+const QUALITY_GATE_THRESHOLD = 60;
+const QUALITY_GATE_PENALTY = 0.5;
+
+function getSlotQualityMultiplier(state, slotKey) {
+  const subj = SLOT_SUBJECT[slotKey];
+  if (!subj) return 1;
+  const acc = getSubjectAccuracy ? getSubjectAccuracy(state) : {};
+  const d = acc[subj];
+  if (!d || !d.total || d.total < 10) return 1;
+  if (d.accuracy < QUALITY_GATE_THRESHOLD) return QUALITY_GATE_PENALTY;
+  return 1;
+}
 const BEDTIME_HOUR = 21;
 const BEDTIME_MIN = 30;
 
@@ -330,6 +354,7 @@ function getCharacterPower(state) {
 
 // 打卡时计算单 slot 实际积分 (含暴击判定)
 // v19.3: 加法公式 — base × (1 + globalPct + streakBonus + critBonus)
+// v19.5: 学习质量门槛 — 科目正确率 <60% 积分×0.5
 function calcSlotReward(state, slotKey, weekNum) {
   const base = SLOT_BASE_POINTS[slotKey] || 2;
   const power = getCharacterPower(state);
@@ -350,12 +375,15 @@ function calcSlotReward(state, slotKey, weekNum) {
   }
   const critBonus = isCrit ? Math.min(power.critMult, CRIT_MULT_MAX) * 0.5 : 0;
   let pts = Math.round(base * (1 + power.globalPct + streakBonus + critBonus));
+  // v19.5: 学习质量门槛
+  const qualityMult = getSlotQualityMultiplier(state, slotKey);
+  if (qualityMult < 1) pts = Math.max(1, Math.round(pts * qualityMult));
   // v19.3: 日上限 300pts soft cap
   const todayEarned = (state._todayEarned || 0);
   if (todayEarned + pts > DAILY_POINTS_CAP) {
     pts = Math.max(1, DAILY_POINTS_CAP - todayEarned);
   }
-  return { pts, isCrit, base, globalPct: power.globalPct, streakBonus, critBonus };
+  return { pts, isCrit, base, globalPct: power.globalPct, streakBonus, critBonus, qualityMult };
 }
 
 // ============= v19.2: 世界章节 =============
@@ -1652,6 +1680,96 @@ function getMockExamSummary(state) {
 window.scoreToAL = scoreToAL;
 window.getMockExamSummary = getMockExamSummary;
 
+// ============= v19.5: 作文质量追踪 (P0-a) =============
+// 每周追踪: 交稿 → 批改 → 重写 3 步. 全完成才给 composition slot 全额积分
+function getCompStatus(state, week) {
+  if (!state.compTracking) state.compTracking = {};
+  return state.compTracking['W' + week] || { submitted: false, reviewed: false, rewritten: false };
+}
+function setCompStep(state, week, step) {
+  if (!state.compTracking) state.compTracking = {};
+  const key = 'W' + week;
+  if (!state.compTracking[key]) state.compTracking[key] = { submitted: false, reviewed: false, rewritten: false };
+  state.compTracking[key][step] = true;
+  return state.compTracking[key];
+}
+function getCompCompletion(state, week) {
+  const s = getCompStatus(state, week);
+  let done = 0;
+  if (s.submitted) done++;
+  if (s.reviewed) done++;
+  if (s.rewritten) done++;
+  return done / 3;
+}
+
+// ============= v19.5: 弱科挑战系统 (P1-a) =============
+// 每周检测弱科, 生成 2 道必做弱科 mini-game 任务
+function getWeeklyWeakChallenge(state) {
+  const weak = findWeakSubjects ? findWeakSubjects(state) : [];
+  if (weak.length === 0) return null;
+  const SUBJ_TO_GAMES = {
+    '英语': ['grammar', 'cloze', 'editing', 'sst'],
+    '科学': ['scimcq', 'scilab'],
+    '数学': ['math', 'unit'],
+    '华文': ['chinese']
+  };
+  const target = weak[0];
+  const games = SUBJ_TO_GAMES[target] || [];
+  return { subject: target, games, required: 2, bonus: 30 };
+}
+function getWeakChallengeProgress(state) {
+  if (!state.weakChallenge) return { done: 0, week: 0 };
+  const cur = state.currentWeek || 1;
+  if (state.weakChallenge.week !== cur) return { done: 0, week: cur };
+  return { done: state.weakChallenge.done || 0, week: cur };
+}
+function recordWeakChallenge(state) {
+  const cur = state.currentWeek || 1;
+  if (!state.weakChallenge || state.weakChallenge.week !== cur) {
+    state.weakChallenge = { week: cur, done: 0, bonusGiven: false };
+  }
+  state.weakChallenge.done++;
+  // Award bonus when challenge is completed
+  const challenge = getWeeklyWeakChallenge(state);
+  if (challenge && state.weakChallenge.done >= challenge.required && !state.weakChallenge.bonusGiven) {
+    state.weakChallenge.bonusGiven = true;
+    state.totalPoints = (state.totalPoints || 0) + challenge.bonus;
+    if (!state.logs) state.logs = [];
+    state.logs.push({ reason: `🎯 弱科挑战完成 (${challenge.subject}) +${challenge.bonus}`, points: challenge.bonus, type: 'weak_challenge', timestamp: Date.now() });
+  }
+  return state.weakChallenge.done;
+}
+
+// ============= v19.5: 模考诊断闭环 (P1-b) =============
+// 月度模考输入后自动生成下月训练重点
+function addMockExam(state, scores) {
+  if (!state.mockExams) state.mockExams = [];
+  state.mockExams.push({
+    date: new Date().toISOString().slice(0, 10),
+    week: state.currentWeek || 1,
+    eng: scores.eng || 0,
+    math: scores.math || 0,
+    sci: scores.sci || 0,
+    chi: scores.chi || 0
+  });
+  return generateFocusAreas(state);
+}
+function generateFocusAreas(state) {
+  const exams = state.mockExams || [];
+  if (exams.length === 0) return [];
+  const latest = exams[exams.length - 1];
+  const areas = [];
+  if (latest.eng < 75) areas.push({ subject: '英语', priority: 'high', detail: latest.eng < 65 ? 'Grammar+Cloze+SST 日刷 15 题' : 'Comprehension+Composition 专攻' });
+  if (latest.sci < 85) areas.push({ subject: '科学', priority: latest.sci < 75 ? 'high' : 'medium', detail: 'OE 答题模板 + 实验设计题' });
+  if (latest.math < 85) areas.push({ subject: '数学', priority: 'medium', detail: 'Paper 2 多步应用题' });
+  if (latest.chi < 85) areas.push({ subject: '华文', priority: 'medium', detail: '成语辨析 + 阅读理解' });
+  state.focusAreas = areas;
+  return areas;
+}
+function getFocusAreas(state) {
+  return state.focusAreas || [];
+}
+
 // ============= v18.59: 错题本 (Error Bank) =============
 // 知识树/mini-game 答错的题自动入库, 反复练直到答对清空
 function addToErrorBank(state, item) {
@@ -1940,7 +2058,83 @@ const LISTEN_DICTATIONS = [
     blanks: ['Although','science','below','seventy','careless'], voice:'en-GB' },
   // 同义改写陷阱 (precipitation = rainfall)
   { text: 'The weather forecast warned that heavy precipitation would continue throughout the weekend, so outdoor activities were cancelled.',
-    blanks: ['forecast','heavy','precipitation','weekend','cancelled'], voice:'en-GB' }
+    blanks: ['forecast','heavy','precipitation','weekend','cancelled'], voice:'en-GB' },
+  // ====== v19.5: Listening 扩容 35 段 (PSLE 风格: 校园/家庭/交通/购物/健康/环境) ======
+  // --- 校园场景 (8 段) ---
+  { text: 'The principal announced that the school sports day would be held on Friday the twenty-third of March instead of Thursday.',
+    blanks: ['principal','sports','Friday','twenty-third','March'], voice:'en-GB', diff: 3 },
+  { text: 'Students who wish to join the science club must submit their application forms to Mrs Tan by next Wednesday.',
+    blanks: ['Students','science','application','Mrs','Wednesday'], voice:'en-GB', diff: 3 },
+  { text: 'The school library will be closed for renovation from the fourteenth to the twenty-eighth of June this year.',
+    blanks: ['library','renovation','fourteenth','twenty-eighth','June'], voice:'en-GB', diff: 4 },
+  { text: 'Our class raised three hundred and fifty dollars for the charity walkathon held at East Coast Park last Saturday.',
+    blanks: ['raised','hundred','fifty','charity','Saturday'], voice:'en-GB', diff: 3 },
+  { text: 'The mathematics examination will last for one hour and forty-five minutes, and calculators are not allowed.',
+    blanks: ['mathematics','hour','forty-five','minutes','calculators'], voice:'en-GB', diff: 4 },
+  { text: 'Despite finishing the project two days early, the teacher said they could not present until the scheduled date.',
+    blanks: ['Despite','finishing','early','present','scheduled'], voice:'en-GB', diff: 5 },
+  { text: 'The prefects reminded everyone that running along the corridor is strictly prohibited and offenders will receive a warning.',
+    blanks: ['prefects','running','corridor','prohibited','warning'], voice:'en-GB', diff: 4 },
+  { text: 'Our geography teacher explained that Singapore receives approximately two thousand four hundred millimetres of rainfall annually.',
+    blanks: ['geography','Singapore','approximately','thousand','annually'], voice:'en-GB', diff: 5 },
+  // --- 交通/旅行场景 (7 段) ---
+  { text: 'The bus service number one hundred and seventy will be diverted due to roadworks near Orchard Boulevard.',
+    blanks: ['hundred','seventy','diverted','roadworks','Orchard'], voice:'en-GB', diff: 4 },
+  { text: 'Passengers travelling to Changi Airport should alight at Terminal Three station and follow signs to the departure hall.',
+    blanks: ['Passengers','Changi','alight','Terminal','departure'], voice:'en-GB', diff: 4 },
+  { text: 'The flight from Singapore to Tokyo takes approximately six hours and thirty minutes with no stopover.',
+    blanks: ['flight','Tokyo','approximately','thirty','stopover'], voice:'en-GB', diff: 3 },
+  { text: 'Due to signal failure, all trains on the North-South line will experience a delay of fifteen to twenty minutes.',
+    blanks: ['signal','failure','North-South','fifteen','twenty'], voice:'en-GB', diff: 4 },
+  { text: 'My family drove from Johor Bahru to Kuala Lumpur, which took about four hours because of heavy traffic on the expressway.',
+    blanks: ['Johor','Kuala','Lumpur','hours','expressway'], voice:'en-GB', diff: 4 },
+  { text: 'The new Circle Line extension will connect Keppel station to HarbourFront, reducing travel time by twelve minutes.',
+    blanks: ['Circle','extension','Keppel','HarbourFront','twelve'], voice:'en-GB', diff: 5 },
+  { text: 'Cyclists must dismount and push their bicycles when using the pedestrian crossing near Bukit Panjang MRT.',
+    blanks: ['Cyclists','dismount','push','pedestrian','Panjang'], voice:'en-GB', diff: 4 },
+  // --- 购物/日常场景 (6 段) ---
+  { text: 'The supermarket on the ground floor offers a twenty percent discount on all dairy products every Tuesday.',
+    blanks: ['supermarket','ground','twenty','discount','Tuesday'], voice:'en-GB', diff: 3 },
+  { text: 'She bought three notebooks at two dollars and fifty cents each and paid with a ten dollar note.',
+    blanks: ['three','notebooks','fifty','cents','ten'], voice:'en-GB', diff: 3 },
+  { text: 'The neighbourhood clinic opens at eight thirty in the morning but is closed on Sundays and public holidays.',
+    blanks: ['neighbourhood','clinic','eight','thirty','Sundays'], voice:'en-GB', diff: 3 },
+  { text: 'Although the restaurant received excellent reviews online, we found the service disappointing and the food overpriced.',
+    blanks: ['Although','restaurant','excellent','disappointing','overpriced'], voice:'en-GB', diff: 5 },
+  { text: 'The community centre is offering free swimming lessons for children aged seven to twelve during the December holidays.',
+    blanks: ['community','swimming','seven','twelve','December'], voice:'en-GB', diff: 4 },
+  { text: 'My mother ordered a birthday cake from the bakery and asked them to write Happy Thirteenth Birthday on it.',
+    blanks: ['mother','birthday','bakery','Thirteenth','Birthday'], voice:'en-GB', diff: 3 },
+  // --- 健康/安全场景 (7 段) ---
+  { text: 'The doctor advised him to drink at least eight glasses of water daily and reduce his intake of sugary beverages.',
+    blanks: ['doctor','eight','glasses','reduce','beverages'], voice:'en-GB', diff: 4 },
+  { text: 'In the event of a fire, proceed calmly to the nearest staircase and assemble at the open field behind Block Forty-Two.',
+    blanks: ['event','calmly','staircase','assemble','Forty-Two'], voice:'en-GB', diff: 5 },
+  { text: 'Children under the age of twelve must be accompanied by an adult when using the swimming pool after seven pm.',
+    blanks: ['Children','twelve','accompanied','adult','seven'], voice:'en-GB', diff: 4 },
+  { text: 'The dengue prevention campaign urges residents to clear stagnant water and apply insect repellent regularly.',
+    blanks: ['dengue','prevention','stagnant','repellent','regularly'], voice:'en-GB', diff: 5 },
+  { text: 'According to the health guidelines, primary school students should get at least nine hours of sleep every night.',
+    blanks: ['According','guidelines','primary','nine','sleep'], voice:'en-GB', diff: 3 },
+  { text: 'The nurse explained that the vaccination would protect against measles, mumps and rubella and had very few side effects.',
+    blanks: ['nurse','vaccination','measles','rubella','effects'], voice:'en-GB', diff: 5 },
+  { text: 'Wearing a helmet while cycling is not compulsory in Singapore, but it is strongly recommended for personal safety.',
+    blanks: ['helmet','cycling','compulsory','Singapore','recommended'], voice:'en-GB', diff: 4 },
+  // --- 环境/科学场景 (7 段) ---
+  { text: 'Scientists discovered that rising sea levels could affect low-lying areas in Southeast Asia within the next fifty years.',
+    blanks: ['Scientists','rising','affect','Southeast','fifty'], voice:'en-GB', diff: 5 },
+  { text: 'The nature reserve in Bukit Timah is home to over eight hundred species of flowering plants and forty species of birds.',
+    blanks: ['nature','Bukit','hundred','species','forty'], voice:'en-GB', diff: 4 },
+  { text: 'Plastic bags take approximately four hundred and fifty years to decompose, which is why we should use reusable bags.',
+    blanks: ['Plastic','approximately','hundred','decompose','reusable'], voice:'en-GB', diff: 4 },
+  { text: 'The average temperature in Singapore ranges from twenty-four to thirty-one degrees Celsius throughout the year.',
+    blanks: ['average','temperature','twenty-four','thirty-one','Celsius'], voice:'en-GB', diff: 4 },
+  { text: 'During the northeast monsoon season from December to March, Singapore experiences heavier rainfall and cooler temperatures.',
+    blanks: ['northeast','monsoon','December','March','temperatures'], voice:'en-GB', diff: 5 },
+  { text: 'The zoo reported that its giant pandas consumed about thirty-eight kilograms of bamboo each day on average.',
+    blanks: ['zoo','giant','pandas','thirty-eight','kilograms'], voice:'en-GB', diff: 4 },
+  { text: 'Energy-saving light bulbs use seventy-five percent less electricity than traditional bulbs and last up to ten times longer.',
+    blanks: ['Energy-saving','seventy-five','electricity','traditional','ten'], voice:'en-GB', diff: 4 }
 ];
 
 // ============= v18.25: 难度标签 (auto-tag existing + 加 hard 题库) =============
@@ -2081,6 +2275,14 @@ function recordGameRun(state, gameKey, correct, total) {
     s.difficulty--;
     levelChanged = 'down';
     s.recent = [];
+  }
+  // v19.5: 弱科挑战 — 如果这次 game 属于弱科, 计入挑战进度
+  const gameSubj = SUBJECT_OF_GAME[gameKey];
+  if (gameSubj) {
+    const weak = findWeakSubjects(state);
+    if (weak.indexOf(gameSubj) >= 0) {
+      recordWeakChallenge(state);
+    }
   }
   return { newDiff: s.difficulty, levelChanged };
 }
@@ -6696,6 +6898,20 @@ window.SUBJECT_OF_GAME = SUBJECT_OF_GAME;
 window.WEAK_KNOWLEDGE_MAP = WEAK_KNOWLEDGE_MAP;
 window.getSubjectAccuracy = getSubjectAccuracy;
 window.findWeakSubjects = findWeakSubjects;
+// v19.5: 学习质量门槛 + 作文追踪 + 弱科挑战 + 模考闭环
+window.SLOT_SUBJECT = SLOT_SUBJECT;
+window.QUALITY_GATE_THRESHOLD = QUALITY_GATE_THRESHOLD;
+window.QUALITY_GATE_PENALTY = QUALITY_GATE_PENALTY;
+window.getSlotQualityMultiplier = getSlotQualityMultiplier;
+window.getCompStatus = getCompStatus;
+window.setCompStep = setCompStep;
+window.getCompCompletion = getCompCompletion;
+window.getWeeklyWeakChallenge = getWeeklyWeakChallenge;
+window.getWeakChallengeProgress = getWeakChallengeProgress;
+window.recordWeakChallenge = recordWeakChallenge;
+window.addMockExam = addMockExam;
+window.generateFocusAreas = generateFocusAreas;
+window.getFocusAreas = getFocusAreas;
 // v18.40: 题库 (华文阅读)
 window.CHINESE_READING = CHINESE_READING;
 window.getChineseReadingByDiff = getChineseReadingByDiff;
