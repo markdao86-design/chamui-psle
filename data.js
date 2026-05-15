@@ -4718,6 +4718,19 @@ const VOCAB_MEANINGS = {
   'a stone\'s throw away':'近在咫尺','break the ice':'打破僵局','go the extra mile':'格外努力',
   'hit the nail on the head':'一针见血','add fuel to the fire':'火上浇油','nip in the bud':'防患于未然',
   'provided':'假如/只要','regardless':'不管怎样','hence':'因此','whereas':'然而/鉴于',
+  // --- v19.5b: 科学/数学闪卡补充翻译 ---
+  'pollination':'传粉','fertilization':'受精','chloroplast':'叶绿体','cell membrane':'细胞膜',
+  'cell wall':'细胞壁','nucleus':'细胞核','vacuole':'液泡','mitochondria':'线粒体',
+  'organism':'生物','species':'物种','vertebrate':'脊椎动物','invertebrate':'无脊椎动物',
+  'boiling':'沸腾','melting':'熔化','freezing':'凝固','magnetic force':'磁力',
+  'inertia':'惯性','acceleration':'加速度','kinetic energy':'动能','potential energy':'势能',
+  'transparent':'透明','translucent':'半透明','opaque':'不透明','current':'电流',
+  'voltage':'电压','resistance':'电阻','independent variable':'自变量',
+  'dependent variable':'因变量','controlled variable':'控制变量',
+  'magnifying glass':'放大镜','dissolve':'溶解','filter':'过滤','mixture':'混合物',
+  'solution':'溶液','reversible':'可逆的','irreversible':'不可逆的','nitrogen':'氮气',
+  'isosceles':'等腰','scalene':'不等边','symmetry':'对称','tessellation':'密铺',
+  'net':'展开图','interest':'利息','ascending':'升序','descending':'降序',
   // --- 新加坡生活词汇 (PSLE 本土化) ---
   'hawker centre':'小贩中心','void deck':'组屋底层','HDB':'组屋','kampong':'甘榜/村庄','mamak':'嘛嘛档',
   'MRT':'地铁','kopitiam':'咖啡店','kiasu':'怕输','singlish':'新加坡式英语','durian':'榴莲'
@@ -4745,7 +4758,17 @@ const FLASHCARD_DECKS = [
   { id: 'cloze_collocations', name: '🧩 Cloze 固定搭配', category: 'Cloze必考',
     words: ['a wide range of','at the expense of','in the nick of time','out of the blue','take for granted','make the most of','to no avail','without a doubt','at a loss','once in a while','in vain','at stake','by all means','on the verge of','lend a hand','in store for','at all costs','bear in mind','for good','on behalf of'] },
   { id: 'idioms', name: '✒️ 写作习语', category: '作文加分',
-    words: ['a blessing in disguise','beat around the bush','burn the midnight oil','once bitten twice shy','the last straw','a drop in the ocean','turn over a new leaf','actions speak louder than words','every cloud has a silver lining','keep one\'s fingers crossed','butterflies in stomach','dawn upon','see eye to eye','a stone\'s throw away','at the top of one\'s lungs','break the ice','go the extra mile','hit the nail on the head','add fuel to the fire','nip in the bud'] }
+    words: ['a blessing in disguise','beat around the bush','burn the midnight oil','once bitten twice shy','the last straw','a drop in the ocean','turn over a new leaf','actions speak louder than words','every cloud has a silver lining','keep one\'s fingers crossed','butterflies in stomach','dawn upon','see eye to eye','a stone\'s throw away','at the top of one\'s lungs','break the ice','go the extra mile','hit the nail on the head','add fuel to the fire','nip in the bud'] },
+  { id: 'sci_life', name: '🔬 科学: 生命科学', category: '科学',
+    words: ['photosynthesis','respiration','transpiration','germination','reproduction','pollination','fertilization','chlorophyll','chloroplast','stomata','xylem','phloem','cell membrane','cell wall','nucleus','vacuole','mitochondria','organism','species','habitat','ecosystem','food chain','food web','producer','consumer','decomposer','predator','prey','adaptation','camouflage','hibernation','migration','vertebrate','invertebrate','mammal','reptile','amphibian'] },
+  { id: 'sci_physical', name: '🔬 科学: 物理科学', category: '科学',
+    words: ['matter','mass','volume','density','solid','liquid','gas','evaporation','condensation','boiling','melting','freezing','conduction','convection','radiation','conductor','insulator','temperature','thermometer','force','friction','gravity','magnetic force','inertia','acceleration','energy','kinetic energy','potential energy','light','shadow','reflection','refraction','transparent','translucent','opaque','circuit','series circuit','parallel circuit','current','voltage','resistance'] },
+  { id: 'sci_process', name: '🔬 科学: 实验/过程词', category: '科学',
+    words: ['experiment','hypothesis','observation','conclusion','variable','independent variable','dependent variable','controlled variable','fair test','prediction','evidence','data','apparatus','beaker','measuring cylinder','test tube','thermometer','magnifying glass','dissolve','filter','mixture','solution','reversible','irreversible','water cycle','precipitation','carbon dioxide','oxygen','nitrogen'] },
+  { id: 'math_geometry', name: '➗ 数学: 几何/测量', category: '数学',
+    words: ['perimeter','area','volume','circumference','radius','diameter','parallel','perpendicular','equilateral','isosceles','scalene','right-angled','acute','obtuse','reflex','vertex','edge','face','base','height','breadth','depth','cuboid','cube','cylinder','cone','sphere','prism','pyramid','symmetry','tessellation','net'] },
+  { id: 'math_number', name: '➗ 数学: 数与运算', category: '数学',
+    words: ['quotient','remainder','dividend','divisor','numerator','denominator','mixed number','improper fraction','equivalent fraction','simplest form','decimal','factor','multiple','prime','composite','product','sum','difference','ratio','proportion','percentage','discount','profit','loss','GST','interest','average','median','mode','ascending','descending','estimate','approximate','round off'] }
 ];
 
 const FLASHCARD_SRS_INTERVALS = [0, 1, 3, 7, 14, 30, 60];
