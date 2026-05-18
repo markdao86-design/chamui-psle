@@ -147,7 +147,8 @@ function allKeySlotsDone(weekNum, state) {
 
 function isDayComplete(state, weekNum, dayKey) {
   const tasks = (WEEK_TASKS[weekNum - 1] && WEEK_TASKS[weekNum - 1].days[dayKey]) || {};
-  const slots = Object.keys(tasks);
+  // v19.6: 排除加练池 slot — 它们不走 daily check 系统, 不影响"今日全勾"
+  const slots = Object.keys(tasks).filter(s => !(POOL_TARGET && POOL_TARGET[s]));
   if (slots.length === 0) return false;
   return slots.every(s => getDailyCheck(state, weekNum, dayKey, s));
 }
@@ -235,6 +236,85 @@ const BEDTIME_MIN = 30;
 const CORE_COMBO = 20;
 const EXTEND_COMBO = 15;
 const PERFECT_COMBO = 35;
+
+// ============= v19.6: 加练池 (替代 tier 2/3 每日固定) =============
+// 痛点: 旧设计每天 7 task 太累, 解锁钩+完美 combo 双重夹击孩子做到吐
+// 新设计: 主线日(tier 1) + 5 项本周加练池, 想做就做, 不强制
+// 删除原因:
+//   LS/VC/VB → mini-game 大厅已替代 (听写/词汇/华文 MCQ), 不再重复做 slot
+//   WSR/WSV/WUP → 软任务 (复盘/家庭聊天/整理书包), 非硬技能, 不进打卡
+// 保留 5 项 (硬技能 + 真实学校任务):
+const POOL_TARGET = {
+  OR: 1,    // 口语录音 (mini-game 没替代品, 独立任务, 每周 1 次)
+  WSE: 1,   // 周六 09:00 周四作业/错题集 1h (真实任务)
+  WSL: 1,   // 周六 11:50 听力 15min (4 步精听法, 结构化训练)
+  WUE1: 1,  // 周日 18:30 美玲作业 part 1 1h (真实任务)
+  WUE2: 1   // 周日 19:45 美玲作业 part 2 + cloze 收尾
+};
+const WEEKLY_PERFECT_BONUS = 30;  // 主线 7 天全勤 + 加练池 5/5 全做 → +30 一次性
+
+function getPoolProgress(state, week) {
+  const pool = (state.weeklyPool && state.weeklyPool[week]) || {};
+  const slots = Object.keys(POOL_TARGET);
+  let done = 0, total = 0;
+  const items = [];
+  for (const s of slots) {
+    const did = Math.min(pool[s] || 0, POOL_TARGET[s]);
+    const max = POOL_TARGET[s];
+    done += did;
+    total += max;
+    items.push({ slot: s, done: did, max, remaining: Math.max(0, max - did) });
+  }
+  return { done, total, items, full: done >= total };
+}
+
+function addPoolEntry(state, week, slotKey) {
+  if (!POOL_TARGET[slotKey]) return false;
+  if (!state.weeklyPool) state.weeklyPool = {};
+  if (!state.weeklyPool[week]) state.weeklyPool[week] = {};
+  const cur = state.weeklyPool[week][slotKey] || 0;
+  if (cur >= POOL_TARGET[slotKey]) return false;
+  state.weeklyPool[week][slotKey] = cur + 1;
+  return true;
+}
+
+function ensureCurrentWeekPool(state) {
+  if (!state.weeklyPool) state.weeklyPool = {};
+  if (!state.weeklyPool[state.currentWeek]) state.weeklyPool[state.currentWeek] = {};
+}
+
+// 周完美判定: 主线 7 天全勤 (Mon-Sun 各日 tier-1 全勾) + 加练池 5/5
+// 用 state.weekly[week].perfectGiven flag 防重复给奖
+function calcWeeklyPerfect(state, week) {
+  const wd = state.weekly && state.weekly[week];
+  if (!wd) return { eligible: false, given: false };
+  if (wd.perfectGiven) return { eligible: true, given: true };
+  // 主线 tier-1 任务每日全勾
+  const daysToCheck = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  for (const day of daysToCheck) {
+    const tpl = (typeof getCheckinTemplate === 'function') ? getCheckinTemplate(week, day) : [];
+    const tier1 = tpl.filter(t => (SLOT_TIER[t.slot] || 3) === 1);
+    if (tier1.length === 0) continue;  // 当天没主线任务跳过
+    const allDone = tier1.every(t => getDailyCheck(state, week, day, t.slot));
+    if (!allDone) return { eligible: false, given: false };
+  }
+  // 池子全做完
+  const pool = getPoolProgress(state, week);
+  if (!pool.full) return { eligible: false, given: false };
+  return { eligible: true, given: false };
+}
+
+function grantWeeklyPerfect(state, week) {
+  if (!state.weekly[week]) state.weekly[week] = { checkin: {} };
+  state.weekly[week].perfectGiven = true;
+  state.totalPoints += WEEKLY_PERFECT_BONUS;
+  state.logs.push({
+    reason: `🌟 W${week} 周完美! 主线全勤 + 加练池 5/5`,
+    points: WEEKLY_PERFECT_BONUS,
+    week,
+    timestamp: Date.now()
+  });
+}
 
 // ============= v19.2: 暴击系统 =============
 // v19.3: 暴击精通触发 (降基础概率, 硬顶25%, ×2封顶)
@@ -5151,7 +5231,9 @@ function getDefaultState() {
     // v18.60: 双龙觉醒状态 — null 或 { unlockedAt, totalPointsAtUnlock, ceremonyDone }
     dragonsUnlocked: { silver: null, gold: null },
     // v18.60: 当前主页宠物类型 — 'hamster' (默认) 或 'gold_dragon' (拿金龙后可切)
-    activePetType: 'hamster'
+    activePetType: 'hamster',
+    // v19.6: 加练池 — 替代旧 tier 2/3 每日固定. 每周独立, 不 carry
+    weeklyPool: {}
   };
 }
 
@@ -6345,7 +6427,9 @@ function calcWeekCompletion(weekNum, state) {
   let total = 0, done = 0;
 
   // v14/v16: 9 个 slot — AM/PM(周末)+ E1/OR/VC/LS/ED/S2/VB(平日 7 个)
-  const ALL_SLOTS = ['AM', 'PM', 'E1', 'OR', 'VC', 'LS', 'ED', 'S2', 'VB'];
+  // v19.6: 排除加练池 slot (OR 等) — 它们走独立 weeklyPool, 不参与每日打卡完成率
+  const ALL_SLOTS_RAW = ['AM', 'PM', 'E1', 'OR', 'VC', 'LS', 'ED', 'S2', 'VB'];
+  const ALL_SLOTS = ALL_SLOTS_RAW.filter(s => !(POOL_TARGET && POOL_TARGET[s]));
   for (const day of DAY_KEYS) {
     const daySlots = w.days[day] || {};
     const isWeekend = day === 'Sat' || day === 'Sun';
@@ -6879,6 +6963,14 @@ window.SLOT_TIER = SLOT_TIER;
 window.CORE_COMBO = CORE_COMBO;
 window.EXTEND_COMBO = EXTEND_COMBO;
 window.PERFECT_COMBO = PERFECT_COMBO;
+// v19.6: 加练池
+window.POOL_TARGET = POOL_TARGET;
+window.WEEKLY_PERFECT_BONUS = WEEKLY_PERFECT_BONUS;
+window.getPoolProgress = getPoolProgress;
+window.addPoolEntry = addPoolEntry;
+window.ensureCurrentWeekPool = ensureCurrentWeekPool;
+window.calcWeeklyPerfect = calcWeeklyPerfect;
+window.grantWeeklyPerfect = grantWeeklyPerfect;
 window.CRIT_CHANCE_BASE = CRIT_CHANCE_BASE;
 window.CRIT_CHANCE_MAX = CRIT_CHANCE_MAX;
 window.CRIT_MULT_BASE = CRIT_MULT_BASE;

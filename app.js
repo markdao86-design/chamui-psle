@@ -1868,21 +1868,19 @@ function renderCheckinPage() {
   `;
 
   // === 3) 当日任务列表 ===
-  const dayTasks = getDailyTasks(week, selectedDay);
+  const dayTasksRaw = getDailyTasks(week, selectedDay);
+  // v19.6: 加练池 slot (OR/WSE/WSL/WUE1/WUE2) 从打卡页彻底移除, 进本周池子
+  const dayTasks = dayTasksRaw.filter(t => !(window.POOL_TARGET && window.POOL_TARGET[t.slot]));
   const allDoneToday = dayTasks.length > 0 && dayTasks.every(t => getDailyCheck(state, week, selectedDay, t.slot));
 
-  // v19.2: 分层逻辑
+  // v19.2: 分层逻辑 (v19.6 后 tier 2/3 实际只剩 WSR/WSV/WUP 等已删除的软任务, dayTasks 已过滤)
   const tier1Tasks = dayTasks.filter(t => (SLOT_TIER[t.slot] || 3) === 1);
   const tier2Tasks = dayTasks.filter(t => (SLOT_TIER[t.slot] || 3) === 2);
   const tier3Tasks = dayTasks.filter(t => (SLOT_TIER[t.slot] || 3) === 3);
   const tier1AllDone = tier1Tasks.length > 0 && tier1Tasks.every(t => getDailyCheck(state, week, selectedDay, t.slot));
-  const tier2AllDone = tier2Tasks.length > 0 && tier2Tasks.every(t => getDailyCheck(state, week, selectedDay, t.slot));
+  const tier2AllDone = tier2Tasks.length === 0 || tier2Tasks.every(t => getDailyCheck(state, week, selectedDay, t.slot));
   const now = new Date();
   const pastBedtime = now.getHours() > BEDTIME_HOUR || (now.getHours() === BEDTIME_HOUR && now.getMinutes() >= BEDTIME_MIN);
-  const expandedKey = `tier_expanded_${selectedDay}`;
-  const manualExpand = sessionStorage.getItem(expandedKey);
-  const showTier2 = tier1AllDone || manualExpand >= '2';
-  const showTier3 = (tier2AllDone && tier1AllDone && !pastBedtime) || manualExpand >= '3';
 
   // v18.23: 周末按 上午/下午/晚上 分段, 段间显示休息/外课说明
   const SECTION_BY_SLOT = {
@@ -1995,7 +1993,8 @@ function renderCheckinPage() {
         }
       }
       const tier = SLOT_TIER[t.slot] || 3;
-      const tierHidden = (tier === 2 && !showTier2) || (tier === 3 && !showTier3);
+      // v19.6: pool slot 已被 dayTasks filter 移除, 这里 tier 2/3 只剩软任务(若有), 默认收起
+      const tierHidden = tier !== 1;
       const tierClass = tier === 1 ? 'tier-core' : tier === 2 ? 'tier-extend' : 'tier-bonus';
       const sizeClass = (SLOT_BASE_POINTS[t.slot] || 2) >= 7 ? 'task-large' : 'task-small';
       return sectionHeader + `
@@ -2022,22 +2021,18 @@ function renderCheckinPage() {
         </div>
       ` + ktHintHtml;
     }).join('');
-    // v19.2: tier-based combo + expand buttons
-    if (tier1AllDone && tier2AllDone && allDoneToday) {
-      slotsHtml += `<div class="combo-banner">🔥 完美日! 主线 +${CORE_COMBO} · 支线 +${EXTEND_COMBO} · 完美 +${PERFECT_COMBO} = 全勤 +${CORE_COMBO + EXTEND_COMBO + PERFECT_COMBO}!</div>`;
-    } else if (tier1AllDone) {
-      slotsHtml += `<div class="combo-banner" style="background:linear-gradient(135deg,rgba(0,255,136,0.08),rgba(0,212,255,0.06))">🎯 主线全勤! +${CORE_COMBO} 分!</div>`;
-      if (!showTier2) {
-        slotsHtml += `<button class="tier-expand-btn" onclick="event.stopPropagation(); sessionStorage.setItem('${expandedKey}','2'); renderCheckinPage()">🎁 解锁支线挑战 (+${tier2Tasks.length} 项)</button>`;
-      } else if (tier2AllDone && !showTier3 && !pastBedtime) {
-        slotsHtml += `<button class="tier-expand-btn" onclick="event.stopPropagation(); sessionStorage.setItem('${expandedKey}','3'); renderCheckinPage()">🔮 解锁隐藏关卡 (+${tier3Tasks.length} 项)</button>`;
-      } else if (pastBedtime && !showTier3) {
+    // v19.6: 主线-only combo + 加练池引导 (删除老解锁钩 + 日完美 combo)
+    if (tier1AllDone) {
+      slotsHtml += `<div class="combo-banner" style="background:linear-gradient(135deg,rgba(0,255,136,0.08),rgba(0,212,255,0.06))">🎯 主线全勤! +${CORE_COMBO} 分 · 想加练去本周池子 👇</div>`;
+      if (pastBedtime) {
         slotsHtml += `<div class="combo-hint">🌙 21:30 到了, 该休息了! 明天继续 💪</div>`;
       }
     } else {
       const coreLeft = tier1Tasks.filter(t => !getDailyCheck(state, week, selectedDay, t.slot)).length;
       slotsHtml += `<div class="combo-hint">🎯 主线还差 <b>${coreLeft}</b> 个 → 全勾拿 <b>+${CORE_COMBO}</b> 主线全勤奖</div>`;
     }
+    // v19.6: 加练池卡 (主线下方, 始终显示)
+    slotsHtml += renderWeeklyPoolCard(week);
   }
 
   // === 4) 周汇总情况 ===
@@ -2079,6 +2074,112 @@ function renderCheckinPage() {
 
   list.innerHTML = goalBanner + restBanner + dayTabs + `<div class="day-slots">${slotsHtml}</div>` + safetyValve + summary + adminHtml;
 }
+
+// ============ v19.6: 本周加练池 ============
+// 5 项 (OR/WSE/WSL/WUE1/WUE2), 全部 1 次/周, 想做就点 [+1]
+// 删 LS/VC/VB (mini-game 大厅替代) + 删 WSR/WSV/WUP (软任务非硬技能)
+const POOL_SLOT_META = {
+  OR:   { icon: '🗣️', name: 'Oral 口语录音 (35min)',    hint: '英语短语录音 + 自己回听', subj: '英语' },
+  WSE:  { icon: '📝', name: '周四作业/错题集 (1h)',     hint: '周末优先做完, 趁记忆热',    subj: '英语' },
+  WSL:  { icon: '🎧', name: '周末听力 4 步精听 (15min)', hint: '听感觉→挑生词→查记本→复听', subj: '英语' },
+  WUE1: { icon: '📚', name: '美玲周五作业 part 1 (1h)',  hint: '英语作业核心部分',          subj: '英语' },
+  WUE2: { icon: '✍️', name: '美玲周五作业 part 2 (45min)', hint: '+ cloze 收尾',           subj: '英语' }
+};
+
+function renderWeeklyPoolCard(week) {
+  if (!window.POOL_TARGET) return '';
+  const prog = window.getPoolProgress(state, week);
+  const isCur = week === state.currentWeek;
+  const expandKey = `pool_expanded_${week}`;
+  const expanded = sessionStorage.getItem(expandKey) === '1';
+  const headerCls = prog.full ? 'pool-card-full' : '';
+  let rows = '';
+  if (expanded) {
+    rows = prog.items.map(it => {
+      const meta = POOL_SLOT_META[it.slot] || { icon: '📋', name: it.slot, hint: '', subj: '' };
+      const pts = (window.SLOT_BASE_POINTS && window.SLOT_BASE_POINTS[it.slot]) || 5;
+      const done = it.done >= it.max;
+      const btn = done
+        ? `<span class="pool-done-tag">✓ 已做</span>`
+        : (isCur
+            ? `<button class="pool-add-btn" onclick="event.stopPropagation(); addPoolAndScore('${it.slot}')">＋ 做 1 次 (+${pts})</button>`
+            : `<span class="pool-readonly-tag">只读</span>`);
+      return `
+        <div class="pool-row ${done ? 'pool-row-done' : ''}">
+          <div class="pool-row-icon">${meta.icon}</div>
+          <div class="pool-row-info">
+            <div class="pool-row-name">${escapeHtml(meta.name)} <span class="pool-row-prog">${it.done}/${it.max}</span></div>
+            <div class="pool-row-hint">${escapeHtml(meta.hint)}</div>
+          </div>
+          <div class="pool-row-action">${btn}</div>
+        </div>`;
+    }).join('');
+  }
+  const tipLine = `<div class="pool-tip">💡 想多练听力/词汇/华文 → 去 <b>mini-game 大厅</b> (做了不用打卡也练到)</div>`;
+  const perfectLine = `<div class="pool-tip">🌟 主线 7 天全勤 + 池子 5/5 = 周完美 +${window.WEEKLY_PERFECT_BONUS || 30} 分</div>`;
+  return `
+    <div class="weekly-pool-card ${headerCls}">
+      <div class="pool-header" onclick="event.stopPropagation(); _togglePoolCard('${expandKey}')">
+        <div class="pool-header-left">
+          <span class="pool-icon">📋</span>
+          <span class="pool-title">本周加练池</span>
+          <span class="pool-progress-num">${prog.done}/${prog.total}</span>
+        </div>
+        <div class="pool-header-right">
+          <div class="pool-progress-bar"><div class="pool-progress-fill" style="width:${Math.round(prog.done/prog.total*100)}%"></div></div>
+          <span class="pool-toggle">${expanded ? '▼' : '▶'}</span>
+        </div>
+      </div>
+      ${expanded ? `<div class="pool-rows">${rows}${tipLine}${perfectLine}</div>` : ''}
+    </div>`;
+}
+
+function _togglePoolCard(key) {
+  const cur = sessionStorage.getItem(key) === '1';
+  sessionStorage.setItem(key, cur ? '0' : '1');
+  renderCheckinPage();
+}
+window._togglePoolCard = _togglePoolCard;
+
+function addPoolAndScore(slotKey) {
+  if (!window.POOL_TARGET || !window.POOL_TARGET[slotKey]) return;
+  const week = state.currentWeek;
+  const cur = ((state.weeklyPool && state.weeklyPool[week]) || {})[slotKey] || 0;
+  const max = window.POOL_TARGET[slotKey];
+  if (cur >= max) { showToast('本周该项已做满 ✓', 'warn'); return; }
+  const ok = window.addPoolEntry(state, week, slotKey);
+  if (!ok) return;
+  const pts = (window.SLOT_BASE_POINTS && window.SLOT_BASE_POINTS[slotKey]) || 5;
+  // v19.6: 池子加练 = 直接加分 (绕开 calcSlotReward 的 daily check 系统, 因为它不绑 day)
+  state.totalPoints += pts;
+  state.logs.push({
+    reason: `📋 加练 ${slotKey} (本周 ${cur+1}/${max})`,
+    points: pts,
+    week,
+    timestamp: Date.now()
+  });
+  showToast(`📋 +${pts} 分 · 本周加练池 ${cur+1}/${max}`, 'happy');
+  playSound('ding');
+  // 周完美判定
+  _checkWeeklyPerfect(week);
+  saveState(state);
+  renderAll();
+}
+window.addPoolAndScore = addPoolAndScore;
+
+function _checkWeeklyPerfect(week) {
+  if (!window.calcWeeklyPerfect) return;
+  const r = window.calcWeeklyPerfect(state, week);
+  if (r.eligible && !r.given) {
+    window.grantWeeklyPerfect(state, week);
+    showToast(`🌟 周完美! +${window.WEEKLY_PERFECT_BONUS} 分 (主线全勤+池子 5/5)`, 'success');
+    shakeScreen();
+    spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 60);
+    setTimeout(() => spawnFloatPoints(`🌟 周完美 +${window.WEEKLY_PERFECT_BONUS}!`, null, true), 200);
+    playSound('tada');
+  }
+}
+window._checkWeeklyPerfect = _checkWeeklyPerfect;
 
 function countDayDone(week, day) {
   const tasks = getDailyTasks(week, day);
@@ -2446,6 +2547,8 @@ function toggleDailyCheck(week, day, slot, evt) {
     checkLevelUp(oldPoints, state.totalPoints);
     // v19.2: 打卡后触发奖励关 (延迟 1.2s 让打卡动画先播完)
     setTimeout(() => _triggerGameReward(week, selectedDay, slot), 1200);
+    // v19.6: 主线打卡可能凑齐周完美
+    _checkWeeklyPerfect(week);
   } else {
     showToast(`↩️ 取消勾选`, 'warn');
     if (oldDayComplete && !newDayComplete) {

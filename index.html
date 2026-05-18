@@ -1882,6 +1882,67 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   transition: all 0.2s;
 }
 .tier-expand-btn:hover { transform: scale(1.02); box-shadow: 0 2px 8px rgba(0,212,255,0.3); }
+
+/* ===== v19.6: 本周加练池 ===== */
+.weekly-pool-card {
+  margin: 14px 0 8px;
+  background: linear-gradient(135deg, rgba(168,85,247,0.06), rgba(56,189,248,0.04));
+  border: 1px solid rgba(168,85,247,0.2);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.weekly-pool-card.pool-card-full {
+  background: linear-gradient(135deg, rgba(255,215,0,0.10), rgba(0,255,136,0.06));
+  border-color: rgba(255,215,0,0.4);
+  box-shadow: 0 0 0 1px rgba(255,215,0,0.2) inset;
+}
+.pool-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  gap: 12px;
+  user-select: none;
+}
+.pool-header-left { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.pool-header-right { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: flex-end; }
+.pool-icon { font-size: 18px; }
+.pool-title { font-weight: 700; font-size: 14px; color: var(--color-text); }
+.pool-progress-num { font-size: 13px; color: #C084FC; font-weight: 600; }
+.pool-progress-bar { flex: 1; max-width: 140px; height: 6px; background: rgba(0,0,0,0.18); border-radius: 3px; overflow: hidden; }
+.pool-progress-fill { height: 100%; background: linear-gradient(90deg, #C084FC, #38BDF8); transition: width 0.3s; }
+.pool-toggle { font-size: 10px; color: var(--color-text-light); width: 12px; text-align: center; }
+.pool-rows { padding: 0 14px 12px; }
+.pool-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.pool-row:first-child { border-top: 1px solid rgba(168,85,247,0.15); }
+.pool-row-done { opacity: 0.55; }
+.pool-row-icon { font-size: 22px; flex-shrink: 0; width: 28px; text-align: center; }
+.pool-row-info { flex: 1; min-width: 0; }
+.pool-row-name { font-size: 13px; font-weight: 600; color: var(--color-text); }
+.pool-row-prog { font-size: 11px; color: var(--color-text-light); font-weight: 500; margin-left: 4px; }
+.pool-row-hint { font-size: 11px; color: var(--color-text-light); margin-top: 2px; opacity: 0.85; }
+.pool-row-action { flex-shrink: 0; }
+.pool-add-btn {
+  background: linear-gradient(135deg, #C084FC, #38BDF8);
+  color: #fff; border: none; padding: 6px 12px;
+  border-radius: 6px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+}
+.pool-add-btn:hover { transform: scale(1.05); box-shadow: 0 2px 8px rgba(168,85,247,0.4); }
+.pool-done-tag { color: var(--color-success); font-size: 12px; font-weight: 600; }
+.pool-readonly-tag { color: var(--color-text-light); font-size: 11px; }
+.pool-tip {
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--color-text-light);
+}
+
 .checkin-item.tier-core { border-left: 3px solid var(--color-primary); }
 .checkin-item.tier-extend { border-left: 3px solid var(--color-accent); }
 .checkin-item.tier-bonus { border-left: 3px solid var(--color-purple); opacity: 0.85; }
@@ -5324,9 +5385,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.5b"></script>
-<script src="data.js?v=19.5b"></script>
-<script src="app.js?v=19.5b"></script>
+<script src="character.js?v=19.6"></script>
+<script src="data.js?v=19.6"></script>
+<script src="app.js?v=19.6"></script>
 
 </body>
 </html>

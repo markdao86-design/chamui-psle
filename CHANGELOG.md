@@ -5,6 +5,63 @@
 
 ---
 
+## 📅 版本历史 (v19.6)
+
+### v19.6 — 治本任务焦虑: 主线日 + 极简加练池 5 项 + 周完美 (2026-05-18)
+
+**痛点**: 孩子反馈"每日任务太多很累"。读源码发现根因不是"支线没藏好", 而是三层任务设计本身把"隐藏"做成了"层层解锁胡萝卜":
+- 主线 3 个 (E1/S2/ED) → 21 分
+- 主线全勤后弹按钮 `🎁 解锁支线挑战` (OR/LS, +7 分)
+- 支线全勤后弹按钮 `🔮 解锁隐藏关卡` (VC/VB, +8 分)
+- 全做完 → `🔥 完美日!` 大 combo (主线+支线+完美 = +70)
+
+工作日实际负担 3.5h + 解锁机制属"沉没成本+完成欲"双重夹击, 孩子明知累还会做。
+
+**核心洞察**:
+1. 一些池子 slot 已被 mini-game 大厅替代 — LS 听力 / VC 学科词汇 / VB Vocab/华文 都能在大厅做更高效
+2. 一些是软任务 — WSR 复盘 / WSV 家庭聊天 / WUP 整理书包 不是硬技能, 不该进打卡
+3. 正确的不需要反复做 — 复用 v19.0 mastered 机制思路
+
+**改造**:
+
+| 改造 | 详情 |
+|---|---|
+| 🗑️ 删冗余 slot | LS/VC/VB (mini-game 大厅替代) + WSR/WSV/WUP (软任务) 全部从打卡页移除 |
+| 📋 引入加练池 | 剩 5 项进 `POOL_TARGET`: OR / WSE / WSL / WUE1 / WUE2 全部 1 次/周, `state.weeklyPool[week][slot]` 计数 |
+| 🚫 删解锁钩 | 老的"🎁 解锁支线挑战" / "🔮 解锁隐藏关卡" 按钮 + 日完美 combo 全删 |
+| 🌟 周完美替代日完美 | 主线 7 天全勤 + 池子 5/5 = `WEEKLY_PERFECT_BONUS` +30 (一周一次, `perfectGiven` flag 防重复) |
+| 🎨 主线-only UI | dayTasks 过滤掉 pool slot, 工作日只显 3 个主线; 加 `renderWeeklyPoolCard` 折叠卡显进度 + [+1] 按钮 |
+| 🔧 完成率修正 | `calcWeekCompletion` ALL_SLOTS 排除 OR (避免完成率被池子拖低); `isDayComplete` 同步排除 |
+
+**新数据字段**:
+```js
+state.weeklyPool = { [week]: { OR: 0|1, WSE: 0|1, WSL: 0|1, WUE1: 0|1, WUE2: 0|1 } }
+state.weekly[week].perfectGiven = true  // 防止周完美奖重复发
+```
+
+**新函数** (data.js):
+- `POOL_TARGET` / `WEEKLY_PERFECT_BONUS` 常量
+- `getPoolProgress(state, week)` → {done, total, items, full}
+- `addPoolEntry(state, week, slotKey)` → bool
+- `calcWeeklyPerfect(state, week)` → {eligible, given}
+- `grantWeeklyPerfect(state, week)` — 发奖 + flag
+
+**新函数** (app.js):
+- `renderWeeklyPoolCard(week)` — 折叠卡 (头部进度条 + 展开 5 行)
+- `addPoolAndScore(slotKey)` — 加分 + toast + 周完美检测
+- `_checkWeeklyPerfect(week)` — 主线打卡和池子加练后检查是否凑齐
+- 钩入 `toggleDailyCheck` 后
+
+**心理转变**:
+- 旧: "今天 7 个任务都摆出来, 不做就缺角" → 损失厌恶 + 完成欲
+- 新: "今天主线 3 个就行, 想加练去翻本周池子" → 控制感 + 自由感
+- 多做多得保留 (不封顶); 但默认看到的任务负担减少 50%+
+
+**QA**: 149 → 163 项 (+14 新断言)
+**cache buster**: 19.5b → 19.6
+
+---
+
 ## 📅 版本历史 (v19.5)
 
 ### v19.5 — 专家评审后 5 大系统改造: 学习效果与激励耦合 (2026-05-15)

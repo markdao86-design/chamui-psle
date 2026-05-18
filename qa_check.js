@@ -371,6 +371,49 @@ assert(ep0.text && Array.isArray(ep0.errors), 'v18: editing paragraph 有 text �
 const ld0 = W.LISTEN_DICTATIONS[0];
 assert(ld0.text && Array.isArray(ld0.blanks), 'v18: listen dict 有 text 和 blanks');
 
+// ===== v19.6: 加练池 =====
+assert(W.POOL_TARGET && typeof W.POOL_TARGET === 'object',
+  'v19.6: POOL_TARGET 已导出');
+const poolKeys = W.POOL_TARGET ? Object.keys(W.POOL_TARGET) : [];
+assert(poolKeys.length === 5,
+  `v19.6: POOL_TARGET 5 项 (实际 ${poolKeys.length})`);
+const expectedPool = ['OR','WSE','WSL','WUE1','WUE2'];
+assert(expectedPool.every(k => W.POOL_TARGET && W.POOL_TARGET[k] === 1),
+  'v19.6: POOL_TARGET 含 OR/WSE/WSL/WUE1/WUE2 各 1');
+assert(typeof W.getPoolProgress === 'function' &&
+       typeof W.addPoolEntry === 'function' &&
+       typeof W.calcWeeklyPerfect === 'function' &&
+       typeof W.grantWeeklyPerfect === 'function' &&
+       typeof W.ensureCurrentWeekPool === 'function',
+  'v19.6: 加练池 5 个函数全部导出');
+assert(typeof W.WEEKLY_PERFECT_BONUS === 'number' && W.WEEKLY_PERFECT_BONUS === 30,
+  'v19.6: WEEKLY_PERFECT_BONUS = 30');
+// 验证: addPoolEntry 能写, getPoolProgress 能读, 超额返回 false
+const _testState = { currentWeek: 1, weeklyPool: {}, totalPoints: 0, logs: [], weekly: {} };
+assert(W.addPoolEntry(_testState, 1, 'OR') === true,
+  'v19.6: addPoolEntry OR 第一次返回 true');
+assert(W.addPoolEntry(_testState, 1, 'OR') === false,
+  'v19.6: addPoolEntry OR 第二次(已满)返回 false');
+const _prog = W.getPoolProgress(_testState, 1);
+assert(_prog.done === 1 && _prog.total === 5,
+  `v19.6: getPoolProgress 写 1 项后 done=1 total=5 (实际 done=${_prog.done} total=${_prog.total})`);
+// 验证 app.js 里有 renderWeeklyPoolCard / addPoolAndScore (字符串 grep, 因为 qa 不加载 app.js)
+const appSrc = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+assert(/function renderWeeklyPoolCard\(/.test(appSrc),
+  'v19.6: app.js 有 renderWeeklyPoolCard 函数');
+assert(/function addPoolAndScore\(/.test(appSrc),
+  'v19.6: app.js 有 addPoolAndScore 函数');
+assert(/_checkWeeklyPerfect\(week\)/.test(appSrc),
+  'v19.6: app.js toggleDailyCheck 调 _checkWeeklyPerfect');
+assert(!/解锁支线挑战/.test(appSrc),
+  'v19.6: 解锁支线挑战按钮已删除');
+assert(!/解锁隐藏关卡/.test(appSrc),
+  'v19.6: 解锁隐藏关卡按钮已删除');
+// 验证 cache buster
+const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+assert(/\?v=19\.6/.test(idxSrc) && !/\?v=19\.5/.test(idxSrc),
+  'v19.6: cache buster 已更新到 19.6');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
