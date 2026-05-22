@@ -367,6 +367,7 @@ function renderDashboard() {
   renderChallengeCard(); // v19.4: 限时挑战赛 (W15-W30)
   renderAchievementWall();  // v18 Phase 5.1
   renderReviewCard();  // v18 Phase 5.3
+  renderPaper2SprintCard();  // v19.7
   renderWeeklyCoach();
   // renderMasterTipCard(); // v18.71: 已合并到 wowCard
   renderDragonProgress();  // v18.55
@@ -409,6 +410,55 @@ function renderDailySlotList() {
   }
   el.innerHTML = html;
 }
+
+// v19.7: Paper 2 弱点突击卡 (实考 AL6 后置顶, 严肃风, 不撒花)
+function renderPaper2SprintCard() {
+  const card = document.getElementById('paper2SprintCard');
+  if (!card || !window.getPaper2SprintStatus) return;
+  const s = window.getPaper2SprintStatus(state);
+  const accColor = (a) => a === null ? '#999' : a >= 75 ? '#4ECDC4' : a >= 60 ? '#FFA500' : '#FF6B6B';
+  const accLabel = (a) => a === null ? '未练' : a + '%';
+  const dailyTargetCloze = 10, dailyTargetSST = 5;  // 建议日量
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div style="font-size:14px;font-weight:900;color:#FF6B6B">🎯 Paper 2 弱点突击</div>
+      <div style="margin-left:auto;font-size:11px;color:#666">实考 AL6 → 目标 AL 4</div>
+    </div>
+    <div style="font-size:11px;color:#666;margin-bottom:8px;line-height:1.5">
+      Cloze (25 分) + Synthesis (8 分) = Paper 2 33 分关键 · 建议每天 ${dailyTargetCloze} Cloze + ${dailyTargetSST} SST
+    </div>
+    <div style="background:#FFF;border:1px solid #DDD;border-radius:6px;padding:8px;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:4px">
+        <span>🧩 Cloze 单空填</span>
+        <span style="color:${accColor(s.cloze.recentAcc)}">近 5 次 ${accLabel(s.cloze.recentAcc)} ${s.cloze.overallAcc !== null ? `· 总 ${s.cloze.overallAcc}%` : ''}</span>
+      </div>
+      <div style="background:#EEE;border-radius:4px;height:8px;overflow:hidden;margin-bottom:4px">
+        <div style="background:linear-gradient(90deg,#FFA500,#4ECDC4);height:100%;width:${s.cloze.pct}%;transition:width 0.4s"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#666">
+        <span>${s.cloze.done} / ${s.cloze.target} 题</span>
+        <button onclick="openClozeGame()" style="padding:3px 10px;background:#FF6B6B;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">立即练 →</button>
+      </div>
+    </div>
+    <div style="background:#FFF;border:1px solid #DDD;border-radius:6px;padding:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:4px">
+        <span>🔄 SST 句型转换</span>
+        <span style="color:${accColor(s.sst.recentAcc)}">近 5 次 ${accLabel(s.sst.recentAcc)} ${s.sst.overallAcc !== null ? `· 总 ${s.sst.overallAcc}%` : ''}</span>
+      </div>
+      <div style="background:#EEE;border-radius:4px;height:8px;overflow:hidden;margin-bottom:4px">
+        <div style="background:linear-gradient(90deg,#FFA500,#4ECDC4);height:100%;width:${s.sst.pct}%;transition:width 0.4s"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#666">
+        <span>${s.sst.done} / ${s.sst.target} 题</span>
+        <button onclick="openSstGame()" style="padding:3px 10px;background:#FF6B6B;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">立即练 →</button>
+      </div>
+    </div>
+    <div style="font-size:10px;color:#888;margin-top:6px;text-align:center;font-style:italic">
+      💡 每天保持节奏, 突击周后 Cloze 正确率应稳定 ≥70%, SST ≥65%
+    </div>
+  `;
+}
+window.renderPaper2SprintCard = renderPaper2SprintCard;
 
 function renderErrorBankCard() {
   const card = document.getElementById('errorBankCard');
@@ -2509,7 +2559,7 @@ function toggleDailyCheck(week, day, slot, evt) {
     // v17.5 Phase 2: 新宝箱提示 (在 streak 庆祝之前)
     if (newBoxes > 0) {
       showToast(`🎁 你赢了 ${newBoxes} 个神秘宝箱! 主页可开盒`, 'happy');
-      spawnConfetti(window.innerWidth / 2, window.innerHeight / 2, 30);
+      // v19.7: 降游戏性 — 删撒花 (只 toast)
     }
     // v17.1: streak 庆祝 (新加 streak 天才显示, 不是每个 slot 都弹)
     if (streakBump && streakBump.added) {
@@ -2520,7 +2570,8 @@ function toggleDailyCheck(week, day, slot, evt) {
         showToast(`🧊 用了 1 张保护券,救回了 ${streakBump.brokenInfo.prevDays} 天连续打卡!`, 'happy');
       } else if (streakBump.isMilestone) {
         showToast(`🔥🔥 第 ${streakBump.isMilestone} 天里程碑!${streakBump.gainedFreeze ? '+ 1 张 🧊 保护券' : ''}`, 'happy');
-        spawnConfetti(window.innerWidth / 2, window.innerHeight / 2, 50);
+        // v19.7: streak 里程碑保留小撒花 (真值得庆祝)
+        spawnConfetti(window.innerWidth / 2, window.innerHeight / 2, 20);
       } else {
         // 普通累计
         showToast(`🔥 连续 ${streakBump.days} 天 — 不能断!`, 'happy');
@@ -2529,11 +2580,10 @@ function toggleDailyCheck(week, day, slot, evt) {
     // 当日 combo 触发(撒花 + 震屏 + 大数字)
     if (newDayComplete && !oldDayComplete) {
       showToast(`🔥 当日全勾!全勤奖 +${DAY_COMBO_POINTS}`, 'success');
-      shakeScreen();
+      // v19.7: 降游戏性 — 删震屏 + 撒花减半 + 删大字, 只保留 toast + 小撒花
       const cx = (evt && evt.clientX) || window.innerWidth / 2;
       const cy = (evt && evt.clientY) || window.innerHeight / 2;
-      spawnConfetti(cx, cy, 35);
-      setTimeout(() => spawnFloatPoints(`全勤 +${DAY_COMBO_POINTS}!`, evt, true), 200);
+      spawnConfetti(cx, cy, 15);
     }
     // 周复盘达标(撒花 + 中央大字 + 震屏)
     if (newOnTrack && !oldOnTrack) {
@@ -5269,7 +5319,7 @@ function _finishUnitGame() {
       <div class="mg-result-reward">+${reward} 分 · ${_getMultiplierLabel(playNum)}</div>
       <button class="btn btn-primary" onclick="closeUnitGame()">知道了!</button>
     </div>`;
-  if (g.correct >= 10 && mult > 0) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 40); playSound('tada'); petExpress('pet-excited', 2200); }
+  if (g.correct >= 10 && mult > 0) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 15); playSound('tada'); petExpress('pet-excited', 2200); }
   if (diffR && diffR.levelChanged === 'up') { showToast(`🆙 单位换算难度升到 Lv ${diffR.newDiff}!`, 'happy'); playSound('tada'); }
   if (diffR && diffR.levelChanged === 'down') showToast(`📉 单位换算难度降到 Lv ${diffR.newDiff}`, 'sad');
   _unitGameState = null;
@@ -5406,6 +5456,10 @@ function _finishMcqGame() {
   if (!g) return;
   let diffR = null;
   if (window.recordGameRun) diffR = window.recordGameRun(state, g.key, g.correct, g.qs.length);
+  // v19.7: Paper 2 突击进度 (Cloze + SST)
+  if (window.bumpPaper2Sprint && (g.key === 'cloze' || g.key === 'sst')) {
+    window.bumpPaper2Sprint(state, g.key, g.correct, g.qs.length);
+  }
   const playNum = _bumpDailyGameCount(g.key);
   const mult = _getGameMultiplier(playNum);
   // v19.0: 难度梯度积分 (高难度答对奖更多)
@@ -5431,7 +5485,7 @@ function _finishMcqGame() {
       <div class="mg-result-reward">+${reward} 分 · ${_getMultiplierLabel(playNum)}</div>
       <button class="btn btn-primary" onclick="closeMcqGame()">知道了!</button>
     </div>`;
-  if (g.correct >= 10 && mult > 0) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 40); playSound('tada'); petExpress('pet-excited', 2200); }
+  if (g.correct >= 10 && mult > 0) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 15); playSound('tada'); petExpress('pet-excited', 2200); }
   if (diffR && diffR.levelChanged === 'up') { showToast(`🆙 ${g.title} 难度升到 Lv ${diffR.newDiff}!`, 'happy'); playSound('tada'); }
   if (diffR && diffR.levelChanged === 'down') showToast(`📉 ${g.title} 难度降到 Lv ${diffR.newDiff}`, 'sad');
   _mcqGameState = null;

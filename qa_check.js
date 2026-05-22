@@ -411,8 +411,8 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.6/.test(idxSrc) && !/\?v=19\.5/.test(idxSrc),
-  'v19.6: cache buster 已更新到 19.6');
+assert(/\?v=19\.7/.test(idxSrc) && !/\?v=19\.6/.test(idxSrc),
+  'v19.7: cache buster 已更新到 19.7');
 
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');

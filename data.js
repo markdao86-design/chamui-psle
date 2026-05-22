@@ -5233,9 +5233,80 @@ function getDefaultState() {
     // v18.60: 当前主页宠物类型 — 'hamster' (默认) 或 'gold_dragon' (拿金龙后可切)
     activePetType: 'hamster',
     // v19.6: 加练池 — 替代旧 tier 2/3 每日固定. 每周独立, 不 carry
-    weeklyPool: {}
+    weeklyPool: {},
+    // v19.7: Paper 2 弱点突击 (真实考试 AL6, Cloze 几乎全错 + 句式转换错不少)
+    paper2Sprint: {
+      startWeek: 1,
+      target: { cloze: 100, sst: 50 },
+      progress: { cloze: 0, sst: 0 },
+      correct: { cloze: 0, sst: 0 },  // 累计答对数 (算正确率)
+      recent: { cloze: [], sst: [] }  // 最近 5 次 [{date, correct, total}]
+    }
   };
 }
+
+// ============= v19.7: Paper 2 弱点突击 (Cloze + SST) =============
+// 真实考试: kid Paper 2 AL6, Cloze 几乎全错, 句式转换错不少
+// 目标: 本周突击 Cloze 100 题 + SST 50 题, 拉正确率 → AL 4
+function _ensurePaper2Sprint(state) {
+  if (!state.paper2Sprint) {
+    state.paper2Sprint = {
+      startWeek: state.currentWeek || 1,
+      target: { cloze: 100, sst: 50 },
+      progress: { cloze: 0, sst: 0 },
+      correct: { cloze: 0, sst: 0 },
+      recent: { cloze: [], sst: [] }
+    };
+  }
+  // 防老数据缺字段
+  if (!state.paper2Sprint.progress) state.paper2Sprint.progress = { cloze: 0, sst: 0 };
+  if (!state.paper2Sprint.correct) state.paper2Sprint.correct = { cloze: 0, sst: 0 };
+  if (!state.paper2Sprint.recent) state.paper2Sprint.recent = { cloze: [], sst: [] };
+  if (!state.paper2Sprint.target) state.paper2Sprint.target = { cloze: 100, sst: 50 };
+}
+function bumpPaper2Sprint(state, gameKey, correct, total) {
+  if (gameKey !== 'cloze' && gameKey !== 'sst') return;
+  _ensurePaper2Sprint(state);
+  const p = state.paper2Sprint;
+  p.progress[gameKey] = (p.progress[gameKey] || 0) + total;
+  p.correct[gameKey] = (p.correct[gameKey] || 0) + correct;
+  p.recent[gameKey].push({ date: new Date().toISOString().slice(0,10), correct, total });
+  if (p.recent[gameKey].length > 5) p.recent[gameKey].shift();
+}
+function getPaper2SprintStatus(state) {
+  _ensurePaper2Sprint(state);
+  const p = state.paper2Sprint;
+  const recentAcc = (key) => {
+    const r = p.recent[key];
+    if (!r || r.length === 0) return null;
+    const c = r.reduce((s,x) => s + x.correct, 0);
+    const t = r.reduce((s,x) => s + x.total, 0);
+    return t > 0 ? Math.round(c/t*100) : null;
+  };
+  const overallAcc = (key) => {
+    const c = p.correct[key] || 0;
+    const t = p.progress[key] || 0;
+    return t > 0 ? Math.round(c/t*100) : null;
+  };
+  return {
+    cloze: {
+      done: p.progress.cloze || 0,
+      target: p.target.cloze,
+      pct: Math.min(100, Math.round((p.progress.cloze || 0) / p.target.cloze * 100)),
+      recentAcc: recentAcc('cloze'),
+      overallAcc: overallAcc('cloze')
+    },
+    sst: {
+      done: p.progress.sst || 0,
+      target: p.target.sst,
+      pct: Math.min(100, Math.round((p.progress.sst || 0) / p.target.sst * 100)),
+      recentAcc: recentAcc('sst'),
+      overallAcc: overallAcc('sst')
+    }
+  };
+}
+window.bumpPaper2Sprint = bumpPaper2Sprint;
+window.getPaper2SprintStatus = getPaper2SprintStatus;
 
 // ============= v18.60: 双龙 RPG 系统 =============
 // 拿到银龙 mini-game +10%, 金龙 +20% (累计取最高)
