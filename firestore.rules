@@ -4,5 +4,14 @@ service cloud.firestore {
     match /chamui/{doc} {
       allow read, write: if true;
     }
+    match /chamui_pure/{doc} {
+      allow read, write: if true;
+    }
+    match /chamui_pure_snapshots/{doc} {
+      allow read, write: if true;
+    }
+    match /chamui_snapshots/{doc} {
+      allow read, write: if true;
+    }
   }
 }

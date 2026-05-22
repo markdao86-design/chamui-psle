@@ -5396,9 +5396,130 @@ function getDefaultState() {
       progress: { cloze: 0, sst: 0 },
       correct: { cloze: 0, sst: 0 },  // 累计答对数 (算正确率)
       recent: { cloze: [], sst: [] }  // 最近 5 次 [{date, correct, total}]
-    }
+    },
+    // v19.12: Paper 2 模拟卷历史 (用于综合 PSLE AL 预测)
+    paper2ALHistory: [],
+    // v19.12: 4 科预测 AL (人工 + mini-game 加权, 真考实测 fallback)
+    subjectALEstimates: { english: 6, math: 1, science: 2, chinese: 1, lastUpdate: null }
   };
 }
+
+// ============= v19.12: PSLE 目标校录取概率系统 =============
+// 不再用 SGD 物质奖励驱动主页, 改为 "综合 PSLE AL → 目标校录取概率%" 教育目标驱动
+const PSLE_TARGET_SCHOOLS = [
+  { id: 'catholic', name: '立化中学', cop: 6, tier: 'top', emoji: '🏛️' },
+  { id: 'hci', name: '华侨中学', cop: 6, tier: 'top', emoji: '🏛️' },
+  { id: 'rgs', name: '莱佛士女中', cop: 6, tier: 'top', emoji: '🏛️' },
+  { id: 'achs', name: '英华自主', cop: 8, tier: 'top', emoji: '🏛️' },
+  { id: 'tjc', name: '淡马锡附中', cop: 8, tier: 'high', emoji: '🏫' },
+  { id: 'srss', name: '实龙岗中学', cop: 10, tier: 'high', emoji: '🏫' },
+  { id: 'nhss', name: '南华中学', cop: 11, tier: 'mid', emoji: '🏫' },
+  { id: 'cchs', name: '公教中学', cop: 12, tier: 'mid', emoji: '🏫' }
+];
+
+// 录取概率公式 (简化正态 CDF — delta = COP - childAL, 越正越好)
+function admissionProbability(childAL, schoolCOP) {
+  const delta = schoolCOP - childAL;
+  if (delta >= 3) return 98;
+  if (delta >= 2) return 92;
+  if (delta >= 1) return 82;
+  if (delta >= 0) return 65;
+  if (delta >= -1) return 35;
+  if (delta >= -2) return 15;
+  if (delta >= -3) return 5;
+  return 1;
+}
+
+// 综合 AL → 新加坡 P6 排名估算
+function estimateSGRank(totalAL) {
+  if (totalAL <= 8) return 5;
+  if (totalAL <= 10) return 15;
+  if (totalAL <= 12) return 25;
+  if (totalAL <= 16) return 40;
+  if (totalAL <= 20) return 60;
+  return 80;
+}
+
+// mini-game 难度 → AL 估算
+function _gameDiffToAL(diff, subject) {
+  // diff 5 (PSLE+) = AL 1-2, diff 4 = AL 3-4, diff 3 = AL 5, diff 2 = AL 6-7, diff 1 = AL 7-8
+  const map = { 5: 1, 4: 3, 3: 5, 2: 6, 1: 7 };
+  return map[diff] || 6;
+}
+
+// 计算综合 PSLE 预测 AL (核心)
+function computeTotalAL(state) {
+  const est = state.subjectALEstimates || { english: 6, math: 1, science: 2, chinese: 1 };
+  // 英语: 取 Paper 2 模拟卷最近 4 次预测 AL 平均, 没有则用 est.english fallback
+  const p2Hist = state.paper2ALHistory || [];
+  let english_AL = est.english;
+  if (p2Hist.length > 0) {
+    const recent = p2Hist.slice(-4);
+    english_AL = Math.round(recent.reduce((s, h) => s + (h.predictedAL || 6), 0) / recent.length);
+  }
+  // 数学: 用 gameStats.math 难度
+  const mathDiff = state.gameStats?.math?.difficulty || 4;
+  const math_AL = Math.min(_gameDiffToAL(mathDiff), est.math);  // 取更好的
+  // 科学: 用 gameStats.scilab + scimcq + est
+  const sciDiff = Math.max(state.gameStats?.scilab?.difficulty || 3, state.gameStats?.scimcq?.difficulty || 3);
+  const science_AL = Math.min(_gameDiffToAL(sciDiff), est.science);
+  // 华文: 用 gameStats.chinese + est
+  const chineseDiff = state.gameStats?.chinese?.difficulty || 3;
+  const chinese_AL = Math.min(_gameDiffToAL(chineseDiff), est.chinese);
+
+  const total_AL = english_AL + math_AL + science_AL + chinese_AL;
+  return {
+    bySubject: { english_AL, math_AL, science_AL, chinese_AL },
+    total_AL,
+    sgRank_pct: estimateSGRank(total_AL)
+  };
+}
+
+// 获取所有目标校录取预测 (主页录取概率卡用)
+function getAdmissionForecasts(state) {
+  const calc = computeTotalAL(state);
+  const schools = PSLE_TARGET_SCHOOLS.map(s => ({
+    ...s,
+    probability: admissionProbability(calc.total_AL, s.cop)
+  }));
+  // 算英语提到 AL3 的预期: 综合 -3, 各校概率
+  const ifEngAL3 = {
+    total_AL: calc.bySubject.english_AL > 3
+      ? calc.total_AL - (calc.bySubject.english_AL - 3)
+      : calc.total_AL,
+    schools: PSLE_TARGET_SCHOOLS.map(s => ({
+      ...s,
+      probability: admissionProbability(
+        calc.bySubject.english_AL > 3 ? calc.total_AL - (calc.bySubject.english_AL - 3) : calc.total_AL,
+        s.cop
+      )
+    }))
+  };
+  return {
+    ...calc,
+    schools,
+    ifEnglishImproved: ifEngAL3
+  };
+}
+
+// 记录 Paper 2 模拟卷结果 (从 _finishMcqGame g.isMock 分支调用)
+function recordPaper2AL(state, predictedAL, score, total) {
+  if (!state.paper2ALHistory) state.paper2ALHistory = [];
+  state.paper2ALHistory.push({
+    date: new Date().toISOString().slice(0, 10),
+    predictedAL, score, total,
+    timestamp: Date.now()
+  });
+  // 保留最近 20 次 (够算 4 周连续)
+  while (state.paper2ALHistory.length > 20) state.paper2ALHistory.shift();
+}
+
+window.PSLE_TARGET_SCHOOLS = PSLE_TARGET_SCHOOLS;
+window.admissionProbability = admissionProbability;
+window.estimateSGRank = estimateSGRank;
+window.computeTotalAL = computeTotalAL;
+window.getAdmissionForecasts = getAdmissionForecasts;
+window.recordPaper2AL = recordPaper2AL;
 
 // ============= v19.7: Paper 2 弱点突击 (Cloze + SST) =============
 // 真实考试: kid Paper 2 AL6, Cloze 几乎全错, 句式转换错不少

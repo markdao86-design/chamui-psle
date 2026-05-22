@@ -379,8 +379,10 @@ function renderDashboard() {
   renderChallengeCard(); // v19.4: 限时挑战赛 (W15-W30)
   renderAchievementWall();  // v18 Phase 5.1
   renderReviewCard();  // v18 Phase 5.3
+  renderAdmissionForecastCard();  // v19.12: 主页核心 — 目标校录取概率
   renderPaper2SprintCard();  // v19.7
-  renderLearningPortraitCard();  // v19.8 P0-2: 本周学习画像
+  // v19.12: 学习画像移到二级 "我的" tab, 主页不渲染 (避免信息超载)
+  // renderLearningPortraitCard();
   renderWeeklyCoach();
   // renderMasterTipCard(); // v18.71: 已合并到 wowCard
   renderDragonProgress();  // v18.55
@@ -479,7 +481,195 @@ function renderPaper2SprintCard() {
 }
 window.renderPaper2SprintCard = renderPaper2SprintCard;
 
-// v19.8 P0-2: 本周学习画像 (替代炫酷反馈, 让孩子看到"我学到了什么" 而不是"我拿了什么")
+// v19.12: 角色 / 装备 / 双龙 / 皮肤 / 学习画像 / 兑换 全部移到二级 "👤 我的" tab
+function renderCharacterPage() {
+  const el = document.getElementById('characterPageContent');
+  if (!el) return;
+  // 检查是否首次构建
+  if (!el.querySelector('#charPage_characterSvg')) {
+    el.innerHTML = `
+      <div class="character-card" style="margin-bottom:12px">
+        <div class="character-display">
+          <div class="character-svg" id="charPage_characterSvg"></div>
+        </div>
+        <div class="character-name" id="charPage_characterName">萌新佑子</div>
+        <div class="character-title-big" id="charPage_characterTitle">刚入门的勇士</div>
+        <span class="level-badge">LV <span id="charPage_charLevelDisplay">1</span></span>
+        <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--color-text-light)">
+          总分: <b id="charPage_pts">0</b> · 击败 <b id="charPage_beat">0</b>% P5 学生
+        </div>
+      </div>
+
+      <div class="card" id="charPage_learningPortrait"></div>
+      <div class="card" id="charPage_dragonProgress"></div>
+      <div class="card">
+        <div class="card-title">⚔️ 装备收集</div>
+        <p style="color: var(--color-text-light); font-size: 13px; margin-bottom: 12px;">每达成条件解锁一件装备!</p>
+        <div class="equipment-grid" id="charPage_equipmentGrid"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">👕 皮肤更衣室</div>
+        <div class="skin-grid" id="charPage_skinGrid"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 本周学习画像</div>
+        <div id="charPage_portraitContent"></div>
+      </div>
+      <div class="card achievement-wall-card" id="charPage_achievementWall"></div>
+    `;
+  }
+  // 复用现有 render 逻辑 — 重定向到 character page 的元素
+  // 简化: 直接复制现有的 character-card / equipment / dragon 内容
+  if (window.CHAMUI && window.CHAMUI.renderCharacter) {
+    const svg = document.getElementById('charPage_characterSvg');
+    if (svg) svg.innerHTML = window.CHAMUI.renderCharacter(state);
+  }
+  const pts = state.totalPoints || 0;
+  const lv = window.CHAMUI ? window.CHAMUI.getLevelInfo(pts) : { name: '?', title: '?', lv: 1 };
+  const dragonTitle = (window.CHAMUI && window.CHAMUI.getDragonTitle) ? window.CHAMUI.getDragonTitle(state) : '';
+  document.getElementById('charPage_characterName').textContent = lv.name + dragonTitle;
+  document.getElementById('charPage_characterTitle').textContent = lv.title;
+  document.getElementById('charPage_charLevelDisplay').textContent = lv.lv;
+  document.getElementById('charPage_pts').textContent = pts.toLocaleString();
+  if (typeof studentBeatPercent === 'function') {
+    document.getElementById('charPage_beat').textContent = studentBeatPercent(pts);
+  }
+  // 装备 grid
+  const grid = document.getElementById('charPage_equipmentGrid');
+  if (grid && window.CHAMUI) {
+    const disabled = new Set(state.equipmentDisabled || []);
+    const HIDDEN = new Set(['silver_dragon', 'dragon']);
+    grid.innerHTML = window.CHAMUI.equipment.filter(eq => !HIDDEN.has(eq.id)).map(eq => {
+      const unlocked = window.CHAMUI.checkEquipmentUnlocked(eq.id, state);
+      const equipped = unlocked && !disabled.has(eq.id);
+      const cls = !unlocked ? 'locked' : (equipped ? 'unlocked equipped' : 'unlocked unequipped');
+      const click = unlocked ? `onclick="toggleEquipment('${eq.id}')"` : '';
+      const status = !unlocked ? eq.hint : equipped ? '✓ 穿戴中' : '👜 已收藏';
+      return `<div class="equipment-item ${cls}" ${click}>
+        <span class="equipment-icon">${eq.icon}</span>
+        <div class="equipment-name">${eq.name}</div>
+        <div class="equipment-condition" style="font-size:9px">${status}</div>
+      </div>`;
+    }).join('');
+  }
+  // 皮肤 grid (复用 renderSkinGrid 如果存在, 否则简化版)
+  if (typeof renderSkinGrid === 'function') {
+    // renderSkinGrid 用了 #skinGrid 这个 ID, 临时改 ID
+    const origSkin = document.getElementById('skinGrid');
+    const charSkin = document.getElementById('charPage_skinGrid');
+    if (charSkin) {
+      charSkin.id = 'skinGrid';
+      if (origSkin) origSkin.id = '_origSkinGrid';
+      renderSkinGrid();
+      charSkin.id = 'charPage_skinGrid';
+      if (origSkin) origSkin.id = 'skinGrid';
+    }
+  }
+  // 双龙进度卡
+  if (typeof renderDragonProgress === 'function') {
+    const origDragon = document.getElementById('dragonProgressCard');
+    const charDragon = document.getElementById('charPage_dragonProgress');
+    if (charDragon) {
+      charDragon.id = 'dragonProgressCard';
+      if (origDragon) origDragon.id = '_origDragonProgressCard';
+      renderDragonProgress();
+      charDragon.id = 'charPage_dragonProgress';
+      if (origDragon) origDragon.id = 'dragonProgressCard';
+    }
+  }
+  // 学习画像
+  if (typeof renderLearningPortraitCard === 'function') {
+    const orig = document.getElementById('learningPortraitCard');
+    const ch = document.getElementById('charPage_learningPortrait');
+    if (ch) {
+      ch.id = 'learningPortraitCard';
+      if (orig) orig.id = '_origLearningPortraitCard';
+      renderLearningPortraitCard();
+      ch.id = 'charPage_learningPortrait';
+      if (orig) orig.id = 'learningPortraitCard';
+    }
+  }
+  // 成就墙
+  if (typeof renderAchievementWall === 'function') {
+    const orig = document.getElementById('achievementWallCard');
+    const ch = document.getElementById('charPage_achievementWall');
+    if (ch) {
+      ch.id = 'achievementWallCard';
+      if (orig) orig.id = '_origAchievementWallCard';
+      renderAchievementWall();
+      ch.id = 'charPage_achievementWall';
+      if (orig) orig.id = 'achievementWallCard';
+    }
+  }
+}
+window.renderCharacterPage = renderCharacterPage;
+
+// v19.12: 主页置顶 — 目标校录取概率仪表盘 (无 SGD/钱字眼)
+function renderAdmissionForecastCard() {
+  const card = document.getElementById('admissionForecastCard');
+  if (!card || !window.getAdmissionForecasts) return;
+  const f = window.getAdmissionForecasts(state);
+  const { bySubject, total_AL, sgRank_pct, schools, ifEnglishImproved } = f;
+
+  // 学校按 tier + cop 排序
+  const byTier = { top: [], high: [], mid: [] };
+  schools.forEach(s => { (byTier[s.tier] || byTier.mid).push(s); });
+  const probColor = (p) => p >= 80 ? '#2E7D32' : p >= 50 ? '#FFA500' : p >= 20 ? '#E67E22' : '#C62828';
+  const probIcon = (p) => p >= 80 ? '✅' : p >= 50 ? '⚠️' : '❌';
+
+  const renderSchool = (s) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px">
+      <span>${s.emoji} ${s.name} <span style="color:#888;font-size:10px">(COP ${s.cop})</span></span>
+      <span style="color:${probColor(s.probability)};font-weight:900">${probIcon(s.probability)} ${s.probability}%</span>
+    </div>
+  `;
+
+  // 算英语提到 AL3 的杠杆效应 (top 校)
+  const topSchool = schools.find(s => s.tier === 'top');
+  const topIfImproved = ifEnglishImproved.schools.find(s => s.id === topSchool.id);
+  const leverageMsg = (topSchool && topIfImproved && topIfImproved.probability > topSchool.probability)
+    ? `💡 <b>英语 AL${bySubject.english_AL} → AL3</b> = ${topSchool.name} 录取 <b>${topSchool.probability}% → ${topIfImproved.probability}%</b> (+${topIfImproved.probability - topSchool.probability}%) 🚀`
+    : '💡 当前预测稳定, 继续保持';
+
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="font-size:15px;font-weight:900">🏫 你的目标校 录取概率</div>
+      <div style="margin-left:auto;font-size:11px;color:#666">基于综合 PSLE 预测 AL</div>
+    </div>
+    <div style="background:#F0F8FF;border-radius:6px;padding:8px;margin-bottom:8px;font-size:12px;display:flex;justify-content:space-between">
+      <span>综合 AL: <b style="font-size:14px;color:#FF6B6B">${total_AL}</b> (英${bySubject.english_AL}+数${bySubject.math_AL}+科${bySubject.science_AL}+华${bySubject.chinese_AL})</span>
+      <span>击败 <b>${sgRank_pct === 5 ? '95+' : (100-sgRank_pct)}%</b> P6 学生</span>
+    </div>
+
+    ${byTier.top.length ? `
+    <div style="margin-bottom:6px">
+      <div style="font-size:11px;color:#666;font-weight:700;margin-bottom:2px">🏛️ 顶级校 (DP 6-8)</div>
+      ${byTier.top.map(renderSchool).join('')}
+    </div>` : ''}
+
+    ${byTier.high.length ? `
+    <div style="margin-bottom:6px">
+      <div style="font-size:11px;color:#666;font-weight:700;margin-bottom:2px">🏫 中上校 (DP 8-10)</div>
+      ${byTier.high.map(renderSchool).join('')}
+    </div>` : ''}
+
+    ${byTier.mid.length ? `
+    <div style="margin-bottom:8px">
+      <div style="font-size:11px;color:#666;font-weight:700;margin-bottom:2px">🏫 中等校 (DP 11+)</div>
+      ${byTier.mid.map(renderSchool).join('')}
+    </div>` : ''}
+
+    <div style="background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border-radius:6px;padding:8px;font-size:12px;color:#5D4037;text-align:center">
+      ${leverageMsg}
+    </div>
+    <button onclick="openPaper2MockGame()" style="width:100%;margin-top:8px;padding:10px;background:#FF6B6B;color:#FFF;border:none;border-radius:6px;font-weight:900;cursor:pointer;font-size:13px">
+      🎯 立即做 Paper 2 模拟卷 (28 min)
+    </button>
+  `;
+}
+window.renderAdmissionForecastCard = renderAdmissionForecastCard;
+
+// v19.8 P0-2: 本周学习画像 (v19.12 移到二级 "我的" tab, 主页不渲染)
 // 心理学原理: 内在动机需要"能力反馈"而不是"行为奖励"
 function renderLearningPortraitCard() {
   const card = document.getElementById('learningPortraitCard');
@@ -5686,6 +5876,11 @@ function _finishMcqGame() {
       window.bumpPaper2Sprint(state, 'cloze', clozeCorrect, clozeQs.length);
       window.bumpPaper2Sprint(state, 'sst', sstCorrect, sstQs.length);
     }
+    // v19.12: 记录到 paper2ALHistory (用于综合 AL 预测)
+    if (window.recordPaper2AL) {
+      const numericAL = parseInt((estAL.match(/\d+/) || ['6'])[0]);
+      window.recordPaper2AL(state, numericAL, estPaper2Score, 35);
+    }
     modal.innerHTML = `
       <div class="mg-inner mcq-inner" style="max-width:480px">
         <div class="mg-result-icon">${accuracy >= 75 ? '🎉' : accuracy >= 60 ? '👍' : '🤔'}</div>
@@ -7809,6 +8004,10 @@ function bindEvents() {
       }
       if (page === 'vocab') {
         renderVocabPage();
+      }
+      // v19.12: 角色/装备/双龙/皮肤/学习画像/兑换 全部移到 "我的" tab
+      if (page === 'character') {
+        renderCharacterPage();
       }
       if (page === 'admin') {
         renderPhotoGallery(state.currentWeek).catch(() => {});
