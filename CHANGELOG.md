@@ -7,6 +7,24 @@
 
 ## 📅 版本历史 (v19.6 — v19.11)
 
+### v19.11.1 — 积分校正 4208 + 数据备份归档 (2026-05-22)
+
+**操作**: 用户告知 iPad localStorage 真实分数是 4208 (Firebase 被旧设备覆盖到 1257). 通过 Firestore REST PATCH `chamui/main` 把 totalPoints 从 1257 校正到 **4208** (+2951).
+
+**追加 audit log** (永久在 state.logs):
+```js
+{
+  reason: '✨ 校正积分到 4208 (iPad localStorage 为准, v19.11)',
+  points: 2951, type: 'correction', timestamp: 2026-05-22T14:35:25Z
+}
+```
+
+**安全网生效**: v19.10 的 sync 安全网阻止旧设备 (1257) 再覆盖 4208 (差 ≥500 → 拒绝)
+**快照保护**: v19.11 的 10 min 快照系统会自动把 4208 备份到 `chamui_snapshots` collection
+**回滚备份**: `firebase_before_correction_2026-05-22T14-35-25.json` (保留 1257 状态如需回退)
+
+---
+
 ### v19.11 — 积分快照备份系统 (2026-05-22)
 
 **痛点**: 5/13 → 5/22 间 Firebase 数据被某次 sync 覆盖, totalPoints 从 3486 降到 1257, logs 从 408 砍到 96. 没有历史快照, 无法精确恢复。
