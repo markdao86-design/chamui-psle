@@ -6858,6 +6858,34 @@ function onFbStatusChange(cb) { _fbStatusListener = cb; }
 // 订阅 Firestore 远端变化(其它设备改动会触发)
 var _localWritePending = false;
 var _lastSaveTs = 0;
+
+// v19.10: sync 安全网 — 远端 totalPoints/logs 比本地少太多, 拒绝接受 (防旧设备覆盖)
+function _isSyncDataSafeToAccept(remoteData) {
+  try {
+    const localState = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    const lp = localState.totalPoints || 0;
+    const rp = remoteData.totalPoints || 0;
+    const llogs = (localState.logs || []).length;
+    const rlogs = (remoteData.logs || []).length;
+    // 远端总分比本地低 ≥500 分 → 极可能是旧设备覆盖
+    if (lp - rp >= 500) {
+      console.warn(`[v19.10 sync 安全网] 远端 pts ${rp} 比本地 ${lp} 少 ${lp-rp}, 拒绝同步`);
+      if (typeof showToast === 'function') showToast(`⚠️ 远端数据可能比本地旧 (差 ${lp-rp} 分), 已忽略一次 sync`, 'warn');
+      return false;
+    }
+    // 远端 logs 比本地少 ≥50 条 → 极可能是数据截断/覆盖
+    if (llogs - rlogs >= 50) {
+      console.warn(`[v19.10 sync 安全网] 远端 logs ${rlogs} 比本地 ${llogs} 少 ${llogs-rlogs}, 拒绝同步`);
+      if (typeof showToast === 'function') showToast(`⚠️ 远端 logs 比本地少 ${llogs-rlogs} 条, 已忽略一次 sync`, 'warn');
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.warn('[v19.10 sync 安全网] 检查失败, 默认接受:', e);
+    return true;
+  }
+}
+
 function subscribeFirestore(onUpdate) {
   if (!_fbReady || !_fbDoc) return null;
   return _fbDoc.onSnapshot(
@@ -6865,7 +6893,10 @@ function subscribeFirestore(onUpdate) {
       if (snap.metadata.hasPendingWrites) return;
       if (_localWritePending || Date.now() - _lastSaveTs < 5000) return;
       if (snap.exists) {
-        try { onUpdate(snap.data()); } catch (e) { console.warn(e); }
+        const remoteData = snap.data();
+        // v19.10: 安全网检查
+        if (!_isSyncDataSafeToAccept(remoteData)) return;
+        try { onUpdate(remoteData); } catch (e) { console.warn(e); }
       }
       setFbStatus('synced');
     },

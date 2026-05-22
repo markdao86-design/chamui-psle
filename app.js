@@ -2535,12 +2535,12 @@ function selectDay(day) {
 }
 
 function toggleDailyCheck(week, day, slot, evt) {
-  // v19.3: 防连点冷却 2s
+  // v19.3: 防连点冷却 2s → v19.10 改 3s (配合 recalc 兜底, 双保险防刷分)
   const cooldownKey = `${week}_${day}_${slot}`;
   const now = Date.now();
   if (!toggleDailyCheck._lastToggle) toggleDailyCheck._lastToggle = {};
-  if (toggleDailyCheck._lastToggle[cooldownKey] && now - toggleDailyCheck._lastToggle[cooldownKey] < 2000) {
-    showToast('⏳ 操作太快, 请稍等', 'warn');
+  if (toggleDailyCheck._lastToggle[cooldownKey] && now - toggleDailyCheck._lastToggle[cooldownKey] < 3000) {
+    showToast('⏳ 操作太快, 请稍等 3 秒', 'warn');
     return;
   }
   toggleDailyCheck._lastToggle[cooldownKey] = now;
@@ -2596,25 +2596,32 @@ function toggleDailyCheck(week, day, slot, evt) {
     });
   } else {
     // v19.3: 取消时找到对应的打卡log并扣回暴击分
+    // v19.10: 修复 — 找不到 slot log 时 recalc 兜底, 不 push undo log (防快速连点刷分 bug)
     let undoAmount = 0;
+    let foundIdx = -1;
     for (let i = state.logs.length - 1; i >= 0; i--) {
       const log = state.logs[i];
       if (log.type === 'slot' && log.reason && log.reason.includes(`W${week} ${day} ${slot}`)) {
         undoAmount = log.points || 0;
-        state.logs.splice(i, 1);
+        foundIdx = i;
         break;
       }
     }
-    if (undoAmount > 0) {
-      state.totalPoints = Math.max(0, state.totalPoints - undoAmount);
+    if (foundIdx >= 0) {
+      state.logs.splice(foundIdx, 1);
+      if (undoAmount > 0) state.totalPoints = Math.max(0, state.totalPoints - undoAmount);
+      state.logs.push({
+        reason: `↩️ 取消 W${week} ${day} ${slot}`,
+        points: -undoAmount,
+        type: 'slot_undo',
+        week: state.currentWeek,
+        timestamp: Date.now()
+      });
+    } else {
+      // v19.10: 找不到原 slot log (可能因快速连点导致 log 紊乱) — recalc 兜底, 不 push undo log
+      console.warn(`[v19.10] 找不到 ${week}/${day}/${slot} 的 slot log, recalc 兜底防刷分`);
+      recalcTotalPoints(state);
     }
-    state.logs.push({
-      reason: `↩️ 取消 W${week} ${day} ${slot}`,
-      points: -undoAmount,
-      type: 'slot_undo',
-      week: state.currentWeek,
-      timestamp: Date.now()
-    });
   }
 
   // v17.1: 打勾(非取消)时累加 daily streak

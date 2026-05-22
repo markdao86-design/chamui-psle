@@ -1,0 +1,1226 @@
+{
+  "updateTime": "2026-05-22T12:30:59.169201Z",
+  "state": {
+    "_rollback_20260513": true,
+    "lastLoginDate": "2026-05-22",
+    "daily": {
+      "1": {
+        "Wed": {},
+        "Sat": {
+          "WSL": true,
+          "WSF": true
+        },
+        "Mon": {
+          "S3": true,
+          "E1": true,
+          "S1": true,
+          "VC": true,
+          "OR": true,
+          "VB": true,
+          "ED": true,
+          "LS": true,
+          "S2": true
+        },
+        "Tue": {
+          "S1": true,
+          "VB": true,
+          "OR": true,
+          "VC": true,
+          "S2": true,
+          "LS": true,
+          "ED": true,
+          "S3": true,
+          "E1": true
+        }
+      }
+    },
+    "alarmShownToday": {
+      "date": "2026-05-22",
+      "shown": []
+    },
+    "adminPageOpens": 22,
+    "ftueDay": 0,
+    "alarmsEnabled": true,
+    "marathonStreak": 0,
+    "_lastGameDate": "Fri May 22 2026",
+    "flashcardSRS": {},
+    "activePetType": "hamster",
+    "milestones": {
+      "W14": false,
+      "W20": false,
+      "W26": false
+    },
+    "wowGuessedToday": {},
+    "compTracking": {},
+    "vocabGameRuns": 11,
+    "spacedRepetition": {
+      "reviews": {
+        "wow:w1": {
+          "intervalDays": 6,
+          "lastReviewed": 1779453042910,
+          "correctStreak": 1,
+          "firstSeen": 1777682542904
+        }
+      }
+    },
+    "paper2Sprint": {
+      "startWeek": 1,
+      "correct": {
+        "cloze": 0,
+        "sst": 0
+      },
+      "progress": {
+        "cloze": 0,
+        "sst": 0
+      },
+      "recent": {
+        "sst": [],
+        "cloze": []
+      },
+      "target": {
+        "cloze": 100,
+        "sst": 50
+      }
+    },
+    "adminPassword": "3816",
+    "weekly": {},
+    "totalPoints": 1257,
+    "tipQsAnswered": {},
+    "thinkPuzzleAnswers": {},
+    "listenGameRuns": 2,
+    "weeklyPool": {},
+    "editingGameRuns": 15,
+    "craftCrystals": 0,
+    "cloudPhotos": {},
+    "knowledgeExplored": {
+      "eng_basics": {
+        "date": "2026-05-02"
+      },
+      "sci_diversity": {
+        "date": "2026-05-02"
+      },
+      "eng_writing": {
+        "date": "2026-05-02"
+      },
+      "ch_basic": {
+        "date": "2026-05-02"
+      },
+      "math_basics": {
+        "date": "2026-05-02"
+      },
+      "math_geometry": {
+        "date": "2026-05-02"
+      },
+      "sci_plant_lc": {
+        "date": "2026-05-02"
+      }
+    },
+    "pet": {
+      "spawnedAt": 1777650533015,
+      "name": "小趴包",
+      "lastFedDate": "2026-05-02",
+      "feedCount": 10,
+      "happiness": 100,
+      "formIdx": 3
+    },
+    "activeSkin": "scholar",
+    "wrongAnswers": [
+      {
+        "q": "风媒花的特征是?",
+        "id": "knowledge|风媒花的特征是?|sci_plant_lc:1777727678471",
+        "addedWeek": 1,
+        "type": "mcq",
+        "_fp": "knowledge|风媒花的特征是?|sci_plant_lc",
+        "gameKey": "knowledge",
+        "explain": "风媒花靠风传粉 → 需大量轻花粉飘散; 虫媒花反之要吸引昆虫",
+        "addedDate": "2026-05-02",
+        "opts": [
+          "花粉轻量多",
+          "花瓣大艳",
+          "有花蜜",
+          "花香浓郁"
+        ],
+        "retries": 0,
+        "nodeId": "sci_plant_lc",
+        "subj": "🔬 科学",
+        "ans": 0
+      },
+      {
+        "ans": 3,
+        "subj": "🔬 科学",
+        "retries": 0,
+        "nodeId": "sci_plant_lc",
+        "opts": [
+          "萌发率",
+          "种子大小",
+          "温度计",
+          "水的量"
+        ],
+        "explain": "IV = 主动改变的变量 (水量); DV = 测量结果 (萌发率)",
+        "addedDate": "2026-05-02",
+        "_fp": "knowledge|设计萌发实验, IV (independent variable) 是?|sci_plant_lc",
+        "type": "mcq",
+        "gameKey": "knowledge",
+        "id": "knowledge|设计萌发实验, IV (independent variable) 是?|sci_plant_lc:1777727678471",
+        "addedWeek": 1,
+        "q": "设计萌发实验, IV (independent variable) 是?"
+      },
+      {
+        "retries": 0,
+        "nodeId": "sci_plant_lc",
+        "subj": "🔬 科学",
+        "ans": 2,
+        "id": "knowledge|种子萌发不需要哪个条件?|sci_plant_lc:1777727687205",
+        "q": "种子萌发不需要哪个条件?",
+        "addedWeek": 1,
+        "type": "mcq",
+        "_fp": "knowledge|种子萌发不需要哪个条件?|sci_plant_lc",
+        "gameKey": "knowledge",
+        "addedDate": "2026-05-02",
+        "explain": "萌发用的是种子内储存的食物, 不需要光. 光合作用是萌发后才需要",
+        "opts": [
+          "水",
+          "空气",
+          "光",
+          "适宜温度"
+        ]
+      },
+      {
+        "addedDate": "2026-05-02",
+        "explain": "Hook 读者: 听觉/视觉描写 + 对话 + 动作 → 评卷老师 6 分钟内决定分数",
+        "opts": [
+          "Sensory details + dialogue + action",
+          "总结全文",
+          "介绍人物",
+          "直接讲故事"
+        ],
+        "id": "knowledge|作文开头 3 句最佳策略?|eng_writing:1777727740086",
+        "addedWeek": 1,
+        "q": "作文开头 3 句最佳策略?",
+        "gameKey": "knowledge",
+        "type": "mcq",
+        "_fp": "knowledge|作文开头 3 句最佳策略?|eng_writing",
+        "ans": 0,
+        "nodeId": "eng_writing",
+        "retries": 0,
+        "subj": "📖 英语"
+      },
+      {
+        "q": "PSLE 作文跑题扣多少?",
+        "id": "knowledge|PSLE 作文跑题扣多少?|eng_writing:1777727740086",
+        "addedWeek": 1,
+        "gameKey": "knowledge",
+        "type": "mcq",
+        "_fp": "knowledge|PSLE 作文跑题扣多少?|eng_writing",
+        "explain": "跑题 = 0 分; 全文必有 1 句扣 theme 关键词",
+        "addedDate": "2026-05-02",
+        "opts": [
+          "扣 10 分",
+          "不扣",
+          "扣 5 分",
+          "直接 0 分"
+        ],
+        "nodeId": "eng_writing",
+        "retries": 0,
+        "subj": "📖 英语",
+        "ans": 3
+      }
+    ],
+    "exchanges": [],
+    "dailyDraws": {
+      "consecutive": 1,
+      "fragments": 0,
+      "lastDrawDate": "2026-05-22"
+    },
+    "logs": [
+      {
+        "timestamp": 1777681921875,
+        "reason": "🎮 Editing 找错全对",
+        "week": 1,
+        "points": 10
+      },
+      {
+        "reason": "🎁 开宝箱 (惊喜!)",
+        "timestamp": 1777681932188,
+        "points": 15,
+        "week": 1
+      },
+      {
+        "points": 10,
+        "week": 1,
+        "reason": "🎮 词汇连连看 W1 全对(0 错)",
+        "timestamp": 1777682076331
+      },
+      {
+        "reason": "🎁 开宝箱 (惊喜!)",
+        "timestamp": 1777682080602,
+        "week": 1,
+        "points": 15
+      },
+      {
+        "timestamp": 1777682568940,
+        "reason": "🎮 词汇连连看 W1 全对(1 错)",
+        "points": 10,
+        "week": 1
+      },
+      {
+        "week": 1,
+        "points": 15,
+        "reason": "🎁 开宝箱 (惊喜!)",
+        "timestamp": 1777682571734
+      },
+      {
+        "timestamp": 1777683575749,
+        "reason": "💡 揭晓 Wow 答案",
+        "points": 2,
+        "week": 1
+      },
+      {
+        "points": 10,
+        "week": 1,
+        "reason": "🎮 词汇连连看 W1 全对(0 错)",
+        "timestamp": 1777683961926
+      },
+      {
+        "reason": "🎁 开宝箱 (普通)",
+        "timestamp": 1777683965649,
+        "points": 5,
+        "week": 1
+      },
+      {
+        "points": 5,
+        "week": 1,
+        "timestamp": 1777684572707,
+        "reason": "⭐ 每日任务: 看 1 个学科词汇本 (+5)"
+      },
+      {
+        "timestamp": 1777684972695,
+        "reason": "🎮 Editing 找错全对",
+        "week": 1,
+        "points": 10
+      },
+      {
+        "points": 5,
+        "week": 1,
+        "reason": "🎁 开宝箱 (普通)",
+        "timestamp": 1777684974762
+      },
+      {
+        "timestamp": 1777684992102,
+        "reason": "🎮 词汇连连看 W1 全对(0 错)",
+        "week": 1,
+        "points": 10
+      },
+      {
+        "week": 1,
+        "points": 5,
+        "timestamp": 1777685095749,
+        "reason": "🎁 开宝箱 (普通)"
+      },
+      {
+        "reason": "🎁 开宝箱 (普通)",
+        "timestamp": 1777685186328,
+        "points": 5,
+        "week": 1
+      },
+      {
+        "week": 1,
+        "points": 10,
+        "reason": "🎮 词汇连连看 W1 全对(0 错)",
+        "timestamp": 1777685203843
+      },
+      {
+        "points": 15,
+        "week": 1,
+        "timestamp": 1777685218914,
+        "reason": "🎁 开宝箱 (惊喜!)"
+      },
+      {
+        "week": 1,
+        "points": 10,
+        "reason": "🎮 词汇连连看 W1 全对(0 错)",
+        "timestamp": 1777685328105
+      },
+      {
+        "points": 5,
+        "week": 1,
+        "timestamp": 1777685329962,
+        "reason": "🎁 开宝箱 (普通)"
+      },
+      {
+        "week": 1,
+        "points": 10,
+        "reason": "🎮 词汇连连看 W1 全对(0 错)",
+        "timestamp": 1777686034630
+      },
+      {
+        "points": 10,
+        "week": 1,
+        "reason": "🎮 词汇连连看 W1 全对(0 错)",
+        "timestamp": 1777686050682
+      },
+      {
+        "reason": "🎮 数学速算 9/10",
+        "timestamp": 1777687663300,
+        "points": 5,
+        "week": 1
+      },
+      {
+        "reason": "🎮 数学速算 10/10",
+        "timestamp": 1777687699671,
+        "points": 8,
+        "week": 1
+      },
+      {
+        "reason": "🎮 Editing 找错全对",
+        "timestamp": 1777687739759,
+        "points": 10,
+        "week": 1
+      },
+      {
+        "points": 15,
+        "week": 1,
+        "reason": "🎁 开宝箱 (惊喜!)",
+        "timestamp": 1777687744714
+      },
+      {
+        "points": 15,
+        "week": 1,
+        "timestamp": 1777687752342,
+        "reason": "🎁 开宝箱 (��喜!)"
+      },
+      {
+        "timestamp": 1777687754228,
+        "reason": "🎁 开宝箱 (普通)",
+        "points": 5,
+        "week": 1
+      },
+      {
+        "week": 1,
+        "points": 10,
+        "timestamp": 1777687903001,
+        "reason": "🎮 词汇连连看 W1 全对(4 错)"
+      },
+      {
+        "week": 1,
+        "points": 5,
+        "timestamp": 1777687905085,
+        "reason": "🎁 开宝箱 (普通)"
+      },
+      {
+        "reason": "🎮 数学速算 9/10",
+        "timestamp": 1777687944286,
+        "week": 1,
+        "points": 5
+      },
+      {
+        "points": 10,
+        "week": 1,
+        "reason": "🎮 Editing 找错全对",
+        "timestamp": 1777689233413
+      },
+      {
+        "timestamp": 1777689242433,
+        "reason": "🎮 Editing 找错全对",
+        "points": 10,
+        "week": 1
+      },
+      {
+        "reason": "🎮 Editing 找错全对",
+        "timestamp": 1777689250771,
+        "points": 10,
+        "week": 1
+      },
+      {
+        "week": 1,
+        "points": 10,
+        "timestamp": 1777689259293,
+        "reason": "🎮 Editing 找错全对"
+      },
+      {
+        "week": 1,
+        "points": 10,
+        "timestamp": 1777689265129,
+        "reason": "🎮 Editing 找错全对"
+      },
+      {
+        "reason": "🎮 Editing 找错全对",
+        "timestamp": 1777689271533,
+        "week": 1,
+        "points": 10
+      },
+      {
+        "reason": "🎮 Editing 找错全对",
+        "timestamp": 1777689278404,
+        "week": 1,
+        "points": 10
+      },
+      {
+        "points": 15,
+        "week": 1,
+        "timestamp": 1777689279593,
+        "reason": "🎁 开宝箱 (惊喜!)"
+      },
+      {
+        "points": 15,
+        "week": 1,
+        "timestamp": 1777689282416,
+        "reason": "🎁 开宝箱 (惊喜!)"
+      },
+      {
+        "week": 1,
+        "points": 5,
+        "reason": "🎁 开宝箱 (普通)",
+        "timestamp": 1777689285475
+      },
+      {
+        "reason": "🎁 开宝箱 (普通)",
+        "timestamp": 1777689287676,
+        "week": 1,
+        "points": 5
+      },
+      {
+        "reason": "🎁 开宝箱 (普通)",
+        "timestamp": 1777689289170,
+        "week": 1,
+        "points": 5
+      },
+      {
+        "week": 1,
+        "points": 15,
+        "timestamp": 1777689290486,
+        "reason": "🎁 开宝箱 (惊喜!)"
+      },
+      {
+        "reason": "🎁 开宝箱 (普通)",
+        "timestamp": 1777689295914,
+        "week": 1,
+        "points": 5
+      },
+      {
+        "points": 10,
+        "week": 1,
+        "timestamp": 1777690331773,
+        "reason": "🎮 Editing 找错全对"
+      },
+      {
+        "reason": "🎁 开宝箱 (普通)",
+        "timestamp": 1777690333462,
+        "week": 1,
+        "points": 5
+      },
+      {
+        "week": 1,
+        "points": 10,
+        "timestamp": 1777690344298,
+        "reason": "🎮 Editing 找错全对"
+      },
+      {
+        "points": 15,
+        "week": 1,
+        "timestamp": 1777690346228,
+        "reason": "🎁 开宝箱 (惊喜!)"
+      },
+      {
+        "points": 8,
+        "week": 1,
+        "reason": "🎮 数学速算 10/10",
+        "timestamp": 1777690530378
+      },
+      {
+        "week": 1,
+        "points": 10,
+        "reason": "🎮 Editing 找错全对",
+        "timestamp": 1777690594198
+      },
+      {
+        "reason": "🎁 开宝箱 (惊喜!)",
+        "timestamp": 1777690595467,
+        "week": 1,
+        "points": 15
+      },
+      {
+        "reason": "🎁 开宝箱 (惊喜!)",
+        "timestamp": 1777690949887,
+        "week": 1,
+        "points": 15
+      },
+      {
+        "timestamp": 1777702070545,
+        "reason": "🎮 数学速算 10/10",
+        "week": 1,
+        "points": 8
+      },
+      {
+        "week": 1,
+        "points": 8,
+        "reason": "🎮 Cloze 单空填 10/10 (第 1 次)",
+        "timestamp": 1777702147684
+      },
+      {
+        "timestamp": 1777702168212,
+        "reason": "🎮 科学分类 6/6 (第 1 次)",
+        "points": 10,
+        "week": 1
+      },
+      {
+        "week": 1,
+        "points": 8,
+        "timestamp": 1777702210965,
+        "reason": "🎮 单位换算 10/10 (第 1 次)"
+      },
+      {
+        "reason": "🎮 Grammar 选择题 8/10 (第 1 次)",
+        "timestamp": 1777702260697,
+        "week": 1,
+        "points": 5
+      },
+      {
+        "week": 1,
+        "points": 10,
+        "reason": "🎮 词汇连连看 W1 全对(第 1 次, 满奖 100%)",
+        "timestamp": 1777702457022
+      },
+      {
+        "points": 5,
+        "week": 1,
+        "reason": "🎮 数学速算 8/10 (第 1 次)",
+        "timestamp": 1777702498610
+      },
+      {
+        "timestamp": 1777702719631,
+        "reason": "🎮 Editing 找错全对 (第 1 次)",
+        "points": 10,
+        "week": 1
+      },
+      {
+        "timestamp": 1777702923411,
+        "reason": "🎮 听写 3/5 (第 1 次)",
+        "week": 1,
+        "points": 5
+      },
+      {
+        "week": 1,
+        "points": 87,
+        "reason": "🎁 开宝箱 (神级!)",
+        "timestamp": 1777702932334
+      },
+      {
+        "points": 5,
+        "week": 1,
+        "reason": "🎁 开宝箱 (普通)",
+        "timestamp": 1777702960689
+      },
+      {
+        "timestamp": 1777703049212,
+        "reason": "🎮 科学分类 6/6 (第 2 次)",
+        "points": 5,
+        "week": 1
+      },
+      {
+        "week": 1,
+        "points": 2,
+        "reason": "🎮 科学分类 6/6 (第 3 次)",
+        "timestamp": 1777703058526
+      },
+      {
+        "reason": "🎮 Editing 找错全对 (第 2 次)",
+        "timestamp": 1777703130997,
+        "week": 1,
+        "points": 5
+      },
+      {
+        "timestamp": 1777703172099,
+        "reason": "🎮 Cloze 单空填 10/10 (第 2 次)",
+        "week": 1,
+        "points": 4
+      },
+      {
+        "reason": "🎮 词汇连连看 W1 全对(第 2 次, 半奖 50%)",
+        "timestamp": 1777703341297,
+        "week": 1,
+        "points": 5
+      },
+      {
+        "timestamp": 1777703378000,
+        "reason": "🎮 数学速算 7/10 (第 2 次)",
+        "points": 2,
+        "week": 1
+      },
+      {
+        "timestamp": 1777703755222,
+        "reason": "🎮 Grammar 选择题 10/10 (第 2 次)",
+        "week": 1,
+        "points": 4
+      },
+      {
+        "timestamp": 1777710266110,
+        "reason": "🌳 知识树探索: Diversity 分类",
+        "week": 1,
+        "points": 2
+      },
+      {
+        "reason": "🌳 知识树探索: 基础 Grammar",
+        "timestamp": 1777710373907,
+        "week": 1,
+        "points": 2
+      },
+      {
+        "points": 2,
+        "week": 1,
+        "reason": "🌳 知识树探索: 植物生命周期",
+        "timestamp": 1777711188110
+      },
+      {
+        "timestamp": 1777711372763,
+        "reason": "🌳 知识树探索: 作文 Composition",
+        "points": 2,
+        "week": 1
+      },
+      {
+        "timestamp": 1777713629534,
+        "reason": "📝 知识练习: sci_diversity 3/3 (3⭐)",
+        "week": 1,
+        "points": 30
+      },
+      {
+        "week": 1,
+        "points": 10,
+        "timestamp": 1777722760143,
+        "reason": "📝 知识练习: eng_basics 2/3 (1⭐)"
+      },
+      {
+        "points": 20,
+        "week": 1,
+        "timestamp": 1777722778870,
+        "reason": "📝 知识练习: eng_basics 3/3 (3⭐)"
+      },
+      {
+        "week": 1,
+        "points": 2,
+        "timestamp": 1777722782857,
+        "reason": "🌳 知识树探索: 四则运算"
+      },
+      {
+        "timestamp": 1777722796590,
+        "reason": "📝 知识练习: math_basics 3/3 (3⭐)",
+        "points": 30,
+        "week": 1
+      },
+      {
+        "timestamp": 1777722800970,
+        "reason": "🌳 知识树探索: 基础词汇",
+        "week": 1,
+        "points": 2
+      },
+      {
+        "points": 2,
+        "week": 1,
+        "timestamp": 1777722803946,
+        "reason": "🌳 知识树探索: 几何"
+      },
+      {
+        "points": 5,
+        "week": 1,
+        "timestamp": 1777722833968,
+        "reason": "📝 知识练习: ch_basic 1/3 (0⭐)"
+      },
+      {
+        "reason": "📝 知识练习: ch_basic 2/3 (1⭐)",
+        "timestamp": 1777722853153,
+        "week": 1,
+        "points": 5
+      },
+      {
+        "timestamp": 1777722867753,
+        "reason": "📝 知识练习: ch_basic 3/3 (3⭐)",
+        "week": 1,
+        "points": 20
+      },
+      {
+        "week": 1,
+        "points": 5,
+        "reason": "📝 知识练习: sci_plant_lc 1/3 (0⭐)",
+        "timestamp": 1777727678471
+      },
+      {
+        "week": 1,
+        "points": 5,
+        "reason": "📝 知识练习: sci_plant_lc 2/3 (1⭐)",
+        "timestamp": 1777727687205
+      },
+      {
+        "timestamp": 1777727697628,
+        "reason": "📝 知识练习: sci_plant_lc 3/3 (3⭐)",
+        "week": 1,
+        "points": 20
+      },
+      {
+        "points": 30,
+        "week": 1,
+        "timestamp": 1777727711827,
+        "reason": "📝 知识练习: sci_diversity 3/3 (3⭐)"
+      },
+      {
+        "timestamp": 1777727740086,
+        "reason": "📝 知识练习: eng_writing 1/3 (0⭐)",
+        "points": 5,
+        "week": 1
+      },
+      {
+        "week": 1,
+        "points": 25,
+        "reason": "📝 知识练习: eng_writing 3/3 (3⭐)",
+        "timestamp": 1777727752543
+      },
+      {
+        "points": 30,
+        "week": 1,
+        "timestamp": 1777727768637,
+        "reason": "📝 知识练习: eng_basics 3/3 (3⭐)"
+      },
+      {
+        "points": 30,
+        "week": 1,
+        "reason": "📝 知识练习: math_geometry 3/3 (3⭐)",
+        "timestamp": 1777727788578
+      },
+      {
+        "week": 1,
+        "points": 30,
+        "timestamp": 1777727801085,
+        "reason": "📝 知识练习: math_basics 3/3 (3⭐)"
+      },
+      {
+        "week": 1,
+        "points": 30,
+        "reason": "📝 知识练习: ch_basic 3/3 (3⭐)",
+        "timestamp": 1777727811616
+      },
+      {
+        "reason": "每日登录奖励",
+        "timestamp": 1779113726032,
+        "week": 1,
+        "points": 5
+      },
+      {
+        "timestamp": 1779450250495,
+        "reason": "每日登录奖励",
+        "points": 5,
+        "week": 1
+      }
+    ],
+    "vocabPerfectRuns": 8,
+    "dragonsUnlocked": {
+      "gold": null,
+      "silver": null
+    },
+    "wowSeenCount": 2,
+    "equipmentDisabled": [],
+    "mockExams": [],
+    "mathGameRuns": 10,
+    "version": 2,
+    "knowledgeStars": {
+      "eng_writing": {
+        "bestScore": 3,
+        "lastDate": "2026-05-02",
+        "stars": 3,
+        "attempts": 2
+      },
+      "eng_basics": {
+        "stars": 3,
+        "attempts": 1,
+        "bestScore": 3,
+        "lastDate": "2026-05-02"
+      },
+      "sci_diversity": {
+        "stars": 3,
+        "attempts": 1,
+        "bestScore": 3,
+        "lastDate": "2026-05-02"
+      },
+      "math_basics": {
+        "attempts": 1,
+        "stars": 3,
+        "lastDate": "2026-05-02",
+        "bestScore": 3
+      },
+      "ch_basic": {
+        "lastDate": "2026-05-02",
+        "bestScore": 3,
+        "attempts": 1,
+        "stars": 3
+      },
+      "sci_plant_lc": {
+        "attempts": 3,
+        "stars": 3,
+        "lastDate": "2026-05-02",
+        "bestScore": 3
+      },
+      "math_geometry": {
+        "stars": 3,
+        "attempts": 1,
+        "bestScore": 3,
+        "lastDate": "2026-05-02"
+      }
+    },
+    "gameDailyCount": {
+      "date": "2026-05-22",
+      "counts": {
+        "scilab": 0,
+        "chinese": 0,
+        "math": 0,
+        "scimcq": 0,
+        "comp_oe": 0,
+        "grammar": 0,
+        "vocab": 0,
+        "editing": 0,
+        "listen": 0,
+        "cloze": 0,
+        "sst": 0,
+        "unit": 0
+      }
+    },
+    "dailyQuests": {
+      "2026-05-18": {
+        "progress": 0,
+        "target": 1,
+        "claimedAt": null,
+        "questId": "feynman",
+        "completed": false
+      },
+      "2026-05-22": {
+        "claimedAt": null,
+        "questId": "slot-3",
+        "completed": false,
+        "progress": 0,
+        "target": 3
+      },
+      "2026-05-02": {
+        "completed": true,
+        "claimedAt": 1777684572707,
+        "questId": "vocab-1",
+        "target": 1,
+        "progress": 1
+      },
+      "2026-05-01": {
+        "target": 1,
+        "progress": 0,
+        "completed": false,
+        "claimedAt": null,
+        "questId": "vocab-1"
+      }
+    },
+    "streakBonusCount": 0,
+    "photoHashes": {},
+    "scores": {
+      "1_Mon_OR": {
+        "score": 17,
+        "note": "",
+        "max": 20,
+        "savedAt": 1777685281649
+      },
+      "1_Mon_E1": {
+        "score": 17,
+        "note": "",
+        "max": 20,
+        "savedAt": 1777622596471
+      },
+      "1_Mon_VB": {
+        "savedAt": 1777622609024,
+        "max": 20,
+        "note": "",
+        "score": 17
+      },
+      "1_Mon_VC": {
+        "score": 20,
+        "savedAt": 1777685432239,
+        "max": 20,
+        "note": ""
+      },
+      "1_Tue_OR": {
+        "note": "",
+        "max": 20,
+        "savedAt": 1777686010698,
+        "score": 18
+      },
+      "1_Tue_VC": {
+        "max": 20,
+        "note": "",
+        "savedAt": 1777686065661,
+        "score": 20
+      }
+    },
+    "achievements": {
+      "unlocked": [
+        "day_5slot",
+        "vocab_perfect",
+        "box_10",
+        "hidden_admin"
+      ],
+      "unlockedAt": {
+        "hidden_admin": 1777702271263,
+        "box_10": 1777687744717,
+        "vocab_perfect": 1777682076333,
+        "day_5slot": 1777650534393
+      }
+    },
+    "questionBankProgress": {},
+    "soundEnabled": true,
+    "listeningUsage": {
+      "2026-05-01": {
+        "seconds": 700
+      },
+      "2026-05-02": {
+        "seconds": 1100
+      }
+    },
+    "currentWeek": 1,
+    "dailyStreak": {
+      "brokenAt": null,
+      "bestEver": 1,
+      "days": 1,
+      "lastDate": "2026-05-02",
+      "freezeTokens": 0
+    },
+    "mysteryBoxes": {
+      "available": 1,
+      "history": [
+        {
+          "wow": null,
+          "points": 5,
+          "tier": "common",
+          "ts": 1777702960689,
+          "equipId": null
+        },
+        {
+          "equipId": "cake",
+          "ts": 1777702932333,
+          "tier": "rare",
+          "points": 87,
+          "wow": null
+        },
+        {
+          "points": 15,
+          "wow": "⚠️ \"Look at\" vs \"Look after\" 意思天差地别",
+          "ts": 1777690949886,
+          "tier": "wow",
+          "equipId": null
+        },
+        {
+          "wow": "🧩 Cloze \"一空一词\" 70% 是介词或冠词",
+          "points": 15,
+          "equipId": null,
+          "ts": 1777690595467,
+          "tier": "wow"
+        },
+        {
+          "wow": "🎧 PSLE Listening 答案 90% 在转折后",
+          "points": 15,
+          "ts": 1777690346228,
+          "tier": "wow",
+          "equipId": null
+        },
+        {
+          "wow": null,
+          "points": 5,
+          "ts": 1777690333461,
+          "tier": "common",
+          "equipId": null
+        },
+        {
+          "ts": 1777689295914,
+          "tier": "common",
+          "equipId": null,
+          "points": 5,
+          "wow": null
+        },
+        {
+          "equipId": null,
+          "tier": "wow",
+          "ts": 1777689290486,
+          "points": 15,
+          "wow": "🔢 数字陷阱: 听 \"fifteen\" 还是 \"fifty\"?"
+        },
+        {
+          "wow": null,
+          "points": 5,
+          "equipId": null,
+          "ts": 1777689289170,
+          "tier": "common"
+        },
+        {
+          "tier": "common",
+          "ts": 1777689287676,
+          "equipId": null,
+          "points": 5,
+          "wow": null
+        }
+      ],
+      "opened": 26,
+      "totalSlotsAtLastEarn": 20
+    },
+    "monthlyTestPass": 0,
+    "sadUntil": null,
+    "rareBoxesCount": 1,
+    "lifetimeEarned": 1257,
+    "gameStats": {
+      "unit": {
+        "difficulty": 2,
+        "cumTotal": 30,
+        "cumCorrect": 14,
+        "cumRuns": 3,
+        "recent": [
+          {
+            "correct": 10,
+            "total": 10,
+            "date": "2026-05-02",
+            "accuracy": 1
+          },
+          {
+            "correct": 4,
+            "total": 10,
+            "date": "2026-05-02",
+            "accuracy": 0.4
+          },
+          {
+            "accuracy": 0,
+            "date": "2026-05-02",
+            "total": 10,
+            "correct": 0
+          }
+        ]
+      },
+      "grammar": {
+        "difficulty": 2,
+        "cumCorrect": 18,
+        "cumTotal": 20,
+        "cumRuns": 2,
+        "recent": [
+          {
+            "correct": 8,
+            "total": 10,
+            "date": "2026-05-02",
+            "accuracy": 0.8
+          },
+          {
+            "correct": 10,
+            "total": 10,
+            "date": "2026-05-02",
+            "accuracy": 1
+          }
+        ]
+      },
+      "editing": {
+        "cumRuns": 2,
+        "cumCorrect": 10,
+        "cumTotal": 10,
+        "recent": [
+          {
+            "date": "2026-05-02",
+            "accuracy": 1,
+            "total": 5,
+            "correct": 5
+          },
+          {
+            "total": 5,
+            "date": "2026-05-02",
+            "accuracy": 1,
+            "correct": 5
+          }
+        ],
+        "difficulty": 1
+      },
+      "vocab": {
+        "difficulty": 1,
+        "cumCorrect": 12,
+        "cumTotal": 12,
+        "cumRuns": 2,
+        "recent": [
+          {
+            "total": 6,
+            "accuracy": 1,
+            "date": "2026-05-02",
+            "correct": 6
+          },
+          {
+            "total": 6,
+            "accuracy": 1,
+            "date": "2026-05-02",
+            "correct": 6
+          }
+        ]
+      },
+      "cloze": {
+        "cumCorrect": 20,
+        "cumTotal": 20,
+        "cumRuns": 2,
+        "recent": [
+          {
+            "total": 10,
+            "accuracy": 1,
+            "date": "2026-05-02",
+            "correct": 10
+          },
+          {
+            "total": 10,
+            "date": "2026-05-02",
+            "accuracy": 1,
+            "correct": 10
+          }
+        ],
+        "difficulty": 1
+      },
+      "listen": {
+        "recent": [
+          {
+            "total": 5,
+            "date": "2026-05-02",
+            "accuracy": 0.6,
+            "correct": 3
+          },
+          {
+            "correct": 2,
+            "total": 5,
+            "date": "2026-05-02",
+            "accuracy": 0.4
+          }
+        ],
+        "cumRuns": 2,
+        "cumTotal": 10,
+        "cumCorrect": 5,
+        "difficulty": 2
+      },
+      "math": {
+        "cumRuns": 3,
+        "cumTotal": 30,
+        "cumCorrect": 15,
+        "recent": [
+          {
+            "date": "2026-05-02",
+            "accuracy": 0.8,
+            "total": 10,
+            "correct": 8
+          },
+          {
+            "correct": 7,
+            "total": 10,
+            "accuracy": 0.7,
+            "date": "2026-05-02"
+          },
+          {
+            "accuracy": 0,
+            "date": "2026-05-02",
+            "total": 10,
+            "correct": 0
+          }
+        ],
+        "difficulty": 2
+      },
+      "scilab": {
+        "recent": [],
+        "difficulty": 2
+      }
+    }
+  }
+}
