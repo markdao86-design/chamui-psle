@@ -92,6 +92,14 @@ async function init() {
   // v18 Phase 5.1: 每日抽奖检查 + 成就 init 检查
   setTimeout(() => {
     _checkDailyLoginBonus();   // v18.86: 每日登录 +5 分
+    // v19.9: 真考 18 道错题自动入错题本 (基于孩子 2026.5 Paper 2 真考批改)
+    if (window.loadPaper2RealErrors) {
+      const added = window.loadPaper2RealErrors(state);
+      if (added > 0) {
+        saveState(state);
+        showToast(`📓 加载了 ${added} 道真考错题到错题本 — 优先复习!`, 'happy');
+      }
+    }
     _checkDailyDrawOnInit();
     _checkAndUnlockAch();
     _checkFTUE();              // v19.3: 首次引导
@@ -536,9 +544,40 @@ function renderLearningPortraitCard() {
 }
 window.renderLearningPortraitCard = renderLearningPortraitCard;
 
+// v19.9: 错题本卡 (区分真考错题 + app 错题)
 function renderErrorBankCard() {
   const card = document.getElementById('errorBankCard');
-  if (card) card.style.display = 'none';
+  if (!card) return;
+  const wrongs = state.wrongAnswers || [];
+  if (wrongs.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = '';
+  const realExam = wrongs.filter(w => w.source === 'paper2-real').length;
+  const appErrors = wrongs.length - realExam;
+  card.style.borderLeft = realExam > 0 ? '4px solid #FF6B6B' : '4px solid #4ECDC4';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div style="font-size:14px;font-weight:900">📓 错题本 ${realExam > 0 ? '<span style="color:#FF6B6B">🔥</span>' : ''}</div>
+      <div style="margin-left:auto;font-size:11px;color:#666">${wrongs.length} 题待清</div>
+    </div>
+    ${realExam > 0 ? `
+    <div style="background:linear-gradient(135deg,#FFF0F0,#FFE0E0);border:1px solid #FFB6B6;border-radius:6px;padding:8px;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:12px;font-weight:900;color:#FF6B6B">🔥 真考错题: ${realExam} 题 (优先!)</div>
+        <button onclick="openErrorBank()" style="padding:4px 12px;background:#FF6B6B;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">立即复习 →</button>
+      </div>
+      <div style="font-size:10px;color:#5D4500;margin-top:4px">来自你 2026.5 Paper 2 真考错题, 反复做直到全对</div>
+    </div>` : ''}
+    ${appErrors > 0 ? `
+    <div style="background:#F0F8FF;border:1px solid #C8E0F0;border-radius:6px;padding:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:12px">📓 App 内错题: ${appErrors} 题</div>
+        ${realExam === 0 ? `<button onclick="openErrorBank()" style="padding:4px 12px;background:#4ECDC4;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">复习 →</button>` : ''}
+      </div>
+    </div>` : ''}
+  `;
 }
 window.renderErrorBankCard = renderErrorBankCard;
 
@@ -4240,9 +4279,10 @@ function closeErrorBank() {
 function startErrorBankReview() {
   const wrongs = (state.wrongAnswers || []).slice();
   if (wrongs.length === 0) { closeErrorBank(); return; }
-  // 打乱顺序
-  wrongs.sort(() => Math.random() - 0.5);
-  _errorBankState = { items: wrongs, idx: 0, correct: 0, removed: [] };
+  // v19.9: 真考错题优先 (paper2-real source 排前), 同源内随机
+  const real = wrongs.filter(w => w.source === 'paper2-real').sort(() => Math.random() - 0.5);
+  const others = wrongs.filter(w => w.source !== 'paper2-real').sort(() => Math.random() - 0.5);
+  _errorBankState = { items: [...real, ...others], idx: 0, correct: 0, removed: [] };
   _renderErrorBankReview();
 }
 function _renderErrorBankReview() {
@@ -4272,16 +4312,24 @@ function _renderErrorBankReview() {
         <button class="btn btn-primary" style="margin-left:8px" onclick="submitErrorBankMath()">提交</button>
       </div>`;
   }
+  // v19.9: 真考错题红色高亮标记
+  const isRealExam = item.source === 'paper2-real';
+  const cardBg = isRealExam ? 'background:linear-gradient(135deg,#FFF0F0,#FFE0E0);border:2px solid #FF6B6B;' : '';
+  const tagPrefix = isRealExam ? '🔥 真考错题 · ' : '';
+  const tagBg = isRealExam ? 'background:#FF6B6B;color:#FFF' : 'background:rgba(0,212,255,0.1);color:var(--color-primary)';
+  // v19.9: SST 类需要显示 rule
+  const ruleHtml = item.rule ? `<div style="background:#FFF8E0;border-left:3px solid #FFA500;padding:6px 10px;margin-bottom:10px;font-size:12px;color:#5D4500"><b>📝 题目要求:</b> ${escapeHtml(item.rule)}</div>` : '';
   modal.innerHTML = `
-    <div class="kt-inner cn-reading-inner">
+    <div class="kt-inner cn-reading-inner" style="${cardBg}">
       <div class="kt-header">
         <div>
-          <div class="kt-title">📓 错题复习 · ${g.idx + 1}/${g.items.length}</div>
+          <div class="kt-title">${isRealExam ? '🔥 ' : '📓 '}错题复习 · ${g.idx + 1}/${g.items.length}</div>
           <div class="kt-progress">✅ 已答对 ${g.correct} · 累计入库 ${(state.wrongAnswers||[]).length} 题</div>
         </div>
         <button class="vocab-modal-close" onclick="closeErrorBank()">×</button>
       </div>
-      <div style="background:rgba(0,212,255,0.1);color:var(--color-primary);font-size:11px;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:8px">${tag}${item.subj ? ' · ' + escapeHtml(item.subj) : ''}${item.retries ? ' · 已重做 ' + item.retries + ' 次' : ''}</div>
+      <div style="${tagBg};font-size:11px;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:8px;font-weight:${isRealExam ? '900' : '400'}">${tagPrefix}${tag}${item.tag && isRealExam ? ' · ' + escapeHtml(item.tag) : ''}${item.subj ? ' · ' + escapeHtml(item.subj) : ''}${item.retries ? ' · 已重做 ' + item.retries + ' 次' : ''}</div>
+      ${ruleHtml}
       <div class="cn-q-text" style="margin-bottom:16px">${escapeHtml(item.q)}</div>
       ${answerArea}
       <div id="ebFeedback" style="min-height:24px;margin-top:12px;font-size:13px"></div>

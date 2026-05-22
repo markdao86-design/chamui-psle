@@ -3381,7 +3381,42 @@ const CLOZE_QUESTIONS = [
   { sentence: 'My grandmother suffers ___ arthritis.', opts: ['from','of','with','at'], ans: 0, diff: 4, tag: 'vocab-prep', explain: 'suffer from = 患…病 (固定); suffer of/with 错' },
   { sentence: 'The success depends ___ how much effort you put in.', opts: ['on','of','with','to'], ans: 0, diff: 4, tag: 'vocab-prep', explain: 'depend on = 依赖于 (固定); depend of/with 错' },
   { sentence: 'The cake consists ___ flour, eggs and sugar.', opts: ['of','from','in','with'], ans: 0, diff: 5, tag: 'vocab-prep', explain: 'consist of = 由…组成 (固定, 不用被动); 区别: be composed of; be made of/from' },
-  { sentence: 'I apologise ___ being late to class.', opts: ['for','about','of','to'], ans: 0, diff: 4, tag: 'vocab-prep', explain: 'apologise for + ing (固定); apologise to + 人; 别混 — apologise to him for being late' }
+  { sentence: 'I apologise ___ being late to class.', opts: ['for','about','of','to'], ans: 0, diff: 4, tag: 'vocab-prep', explain: 'apologise for + ing (固定); apologise to + 人; 别混 — apologise to him for being late' },
+
+  // ====== v19.9 P0: 20 道 Cloze 词义辨析 (覆盖孩子真考具体错点) ======
+  // 真考 Section C 错了 9 道: another/other, when/whenever, saw/watched, too/so, him/myself, pull to safety, Across/Flowing 等
+
+  // === another vs other (3 道, 真考 17 题) ===
+  { sentence: 'I have two pens. One is blue and the ___ is red.', opts: ['other','another','others','any other'], ans: 0, diff: 4, tag: 'vocab-another-other', explain: 'the other = 两个中的另一个 (确指); another = 还有一个 (再加, 不确指). 真考 17 题孩子写 another 错' },
+  { sentence: 'There are three apples on the table. One is mine, and the ___ two belong to my sister.', opts: ['other','another','others','any'], ans: 0, diff: 4, tag: 'vocab-another-other', explain: 'the other + 复数 = 其余的 (剩下都是); another 后只能跟单数; others 是代词不接名词' },
+  { sentence: 'Would you like ___ cup of tea?', opts: ['another','other','the other','others'], ans: 0, diff: 4, tag: 'vocab-another-other', explain: 'another + 单数 = 再一个 (不确指); other 后必须有名词复数 或 the other; 这里是 polite offer 用 another' },
+
+  // === when vs whenever (3 道, 真考 25 题) ===
+  { sentence: '___ I see a stray dog, I feel sorry for it.', opts: ['Whenever','When','While','As'], ans: 0, diff: 5, tag: 'vocab-when-whenever', explain: 'whenever = 每当 (习惯性, 强调每一次都这样); when = 当...时 (单次或一般); 真考 25 题就是这型, 孩子错' },
+  { sentence: '___ the bell rings, students rush out of the classroom.', opts: ['Whenever','When','Where','That'], ans: 0, diff: 4, tag: 'vocab-when-whenever', explain: 'whenever = 每次都 (习惯) — bell rings 每次都 rush out, 是规律; when 是单次' },
+  { sentence: '___ we visit grandma, she always cooks our favourite food.', opts: ['Whenever','When','Whereas','Wherever'], ans: 0, diff: 4, tag: 'vocab-when-whenever', explain: 'whenever (每次都) + always (总是) 习惯性配对; whereas = 然而 (对比); wherever = 无论哪里' },
+
+  // === saw vs watched (3 道, 真考 20 题) ===
+  { sentence: 'I ___ the children playing in the park for an hour.', opts: ['watched','saw','looked','noticed'], ans: 0, diff: 5, tag: 'vocab-saw-watched', explain: 'watch = 持续观看 (for an hour 持续动作); saw = 一瞬间看到; look at = 朝某方向看. 真考 20 题孩子写 saw 错' },
+  { sentence: 'As I ___ the ripples form on the water, I felt peaceful.', opts: ['watched','saw','looked','viewed'], ans: 0, diff: 5, tag: 'vocab-saw-watched', explain: 'watched 持续观察 (ripples form 涟漪形成是一个过程); saw 是看见一瞬; 真考原题就是这句' },
+  { sentence: 'Dad ___ TV every evening after dinner.', opts: ['watches','sees','looks','notices'], ans: 0, diff: 4, tag: 'vocab-saw-watched', explain: 'watch TV 是固定搭配 (持续观看节目); see TV 错' },
+
+  // === too vs so (3 道, 真考 23 题) ===
+  { sentence: 'The current was ___ strong that I struggled to swim back.', opts: ['so','too','very','quite'], ans: 0, diff: 5, tag: 'vocab-so-too', explain: 'so + adj + that = 如此...以致 (结构固定); too + adj + to + 动 (不能跟 that); 真考 23 题孩子写 too 错' },
+  { sentence: 'The film was ___ boring that we all fell asleep.', opts: ['so','too','very','really'], ans: 0, diff: 4, tag: 'vocab-so-too', explain: 'so...that = 结果状语从句; too...that 不存在; too...to 才对' },
+  { sentence: 'The bag is ___ heavy for me to carry.', opts: ['too','so','very','enough'], ans: 0, diff: 4, tag: 'vocab-so-too', explain: 'too + adj + (for sb) + to + 动 = 太...而不能 (结构); so 后跟 that 从句' },
+
+  // === him vs myself (反身代词, 4 道, 真考 26 题) ===
+  { sentence: 'I always tell ___ to stay calm during exams.', opts: ['myself','me','him','my'], ans: 0, diff: 5, tag: 'vocab-reflexive', explain: '反身代词: 主语和宾语同一人 → 用 myself. I + tell + me 错 (要 myself); 真考 26 题孩子写 him 错' },
+  { sentence: 'She made the cake all by ___.', opts: ['herself','her','she','hers'], ans: 0, diff: 4, tag: 'vocab-reflexive', explain: 'by + 反身代词 = 独自. by herself = 她自己 (没人帮); by her 是 "由她" 不同意' },
+  { sentence: 'The children dressed ___ before going to school.', opts: ['themselves','them','their','they'], ans: 0, diff: 4, tag: 'vocab-reflexive', explain: '主语 children = 复数, 反身 themselves; dress oneself = 给自己穿衣 (动作返回主语)' },
+  { sentence: 'I was so angry that I could not stop ___ from yelling.', opts: ['myself','me','I','mine'], ans: 0, diff: 5, tag: 'vocab-reflexive', explain: 'stop + oneself + from = 阻止自己 (反身); 主语 I, 宾语 myself' },
+
+  // === Pull to + safety / collocation (4 道, 真考 30 题) ===
+  { sentence: 'The lifeguard pulled the drowning child to ___.', opts: ['safety','ground','land','dry'], ans: 0, diff: 5, tag: 'vocab-collocation-safety', explain: 'pull/bring/get sb to safety = 救出脱险 (固定搭配, "safety" 抽象名词); pull to ground 不对; 真考 30 题孩子写 ground 错' },
+  { sentence: 'Despite the heavy traffic, we arrived ___ on time.', opts: ['just','very','too','quite'], ans: 0, diff: 4, tag: 'vocab-collocation', explain: 'just on time = 刚好准时 (固定); very on time 不自然' },
+  { sentence: 'The river was ___ across the village, bringing fresh water.', opts: ['flowing','flow','flowed','flows'], ans: 0, diff: 5, tag: 'vocab-word-form', explain: 'was + V-ing = 过去进行 (河流持续流动). 真考 16 题孩子写 Across 错 (Across 是 prep 不是动词形式, 应该用 ing) ' },
+  { sentence: 'The dog was ___ in the river before its owner rescued it.', opts: ['drowning','sinking','sanking','sank'], ans: 0, diff: 5, tag: 'vocab-word-form', explain: 'drowning = 正在溺水 (was + V-ing); sanking 不是英文词 (sank 才是过去式); sinking 是船下沉用. 真考 29 题孩子写 sanked 错' }
 ];
 
 // ============= v19.4: SST (Synthesis & Transformation) 题库 =============
@@ -3489,7 +3524,33 @@ const SST_QUESTIONS = [
   { q: 'It was a difficult question. Nobody could answer it.', rule: 'Combine using "such...that".', opts: ['It was such a difficult question that nobody could answer it.','It was so difficult question that nobody could answer it.','It was such difficult question that nobody could answer it.','It was such a difficult question and nobody could answer it.'], ans: 0, diff: 5, tag: 'sst-such that', explain: 'such + a/an + 形容词 + 名词 + that. B so 用错 (so 跟形容词不跟名词); C 漏 a; D 用 and 错 (不是结果)' },
   { q: 'She runs very fast. She always wins the race.', rule: 'Combine using "so...that".', opts: ['She runs so fast that she always wins the race.','She runs so fast and always wins the race.','She runs so fast that she always win the race.','She runs such fast that she always wins the race.'], ans: 0, diff: 4, tag: 'sst-so that', explain: 'so + 副词 + that. B 用 and 错; C wins 改 win (主谓错); D such 后跟形容词错' },
   { q: 'The film was boring. We all fell asleep.', rule: 'Combine using "so...that".', opts: ['The film was so boring that we all fell asleep.','The film was such boring that we all fell asleep.','The film was so boring, so we all fell asleep.','So boring was the film that we all fell asleep.'], ans: 0, diff: 4, tag: 'sst-so that', explain: 'so + 形 + that. B such 后跟形容词错; C so...so 重复; D 是倒装句, 语法 OK 但不符 "so...that" 标准结构' },
-  { q: 'The puzzle was easy. Even my little brother solved it.', rule: 'Combine using "such...that".', opts: ['It was such an easy puzzle that even my little brother solved it.','It was such easy puzzle that even my little brother solved it.','It was so easy puzzle that even my little brother solved it.','It was such a easy puzzle that even my little brother solved it.'], ans: 0, diff: 5, tag: 'sst-such that', explain: 'such + an (元音前) + 形 + 名 + that. B 漏 a/an; C so 后跟名词错; D 用 a 错 (easy 元音前要 an)' }
+  { q: 'The puzzle was easy. Even my little brother solved it.', rule: 'Combine using "such...that".', opts: ['It was such an easy puzzle that even my little brother solved it.','It was such easy puzzle that even my little brother solved it.','It was so easy puzzle that even my little brother solved it.','It was such a easy puzzle that even my little brother solved it.'], ans: 0, diff: 5, tag: 'sst-such that', explain: 'such + an (元音前) + 形 + 名 + that. B 漏 a/an; C so 后跟名词错; D 用 a 错 (easy 元音前要 an)' },
+
+  // ====== v19.9 P0: 15 道 SST 关系从句 (whose/which/who/whom) ======
+  // 真考 D34 直接 10 分大题, 孩子完全做不出 — 必须专项突击
+
+  // === whose 所有格关系代词 (5 道) ===
+  { q: 'John is a teacher. His wallet was stolen.', rule: 'Combine using "whose".', opts: ['John, whose wallet was stolen, is a teacher.','The teacher John, whose wallet was stolen.','John whose wallet was stolen is a teacher.','John who his wallet was stolen, is a teacher.'], ans: 0, diff: 5, tag: 'sst-relative-whose', explain: 'whose = 所有格关系代词 (= his/her/their). 非限定从句两边要逗号. B 不完整 (缺 is...); C 缺逗号; D who 后还有 his 重复 (用 whose 就不用 his). 🎯 孩子真考 D34 错的就是这型!' },
+  { q: 'I met a girl. Her father is a doctor.', rule: 'Combine using "whose".', opts: ['I met a girl whose father is a doctor.','I met a girl who her father is a doctor.','I met a girl whose her father is a doctor.','I met a girl, who father is a doctor.'], ans: 0, diff: 5, tag: 'sst-relative-whose', explain: 'whose 直接代替 her, 不能再加 her (C 错); 限定从句不要逗号 (D 错); who + her 重复错 (B). 一般信息用限定从句不加逗号' },
+  { q: 'The book is on the table. Its cover is red.', rule: 'Combine using "whose".', opts: ['The book whose cover is red is on the table.','The book, whose cover is red, is on the table.','The book which cover is red is on the table.','The book whose its cover is red is on the table.'], ans: 0, diff: 5, tag: 'sst-relative-whose', explain: 'whose 也可代物 (its cover). 限定从句 (区分"哪本书"才说), 所以不要逗号 (A 对, B 错). C which 错 (不能用所有格); D whose + its 重复' },
+  { q: 'My friend lost her cat. The cat is white.', rule: 'Combine using "whose".', opts: ['My friend, whose cat is white, lost her cat.','My friend whose cat white, lost her cat.','My friend, whose cat is white lost her cat.','My friend whose her cat is white, lost her cat.'], ans: 0, diff: 5, tag: 'sst-relative-whose', explain: '非限定从句两边都要逗号 (A 对); B 缺 is; C 缺右逗号; D whose + her 重复' },
+  { q: 'The student got an award. His project won the competition.', rule: 'Combine using "whose".', opts: ['The student whose project won the competition got an award.','The student which project won the competition got an award.','The student, whose project won the competition got an award.','The student got an award whose his project won the competition.'], ans: 0, diff: 5, tag: 'sst-relative-whose', explain: '限定从句不要逗号 (A 对); B which 不能代人; C 缺右逗号 (要么两边都加要么都不加); D 语序错 + 重复 his' },
+
+  // === which 关系代词 (5 道) ===
+  { q: 'I borrowed a book from the library. The book was very interesting.', rule: 'Combine using "which".', opts: ['The book which I borrowed from the library was very interesting.','The book, which I borrowed from the library, was very interesting.','I borrowed a book from the library which was very interesting.','The book whom I borrowed from the library was very interesting.'], ans: 0, diff: 4, tag: 'sst-relative-which', explain: '限定从句区分"哪本书", which 引导 (A 对). B 两逗号成非限定, 但限定情境下不对; C 歧义 (which 指 library 还是 book?); D whom 不能代物' },
+  { q: 'The car was very expensive. It was parked outside the house.', rule: 'Combine using "which".', opts: ['The car which was parked outside the house was very expensive.','The car, which was parked outside the house, was very expensive.','The car who was parked outside the house was very expensive.','The car which it was parked outside the house was very expensive.'], ans: 0, diff: 4, tag: 'sst-relative-which', explain: '限定从句区分"哪辆车", A 对. B 用逗号变非限定 (有歧义题型); C who 不代物; D which + it 重复 (which 已代 the car)' },
+  { q: 'The cake was delicious. My mum baked it for my birthday.', rule: 'Combine using "which".', opts: ['The cake which my mum baked for my birthday was delicious.','The cake, which my mum baked for my birthday, was delicious.','The cake whom my mum baked for my birthday was delicious.','The cake which my mum baked it for my birthday was delicious.'], ans: 0, diff: 5, tag: 'sst-relative-which', explain: 'A 对 (which 作宾语, 可省略); D 错: which 已是 it 的代替, 不要再加 it' },
+  { q: 'The movie won the award. We watched the movie last night.', rule: 'Combine using "which".', opts: ['The movie which we watched last night won the award.','The movie that we watched last night, won the award.','The movie which won the award we watched last night.','The movie won the award which we watched last night.'], ans: 0, diff: 5, tag: 'sst-relative-which', explain: 'A 对 (which 作宾语); B that 也行但加了逗号错; C 语序混乱; D which 修饰 award 不对 (要修饰 movie)' },
+  { q: 'The new park is beautiful. It was opened last month.', rule: 'Combine using "which".', opts: ['The new park, which was opened last month, is beautiful.','The new park which it was opened last month is beautiful.','The new park, who was opened last month, is beautiful.','The new park was opened last month which is beautiful.'], ans: 0, diff: 4, tag: 'sst-relative-which', explain: 'A 对 (非限定从句加逗号); B which + it 重复; C who 不代物; D 修饰错了名词' },
+
+  // === who 关系代词 (3 道) ===
+  { q: 'The boy is my classmate. He won the spelling bee.', rule: 'Combine using "who".', opts: ['The boy who won the spelling bee is my classmate.','The boy whom won the spelling bee is my classmate.','The boy which won the spelling bee is my classmate.','The boy he won the spelling bee is my classmate.'], ans: 0, diff: 4, tag: 'sst-relative-who', explain: 'who 代人作主语 (A 对); B whom 是宾格不对 (这里 he 是主语); C which 不代人; D he 与 who 重复' },
+  { q: 'I have a neighbour. She is a famous singer.', rule: 'Combine using "who".', opts: ['I have a neighbour who is a famous singer.','I have a neighbour, who is a famous singer.','I have a neighbour whom is a famous singer.','I have a neighbour which is a famous singer.'], ans: 0, diff: 4, tag: 'sst-relative-who', explain: '限定从句不加逗号 (A 对); B 加逗号变非限定 (歧义); C whom 错 (是主语); D which 不代人' },
+  { q: 'My grandmother makes the best cookies. She lives next door.', rule: 'Combine using "who".', opts: ['My grandmother, who lives next door, makes the best cookies.','My grandmother who lives next door, makes the best cookies.','My grandmother, who lives next door makes the best cookies.','My grandmother that lives next door, makes the best cookies.'], ans: 0, diff: 5, tag: 'sst-relative-who', explain: '非限定从句两边都要逗号 (A 对); B 缺左逗号; C 缺右逗号; D that 不能用在非限定' },
+
+  // === whom 关系代词 (2 道) ===
+  { q: 'The man is my uncle. I spoke to him yesterday.', rule: 'Combine using "whom".', opts: ['The man whom I spoke to yesterday is my uncle.','The man who I spoke to him yesterday is my uncle.','The man whom I spoke to him yesterday is my uncle.','The man which I spoke to yesterday is my uncle.'], ans: 0, diff: 5, tag: 'sst-relative-whom', explain: 'whom 代人作宾语 (介词 to 后宾格); B who 错 (应 whom) + him 重复; C whom + him 重复; D which 不代人' },
+  { q: 'The teacher gave me extra help. I thanked her yesterday.', rule: 'Combine using "whom".', opts: ['The teacher whom I thanked yesterday gave me extra help.','The teacher who I thanked her yesterday gave me extra help.','The teacher whom gave me extra help I thanked yesterday.','The teacher whose I thanked yesterday gave me extra help.'], ans: 0, diff: 5, tag: 'sst-relative-whom', explain: 'whom 代 her (宾格); B 多了 her 重复; C 语序错; D whose 是所有格不对' }
 ];
 
 function getSstByDiff(diff, n) { return _sampleByDiff(SST_QUESTIONS, diff, n || 5); }
@@ -5401,6 +5462,125 @@ function getPaper2SprintStatus(state) {
 }
 window.bumpPaper2Sprint = bumpPaper2Sprint;
 window.getPaper2SprintStatus = getPaper2SprintStatus;
+
+// ============= v19.9: 真考错题手动入库 =============
+// 这是孩子 2026.5 Paper 2 真考 18 道错题 (基于实物批改照片人工录入)
+// 标记 source: 'paper2-real' 让 UI 红色高亮 + 优先复习
+const PAPER2_REAL_ERRORS = [
+  // ===== Section C (Vocab Cloze) — 9 题 =====
+  { gameKey: 'cloze', type: 'mcq', source: 'paper2-real', tag: 'C16',
+    q: 'Ali and I used to live in the same village. ___ through the village was a river.',
+    opts: ['Flowing', 'Across', 'Other', 'Wide'], ans: 0,
+    explain: 'Flowing through = 流经 (现在分词作定语); Across 是介词不能单独作主语. 真考 16 题, 你写 Across 错.' },
+  { gameKey: 'cloze', type: 'mcq', source: 'paper2-real', tag: 'C17',
+    q: "Ali's house was on one side of the river and mine was on the ___ side.",
+    opts: ['other', 'another', 'others', 'wide'], ans: 0,
+    explain: 'the other side = 另一边 (两个中的另一个, 确指); another 不能跟 the. 真考 17 题, 你写 another 错.' },
+  { gameKey: 'cloze', type: 'mcq', source: 'paper2-real', tag: 'C18',
+    q: 'Across the river was a sturdy bridge ___ enough for two lorries to pass through.',
+    opts: ['wide', 'which', 'long', 'big'], ans: 0,
+    explain: 'wide + enough = 足够宽 (形容词描述桥的宽度可让车通过); which 是关系代词不能用. 真考 18 题, 你写 which 错.' },
+  { gameKey: 'cloze', type: 'mcq', source: 'paper2-real', tag: 'C20',
+    q: 'As I ___ the ripples form on the water, Ali crept up from behind.',
+    opts: ['watched', 'saw', 'looked', 'noticed'], ans: 0,
+    explain: 'watched = 持续看 (ripples form 是过程); saw 是看见一瞬. 真考 20 题, 你写 saw 错.' },
+  { gameKey: 'cloze', type: 'mcq', source: 'paper2-real', tag: 'C23',
+    q: 'The current was ___ strong that I struggled to swim back to the bank.',
+    opts: ['so', 'too', 'very', 'really'], ans: 0,
+    explain: 'so + adj + that = 如此...以致 (结果状语); too + adj + to + 动 (不能跟 that). 真考 23 题, 你写 too 错.' },
+  { gameKey: 'cloze', type: 'mcq', source: 'paper2-real', tag: 'C25',
+    q: '___ I saw him, I would tell myself that I would have my revenge one day.',
+    opts: ['Whenever', 'When', 'While', 'As'], ans: 0,
+    explain: 'Whenever = 每当 (习惯性, 每次都这样); When = 一次. 上下文是 "每次见到他", 用 Whenever. 真考 25 题, 你写 When 错.' },
+  { gameKey: 'cloze', type: 'mcq', source: 'paper2-real', tag: 'C26',
+    q: 'No one knew it but whenever I saw him, I would tell ___ that I would have my revenge.',
+    opts: ['myself', 'him', 'me', 'mine'], ans: 0,
+    explain: '反身代词: I 告诉 自己 → myself (主语和宾语同一人). 真考 26 题, 你写 him 错.' },
+  { gameKey: 'cloze', type: 'mcq', source: 'paper2-real', tag: 'C29',
+    q: 'Ali could not swim and was ___ before my eyes.',
+    opts: ['drowning', 'sinking', 'sanked', 'sank'], ans: 0,
+    explain: 'drowning = 正在溺水 (was + V-ing 过去进行); sanked 不是英文词. 真考 29 题, 你写 Sanked 错.' },
+  { gameKey: 'cloze', type: 'mcq', source: 'paper2-real', tag: 'C30',
+    q: 'Abdul plunged into the river and pulled Ali to ___.',
+    opts: ['safety', 'ground', 'land', 'shore'], ans: 0,
+    explain: 'pull/bring sb to safety = 救出脱险 (固定搭配, safety 抽象名词); pull to ground 不对. 真考 30 题, 你写 ground 错.' },
+
+  // ===== Section D (SST) — 4 题真考错 =====
+  { gameKey: 'sst', type: 'mcq', source: 'paper2-real', tag: 'D31-spelling',
+    q: 'Mrs Tan was not at the birthday party last night. The twins were not there too.',
+    rule: 'Combine using "Neither...nor".',
+    opts: ['Neither Mrs Tan nor the twins were at the birthday party last night.',
+           'Neither Mrs Tan nor the twee twins were at the birthday party last night.',
+           'Neither Mrs Tan nor the twins was at the birthday party last night.',
+           'Neither Mrs Tan or the twins were at the birthday party last night.'], ans: 0,
+    explain: 'twins (拼写正确, 你写 "twee" 是 typo); were 主谓一致看 nor 后名词 (twins 复数 → were); neither + nor 配对 (不是 or). 真考 31 题, 你写 twee 拼错.' },
+  { gameKey: 'sst', type: 'mcq', source: 'paper2-real', tag: 'D33-connector',
+    q: '"Take the train to Lavender station before changing to the bus," Sam instructed his sister.',
+    rule: 'Rewrite in indirect speech starting with "Sam instructed".',
+    opts: ['Sam instructed his sister to take the train to Lavender station before changing to the bus.',
+           'Sam instructed his sister to take the train to Lavender before $ changing to the bus.',
+           'Sam instructed his sister that to take the train to Lavender station before changing to the bus.',
+           'Sam instructed his sister to take the train to Lavender station before change to the bus.'], ans: 0,
+    explain: '指令性 indirect speech: instructed + sb + to + 动. station 不能丢; before + V-ing (changing 不是 change). 真考 33 题, 你漏了 station 和 connector.' },
+  { gameKey: 'sst', type: 'mcq', source: 'paper2-real', tag: 'D34-whose',
+    q: "John's wallet was stolen. John is a teacher.",
+    rule: 'Combine using "whose".',
+    opts: ['John, whose wallet was stolen, is a teacher.',
+           'The teacher John, whose wallet has been stolen was John.',
+           'John whose wallet was stolen is a teacher.',
+           'John, who his wallet was stolen, is a teacher.'], ans: 0,
+    explain: 'whose = 所有格关系代词 (= his wallet). 非限定从句两边要逗号 (John, whose..., is). 真考 34 题, 你写错: 把 "The teacher" 放前面 + 末尾再加 "was John" 是冗余, 完全搞反了句子结构. 这是 10 分大题!' },
+  { gameKey: 'sst', type: 'mcq', source: 'paper2-real', tag: 'D35-spelling',
+    q: 'The farmer saw a snake slithering behind the bushes. He yelled out loudly.',
+    rule: 'Combine starting with "After seeing".',
+    opts: ['After seeing a snake slithering behind the bushes, the farmer yelled out loudly.',
+           'After seeing a snake slithering behind the bushed, the farmer yelled out loudly.',
+           'After seeing a snake slither behind the bushes, the farmer yelled out loudly.',
+           'After see a snake slithering behind the bushes, the farmer yelled out loudly.'], ans: 0,
+    explain: 'bushes (复数, 不是 bushed); slithering (现在分词修饰 snake); After + V-ing (动名词). 真考 35 题, 你把 bushes 拼成 bushed 错.' },
+
+  // ===== Section B (Grammar Cloze 字母填空) — 4 题真考错 (改成完整 fill-in 单题) =====
+  { gameKey: 'cloze', type: 'mcq', source: 'paper2-real', tag: 'B7',
+    q: 'The eyebrow is an important facial feature. ___ completing our look, our eyebrows have three other major functions.',
+    opts: ['Besides', 'When', 'Because', 'About'], ans: 0,
+    explain: 'Besides + V-ing = 除了 (introducing additional functions); B11 of original = Besides 字母 (E). 真考 7 题字母填错.' },
+  { gameKey: 'cloze', type: 'mcq', source: 'paper2-real', tag: 'B11',
+    q: 'When a person raises an eyebrow, it means he is unsure ___ something.',
+    opts: ['about', 'with', 'in', 'for'], ans: 0,
+    explain: 'unsure about + sth = 不确定 (固定搭配); unsure with 错. 真考 11 题选错字母.' },
+  { gameKey: 'cloze', type: 'mcq', source: 'paper2-real', tag: 'B12',
+    q: '___ in cartoons, a simple line above eyes is enough to portray emotions.',
+    opts: ['Why', 'How', 'This', 'When'], ans: 0,
+    explain: '这里 Why = 这就是为什么 (引出原因, 前句解释了 eyebrow 重要性); How 不通顺. 真考 12 题选错.' },
+  { gameKey: 'cloze', type: 'mcq', source: 'paper2-real', tag: 'B15',
+    q: 'People are more likely to identify other people ___ their eyebrows as compared to other facial features.',
+    opts: ['with', 'by', 'from', 'in'], ans: 0,
+    explain: 'identify sb with sth = 通过某物认出某人 (固定); identify by 也偶尔用但 with 更准. 真考 15 题选错.' }
+];
+window.PAPER2_REAL_ERRORS = PAPER2_REAL_ERRORS;
+// 把真考错题入孩子错题本 (一次性, 不重复)
+function loadPaper2RealErrors(state) {
+  if (!state.wrongAnswers) state.wrongAnswers = [];
+  if (state._paper2RealLoaded) return 0;  // 防重复
+  let added = 0;
+  for (const item of PAPER2_REAL_ERRORS) {
+    const fp = (item.gameKey || '') + '|' + (item.q || '') + '|' + (item.tag || '');
+    if (state.wrongAnswers.some(w => w._fp === fp)) continue;
+    const entry = Object.assign({}, item, {
+      _fp: fp,
+      id: fp + ':' + Date.now() + '_' + added,
+      addedDate: new Date().toISOString().slice(0, 10),
+      addedWeek: state.currentWeek || 1,
+      retries: 0,
+      qField: 'q'  // PAPER2_REAL_ERRORS 用 q 字段
+    });
+    state.wrongAnswers.push(entry);
+    added++;
+  }
+  state._paper2RealLoaded = true;
+  return added;
+}
+window.loadPaper2RealErrors = loadPaper2RealErrors;
 
 // ============= v18.60: 双龙 RPG 系统 =============
 // 拿到银龙 mini-game +10%, 金龙 +20% (累计取最高)
