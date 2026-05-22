@@ -68,7 +68,7 @@ assert(def.activeSkin === 'default', `默认 activeSkin = 'default' (实际 ${de
 
 // ===== 4. character.js 装备 42 件 =====
 const C = ctx.window.CHAMUI;
-assert(C.equipment.length === 69, `equipment 数量 69 (v19.2 +5 死区装备) (实际 ${C.equipment.length})`);
+assert(C.equipment.length === 72, `equipment 数量 72 (v19.8 +3 中期周次装备 W18/24/40) (实际 ${C.equipment.length})`);
 
 // 装备 id 唯一
 const eqIds = C.equipment.map(e => e.id);
@@ -411,8 +411,8 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.7/.test(idxSrc) && !/\?v=19\.6/.test(idxSrc),
-  'v19.7: cache buster 已更新到 19.7');
+assert(/\?v=19\.8/.test(idxSrc) && !/\?v=19\.7/.test(idxSrc),
+  'v19.8: cache buster 已更新到 19.8');
 
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');

@@ -93,8 +93,12 @@ const CHAMUI = {
     { id: 'gr200',    icon: '🎯', name: '神射手',     condition: 'game-runs', value: 200, hint: 'Mini-game 累计 200 局 (v18.58)' },
     { id: 'gr500',    icon: '🎰', name: 'mini-game 王', condition: 'game-runs', value: 500, hint: 'Mini-game 累计 500 局 (v18.58)' },
     // v18.86: 打卡周次装备 — 光打卡也能拿到
+    // v19.8: 加 W18/W24/W40 填 F2P 专家发现的中期荒漠 (W14-W42 装备稀疏)
+    { id: 'wk18', icon: '📐', name: '数据分析尺', condition: 'week', value: 18, hint: '打卡到第18周自动解锁 (v19.8)' },
+    { id: 'wk24', icon: '🧪', name: '模型试剂瓶', condition: 'week', value: 24, hint: '打卡到第24周自动解锁 (v19.8)' },
     { id: 'wk30', icon: '🧭', name: '探险指南针', condition: 'week', value: 30, hint: '打卡到第30周自动解锁' },
     { id: 'wk36', icon: '🌱', name: '成长之芽',   condition: 'week', value: 36, hint: '打卡到第36周自动解锁' },
+    { id: 'wk40', icon: '📔', name: '错题宝典',   condition: 'week', value: 40, hint: '打卡到第40周自动解锁 (v19.8)' },
     { id: 'wk50', icon: '⚓', name: '半程之锚',   condition: 'week', value: 50, hint: '打卡到第50周自动解锁' },
   ],
 

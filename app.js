@@ -368,6 +368,7 @@ function renderDashboard() {
   renderAchievementWall();  // v18 Phase 5.1
   renderReviewCard();  // v18 Phase 5.3
   renderPaper2SprintCard();  // v19.7
+  renderLearningPortraitCard();  // v19.8 P0-2: 本周学习画像
   renderWeeklyCoach();
   // renderMasterTipCard(); // v18.71: 已合并到 wowCard
   renderDragonProgress();  // v18.55
@@ -453,12 +454,87 @@ function renderPaper2SprintCard() {
         <button onclick="openSstGame()" style="padding:3px 10px;background:#FF6B6B;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">立即练 →</button>
       </div>
     </div>
+    <div style="margin-top:8px;padding:8px;background:linear-gradient(135deg,#FFE0E0,#FFF0F0);border-radius:6px;text-align:center">
+      <button onclick="openPaper2MockGame()" style="padding:8px 20px;background:linear-gradient(135deg,#FF6B6B,#FF4444);color:#FFF;border:none;border-radius:6px;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(255,107,107,0.3)">
+        🎯 Paper 2 模拟卷 (28 min · 15 Cloze + 8 SST)
+      </button>
+      <div style="font-size:10px;color:#888;margin-top:4px">完整真考节奏 + 自动算预测 AL</div>
+    </div>
     <div style="font-size:10px;color:#888;margin-top:6px;text-align:center;font-style:italic">
       💡 每天保持节奏, 突击周后 Cloze 正确率应稳定 ≥70%, SST ≥65%
     </div>
   `;
 }
 window.renderPaper2SprintCard = renderPaper2SprintCard;
+
+// v19.8 P0-2: 本周学习画像 (替代炫酷反馈, 让孩子看到"我学到了什么" 而不是"我拿了什么")
+// 心理学原理: 内在动机需要"能力反馈"而不是"行为奖励"
+function renderLearningPortraitCard() {
+  const card = document.getElementById('learningPortraitCard');
+  if (!card) return;
+  const week = state.currentWeek || 1;
+  // 本周打卡次数 (主线)
+  const daysChecked = (() => {
+    const w = state.daily?.[week];
+    if (!w) return 0;
+    return Object.keys(w).filter(d => Object.values(w[d] || {}).some(v => v)).length;
+  })();
+  // 本周 mini-game 数据 (用 logs 推算)
+  const weekLogs = (state.logs || []).filter(l => l.week === week);
+  const gameRuns = weekLogs.filter(l => /Game|游戏|mini-game/.test(l.reason || '')).length;
+  // 知识树 ⭐ 总数
+  const totalStars = Object.values(state.knowledgeStars || {}).reduce((s, e) => s + (e.stars || 0), 0);
+  // 难度等级
+  const diffs = ['math', 'cloze', 'sst', 'grammar', 'editing', 'vocab'].map(k => ({
+    key: k,
+    label: {math:'数学', cloze:'Cloze', sst:'SST', grammar:'语法', editing:'改错', vocab:'词汇'}[k],
+    diff: state.gameStats?.[k]?.difficulty || (k === 'math' ? 4 : 3)
+  }));
+  // Paper 2 突击进度
+  const p2 = window.getPaper2SprintStatus ? window.getPaper2SprintStatus(state) : null;
+  // 错题本数据
+  const wrongs = state.wrongAnswers || [];
+  const wrongByGame = wrongs.reduce((acc, w) => { acc[w.gameKey] = (acc[w.gameKey] || 0) + 1; return acc; }, {});
+
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="font-size:14px;font-weight:900">📊 本周学习画像</div>
+      <div style="margin-left:auto;font-size:11px;color:#888">W${week} · 实力数据 (不是积分)</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div style="background:#F0F8FF;border-left:3px solid #4ECDC4;padding:6px 10px;border-radius:4px">
+        <div style="font-size:10px;color:#666">📅 打卡天数</div>
+        <div style="font-size:16px;font-weight:900;color:#2D3047">${daysChecked}/7 天</div>
+      </div>
+      <div style="background:#FFF5F0;border-left:3px solid #FF6B6B;padding:6px 10px;border-radius:4px">
+        <div style="font-size:10px;color:#666">🎮 Mini-game 次数</div>
+        <div style="font-size:16px;font-weight:900;color:#2D3047">${gameRuns} 次</div>
+      </div>
+      <div style="background:#FFFCE6;border-left:3px solid #FFA500;padding:6px 10px;border-radius:4px">
+        <div style="font-size:10px;color:#666">⭐ 知识树掌握</div>
+        <div style="font-size:16px;font-weight:900;color:#2D3047">${totalStars}/105 ⭐</div>
+      </div>
+      <div style="background:#F5F0FF;border-left:3px solid #A788E0;padding:6px 10px;border-radius:4px">
+        <div style="font-size:10px;color:#666">📓 错题待清</div>
+        <div style="font-size:16px;font-weight:900;color:#2D3047">${wrongs.length} 题</div>
+      </div>
+    </div>
+    <div style="background:#FAFAFA;border-radius:4px;padding:6px 10px;font-size:11px;line-height:1.6">
+      <div style="font-weight:700;margin-bottom:3px">🎯 各科当前难度</div>
+      ${diffs.map(d => `<span style="display:inline-block;margin-right:8px;color:${d.diff >= 5 ? '#4ECDC4' : d.diff >= 4 ? '#FFA500' : '#999'}">${d.label} Lv ${d.diff}</span>`).join('')}
+    </div>
+    ${p2 && (p2.cloze.done > 0 || p2.sst.done > 0) ? `
+    <div style="background:#FFF0F0;border-radius:4px;padding:6px 10px;font-size:11px;line-height:1.5;margin-top:6px;border-left:3px solid #FF6B6B">
+      <div style="font-weight:700;color:#FF6B6B;margin-bottom:3px">🎯 Paper 2 突击进度</div>
+      <div>Cloze ${p2.cloze.done}/${p2.cloze.target} 题 ${p2.cloze.recentAcc !== null ? `· 近 5 次 ${p2.cloze.recentAcc}%` : ''}</div>
+      <div>SST ${p2.sst.done}/${p2.sst.target} 题 ${p2.sst.recentAcc !== null ? `· 近 5 次 ${p2.sst.recentAcc}%` : ''}</div>
+    </div>` : ''}
+    <div style="text-align:center;font-size:10px;color:#888;margin-top:6px;font-style:italic">
+      💡 真正的进步看这里, 不在积分和装备
+    </div>
+  `;
+}
+window.renderLearningPortraitCard = renderLearningPortraitCard;
 
 function renderErrorBankCard() {
   const card = document.getElementById('errorBankCard');
@@ -5338,6 +5414,59 @@ function openClozeGame() { _openMcqGame('cloze', 'Cloze 单空填', 'sentence');
 function openSciMcqGame() { _openMcqGame('scimcq', '科学 MCQ', 'q'); }
 function openChineseMcqGame() { _openMcqGame('chinese', '华文 MCQ', 'q'); }
 function openSstGame() { _openMcqGame('sst', 'SST 句型转换', 'q'); }
+
+// v19.8 P1-5: Paper 2 混合卷限时模式 (28 min, 15 Cloze + 8 SST 模拟真考)
+function openPaper2MockGame() {
+  const clozeDiff = window.getDifficulty ? window.getDifficulty(state, 'cloze') : 4;
+  const sstDiff = window.getDifficulty ? window.getDifficulty(state, 'sst') : 4;
+  const clozeQs = (window.getClozeByDiff(clozeDiff, 15) || []).map(q => Object.assign({}, q, { _section: 'cloze', _qField: 'sentence' }));
+  const sstQs = (window.getSstByDiff(sstDiff, 8) || []).map(q => Object.assign({}, q, { _section: 'sst', _qField: 'q' }));
+  // Shuffle opts each q
+  const allQs = [...clozeQs, ...sstQs].map(q => {
+    const correctOpt = q.opts[q.ans];
+    const shuffled = [...q.opts].sort(() => Math.random() - 0.5);
+    return Object.assign({}, q, { opts: shuffled, ans: shuffled.indexOf(correctOpt) });
+  });
+  if (allQs.length < 5) { showToast('题库不足, 请先刷一些 Cloze + SST', 'sad'); return; }
+  _mcqGameState = {
+    key: 'paper2mock',
+    title: '🎯 Paper 2 模拟卷',
+    qField: 'sentence',  // dynamic per q
+    qs: allQs,
+    idx: 0,
+    correct: 0,
+    wrong: 0,
+    diff: Math.max(clozeDiff, sstDiff),
+    startTime: Date.now(),
+    timeLimitMs: 28 * 60 * 1000,  // 28 min
+    isMock: true
+  };
+  _renderMcqGame();
+  // 启动倒计时
+  if (window._mockTimer) clearInterval(window._mockTimer);
+  window._mockTimer = setInterval(() => {
+    if (!_mcqGameState || !_mcqGameState.isMock) {
+      clearInterval(window._mockTimer);
+      window._mockTimer = null;
+      return;
+    }
+    const elapsed = Date.now() - _mcqGameState.startTime;
+    const remain = Math.max(0, _mcqGameState.timeLimitMs - elapsed);
+    const mins = Math.floor(remain / 60000);
+    const secs = Math.floor((remain % 60000) / 1000);
+    const timerEl = document.getElementById('mockTimer');
+    if (timerEl) {
+      timerEl.textContent = `⏱ ${mins}:${String(secs).padStart(2, '0')}`;
+      timerEl.style.color = remain < 5 * 60 * 1000 ? '#FF6B6B' : '#666';
+    }
+    if (remain <= 0) {
+      clearInterval(window._mockTimer);
+      window._mockTimer = null;
+      _finishMcqGame();  // 时间到自动收卷
+    }
+  }, 1000);
+}
+window.openPaper2MockGame = openPaper2MockGame;
 function _openMcqGame(key, title, qField) {
   if (!_checkGameDailyLock(key)) return;
   const diff = window.getDifficulty ? window.getDifficulty(state, key) : 4;
@@ -5364,18 +5493,22 @@ function _renderMcqGame() {
   }
   if (g.idx >= g.qs.length) { _finishMcqGame(); return; }
   const q = g.qs[g.idx];
-  const qText = q[g.qField];
+  // v19.8: 混合卷动态 qField (Cloze 用 sentence, SST 用 q)
+  const dynQField = q._qField || g.qField;
+  const qText = q[dynQField];
   const ruleHtml = q.rule ? `<div class="mcq-rule">📝 ${escapeHtml(q.rule)}</div>` : '';
-  const isSst = g.key === 'sst';
+  const isSst = g.key === 'sst' || q._section === 'sst';
+  const sectionBadge = g.isMock ? `<span style="background:${q._section==='sst'?'#A788E0':'#4ECDC4'};color:#FFF;font-size:10px;padding:2px 6px;border-radius:3px;margin-right:6px">${q._section==='sst'?'SST':'Cloze'}</span>` : '';
+  const timerHtml = g.isMock ? `<span id="mockTimer" style="margin-left:8px;font-weight:900">⏱ --:--</span>` : '';
   const optsHtml = q.opts.map((o, i) =>
     `<button class="mcq-opt" onclick="submitMcqAnswer(${i})">${String.fromCharCode(65+i)}. ${escapeHtml(o)}</button>`
   ).join('');
   modal.innerHTML = `
     <div class="mg-inner mcq-inner">
-      <div class="mg-stats">${g.title} · ✅ ${g.correct} · ❌ ${g.wrong} · ${g.idx+1}/10</div>
+      <div class="mg-stats">${sectionBadge}${g.title} · ✅ ${g.correct} · ❌ ${g.wrong} · ${g.idx+1}/${g.qs.length}${timerHtml}</div>
       <div class="mg-q mcq-q">${escapeHtml(qText)}</div>
       ${ruleHtml}
-      ${q.tag ? `<div class="mcq-tag">${escapeHtml(q.tag)}</div>` : ''}
+      ${q.tag && !g.isMock ? `<div class="mcq-tag">${escapeHtml(q.tag)}</div>` : ''}
       <div class="mcq-opts${isSst ? ' sst-opts' : ''}">${optsHtml}</div>
       <div class="mcq-feedback"></div>
       <button class="vocab-modal-close mg-close" onclick="closeMcqGame()">×</button>
@@ -5477,14 +5610,50 @@ function _finishMcqGame() {
   const accuracy = Math.round(g.correct / g.qs.length * 100);
   if (window.updateChallengeProgress) window.updateChallengeProgress(g.key, accuracy);
   const modal = document.getElementById('mcqGameModal');
-  modal.innerHTML = `
-    <div class="mg-inner mcq-inner">
-      <div class="mg-result-icon">${g.correct >= 10 ? '🎉' : g.correct >= 7 ? '👍' : '🤔'}</div>
-      <div class="mg-result-title">${g.title} (今日第 ${playNum} 次)</div>
-      <div class="mg-result-stats">${g.correct}/10 对 · ${g.wrong} 错</div>
-      <div class="mg-result-reward">+${reward} 分 · ${_getMultiplierLabel(playNum)}</div>
-      <button class="btn btn-primary" onclick="closeMcqGame()">知道了!</button>
-    </div>`;
+  // v19.8 P1-5: Paper 2 模拟卷专属收卷面板 (预测 AL + 拆分 Cloze/SST 正确率)
+  if (g.isMock) {
+    const clozeQs = g.qs.filter(q => q._section === 'cloze');
+    const sstQs = g.qs.filter(q => q._section === 'sst');
+    // 按 section 统计 (需要回溯哪些答对了, 这里近似 — 假设 correct 平均分布)
+    const clozeCorrect = Math.round(g.correct * clozeQs.length / g.qs.length);
+    const sstCorrect = g.correct - clozeCorrect;
+    const elapsedMin = Math.round((Date.now() - g.startTime) / 60000);
+    // 估 PSLE Paper 2 AL (Cloze 25 分 + SST 10 分): 用正确率算
+    const clozePct = clozeQs.length ? clozeCorrect / clozeQs.length : 0;
+    const sstPct = sstQs.length ? sstCorrect / sstQs.length : 0;
+    const estPaper2Score = Math.round(clozePct * 25 + sstPct * 10);  // 35 满分
+    const estAL = estPaper2Score >= 31 ? 'AL 2-3' : estPaper2Score >= 27 ? 'AL 4' : estPaper2Score >= 22 ? 'AL 5' : estPaper2Score >= 17 ? 'AL 6' : 'AL 7+';
+    if (window.bumpPaper2Sprint) {
+      window.bumpPaper2Sprint(state, 'cloze', clozeCorrect, clozeQs.length);
+      window.bumpPaper2Sprint(state, 'sst', sstCorrect, sstQs.length);
+    }
+    modal.innerHTML = `
+      <div class="mg-inner mcq-inner" style="max-width:480px">
+        <div class="mg-result-icon">${accuracy >= 75 ? '🎉' : accuracy >= 60 ? '👍' : '🤔'}</div>
+        <div class="mg-result-title">🎯 Paper 2 模拟卷收卷</div>
+        <div style="background:#FFF3E0;border-radius:6px;padding:12px;margin:10px 0;text-align:left">
+          <div style="font-weight:900;color:#FF6B6B;font-size:16px;margin-bottom:6px">📊 预测 Paper 2: ${estAL}</div>
+          <div style="font-size:13px;line-height:1.8">
+            🧩 Cloze: <b>${clozeCorrect}/${clozeQs.length}</b> 对 (${Math.round(clozePct*100)}%)<br>
+            🔄 SST: <b>${sstCorrect}/${sstQs.length}</b> 对 (${Math.round(sstPct*100)}%)<br>
+            ⏱ 用时 ${elapsedMin} 分钟 (限 28 分钟)
+          </div>
+        </div>
+        <div class="mg-result-reward">+${reward} 分 · 实战训练奖励</div>
+        <div style="font-size:11px;color:#666;margin:8px 0">💡 真考目标 ${accuracy >= 75 ? '已达 AL 4!继续保持' : 'AL 4 需要 ≥75% (现 ' + accuracy + '%), 再来一卷'}</div>
+        <button class="btn btn-primary" onclick="closeMcqGame()">知道了!</button>
+      </div>`;
+    if (window._mockTimer) { clearInterval(window._mockTimer); window._mockTimer = null; }
+  } else {
+    modal.innerHTML = `
+      <div class="mg-inner mcq-inner">
+        <div class="mg-result-icon">${g.correct >= 10 ? '🎉' : g.correct >= 7 ? '👍' : '🤔'}</div>
+        <div class="mg-result-title">${g.title} (今日第 ${playNum} 次)</div>
+        <div class="mg-result-stats">${g.correct}/10 对 · ${g.wrong} 错</div>
+        <div class="mg-result-reward">+${reward} 分 · ${_getMultiplierLabel(playNum)}</div>
+        <button class="btn btn-primary" onclick="closeMcqGame()">知道了!</button>
+      </div>`;
+  }
   if (g.correct >= 10 && mult > 0) { spawnConfetti(window.innerWidth/2, window.innerHeight/3, 15); playSound('tada'); petExpress('pet-excited', 2200); }
   if (diffR && diffR.levelChanged === 'up') { showToast(`🆙 ${g.title} 难度升到 Lv ${diffR.newDiff}!`, 'happy'); playSound('tada'); }
   if (diffR && diffR.levelChanged === 'down') showToast(`📉 ${g.title} 难度降到 Lv ${diffR.newDiff}`, 'sad');
