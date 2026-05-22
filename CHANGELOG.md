@@ -5,7 +5,115 @@
 
 ---
 
-## 📅 版本历史 (v19.6)
+## 📅 版本历史 (v19.6 — v19.11)
+
+### v19.11 — 积分快照备份系统 (2026-05-22)
+
+**痛点**: 5/13 → 5/22 间 Firebase 数据被某次 sync 覆盖, totalPoints 从 3486 降到 1257, logs 从 408 砍到 96. 没有历史快照, 无法精确恢复。
+
+**v19.10 已加 sync 安全网防覆盖, v19.11 加快照系统留历史**:
+- **每 10 分钟** 自动 snapshot `totalPoints / logs count / ⭐ / wrongAnswers` 到:
+  - Firestore `chamui_snapshots/{ISO-timestamp}` (永久云端历史)
+  - localStorage `chamui_snapshots_local` (最近 50 个 ring buffer)
+- 启动 app 时立即拍 1 次 (`source: app-start`)
+- 后续每 10 min 1 次 (`source: auto-10min`)
+- 手动: `snapshotPoints(state, 'manual')`
+
+**查询/恢复 API** (浏览器 console):
+- `window.listLocalSnapshots()` — 最近 50 本地
+- `await window.listCloudSnapshots(100)` — 最近 100 云端
+- `await window.restoreFromSnapshot(ISO)` — 返回快照对象 (不自动恢复, 需手动 confirm)
+
+**文档同步**:
+- `CLAUDE.md` 加 "§7.5 积分快照备份系统" 章节
+- `HANDOFF.md` 加 "积分快照 / 数据恢复工具" 章节
+- 新 session 接手 → 跑 `./dump_firebase.sh` + 看 Firestore `chamui_snapshots` 历史趋势
+
+---
+
+### v19.10 — 数据完整性: 修 toggle 刷分 bug + sync 安全网
+
+**深查数据混乱根源** (5/13 06:22 峰值 3486 → 5/22 live 1257, 跌 ~1100 分):
+
+1. **Bug 1 — toggleDailyCheck 凭空多分**:
+   5/12 12:55:28-12:55:51 间 W1 Sat WSF 反复"取消→重打" 10+ 次, 每次多 ~8 分 critExtra 没扣回.
+   根因: 取消时找 slot log 找不到 → `undoAmount = 0` → 老 critExtra log 还在 logs → recalc 多算.
+   **修**: app.js:2597-2618 — 找不到 slot log 时 `recalcTotalPoints` 兜底 + 不 push undo log + 防连点冷却 2s → 3s
+
+2. **Bug 2 — 远端旧数据覆盖本地新数据**:
+   5/13 → 5/22 间数据被回滚, 不是孩子操作 (logs 几乎没新增).
+   **修**: data.js subscribeFirestore 加 `_isSyncDataSafeToAccept` 安全网:
+   - 远端 totalPoints 比本地少 ≥500 → 拒绝
+   - 远端 logs 比本地少 ≥50 → 拒绝
+   - 弹 toast 警告 "远端数据可能比本地旧, 已忽略一次 sync"
+
+3. **数据恢复工具** `restore_firebase.js` (默认 dry-run, --yes 才执行):
+   - 拉 live → 备份 `firebase_before_restore_{ts}.json`
+   - 读 `firebase_check.json` (5/13 06:22 peak 3486 分)
+   - PATCH `/chamui-psle/databases/(default)/documents/chamui/main`
+   - 验证 → 应是 3486
+
+**注**: 最终未执行 restore — 用户告知 iPad localStorage 才是 ground truth (4000+), 让 iPad 自然 sync up (受新安全网保护)。
+
+---
+
+### v19.9 — 真考错题精准补救 (基于孩子 2026.5 Paper 2 真考)
+
+**输入**: 用户传孩子 Paper 2 真考实物照片 3 张 (Section B/C/D), 逐题分析红笔批改。
+
+**真考真错 17 道直接入孩子错题本** (`PAPER2_REAL_ERRORS` in data.js):
+- Section B Grammar Cloze 4 道
+- Section C Vocab Cloze 9 道 (Across→Flowing / saw→watched / too→so / him→myself / sanked→drowning / ground→safety 等)
+- Section D Synthesis 4 道 (twee→twins 拼写 / 漏 station / **whose 关系从句 D34 10 分大题完全做不出** / bushed→bushes)
+
+**机制**: `loadPaper2RealErrors(state)` 启动时自动入库, fingerprint 去重防重复.
+
+**错题本 UI 升级**:
+- `source: 'paper2-real'` 标记 → 红色背景高亮 + 🔥 标识
+- 主页错题本卡分 "🔥 真考错题: N 题 (优先!)" + "📓 App 内错题: M 题"
+- 复习顺序: 真考优先 (做完才轮到 app 错题)
+
+**系统性补题** (除 17 真考外):
+- SST +15 道关系从句专项 (whose 5 + which 5 + who 3 + whom 2, 真考 D34 救命题)
+- Cloze +20 道词义辨析 (another/other / when/whenever / saw/watched / too/so / him/myself / pull to safety / flowing / drowning)
+
+**Pool 规模**: Cloze 186→**206**, SST 85→**100**, 总 +35 题。
+
+---
+
+### v19.8 — P0+P1 全套提分改造
+
+| 改造 | 详情 |
+|---|---|
+| +50 PSLE Vocab Cloze | 每题带 explain (词义辨析/搭配/连接词/phrasal/介词) |
+| +20 SST 高仿真 distractor | passive/indirect/although/despite/so that 5 类各 4-5 题, 每题 explain |
+| **主页学习画像卡** | 打卡天数/⭐/错题/各科难度/Paper 2 进度 — 打卡反馈解耦 |
+| **Paper 2 模拟卷** | `openPaper2MockGame()` — 28 min 限时 15 Cloze + 8 SST → 自动预测 AL |
+| +3 件中期装备 (W18/24/40) | 填 v18.62 F2P 专家指出的 W14-W42 中期荒漠 |
+| 每日登录 +5 分 | v18.86 已埋点, 验证已激活 |
+
+---
+
+### v19.7 — Paper 2 弱点突击卡 + 降游戏性
+
+**痛点**: 孩子 Paper 2 实考 AL6, Cloze 几乎全错 + SST 错不少. 用户希望"降低游戏性, 加强勤勉激励".
+
+**Paper 2 突击卡** (主页置顶, 严肃风, 不撒花):
+- Cloze 100 + SST 50 目标进度
+- 近 5 次正确率 (≥75% 青绿 / 60-75% 橙 / <60% 红)
+- "立即练" 大红按钮直达 mini-game
+- `state.paper2Sprint = {target, progress, correct, recent}` 自动跟踪
+
+**降游戏性** (避免为打卡而打卡):
+- 宝箱奖励: 30 颗 confetti → 0 (只 toast)
+- 当日全勾: 35 颗 + 震屏 + 大字 → 15 颗 (删震屏 + 删大字)
+- Streak 里程碑: 50 → 20 颗
+- Mini-game 满分: 40 → 15 颗
+- 保留强反馈: 觉醒仪式 / 周完美 (真值得庆祝的)
+
+---
+
+
 
 ### v19.6 — 治本任务焦虑: 主线日 + 极简加练池 5 项 + 周完美 (2026-05-18)
 

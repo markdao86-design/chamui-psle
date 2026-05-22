@@ -6855,6 +6855,111 @@ function isFbReady() { return _fbReady; }
 // 注册 status 变化回调(app.js 用来刷新 header)
 function onFbStatusChange(cb) { _fbStatusListener = cb; }
 
+// ============= v19.11: 积分快照系统 (单独存放, 10 分钟一次) =============
+// 防止 totalPoints + logs 被覆盖/丢失. 每 10 分钟保存到 Firestore 单独 collection.
+// Path: chamui_snapshots/{ISO_timestamp}
+// 字段: { totalPoints, logsCount, currentWeek, snapshotAt, source }
+
+const SNAPSHOT_COLLECTION = 'chamui_snapshots';
+const SNAPSHOT_INTERVAL_MS = 10 * 60 * 1000;  // 10 min
+const SNAPSHOT_LOCAL_KEY = 'chamui_snapshots_local';  // 本地 ring buffer
+const SNAPSHOT_LOCAL_MAX = 50;  // 本地保留最近 50 个
+
+let _snapshotTimer = null;
+let _lastSnapshotTs = 0;
+
+function _localSnapshotsList() {
+  try { return JSON.parse(localStorage.getItem(SNAPSHOT_LOCAL_KEY) || '[]'); } catch (e) { return []; }
+}
+function _localSnapshotsAdd(snap) {
+  const arr = _localSnapshotsList();
+  arr.push(snap);
+  // 保留最近 N 个
+  while (arr.length > SNAPSHOT_LOCAL_MAX) arr.shift();
+  try { localStorage.setItem(SNAPSHOT_LOCAL_KEY, JSON.stringify(arr)); } catch (e) {}
+}
+
+async function snapshotPoints(state, source) {
+  if (!state) return null;
+  const now = Date.now();
+  // 防短时重复 (< 1 min 不重复 snapshot)
+  if (now - _lastSnapshotTs < 60 * 1000 && source !== 'manual') return null;
+  _lastSnapshotTs = now;
+  const iso = new Date().toISOString();
+  const snap = {
+    snapshotAt: iso,
+    totalPoints: state.totalPoints || 0,
+    currentWeek: state.currentWeek || 1,
+    logsCount: (state.logs || []).length,
+    logsSum: (state.logs || []).reduce((s, l) => s + (l.points || 0), 0),
+    knowledgeStars: Object.values(state.knowledgeStars || {}).reduce((s, e) => s + (e?.stars || 0), 0),
+    wrongAnswersCount: (state.wrongAnswers || []).length,
+    source: source || 'auto-10min',
+    appVersion: 'v19.11'
+  };
+  // 1. 写本地 ring buffer (永远成功, 不依赖网络)
+  _localSnapshotsAdd(snap);
+  // 2. 异步写 Firestore (失败不影响本地)
+  if (_fbReady && firebase && firebase.firestore) {
+    try {
+      await firebase.firestore().collection(SNAPSHOT_COLLECTION).doc(iso.replace(/[:.]/g, '-')).set(snap);
+      console.log(`[snapshot] ${iso} pts=${snap.totalPoints} logs=${snap.logsCount} ⭐=${snap.knowledgeStars} → Firestore + 本地`);
+    } catch (e) {
+      console.warn('[snapshot] Firestore 写入失败 (本地已存):', e.message);
+    }
+  }
+  return snap;
+}
+
+function startSnapshotTimer(getState) {
+  if (_snapshotTimer) clearInterval(_snapshotTimer);
+  // 立即拍一次 (app 启动时)
+  snapshotPoints(getState(), 'app-start').catch(()=>{});
+  _snapshotTimer = setInterval(() => {
+    snapshotPoints(getState(), 'auto-10min').catch(()=>{});
+  }, SNAPSHOT_INTERVAL_MS);
+  console.log('[snapshot] 定时器启动 (每 10 min 一次)');
+}
+
+// 查列出所有本地快照
+function listLocalSnapshots() {
+  return _localSnapshotsList();
+}
+
+// 查列出云端快照 (异步, 返回 promise)
+async function listCloudSnapshots(limit) {
+  if (!_fbReady) return [];
+  try {
+    const snaps = await firebase.firestore().collection(SNAPSHOT_COLLECTION)
+      .orderBy('snapshotAt', 'desc').limit(limit || 100).get();
+    return snaps.docs.map(d => d.data());
+  } catch (e) {
+    console.warn('[snapshot] 列云端失败:', e);
+    return [];
+  }
+}
+
+// 从特定快照恢复 totalPoints (要求用户确认!)
+async function restoreFromSnapshot(snapshotISO) {
+  const local = _localSnapshotsList();
+  let snap = local.find(s => s.snapshotAt === snapshotISO);
+  if (!snap && _fbReady) {
+    try {
+      const doc = await firebase.firestore().collection(SNAPSHOT_COLLECTION).doc(snapshotISO.replace(/[:.]/g, '-')).get();
+      if (doc.exists) snap = doc.data();
+    } catch (e) {}
+  }
+  if (!snap) throw new Error('快照不存在: ' + snapshotISO);
+  // 只恢复 totalPoints (不动其他字段, 保证安全)
+  return snap;
+}
+
+window.snapshotPoints = snapshotPoints;
+window.startSnapshotTimer = startSnapshotTimer;
+window.listLocalSnapshots = listLocalSnapshots;
+window.listCloudSnapshots = listCloudSnapshots;
+window.restoreFromSnapshot = restoreFromSnapshot;
+
 // 订阅 Firestore 远端变化(其它设备改动会触发)
 var _localWritePending = false;
 var _lastSaveTs = 0;

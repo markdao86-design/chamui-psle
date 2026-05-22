@@ -87,6 +87,9 @@ build → git commit → push → Firebase deploy 一条龙。**不要手动 git
 | 双龙卡占位太大 | v18.56 | 紧凑化, 一行一龙 |
 | 知识树/作文是弹框 | v18.49 | 改成 page (data-page="knowledge") |
 | 95% 周完成率"封顶" | v18.52 | 软提示, 不强制扣分 (binary slot 本来就防刷) |
+| toggle 取消快速连点凭空多分 | v19.10 | undoAmount 找不到 slot log → recalc 兜底 + 冷却 3s |
+| 旧设备覆盖远端最新数据 | v19.10 | sync 安全网: 远端 pts 少 ≥500 或 logs 少 ≥50 拒绝 |
+| 跨设备 totalPoints 易丢失 | v19.11 | **积分快照系统: 每 10 min 备份到 Firestore chamui_snapshots collection** |
 
 ---
 
@@ -106,6 +109,43 @@ build → git commit → push → Firebase deploy 一条龙。**不要手动 git
 ### P3 (大, 选做)
 6. **PSLE 名人堂截图分享** — 拿金龙后角色+日期+总分入"名人堂", 可截图给家长群
 7. **第二宠物完整养成** — 金龙幼崽现在只是显示, 没独立喂养/进化逻辑
+
+---
+
+## 🔍 积分快照 / 数据恢复工具 (v19.11)
+
+```bash
+# 1. 看当前 live 状态
+./dump_firebase.sh                    # 关键指标
+./dump_firebase.sh --full             # + 保存完整 state JSON
+
+# 2. 看快照历史 (浏览器 console 跑, 不在 Node 跑)
+window.listLocalSnapshots()           # 最近 50 个本地快照
+await window.listCloudSnapshots(100)  # 最近 100 个云端快照
+
+# 3. 数据被覆盖了, 需要查 Firestore 历史快照
+# 用 dump_firebase.js 改路径:
+node -e "
+const https=require('https');
+https.get('https://firestore.googleapis.com/v1/projects/chamui-psle/databases/(default)/documents/chamui_snapshots?pageSize=100&orderBy=snapshotAt+desc',
+  res=>{let d='';res.on('data',c=>d+=c);res.on('end',()=>{
+    const docs=JSON.parse(d).documents||[];
+    docs.forEach(doc=>{
+      const f=doc.fields;
+      console.log(f.snapshotAt?.stringValue, 'pts:', f.totalPoints?.integerValue, 'logs:', f.logsCount?.integerValue);
+    });
+  });});
+"
+
+# 4. 如果真要恢复: 用 restore_firebase.js (危险! 默认 dry-run, 加 --yes 才执行)
+node restore_firebase.js              # 显示会做什么, 不实际写
+node restore_firebase.js --yes        # 实际写回 Firebase (需先确保孩子 iPad 关 app)
+```
+
+**积分快照系统数据位置**:
+- **Firestore**: `chamui-psle / chamui_snapshots / {ISO-timestamp}` (永久云端)
+- **localStorage**: `chamui_snapshots_local` (最近 50 个 ring buffer)
+- **每 10 min** 自动备份, 启动时立即拍一次
 
 ---
 

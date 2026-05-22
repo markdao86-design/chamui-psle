@@ -100,6 +100,10 @@ async function init() {
         showToast(`📓 加载了 ${added} 道真考错题到错题本 — 优先复习!`, 'happy');
       }
     }
+    // v19.11: 启动积分快照定时器 (每 10 min 备份 totalPoints + logs 到 Firestore + localStorage)
+    if (window.startSnapshotTimer) {
+      window.startSnapshotTimer(() => state);
+    }
     _checkDailyDrawOnInit();
     _checkAndUnlockAch();
     _checkFTUE();              // v19.3: 首次引导

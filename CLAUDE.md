@@ -163,16 +163,47 @@ curl -s "https://chamui-psle.web.app/app.js?v=VERSION" | grep "关键文本"
 
 ---
 
-## 7. 当前规模 (v19.5)
+## 7. 当前规模 (v19.11)
 
-- **装备 69 件** (39 points + 10 milestone + 8 streak-days + 3 ⭐ + 3 game-runs + 3 week + 2 monthly + 1 streak)
-- **成就 60 个** (含周次里程碑)
-- **皮肤 6 套** / **宠物 12 阶 + 高达伙伴** (v19.1 双宠物)
-- **Mini-game 12 种**: Grammar 195 / Cloze 136 / SST 65 / Math 75 / Editing 61 / Vocab 61 / SciMCQ 70 / Chinese 40 / **Listen 51** / SciClassify 10 / Unit 45 / CompOE 20篇
+- **装备 72 件** (含 v19.8 W18/24/40 中期补)
+- **成就 60+ 个** (含周次里程碑 + Paper 2 突击)
+- **皮肤 6 套** / **宠物 12 阶 + 金龙幼崽**
+- **Mini-game 题库** (v19.9 后): Cloze **206** / SST **100** / Grammar 195 / Math 75 / Editing 61 / SciMCQ 70 / Chinese 40 / Listen 51 / Vocab 61 / SciClassify 10 / Unit 45 / CompOE 20 篇
 - **知识树**: 35 节点 × 3 题 = 105 道 PSLE 风练习
 - **73 周作文**: 73 个 prompt
-- **QA**: 149 断言
-- **v19.5 新系统**: 学习质量门槛 + 作文追踪 + 弱科挑战 + 模考闭环
+- **QA**: 163 断言
+
+### v19.7-v19.11 新系统
+- **Paper 2 弱点突击卡** (v19.7): Cloze 100 + SST 50 目标进度 + 立即练入口
+- **本周学习画像卡** (v19.8): 打卡天数/⭐/错题/各科难度 — 打卡反馈解耦
+- **Paper 2 模拟卷** (v19.8): 28 min 限时 15 Cloze + 8 SST → 自动算预测 AL
+- **真考错题入库** (v19.9): 孩子 2026.5 Paper 2 真考 17 道错题自动入错题本, 红色高亮优先复习
+- **数据完整性** (v19.10): 修 toggle 取消刷分 bug + 防连点 3s + sync 安全网防旧设备覆盖
+- **积分快照系统** (v19.11): **每 10 分钟自动备份 totalPoints + logs 到 Firestore `chamui_snapshots` collection + 本地 ring buffer 50 个**
+
+---
+
+## 7.5. 积分快照备份系统 (v19.11 新加, 关键工具!)
+
+**目的**: 防止 totalPoints + logs 被覆盖丢失 (5/13 → 5/22 曾被旧设备覆盖回滚 1100 分的事件)
+
+**机制**:
+- **每 10 分钟** 自动 snapshot 当前 `totalPoints / logs / ⭐ / wrongAnswers count` 到:
+  - **Firestore**: `chamui_snapshots/{ISO 时间}` 文档 (永久云端历史)
+  - **本地**: `localStorage.chamui_snapshots_local` ring buffer (最近 50 个)
+- 启动 app 时立即拍一次 (`source: app-start`)
+- 后续每 10 min 一次 (`source: auto-10min`)
+- 可调 `snapshotPoints(state, 'manual')` 手动拍
+
+**查询 + 恢复**:
+```js
+// 浏览器 console 跑
+window.listLocalSnapshots()  // 最近 50 个本地快照
+await window.listCloudSnapshots(100)  // 最近 100 个云端快照
+await window.restoreFromSnapshot('2026-05-22T12:30:59.169Z')  // 返回快照 (不自动恢复, 需手动 confirm)
+```
+
+**新 session 接手时**: 跑 `./dump_firebase.sh` 看当前 live + `node -e "..."` 拉 Firestore `chamui_snapshots` 看历史趋势, 决定是否需要恢复。
 
 ---
 
