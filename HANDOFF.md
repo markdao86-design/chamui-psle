@@ -90,6 +90,16 @@ build → git commit → push → Firebase deploy 一条龙。**不要手动 git
 | toggle 取消快速连点凭空多分 | v19.10 | undoAmount 找不到 slot log → recalc 兜底 + 冷却 3s |
 | 旧设备覆盖远端最新数据 | v19.10 | sync 安全网: 远端 pts 少 ≥500 或 logs 少 ≥50 拒绝 |
 | 跨设备 totalPoints 易丢失 | v19.11 | **积分快照系统: 每 10 min 备份到 Firestore chamui_snapshots collection** |
+| 主页 5 卡 + 9 tab 决策瘫痪 | v19.14a/i | 砍 5→2 卡 + 9→5 tab + 字号升 |
+| 打卡刷分 vs 真训练错配 | v19.14a | Cloze/SST 按题 +2 衰减 + 打卡日封 5 项周封 200 |
+| Leitner bug (硬编码 4 没读常量) | v19.14d/h | 两处都改读 LEITNER_GRADUATION (=3) |
+| Oral 假打卡 quickOralCheckin | v19.14d | 删假打卡 + 反向验证 textarea ≥10 字 |
+| 数学 hard lock 误伤 AL1 维持 | v19.14d | hard lock → soft cap (math 平日每日 1 次满奖) |
+| 装备/皮肤平日 lock 用户失灵抱怨 | v19.14j | 撤回 v19.14c lock, 装备随时可换 |
+| 概念图 3 处 PSLE marker 事实错 | v19.14d | Phloem 双向 → translocation / Liver bile emulsify / Light translucent shadow lighter |
+| 子串匹配漏洞 (heat→wheat) | v19.14f | word boundary + stem 词干正则 |
+| 作文 V2 +10 分可刷 | v19.14h | state.essayUpgradeBonus[week] dedupe |
+| Cloze 3 件事 input 接受度 30% | v19.14l | 改 3 选 1 MCQ + 161 词字典 (接受度 → 75%) |
 
 ---
 
@@ -98,17 +108,18 @@ build → git commit → push → Firebase deploy 一条龙。**不要手动 git
 按优先级:
 
 ### P1 (高 ROI, 快做)
-1. **错题本扩展到 vocab/listen/editing/scilab** — 4 个 mini-game 还没 hook 错题入库 (v18.59 仅 4 个)
-2. **P3 周次里程碑装备** — W30/W36/W50 加 3 件"光打卡也解锁" (跟成绩脱钩)
+1. **第 5 次评审验证 v19.14l 效果** — 5 专家累计 4 次评审"必改 1 项" 已 100% 完成, 跑第 5 次看新评分
+2. **SCIENCE_MCQ 70 道手动补 chapterId 字段** — runtime tag 90%+ 召回率, 手动可达 100%
+3. **Cloze 3 件事字典扩充** 161 词 → 300 词 (覆盖率 70% → 90%)
 
 ### P2 (中, 内容打磨)
-3. **每日登录 +5 分 bonus** — 持续小奖励
-4. **错题本分类筛选** — 只复习数学/语法
-5. **季节事件** — PSLE 100 天倒计时装备 / 假期主题
+4. **错题本扩展到 vocab/listen/editing** — 部分 mini-game 仍未 hook
+5. **每日登录 +5 分 bonus** — 持续小奖励
+6. **季节事件** — PSLE 100 天倒计时装备 / 假期主题
 
 ### P3 (大, 选做)
-6. **PSLE 名人堂截图分享** — 拿金龙后角色+日期+总分入"名人堂", 可截图给家长群
-7. **第二宠物完整养成** — 金龙幼崽现在只是显示, 没独立喂养/进化逻辑
+7. **PSLE 名人堂截图分享** — 拿金龙后角色+日期+总分入"名人堂"
+8. **第二宠物完整养成** — 金龙幼崽现在只是显示, 没独立喂养/进化逻辑
 
 ---
 

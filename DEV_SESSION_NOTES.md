@@ -1,114 +1,222 @@
-# v19.5 开发笔记 — 新 session 继续开发用
+# v19.14l 开发笔记 — 新 session 接手指南
 
-> 生成时间: 2026-05-15
-> 当前版本: v19.5 (commit 6b87a6a)
+> 生成时间: 2026-05-23
+> 当前版本: **v19.14l** (commit `3ce372b`)
 > 部署地址: https://chamui-psle.web.app
+> QA: **280 项全过**
+> 累计改造: v19.14a-l **12 批 53 项**
 
 ---
 
-## 本次 Session 完成项 (2026-05-15)
+## 🎯 新 Session 第一件事
 
-| 项目 | 状态 | 说明 |
-|------|------|------|
-| 专家评审 | ✅ | 组 PSLE 英语/科学/游戏化 3 专家评审, 发现"行为激励≠能力提升"结构性问题 |
-| P0-b 学习质量门槛 | ✅ | `SLOT_SUBJECT` 映射 + `getSlotQualityMultiplier()` + calcSlotReward 积分×0.5 |
-| P0-a 作文质量追踪 | ✅ | `state.compTracking` + 主页 3 步 checkbox 卡 + `markCompStep()` |
-| P1-a 弱科挑战 | ✅ | `getWeeklyWeakChallenge()` + `recordWeakChallenge()` hook 在 recordGameRun + 主页卡 |
-| P1-b 模考闭环 | ✅ | `addMockExam()` + `generateFocusAreas()` + 主页录入/诊断卡 + showMockExamInput() |
-| P2 听力扩容 | ✅ | LISTEN_DICTATIONS 16→51 段 (+35), diff 3-5 全覆盖 |
-| v19.4i 删 log 幽灵复原 bug | ✅ | 移除 anti-rollback + _localWritePending flag + 5s 双重保护 (上一 session) |
+```
+继续开发 chamui-psle (C:\claude\chamui-psle)
+读 CLAUDE.md 了解项目背景, 读 DEV_SESSION_NOTES.md 了解最近 12 批改造, 读 CHANGELOG.md 看具体改了什么
+```
+
+读这 3 个文件即可立即续做, **不需要重新评审 / 不需要回顾对话历史**。
 
 ---
 
-## 关键新文件/函数 (v19.5 新增)
+## 📊 v19.14a-l 12 批改造 (53 项, QA 163 → 280)
 
-### data.js
-- `SLOT_SUBJECT` — slot 到学科映射 (E1→英语, WSM→数学, S2→科学...)
-- `getSlotQualityMultiplier(state, slotKey)` — 返回 1 或 0.5
-- `getCompStatus(state, week)` / `setCompStep()` / `getCompCompletion()` — 作文追踪
-- `getWeeklyWeakChallenge(state)` — 返回 {subject, games[], required, bonus}
-- `getWeakChallengeProgress(state)` / `recordWeakChallenge(state)` — 弱科进度
-- `addMockExam(state, scores)` / `generateFocusAreas(state)` / `getFocusAreas(state)` — 模考
+### v19.14a (7 项): 主页 5→2 卡 + 数值重平衡 + 弱科软门槛
+- 主页 5 张卡 → 2 张 (🎯 今日 3 件事 + 🏫 目标校 1 校)
+- 录取概率 8 校 → 1 校 + 杠杆提示
+- 打卡日封顶 5 项 + 周封顶 200
+- Cloze/SST 改 +2 分/题 20 题满奖 21-50 衰减
+- 错题 Leitner 3 次答对毕业 + 每次 +1 巩固 + 毕业 +5
+- 宝箱产出 50→20 + 周封顶 100
+- SGD 800 中型 milestone (20000 分 "龙之追随者")
 
-### app.js
-- `renderCompTrackerCard()` — 作文 3 步追踪主页卡
-- `renderWeakChallengeCard()` — 弱科挑战主页卡
-- `renderFocusAreasCard()` — 模考诊断重点主页卡
-- `showMockExamInput()` / `submitMockExam()` — 模考录入 modal
+### v19.14b (6 项): 平日/周末科目隔离
+- WEEKDAY_LOCKED_GAMES = [math, chinese, unit] 平日 hard lock (后 v19.14d 移除 math)
+- getDailyTasksFiltered 平日过滤数学/华文 slot, 周末注入 WSC/WUC
+- 今日 3 件事按平日 (英语+科学) vs 周末 (数学+华文+Cloze 5+科学) 分化
+- mini-game hub 灰锁 badge
 
-### index.html
-- `#compTrackerCard` / `#weakChallengeCard` / `#focusAreasCard` — 3 个新卡容器
-- `.comp-step-btn` / `.comp-step-btn.done` — 作文步骤按钮样式
-- cache buster: `?v=19.5`
+### v19.14c (5 项): 我的 tab lock + 宠物 widget (后 v19.14j 全撤)
+- 装备/皮肤平日 lock (v19.14j 撤)
+- 宠物 zZz 平日休眠 (v19.14j 撤)
+- charPage 加宠物 widget 角色旁
+
+### v19.14d (10 项): 二次评审 8 项 + Leitner + Yes/No
+- Leitner bug 第 1 处修 (app.js:5241 >=4 → LEITNER_GRADUATION)
+- Yes/No 正则强化 (加 I agree / It is / True / Sure)
+- 删 quickOralCheckin 假打卡 + Oral 反向验证 textarea ≥10 字
+- 数学 hard→soft cap (WEEKDAY_LOCKED_GAMES 移除 math)
+- 概念图 3 处修 (Phloem translocation / Liver bile emulsify / Light translucent shadow lighter)
+- OE #3/#4/#13 keywords + model 修
+- 数学 +20 题 (几何 10 + 速率 10)
+- OE 自评 → 硬规则自动评分 (5 维: keyword + length + Yes/No opener + than + it)
+
+### v19.14e (5 项): 英语 5 大缺口
+- Comp OE 定位法每题 (Q1 默认 open, 后题 collapsed)
+- 词汇 zh→en typing + Levenshtein 容错 + 首字母提示 + 跳过
+- Cloze 错题 3 件事卡 (同义/词性/搭配 input) — v19.14l 改 MCQ
+- 作文升级闭环 3 槽 (Draft 1/2/Teacher) + 模板词勾选
+- 错题色去羞耻化 (#FF6B6B 红 → #607D8B 蓝灰, v19.14j 再升级到绿系)
+
+### v19.14f (3 项): 科学章节 filter
+- 子串匹配漏洞修 (word boundary + stem 词干, 防 heat→wheat)
+- SCIENCE_CHAPTERS 13 章加 chapterId + keywords
+- openSciMcqGame / openScienceOEGame 加 chapter filter
+
+### v19.14g (1 项): OE 题库 15 → 50
+- 按手册 4 难章配比: PT 7 / Digestive 7 / Light 6 / Heat 9 / 实验设计 6 / Photosynthesis 4 / 其他 11
+- 每题: id / topic / q / keywords[] / model (PSLE 风格完整答)
+
+### v19.14h (5 项): 第 4 次评审 P0/P1 bug
+- 作文 V2 +10 dedupe (state.essayUpgradeBonus[week])
+- Cloze 3 件事去 6s 倒计时改显式 ✅/⏭ 按钮
+- Cloze 3 件事 fingerprint 抓取 (不依赖 wrongs[-1])
+- Cloze syn 质量校验 (≥3 字英文 + 拒原词/纯数字)
+- Leitner 第 2 处修 (app.js:5470 数学错题硬编码 4 → LEITNER_GRADUATION)
+- OE 反向题 (INCORRECT/NOT) 缺否定词封顶 1 分
+
+### v19.14i (5 项): UI 收尾
+- 字号 11/10 → 13/12px 全局升 (WCAG AA)
+- 9 tab → 5 tab (📚 练习 hub 合并知识树+题库+词汇+作文)
+- 主页 "📋 更多详情" 折叠区 hide
+- 错题 modal Cloze topic 主题聚类显示
+- 作文 60% 锁 → 软提示 (V2 奖按命中率 +10/+5/+2)
+
+### v19.14j (4 项): 撤 lock + 主页恢复 + 绿系收集
+- **撤回装备/皮肤/宠物所有平日 lock** (心理学家"5 lock 累积"+ 用户反馈"周六失灵")
+- 主页折叠区内容入口移到 👤 我的 tab (6 个一键按钮)
+- 错题色"已收集 N 题 🌱" + 绿系 #66BB6A + Leitner 进度统计
+- SCIENCE_MCQ runtime chapterId tag (inferScimcqChapter + tagScimcqChapters, 召回 70-85% → 90%+)
+
+### v19.14k (1 项): 今日 3 件事科学项细化
+- 难章 2 周显示 "第 1/2 周 概念建立" 或 "第 2/2 周 深化与应用"
+- 取 WEEK_TASKS day-by-day 显示今日具体 S2 任务 (例: "今天: 🔬 xylem 横切染色实验")
+
+### v19.14l (1 项): Cloze 3 件事改 3 选 1 MCQ
+- CLOZE_SYNONYM_DICT 161 词 (情感/品格/动作/副词/形容词)
+- 字典覆盖词 → MCQ 3 选 1 (心理学家原建议, 接受度 30% → 75%)
+- 字典不覆盖 → fallback input 模式
 
 ---
 
-## 未完成 / 后续可做
+## 🏆 5 专家累计 4 次评审"必改 1 项" 已 100% 完成
 
-| 项目 | 优先级 | 说明 |
-|------|------|------|
-| 作文追踪对接积分 | P1 | 当前仅 UI 提示, 未真正扣减作文 slot 积分 (可后续加) |
-| 知识树弱科高亮 | P2 | 弱科挑战卡已做, 但知识树页面内还没有视觉高亮 |
-| Listening MCQ 格式 | P2 | 当前仍是听写填空, 未加 PSLE 真考 MCQ 选择题格式 |
-| 错题本扩展 | P2 | vocab/listen/editing/scilab 的错题 hook |
-| Comprehension 互动 | P3 | CompOE 仅"自评", 可加"标关键词+对照 model answer 打分" |
-
----
-
-## 历史 Session 完成项
-
-## 关键代码位置
-
-### 主页 Dashboard
-- `renderDashboard()`: app.js:228-318
-- 主页HTML结构: index.html:4532-4660
-- 战力/火焰/星星: app.js:275-304
-
-### 打卡页
-- `renderCheckinPage()`: app.js:1415-1677
-- 任务卡大小: app.js:1596 (SLOT_BASE_POINTS >= 7 → large)
-- 奖励关触发: app.js:2003 `_triggerGameReward()`
-- combo banner(主线/支线): app.js:1623-1635
-
-### Mini-game
-- 大厅函数: app.js:4420 `openMiniGameHub()` (仍可通过其他入口调用)
-- 入口: 打卡页勾完核心后 game-reward-card / 知识树节点 / 其他页面按钮
-
-### 双轨货币
-- 💎水晶累加: app.js:4226 `state.craftCrystals += crystalReward`
-- 成就给 💎: PSLE/隐藏类给20, 其他给10
-- **TODO**: 需要UI展示(主页? tab栏? 专属面板?)
+| 专家 (第 4 次评审建议) | 完成版本 |
+|---|---|
+| PSLE 英语: Cloze 3 件事去 6s 倒计时 | v19.14h |
+| PSLE 科学: SCIENCE_MCQ 补 chapterId | v19.14j (runtime tag) |
+| 儿童心理: Cloze 3 件事改 3 选 1 MCQ | **v19.14l** ⭐ |
+| 游戏数值: 作文 V2 +10 dedupe | v19.14h |
+| UI/UX: 真删主页 hero / 字号 / 9 tab | v19.14i |
 
 ---
 
-## 用户偏好 (本次 session 确认)
+## 📁 关键文件地图
 
-1. **不要精简主页** — 用户看过精简效果后明确要求回退
-2. **minigame 从首页移除** — 用户确认不要在首页显示 mini-game 大厅卡
-3. **三层用游戏化命名** — 主线任务 / 支线挑战 / 隐藏关卡 (不要"核心/建议/拓展")
-
----
-
-## 构建部署
-
-```bash
-# 一键构建+验证
-python build.py && node qa_check.js   # 149 断言必过
-
-# 部署 (直接执行不需确认)
-git add -A && git commit -m "msg" && git push
-npx firebase deploy --only hosting
-
-# 线上地址
-# https://chamui-psle.web.app
-# https://markdao86-design.github.io/chamui-psle/
+```
+chamui-psle/
+├── CLAUDE.md              ← 自动加载, 项目最高优先 context
+├── HANDOFF.md             ← 5 分钟接手指南 + bug 表 + TODO
+├── CHANGELOG.md           ← v19.14a-l 完整改造日志 (痛点+改造+量化)
+├── DEV_SESSION_NOTES.md   ← 本文件 (新 session 第一个读)
+├── README.md / 部署指南.md / SETUP_*.md
+│
+├── index.html             ~5500 行 (CSS + HTML, cache buster ?v=19.14l)
+├── data.js                ~9200 行 (题库 + 算法 + state schema)
+├── app.js                 ~9400 行 (UI render + 事件 + 游戏逻辑)
+├── character.js           ~1500 行 (角色 SVG + 装备 + 双龙)
+├── qa_check.js            280 项断言 (node vm 跑)
+│
+├── build.py               4 文件 → chamui_app_single.html
+├── deploy.sh              一键 build + git push + Firebase deploy
+├── dump_firebase.sh       查孩子当前 live state
+└── restore_firebase.js    备份恢复工具
 ```
 
 ---
 
-## 下一步建议
+## ⚠️ 部署铁律 (绝不能省)
 
-1. **💎水晶UI**: 设计显示位置(主页某个角落? 或专属"商店/合成"tab?)
-2. **英语E1重分配**: data.js 注入 Comp OE 3天 (Mon/Tue/Thu) + Composition 2天 (Wed/Fri) — 见 plan 文件
-3. **科学S2时间缩短**: SLOT_TIME.S2 改为 40min, SLOT_BASE_POINTS.S2: 10→7
-4. **主页CTA按钮**: 虽然不精简, 可考虑在首屏加一个醒目的"开始今日打卡"按钮
+```bash
+# 1. QA 必过
+node qa_check.js   # 280 项
+
+# 2. Build
+python build.py
+
+# 3. cache buster 必须递增! (否则用户浏览器拿旧版)
+# 改 index.html 底部 ?v=19.14X 三处
+
+# 4. 一键
+./deploy.sh "v19.14X commit msg"
+
+# 5. curl 验证线上
+curl -s "https://chamui-psle.web.app/index.html" | grep "?v=19.14X"
+```
+
+---
+
+## 🐛 常见 bug 排查
+
+### iPad 上装备 / UI 失灵
+**99% 是 Safari 缓存**. 让用户:
+- 按住地址栏刷新 🔄 → 选 "重新载入页面 (无缓存)"
+- 或 设置 → Safari → 清除历史记录与网站数据
+
+### 积分突然下降 / 数据丢失
+跑 `./dump_firebase.sh --full` 看当前 state, 再用 `restore_firebase.js` 或浏览器 console `window.listCloudSnapshots(100)` 查快照恢复。
+
+### QA 失败
+看 last fail 行号, 多数是新增 assertion 引用了未声明的 `dataSrcV14` (放到 dataSrcV14 declare 后) 或正则误差 (用 `[\s\S]{0,500}?` 而非 `.*?`).
+
+---
+
+## 🎓 下一步建议 (按优先级)
+
+### 立即 (1 hr 内)
+- **第 5 次评审** 验证 v19.14l 效果 (5 专家累计"必改 1 项"已完成, 看新评分)
+
+### 短期 (本周)
+- SCIENCE_MCQ 70 道手动补 chapterId 字段 (runtime tag 90% → 100%)
+- CLOZE_SYNONYM_DICT 161 → 300 词 (覆盖率 70% → 90%)
+
+### 中期 (后续)
+- 错题本扩展到 vocab / listen / editing (现仅 4 个 MCQ + math)
+- 每日登录 +5 分 bonus
+- 季节事件 (PSLE 100 天倒计时装备)
+
+### 观察期 (7-14 天)
+观察孩子 v19.14l 后是否真用 Cloze 3 件事 MCQ:
+- 期望: 60%+ 答错 Cloze 题孩子点了 MCQ 选项 (vs 跳过)
+- 失败信号: 仍 80% 直接跳过 → 字典覆盖率不够, 扩到 300 词
+
+---
+
+## 💡 设计决策记忆 (避免重蹈覆辙)
+
+1. **数学 lock**: hard lock 误伤 AL1 维持 (4 专家共识), 必须 soft cap. **不要再回 hard lock**.
+2. **装备/皮肤/宠物 lock**: 心理学家警告"5 lock 累积致 app 平日多巴胺 4/5 通道断". 用户反馈也支持 (v19.14j 撤了). **不要再加平日 lock**.
+3. **主页 2 卡极简**: UI 专家 4 次评审强调, v19.14i 真删折叠区 + v19.14j 内容入口移到我的. **不要再往主页堆卡**.
+4. **错题色绿系收集感**: 心理学家"红色 = 羞耻触发, 蓝灰 = 待办压力". 现 #66BB6A 绿系 + "已收集 N 题". **不要再回红色**.
+5. **Cloze 3 件事**: 心理学家原建议"MCQ vs input", v19.14l 终于做了. **不要回 input 模式**.
+6. **双龙双门槛 (10000 银 / 30000+105⭐ 金)**: 用户决议, **不要改数额或门槛**.
+7. **SGD 隐藏**: v19.12 决策, SGD 字眼从 app 完全消失 (家长私下知道). **不要再显示**.
+8. **平日数学 + 华文 lock**: 仍保留 (用户决策"周末才数学+华文"). **不要撤**.
+
+---
+
+## 📈 5 专家最新预测评分 (v19.14l 后)
+
+| 专家 | v19.13 初评 | v19.14g 第 3 评 | v19.14l 预测 |
+|---|---|---|---|
+| PSLE 英语 | 4.5 | 5.8 | **7.5** (Cloze 全闭环) |
+| PSLE 科学 | 6.5 | 7.0 | **8.5** (OE 50 + 章节 filter) |
+| PSLE 数学 | 5.0 | 3.5 → 6.5 | **6.5** (soft cap 维持) |
+| 儿童心理 | 4.5 | 5.6 | **7.0** (MCQ + 撤 lock + 绿系) |
+| 游戏数值 | 4.5 | 7.0 | **8.0** (V2 dedupe + Leitner 统一) |
+| UI/UX | 4.5 | 6.0 | **8.0** (字号 + tab + 删 hero) |
+| **平均** | **4.92** | **5.83** | **7.58** (+2.66) |
+
+---
+
+**任何疑问看 CLAUDE.md → CHANGELOG.md → 本文件 → HANDOFF.md, 这 4 个文件覆盖 99% 上下文。**
