@@ -411,8 +411,29 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.13/.test(idxSrc) && !/\?v=19\.12[^0-9]/.test(idxSrc),
-  'v19.13: cache buster 已更新到 19.13');
+assert(/\?v=19\.14a/.test(idxSrc) && !/\?v=19\.13[^0-9]/.test(idxSrc),
+  'v19.14a: cache buster 已更新到 19.14a');
+
+// v19.14a 新模块断言
+const dataSrcV14 = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
+assert(/DAILY_SLOT_CAP\s*=\s*5/.test(dataSrcV14), 'v19.14a: DAILY_SLOT_CAP = 5');
+assert(/WEEKLY_CHECKIN_CAP\s*=\s*200/.test(dataSrcV14), 'v19.14a: WEEKLY_CHECKIN_CAP = 200');
+assert(/LEITNER_GRADUATION\s*=\s*3/.test(dataSrcV14), 'v19.14a: LEITNER_GRADUATION = 3');
+assert(/PSLE_MILESTONES\s*=/.test(dataSrcV14), 'v19.14a: PSLE_MILESTONES 数组');
+assert(/CLOZE_SST_PER_Q\s*=\s*2/.test(dataSrcV14), 'v19.14a: CLOZE_SST_PER_Q = 2');
+assert(/MYSTERY_BOX_WEEKLY_CAP\s*=\s*100/.test(dataSrcV14), 'v19.14a: 宝箱周封顶 100');
+assert(/function markErrorAnsweredCorrect/.test(dataSrcV14), 'v19.14a: Leitner markErrorAnsweredCorrect');
+assert(/function isPaper2GateOpen/.test(dataSrcV14), 'v19.14a: isPaper2GateOpen');
+assert(/STRONG_SUBJECT_GAMES/.test(dataSrcV14), 'v19.14a: STRONG_SUBJECT_GAMES 定义');
+// app.js 新 render
+assert(/function renderTodayThreeCard/.test(appSrc), 'v19.14a: renderTodayThreeCard');
+assert(/function renderTargetSchoolMini/.test(appSrc), 'v19.14a: renderTargetSchoolMini');
+assert(/clozeSstReward\s*\(/.test(appSrc), 'v19.14a: app.js 用 clozeSstReward');
+assert(/STRONG_SUBJECT_GAMES.*includes\(gameKey\)/.test(appSrc), 'v19.14a: _checkGameDailyLock 加强项 gate');
+assert(/DAILY_SLOT_CAP/.test(appSrc), 'v19.14a: toggleDailyCheck 用 DAILY_SLOT_CAP');
+// HTML 新容器
+assert(/id="todayThreeCard"/.test(idxSrc), 'v19.14a: index.html 有 todayThreeCard');
+assert(/id="targetSchoolMini"/.test(idxSrc), 'v19.14a: index.html 有 targetSchoolMini');
 
 // v19.13: 5 大新模块数据 (oral / vocab / essay tmpl / sci chapter / OE / diagrams)
 const dataSrc = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
@@ -433,10 +454,11 @@ assert(/function openConceptDiagram/.test(appSrc), 'v19.13: app.js 有 openConce
 assert(/renderOralCheckinCard\(\);/.test(appSrc), 'v19.13: renderDashboard 调用 oral 卡');
 assert(/renderSubjectVocabCard\(\);/.test(appSrc), 'v19.13: renderDashboard 调用 vocab 卡');
 assert(/renderScienceChapterCard\(\);/.test(appSrc), 'v19.13: renderDashboard 调用 science 卡');
-// HTML 有新容器
-assert(/id="oralCheckinCard"/.test(idxSrc), 'v19.13: index.html 有 oralCheckinCard');
-assert(/id="subjectVocabCard"/.test(idxSrc), 'v19.13: index.html 有 subjectVocabCard');
-assert(/id="scienceChapterCard"/.test(idxSrc), 'v19.13: index.html 有 scienceChapterCard');
+// v19.13 → v19.14a: 旧 3 张卡容器已收纳到"今日 3 件事", HTML 不再需要这 3 个 id
+// 检查 render 函数还在 (内容可用) 即可
+assert(/function renderOralCheckinCard/.test(appSrc), 'v19.14a: renderOralCheckinCard 函数保留');
+assert(/function renderSubjectVocabCard/.test(appSrc), 'v19.14a: renderSubjectVocabCard 函数保留');
+assert(/function renderScienceChapterCard/.test(appSrc), 'v19.14a: renderScienceChapterCard 函数保留');
 // 学科词汇 ≥ 500
 const mathVocabMatches = (dataSrc.match(/cat:\s*'(几何|数与运算|比例|统计|单位|题干)'/g) || []).length;
 const sciVocabMatches = (dataSrc.match(/cat:\s*'(力学|光学|热学|物质|植物|动物|人体|实验|环境\/能量)'/g) || []).length;

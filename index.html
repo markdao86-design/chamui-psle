@@ -4886,16 +4886,15 @@ p { font-size: 14px; line-height: 1.6; }
 <main class="main-container">
   <!-- 主页 -->
   <div class="page active" id="page-dashboard">
-    <!-- v19.12: 主页核心 #1 — 目标校录取概率 (取代角色卡, 极简化) -->
-    <div class="card" id="admissionForecastCard" style="border-left:4px solid #4ECDC4"></div>
-
-    <!-- v19.7: Paper 2 弱点突击卡 (主页核心 #2) -->
-    <div class="card" id="paper2SprintCard" style="border-left:4px solid #FF6B6B"></div>
-
-    <!-- v19.13: 主页极简 4 新卡 — 对齐手册 v14 英语 16.5h / 科学 P3-P4 -->
-    <div class="card" id="oralCheckinCard" style="border-left:4px solid #0277BD"></div>
-    <div class="card" id="subjectVocabCard" style="border-left:4px solid #1565C0"></div>
-    <div class="card" id="scienceChapterCard" style="border-left:4px solid #2E7D32"></div>
+    <!-- v19.14a: 主页极简 → 只 2 张卡 (今日 3 件事 + 目标校 1 校) -->
+    <!-- 5 专家评审 + 用户 3 决策驱动: UI 砍 5 卡 / 数值反通胀 / 强制弱科门槛 -->
+    <div class="card" id="todayThreeCard" style="border-left:4px solid #FF6B6B"></div>
+    <div class="card" id="targetSchoolMini" style="border-left:1px solid #E0E0E0"></div>
+    <!-- v19.14a: 旧 5 卡容器移除 (内容收纳到今日 3 件事 + 二级页) -->
+    <!-- admissionForecastCard 详情移到 📊 能力 tab -->
+    <!-- paper2SprintCard / oralCheckinCard / subjectVocabCard / scienceChapterCard 内容收纳进今日 3 件事 -->
+    <!-- 兼容旧 render 调用: 隐藏 placeholder 容器 (不渲染) -->
+    <div id="admissionForecastCard" style="display:none"></div>
 
     <!-- v19.8 P0-2: 本周学习画像 (替代炫酷反馈, 让孩子看到真正进步) -->
     <div class="card" id="learningPortraitCard" style="border-left:4px solid #4ECDC4"></div>
@@ -5419,9 +5418,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.13"></script>
-<script src="data.js?v=19.13"></script>
-<script src="app.js?v=19.13"></script>
+<script src="character.js?v=19.14a"></script>
+<script src="data.js?v=19.14a"></script>
+<script src="app.js?v=19.14a"></script>
 
 </body>
 </html>

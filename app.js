@@ -379,12 +379,17 @@ function renderDashboard() {
   renderChallengeCard(); // v19.4: 限时挑战赛 (W15-W30)
   renderAchievementWall();  // v18 Phase 5.1
   renderReviewCard();  // v18 Phase 5.3
-  renderAdmissionForecastCard();  // v19.12: 主页核心 — 目标校录取概率
-  renderPaper2SprintCard();  // v19.7
-  // v19.13: 主页极简 4 卡 — 录取概率 / Paper 2 / Oral / 学科词汇 / 科学章节
-  renderOralCheckinCard();
-  renderSubjectVocabCard();
-  renderScienceChapterCard();
+  // v19.14a: 主页极简 → 2 卡 (今日 3 件事 + 目标校 1 校)
+  // 旧 5 卡 (admissionForecast / paper2Sprint / oralCheckin / subjectVocab / scienceChapter)
+  // 全部内容收纳进"今日 3 件事" + 目标校单卡 + 详情下沉到对应 tab
+  renderTodayThreeCard();
+  renderTargetSchoolMini();
+  // 仍然 render 旧卡 (HTML 容器若存在则填充), 兼容性: 若 HTML 删了对应容器, 这些 render 无副作用
+  if (document.getElementById('admissionForecastCard')) renderAdmissionForecastCard();
+  if (document.getElementById('paper2SprintCard')) renderPaper2SprintCard();
+  if (document.getElementById('oralCheckinCard')) renderOralCheckinCard();
+  if (document.getElementById('subjectVocabCard')) renderSubjectVocabCard();
+  if (document.getElementById('scienceChapterCard')) renderScienceChapterCard();
   // v19.12: 学习画像移到二级 "我的" tab, 主页不渲染 (避免信息超载)
   // renderLearningPortraitCard();
   renderWeeklyCoach();
@@ -672,6 +677,85 @@ function renderAdmissionForecastCard() {
   `;
 }
 window.renderAdmissionForecastCard = renderAdmissionForecastCard;
+
+// ============================================================
+// v19.14a: 主页极简 — 2 张卡 (今日 3 件事 + 目标校 1 校)
+// 取代 v19.12-13 的 5 卡布局, 直接对接 5 专家评审决议
+// ============================================================
+
+// A1: 今日 3 件事 sticky 卡
+function renderTodayThreeCard() {
+  const card = document.getElementById('todayThreeCard');
+  if (!card) return;
+  // 算 3 件事进度
+  const oral = window.getOralStatus ? window.getOralStatus(state) : { todaySec: 0, targetSec: 1500, pct: 0, done: false };
+  const oralDone = oral.done || oral.todaySec >= 1500;
+  // Paper 2 (Cloze + SST)
+  const sprint = window.getPaper2SprintStatus ? window.getPaper2SprintStatus(state) : null;
+  const todayPaper2 = window.getTodayClozeSstCount ? window.getTodayClozeSstCount(state) : 0;
+  const paper2Done = todayPaper2 >= 15;  // 10 Cloze + 5 SST
+  // 本周科学
+  const week = state.currentWeek || 1;
+  const chapter = window.getCurrentScienceChapter ? window.getCurrentScienceChapter(week) : null;
+  const sciToday = ((state.gameDailyCount && state.gameDailyCount.counts) || {});
+  const sciDone = (sciToday.scimcq || 0) >= 1 || (sciToday.sci_oe || 0) >= 1;
+
+  const item = (icon, label, sub, done, onclick, color) => `
+    <div onclick="${onclick}" style="display:flex;align-items:center;gap:10px;padding:14px;background:${done ? '#E8F5E9' : '#FFF'};border:2px solid ${done ? '#4CAF50' : '#E0E0E0'};border-radius:8px;margin-bottom:8px;cursor:pointer;min-height:64px;transition:all 0.2s">
+      <div style="font-size:24px;width:32px;text-align:center">${done ? '✅' : icon}</div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:700;color:${done ? '#2E7D32' : '#212121'}">${label}</div>
+        <div style="font-size:12px;color:${done ? '#388E3C' : '#666'};margin-top:2px">${sub}</div>
+      </div>
+      <div style="color:${color};font-size:20px">›</div>
+    </div>
+  `;
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <div style="font-size:17px;font-weight:900;color:#FF6B6B">🎯 今日要做的 3 件事</div>
+      <div style="margin-left:auto;font-size:12px;color:#666">${(oralDone?1:0) + (paper2Done?1:0) + (sciDone?1:0)} / 3 完成</div>
+    </div>
+    ${item('🗣️', 'Oral 25 min', `${Math.round(oral.todaySec/60)}/25 min · 抽 PSLE 口试题`, oralDone, 'openOralPracticeModal()', '#0277BD')}
+    ${item('🎯', '10 Cloze + 5 SST', `今日 ${todayPaper2}/15 题 · 英语 AL6→AL2 关键`, paper2Done, 'openPaper2MockGame()', '#FF6B6B')}
+    ${item('🔬', chapter ? '本周科学 1 节' : '科学练习', chapter ? `${chapter.title} ${chapter.stars} · 含概念图` : '科学 MCQ + OE 训练', sciDone, chapter && chapter.diagram ? `openConceptDiagram('${chapter.diagram}'); setTimeout(openScienceOEGame, 100)` : 'openSciMcqGame()', '#2E7D32')}
+    <div style="margin-top:8px;font-size:11px;color:#888;text-align:center;line-height:1.4">
+      💡 完成 3 件事 = 撑住每日学习节奏 · 强项 game 第 3 次起需先做 Paper 2 5 题
+    </div>
+  `;
+}
+window.renderTodayThreeCard = renderTodayThreeCard;
+
+// A5: 目标校 1 校提示 (取代 8 校列表)
+function renderTargetSchoolMini() {
+  const card = document.getElementById('targetSchoolMini');
+  if (!card || !window.getAdmissionForecasts) return;
+  const f = window.getAdmissionForecasts(state);
+  const { bySubject, total_AL, schools, ifEnglishImproved } = f;
+  // 默认主目标校 = 用户存的 mainTargetSchool, 否则取第一个 top tier
+  const mainId = state.mainTargetSchool || (schools.find(s => s.tier === 'top') || schools[0]).id;
+  const main = schools.find(s => s.id === mainId) || schools[0];
+  const mainImproved = ifEnglishImproved.schools.find(s => s.id === main.id);
+  const probColor = main.probability >= 80 ? '#2E7D32' : main.probability >= 50 ? '#FFA500' : '#C62828';
+  const lift = mainImproved ? mainImproved.probability - main.probability : 0;
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="font-size:15px;font-weight:900;color:#1565C0">🏫 目标校 · ${main.name}</div>
+      <button onclick="document.querySelector('[data-page=history]').click()" style="margin-left:auto;background:none;border:none;color:#1565C0;font-size:12px;cursor:pointer;text-decoration:underline">查看全部 8 校 →</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;background:#F0F8FF;border-radius:6px;padding:12px">
+      <div style="text-align:center;flex:0 0 80px">
+        <div style="font-size:28px;color:${probColor};font-weight:900;line-height:1">${main.probability}%</div>
+        <div style="font-size:11px;color:#666;margin-top:2px">录取概率</div>
+      </div>
+      <div style="flex:1;font-size:12px;color:#333;line-height:1.6">
+        <div>当前综合 AL: <b style="color:#FF6B6B">${total_AL}</b> (英${bySubject.english_AL}+数${bySubject.math_AL}+科${bySubject.science_AL}+华${bySubject.chinese_AL})</div>
+        <div>${main.name} COP: <b>${main.cop}</b></div>
+        ${lift > 0 ? `<div style="margin-top:4px;padding:6px;background:#FFF3E0;border-radius:4px"><b style="color:#E65100">💡 英语 AL${bySubject.english_AL} → AL3</b> = 录取 <b>${main.probability}% → ${mainImproved.probability}%</b> (+${lift}%)</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+window.renderTargetSchoolMini = renderTargetSchoolMini;
 
 // ============================================================
 // v19.13: 5 大新模块 render + 游戏逻辑 (对齐手册 v14)
@@ -3247,18 +3331,38 @@ function toggleDailyCheck(week, day, slot, evt) {
       const subj = window.SLOT_SUBJECT && window.SLOT_SUBJECT[slot];
       setTimeout(() => showToast(`⚠️ ${subj || '该科'}正确率不足60%，积分×${reward.qualityMult} — 做 mini-game 提升!`, 'warn'), 600);
     }
+    // v19.14a B1: 打卡分砸半 + 日封顶 5 项 + 周封顶 200
+    const todayCount = window.countTodaySlotChecks ? window.countTodaySlotChecks(state) : 0;
+    const weekTotal = window.calcWeekSlotPoints ? window.calcWeekSlotPoints(state, week) : 0;
+    const DAILY_CAP = window.DAILY_SLOT_CAP || 5;
+    const WEEK_CAP = window.WEEKLY_CHECKIN_CAP || 200;
+    let v14_capReason = '';
+    if (todayCount >= DAILY_CAP) {
+      reward.pts = 0;
+      v14_capReason = ` [日封顶 ${DAILY_CAP} 项, +0]`;
+    } else if (weekTotal >= WEEK_CAP) {
+      reward.pts = 0;
+      v14_capReason = ` [周封顶 ${WEEK_CAP} 分, +0]`;
+    } else if (weekTotal + reward.pts > WEEK_CAP) {
+      reward.pts = Math.max(0, WEEK_CAP - weekTotal);
+      v14_capReason = ` [周封顶剩 ${reward.pts}]`;
+    }
     const critExtra = reward.pts - (reward.base || slotPoints(week, slot));
     if (critExtra > 0) {
       state.totalPoints += critExtra;
       if (!state.lifetimeEarned || state.totalPoints > state.lifetimeEarned) state.lifetimeEarned = state.totalPoints;
+    } else if (reward.pts === 0) {
+      // 完全被封顶: 不该把 base 也算进去 → 撤回前面 recalc 加的 base
+      state.totalPoints = Math.max(0, state.totalPoints - (reward.base || slotPoints(week, slot)));
     }
     state.logs.push({
-      reason: `✅ 打卡 W${week} ${day} ${slot}${reward.isCrit ? ' 💥暴击' : ''} +${reward.pts}`,
+      reason: `✅ 打卡 W${week} ${day} ${slot}${reward.isCrit ? ' 💥暴击' : ''} +${reward.pts}${v14_capReason}`,
       points: critExtra,
       type: 'slot',
       week: state.currentWeek,
       timestamp: Date.now()
     });
+    if (v14_capReason) showToast('⚠️ 打卡分' + v14_capReason.trim() + ' — 改去做 Cloze/SST 提英语 AL', 'warn');
   } else {
     // v19.3: 取消时找到对应的打卡log并扣回暴击分
     // v19.10: 修复 — 找不到 slot log 时 recalc 兜底, 不 push undo log (防快速连点刷分 bug)
@@ -4433,7 +4537,25 @@ function _getMultiplierLabel(playNum) {
 }
 // 检查游戏是否可玩, 不可玩则弹提示并返回 false
 function _checkGameDailyLock(gameKey) {
-  // v19.4: 取消锁定, 允许无限练习 (第 2 次起不给积分, 但能玩)
+  // v19.4: 取消日次数锁, 允许无限练习 (第 2 次起不给积分, 但能玩)
+  // v19.14a B6/B7: 弱科燃料 + 软门槛 — 强项 game 需先做 Paper 2 (Cloze/SST ≥ 5 题)
+  if (window.STRONG_SUBJECT_GAMES && window.STRONG_SUBJECT_GAMES.includes(gameKey)) {
+    const todayCnt = (state.gameDailyCount && state.gameDailyCount.counts) || {};
+    const playedBefore = todayCnt[gameKey] || 0;
+    const FREE_PLAYS = 2;  // 前 2 次免费 (弱科燃料)
+    if (playedBefore < FREE_PLAYS) return true;
+    // 第 3+ 次需 Paper 2 门槛
+    const gateOpen = window.isPaper2GateOpen ? window.isPaper2GateOpen(state) : true;
+    if (!gateOpen) {
+      const cur = window.getTodayClozeSstCount ? window.getTodayClozeSstCount(state) : 0;
+      showToast(`🔒 ${gameKey} 今日已玩 ${playedBefore} 次. 完成 5 题 Cloze 或 SST 解锁 (现 ${cur}/5)`, 'warn');
+      // 弹打开 Paper 2 突击的对话框
+      if (confirm(`💪 强项已玩 ${playedBefore} 次, 现在花 2 min 做 5 题 Cloze 解锁继续?\n\n(英语 AL6 → AL2 是综合 AL 4-5 的最大杠杆)`)) {
+        if (window.openClozeGame) window.openClozeGame();
+      }
+      return false;
+    }
+  }
   return true;
 }
 
@@ -6354,15 +6476,28 @@ function _finishMcqGame() {
   }
   const playNum = _bumpDailyGameCount(g.key);
   const mult = _getGameMultiplier(playNum);
-  // v19.0: 难度梯度积分 (高难度答对奖更多)
-  const rewardMap = { 3: 4, 4: 6, 5: 10, 6: 15 };
-  let baseR = 0;
-  if (g.correct >= 10) baseR = rewardMap[g.diff] || 3;
-  else if (g.correct >= 7) baseR = Math.max(1, (rewardMap[g.diff] || 3) - 1);
-  const reward = Math.floor(baseR * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
+  // v19.14a B2: Cloze/SST 改按题计分 + 衰减 (其他 game 走旧 rewardMap)
+  let reward = 0;
+  let v14_clozeSstLog = '';
+  if ((g.key === 'cloze' || g.key === 'sst') && window.clozeSstReward) {
+    // 累计今日 cloze+sst 答题数 (分游戏统计, 用占位 key)
+    if (!state.gameDailyCount) state.gameDailyCount = { date: new Date().toISOString().slice(0,10), counts: {} };
+    const cnt = state.gameDailyCount.counts;
+    const todayBefore = (cnt._cloze_q || 0) + (cnt._sst_q || 0);
+    reward = window.clozeSstReward(todayBefore, g.correct);
+    cnt['_' + g.key + '_q'] = (cnt['_' + g.key + '_q'] || 0) + g.correct;
+    v14_clozeSstLog = `[今日累计 ${todayBefore + g.correct} 题]`;
+  } else {
+    // v19.0: 难度梯度积分 (高难度答对奖更多)
+    const rewardMap = { 3: 4, 4: 6, 5: 10, 6: 15 };
+    let baseR = 0;
+    if (g.correct >= 10) baseR = rewardMap[g.diff] || 3;
+    else if (g.correct >= 7) baseR = Math.max(1, (rewardMap[g.diff] || 3) - 1);
+    reward = Math.floor(baseR * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
+  }
   if (reward > 0) {
     state.totalPoints += reward;
-    state.logs.push({ reason: `🎮 ${g.title} ${g.correct}/10 (第 ${playNum} 次)`, points: reward, week: state.currentWeek, timestamp: Date.now() });
+    state.logs.push({ reason: `🎮 ${g.title} ${g.correct}/10 (第 ${playNum} 次) ${v14_clozeSstLog}`, points: reward, week: state.currentWeek, timestamp: Date.now() });
   }
   saveState(state);
   // v19.4: 更新限时挑战赛进度

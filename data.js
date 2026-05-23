@@ -1856,18 +1856,49 @@ function addToErrorBank(state, item) {
   if (!state.wrongAnswers) state.wrongAnswers = [];
   // 去重: 同一道题不重复加 (按 gameKey + q + nodeId fingerprint)
   const fp = (item.gameKey || '') + '|' + (item.q || '') + '|' + (item.nodeId || '');
-  if (state.wrongAnswers.some(w => w._fp === fp)) return false;
+  // v19.14a: 若已存在, 重置 correctStreak (再次答错说明没掌握)
+  const existing = state.wrongAnswers.find(w => w._fp === fp);
+  if (existing) {
+    existing.correctStreak = 0;
+    existing.retries = (existing.retries || 0) + 1;
+    return false;
+  }
   item._fp = fp;
   item.id = fp + ':' + Date.now();
   item.addedDate = new Date().toISOString().slice(0, 10);
   item.addedWeek = state.currentWeek || 1;
   item.retries = 0;
+  item.correctStreak = 0;  // v19.14a: Leitner box 连续答对计数
   state.wrongAnswers.push(item);
   return true;
 }
+
+// v19.14a Leitner: 答对时调用 — 连续答对 LEITNER_GRADUATION 次才删, 每次 +1 巩固分
+function markErrorAnsweredCorrect(state, id) {
+  if (!state.wrongAnswers) return { graduated: false, streak: 0 };
+  const entry = state.wrongAnswers.find(w => w.id === id || w._fp === id);
+  if (!entry) return { graduated: false, streak: 0 };
+  entry.correctStreak = (entry.correctStreak || 0) + 1;
+  entry.lastCorrectDate = new Date().toISOString().slice(0, 10);
+  state.totalPoints = (state.totalPoints || 0) + 1;  // +1 巩固分
+  if (entry.correctStreak >= LEITNER_GRADUATION) {
+    state.wrongAnswers = state.wrongAnswers.filter(w => w.id !== entry.id);
+    state.totalPoints = (state.totalPoints || 0) + 5;  // 毕业 +5 分
+    return { graduated: true, streak: entry.correctStreak };
+  }
+  return { graduated: false, streak: entry.correctStreak };
+}
+
+// v19.14a: 旧 API 保留 (兼容现有代码), 但默认不立即删除, 改走 Leitner
 function removeFromErrorBank(state, id) {
   if (!state.wrongAnswers) return;
-  state.wrongAnswers = state.wrongAnswers.filter(w => w.id !== id);
+  // 兼容旧行为 (强制删) — 内部代码可改用 markErrorAnsweredCorrect
+  if (typeof id === 'object' && id.force) {
+    state.wrongAnswers = state.wrongAnswers.filter(w => w.id !== id.id);
+    return;
+  }
+  // 新 default: 走 Leitner
+  markErrorAnsweredCorrect(state, id);
 }
 function errorBankCount(state) {
   return (state.wrongAnswers || []).length;
@@ -1881,6 +1912,7 @@ function errorBankByGame(state) {
 }
 window.addToErrorBank = addToErrorBank;
 window.removeFromErrorBank = removeFromErrorBank;
+window.markErrorAnsweredCorrect = markErrorAnsweredCorrect;  // v19.14a
 window.errorBankCount = errorBankCount;
 window.errorBankByGame = errorBankByGame;
 
@@ -4634,35 +4666,41 @@ function openMysteryBoxOnce(state) {
   if (!state.mysteryBoxes || state.mysteryBoxes.available <= 0) return null;
   state.mysteryBoxes.available -= 1;
   state.mysteryBoxes.opened += 1;
+  // v19.14a B4: 周封顶 100 分 + 单次奖励砍 60%
+  const week = state.currentWeek || 1;
+  const wkKey = '_wk' + week;
+  if (!state.mysteryBoxes._wkEarned) state.mysteryBoxes._wkEarned = {};
+  const wkEarned = state.mysteryBoxes._wkEarned[wkKey] || 0;
+  const wkCap = window.MYSTERY_BOX_WEEKLY_CAP || 100;
+  const remain = Math.max(0, wkCap - wkEarned);
   const r = Math.random();
   let tier, result;
   if (r < 0.70) {
     tier = 'common';
-    result = { tier, points: 6 };
+    result = { tier, points: Math.min(3, remain) };  // 6 → 3
   } else if (r < 0.95) {
     tier = 'wow';
     const pool = ENGLISH_WOW_FACTS;
     const wow = pool[Math.floor(Math.random() * pool.length)];
-    result = { tier, points: 18, wow };
+    result = { tier, points: Math.min(7, remain), wow };  // 18 → 7
   } else {
     tier = 'rare';
-    // 选 1 件未解锁的高分装备(points 类),让 state 立刻解锁(通过提分到阈值)
+    // 选 1 件未解锁的高分装备 (改: 只给 +15 分而非"补到阈值")
     if (window.CHAMUI) {
       const candidates = window.CHAMUI.equipment.filter(e =>
         e.condition === 'points' && state.totalPoints < e.value
-      ).sort((a, b) => a.value - b.value);  // 先解锁最容易够到的
+      ).sort((a, b) => a.value - b.value);
       const eq = candidates[0];
       if (eq) {
-        const needed = eq.value - state.totalPoints;
-        result = { tier, points: needed, equipId: eq.id, equipName: eq.name, equipIcon: eq.icon };
+        result = { tier, points: Math.min(15, remain), equipId: eq.id, equipName: eq.name, equipIcon: eq.icon };  // 改: 固定 15 分而非补到阈值
       } else {
-        // 都解锁了 → 给大额积分
-        result = { tier, points: 50 };
+        result = { tier, points: Math.min(20, remain) };  // 50 → 20
       }
     } else {
-      result = { tier, points: 50 };
+      result = { tier, points: Math.min(20, remain) };
     }
   }
+  state.mysteryBoxes._wkEarned[wkKey] = wkEarned + result.points;
   // 记录历史(只保留最近 10 条)
   state.mysteryBoxes.history.unshift({
     tier: result.tier,
@@ -7775,6 +7813,99 @@ window.generateFocusAreas = generateFocusAreas;
 window.getFocusAreas = getFocusAreas;
 // v18.40: 题库 (华文阅读)
 window.CHINESE_READING = CHINESE_READING;
+
+// ============================================================
+// v19.14a: 数值重平衡 + Leitner 错题机制 + 新 milestone
+// 来源: 5 专家评审 + 用户 3 项决策 (3 种弱科机制全做)
+// ============================================================
+
+// B1: 打卡分砍半 + 日封顶 5 项 + 周封顶 200 分
+const DAILY_SLOT_CAP = 5;          // 前 5 项满奖, 第 6+ 项 0 奖
+const WEEKLY_CHECKIN_CAP = 200;     // 周累计打卡积分硬封顶
+
+// B3: Leitner 错题机制 — 累计 3 次答对才出库
+const LEITNER_GRADUATION = 3;       // 连续答对几次才从错题本删除
+
+// B5: 加 1 个中型 milestone (20000 SGD 800), 改进双龙双门槛单调性
+const PSLE_MILESTONES = [
+  { points: 10000, sgd: 500,  title: '🐲 银龙骑士',    color: '#9E9E9E', achievement: 'milestone_silver' },
+  { points: 20000, sgd: 800,  title: '💎 龙之追随者', color: '#7986CB', achievement: 'milestone_mid' },
+  { points: 30000, sgd: 1500, title: '🐉 金龙之王',    color: '#FFC107', achievement: 'milestone_gold',
+    extraRequirement: { stars: 105, label: '+ 知识树 105⭐ 双门槛' } }
+];
+
+// B2: Cloze/SST 按题计分 + 衰减
+const CLOZE_SST_PER_Q = 2;        // 每题对 +2 分
+const CLOZE_SST_FULL_DAILY = 20;  // 前 20 题/天 满奖
+const CLOZE_SST_DECAY_DAILY = 50; // 21-50 题 50% 衰减 (+1 分/题)
+
+// B4: 宝箱产出砍 60% (随机 30-50 → 10-20)
+const MYSTERY_BOX_NEW_MIN = 10;
+const MYSTERY_BOX_NEW_MAX = 20;
+const MYSTERY_BOX_WEEKLY_CAP = 100;
+
+// 计算今日已打卡 slot 数 (含已取消的, 用 logs 算)
+function countTodaySlotChecks(state) {
+  const today = new Date().toISOString().slice(0, 10);
+  const logs = state.logs || [];
+  return logs.filter(l => {
+    if (l.type !== 'slot') return false;
+    const ts = l.timestamp || 0;
+    return new Date(ts).toISOString().slice(0, 10) === today;
+  }).length;
+}
+
+// 计算本周打卡累积积分 (用于周封顶)
+function calcWeekSlotPoints(state, week) {
+  const w = week || state.currentWeek;
+  const logs = state.logs || [];
+  return logs.filter(l => (l.type === 'slot' || l.type === 'slot_undo') && l.week === w)
+    .reduce((s, l) => s + (l.points || 0), 0);
+}
+
+// B2: Cloze/SST 当日已答题数 (从 gameDailyCount.counts 算)
+function getTodayClozeSstCount(state) {
+  if (!state.gameDailyCount || state.gameDailyCount.date !== new Date().toISOString().slice(0, 10)) return 0;
+  const c = state.gameDailyCount.counts || {};
+  return (c._cloze_q || 0) + (c._sst_q || 0);
+}
+
+// Cloze/SST 按题计分公式 (q = 当日已答题数, n = 本次答对题数)
+function clozeSstReward(todayDoneBefore, correctThisRound) {
+  let reward = 0;
+  for (let i = 0; i < correctThisRound; i++) {
+    const idx = todayDoneBefore + i + 1;
+    if (idx <= CLOZE_SST_FULL_DAILY) reward += CLOZE_SST_PER_Q;        // +2
+    else if (idx <= CLOZE_SST_DECAY_DAILY) reward += 1;                // 衰减 +1
+    // 51+ 0 分
+  }
+  return reward;
+}
+
+// B6/B7: 弱科燃料 + 软门槛 — 检查今日 Cloze+SST 是否达 5 题门槛
+function isPaper2GateOpen(state) {
+  return getTodayClozeSstCount(state) >= 5;
+}
+
+// 强项科目列表 (受 fuel/gate 约束)
+const STRONG_SUBJECT_GAMES = ['math', 'chinese', 'unit', 'grammar'];
+
+window.DAILY_SLOT_CAP = DAILY_SLOT_CAP;
+window.WEEKLY_CHECKIN_CAP = WEEKLY_CHECKIN_CAP;
+window.LEITNER_GRADUATION = LEITNER_GRADUATION;
+window.PSLE_MILESTONES = PSLE_MILESTONES;
+window.CLOZE_SST_PER_Q = CLOZE_SST_PER_Q;
+window.CLOZE_SST_FULL_DAILY = CLOZE_SST_FULL_DAILY;
+window.CLOZE_SST_DECAY_DAILY = CLOZE_SST_DECAY_DAILY;
+window.MYSTERY_BOX_NEW_MIN = MYSTERY_BOX_NEW_MIN;
+window.MYSTERY_BOX_NEW_MAX = MYSTERY_BOX_NEW_MAX;
+window.MYSTERY_BOX_WEEKLY_CAP = MYSTERY_BOX_WEEKLY_CAP;
+window.STRONG_SUBJECT_GAMES = STRONG_SUBJECT_GAMES;
+window.countTodaySlotChecks = countTodaySlotChecks;
+window.calcWeekSlotPoints = calcWeekSlotPoints;
+window.getTodayClozeSstCount = getTodayClozeSstCount;
+window.clozeSstReward = clozeSstReward;
+window.isPaper2GateOpen = isPaper2GateOpen;
 
 // ============================================================
 // v19.13: 5 大新模块 (对齐手册 v14 英语 16.5h / 科学 P3-P4 系统过)
