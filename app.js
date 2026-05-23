@@ -149,6 +149,11 @@ function renderAll() {
   renderCheckinPage();
   renderHistoryPage();
   renderAdminPage();
+  // v19.14m bug 修: 我的 tab active 时刷新装备 grid (之前 toggleEquipment 后 grid 不更新)
+  const charPageActive = document.getElementById('page-character');
+  if (charPageActive && charPageActive.classList.contains('active') && typeof renderCharacterPage === 'function') {
+    renderCharacterPage();
+  }
   // v18.60: 检测双龙是否新解锁, 触发觉醒仪式
   if (typeof _checkAndTriggerDragonCeremony === 'function') _checkAndTriggerDragonCeremony();
   // v18.20 E: 总分变化时数字跳动

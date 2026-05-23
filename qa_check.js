@@ -411,8 +411,10 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.14l/.test(idxSrc) && !/\?v=19\.14k[^0-9]/.test(idxSrc),
-  'v19.14l: cache buster 已更新到 19.14l');
+assert(/\?v=19\.14m/.test(idxSrc) && !/\?v=19\.14l[^0-9]/.test(idxSrc),
+  'v19.14m: cache buster 已更新到 19.14m');
+// v19.14m: 装备穿戴 bug fix — renderAll 加 renderCharacterPage 刷新
+assert(/charPageActive\.classList\.contains\('active'\)[\s\S]{0,100}renderCharacterPage\(\)/.test(appSrc), 'v19.14m: renderAll 加我的 tab active 时 renderCharacterPage');
 // v19.14l Cloze 3 件事改 MCQ
 assert(/pickClozeSyn|getClozeSynonymOptions/.test(appSrc), 'v19.14l: Cloze syn MCQ 函数');
 assert(/data-mode=.{1,30}mcq.{0,20}input|data-mode=.{1,40}'mcq'.{0,30}'input'/.test(appSrc), 'v19.14l: MCQ/input 双模式');
