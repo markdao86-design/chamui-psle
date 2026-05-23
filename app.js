@@ -5500,7 +5500,9 @@ function submitErrorBankAnswer(optIdx) {
         w.correctStreak = (w.correctStreak || 0) + 1;
         const grad = window.LEITNER_GRADUATION || 3;
         if (w.correctStreak >= grad) {
-          window.removeFromErrorBank(state, item.id);
+          // v19.15a hotfix: 用 {force:true} 跳过 markErrorAnsweredCorrect 的内部 +1/+5
+          // (否则会双重计分: mark +1 巩固 + mark +5 毕业 + 我们 +5 = +11/题)
+          window.removeFromErrorBank(state, { force: true, id: item.id });
           g.removed.push(item.id);
           state.totalPoints = (state.totalPoints || 0) + 5;
           state.logs.push({ reason: '🎓 错题毕业 (Leitner 3 连对)', points: 5, week: state.currentWeek, timestamp: Date.now() });
@@ -5536,7 +5538,9 @@ function submitErrorBankMath() {
         w.correctStreak = (w.correctStreak || 0) + 1;
         const grad = window.LEITNER_GRADUATION || 3;
         if (w.correctStreak >= grad) {
-          window.removeFromErrorBank(state, item.id);
+          // v19.15a hotfix: 用 {force:true} 跳过 markErrorAnsweredCorrect 的内部 +1/+5
+          // (否则会双重计分: mark +1 巩固 + mark +5 毕业 + 我们 +5 = +11/题)
+          window.removeFromErrorBank(state, { force: true, id: item.id });
           g.removed.push(item.id);
           state.totalPoints = (state.totalPoints || 0) + 5;
           state.logs.push({ reason: '🎓 错题毕业 (Leitner 3 连对)', points: 5, week: state.currentWeek, timestamp: Date.now() });

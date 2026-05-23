@@ -411,13 +411,19 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.15/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.15: cache buster 已更新到 19.15');
+assert(/\?v=19\.15a/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.15a: cache buster 已更新到 19.15a (hotfix Leitner 双重计分)');
 // v19.14m: 装备穿戴 bug fix — renderAll 加 renderCharacterPage 刷新
 assert(/charPageActive\.classList\.contains\('active'\)[\s\S]{0,100}renderCharacterPage\(\)/.test(appSrc), 'v19.14m: renderAll 加我的 tab active 时 renderCharacterPage');
 
 // v19.15 P0-1: Leitner 巩固积分封顶 — 毕业一次性 +5, 不再每答对 +2
 assert(/错题毕业.*Leitner 3 连对|🎓 错题毕业/.test(appSrc), 'v19.15 P0-1: Leitner 毕业 +5 标记');
+// v19.15a hotfix: removeFromErrorBank 必须用 {force:true} 跳过内部 markErrorAnsweredCorrect 双重计分
+const forceRemoveCount = (appSrc.match(/removeFromErrorBank\(state,\s*\{\s*force:\s*true,\s*id:\s*item\.id\s*\}\)/g) || []).length;
+assert(forceRemoveCount === 2, `v19.15a hotfix: 两处 Leitner 毕业用 {force:true} (实际 ${forceRemoveCount})`);
+// 防回归: 不能有 removeFromErrorBank(state, item.id) 单参形式 (走 mark 双重)
+const naiveRemove = (appSrc.match(/removeFromErrorBank\(state,\s*item\.id\)/g) || []).length;
+assert(naiveRemove === 0, `v19.15a hotfix: 不能有单参 removeFromErrorBank(state, item.id) (实际 ${naiveRemove})`);
 const leitnerGradPlus5 = (appSrc.match(/state\.totalPoints\s*=\s*\(state\.totalPoints\s*\|\|\s*0\)\s*\+\s*5;\s*\n\s*state\.logs\.push\(\{\s*reason:\s*'🎓 错题毕业/g) || []).length;
 assert(leitnerGradPlus5 >= 2, `v19.15 P0-1: 两处 Leitner 分支都 +5 毕业 (实际 ${leitnerGradPlus5})`);
 // 验证已删除 +2 每次 (旧逻辑)
