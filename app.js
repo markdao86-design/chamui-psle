@@ -861,14 +861,59 @@ function renderTargetSchoolMini() {
         <div style="font-size:11px;color:#A0A0A0;margin-top:2px">录取概率</div>
       </div>
       <div style="flex:1;font-size:12px;color:#E0E0E0;line-height:1.6">
-        <div>当前综合 AL: <b style="color:#FF8A65">${total_AL}</b> (英${bySubject.english_AL}+数${bySubject.math_AL}+科${bySubject.science_AL}+华${bySubject.chinese_AL})</div>
-        <div>${main.name} COP: <b style="color:#FFD180">${main.cop}</b></div>
+        <div>当前综合 AL: <b style="color:#FF8A65">${total_AL}</b> ${f.isManual ? '<span style="font-size:10px;color:#FFB74D;font-weight:700">✏️ 已手动</span>' : '<span style="font-size:10px;color:#888">(自动算)</span>'}</div>
+        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
+          ${_renderALEditor('english', '英', bySubject.english_AL)}
+          ${_renderALEditor('math', '数', bySubject.math_AL)}
+          ${_renderALEditor('science', '科', bySubject.science_AL)}
+          ${_renderALEditor('chinese', '华', bySubject.chinese_AL)}
+          ${f.isManual ? `<button onclick="resetSubjectALToAuto()" style="font-size:10px;padding:2px 6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:3px;color:#A0A0A0;cursor:pointer">↻ 自动</button>` : ''}
+        </div>
+        <div style="margin-top:6px">${main.name} COP: <b style="color:#FFD180">${main.cop}</b></div>
         ${lift > 0 ? `<div style="margin-top:4px;padding:6px;background:linear-gradient(135deg, rgba(255,184,0,0.12), rgba(255,107,53,0.06));border:1px solid rgba(255,184,0,0.30);border-radius:4px"><b style="color:#FFB74D">💡 英语 AL${bySubject.english_AL} → AL3</b> = 录取 <b style="color:#FFD180">${main.probability}% → ${mainImproved.probability}%</b> (+${lift}%)</div>` : ''}
       </div>
     </div>
   `;
 }
 window.renderTargetSchoolMini = renderTargetSchoolMini;
+
+// v19.15j: 4 科 AL 内联编辑 helper (供 renderTargetSchoolMini + openAllSchoolsModal 共用)
+function _renderALEditor(key, label, val) {
+  return `
+    <span style="display:inline-flex;align-items:center;gap:2px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:4px;padding:2px 4px">
+      <span style="color:#94A3B8;font-size:11px">${label}</span>
+      <button onclick="bumpManualAL('${key}',-1)" style="width:18px;height:18px;border:1px solid rgba(255,255,255,0.20);background:rgba(255,255,255,0.05);color:#4FC3F7;border-radius:3px;cursor:pointer;font-weight:900;font-size:12px;line-height:1;padding:0">−</button>
+      <b style="color:#FF8A65;font-size:13px;min-width:14px;text-align:center;display:inline-block">${val}</b>
+      <button onclick="bumpManualAL('${key}',+1)" style="width:18px;height:18px;border:1px solid rgba(255,255,255,0.20);background:rgba(255,255,255,0.05);color:#4FC3F7;border-radius:3px;cursor:pointer;font-weight:900;font-size:12px;line-height:1;padding:0">+</button>
+    </span>`;
+}
+
+function bumpManualAL(subj, delta) {
+  if (!window.setManualSubjectAL || !window.getAdmissionForecasts) return;
+  const cur = window.getAdmissionForecasts(state).bySubject[subj + '_AL'] || 6;
+  const next = Math.max(1, Math.min(8, cur + delta));
+  if (next === cur) return;
+  window.setManualSubjectAL(state, subj, next);
+  saveState(state);
+  renderAll();
+  // 若有 8 校 modal 在打开, 重渲
+  const m = document.getElementById('allSchoolsModal');
+  if (m && m.classList.contains('show')) openAllSchoolsModal();
+}
+
+function resetSubjectALToAuto() {
+  if (!window.resetSubjectALAuto) return;
+  window.resetSubjectALAuto(state);
+  saveState(state);
+  renderAll();
+  const m = document.getElementById('allSchoolsModal');
+  if (m && m.classList.contains('show')) openAllSchoolsModal();
+  showToast('↻ AL 已恢复自动算', 'success');
+}
+
+window._renderALEditor = _renderALEditor;
+window.bumpManualAL = bumpManualAL;
+window.resetSubjectALToAuto = resetSubjectALToAuto;
 
 // v19.15i: 8 校全列表 modal (从 "查看全部 8 校 →" 触发)
 function openAllSchoolsModal() {
@@ -903,9 +948,16 @@ function openAllSchoolsModal() {
   modal.innerHTML = `
     <div class="kt-inner cn-reading-inner" style="max-width:520px;background:var(--color-card);border:1px solid rgba(0,212,255,0.30);box-shadow:0 0 20px rgba(0,212,255,0.10)">
       <div class="kt-header">
-        <div>
+        <div style="flex:1">
           <div class="kt-title" style="color:#4FC3F7">🏫 全部 ${schools.length} 校 录取概率</div>
-          <div class="kt-progress">综合 AL <b style="color:#FF8A65">${total_AL}</b> · 英${bySubject.english_AL} 数${bySubject.math_AL} 科${bySubject.science_AL} 华${bySubject.chinese_AL}</div>
+          <div class="kt-progress">综合 AL <b style="color:#FF8A65">${total_AL}</b> ${f.isManual ? '<span style="font-size:10px;color:#FFB74D;font-weight:700">✏️ 已手动</span>' : '<span style="font-size:10px;color:#888">(自动算)</span>'}</div>
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center">
+            ${_renderALEditor('english', '英', bySubject.english_AL)}
+            ${_renderALEditor('math', '数', bySubject.math_AL)}
+            ${_renderALEditor('science', '科', bySubject.science_AL)}
+            ${_renderALEditor('chinese', '华', bySubject.chinese_AL)}
+            ${f.isManual ? `<button onclick="resetSubjectALToAuto()" style="font-size:10px;padding:2px 6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:3px;color:#A0A0A0;cursor:pointer">↻ 自动</button>` : ''}
+          </div>
         </div>
         <button class="vocab-modal-close" onclick="closeAllSchoolsModal()">×</button>
       </div>

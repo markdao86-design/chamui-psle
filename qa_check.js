@@ -411,8 +411,19 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.15i/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.15i: cache buster 已更新到 19.15i (8 校 modal + 装备/皮肤防沉迷封顶)');
+assert(/\?v=19\.15j/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.15j: cache buster 已更新到 19.15j (4 科 AL 手动编辑 +/- 实时算概率)');
+// v19.15j: 4 科 AL 手动编辑
+assert(/function _renderALEditor/.test(appSrc), 'v19.15j: _renderALEditor helper');
+assert(/function bumpManualAL/.test(appSrc), 'v19.15j: bumpManualAL 函数');
+assert(/function resetSubjectALToAuto/.test(appSrc), 'v19.15j: resetSubjectALToAuto 函数');
+assert(/onclick="bumpManualAL\('\$\{key\}',-1\)"/.test(appSrc), 'v19.15j: - 按钮');
+assert(/onclick="bumpManualAL\('\$\{key\}',\+1\)"/.test(appSrc), 'v19.15j: + 按钮');
+// 接入 renderTargetSchoolMini + openAllSchoolsModal
+const renderALCount = (appSrc.match(/_renderALEditor\('english'/g) || []).length;
+assert(renderALCount >= 2, `v19.15j: _renderALEditor 接入 ≥2 处 (主页 + modal, 实际 ${renderALCount})`);
+// 防回归: 显示文案应包含 ✏️ 已手动 / (自动算) 标识
+assert(/✏️ 已手动/.test(appSrc), 'v19.15j: 手动覆盖标识');
 // v19.15i: 8 校 modal
 assert(/function openAllSchoolsModal\(\)/.test(appSrc), 'v19.15i: openAllSchoolsModal 函数');
 assert(/onclick="openAllSchoolsModal\(\)"/.test(appSrc), 'v19.15i: 查看全部 8 校 按钮触发 openAllSchoolsModal');
@@ -607,6 +618,11 @@ assert(/DAILY_GAME_HARD_NUDGE\s*=\s*15/.test(dataSrcV14), 'v19.15 P0-3: DAILY_GA
 // v19.15i data 类: 装备/皮肤防沉迷封顶常量
 assert(/DAILY_AVATAR_ACTIONS_SOFT\s*=\s*8/.test(dataSrcV14), 'v19.15i: DAILY_AVATAR_ACTIONS_SOFT = 8');
 assert(/DAILY_AVATAR_ACTIONS_HARD\s*=\s*15/.test(dataSrcV14), 'v19.15i: DAILY_AVATAR_ACTIONS_HARD = 15');
+// v19.15j data 类: 手动 AL 覆盖
+assert(/state\.subjectALManual && typeof state\.subjectALManual === 'object'/.test(dataSrcV14), 'v19.15j: computeTotalAL 检查 manual override');
+assert(/function setManualSubjectAL/.test(dataSrcV14), 'v19.15j: setManualSubjectAL helper');
+assert(/function resetSubjectALAuto/.test(dataSrcV14), 'v19.15j: resetSubjectALAuto helper');
+assert(/subjectALManual:\s*null/.test(dataSrcV14), 'v19.15j: state default subjectALManual = null');
 // v19.15c data 类: currentWeek 自动算 + carry-forward 池
 assert(/function computeCurrentWeekFromToday/.test(dataSrcV14), 'v19.15c: computeCurrentWeekFromToday 函数');
 assert(/function getCarryForwardTasks/.test(dataSrcV14), 'v19.15c: getCarryForwardTasks 函数');
