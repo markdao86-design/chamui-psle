@@ -411,8 +411,17 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.20/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.20: cache buster 已更新到 19.20 (全局 inline 浅底自动适配暗主题)');
+assert(/\?v=19\.21/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.21: cache buster 已更新到 19.21 (Paper 2 卡 + 全局 #FFF/#EEE/linear-gradient 补)');
+// v19.21: Paper 2 弱点卡改暗调
+assert(/color:#FF8A9C">🎯 Paper 2 弱点突击/.test(appSrc), 'v19.21: Paper 2 标题用亮粉 #FF8A9C');
+assert(/rgba\(255,255,255,0\.04\);border:1px solid rgba\(255,255,255,0\.10\)[\s\S]{0,500}Cloze 单空填/.test(appSrc), 'v19.21: Cloze 块用透明背景');
+assert(/linear-gradient\(90deg,#FFB74D,#66FFB0\)/.test(appSrc), 'v19.21: 进度条改亮版橙→绿渐变');
+assert(/rgba\(255,255,255,0\.08\);border-radius:4px;height:8px/.test(appSrc), 'v19.21: 进度条底用透明白');
+// v19.21 全局补 #FFF/#EEE/linear-gradient
+assert(/\[style\*="background:#FFF;"\]/.test(idxSrc), 'v19.21: 全局补 #FFF; 适配');
+assert(/\[style\*="background:#EEE;"\]/.test(idxSrc), 'v19.21: 全局补 #EEE; 适配');
+assert(/\[style\*="background:linear-gradient\(135deg,#FFE0E0/.test(idxSrc), 'v19.21: 全局补浅红粉 linear-gradient 适配');
 // v19.20: 全局适配 CSS
 assert(/\[style\*="background:#F0F8FF"\][\s\S]{0,200}rgba\(0,212,255/.test(idxSrc), 'v19.20: 蓝色调浅底转暗青渐变');
 assert(/\[style\*="background:#E8F5E9"\][\s\S]{0,200}rgba\(0,255,136/.test(idxSrc), 'v19.20: 绿色调浅底转暗绿渐变');

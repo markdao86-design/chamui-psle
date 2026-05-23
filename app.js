@@ -456,55 +456,55 @@ function renderDailySlotList() {
   el.innerHTML = html;
 }
 
-// v19.7: Paper 2 弱点突击卡 (实考 AL6 后置顶, 严肃风, 不撒花)
+// v19.7 + v19.21: Paper 2 弱点突击卡 (暗调适配)
 function renderPaper2SprintCard() {
   const card = document.getElementById('paper2SprintCard');
   if (!card || !window.getPaper2SprintStatus) return;
   const s = window.getPaper2SprintStatus(state);
-  const accColor = (a) => a === null ? '#999' : a >= 75 ? '#4ECDC4' : a >= 60 ? '#FFA500' : '#FF6B6B';
+  const accColor = (a) => a === null ? '#A0A0A0' : a >= 75 ? '#66FFB0' : a >= 60 ? '#FFB74D' : '#EF5350';
   const accLabel = (a) => a === null ? '未练' : a + '%';
-  const dailyTargetCloze = 10, dailyTargetSST = 5;  // 建议日量
+  const dailyTargetCloze = 10, dailyTargetSST = 5;
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <div style="font-size:14px;font-weight:900;color:#FF6B6B">🎯 Paper 2 弱点突击</div>
-      <div style="margin-left:auto;font-size:11px;color:#666">实考 AL6 → 目标 AL 4</div>
+      <div style="font-size:14px;font-weight:900;color:#FF8A9C">🎯 Paper 2 弱点突击</div>
+      <div style="margin-left:auto;font-size:11px;color:#A0A0A0">实考 AL6 → 目标 AL 4</div>
     </div>
-    <div style="font-size:11px;color:#666;margin-bottom:8px;line-height:1.5">
+    <div style="font-size:11px;color:#A0A0A0;margin-bottom:8px;line-height:1.5">
       Cloze (25 分) + Synthesis (8 分) = Paper 2 33 分关键 · 建议每天 ${dailyTargetCloze} Cloze + ${dailyTargetSST} SST
     </div>
-    <div style="background:#FFF;border:1px solid #DDD;border-radius:6px;padding:8px;margin-bottom:6px">
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:4px">
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:6px;padding:8px;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:4px;color:#E0E0E0">
         <span>🧩 Cloze 单空填</span>
         <span style="color:${accColor(s.cloze.recentAcc)}">近 5 次 ${accLabel(s.cloze.recentAcc)} ${s.cloze.overallAcc !== null ? `· 总 ${s.cloze.overallAcc}%` : ''}</span>
       </div>
-      <div style="background:#EEE;border-radius:4px;height:8px;overflow:hidden;margin-bottom:4px">
-        <div style="background:linear-gradient(90deg,#FFA500,#4ECDC4);height:100%;width:${s.cloze.pct}%;transition:width 0.4s"></div>
+      <div style="background:rgba(255,255,255,0.08);border-radius:4px;height:8px;overflow:hidden;margin-bottom:4px">
+        <div style="background:linear-gradient(90deg,#FFB74D,#66FFB0);height:100%;width:${s.cloze.pct}%;transition:width 0.4s"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#666">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#A0A0A0">
         <span>${s.cloze.done} / ${s.cloze.target} 题</span>
-        <button onclick="openClozeGame()" style="padding:3px 10px;background:#FF6B6B;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">立即练 →</button>
+        <button onclick="openClozeGame()" style="padding:4px 12px;background:#FF6B6B;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">立即练 →</button>
       </div>
     </div>
-    <div style="background:#FFF;border:1px solid #DDD;border-radius:6px;padding:8px">
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:4px">
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:6px;padding:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:4px;color:#E0E0E0">
         <span>🔄 SST 句型转换</span>
         <span style="color:${accColor(s.sst.recentAcc)}">近 5 次 ${accLabel(s.sst.recentAcc)} ${s.sst.overallAcc !== null ? `· 总 ${s.sst.overallAcc}%` : ''}</span>
       </div>
-      <div style="background:#EEE;border-radius:4px;height:8px;overflow:hidden;margin-bottom:4px">
-        <div style="background:linear-gradient(90deg,#FFA500,#4ECDC4);height:100%;width:${s.sst.pct}%;transition:width 0.4s"></div>
+      <div style="background:rgba(255,255,255,0.08);border-radius:4px;height:8px;overflow:hidden;margin-bottom:4px">
+        <div style="background:linear-gradient(90deg,#FFB74D,#66FFB0);height:100%;width:${s.sst.pct}%;transition:width 0.4s"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#666">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#A0A0A0">
         <span>${s.sst.done} / ${s.sst.target} 题</span>
-        <button onclick="openSstGame()" style="padding:3px 10px;background:#FF6B6B;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">立即练 →</button>
+        <button onclick="openSstGame()" style="padding:4px 12px;background:#FF6B6B;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">立即练 →</button>
       </div>
     </div>
-    <div style="margin-top:8px;padding:8px;background:linear-gradient(135deg,#FFE0E0,#FFF0F0);border-radius:6px;text-align:center">
-      <button onclick="openPaper2MockGame()" style="padding:8px 20px;background:linear-gradient(135deg,#FF6B6B,#FF4444);color:#FFF;border:none;border-radius:6px;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(255,107,107,0.3)">
+    <div style="margin-top:8px;padding:10px;background:linear-gradient(135deg, rgba(255,107,107,0.10), rgba(255,107,107,0.03));border:1px solid rgba(255,107,107,0.25);border-radius:6px;text-align:center">
+      <button onclick="openPaper2MockGame()" style="padding:8px 20px;background:linear-gradient(135deg,#FF6B6B,#FF4444);color:#FFF;border:none;border-radius:6px;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 2px 8px rgba(255,107,107,0.30)">
         🎯 Paper 2 模拟卷 (28 min · 15 Cloze + 8 SST)
       </button>
-      <div style="font-size:10px;color:#888;margin-top:4px">完整真考节奏 + 自动算预测 AL</div>
+      <div style="font-size:10px;color:#A0A0A0;margin-top:4px">完整真考节奏 + 自动算预测 AL</div>
     </div>
-    <div style="font-size:10px;color:#888;margin-top:6px;text-align:center;font-style:italic">
+    <div style="font-size:10px;color:#A0A0A0;margin-top:6px;text-align:center;font-style:italic">
       💡 每天保持节奏, 突击周后 Cloze 正确率应稳定 ≥70%, SST ≥65%
     </div>
   `;

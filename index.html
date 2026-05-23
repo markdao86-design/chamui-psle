@@ -296,9 +296,25 @@ body::before {
 /* 中性灰白 */
 [style*="background:#F5F5F5"],
 [style*="background:#FAFAFA"],
-[style*="background:#EEEEEE"] {
+[style*="background:#EEEEEE"],
+[style*="background:#EEE;"],
+[style*="background:#EEE "],
+[style*="background:#FFF;"],
+[style*="background:#FFF "],
+[style*="background:#FFFFFF"],
+[style*="background:#FFF8F0"],
+[style*="background:white"],
+[style*="background: white"] {
   background: rgba(255,255,255,0.04) !important;
   border: 1px solid rgba(255,255,255,0.10) !important;
+}
+/* linear-gradient 含浅红/粉色 (例 #FFE0E0,#FFF0F0 / #FFE0B2,#FFE0E0) — 转暗红透明渐变 */
+[style*="background:linear-gradient(135deg,#FFE0E0"],
+[style*="background:linear-gradient(135deg, #FFE0E0"],
+[style*="linear-gradient(135deg,#FFF0F0"],
+[style*="linear-gradient(135deg, #FFF0F0"] {
+  background: linear-gradient(135deg, rgba(255,107,107,0.10), rgba(255,107,107,0.03)) !important;
+  border: 1px solid rgba(255,107,107,0.25) !important;
 }
 /* 把超深字色 (#212121/#333/#000/#2D3047/#5D4037 类) 强转亮灰 (在被覆盖底色之后看得见) */
 [style*="color:#212121"],
@@ -5683,9 +5699,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.20"></script>
-<script src="data.js?v=19.20"></script>
-<script src="app.js?v=19.20"></script>
+<script src="character.js?v=19.21"></script>
+<script src="data.js?v=19.21"></script>
+<script src="app.js?v=19.21"></script>
 
 </body>
 </html>
