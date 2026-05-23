@@ -1017,23 +1017,146 @@ function _renderSvGame() {
     return;
   }
   const q = g.questions[g.qIdx];
+  // v19.14e (英语 P3): 改 zh → en typing production (原 en → zh 4 选 1 是 recognition, 对 AL5 孩子无效)
+  // 心理学降门槛: 首字母提示 + Levenshtein ≤1 + 单复数容错 + 跳过按钮
+  const showHint = g._showHint || false;
+  const hintLetters = q.w.en.substring(0, Math.ceil(q.w.en.length / 3));  // 前 1/3 字母
   modal.innerHTML = `
     <div class="mg-inner" style="max-width:480px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-size:13px;color:#1565C0;font-weight:700">📚 学科英语 · ${g.qIdx + 1}/${g.questions.length}</div>
+        <div style="font-size:13px;color:#1565C0;font-weight:700">📚 学科英语 · ${g.qIdx + 1}/${g.questions.length} · 中→英 production</div>
         <button onclick="closeSvGame()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">×</button>
       </div>
       <div style="text-align:center;background:#E3F2FD;border-radius:8px;padding:18px;margin-bottom:12px">
         <div style="font-size:11px;color:#1565C0;margin-bottom:4px">${q.w.cat}</div>
-        <div style="font-size:24px;color:#0D47A1;font-weight:900">${escapeHtml(q.w.en)}</div>
-        <div style="font-size:10px;color:#888;margin-top:4px">中文意思是?</div>
+        <div style="font-size:26px;color:#0D47A1;font-weight:900">${escapeHtml(q.w.zh)}</div>
+        <div style="font-size:11px;color:#888;margin-top:6px">敲出英文 (大小写不计 · 拼写容错 ≤1 字母 · 单复数都行)</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px">
-        ${q.opts.map((o, i) => `<button onclick="svPick(${i})" style="padding:10px;background:#FFF;border:2px solid #DDD;border-radius:6px;cursor:pointer;font-size:14px;text-align:left">${String.fromCharCode(65+i)}. ${escapeHtml(o)}</button>`).join('')}
+      <input id="svInput" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+             placeholder="${showHint ? `首字母: ${hintLetters}___` : '在这里敲英文 (Enter 提交)'}"
+             style="width:100%;padding:12px;font-size:18px;border:2px solid #1565C0;border-radius:6px;box-sizing:border-box;margin-bottom:8px"
+             onkeydown="if(event.key==='Enter'){event.preventDefault();svSubmitTyping();}">
+      <div style="display:flex;gap:6px">
+        <button onclick="svHint()" style="flex:1;padding:8px;background:#FFA000;color:#FFF;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer">💡 首字母提示</button>
+        <button onclick="svSkip()" style="flex:1;padding:8px;background:#9E9E9E;color:#FFF;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer">⏭ 跳过</button>
+        <button onclick="svSubmitTyping()" style="flex:2;padding:8px;background:linear-gradient(135deg,#1565C0,#0D47A1);color:#FFF;border:none;border-radius:6px;font-weight:900;font-size:13px;cursor:pointer">提交</button>
       </div>
     </div>
   `;
   modal.classList.add('show');
+  // 自动 focus + 3s 无输入弹首字母提示
+  setTimeout(() => {
+    const inp = document.getElementById('svInput');
+    if (inp) inp.focus();
+  }, 80);
+  if (g._hintTimer) clearTimeout(g._hintTimer);
+  if (!showHint) {
+    g._hintTimer = setTimeout(() => {
+      const inp = document.getElementById('svInput');
+      if (inp && !inp.value) {
+        inp.placeholder = `想 3 秒了? 首字母: ${hintLetters}___`;
+      }
+    }, 3000);
+  }
+}
+
+// Levenshtein 距离 (简版, 用于词汇拼写容错)
+function _levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  const d = Array.from({length: m + 1}, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 0; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      d[i][j] = a[i-1] === b[j-1] ? d[i-1][j-1] : 1 + Math.min(d[i-1][j-1], d[i-1][j], d[i][j-1]);
+    }
+  }
+  return d[m][n];
+}
+
+function svHint() {
+  if (!_svGame) return;
+  _svGame._showHint = true;
+  _renderSvGame();
+}
+
+function svSkip() {
+  const g = _svGame;
+  if (!g) return;
+  const q = g.questions[g.qIdx];
+  // 跳过 = 当作答错, 加入错题本但不扣分
+  if (window.addToErrorBank) {
+    window.addToErrorBank(state, {
+      gameKey: 'subject_vocab', type: 'typing',
+      q: q.w.zh, correctAns: q.w.en,
+      explain: `${q.w.zh} = ${q.w.en} (跳过, 没敲)`,
+      topic: q.w.cat
+    });
+  }
+  // 显示答案 1 秒再下一题
+  const modal = document.getElementById('svGameModal');
+  if (modal) {
+    const inp = modal.querySelector('#svInput');
+    if (inp) {
+      inp.value = q.w.en;
+      inp.style.borderColor = '#9E9E9E';
+      inp.style.background = '#F5F5F5';
+    }
+  }
+  setTimeout(() => { g._showHint = false; g.qIdx++; _renderSvGame(); }, 1100);
+}
+
+function svSubmitTyping() {
+  const g = _svGame;
+  if (!g) return;
+  const inp = document.getElementById('svInput');
+  if (!inp) return;
+  const userTyped = (inp.value || '').trim();
+  if (!userTyped) { showToast('请先敲入英文 (或点跳过)', 'warn'); inp.focus(); return; }
+  const q = g.questions[g.qIdx];
+  const target = q.w.en.toLowerCase().trim();
+  const typed = userTyped.toLowerCase();
+  // 容错: 完全相等 / Levenshtein ≤ 1 / 单复数 +/- s, es, y→ies
+  const lev = _levenshtein(typed, target);
+  const isPluralVariant =
+    typed === target + 's' || typed + 's' === target ||
+    typed === target + 'es' || typed + 'es' === target ||
+    (target.endsWith('y') && typed === target.slice(0, -1) + 'ies') ||
+    (typed.endsWith('y') && target === typed.slice(0, -1) + 'ies');
+  const ok = typed === target || lev <= 1 || isPluralVariant;
+  if (ok) {
+    g.correct++;
+    playSound && playSound('ding');
+    inp.style.borderColor = '#4CAF50';
+    inp.style.background = '#E8F5E9';
+  } else {
+    playSound && playSound('sad');
+    // 加入错题本 + 拼写错误本
+    if (!state.spellingErrors) state.spellingErrors = [];
+    state.spellingErrors.push({
+      zh: q.w.zh, target: q.w.en, typed: userTyped,
+      date: Date.now(), cat: q.w.cat, lev
+    });
+    if (state.spellingErrors.length > 200) state.spellingErrors = state.spellingErrors.slice(-200);
+    if (window.addToErrorBank) {
+      window.addToErrorBank(state, {
+        gameKey: 'subject_vocab', type: 'typing',
+        q: q.w.zh, correctAns: q.w.en,
+        explain: `${q.w.zh} = ${q.w.en} (你写: ${userTyped}, lev=${lev})`,
+        topic: q.w.cat
+      });
+    }
+    inp.style.borderColor = '#FF6B6B';
+    inp.style.background = '#FFEBEE';
+    // 显示正确答案
+    setTimeout(() => {
+      inp.value = `${userTyped} → ${q.w.en}`;
+    }, 150);
+  }
+  if (g._hintTimer) { clearTimeout(g._hintTimer); g._hintTimer = null; }
+  // 1.5s 后下一题
+  setTimeout(() => { g._showHint = false; g.qIdx++; _renderSvGame(); }, ok ? 900 : 1800);
 }
 function svPick(i) {
   const g = _svGame;
@@ -1076,6 +1199,10 @@ function closeSvGame() {
 }
 window.openSubjectVocabGame = openSubjectVocabGame;
 window.svPick = svPick;
+window.svSubmitTyping = svSubmitTyping;
+window.svHint = svHint;
+window.svSkip = svSkip;
+window._levenshtein = _levenshtein;
 window.closeSvGame = closeSvGame;
 
 // --------- 5. 科学章节里程碑卡 (W1-W14 P3-P4 系统过) ---------
@@ -1414,25 +1541,26 @@ function renderErrorBankCard() {
   card.style.display = '';
   const realExam = wrongs.filter(w => w.source === 'paper2-real').length;
   const appErrors = wrongs.length - realExam;
-  card.style.borderLeft = realExam > 0 ? '4px solid #FF6B6B' : '4px solid #4ECDC4';
+  // v19.14e (心理学家): 去羞耻化 — 红色 #FF6B6B → 蓝灰 #607D8B, "错题/真考" → "待复习/重点"
+  card.style.borderLeft = realExam > 0 ? '4px solid #607D8B' : '4px solid #4ECDC4';
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <div style="font-size:14px;font-weight:900">📓 错题本 ${realExam > 0 ? '<span style="color:#FF6B6B">🔥</span>' : ''}</div>
-      <div style="margin-left:auto;font-size:11px;color:#666">${wrongs.length} 题待清</div>
+      <div style="font-size:14px;font-weight:900;color:#455A64">📓 待复习清单 ${realExam > 0 ? '<span style="color:#607D8B">⭐</span>' : ''}</div>
+      <div style="margin-left:auto;font-size:11px;color:#666">${wrongs.length} 题待掌握</div>
     </div>
     ${realExam > 0 ? `
-    <div style="background:linear-gradient(135deg,#FFF0F0,#FFE0E0);border:1px solid #FFB6B6;border-radius:6px;padding:8px;margin-bottom:6px">
+    <div style="background:linear-gradient(135deg,#ECEFF1,#CFD8DC);border:1px solid #B0BEC5;border-radius:6px;padding:8px;margin-bottom:6px">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:12px;font-weight:900;color:#FF6B6B">🔥 真考错题: ${realExam} 题 (优先!)</div>
-        <button onclick="openErrorBank()" style="padding:4px 12px;background:#FF6B6B;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">立即复习 →</button>
+        <div style="font-size:12px;font-weight:900;color:#455A64">⭐ Paper 2 重点: ${realExam} 题</div>
+        <button onclick="openErrorBank()" style="padding:4px 12px;background:#607D8B;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">现在练 →</button>
       </div>
-      <div style="font-size:10px;color:#5D4500;margin-top:4px">来自你 2026.5 Paper 2 真考错题, 反复做直到全对</div>
+      <div style="font-size:10px;color:#546E7A;margin-top:4px">基于你的 Paper 2 表现挑出, 练到掌握就毕业 (Leitner 3 次答对)</div>
     </div>` : ''}
     ${appErrors > 0 ? `
     <div style="background:#F0F8FF;border:1px solid #C8E0F0;border-radius:6px;padding:8px">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:12px">📓 App 内错题: ${appErrors} 题</div>
-        ${realExam === 0 ? `<button onclick="openErrorBank()" style="padding:4px 12px;background:#4ECDC4;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">复习 →</button>` : ''}
+        <div style="font-size:12px">📓 平日积累: ${appErrors} 题</div>
+        ${realExam === 0 ? `<button onclick="openErrorBank()" style="padding:4px 12px;background:#4ECDC4;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">练 →</button>` : ''}
       </div>
     </div>` : ''}
   `;
@@ -5407,7 +5535,7 @@ window.openKnowledgeTreeModal = openKnowledgeTreeModal;
 window.closeKnowledgeTreeModal = closeKnowledgeTreeModal;
 window.renderKnowledgeTreePage = renderKnowledgeTreePage;
 
-// ============ v18.31: PSLE 作文 modal + 精修上传 + 作文模板库 ============
+// ============ v18.31 + v19.14e P4: PSLE 作文 modal + 3 层"升级"闭环 + 模板词检查 ============
 async function openCompositionModal(week) {
   const p = window.getCompositionPrompt(week);
   if (!p) { showToast('本周无作文题', 'sad'); return; }
@@ -5415,16 +5543,34 @@ async function openCompositionModal(week) {
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'compositionModal';
-    modal.className = 'kt-modal';  // 复用样式
+    modal.className = 'kt-modal';
     document.body.appendChild(modal);
   }
-  // 检查是否已上传精修作文
-  let hasEssay = false;
-  try {
-    const rec = await window.photoGet(week, 'Wed', 'ESSAY');
-    hasEssay = !!(rec && rec.blob);
-  } catch (e) {}
+  // v19.14e: 3 层照片槽 (Draft 1 / Draft 2 升级 / 老师批改)
+  let hasV1 = false, hasV2 = false, hasTeacher = false, hasLegacy = false;
+  try { hasV1 = !!((await window.photoGet(week, 'Wed', 'ESSAY_V1')) || {}).blob; } catch (e) {}
+  try { hasV2 = !!((await window.photoGet(week, 'Wed', 'ESSAY_V2')) || {}).blob; } catch (e) {}
+  try { hasTeacher = !!((await window.photoGet(week, 'Wed', 'ESSAY_TEACHER')) || {}).blob; } catch (e) {}
+  try { hasLegacy = !!((await window.photoGet(week, 'Wed', 'ESSAY')) || {}).blob; } catch (e) {}
+  // 兼容旧数据: 若有 legacy ESSAY, 当作 V1
+  if (hasLegacy && !hasV1) hasV1 = true;
+
+  // v19.14e: 模板词命中检查 (前 10 高级词, 孩子勾选用上的)
+  if (!state.essayChecks) state.essayChecks = {};
+  const checked = state.essayChecks[week] || {};
+  const templateWords = (window.ESSAY_TEMPLATES && window.ESSAY_TEMPLATES.highVocab || []).slice(0, 10);
+  const hitCount = templateWords.filter(w => checked[w.word]).length;
+  const hitRatio = templateWords.length ? hitCount / templateWords.length : 0;
+  const canUploadV2 = hitRatio >= 0.6;  // 命中 ≥ 60% 才解锁 Draft 2
+
   const picsHtml = p.pictures.map(pic => `<li>${escapeHtml(pic)}</li>`).join('');
+  const wordCheckboxes = templateWords.map(w => `
+    <label style="display:inline-flex;align-items:center;gap:3px;margin:2px 6px 2px 0;font-size:11px;cursor:pointer;padding:3px 6px;background:${checked[w.word] ? '#C8E6C9' : '#FFF'};border:1px solid #DDD;border-radius:3px">
+      <input type="checkbox" ${checked[w.word] ? 'checked' : ''} onchange="toggleEssayCheck(${week}, '${escapeAttr(w.word)}')" style="margin:0">
+      ${escapeHtml(w.word)}
+    </label>
+  `).join('');
+
   modal.innerHTML = `
     <div class="kt-inner comp-inner">
       <div class="kt-header">
@@ -5446,21 +5592,156 @@ async function openCompositionModal(week) {
         <div class="comp-label">💡 写作 tips</div>
         <div class="comp-text">${escapeHtml(p.tips)}</div>
       </div>
-      <div class="comp-section comp-req">
-        <div class="comp-label">✅ 要求</div>
-        <div class="comp-text"><b>${escapeHtml(p.requirement)}</b></div>
+
+      <!-- v19.14e P4: 3 层升级闭环 -->
+      <div class="comp-section" style="background:linear-gradient(135deg,#FFF8E1,#FFE082);border-radius:8px;padding:12px;margin-top:10px">
+        <div class="comp-label" style="color:#BF360C;font-weight:900">🔄 升级闭环 (手册 v14: 改 = 进步)</div>
+
+        <div style="background:#FFF;border-radius:6px;padding:8px;margin-top:8px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700">
+            ${hasV1 ? '✅' : '①'} <span>Draft 1 (初稿)</span>
+            <button onclick="uploadEssayV(${week}, 'V1')" style="margin-left:auto;padding:4px 10px;background:#1565C0;color:#FFF;border:none;border-radius:4px;font-size:11px;cursor:pointer">${hasV1 ? '🔄 替换' : '📷 上传'}</button>
+            ${hasV1 ? `<button onclick="viewEssayV(${week}, 'V1')" style="padding:4px 8px;background:none;border:1px solid #1565C0;color:#1565C0;border-radius:4px;font-size:11px;cursor:pointer">查看</button>` : ''}
+          </div>
+        </div>
+
+        <div style="background:#FFF;border-radius:6px;padding:8px;margin-top:6px">
+          <div style="font-size:12px;font-weight:700;color:#5D4037;margin-bottom:4px">📋 模板词自查 (用了几个?)</div>
+          <div style="line-height:1.8">${wordCheckboxes}</div>
+          <div style="font-size:11px;color:${hitRatio >= 0.6 ? '#2E7D32' : '#FFA000'};margin-top:4px;font-weight:700">
+            命中: ${hitCount}/${templateWords.length} (${Math.round(hitRatio*100)}%) ${hitRatio >= 0.6 ? '✅ Draft 2 已解锁' : '⚠️ ≥ 60% 才能传 Draft 2'}
+          </div>
+        </div>
+
+        <div style="background:${canUploadV2 ? '#FFF' : '#F5F5F5'};border-radius:6px;padding:8px;margin-top:6px;${canUploadV2 ? '' : 'opacity:0.6'}">
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700">
+            ${hasV2 ? '✅' : '②'} <span>Draft 2 (升级版 — 改 5 句不是重写全文)</span>
+            <button onclick="${canUploadV2 ? `uploadEssayV(${week}, 'V2')` : `showToast('🔒 先勾够 60% 模板词才能升级', 'warn')`}" style="margin-left:auto;padding:4px 10px;background:${canUploadV2 ? '#7B1FA2' : '#9E9E9E'};color:#FFF;border:none;border-radius:4px;font-size:11px;cursor:${canUploadV2 ? 'pointer' : 'not-allowed'}">${hasV2 ? '🔄 替换' : (canUploadV2 ? '📷 上传' : '🔒 锁定')}</button>
+            ${hasV2 ? `<button onclick="viewEssayV(${week}, 'V2')" style="padding:4px 8px;background:none;border:1px solid #7B1FA2;color:#7B1FA2;border-radius:4px;font-size:11px;cursor:pointer">查看</button>` : ''}
+          </div>
+        </div>
+
+        <div style="background:#FFF;border-radius:6px;padding:8px;margin-top:6px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700">
+            ${hasTeacher ? '✅' : '③'} <span>老师批改 (可选, 父母监督上传)</span>
+            <button onclick="uploadEssayV(${week}, 'TEACHER')" style="margin-left:auto;padding:4px 10px;background:#2E7D32;color:#FFF;border:none;border-radius:4px;font-size:11px;cursor:pointer">${hasTeacher ? '🔄 替换' : '📷 上传'}</button>
+            ${hasTeacher ? `<button onclick="viewEssayV(${week}, 'TEACHER')" style="padding:4px 8px;background:none;border:1px solid #2E7D32;color:#2E7D32;border-radius:4px;font-size:11px;cursor:pointer">查看</button>` : ''}
+          </div>
+        </div>
+
+        ${(hasV1 && hasV2) ? `<div style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-radius:6px;padding:8px;margin-top:8px;text-align:center;font-size:12px;color:#1B5E20;font-weight:900">🎉 升级闭环已完成 +10 分! 这一周作文从"写完"升级到"练熟"</div>` : ''}
       </div>
-      <div class="comp-actions">
-        <button class="btn btn-primary" onclick="uploadPolishedEssay(${week})">
-          ${hasEssay ? '🔄 替换精修作文' : '📸 上传精修作文'}
-        </button>
-        ${hasEssay ? `<button class="btn btn-secondary" onclick="viewPolishedEssay(${week})">📖 看已存精修</button>` : ''}
+
+      <div class="comp-actions" style="margin-top:10px">
         <button class="btn btn-secondary" onclick="openEssayLibrary()">📚 作文模板库 (背诵)</button>
       </div>
     </div>
   `;
   modal.classList.add('show');
 }
+
+// v19.14e P4: 模板词勾选
+function toggleEssayCheck(week, word) {
+  if (!state.essayChecks) state.essayChecks = {};
+  if (!state.essayChecks[week]) state.essayChecks[week] = {};
+  state.essayChecks[week][word] = !state.essayChecks[week][word];
+  saveState(state);
+  // 重 render modal 刷新命中率
+  openCompositionModal(week);
+}
+
+// v19.14e P4: 上传指定版本 (V1 / V2 / TEACHER)
+function uploadEssayV(week, version) {
+  const slot = version === 'V1' ? 'ESSAY_V1' : version === 'V2' ? 'ESSAY_V2' : 'ESSAY_TEACHER';
+  const label = version === 'V1' ? '初稿 Draft 1' : version === 'V2' ? '升级 Draft 2' : '老师批改';
+  const overlay = document.createElement('div');
+  overlay.className = 'photo-source-modal';
+  overlay.innerHTML = `
+    <div class="photo-source-card">
+      <div class="photo-source-title">📝 上传 W${week} ${label}</div>
+      <div class="photo-source-buttons">
+        <button class="photo-source-btn" data-source="camera">
+          <span class="ps-icon">📷</span><span class="ps-label">现在拍照</span><span class="ps-sub">用摄像头</span>
+        </button>
+        <button class="photo-source-btn" data-source="gallery">
+          <span class="ps-icon">🖼️</span><span class="ps-label">从相册选</span><span class="ps-sub">已拍好的</span>
+        </button>
+      </div>
+      <button class="photo-source-cancel" onclick="this.closest('.photo-source-modal').remove()">取消</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', async (e) => {
+    if (e.target === overlay) overlay.remove();
+    const btn = e.target.closest('.photo-source-btn');
+    if (!btn) return;
+    const source = btn.dataset.source;
+    overlay.remove();
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    if (source === 'camera') input.capture = 'environment';
+    input.onchange = async (ev) => {
+      const file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+      showToast('📤 压缩上传中…', 'success');
+      try {
+        const blob = await compressImage(file);
+        await window.photoPut(week, 'Wed', slot, blob);
+        await refreshPhotoKeyCache();
+        // V2 完成 +10 分 (升级闭环奖励)
+        if (version === 'V2') {
+          const v1Rec = await window.photoGet(week, 'Wed', 'ESSAY_V1');
+          if (v1Rec && v1Rec.blob) {
+            state.totalPoints = (state.totalPoints || 0) + 10;
+            state.logs.push({ reason: `📝 W${week} 作文升级闭环完成 +10`, points: 10, week: state.currentWeek, timestamp: Date.now() });
+            saveState(state);
+            showToast(`🎉 升级闭环完成 +10 分!`, 'happy');
+          }
+        }
+        showToast(`📝 W${week} ${label}已存 (${Math.round(blob.size/1024)} KB)`, 'success');
+        openCompositionModal(week);  // 刷新
+      } catch (err) {
+        console.error(err);
+        showToast('❌ 上传失败:' + err.message, 'danger');
+      }
+    };
+    document.body.appendChild(input);
+    input.click();
+    setTimeout(() => input.remove(), 5000);
+  });
+}
+
+async function viewEssayV(week, version) {
+  const slot = version === 'V1' ? 'ESSAY_V1' : version === 'V2' ? 'ESSAY_V2' : 'ESSAY_TEACHER';
+  const label = version === 'V1' ? '初稿 Draft 1' : version === 'V2' ? '升级 Draft 2' : '老师批改';
+  try {
+    let rec = await window.photoGet(week, 'Wed', slot);
+    // V1 fallback 旧 ESSAY
+    if (version === 'V1' && (!rec || !rec.blob)) rec = await window.photoGet(week, 'Wed', 'ESSAY');
+    if (!rec || !rec.blob) { showToast(`没找到 W${week} ${label}`, 'sad'); return; }
+    const url = URL.createObjectURL(rec.blob);
+    const overlay = document.createElement('div');
+    overlay.className = 'photo-modal';
+    overlay.innerHTML = `
+      <div class="photo-modal-card">
+        <div class="photo-modal-header">
+          <div>
+            <div class="photo-modal-title">📝 W${week} ${label}</div>
+            <div class="photo-modal-meta">${Math.round(rec.size/1024)} KB</div>
+          </div>
+          <button class="photo-modal-close" onclick="this.closest('.photo-modal').remove(); URL.revokeObjectURL('${url}')">✕</button>
+        </div>
+        <img class="photo-modal-img" src="${url}" alt="${label} W${week}">
+      </div>`;
+    document.body.appendChild(overlay);
+  } catch (e) {
+    showToast('读取失败:' + e.message, 'danger');
+  }
+}
+
+window.toggleEssayCheck = toggleEssayCheck;
+window.uploadEssayV = uploadEssayV;
+window.viewEssayV = viewEssayV;
 function closeCompositionModal() {
   const m = document.getElementById('compositionModal');
   if (m) m.classList.remove('show');
@@ -6551,13 +6832,17 @@ function submitMcqAnswer(idx) {
       window._saveMastered(state);
     }
   } else { g.wrong++; playSound('sad'); }
-  // v18.59: 错题入错题本
+  // v18.59: 错题入错题本 + v19.14e: Cloze 加 topic 自动归类 (travel/school/nature/emotion 等)
   if (!isCorrect && window.addToErrorBank) {
+    const correctWord = q.opts && q.opts[q.ans];
+    const topic = (g.key === 'cloze' && window.guessClozeTopic) ? window.guessClozeTopic(q[g.qField] + ' ' + correctWord) : null;
     window.addToErrorBank(state, {
       gameKey: g.key, type: 'mcq',
       q: q[g.qField] || '', opts: q.opts, ans: q.ans,
-      correctAns: q.opts[q.ans],
-      explain: q.explain || _generateMcqExplain(q)
+      correctAns: correctWord,
+      explain: q.explain || _generateMcqExplain(q),
+      topic: topic,  // v19.14e: 主题词 (travel/school/...) 用于错题本聚类
+      correctWord: correctWord  // 给后面 3 件事卡用
     });
   }
   const opts = document.querySelectorAll('.mcq-opt');
@@ -6574,12 +6859,71 @@ function submitMcqAnswer(idx) {
       ? `✅ <b>答对!</b> ${escapeHtml(expl)}`
       : `❌ 应是 <b>${String.fromCharCode(65+q.ans)}. ${escapeHtml(q.opts[q.ans])}</b><br>💡 ${escapeHtml(expl)}`;
     fb.className = 'mcq-feedback show ' + (isCorrect ? 'fb-correct' : 'fb-wrong');
+
+    // v19.14e (P2): Cloze 错题 "3 件事卡" — 同义词必填, 词性/搭配选填, "跳过"不阻塞
+    if (!isCorrect && g.key === 'cloze') {
+      const word = q.opts[q.ans];
+      fb.insertAdjacentHTML('beforeend', `
+        <div id="cloze3things" data-word="${escapeAttr(word)}" style="margin-top:8px;padding:8px;background:#FFF;border-radius:4px;border:1px solid #DDD">
+          <div style="font-size:11px;color:#555;font-weight:700;margin-bottom:4px">📝 三件事查 (同义词必填, 其他可空):</div>
+          <input id="c3-syn" placeholder="同义词 (≥1 个, 如 happy→glad)" style="width:100%;padding:5px;font-size:12px;margin-bottom:3px;border:1px solid #CCC;border-radius:4px;box-sizing:border-box">
+          <input id="c3-pos" placeholder="词性 n./v./adj./adv. (可空)" style="width:48%;padding:5px;font-size:12px;border:1px solid #CCC;border-radius:4px;box-sizing:border-box">
+          <input id="c3-col" placeholder="搭配 (如 good AT, 可空)" style="width:48%;padding:5px;font-size:12px;margin-left:4%;border:1px solid #CCC;border-radius:4px;box-sizing:border-box">
+          <div style="display:flex;gap:4px;margin-top:4px">
+            <button onclick="saveCloze3Things()" style="flex:2;padding:5px;background:#4ECDC4;color:#FFF;border:none;border-radius:4px;font-size:12px;cursor:pointer">✅ 保存 +2 分</button>
+            <button onclick="skipCloze3Things()" style="flex:1;padding:5px;background:#9E9E9E;color:#FFF;border:none;border-radius:4px;font-size:12px;cursor:pointer">⏭ 跳过</button>
+          </div>
+        </div>
+      `);
+    }
   }
+  // v19.14e: Cloze 答错延时改 6 秒, 给孩子时间填 3 件事卡
+  const wrongDelay = (g.key === 'cloze' && !isCorrect) ? 6000 : 2200;
   setTimeout(() => {
     g.idx++;
     if (g.idx >= g.qs.length) _finishMcqGame();
     else _renderMcqGame();
-  }, isCorrect ? 1200 : 2200);  // 答错给更长时间看解析
+  }, isCorrect ? 1200 : wrongDelay);
+}
+
+// v19.14e (英语 P2): Cloze 3 件事卡 - 保存
+function saveCloze3Things() {
+  const c3 = document.getElementById('cloze3things');
+  if (!c3) return;
+  const syn = (document.getElementById('c3-syn') || {}).value || '';
+  const pos = (document.getElementById('c3-pos') || {}).value || '';
+  const col = (document.getElementById('c3-col') || {}).value || '';
+  if (syn.trim().length < 2) {
+    showToast('❌ 同义词至少写 2 字符 (如 glad 同 happy)', 'warn');
+    const sy = document.getElementById('c3-syn'); if (sy) sy.focus();
+    return;
+  }
+  // 找到最后一条 cloze 错题写入 3 件事
+  const wrongs = state.wrongAnswers || [];
+  for (let i = wrongs.length - 1; i >= 0; i--) {
+    if (wrongs[i].gameKey === 'cloze') {
+      wrongs[i].synonym = syn.trim();
+      wrongs[i].wordClass = pos.trim();
+      wrongs[i].collocation = col.trim();
+      wrongs[i].threeThings = true;
+      break;
+    }
+  }
+  state.totalPoints = (state.totalPoints || 0) + 2;
+  state.logs.push({ reason: '📝 Cloze 3 件事查 +2', points: 2, week: state.currentWeek, timestamp: Date.now() });
+  saveState(state);
+  c3.innerHTML = '<div style="color:#4ECDC4;font-weight:900;text-align:center;padding:8px">✅ 已保存 +2 分</div>';
+  showToast('✅ 3 件事查 +2 分 · 错题本已记主题词聚类', 'happy');
+}
+function skipCloze3Things() {
+  const c3 = document.getElementById('cloze3things');
+  if (c3) c3.innerHTML = '<div style="color:#9E9E9E;font-size:11px;text-align:center;padding:4px">⏭ 跳过 (错题已入库, 无 3 件事查)</div>';
+}
+window.saveCloze3Things = saveCloze3Things;
+window.skipCloze3Things = skipCloze3Things;
+// escapeAttr helper (若不存在)
+if (typeof window.escapeAttr === 'undefined') {
+  window.escapeAttr = function(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); };
 }
 function _generateMcqExplain(q) {
   const tag = q.tag || '';
@@ -8938,17 +9282,19 @@ function _renderCompOe() {
   const isRevealed = g.revealed[g.qIdx];
   const typeLabel = q.type === 'literal' ? '📖 Literal' : q.type === 'inferential' ? '🧠 Inferential' : '💭 Evaluative';
   const passageHtml = g.qIdx === 0 ? `<div class="comp-passage">${escapeHtml(p.passage)}</div>` : `<div class="comp-passage-mini">📄 <em>${escapeHtml(p.title)}</em> (scroll up if needed)</div>`;
-  // v19.13: Q1 显示"定位法"3 步训练 (手册 v14 关键技巧)
-  const locationMethodHtml = g.qIdx === 0 ? `
-    <div style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-left:4px solid #2E7D32;border-radius:6px;padding:10px;margin-bottom:10px">
-      <div style="font-size:12px;font-weight:900;color:#1B5E20;margin-bottom:6px">📍 OE 定位法 3 步 (手册 v14):</div>
-      <div style="font-size:11px;color:#2E7D32;line-height:1.6">
+  // v19.14e (英语+心理 共识): 定位法每题都显示 — Q1 默认展开示范, 后题折叠不占屏
+  const isQ1 = g.qIdx === 0;
+  const locationMethodHtml = `
+    <details ${isQ1 ? 'open' : ''} style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-left:4px solid #2E7D32;border-radius:6px;padding:8px 10px;margin-bottom:10px">
+      <summary style="font-size:12px;font-weight:900;color:#1B5E20;cursor:pointer;outline:none">📍 OE 定位法 3 步 ${isQ1 ? '(必看)' : '(点开复习)'}</summary>
+      <div style="font-size:11px;color:#2E7D32;line-height:1.6;margin-top:6px">
         <b>① 先看题</b>: 圈出题目里的关键词 (who/what/where/why)<br>
         <b>② 再回原文找</b>: 不是先读全文, 是带着问题去定位<br>
-        <b>③ 答案必含原文核心词</b>: 直接抄原文关键词不算违规, 是得分必要条件
+        <b>③ 答案必含原文核心词</b>: 直接抄原文关键词不算违规, 是得分必要条件<br>
+        <b>自评 rubric</b>: 0=没找到位置 / 1=找到但概括偏 / 2=含原文核心词且完整
       </div>
-    </div>
-  ` : '';
+    </details>
+  `;
   modal.innerHTML = `
     <div class="mg-inner comp-oe-inner">
       <div class="mg-stats">📖 Comprehension OE · ${p.title} · Q${g.qIdx+1}/${totalQ}</div>

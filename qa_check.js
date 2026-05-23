@@ -411,8 +411,14 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.14d/.test(idxSrc) && !/\?v=19\.14c[^0-9]/.test(idxSrc),
-  'v19.14d: cache buster 已更新到 19.14d');
+assert(/\?v=19\.14e/.test(idxSrc) && !/\?v=19\.14d[^0-9]/.test(idxSrc),
+  'v19.14e: cache buster 已更新到 19.14e');
+// v19.14e 英语 5 项
+assert(/<details \${isQ1 \? 'open' : ''}|定位法 3 步.*\$\{isQ1/.test(appSrc), 'v19.14e P5: Comp OE 每题定位法 (Q1 open, 后题折叠)');
+assert(/svSubmitTyping|_levenshtein/.test(appSrc), 'v19.14e P3: 词汇 typing (zh→en + Levenshtein)');
+assert(/saveCloze3Things|skipCloze3Things/.test(appSrc), 'v19.14e P2: Cloze 3 件事卡');
+assert(/uploadEssayV|toggleEssayCheck/.test(appSrc), 'v19.14e P4: 作文 V1/V2/Teacher 升级闭环');
+assert(/#607D8B|待复习清单|待掌握/.test(appSrc), 'v19.14e: 错题色去羞耻化 (蓝灰 + 待复习文案)');
 // v19.14d1: 我的 tab 角色卡布局 hotfix — 防文字+角色重叠 (保留检查)
 assert(/#page-character\s+\.character-display[\s\S]{0,200}height:\s*auto/.test(idxSrc), 'v19.14d1: page-character display height auto');
 assert(/#page-character\s+\.character-svg[\s\S]{0,200}margin-top:\s*0/.test(idxSrc), 'v19.14d1: page-character svg margin-top 0');
@@ -432,6 +438,10 @@ assert(/charPage_lockBanner/.test(appSrc), 'v19.14c: charPage 平日 lock banner
 
 // v19.14a 新模块断言
 const dataSrcV14 = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
+
+// v19.14e data 类断言
+assert(/guessClozeTopic|CLOZE_TOPIC_MAP/.test(dataSrcV14), 'v19.14e: data.js 有 Cloze 主题词聚类');
+assert(/errorBankByTopic/.test(dataSrcV14), 'v19.14e: data.js 有 errorBankByTopic');
 
 // v19.14d data 类断言 (在 dataSrcV14 之后)
 assert(/WEEKDAY_LOCKED_GAMES\s*=\s*\['chinese',\s*'unit'\]/.test(dataSrcV14), 'v19.14d: 数学从 hard lock 移除');

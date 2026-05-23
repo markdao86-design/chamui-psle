@@ -7926,6 +7926,47 @@ window.MYSTERY_BOX_WEEKLY_CAP = MYSTERY_BOX_WEEKLY_CAP;
 window.STRONG_SUBJECT_GAMES = STRONG_SUBJECT_GAMES;
 window.countTodaySlotChecks = countTodaySlotChecks;
 
+// v19.14e (英语 P2): Cloze 错题主题词聚类 — 用关键词匹配把题归到 8 大主题
+const CLOZE_TOPIC_MAP = {
+  travel: ['travel','journey','trip','tourist','hotel','flight','airport','passport','luggage','vacation','holiday','cruise','adventure','destination'],
+  school: ['school','teacher','student','classroom','homework','exam','study','lesson','subject','principal','library','uniform','textbook','assembly'],
+  nature: ['tree','flower','plant','garden','forest','river','mountain','sea','ocean','sky','cloud','rain','sun','moon','star','animal','bird','flower'],
+  emotion: ['happy','sad','angry','glad','afraid','scared','excited','nervous','proud','jealous','disappointed','grateful','calm','curious','surprised','furious','delighted','miserable'],
+  food: ['food','meal','breakfast','lunch','dinner','restaurant','cook','recipe','delicious','tasty','bake','fry','noodle','rice','vegetable','fruit','dessert'],
+  family: ['family','mother','father','parent','brother','sister','grandfather','grandmother','uncle','aunt','cousin','child','relative','sibling'],
+  sport: ['sport','game','match','team','player','football','basketball','swimming','race','win','lose','coach','train','goal','tournament','medal'],
+  weather: ['weather','rain','snow','storm','wind','sunny','cloudy','hot','cold','warm','cool','thunder','lightning','fog','temperature','climate']
+};
+
+function guessClozeTopic(text) {
+  if (!text) return null;
+  const lower = String(text).toLowerCase();
+  let bestTopic = null, bestHits = 0;
+  for (const topic in CLOZE_TOPIC_MAP) {
+    const hits = CLOZE_TOPIC_MAP[topic].filter(k => lower.includes(k)).length;
+    if (hits > bestHits) { bestTopic = topic; bestHits = hits; }
+  }
+  return bestTopic;  // 可能 null (general)
+}
+
+// 按 topic 聚合 Cloze 错题 — 错题本面板用
+function errorBankByTopic(state, gameKey) {
+  const out = {};
+  const wrongs = (state.wrongAnswers || []).filter(w => !gameKey || w.gameKey === gameKey);
+  wrongs.forEach(w => {
+    const t = w.topic || 'general';
+    if (!out[t]) out[t] = { count: 0, items: [], threeThingsCount: 0 };
+    out[t].count++;
+    out[t].items.push(w);
+    if (w.threeThings) out[t].threeThingsCount++;
+  });
+  return out;
+}
+
+window.CLOZE_TOPIC_MAP = CLOZE_TOPIC_MAP;
+window.guessClozeTopic = guessClozeTopic;
+window.errorBankByTopic = errorBankByTopic;
+
 // ============================================================
 // v19.14b: 平日/周末科目隔离 (英语+科学 vs 数学+华文)
 // 平日 hard lock 数学/华文 game · 周末 3 件事分化 · 加 WSC/WUC 周末华文 slot
