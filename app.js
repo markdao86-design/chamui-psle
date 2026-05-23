@@ -736,15 +736,15 @@ function renderTodayThreeCard() {
   let headerColor = '#FF6B6B';
   let counterFn = (done) => `${done} / 3 完成`;
 
-  // 通用 item renderer
+  // v19.15e: 暗调 + 青色发光风格, 匹配打卡页 .checkin-item (未做高亮 / 已做灰掉)
   const item = (icon, label, sub, done, onclick, color) => `
-    <div onclick="${onclick}" style="display:flex;align-items:center;gap:10px;padding:14px;background:${done ? '#E8F5E9' : '#FFF'};border:2px solid ${done ? '#4CAF50' : '#E0E0E0'};border-radius:8px;margin-bottom:8px;cursor:pointer;min-height:64px;transition:all 0.2s">
+    <div onclick="${onclick}" style="display:flex;align-items:center;gap:10px;padding:14px;background:${done ? 'rgba(80,80,80,0.08)' : 'linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,212,255,0.02))'};border:${done ? '1px solid rgba(120,120,120,0.18)' : '1px solid rgba(0,212,255,0.45)'};box-shadow:${done ? 'none' : '0 0 12px rgba(0,212,255,0.10), inset 0 0 0 1px rgba(0,212,255,0.05)'};border-radius:8px;margin-bottom:8px;cursor:pointer;min-height:64px;transition:all 0.2s;${done ? 'opacity:0.45;filter:grayscale(0.6);' : ''}">
       <div style="font-size:24px;width:32px;text-align:center">${done ? '✅' : icon}</div>
       <div style="flex:1">
-        <div style="font-size:15px;font-weight:700;color:${done ? '#2E7D32' : '#212121'}">${label}</div>
-        <div style="font-size:12px;color:${done ? '#388E3C' : '#666'};margin-top:2px">${sub}</div>
+        <div style="font-size:15px;font-weight:700;color:${done ? '#9E9E9E' : '#E0E0E0'};${done ? 'text-decoration:line-through;' : ''}">${label}</div>
+        <div style="font-size:12px;color:${done ? '#777' : '#A0A0A0'};margin-top:2px">${sub}</div>
       </div>
-      <div style="color:${color};font-size:20px">›</div>
+      <div style="color:${done ? '#777' : color};font-size:20px">›</div>
     </div>
   `;
 
@@ -798,7 +798,7 @@ function renderTodayThreeCard() {
       item('🎯', '10 Cloze + 5 SST', `今日 ${todayPaper2}/15 题 · 英语 AL6→AL2 关键`, paper2Done, 'openPaper2MockGame()', '#FF6B6B'),
       item('🔬', chapter ? '本周科学 1 节' : '科学练习', sciSub, sciDone, chapter && chapter.diagram ? `openConceptDiagram('${chapter.diagram}'); setTimeout(openScienceOEGame, 100)` : 'openSciMcqGame()', '#2E7D32')
     ].join('');
-    tipHtml = `<div style="margin-top:8px;padding:8px;background:#FFF3E0;border-radius:6px;font-size:11px;color:#5D4037;line-height:1.5;text-align:center">
+    tipHtml = `<div style="margin-top:8px;padding:8px;background:linear-gradient(135deg, rgba(255,184,0,0.10), rgba(255,107,53,0.05));border:1px solid rgba(255,184,0,0.30);border-radius:6px;font-size:11px;color:#FFD180;line-height:1.5;text-align:center">
       📅 <b>数学 / 华文 周末才开放</b> — 平日全力攻英语 (AL6 → AL2 是综合 AL 4-5 最大杠杆)
     </div>`;
   } else {
@@ -819,7 +819,7 @@ function renderTodayThreeCard() {
       item('🇨🇳', '华文阅读 (可选)', '10 题 · 维持 AL1 · 20 分钟内', chineseDone, 'openChineseMcqGame()', '#C62828'),
       item('📖', '英语+科学 保手感 (可选)', `Cloze ${todayPaper2}/5 + 1 套科学 · 15 分钟内`, item3Done, cloze5Done ? 'openSciMcqGame()' : 'openClozeGame()', '#7B1FA2')
     ].join('');
-    tipHtml = `<div style="margin-top:8px;padding:8px;background:#E8F5E9;border-radius:6px;font-size:11px;color:#1B5E20;line-height:1.5;text-align:center">
+    tipHtml = `<div style="margin-top:8px;padding:8px;background:linear-gradient(135deg, rgba(0,255,136,0.10), rgba(46,125,50,0.05));border:1px solid rgba(0,255,136,0.30);border-radius:6px;font-size:11px;color:#A5D6A7;line-height:1.5;text-align:center">
       🛋️ <b>挑 1-2 件就好</b> · 周日下午 14-18 完全休息 (手册硬红线) · 累了直接关 app, 不掉 streak
     </div>`;
   }
@@ -848,20 +848,22 @@ function renderTargetSchoolMini() {
   const mainImproved = ifEnglishImproved.schools.find(s => s.id === main.id);
   const probColor = main.probability >= 80 ? '#2E7D32' : main.probability >= 50 ? '#FFA500' : '#C62828';
   const lift = mainImproved ? mainImproved.probability - main.probability : 0;
+  // v19.15e: 暗调 + 青色发光 + 校牌色 (匹配打卡页)
+  const probColorBright = main.probability >= 80 ? '#66BB6A' : main.probability >= 50 ? '#FFB74D' : '#EF5350';
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <div style="font-size:15px;font-weight:900;color:#1565C0">🏫 目标校 · ${main.name}</div>
-      <button onclick="document.querySelector('[data-page=history]').click()" style="margin-left:auto;background:none;border:none;color:#1565C0;font-size:12px;cursor:pointer;text-decoration:underline">查看全部 8 校 →</button>
+      <div style="font-size:15px;font-weight:900;color:#4FC3F7">🏫 目标校 · ${main.name}</div>
+      <button onclick="document.querySelector('[data-page=history]').click()" style="margin-left:auto;background:none;border:none;color:#4FC3F7;font-size:12px;cursor:pointer;text-decoration:underline">查看全部 8 校 →</button>
     </div>
-    <div style="display:flex;align-items:center;gap:12px;background:#F0F8FF;border-radius:6px;padding:12px">
+    <div style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,212,255,0.02));border:1px solid rgba(0,212,255,0.30);box-shadow:0 0 10px rgba(0,212,255,0.08);border-radius:8px;padding:12px">
       <div style="text-align:center;flex:0 0 80px">
-        <div style="font-size:28px;color:${probColor};font-weight:900;line-height:1">${main.probability}%</div>
-        <div style="font-size:11px;color:#666;margin-top:2px">录取概率</div>
+        <div style="font-size:28px;color:${probColorBright};font-weight:900;line-height:1">${main.probability}%</div>
+        <div style="font-size:11px;color:#A0A0A0;margin-top:2px">录取概率</div>
       </div>
-      <div style="flex:1;font-size:12px;color:#333;line-height:1.6">
-        <div>当前综合 AL: <b style="color:#FF6B6B">${total_AL}</b> (英${bySubject.english_AL}+数${bySubject.math_AL}+科${bySubject.science_AL}+华${bySubject.chinese_AL})</div>
-        <div>${main.name} COP: <b>${main.cop}</b></div>
-        ${lift > 0 ? `<div style="margin-top:4px;padding:6px;background:#FFF3E0;border-radius:4px"><b style="color:#E65100">💡 英语 AL${bySubject.english_AL} → AL3</b> = 录取 <b>${main.probability}% → ${mainImproved.probability}%</b> (+${lift}%)</div>` : ''}
+      <div style="flex:1;font-size:12px;color:#E0E0E0;line-height:1.6">
+        <div>当前综合 AL: <b style="color:#FF8A65">${total_AL}</b> (英${bySubject.english_AL}+数${bySubject.math_AL}+科${bySubject.science_AL}+华${bySubject.chinese_AL})</div>
+        <div>${main.name} COP: <b style="color:#FFD180">${main.cop}</b></div>
+        ${lift > 0 ? `<div style="margin-top:4px;padding:6px;background:linear-gradient(135deg, rgba(255,184,0,0.12), rgba(255,107,53,0.06));border:1px solid rgba(255,184,0,0.30);border-radius:4px"><b style="color:#FFB74D">💡 英语 AL${bySubject.english_AL} → AL3</b> = 录取 <b style="color:#FFD180">${main.probability}% → ${mainImproved.probability}%</b> (+${lift}%)</div>` : ''}
       </div>
     </div>
   `;

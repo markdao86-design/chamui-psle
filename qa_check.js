@@ -411,8 +411,19 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.15d/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.15d: cache buster 已更新到 19.15d (取消软打卡 + checkin tab 跳今日)');
+assert(/\?v=19\.15e/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.15e: cache buster 已更新到 19.15e (主页今日 3 件事 + 目标校改暗调+青色发光)');
+// v19.15e: 主页配色统一到暗调+青色发光 (匹配 .checkin-item)
+assert(/暗调 \+ 青色发光风格, 匹配打卡页 \.checkin-item/.test(appSrc), 'v19.15e: renderTodayThreeCard 注释说明改暗调');
+assert(/暗调 \+ 青色发光 \+ 校牌色 \(匹配打卡页\)/.test(appSrc), 'v19.15e: renderTargetSchoolMini 改暗调');
+// 验证关键暗色 token 出现
+assert(/color:#4FC3F7/.test(appSrc), 'v19.15e: 目标校标题色 #4FC3F7 (亮青)');
+assert(/probColorBright/.test(appSrc), 'v19.15e: 录取概率色加亮版本 probColorBright');
+// 防回归: 不能再有 #FFF (纯白) item bg + #1565C0 (暗蓝标题) 残留
+assert(!/background:\$\{done \? '#E8F5E9' : '#FFF'\}/.test(appSrc), 'v19.15e: 旧白底 item 已撤');
+// 目标校卡内部 (renderTargetSchoolMini 函数体) 不能含 F0F8FF (其他地方仍可用)
+const targetSchoolFn = (appSrc.match(/function renderTargetSchoolMini[\s\S]*?^window\.renderTargetSchoolMini/m) || [''])[0];
+assert(!/#F0F8FF/.test(targetSchoolFn), 'v19.15e: 目标校函数体内旧浅蓝底 #F0F8FF 已撤');
 // v19.15c app 类 (data 类移到 dataSrcV14 declare 之后)
 assert(/state\.currentWeek\s*=\s*window\.computeCurrentWeekFromToday\(\)/.test(appSrc), 'v19.15c: init/renderAll 自动同步 currentWeek');
 assert(/if \(!wasChecked && week > state\.currentWeek\)/.test(appSrc), 'v19.15c: toggleDailyCheck 守卫改 week > currentWeek');
