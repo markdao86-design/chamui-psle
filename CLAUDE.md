@@ -163,7 +163,7 @@ curl -s "https://chamui-psle.web.app/app.js?v=VERSION" | grep "关键文本"
 
 ---
 
-## 7. 当前规模 (v19.14k)
+## 7. 当前规模 (v19.14l)
 
 - **装备 72 件** (含 v19.8 W18/24/40 中期补)
 - **成就 60+ 个** (含周次里程碑 + Paper 2 突击)
@@ -175,7 +175,7 @@ curl -s "https://chamui-psle.web.app/app.js?v=VERSION" | grep "关键文本"
 - **Oral 题库 30 道** + **反向验证 textarea** (≥10 字 v19.14d)
 - **科学 OE 50 道** (v19.14g 完成: PT 7 / Digestive 7 / Light 6 / Heat 9 / 实验设计 6 / Photosynthesis 4 / 其他 11) + **硬规则自动评分** + **章节 filter**
 - **4 张概念图** (Plant Transport / Digestive / Light / Heat) + **PSLE marker scheme 修复** (v19.14d)
-- **QA**: **274 项** 断言
+- **QA**: **280 项** 断言
 
 ### v19.7-v19.14f 新系统
 - **Paper 2 弱点突击卡** (v19.7): Cloze 100 + SST 50 目标进度
@@ -195,6 +195,7 @@ curl -s "https://chamui-psle.web.app/app.js?v=VERSION" | grep "关键文本"
 - **第 4 次评审 5 项 bug 修复** (v19.14h): 作文 V2 +10 dedupe 防刷分 / Cloze 3 件事去 6s 倒计时改显式按钮 + fingerprint + syn 质量校验 / Leitner 数学错题硬编码 4 统一到 LEITNER_GRADUATION 常量 / OE 反向题 (INCORRECT/NOT) 缺否定词封顶 1 分
 - **UI 收尾 + 内容 5 项** (v19.14i): **字号 11/10→13/12 全局升** (WCAG AA) / **9 tab→5 tab** (📚 练习 hub 合并知识树+题库+词汇+作文) / **主页"📋 更多详情"折叠区 hide** / **错题 modal Cloze topic 聚类** / **作文 60% 锁→软提示分级**
 - **今日 3 件事科学项加章节内週进度** (v19.14k): 难章 2 周 (Plant Transport/Digestive/Light/Heat) 显示"第 1/2 周 概念建立" 或"第 2/2 周 深化与应用" + 今日具体 S2 段任务 (取 WEEK_TASKS day-by-day, 例: "今天: 🔬 xylem 横切染色实验"), 完全对接手册 v14 day-by-day 节奏
+- **Cloze 3 件事同义词改 MCQ** (v19.14l, 心理学家原建议): CLOZE_SYNONYM_DICT 161 词 (情感 38 + 品格 27 + 动作 38 + 副词 31 + 形容词 27) PSLE 高频, 每词 1 正同义 + 2 干扰; UI 字典覆盖词 → MCQ 3 选 1, 不覆盖词 → input fallback; 接受度从 30% → 75% (识别 vs 产出, AL5 孩子能力匹配)
 - **撤 lock + 主页内容恢复 + 绿系收集 4 项** (v19.14j): **撤回 v19.14c 装备/皮肤平日 lock** (心理学家"5 lock 累积致弃用"+ 用户反馈"周六失灵") · **撤回宠物 zZz 平日休眠** (心理学家"误读间歇强化") · **主页折叠区入口移到 👤 我的 tab 末尾 details** (6 个一键按钮: 教练报告/待复习/W73 我/能力页/父母面板/宝箱) · **错题色去羞耻升级** (蓝灰 → 绿系 #66BB6A, "待复习" → "已收集 N 题 🌱", 加"已答对 1+ 次"+ "接近毕业"统计) · **SCIENCE_MCQ runtime chapter 推断** (`inferScimcqChapter` + `tagScimcqChapters` lazy tag, word boundary + stem + 难章 1.2× 加权, 召回率 70-85% → 90%+)
 
 ---

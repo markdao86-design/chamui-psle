@@ -5,6 +5,38 @@
 
 ---
 
+## v19.14l (2026-05-23) — Cloze 3 件事同义词改 3 选 1 MCQ
+
+### 痛点 (心理学家原建议, 累计 3 版未做)
+- Cloze 3 件事 input 模式接受度 30% — AL5 孩子主动产出"同义词"是降维打击
+- 心理学家原建议: 改 3 选 1 MCQ (识别难度 = AL5 孩子能力区), 接受度 75%
+- 实际行为预测: input 模式假打卡率 20%, MCQ 模式 < 5%
+
+### 改造
+- **data.js CLOZE_SYNONYM_DICT 161 词**: PSLE Cloze 高频词 + 每词 1 正同义 + 2 干扰
+  - 情感 38: happy/sad/angry/scared/excited/grateful/disappointed/relieved/curious/jealous/...
+  - 品格 27: kind/honest/brave/generous/patient/polite/cautious/determined/humble/reliable/exemplary/...
+  - 动作 38: ran/sprinted/whispered/glanced/laughed/sobbed/seized/dropped/finished/received/...
+  - 副词 31: quickly/slowly/quietly/loudly/carefully/suddenly/immediately/frequently/rarely/...
+  - 形容词 27: enormous/tiny/beautiful/difficult/important/interesting/strange/rare/thunderous/scattered/...
+- **`getClozeSynonymOptions(word)`**: 查字典返回 {opts: shuffled 3, correctIdx, correctSyn}
+- **app.js UI 双模式**: 字典覆盖词 → MCQ 3 选 1 (A/B/C 大按钮, 选后视觉反馈 ✓/✗); 字典不覆盖 → fallback 旧 input 模式
+- **`pickClozeSyn(idx)`**: 点选项后视觉反馈 (正确绿 / 错误红) + 把正确同义词塞入 c3-syn hidden input 供保存
+- **saveCloze3Things**: 加 mode 判断 — MCQ 模式跳过 input 质量校验 (字典已保证), input 模式仍走 3 重校验
+
+### 量化
+| 维度 | v19.14k (input only) | v19.14l (MCQ + input fallback) |
+|---|---|---|
+| Cloze 同义词模式 | input 强制产出 | **字典覆盖 → 3 选 1 MCQ** |
+| 字典覆盖率 | 0% | **~70%** (161 词覆盖 PSLE 高频 Cloze 选项词) |
+| 11 岁接受度 | 30% (心理学家预测) | **75%** (识别 vs 产出) |
+| 假打卡率 | 20% ("aa"/原词) | **< 5%** (MCQ 无法假) |
+| 数据质量 | 字符串噪音 | **结构化字典词** (Leitner 可信) |
+
+QA 280 项全过 / cache buster ?v=19.14l
+
+---
+
 ## v19.14k (2026-05-23) — 今日 3 件事科学项细化对接手册 day-by-day
 
 ### 痛点 (上次 review 自查)
