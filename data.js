@@ -639,6 +639,9 @@ const LISTENING_DAILY_LIMIT_MIN = 30;  // 每天 30 分钟,达到自动关 modal
 // v19.15 P0-3: 沉迷闸 — 每日 mini-game 总局数软封顶 (心理学家警告后 9 月自驱沉迷风险)
 const DAILY_GAME_SOFT_WARN = 10;  // 10 局软提示 "注意休息"
 const DAILY_GAME_HARD_NUDGE = 15;  // 15 局强劝 "今天够了"
+// v19.15i: 防沉迷 — 我的 tab 装备/皮肤/宠物切换日次数 (用户决议 2026-05-23: 周末也要限)
+const DAILY_AVATAR_ACTIONS_SOFT = 8;   // 软提示
+const DAILY_AVATAR_ACTIONS_HARD = 15;  // 硬封顶 (block, 明天再玩)
 
 function listeningTodayKey() {
   const d = new Date();
@@ -7765,6 +7768,8 @@ window.LISTENING_RESOURCES = LISTENING_RESOURCES;
 window.LISTENING_DAILY_LIMIT_MIN = LISTENING_DAILY_LIMIT_MIN;
 window.DAILY_GAME_SOFT_WARN = DAILY_GAME_SOFT_WARN;
 window.DAILY_GAME_HARD_NUDGE = DAILY_GAME_HARD_NUDGE;
+window.DAILY_AVATAR_ACTIONS_SOFT = DAILY_AVATAR_ACTIONS_SOFT;
+window.DAILY_AVATAR_ACTIONS_HARD = DAILY_AVATAR_ACTIONS_HARD;
 window.listeningTodayKey = listeningTodayKey;
 window.getListeningSecondsToday = getListeningSecondsToday;
 window.addListeningSeconds = addListeningSeconds;

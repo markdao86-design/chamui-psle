@@ -853,7 +853,7 @@ function renderTargetSchoolMini() {
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <div style="font-size:15px;font-weight:900;color:#4FC3F7">🏫 目标校 · ${main.name}</div>
-      <button onclick="document.querySelector('[data-page=history]').click()" style="margin-left:auto;background:none;border:none;color:#4FC3F7;font-size:12px;cursor:pointer;text-decoration:underline">查看全部 8 校 →</button>
+      <button onclick="openAllSchoolsModal()" style="margin-left:auto;background:none;border:none;color:#4FC3F7;font-size:12px;cursor:pointer;text-decoration:underline">查看全部 8 校 →</button>
     </div>
     <div style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,212,255,0.02));border:1px solid rgba(0,212,255,0.30);box-shadow:0 0 10px rgba(0,212,255,0.08);border-radius:8px;padding:12px">
       <div style="text-align:center;flex:0 0 80px">
@@ -869,6 +869,63 @@ function renderTargetSchoolMini() {
   `;
 }
 window.renderTargetSchoolMini = renderTargetSchoolMini;
+
+// v19.15i: 8 校全列表 modal (从 "查看全部 8 校 →" 触发)
+function openAllSchoolsModal() {
+  if (!window.getAdmissionForecasts) { showToast('数据未就绪', 'warn'); return; }
+  const f = window.getAdmissionForecasts(state);
+  const { bySubject, total_AL, schools, ifEnglishImproved } = f;
+  const byTier = { top: [], high: [], mid: [] };
+  schools.forEach(s => { (byTier[s.tier] || byTier.mid).push(s); });
+  const probColor = (p) => p >= 80 ? '#66FFB0' : p >= 50 ? '#FFB74D' : p >= 20 ? '#FF8A65' : '#EF5350';
+  const probIcon = (p) => p >= 80 ? '✅' : p >= 50 ? '⚠️' : '❌';
+  const tierLabel = { top: '🏛️ 顶级校 (DP 6-8)', high: '🏫 中上校 (DP 8-10)', mid: '🏫 中等校 (DP 11+)' };
+  const renderSchool = (s) => {
+    const improved = ifEnglishImproved.schools.find(x => x.id === s.id);
+    const lift = improved ? improved.probability - s.probability : 0;
+    return `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;margin-bottom:6px;font-size:13px">
+      <div style="flex:1">
+        <div style="color:#E0E0E0;font-weight:700">${s.emoji} ${s.name} <span style="color:#94A3B8;font-size:11px;font-weight:400">(COP ${s.cop})</span></div>
+        ${lift > 0 ? `<div style="color:#FFB74D;font-size:10px;margin-top:2px">英语 → AL3 可提到 ${improved.probability}% (+${lift}%)</div>` : ''}
+      </div>
+      <span style="color:${probColor(s.probability)};font-weight:900;font-size:15px;margin-left:8px">${probIcon(s.probability)} ${s.probability}%</span>
+    </div>
+  `;};
+  let modal = document.getElementById('allSchoolsModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'allSchoolsModal';
+    modal.className = 'vocab-modal';
+    modal.onclick = (e) => { if (e.target === modal) closeAllSchoolsModal(); };
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div class="kt-inner cn-reading-inner" style="max-width:520px;background:var(--color-card);border:1px solid rgba(0,212,255,0.30);box-shadow:0 0 20px rgba(0,212,255,0.10)">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title" style="color:#4FC3F7">🏫 全部 ${schools.length} 校 录取概率</div>
+          <div class="kt-progress">综合 AL <b style="color:#FF8A65">${total_AL}</b> · 英${bySubject.english_AL} 数${bySubject.math_AL} 科${bySubject.science_AL} 华${bySubject.chinese_AL}</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeAllSchoolsModal()">×</button>
+      </div>
+      <div style="max-height:60vh;overflow-y:auto;padding:4px">
+        ${byTier.top.length ? `<div style="color:#4FC3F7;font-weight:700;font-size:12px;margin:8px 0 4px">${tierLabel.top}</div>${byTier.top.map(renderSchool).join('')}` : ''}
+        ${byTier.high.length ? `<div style="color:#4FC3F7;font-weight:700;font-size:12px;margin:12px 0 4px">${tierLabel.high}</div>${byTier.high.map(renderSchool).join('')}` : ''}
+        ${byTier.mid.length ? `<div style="color:#4FC3F7;font-weight:700;font-size:12px;margin:12px 0 4px">${tierLabel.mid}</div>${byTier.mid.map(renderSchool).join('')}` : ''}
+      </div>
+      <div style="background:linear-gradient(135deg, rgba(255,184,0,0.12), rgba(255,107,53,0.06));border:1px solid rgba(255,184,0,0.30);border-radius:6px;padding:10px;margin-top:10px;font-size:12px;color:#FFD180;text-align:center;line-height:1.6">
+        💡 英语 AL${bySubject.english_AL} → AL3 是杠杆点 · 每提升 1 个 AL 录取概率大幅上升
+      </div>
+    </div>`;
+  modal.classList.add('show');
+}
+function closeAllSchoolsModal() {
+  const m = document.getElementById('allSchoolsModal');
+  if (m) m.classList.remove('show');
+}
+window.openAllSchoolsModal = openAllSchoolsModal;
+window.closeAllSchoolsModal = closeAllSchoolsModal;
 
 // ============================================================
 // v19.13: 5 大新模块 render + 游戏逻辑 (对齐手册 v14)
@@ -2943,9 +3000,37 @@ function doEvolve(equipId) {
 window.doEvolve = doEvolve;
 
 // v16.8: 点击装备 → 切换穿戴/卸下 (state.equipmentDisabled 数组里有 = 卸下)
+// v19.15i: 防沉迷 — 我的 tab 装备/皮肤/宠物切换日次数封顶 (周末也限)
+function _checkAvatarActionCap() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (!state.dailyAvatarActions || state.dailyAvatarActions.date !== today) {
+    state.dailyAvatarActions = { date: today, count: 0 };
+  }
+  const hard = window.DAILY_AVATAR_ACTIONS_HARD || 15;
+  if (state.dailyAvatarActions.count >= hard) {
+    showToast(`🔒 今日装备/皮肤/宠物切换已达 ${hard} 次, 明天再玩 · 真正进步在打卡和 mini-game`, 'warn');
+    return false;
+  }
+  return true;
+}
+function _bumpAvatarAction() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (!state.dailyAvatarActions || state.dailyAvatarActions.date !== today) {
+    state.dailyAvatarActions = { date: today, count: 0 };
+  }
+  state.dailyAvatarActions.count++;
+  const c = state.dailyAvatarActions.count;
+  const soft = window.DAILY_AVATAR_ACTIONS_SOFT || 8;
+  if (c === soft) {
+    showToast(`🛋️ 今日装备/皮肤已切换 ${c} 次, 别忘学习 (PSLE 是 17 月马拉松)`, 'warn');
+  }
+}
+
 function toggleEquipment(equipId) {
   const unlocked = CHAMUI.checkEquipmentUnlocked(equipId, state);
   if (!unlocked) { showToast('该装备还没解锁哦', 'sad'); return; }
+  // v19.15i: 防沉迷封顶 (周末也限)
+  if (!_checkAvatarActionCap()) return;
   // v19.14j: 撤回 v19.14c 装备平日 lock — 心理学家"5 lock 累积致弃用" + 用户反馈"周六还失灵"
   // 装备穿戴随时可用, 不再 lock
   if (!state.equipmentDisabled) state.equipmentDisabled = [];
@@ -2958,6 +3043,7 @@ function toggleEquipment(equipId) {
     state.equipmentDisabled.push(equipId);
     showToast(`已卸下 ${eq ? eq.name : equipId}`, 'success');
   }
+  _bumpAvatarAction();  // v19.15i 防沉迷计数
   saveState(state);
   renderAll();
 }
@@ -2989,8 +3075,11 @@ function setActiveSkin(skinId) {
     return;
   }
   if (state.activeSkin === skinId) return;
+  // v19.15i: 防沉迷封顶
+  if (!_checkAvatarActionCap()) return;
   // v19.14j: 撤回 v19.14c 皮肤平日 lock — 同装备, 不再阻挠
   state.activeSkin = skinId;
+  _bumpAvatarAction();  // v19.15i 防沉迷计数
   saveState(state);
   renderAll();
   const sk = CHAMUI.skins.find(s => s.id === skinId);

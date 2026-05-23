@@ -411,8 +411,18 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.15h/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.15h: cache buster 已更新到 19.15h (本周学习画像卡改暗调 + 修难度 floor)');
+assert(/\?v=19\.15i/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.15i: cache buster 已更新到 19.15i (8 校 modal + 装备/皮肤防沉迷封顶)');
+// v19.15i: 8 校 modal
+assert(/function openAllSchoolsModal\(\)/.test(appSrc), 'v19.15i: openAllSchoolsModal 函数');
+assert(/onclick="openAllSchoolsModal\(\)"/.test(appSrc), 'v19.15i: 查看全部 8 校 按钮触发 openAllSchoolsModal');
+assert(/全部 \$\{schools\.length\} 校 录取概率/.test(appSrc), 'v19.15i: 8 校 modal 标题');
+// v19.15i: 装备/皮肤防沉迷封顶
+assert(/function _checkAvatarActionCap/.test(appSrc), 'v19.15i: _checkAvatarActionCap helper');
+assert(/function _bumpAvatarAction/.test(appSrc), 'v19.15i: _bumpAvatarAction helper');
+// toggleEquipment + setActiveSkin 都 wire
+assert((appSrc.match(/_bumpAvatarAction\(\)/g) || []).length >= 2, 'v19.15i: _bumpAvatarAction 至少接 2 处 (装备 + 皮肤)');
+assert((appSrc.match(/_checkAvatarActionCap\(\)/g) || []).length >= 2, 'v19.15i: _checkAvatarActionCap 至少守 2 处 (装备 + 皮肤)');
 // v19.15h: 难度显示走 getDifficulty (强制 floor=4)
 assert(/diff:\s*window\.getDifficulty\s*\?\s*window\.getDifficulty\(state,\s*k\)\s*:\s*4/.test(appSrc), 'v19.15h: 难度显示用 getDifficulty 强制 floor');
 // 防回归: 不能再有 raw state.gameStats?.[k]?.difficulty || (k === 'math' ? 4 : 3)
@@ -594,6 +604,9 @@ assert(/'thought':\s*\{\s*syn:/.test(dataSrcV14), 'v19.15 P0-2: 含思考动词 
 // v19.15 P0-3 data 类: 沉迷闸常量
 assert(/DAILY_GAME_SOFT_WARN\s*=\s*10/.test(dataSrcV14), 'v19.15 P0-3: DAILY_GAME_SOFT_WARN = 10');
 assert(/DAILY_GAME_HARD_NUDGE\s*=\s*15/.test(dataSrcV14), 'v19.15 P0-3: DAILY_GAME_HARD_NUDGE = 15');
+// v19.15i data 类: 装备/皮肤防沉迷封顶常量
+assert(/DAILY_AVATAR_ACTIONS_SOFT\s*=\s*8/.test(dataSrcV14), 'v19.15i: DAILY_AVATAR_ACTIONS_SOFT = 8');
+assert(/DAILY_AVATAR_ACTIONS_HARD\s*=\s*15/.test(dataSrcV14), 'v19.15i: DAILY_AVATAR_ACTIONS_HARD = 15');
 // v19.15c data 类: currentWeek 自动算 + carry-forward 池
 assert(/function computeCurrentWeekFromToday/.test(dataSrcV14), 'v19.15c: computeCurrentWeekFromToday 函数');
 assert(/function getCarryForwardTasks/.test(dataSrcV14), 'v19.15c: getCarryForwardTasks 函数');
