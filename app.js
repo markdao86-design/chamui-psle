@@ -859,11 +859,9 @@ function renderOralCheckinCard() {
       <span style="color:#888;font-size:10px">累计 ${s.totalSessions} 次练习</span>
     </div>
     <div style="display:flex;gap:6px">
+      <!-- v19.14d (英语+心理 2 票): 删 quickOralCheckin 假打卡按钮, 只留抽题 -->
       <button onclick="openOralPracticeModal()" style="flex:1;padding:8px;background:linear-gradient(135deg,#0277BD,#01579B);color:#FFF;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer">
-        🎤 抽一题 PSLE Oral
-      </button>
-      <button onclick="quickOralCheckin(5)" style="padding:8px 10px;background:#4ECDC4;color:#FFF;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer" title="豆包对话/朗读 5 分钟 → 直接打卡">
-        +5min 已练
+        🎤 抽一题 PSLE Oral · 必须答完才算
       </button>
     </div>
   `;
@@ -898,11 +896,14 @@ function openOralPracticeModal(seed) {
       </div>
       <div style="background:#F5F5F5;border-radius:6px;padding:10px;margin-bottom:10px;font-size:11px;color:#555">
         <b>建议流程</b> (2-3 min):<br>
-        1. 朗读题目 1 遍 · 2. 思考 30s · 3. 对豆包/家长口头回答 1-2 min · 4. 录音回听一次, 找 1 个改进点
+        1. 朗读题目 1 遍 · 2. 思考 30s · 3. 对豆包/家长<b>口头</b>回答 1-2 min<br>
+        4. <b>用一句话告诉爸妈你刚刚说了什么</b> (填下面框, ≥10 字才能 +3 分)
       </div>
+      <!-- v19.14d (英语+心理 2 票): 反向验证 textarea, 替代假打卡 -->
+      <textarea id="oralReverseInput" placeholder="比如: 我说了我喜欢妈妈做的咖喱因为味道很香, 还讲了上次和妈妈一起做菜的经历..." style="width:100%;min-height:80px;padding:8px;border:1px solid #DDD;border-radius:6px;font-size:13px;font-family:inherit;box-sizing:border-box;margin-bottom:8px;resize:vertical"></textarea>
       <div style="display:flex;gap:6px">
         <button onclick="openOralPracticeModal()" style="flex:1;padding:10px;background:#FFA000;color:#FFF;border:none;border-radius:6px;font-weight:700;cursor:pointer">🔄 换一题</button>
-        <button onclick="completeOralPractice()" style="flex:2;padding:10px;background:linear-gradient(135deg,#4ECDC4,#26A69A);color:#FFF;border:none;border-radius:6px;font-weight:900;cursor:pointer">✅ 练完此题 (+3 分, 计 3 min)</button>
+        <button onclick="completeOralPractice()" style="flex:2;padding:10px;background:linear-gradient(135deg,#4ECDC4,#26A69A);color:#FFF;border:none;border-radius:6px;font-weight:900;cursor:pointer">✅ 提交反向验证 (+3 分)</button>
       </div>
     </div>
   `;
@@ -915,23 +916,29 @@ function closeOralModal() {
 }
 function completeOralPractice() {
   if (!_oralModalQ || !window.recordOralPractice) { closeOralModal(); return; }
+  // v19.14d: 反向验证 — 必须填 ≥10 字, 防止 1 秒钟点完应付
+  const inp = document.getElementById('oralReverseInput');
+  const text = (inp && inp.value || '').trim();
+  if (text.length < 10) {
+    showToast('❌ 必须用一句话告诉爸妈你刚说了什么 (≥10 字), 不能空手点 +3 分', 'warn');
+    if (inp) inp.focus();
+    return;
+  }
   window.recordOralPractice(state, _oralModalQ.id, 180);  // 3 min/题
-  showToast('🎤 +3 分 · 累计今日 Oral +3 min', 'success');
+  // 存反向验证文本到 oralPractice.sessions 末项
+  if (state.oralPractice && state.oralPractice.sessions && state.oralPractice.sessions.length) {
+    state.oralPractice.sessions[state.oralPractice.sessions.length - 1].reverseText = text;
+  }
+  showToast('🎤 +3 分 · 反向验证已记 · 累计 Oral +3 min', 'success');
   closeOralModal();
   if (typeof renderAll === 'function') renderAll();
   else renderOralCheckinCard();
 }
-function quickOralCheckin(min) {
-  if (!window.recordOralPractice) return;
-  window.recordOralPractice(state, '_quick_' + min, (min || 5) * 60);
-  showToast(`🗣️ +${min} min Oral 已记 (+3 分)`, 'success');
-  if (typeof renderAll === 'function') renderAll();
-  else renderOralCheckinCard();
-}
+// v19.14d: quickOralCheckin 函数完全删除 — 不再给一键 +5min 假打卡
 window.openOralPracticeModal = openOralPracticeModal;
 window.closeOralModal = closeOralModal;
 window.completeOralPractice = completeOralPractice;
-window.quickOralCheckin = quickOralCheckin;
+window.quickOralCheckin = function() { showToast('⚠️ 一键打卡已禁用 (v19.14d) — 用"抽一题"做反向验证', 'warn'); };
 
 // --------- 2. 学科英语词汇 500 (今日 5 词 + mini-game) ---------
 function renderSubjectVocabCard() {
@@ -1173,7 +1180,9 @@ function _renderSciOe() {
   let warnings = [];
   if (userAns) {
     const lowerAns = userAns.toLowerCase();
-    if (/^(yes[\.,\s]|no[\.,\s]|yes$|no$)/i.test(userAns)) warnings.push('❌ 不能用 Yes/No 开头 (-1)');
+    // v19.14d: 加强弱 opener 检测 (含 I agree / It is / True / 反问)
+    const weakOpener = /^(yes[\.,\s]|no[\.,\s]|yes$|no$|i\s+agree|it\s+is|true[\.,\s]|true$|false[\.,\s]|false$|sure[\.,\s])/i;
+    if (weakOpener.test(userAns)) warnings.push('❌ 不能用 Yes/No/I agree/It is/True 等弱 opener 开头 (PSLE 直接 0 分)');
     const matchedKw = q.keywords.filter(k => lowerAns.includes(k.toLowerCase()));
     if (matchedKw.length < q.keywords.length / 2) {
       warnings.push(`⚠️ 关键词不够 (用了 ${matchedKw.length}/${q.keywords.length}: ${q.keywords.join(', ')})`);
@@ -1189,18 +1198,44 @@ function _renderSciOe() {
       <div style="background:#FFF3E0;border-radius:6px;padding:10px;margin-bottom:10px">
         <div style="font-size:13px;color:#BF360C;font-weight:600;line-height:1.5">${escapeHtml(q.q)}</div>
       </div>
-      ${showModel ? `
+      ${showModel ? (() => {
+        // v19.14d (科学专家 P1): 删用户 0/1/2 自评, 改硬规则自动评分
+        // 规则: 关键词全中 → 2 / ≥⌈n/2⌉ → 1 / 否则 0; Yes/No opener 封顶 1; 长度 <50 封顶 1; 比较题缺 than → 封顶 1; 用 it 指代 → 封顶 1
+        const userAnsTrim = userAns.trim();
+        const lowerAns = userAnsTrim.toLowerCase();
+        const matchedKw = q.keywords.filter(k => lowerAns.includes(k.toLowerCase()));
+        const half = Math.ceil(q.keywords.length / 2);
+        let autoScore = matchedKw.length >= q.keywords.length ? 2 : matchedKw.length >= half ? 1 : 0;
+        const reasons = [];
+        // 各种 cap 检查
+        if (weakOpener.test(userAnsTrim)) { autoScore = Math.min(autoScore, 1); reasons.push('❌ 弱 opener → 封顶 1 分'); }
+        if (lowerAns.length < 50) { autoScore = Math.min(autoScore, 1); reasons.push('⚠️ 答案 < 50 字符 → 封顶 1 分'); }
+        // 比较题 (问 hotter/colder/faster/slower/larger 之类) 缺 than
+        const isCompareQ = /(hotter|colder|faster|slower|larger|smaller|greater|less|more|better|brighter|denser)/i.test(q.q + ' ' + q.model);
+        if (isCompareQ && !/\bthan\b/i.test(userAnsTrim)) { autoScore = Math.min(autoScore, 1); reasons.push('⚠️ 比较题缺 "than" → 封顶 1 分'); }
+        // 用 it 模糊指代 (不带具体名词)
+        if (/\bit\b\s+(is|has|was|will|can|does|gets)/i.test(userAnsTrim) && userAnsTrim.length < 120) {
+          autoScore = Math.min(autoScore, 1); reasons.push('⚠️ 用 "it" 模糊指代 → 应重复名词');
+        }
+        const scoreColor = autoScore === 2 ? '#2E7D32' : autoScore === 1 ? '#FFA000' : '#C62828';
+        const scoreIcon = autoScore === 2 ? '✅' : autoScore === 1 ? '⚠️' : '❌';
+        const nextLabel = (g.qIdx + 1 >= g.questions.length) ? '完成 →' : '下一题 →';
+        return `
         <div style="background:#E8F5E9;border-left:3px solid #2E7D32;padding:10px;margin-bottom:10px">
           <div style="font-size:11px;color:#1B5E20;font-weight:900;margin-bottom:4px">✅ Model Answer (关键词: ${q.keywords.join(', ')})</div>
           <div style="font-size:12px;color:#1B5E20;line-height:1.6">${escapeHtml(q.model)}</div>
         </div>
-        <div style="text-align:center;margin-bottom:10px">
-          <div style="font-size:13px;color:#666;margin-bottom:6px">你的答案对照 model, 自评:</div>
-          <button onclick="sciOeScore(0)" style="padding:8px 14px;background:#FF6B6B;color:#FFF;border:none;border-radius:6px;margin:0 4px;cursor:pointer">❌ 0 分</button>
-          <button onclick="sciOeScore(1)" style="padding:8px 14px;background:#FFA000;color:#FFF;border:none;border-radius:6px;margin:0 4px;cursor:pointer">⚠️ 1 分</button>
-          <button onclick="sciOeScore(2)" style="padding:8px 14px;background:#4ECDC4;color:#FFF;border:none;border-radius:6px;margin:0 4px;cursor:pointer">✅ 2 分</button>
+        <div style="background:${autoScore === 0 ? '#FFEBEE' : autoScore === 1 ? '#FFF3E0' : '#E8F5E9'};border-left:4px solid ${scoreColor};border-radius:6px;padding:12px;margin-bottom:10px">
+          <div style="font-size:18px;font-weight:900;color:${scoreColor};margin-bottom:6px">${scoreIcon} 自动评分: ${autoScore} / 2 分</div>
+          <div style="font-size:11px;color:#555;line-height:1.5">
+            <b>关键词命中</b>: ${matchedKw.length}/${q.keywords.length} (${matchedKw.length > 0 ? matchedKw.join(', ') : '无'})<br>
+            <b>答案长度</b>: ${userAnsTrim.length} 字符 (≥50 才满分)<br>
+            ${reasons.length ? '<b>扣分点</b>:<br>' + reasons.join('<br>') : '<b>✓ 无 opener / than / it 扣分</b>'}
+          </div>
         </div>
-      ` : `
+        <button onclick="sciOeScore(${autoScore})" style="width:100%;padding:12px;background:linear-gradient(135deg,${scoreColor},${scoreColor});color:#FFF;border:none;border-radius:6px;font-weight:900;cursor:pointer;font-size:13px">${nextLabel}</button>
+      `;
+      })() : `
         <textarea id="sciOeInput" placeholder="用 2-3 句答, 必含关键词, 不能 Yes/No 开头..." style="width:100%;min-height:90px;padding:8px;border:1px solid #DDD;border-radius:6px;font-size:13px;font-family:inherit;box-sizing:border-box;margin-bottom:6px"></textarea>
         ${warnings.length ? `<div style="background:#FFF3E0;border-radius:4px;padding:6px;margin-bottom:8px;font-size:11px;color:#BF360C">${warnings.join('<br>')}</div>` : ''}
         <button onclick="sciOeCheck()" style="width:100%;padding:10px;background:linear-gradient(135deg,#FFA000,#E65100);color:#FFF;border:none;border-radius:6px;font-weight:700;cursor:pointer">📋 提交 + 看 Model Answer</button>
@@ -5234,11 +5269,13 @@ function submitErrorBankAnswer(optIdx) {
   _handleErrorBankResult(isCorrect, item, () => {
     if (isCorrect) {
       g.correct++; petExpress('pet-excited', 800);
-      // v19.3: Leitner间隔 — 答对4次才真删
+      // v19.14d bug fix: 读 LEITNER_GRADUATION 常量 (=3), 不再硬编码 4
+      // v19.3 注释保留: Leitner 间隔复习
       const w = (state.wrongAnswers || []).find(w => w.id === item.id);
       if (w) {
         w.correctStreak = (w.correctStreak || 0) + 1;
-        if (w.correctStreak >= 4) {
+        const grad = window.LEITNER_GRADUATION || 3;
+        if (w.correctStreak >= grad) {
           window.removeFromErrorBank(state, item.id);
           g.removed.push(item.id);
         } else {

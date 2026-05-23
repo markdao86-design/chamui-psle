@@ -2002,7 +2002,30 @@ const MATH_QUESTIONS = [
   { q: '100 以内最大质数', ans: 97, diff: 6 },
   { q: '一根绳对折 3 次后剪 1 刀, 共几段?', ans: 9, diff: 6 },
   { q: '鸡兔共 35 头 94 脚, 兔几只?', ans: 12, diff: 6 },
-  { q: '1×2+2×3+3×4+...+9×10 =?', ans: 330, diff: 6 }
+  { q: '1×2+2×3+3×4+...+9×10 =?', ans: 330, diff: 6 },
+  // ========== v19.14d: +20 题补 P6 Section C 缺口 (10 几何 + 10 速率) ==========
+  // 几何 (圆/角度/area-perimeter, 数学专家 P4 缺口)
+  { q: '圆半径 7cm, 周长 (π=22/7, cm)', ans: 44, diff: 4 },
+  { q: '圆半径 14cm, 面积 (π=22/7, cm²)', ans: 616, diff: 4 },
+  { q: '正方形边 10cm 内接圆面积 (π=22/7, 取整 cm²)', ans: 78, diff: 5 },
+  { q: '长方形 长12 宽 8, 周长 (cm)', ans: 40, diff: 4 },
+  { q: '三角形底 14 高 8, 面积 (cm²)', ans: 56, diff: 4 },
+  { q: '梯形上底 6 下底 10 高 8, 面积 (cm²)', ans: 64, diff: 4 },
+  { q: '直角三角形两直角边 6 和 8, 斜边 (cm)', ans: 10, diff: 5 },
+  { q: '三角形两角 65° 和 75°, 第三角 (°)', ans: 40, diff: 4 },
+  { q: '四边形三角 90+85+95°, 第四角 (°)', ans: 90, diff: 4 },
+  { q: '正八边形每内角 (°)', ans: 135, diff: 5 },
+  // 速率追及 (Heuristics, 数学专家 P4 缺口)
+  { q: '车 60km/h 走 2.5h, 距离 (km)', ans: 150, diff: 4 },
+  { q: '走 300km 用 4h, 平均速度 (km/h)', ans: 75, diff: 4 },
+  { q: '甲速 40 乙速 60 km/h, 相向 200km, 几小时相遇', ans: 2, diff: 4 },
+  { q: '甲乙同地同向, 甲 40 乙 60 km/h, 5h 后乙比甲远 (km)', ans: 100, diff: 4 },
+  { q: '甲先走 50km, 乙 70km/h 追, 甲 50km/h, 几小时追上', ans: 2.5, diff: 5 },
+  { q: 'A 到 B 90km, 去时 60km/h 回 30km/h, 平均速度 (km/h)', ans: 40, diff: 5 },
+  { q: '火车长 200m 时速 72km/h, 过 1000m 桥用几秒', ans: 60, diff: 5 },
+  { q: '甲乙速度比 3:5 同向, 甲先走 16km, 乙追上时乙走 (km)', ans: 40, diff: 6 },
+  { q: '走 1.2km 用 15min, 速度 (km/h)', ans: 4.8, diff: 4 },
+  { q: '环形跑道 400m, A 5m/s B 4m/s 反向, 几秒相遇一次', ans: 44.4, diff: 6 }
 ];
 
 // v18.3: 25 段 PSLE Editing 5 类错(主谓/时态/拼写/介词/冠词), 每段 ~50 词 5 错
@@ -7908,8 +7931,12 @@ window.countTodaySlotChecks = countTodaySlotChecks;
 // 平日 hard lock 数学/华文 game · 周末 3 件事分化 · 加 WSC/WUC 周末华文 slot
 // ============================================================
 
-// 平日 hard-lock 的 mini-game (周末才能玩)
-const WEEKDAY_LOCKED_GAMES = ['math', 'chinese', 'unit'];
+// v19.14d (4 专家共识): math 从 hard lock 移除 — 改 soft cap (平日每日 1 次满奖维持手感)
+// 理由: 孩子数学 AL1, 5 天 0 练习 → 速度肌肉记忆退化, P6 Paper 1 (40min/15题) 速度塌方
+// 保留 chinese/unit hard lock (chinese 课内有 + unit 是纯计算工具)
+const WEEKDAY_LOCKED_GAMES = ['chinese', 'unit'];
+// 平日 soft cap: math 每日 1 次满奖, 第 2+ 次 0 分但可练
+const WEEKDAY_SOFT_CAP_GAMES = { math: 1 };
 
 function isWeekdayToday() {
   const d = new Date().getDay();  // 0=Sun, 1=Mon ... 6=Sat
@@ -7947,6 +7974,7 @@ function getDailyTasksFiltered(weekNum, dayKey) {
 }
 
 window.WEEKDAY_LOCKED_GAMES = WEEKDAY_LOCKED_GAMES;
+window.WEEKDAY_SOFT_CAP_GAMES = WEEKDAY_SOFT_CAP_GAMES;
 window.isWeekdayToday = isWeekdayToday;
 window.isWeekendDayKey = isWeekendDayKey;
 window.getDailyTasksFiltered = getDailyTasksFiltered;
@@ -8708,11 +8736,13 @@ const SCIENCE_OE_QUESTIONS = [
     keywords: ['sun', 'lower', 'angle', 'light', 'block'],
     model: 'In the late afternoon, the sun is at a lower position in the sky. Light rays from the sun strike the object at a low angle. Since light travels in straight lines and the object blocks the light, the shadow formed on the ground is longer.' },
   { id: 'oe_3', topic: 'Plant Transport', q: 'Explain why a plant placed in salt water will eventually die.',
-    keywords: ['water', 'roots', 'absorb', 'photosynthesis'],
-    model: 'The salt water has a higher concentration of salt than the plant cells. Water moves out of the roots into the salt water instead of being absorbed in. Without water, the plant cannot carry out photosynthesis and will eventually die.' },
+    // v19.14d (科学专家): 加 transport / mineral salts 关键词, 双 reason 才满分
+    keywords: ['water', 'roots', 'absorb', 'transport', 'mineral', 'photosynthesis'],
+    model: 'The salt water has a higher concentration of salt than the plant cells. Water moves out of the roots into the salt water instead of being absorbed in. Without water, the plant cannot transport water and mineral salts up the stem, and cannot carry out photosynthesis. The plant will eventually die.' },
   { id: 'oe_4', topic: 'Digestion', q: 'State and explain the function of the small intestine.',
-    keywords: ['absorb', 'nutrient', 'blood', 'digested'],
-    model: 'The small intestine absorbs digested nutrients into the bloodstream. Its inner wall has many tiny villi that increase the surface area for faster absorption.' },
+    // v19.14d (科学专家): keywords 必含 villi + thin wall — PSLE marker scheme 两点都要
+    keywords: ['absorb', 'nutrient', 'blood', 'digested', 'villi', 'thin', 'surface area'],
+    model: 'The small intestine absorbs digested nutrients into the bloodstream. Its inner wall has many tiny villi which increase the surface area for absorption. The villi also have very thin walls, allowing nutrients to pass through quickly into the blood vessels.' },
   { id: 'oe_5', topic: 'Friction', q: 'Why are the soles of football boots made with studs?',
     keywords: ['friction', 'grip', 'slip'],
     model: 'The studs increase the friction between the boots and the ground. This gives the player a better grip so that they do not slip while running.' },
@@ -8738,8 +8768,9 @@ const SCIENCE_OE_QUESTIONS = [
     keywords: ['heated', 'gas', 'expand', 'pressure', 'burst'],
     model: 'When the balloon is heated by the sun, the gas inside the balloon expands. The expanding gas pushes against the wall of the balloon with greater pressure. When the pressure exceeds what the balloon can hold, the balloon bursts.' },
   { id: 'oe_13', topic: 'Energy', q: 'Describe two energy changes that happen when a torch is switched on.',
-    keywords: ['chemical', 'electrical', 'light', 'heat'],
-    model: 'When the torch is switched on, chemical energy stored in the battery is converted into electrical energy. The electrical energy is then converted into light energy (and some heat energy) at the bulb.' },
+    // v19.14d (科学专家): light + heat 都是独立 conversion (题目要 two), 不能括号化
+    keywords: ['chemical', 'electrical', 'light', 'heat', 'converted'],
+    model: 'Change 1: Chemical energy stored in the battery is converted into electrical energy. Change 2: At the bulb, the electrical energy is converted into light energy and heat energy. (Both light and heat are independent energy changes — do NOT bracket heat.)' },
   { id: 'oe_14', topic: 'Force', q: 'Why is it harder to push a heavy box across a carpet than across a smooth floor?',
     keywords: ['friction', 'rough', 'greater'],
     model: 'The carpet has a rougher surface than the smooth floor. This causes greater friction between the box and the carpet, so a larger pushing force is needed to overcome the friction and move the box.' },
@@ -8753,8 +8784,9 @@ const SCIENCE_OE_QUESTIONS = [
 const CONCEPT_DIAGRAMS = {
   plant_transport: {
     title: 'Plant Transport — 植物运输系统',
-    subtitle: '水/矿物盐从根上升 (xylem) · 食物从叶下降 (phloem)',
-    pitfall: 'Xylem ↑ 水矿物盐 (向上单向) / Phloem ↕ 食物 (双向都行) · 蒸腾 transpiration 是动力',
+    subtitle: '水/矿物盐从根上升 (xylem) · 食物从叶 → 储存器官 (phloem translocation)',
+    // v19.14d (科学专家): 改 phloem 表述, PSLE marker 不接受"双向", 标准答 "from leaves to storage organs"
+    pitfall: 'Xylem ↑ water + mineral salts (向上单向) · Phloem: food from LEAVES to STORAGE ORGANS (translocation, 考试不写"双向") · Transpiration 是动力',
     svg: `<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" style="background:#F0F8E8;border-radius:8px">
       <!-- 树干轮廓 -->
       <path d="M380 480 L380 200 Q360 100 400 80 Q440 100 420 200 L420 480 Z" fill="#8B7355" stroke="#5D4E37" stroke-width="2"/>
@@ -8772,12 +8804,12 @@ const CONCEPT_DIAGRAMS = {
       <text x="320" y="280" font-size="12" fill="#1565C0" font-weight="bold">Xylem ↑</text>
       <text x="280" y="298" font-size="10" fill="#1565C0">water + mineral salts</text>
       <text x="290" y="312" font-size="10" fill="#1565C0">(向上, 单向)</text>
-      <!-- Phloem 双向箭头 (黄色 - 食物) -->
+      <!-- v19.14d: Phloem 单向叶→储存器官 (PSLE marker 标准答, 不写双向) -->
       <line x1="410" y1="180" x2="410" y2="470" stroke="#FFA000" stroke-width="3" marker-end="url(#arroworange)"/>
-      <line x1="412" y1="470" x2="412" y2="180" stroke="#FFA000" stroke-width="3" marker-end="url(#arroworange)"/>
-      <text x="490" y="280" font-size="12" fill="#E65100" font-weight="bold">Phloem ↕</text>
+      <text x="490" y="280" font-size="12" fill="#E65100" font-weight="bold">Phloem ↓</text>
       <text x="475" y="298" font-size="10" fill="#E65100">food (sugar) 🍯</text>
-      <text x="475" y="312" font-size="10" fill="#E65100">(双向流动)</text>
+      <text x="475" y="312" font-size="10" fill="#E65100">叶 → 储存器官</text>
+      <text x="475" y="326" font-size="9" fill="#BF360C">(translocation)</text>
       <!-- Transpiration 标注 -->
       <text x="600" y="100" font-size="12" fill="#0277BD" font-weight="bold">💨 Transpiration</text>
       <text x="600" y="118" font-size="10" fill="#0277BD">叶背气孔失水</text>
@@ -8786,9 +8818,9 @@ const CONCEPT_DIAGRAMS = {
       <!-- 题型陷阱 -->
       <rect x="30" y="380" width="320" height="100" fill="#FFEBEE" stroke="#C62828" stroke-width="2" rx="6"/>
       <text x="40" y="400" font-size="12" font-weight="bold" fill="#C62828">⚠️ PSLE 常错点:</text>
-      <text x="40" y="420" font-size="11" fill="#333">• Xylem 单向 ↑ (不能 ↓), Phloem 双向 ↕</text>
-      <text x="40" y="438" font-size="11" fill="#333">• 切断 phloem → 叶仍活但根饿死</text>
-      <text x="40" y="456" font-size="11" fill="#333">• 切断 xylem → 整株缺水枯死</text>
+      <text x="40" y="420" font-size="11" fill="#333">• Xylem 单向 ↑ water+mineral / Phloem ↓ food</text>
+      <text x="40" y="438" font-size="11" fill="#333">• 答 phloem: from LEAVES to STORAGE ORGANS</text>
+      <text x="40" y="456" font-size="11" fill="#333">• 不写"双向" (科学事实 ≠ 考试标准答)</text>
       <text x="40" y="474" font-size="11" fill="#333">• 蒸腾是 transport 的"动力", 不是浪费水</text>
       <defs>
         <marker id="arrowblue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
@@ -8803,7 +8835,8 @@ const CONCEPT_DIAGRAMS = {
   digestive: {
     title: 'Human Digestive System — 完整消化路径',
     subtitle: 'Mouth → Oesophagus → Stomach → Small Intestine → Large Intestine → Anus',
-    pitfall: 'Small intestine 才是 absorb nutrient 的地方, 不是 stomach. Liver/Pancreas 是 accessory (出酶) 不是路径上的器官',
+    // v19.14d (科学专家): Liver bile emulsify ≠ digest, PSLE 严格区分
+    pitfall: 'Small intestine 才是 absorb nutrient 的地方 · Liver bile EMULSIFIES fat (打散成小油滴) ≠ digest fat (酶才是 digest) · Liver/Pancreas 是 accessory 不是路径器官',
     svg: `<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" style="background:#FFF8E1;border-radius:8px">
       <!-- 人体轮廓 -->
       <path d="M400 50 Q360 50 360 80 Q360 110 400 110 Q440 110 440 80 Q440 50 400 50 Z" fill="#FFE0B2" stroke="#8D6E63" stroke-width="2"/>
@@ -8835,7 +8868,7 @@ const CONCEPT_DIAGRAMS = {
       <!-- 辅助器官 (Liver / Pancreas) -->
       <rect x="600" y="180" width="170" height="80" fill="#E1BEE7" stroke="#6A1B9A" stroke-width="1" rx="4"/>
       <text x="610" y="200" font-size="11" font-weight="bold" fill="#4A148C">辅助器官 (出酶, 非路径):</text>
-      <text x="610" y="218" font-size="10" fill="#4A148C">🟤 Liver → bile (消化 fat)</text>
+      <text x="610" y="218" font-size="10" fill="#4A148C">🟤 Liver → bile (emulsify fat, 非 digest)</text>
       <text x="610" y="234" font-size="10" fill="#4A148C">🟡 Pancreas → 消化酶 (多种)</text>
       <text x="610" y="250" font-size="10" fill="#4A148C">🟢 Gall bladder → 储 bile</text>
       <!-- 题型陷阱 -->
@@ -8843,7 +8876,7 @@ const CONCEPT_DIAGRAMS = {
       <text x="30" y="40" font-size="12" font-weight="bold" fill="#C62828">⚠️ PSLE 高频考点:</text>
       <text x="30" y="60" font-size="11" fill="#333">• absorb nutrient 在 small intestine (不是 stomach)</text>
       <text x="30" y="78" font-size="11" fill="#333">• absorb water 在 large intestine</text>
-      <text x="30" y="96" font-size="11" fill="#333">• Liver/Pancreas 是 accessory (出酶, 非路径器官)</text>
+      <text x="30" y="96" font-size="11" fill="#333">• Bile EMULSIFY fat ≠ digest fat (酶才 digest)</text>
       <text x="30" y="114" font-size="11" fill="#333">• Oesophagus 只输送, 不消化</text>
     </svg>`
   },
@@ -8895,7 +8928,7 @@ const CONCEPT_DIAGRAMS = {
       <text x="440" y="414" font-size="11" fill="#333">• 同光源, 物体越近屏幕 → 影子越小越清晰</text>
       <text x="440" y="432" font-size="11" fill="#333">• 影子颜色 = 黑 (不是物体的颜色)</text>
       <text x="440" y="450" font-size="11" fill="#333">• 多光源 → 多重影子 (各方向不同浓度)</text>
-      <text x="440" y="468" font-size="11" fill="#333">• Translucent 也有影子, 但比 opaque 浅</text>
+      <text x="440" y="468" font-size="11" fill="#333">• Translucent 影子 lighter / not fully dark (不是 no shadow!)</text>
     </svg>`
   },
   heat: {

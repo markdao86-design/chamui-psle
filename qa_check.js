@@ -411,11 +411,17 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.14d1/.test(idxSrc) && !/\?v=19\.14c[^0-9]/.test(idxSrc),
-  'v19.14d1: cache buster 已更新到 19.14d1');
-// v19.14d1: 我的 tab 角色卡布局 hotfix — 防文字+角色重叠
+assert(/\?v=19\.14d/.test(idxSrc) && !/\?v=19\.14c[^0-9]/.test(idxSrc),
+  'v19.14d: cache buster 已更新到 19.14d');
+// v19.14d1: 我的 tab 角色卡布局 hotfix — 防文字+角色重叠 (保留检查)
 assert(/#page-character\s+\.character-display[\s\S]{0,200}height:\s*auto/.test(idxSrc), 'v19.14d1: page-character display height auto');
 assert(/#page-character\s+\.character-svg[\s\S]{0,200}margin-top:\s*0/.test(idxSrc), 'v19.14d1: page-character svg margin-top 0');
+// v19.14d 二次评审 app.js 类断言 (data 类移到 dataSrcV14 declare 后)
+assert(/LEITNER_GRADUATION\s*\|\|\s*3/.test(appSrc), 'v19.14d: Leitner bug 修 — 读 LEITNER_GRADUATION 不再硬编码');
+assert(/i\\s\+agree|i\s+agree/.test(appSrc), 'v19.14d: Yes/No 正则加 I agree');
+assert(/quickOralCheckin[\s\S]{0,200}已禁用/.test(appSrc), 'v19.14d: quickOralCheckin 假打卡禁用');
+assert(/oralReverseInput/.test(appSrc), 'v19.14d: Oral 反向验证 textarea');
+assert(/自动评分:\s*\$\{autoScore\}|关键词命中.*matchedKw\.length/.test(appSrc), 'v19.14d: OE 改硬规则自动评分');
 
 // v19.14c: 我的 tab 平日 lock 装备/皮肤 + 宠物休眠/活跃
 assert(/toggleEquipment[\s\S]{0,500}?isWeekdayToday/.test(appSrc), 'v19.14c: toggleEquipment 加平日 lock');
@@ -427,10 +433,21 @@ assert(/charPage_lockBanner/.test(appSrc), 'v19.14c: charPage 平日 lock banner
 // v19.14a 新模块断言
 const dataSrcV14 = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
 
+// v19.14d data 类断言 (在 dataSrcV14 之后)
+assert(/WEEKDAY_LOCKED_GAMES\s*=\s*\['chinese',\s*'unit'\]/.test(dataSrcV14), 'v19.14d: 数学从 hard lock 移除');
+assert(/WEEKDAY_SOFT_CAP_GAMES/.test(dataSrcV14), 'v19.14d: 数学加 soft cap');
+assert(/from LEAVES to STORAGE ORGANS|translocation/.test(dataSrcV14), 'v19.14d: Phloem 修正不写双向');
+assert(/EMULSIFIES?\s+fat|emulsify fat/.test(dataSrcV14), 'v19.14d: Liver bile 改 emulsify');
+assert(/lighter\s*\/\s*not fully dark|影子 lighter/.test(dataSrcV14), 'v19.14d: Light translucent 影子加 lighter');
+assert(/'thin'.*'surface area'|villi.*'thin'/.test(dataSrcV14), 'v19.14d: OE #4 加 villi+thin wall keywords');
+assert(/Change 1:.*Change 2:|do NOT bracket heat/.test(dataSrcV14), 'v19.14d: OE #13 light/heat 独立');
+const mathCountV14d = (dataSrcV14.match(/q:\s*'[^']+',\s*ans:/g) || []).length;
+assert(mathCountV14d >= 90, `v19.14d: 数学题 ≥ 90 (实际 ${mathCountV14d}), 原 75 + 20`);
+
 // v19.14b 平日/周末科目隔离断言 (放到 dataSrcV14 declare 之后)
 assert(/function isWeekdayToday/.test(dataSrcV14), 'v19.14b: isWeekdayToday 函数');
 assert(/function isWeekendDayKey/.test(dataSrcV14), 'v19.14b: isWeekendDayKey 函数');
-assert(/WEEKDAY_LOCKED_GAMES\s*=\s*\['math',\s*'chinese',\s*'unit'\]/.test(dataSrcV14), 'v19.14b: WEEKDAY_LOCKED_GAMES = math/chinese/unit');
+// v19.14d: 此项已废 (math 从 hard lock 移除, 改为 v19.14d 的 chinese/unit only). 见上面 v19.14d 断言.
 assert(/function getDailyTasksFiltered/.test(dataSrcV14), 'v19.14b: getDailyTasksFiltered 函数');
 assert(/SLOT_BASE_POINTS\.WSC\s*=\s*5/.test(dataSrcV14), 'v19.14b: SLOT_BASE_POINTS.WSC = 5');
 assert(/SLOT_BASE_POINTS\.WUC\s*=\s*4/.test(dataSrcV14), 'v19.14b: SLOT_BASE_POINTS.WUC = 4');
