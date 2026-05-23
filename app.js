@@ -742,10 +742,40 @@ function renderTodayThreeCard() {
     const sciDone = (todayCounts.scimcq || 0) >= 1 || (todayCounts.sci_oe || 0) >= 1;
     doneCount = (oralDone?1:0) + (paper2Done?1:0) + (sciDone?1:0);
     headerSub = `平日 · 英语 70% + 科学 30%`;
+    // v19.14k: 科学章节内细分进度 + 今日 S2 段具体任务 (对接 WEEK_TASKS day-by-day)
+    let chapterSubProgress = '', todayS2Task = '';
+    if (chapter && chapter.weeks) {
+      const chapterTotalWeeks = chapter.weeks[1] - chapter.weeks[0] + 1;
+      const chapterWeekIdx = week - chapter.weeks[0] + 1;
+      if (chapterTotalWeeks > 1) {
+        // 难章 2 周: 第 1 周 = 概念建立, 第 2 周 = 深化与应用
+        const phase = chapterWeekIdx === 1 ? '概念建立' : '深化与应用';
+        chapterSubProgress = ` · 第 ${chapterWeekIdx}/${chapterTotalWeeks} 周 ${phase}`;
+      }
+      // 今日 S2 段具体任务 (从 WEEK_TASKS 取)
+      const todayKey = (typeof todayDayKeyForWeek === 'function') ? todayDayKeyForWeek(week) : null;
+      if (todayKey && window.WEEK_TASKS && window.WEEK_TASKS[week - 1]) {
+        const days = window.WEEK_TASKS[week - 1].days;
+        const dayTasks = days && days[todayKey];
+        if (dayTasks) {
+          // 平日找 S2 段, 周末找 WSS/WUS
+          const taskText = dayTasks.S2 || dayTasks.WSS || dayTasks.WUS || '';
+          // 只取 🔬 开头的科学任务
+          if (taskText && taskText.match(/🔬|科学|Plant|Digestive|Heat|Light|Magnet|Diversity|Photosynthesis|Respiration|Matter|Force|Cell|Experiment/i)) {
+            todayS2Task = taskText.length > 36 ? taskText.substring(0, 34) + '…' : taskText;
+          }
+        }
+      }
+    }
+    const sciSub = chapter
+      ? (todayS2Task
+          ? `<b>今天</b>: ${escapeHtml(todayS2Task)}<br><span style="font-size:10px;color:#888">${escapeHtml(chapter.title)} ${chapter.stars}${chapterSubProgress}</span>`
+          : `${escapeHtml(chapter.title)} ${chapter.stars}${chapterSubProgress} · 含概念图`)
+      : '科学 MCQ + OE 训练';
     itemsHtml = [
       item('🗣️', 'Oral 25 min', `${Math.round(oral.todaySec/60)}/25 min · 抽 PSLE 口试题`, oralDone, 'openOralPracticeModal()', '#0277BD'),
       item('🎯', '10 Cloze + 5 SST', `今日 ${todayPaper2}/15 题 · 英语 AL6→AL2 关键`, paper2Done, 'openPaper2MockGame()', '#FF6B6B'),
-      item('🔬', chapter ? '本周科学 1 节' : '科学练习', chapter ? `${chapter.title} ${chapter.stars} · 含概念图` : '科学 MCQ + OE 训练', sciDone, chapter && chapter.diagram ? `openConceptDiagram('${chapter.diagram}'); setTimeout(openScienceOEGame, 100)` : 'openSciMcqGame()', '#2E7D32')
+      item('🔬', chapter ? '本周科学 1 节' : '科学练习', sciSub, sciDone, chapter && chapter.diagram ? `openConceptDiagram('${chapter.diagram}'); setTimeout(openScienceOEGame, 100)` : 'openSciMcqGame()', '#2E7D32')
     ].join('');
     tipHtml = `<div style="margin-top:8px;padding:8px;background:#FFF3E0;border-radius:6px;font-size:11px;color:#5D4037;line-height:1.5;text-align:center">
       📅 <b>数学 / 华文 周末才开放</b> — 平日全力攻英语 (AL6 → AL2 是综合 AL 4-5 最大杠杆)
