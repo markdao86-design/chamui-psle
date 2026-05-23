@@ -411,8 +411,15 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.14b/.test(idxSrc) && !/\?v=19\.14a[^0-9]/.test(idxSrc),
-  'v19.14b: cache buster 已更新到 19.14b');
+assert(/\?v=19\.14c/.test(idxSrc) && !/\?v=19\.14b[^0-9]/.test(idxSrc),
+  'v19.14c: cache buster 已更新到 19.14c');
+
+// v19.14c: 我的 tab 平日 lock 装备/皮肤 + 宠物休眠/活跃
+assert(/toggleEquipment[\s\S]{0,500}?isWeekdayToday/.test(appSrc), 'v19.14c: toggleEquipment 加平日 lock');
+assert(/setActiveSkin[\s\S]{0,800}?isWeekdayToday/.test(appSrc), 'v19.14c: setActiveSkin 加平日 lock');
+assert(/charPage_petWidget/.test(appSrc), 'v19.14c: charPage 加宠物 widget');
+assert(/pet-sleepy|💤.*休息|宠物.*休眠/.test(appSrc), 'v19.14c: 平日宠物 zZz 状态');
+assert(/charPage_lockBanner/.test(appSrc), 'v19.14c: charPage 平日 lock banner');
 
 // v19.14a 新模块断言
 const dataSrcV14 = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');

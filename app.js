@@ -497,15 +497,22 @@ function renderCharacterPage() {
   // 检查是否首次构建
   if (!el.querySelector('#charPage_characterSvg')) {
     el.innerHTML = `
-      <div class="character-card" style="margin-bottom:12px">
-        <div class="character-display">
+      <div class="character-card" style="margin-bottom:12px;position:relative">
+        <div class="character-display" style="position:relative">
           <div class="character-svg" id="charPage_characterSvg"></div>
+          <!-- v19.14c: 宠物 widget 还原到角色旁 (我的 tab 内, 不在主页) -->
+          <div class="pet-widget" id="charPage_petWidget" style="position:absolute;right:8px;bottom:8px;width:90px;height:90px"></div>
         </div>
         <div class="character-name" id="charPage_characterName">萌新佑子</div>
         <div class="character-title-big" id="charPage_characterTitle">刚入门的勇士</div>
         <span class="level-badge">LV <span id="charPage_charLevelDisplay">1</span></span>
         <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--color-text-light)">
           总分: <b id="charPage_pts">0</b> · 击败 <b id="charPage_beat">0</b>% P5 学生
+        </div>
+        <!-- v19.14c: 平日 lock 提示横幅 -->
+        <div id="charPage_lockBanner" style="display:none;margin-top:10px;padding:10px;background:linear-gradient(135deg,#FFF8E1,#FFE082);border-radius:6px;font-size:12px;color:#5D4037;text-align:center;line-height:1.5">
+          📅 <b>平日装备 + 皮肤穿戴已锁</b> · 宠物在休息 💤<br>
+          <span style="font-size:11px;color:#888">周末打开 → 换装备 + 喂宠物 + 看动画</span>
         </div>
       </div>
 
@@ -543,7 +550,10 @@ function renderCharacterPage() {
   if (typeof studentBeatPercent === 'function') {
     document.getElementById('charPage_beat').textContent = studentBeatPercent(pts);
   }
-  // 装备 grid
+  // 装备 grid — v19.14c: 平日加视觉灰锁
+  const isWeekdayCp = window.isWeekdayToday ? window.isWeekdayToday() : false;
+  const lockBanner = document.getElementById('charPage_lockBanner');
+  if (lockBanner) lockBanner.style.display = isWeekdayCp ? 'block' : 'none';
   const grid = document.getElementById('charPage_equipmentGrid');
   if (grid && window.CHAMUI) {
     const disabled = new Set(state.equipmentDisabled || []);
@@ -554,12 +564,46 @@ function renderCharacterPage() {
       const cls = !unlocked ? 'locked' : (equipped ? 'unlocked equipped' : 'unlocked unequipped');
       const click = unlocked ? `onclick="toggleEquipment('${eq.id}')"` : '';
       const status = !unlocked ? eq.hint : equipped ? '✓ 穿戴中' : '👜 已收藏';
-      return `<div class="equipment-item ${cls}" ${click}>
+      // v19.14c: 平日已解锁装备加 🔒 视觉 (但仍可点 — toggleEquipment 内 lock 弹 toast)
+      const lockStyle = (isWeekdayCp && unlocked) ? 'opacity:0.55;filter:grayscale(0.5)' : '';
+      const lockBadge = (isWeekdayCp && unlocked) ? '<div style="position:absolute;top:2px;right:2px;font-size:12px;background:rgba(0,0,0,0.6);color:#FFF;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center">🔒</div>' : '';
+      return `<div class="equipment-item ${cls}" ${click} style="position:relative;${lockStyle}">
+        ${lockBadge}
         <span class="equipment-icon">${eq.icon}</span>
         <div class="equipment-name">${eq.name}</div>
         <div class="equipment-condition" style="font-size:9px">${status}</div>
       </div>`;
     }).join('');
+  }
+  // v19.14c: 宠物 widget 在角色旁 — 平日 zZz 灰色休眠, 周末活跃
+  const petEl = document.getElementById('charPage_petWidget');
+  if (petEl && window.getCurrentPetForm) {
+    if (!state.pet) state.pet = { name: '球球', formIdx: 0, spawnedAt: Date.now(), feedCount: 0, happiness: 100, lastFedDate: null };
+    const calcForm = window.getCurrentPetForm(state);
+    state.pet.formIdx = Math.max(state.pet.formIdx || 0, calcForm.idx);
+    const form = window.PET_FORMS[state.pet.formIdx] || calcForm;
+    const happy = state.pet.happiness || 0;
+    if (isWeekdayCp) {
+      // 平日: 灰色 + zZz + 静默
+      petEl.innerHTML = `
+        <div class="pet-svg-wrap" style="filter:grayscale(0.85);opacity:0.7;animation:none">${form.svg}</div>
+        <div style="position:absolute;top:-6px;right:-4px;font-size:18px">💤</div>
+      `;
+      petEl.style.cursor = 'default';
+      petEl.title = `${state.pet.name || '球球'} 在休息 · 周末才活跃`;
+      petEl.onclick = () => showToast(`💤 ${state.pet.name || '球球'} 在休息 — 周末打开 app 我才有精神陪你玩!`, 'warn');
+      petEl.classList.add('pet-sleepy');
+      petEl.classList.remove('pet-happy', 'pet-proud');
+    } else {
+      // 周末: 彩色动画 + petSay enabled + 喂食 enabled
+      petEl.innerHTML = `<div class="pet-svg-wrap">${form.svg}</div>`;
+      petEl.style.cursor = 'pointer';
+      petEl.title = `${state.pet.name || '球球'} (${form.name}) · 心情 ${happy}/100\n点击查看/改名`;
+      petEl.onclick = window.openPetModal || (() => {});
+      petEl.classList.remove('pet-sleepy');
+      if (happy >= 70) petEl.classList.add('pet-happy');
+      else if (happy < 30) petEl.classList.add('pet-sad');
+    }
   }
   // 皮肤 grid (复用 renderSkinGrid 如果存在, 否则简化版)
   if (typeof renderSkinGrid === 'function') {
@@ -2654,6 +2698,11 @@ window.doEvolve = doEvolve;
 function toggleEquipment(equipId) {
   const unlocked = CHAMUI.checkEquipmentUnlocked(equipId, state);
   if (!unlocked) { showToast('该装备还没解锁哦', 'sad'); return; }
+  // v19.14c: 平日 lock 装备穿戴/卸下 — 防止"研究装备耗时", 周末才能换
+  if (window.isWeekdayToday && window.isWeekdayToday()) {
+    showToast('🔒 装备穿戴只在周末开放 — 平日先攻克英语 (周末换装等你来玩 👗)', 'warn');
+    return;
+  }
   if (!state.equipmentDisabled) state.equipmentDisabled = [];
   const idx = state.equipmentDisabled.indexOf(equipId);
   const eq = CHAMUI.equipment.find(e => e.id === equipId);
@@ -2695,6 +2744,11 @@ function setActiveSkin(skinId) {
     return;
   }
   if (state.activeSkin === skinId) return;
+  // v19.14c: 平日 lock 皮肤切换 — 跟装备一样, 防止"研究皮肤耗时"
+  if (window.isWeekdayToday && window.isWeekdayToday()) {
+    showToast('🔒 皮肤切换只在周末开放 — 平日先攻克英语 👕', 'warn');
+    return;
+  }
   state.activeSkin = skinId;
   saveState(state);
   renderAll();
