@@ -254,6 +254,24 @@ body::before {
   padding: 12px;
   transition: background 0.8s ease, box-shadow 0.8s ease;
 }
+/* v19.19: 主页左右 2 栏布局 (iPad 横屏 ≥900px), 竖屏/手机 fallback 单栏 */
+.home-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 12px;
+}
+.home-col-left, .home-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+@media (min-width: 900px) {
+  .home-grid-2col {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+}
 /* v19.12: 主页极简化 — 主页隐藏角色/装备/双龙/皮肤/兑换/成就墙 (移到 "我的" tab) */
 #page-dashboard .hero-section,
 #page-dashboard #dragonProgressCard,
@@ -5006,18 +5024,10 @@ p { font-size: 14px; line-height: 1.6; }
 <main class="main-container">
   <!-- 主页 -->
   <div class="page active" id="page-dashboard">
-    <!-- v19.14a: 主页极简 → 只 2 张卡 (今日 3 件事 + 目标校 1 校) -->
-    <!-- 5 专家评审 + 用户 3 决策驱动: UI 砍 5 卡 / 数值反通胀 / 强制弱科门槛 -->
-    <div class="card" id="todayThreeCard" style="border-left:4px solid #FF6B6B"></div>
-    <div class="card" id="targetSchoolMini" style="border-left:1px solid #E0E0E0"></div>
-    <!-- v19.14a: 旧 5 卡容器移除 (内容收纳到今日 3 件事 + 二级页) -->
-    <!-- admissionForecastCard 详情移到 📊 能力 tab -->
-    <!-- paper2SprintCard / oralCheckinCard / subjectVocabCard / scienceChapterCard 内容收纳进今日 3 件事 -->
-    <!-- 兼容旧 render 调用: 隐藏 placeholder 容器 (不渲染) -->
+    <!-- v19.19: 主页改左右两栏布局 — hero 顶部全宽, 主区 2 栏 (左行动 / 右信息教学) -->
+    <!-- 兼容旧 render: admissionForecastCard / learningPortraitCard hidden placeholder -->
     <div id="admissionForecastCard" style="display:none"></div>
-
-    <!-- v19.8 P0-2: 本周学习画像 (替代炫酷反馈, 让孩子看到真正进步) -->
-    <div class="card" id="learningPortraitCard" style="border-left:4px solid #4ECDC4"></div>
+    <div class="card" id="learningPortraitCard" style="border-left:4px solid #4ECDC4;display:none"></div>
 
     <div class="hero-section">
       <div class="character-card">
@@ -5086,14 +5096,24 @@ p { font-size: 14px; line-height: 1.6; }
     <!-- v18.59: 错题本入口卡 (v19.14i 从折叠区提到主页) -->
     <div class="card" id="errorBankCardNew" style="border-left:4px solid #607D8B;display:none"></div>
 
-    <!-- v19.18: 学习入口区 (4 卡复活, 替代旧 "2 卡极简") -->
-    <div style="margin:14px 0 8px;font-size:13px;font-weight:900;color:#4FC3F7;letter-spacing:1px">📚 学习入口</div>
-    <div class="card think-puzzle-card" id="thinkPuzzleCard" style="display:none"></div>
-    <div class="card" id="paper2SprintCard"></div>
-    <div class="card" id="errorBankCard"></div>
-    <div class="card" id="weekMasterTipCard"></div>
-    <!-- v19.17: 毕业题间隔复习卡 (14 天后回测) -->
-    <div id="gradReviewCard"></div>
+    <!-- v19.19: 主页 2 栏布局 (左行动 / 右信息教学), hero 上方已全宽 -->
+    <div class="home-grid-2col">
+      <!-- 左栏: 今日必做 行动驱动 -->
+      <div class="home-col-left">
+        <div style="font-size:12px;font-weight:900;color:#FF6B6B;letter-spacing:1px;margin-bottom:6px">⚡ 今日必做</div>
+        <div class="card" id="todayThreeCard" style="border-left:4px solid #FF6B6B"></div>
+        <div class="card" id="paper2SprintCard"></div>
+        <div class="card" id="errorBankCard"></div>
+        <div id="gradReviewCard"></div>
+      </div>
+      <!-- 右栏: 信息 + 教学 -->
+      <div class="home-col-right">
+        <div style="font-size:12px;font-weight:900;color:#4FC3F7;letter-spacing:1px;margin-bottom:6px">🎓 目标 + 教学</div>
+        <div class="card" id="targetSchoolMini" style="border-left:1px solid #E0E0E0"></div>
+        <div class="card think-puzzle-card" id="thinkPuzzleCard" style="display:none"></div>
+        <div class="card" id="weekMasterTipCard"></div>
+      </div>
+    </div>
 
     <!-- v19.14i (UI 专家): "📋 更多详情" 折叠区改为彻底隐藏 (display:none), DOM 保留以兼容 render 函数 -->
     <!-- 内容 (智慧教练/进度/成就墙/皮肤更衣室/装备/双龙) 在 👤 我的 tab 已经有完整渲染 -->
@@ -5596,9 +5616,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.18"></script>
-<script src="data.js?v=19.18"></script>
-<script src="app.js?v=19.18"></script>
+<script src="character.js?v=19.19"></script>
+<script src="data.js?v=19.19"></script>
+<script src="app.js?v=19.19"></script>
 
 </body>
 </html>

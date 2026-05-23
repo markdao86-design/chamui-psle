@@ -411,10 +411,19 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.18/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.18: cache buster 已更新到 19.18 (主页学习入口区 4 卡复活)');
+assert(/\?v=19\.19/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.19: cache buster 已更新到 19.19 (主页左右 2 栏布局)');
+// v19.19: 左右 2 栏布局
+assert(/class="home-grid-2col"/.test(idxSrc), 'v19.19: home-grid-2col 容器');
+assert(/class="home-col-left"/.test(idxSrc), 'v19.19: home-col-left');
+assert(/class="home-col-right"/.test(idxSrc), 'v19.19: home-col-right');
+assert(/⚡ 今日必做/.test(idxSrc), 'v19.19: 左栏标题');
+assert(/🎓 目标 \+ 教学/.test(idxSrc), 'v19.19: 右栏标题');
+assert(/@media \(min-width:\s*900px\)[\s\S]{0,200}grid-template-columns:\s*1fr 1fr/.test(idxSrc), 'v19.19: 响应式 ≥900px 2 栏 / 其他 1 栏');
+// 防回归: 旧"📚 学习入口" 单栏标题已撤
+assert(!/📚 学习入口<\/div>/.test(idxSrc), 'v19.19: 旧学习入口单栏标题已撤');
 // v19.18: 主页学习入口区 4 卡
-assert(/📚 学习入口/.test(idxSrc), 'v19.18: 学习入口分区标题');
+// v19.19 撤回 v19.18 "📚 学习入口" 单栏标题, 改 2 栏布局 "⚡ 今日必做" + "🎓 目标 + 教学"
 assert(/id="thinkPuzzleCard"/.test(idxSrc), 'v19.18: thinkPuzzleCard 在主页');
 assert(/id="paper2SprintCard"/.test(idxSrc), 'v19.18: paper2SprintCard 在主页');
 assert(/id="weekMasterTipCard"/.test(idxSrc), 'v19.18: weekMasterTipCard 在主页');
