@@ -719,6 +719,10 @@ function renderTodayThreeCard() {
   const card = document.getElementById('todayThreeCard');
   if (!card) return;
   const isWeekday = window.isWeekdayToday ? window.isWeekdayToday() : true;
+  // v19.15 P0-3: 卡片标题/计数器按平日 vs 周末分化 (周末改"自选推荐", 心理上从义务→自主)
+  let headerTitle = '🎯 今日要做的 3 件事';
+  let headerColor = '#FF6B6B';
+  let counterFn = (done) => `${done} / 3 完成`;
 
   // 通用 item renderer
   const item = (icon, label, sub, done, onclick, color) => `
@@ -786,28 +790,32 @@ function renderTodayThreeCard() {
       📅 <b>数学 / 华文 周末才开放</b> — 平日全力攻英语 (AL6 → AL2 是综合 AL 4-5 最大杠杆)
     </div>`;
   } else {
-    // 周末 3 件事: 数学 + 华文 + Cloze 5 题 (保英语手感) + 科学 1 套
+    // v19.15 P0-3: 周末改"自选推荐"模式 — 从"必做 3 件"→"挑 1-2 件就好, 休息也算赢"
+    // 心理学家警告: 周末双科爆发风险 → 改自主规划框架
     const mathDone = (todayCounts.math || 0) >= 1;
     const chineseDone = (todayCounts.chinese || 0) >= 1;
     const cloze5Done = todayPaper2 >= 5;
     const sciDone = (todayCounts.scimcq || 0) >= 1 || (todayCounts.sci_oe || 0) >= 1;
-    const item3Done = cloze5Done && sciDone;  // 第 3 件 = Cloze 5 + 科学 1 套
+    const item3Done = cloze5Done && sciDone;
     doneCount = (mathDone?1:0) + (chineseDone?1:0) + (item3Done?1:0);
-    headerSub = `周末 · 数学 + 华文 (+ 5 题 Cloze + 1 套科学保手感)`;
+    headerTitle = '🌿 周末推荐 · 自选';
+    headerColor = '#2E7D32';
+    counterFn = (done) => done === 0 ? '休息日 · 自由安排' : `已挑 ${done} 件 · 1-2 件就够`;
+    headerSub = `周末灵活安排 · 休息也算赢 (PSLE 是 17 月马拉松, 不靠冲刺)`;
     itemsHtml = [
-      item('➗', '数学 P5/P6 模拟卷', '10 题 · PSLE 5-mark 难度 · 维持 AL1', mathDone, 'openMathGame()', '#FFA000'),
-      item('🇨🇳', '华文阅读 1 套', '10 题 · 维持 AL1 + 作文素材', chineseDone, 'openChineseMcqGame()', '#C62828'),
-      item('📖', '5 题 Cloze + 1 套科学', `Cloze ${todayPaper2}/5 · 科学 MCQ — 保英语+科学手感`, item3Done, cloze5Done ? 'openSciMcqGame()' : 'openClozeGame()', '#7B1FA2')
+      item('➗', '数学 P5/P6 (可选)', '10 题 · 维持 AL1 · 30 分钟内', mathDone, 'openMathGame()', '#FFA000'),
+      item('🇨🇳', '华文阅读 (可选)', '10 题 · 维持 AL1 · 20 分钟内', chineseDone, 'openChineseMcqGame()', '#C62828'),
+      item('📖', '英语+科学 保手感 (可选)', `Cloze ${todayPaper2}/5 + 1 套科学 · 15 分钟内`, item3Done, cloze5Done ? 'openSciMcqGame()' : 'openClozeGame()', '#7B1FA2')
     ].join('');
     tipHtml = `<div style="margin-top:8px;padding:8px;background:#E8F5E9;border-radius:6px;font-size:11px;color:#1B5E20;line-height:1.5;text-align:center">
-      🎉 <b>周末科目全开放</b> — 数学 / 华文 mini-game 已解锁 · 周日下午 14-18 完全休息 (手册硬红线)
+      🛋️ <b>挑 1-2 件就好</b> · 周日下午 14-18 完全休息 (手册硬红线) · 累了直接关 app, 不掉 streak
     </div>`;
   }
 
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <div style="font-size:17px;font-weight:900;color:#FF6B6B">🎯 今日要做的 3 件事</div>
-      <div style="margin-left:auto;font-size:12px;color:#666">${doneCount} / 3 完成</div>
+      <div style="font-size:17px;font-weight:900;color:${headerColor}">${headerTitle}</div>
+      <div style="margin-left:auto;font-size:12px;color:#666">${counterFn(doneCount)}</div>
     </div>
     <div style="font-size:11px;color:#888;margin-bottom:10px">${headerSub}</div>
     ${itemsHtml}
@@ -4829,6 +4837,16 @@ function _getDailyGameCount(gameKey) {
 function _bumpDailyGameCount(gameKey) {
   _getDailyGameCount(gameKey);  // ensure init
   state.gameDailyCount.counts[gameKey] = (state.gameDailyCount.counts[gameKey] || 0) + 1;
+  // v19.15 P0-3: 沉迷闸 — 每日 mini-game 总局数软提示 (10 软警告 / 15 强劝休息)
+  const counts = state.gameDailyCount.counts || {};
+  const totalToday = Object.values(counts).reduce((a, b) => a + (b || 0), 0);
+  const soft = window.DAILY_GAME_SOFT_WARN || 10;
+  const hard = window.DAILY_GAME_HARD_NUDGE || 15;
+  if (totalToday === soft) {
+    showToast(`🛋️ 今日已练 ${totalToday} 局, 注意休息 · PSLE 是 17 月马拉松, 不靠冲刺`, 'warn');
+  } else if (totalToday === hard) {
+    showToast(`🛑 今日 ${totalToday} 局太多了! 真的该关 app 休息了 (爸妈也心疼眼睛 + 大脑)`, 'warn');
+  }
   return state.gameDailyCount.counts[gameKey];
 }
 // v19.4: 第 1 次满奖, 之后 0 分但可继续练习
@@ -5476,7 +5494,7 @@ function submitErrorBankAnswer(optIdx) {
   _handleErrorBankResult(isCorrect, item, () => {
     if (isCorrect) {
       g.correct++; petExpress('pet-excited', 800);
-      // v19.14d + v19.14h: 统一读 LEITNER_GRADUATION 常量, 不再硬编码 4
+      // v19.15 P0-1: Leitner 巩固积分封顶 — 毕业一次性 +5, 不再每答对 +2 (防错题本变积分水泵)
       const w = (state.wrongAnswers || []).find(w => w.id === item.id);
       if (w) {
         w.correctStreak = (w.correctStreak || 0) + 1;
@@ -5484,13 +5502,14 @@ function submitErrorBankAnswer(optIdx) {
         if (w.correctStreak >= grad) {
           window.removeFromErrorBank(state, item.id);
           g.removed.push(item.id);
+          state.totalPoints = (state.totalPoints || 0) + 5;
+          state.logs.push({ reason: '🎓 错题毕业 (Leitner 3 连对)', points: 5, week: state.currentWeek, timestamp: Date.now() });
+          showToast('🎓 +5 错题毕业!', 'happy');
         } else {
           const intervals = [1, 3, 7];
           w.nextReview = Date.now() + (intervals[w.correctStreak - 1] || 7) * 86400000;
         }
       }
-      state.totalPoints = (state.totalPoints || 0) + 2;
-      state.logs.push({ reason: '📓 错题复习答对', points: 2, week: state.currentWeek, timestamp: Date.now() });
     } else {
       const w = (state.wrongAnswers || []).find(w => w.id === item.id);
       if (w) { w.retries = (w.retries || 0) + 1; w.correctStreak = 0; }
@@ -5511,7 +5530,7 @@ function submitErrorBankMath() {
   _handleErrorBankResult(isCorrect, item, () => {
     if (isCorrect) {
       g.correct++;
-      // v19.14h: 统一读 LEITNER_GRADUATION 常量 (=3), 修数学错题硬编码 4 的 bug
+      // v19.15 P0-1: Leitner 巩固积分封顶 — 毕业一次性 +5, 不再每答对 +2 (防错题本变积分水泵)
       const w = (state.wrongAnswers || []).find(w => w.id === item.id);
       if (w) {
         w.correctStreak = (w.correctStreak || 0) + 1;
@@ -5519,13 +5538,14 @@ function submitErrorBankMath() {
         if (w.correctStreak >= grad) {
           window.removeFromErrorBank(state, item.id);
           g.removed.push(item.id);
+          state.totalPoints = (state.totalPoints || 0) + 5;
+          state.logs.push({ reason: '🎓 错题毕业 (Leitner 3 连对)', points: 5, week: state.currentWeek, timestamp: Date.now() });
+          showToast('🎓 +5 错题毕业!', 'happy');
         } else {
           const intervals = [1, 3, 7];
           w.nextReview = Date.now() + (intervals[w.correctStreak - 1] || 7) * 86400000;
         }
       }
-      state.totalPoints = (state.totalPoints || 0) + 2;
-      state.logs.push({ reason: '📓 错题复习答对', points: 2, week: state.currentWeek, timestamp: Date.now() });
     } else {
       const w = (state.wrongAnswers || []).find(w => w.id === item.id);
       if (w) { w.retries = (w.retries || 0) + 1; w.correctStreak = 0; }

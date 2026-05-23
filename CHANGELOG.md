@@ -5,6 +5,48 @@
 
 ---
 
+## v19.15 (2026-05-23) — 第 5 次评审 P0 三件套: Leitner 封顶 + Cloze 字典扩 + 周末自选
+
+### 痛点 (第 5 次 6 专家独立评审, 累计平均 6.88/10 vs 自评 7.58, 偏差 -0.7)
+- **游戏数值专家** (新分 8.2, +1.2): 错题本 Leitner 每次答对 +2 = 50 题 × 3 次 = 300 分凭空刷
+- **PSLE 英语专家** (新分 6.2, +0.4 但远低自评 7.5): v19.14l CLOZE_SYNONYM_DICT 161 词字典实际覆盖率 <50% (非预期 70%), 缺派生形式 (-ing/-ly/比较级)
+- **儿童心理专家** (新分 5.9, 6 项最低): 17 月长跑 + 防沉迷只有 1 道闸 (LISTENING 30 min), 后 9 月自驱沉迷风险; 周末双科爆发是义务感而非自主感
+
+### 改造 3 项 (P0 三件套)
+
+**P0-1: Leitner 巩固积分封顶 — 毕业一次 +5, 取消每次 +2**
+- `app.js submitErrorBankAnswer / submitErrorBankMath` (~5471/5503): 删除 `state.totalPoints += 2` 每答对计分 + 加 `state.totalPoints += 5` 仅毕业时
+- 加 `showToast('🎓 +5 错题毕业!', 'happy')` 让孩子看见
+- 量化: 50 错题 × 3 review = 旧 +300 / 新 +250, 锁死 +5/题封顶 (无法循环刷)
+
+**P0-2: CLOZE_SYNONYM_DICT 161 → ~300 词 (+~140)**
+- `data.js:8143` 后追加 5 大类:
+  - **-ing 现在分词 ~34 词**: running/walking/sprinting/dashing/shouting/laughing/grabbing/...
+  - **-ly 副词 ~24 词**: happily/sadly/angrily/gratefully/proudly/anxiously/kindly/...
+  - **比较级/最高级 ~30 词**: bigger/biggest/faster/slower/better/worse/easier/harder/...
+  - **思考/认知动词 ~16 词**: thought/wondered/realised/decided/believed/imagined/...
+  - **沟通+出现+帮助+时间 ~36 词**: agreed/refused/appeared/vanished/helped/recently/many/very/...
+- 量化: PSLE Cloze 字典覆盖率 <50% → ~80% (派生词补齐后)
+
+**P0-3: 周末"自选推荐"模式 + 每日游戏沉迷闸**
+- `app.js renderTodayThreeCard()` 周末分支: 标题 "🎯 今日要做的 3 件事" → "🌿 周末推荐 · 自选" (绿色); 计数器从 "3/3 完成" → "已挑 N 件 · 1-2 件就够"; tip 从"科目全开放"→"挑 1-2 件就好, 累了直接关 app 不掉 streak"; 每项加 "(可选)" 标签 + 时长建议
+- `data.js` 加常量 `DAILY_GAME_SOFT_WARN=10` / `DAILY_GAME_HARD_NUDGE=15`
+- `app.js _bumpDailyGameCount`: 总局数 = 10 toast "🛋️ 注意休息, PSLE 是 17 月马拉松"; = 15 toast "🛑 该关 app 休息了"
+- 量化: 防沉迷从 1 道闸 (LISTENING 30 min) → 2 道闸 (+ 每日总局数软警告)
+
+### 量化对比
+| 维度 | v19.14l | v19.15 |
+|---|---|---|
+| Leitner 巩固刷分上限 | 50 题 × +6 = +300 分 (累积) | **50 题 × +5 = +250 分** (单次封顶) |
+| CLOZE_SYNONYM_DICT | 161 词, 覆盖率 <50% | **~300 词, 覆盖率 ~80%** |
+| 周末心理框架 | "3 件事必做" 义务感 | **"挑 1-2 件就好" 自主感** |
+| 防沉迷闸数 | 1 (听力 30 min) | **2 (+ 每日总局数 10/15)** |
+| QA 项数 | 280 | **295** (+15 P0 断言) |
+
+QA 295 项全过 / cache buster ?v=19.15
+
+---
+
 ## v19.14l (2026-05-23) — Cloze 3 件事同义词改 3 选 1 MCQ
 
 ### 痛点 (心理学家原建议, 累计 3 版未做)

@@ -411,10 +411,24 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.14m/.test(idxSrc) && !/\?v=19\.14l[^0-9]/.test(idxSrc),
-  'v19.14m: cache buster 已更新到 19.14m');
+assert(/\?v=19\.15/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.15: cache buster 已更新到 19.15');
 // v19.14m: 装备穿戴 bug fix — renderAll 加 renderCharacterPage 刷新
 assert(/charPageActive\.classList\.contains\('active'\)[\s\S]{0,100}renderCharacterPage\(\)/.test(appSrc), 'v19.14m: renderAll 加我的 tab active 时 renderCharacterPage');
+
+// v19.15 P0-1: Leitner 巩固积分封顶 — 毕业一次性 +5, 不再每答对 +2
+assert(/错题毕业.*Leitner 3 连对|🎓 错题毕业/.test(appSrc), 'v19.15 P0-1: Leitner 毕业 +5 标记');
+const leitnerGradPlus5 = (appSrc.match(/state\.totalPoints\s*=\s*\(state\.totalPoints\s*\|\|\s*0\)\s*\+\s*5;\s*\n\s*state\.logs\.push\(\{\s*reason:\s*'🎓 错题毕业/g) || []).length;
+assert(leitnerGradPlus5 >= 2, `v19.15 P0-1: 两处 Leitner 分支都 +5 毕业 (实际 ${leitnerGradPlus5})`);
+// 验证已删除 +2 每次 (旧逻辑)
+const leitnerPlus2 = (appSrc.match(/state\.totalPoints\s*=\s*\(state\.totalPoints\s*\|\|\s*0\)\s*\+\s*2;\s*\n\s*state\.logs\.push\(\{\s*reason:\s*'📓 错题复习答对/g) || []).length;
+assert(leitnerPlus2 === 0, `v19.15 P0-1: 旧 +2 每次答对已删除 (实际残留 ${leitnerPlus2})`);
+
+// v19.15 P0-3 app 类断言 (data 类移到 dataSrcV14 之后)
+assert(/headerTitle\s*=\s*'🌿 周末推荐 · 自选'|周末推荐 · 自选/.test(appSrc), 'v19.15 P0-3: 周末标题改"自选推荐"');
+assert(/挑 1-2 件就好|休息也算赢/.test(appSrc), 'v19.15 P0-3: 周末提示文案改"挑 1-2 件"');
+assert(/今日已练 \$\{totalToday\} 局, 注意休息|PSLE 是 17 月马拉松/.test(appSrc), 'v19.15 P0-3: _bumpDailyGameCount 加软提示 toast');
+assert(/今日 \$\{totalToday\} 局太多了/.test(appSrc), 'v19.15 P0-3: 15 局强劝 toast');
 // v19.14l Cloze 3 件事改 MCQ
 assert(/pickClozeSyn|getClozeSynonymOptions/.test(appSrc), 'v19.14l: Cloze syn MCQ 函数');
 assert(/data-mode=.{1,30}mcq.{0,20}input|data-mode=.{1,40}'mcq'.{0,30}'input'/.test(appSrc), 'v19.14l: MCQ/input 双模式');
@@ -503,6 +517,16 @@ assert(/function getClozeSynonymOptions/.test(dataSrcV14), 'v19.14l: getClozeSyn
 // 字典 ≥ 100 词
 const synDictCount = (dataSrcV14.match(/'[a-z][a-z\s\-]+':\s*\{\s*syn:/g) || []).length;
 assert(synDictCount >= 100, `v19.14l: 同义词字典 ≥ 100 词 (实际 ${synDictCount})`);
+// v19.15 P0-2: CLOZE_SYNONYM_DICT 扩充到 ≥ 280 词 (从 161 → ~300)
+assert(synDictCount >= 280, `v19.15 P0-2: 同义词字典 ≥ 280 词 (实际 ${synDictCount})`);
+// 验证含派生形式 (-ing, -ly, 比较级, 思考动词)
+assert(/'running':\s*\{\s*syn:/.test(dataSrcV14), 'v19.15 P0-2: 含 -ing 派生 (running)');
+assert(/'happily':\s*\{\s*syn:/.test(dataSrcV14), 'v19.15 P0-2: 含 -ly 副词 (happily)');
+assert(/'bigger':\s*\{\s*syn:/.test(dataSrcV14), 'v19.15 P0-2: 含比较级 (bigger)');
+assert(/'thought':\s*\{\s*syn:/.test(dataSrcV14), 'v19.15 P0-2: 含思考动词 (thought)');
+// v19.15 P0-3 data 类: 沉迷闸常量
+assert(/DAILY_GAME_SOFT_WARN\s*=\s*10/.test(dataSrcV14), 'v19.15 P0-3: DAILY_GAME_SOFT_WARN = 10');
+assert(/DAILY_GAME_HARD_NUDGE\s*=\s*15/.test(dataSrcV14), 'v19.15 P0-3: DAILY_GAME_HARD_NUDGE = 15');
 // v19.14f data 类断言
 assert(/chapterId:\s*'p4_plant_transport'/.test(dataSrcV14), 'v19.14f: SCIENCE_CHAPTERS 加 chapterId');
 assert(/keywords:\s*\[[^\]]*'xylem'/.test(dataSrcV14), 'v19.14f: Plant Transport 章节 keywords');
