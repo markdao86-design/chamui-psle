@@ -1241,11 +1241,30 @@ window.renderScienceChapterCard = renderScienceChapterCard;
 
 // --------- 6. 科学 OE 答题训练 mini-game ---------
 let _sciOeGame = null;
-function openScienceOEGame() {
+// v19.14f (科学专家新发现 #3): OE 入口也按章节过滤 — 章节卡承诺兑现
+function openScienceOEGame(chapterFilter) {
   if (!window.SCIENCE_OE_QUESTIONS) { showToast('OE 题库未加载', 'warn'); return; }
+  const cur = chapterFilter
+    ? (window.SCIENCE_CHAPTERS || []).find(c => c.chapterId === chapterFilter)
+    : (window.getCurrentScienceChapter ? window.getCurrentScienceChapter(state.currentWeek || 1) : null);
   const all = window.SCIENCE_OE_QUESTIONS.slice();
-  const shuffled = all.sort(() => Math.random() - 0.5).slice(0, 5);
-  _sciOeGame = { questions: shuffled, qIdx: 0, scores: [], answers: [], step: 'principles' };
+  let pool = all;
+  if (cur && cur.keywords && cur.keywords.length) {
+    const kws = cur.keywords.map(k => k.toLowerCase());
+    const onChapter = all.filter(q => {
+      const text = ((q.topic || '') + ' ' + q.q + ' ' + (q.model || '')).toLowerCase();
+      return kws.some(k => text.includes(k));
+    });
+    if (onChapter.length >= 3) {
+      // 本章 + 1-2 题综合
+      const otherPool = all.filter(q => !onChapter.includes(q));
+      const supplementCount = Math.max(0, 5 - onChapter.length);
+      pool = [...onChapter, ...otherPool.sort(() => Math.random()-0.5).slice(0, supplementCount + 2)];
+      setTimeout(() => showToast(`🧪 ${cur.title} 章节 ${onChapter.length} 题`, 'success'), 100);
+    }
+  }
+  const shuffled = pool.sort(() => Math.random() - 0.5).slice(0, 5);
+  _sciOeGame = { questions: shuffled, qIdx: 0, scores: [], answers: [], step: 'principles', chapter: cur };
   _renderSciOe();
 }
 function _renderSciOe() {
@@ -1310,7 +1329,13 @@ function _renderSciOe() {
     // v19.14d: 加强弱 opener 检测 (含 I agree / It is / True / 反问)
     const weakOpener = /^(yes[\.,\s]|no[\.,\s]|yes$|no$|i\s+agree|it\s+is|true[\.,\s]|true$|false[\.,\s]|false$|sure[\.,\s])/i;
     if (weakOpener.test(userAns)) warnings.push('❌ 不能用 Yes/No/I agree/It is/True 等弱 opener 开头 (PSLE 直接 0 分)');
-    const matchedKw = q.keywords.filter(k => lowerAns.includes(k.toLowerCase()));
+    // v19.14f (科学专家新发现): 修子串匹配漏洞 — 用 word boundary + 词干, 防"heat"匹配"wheat"/"school"匹配"cool"
+    const matchedKw = q.keywords.filter(k => {
+      const stem = k.toLowerCase().replace(/(s|ed|ing|es|ies|ied|er|est)$/, '');
+      const safeStem = stem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');  // 转义特殊字符
+      const re = new RegExp('\\b' + safeStem + '(s|ed|ing|es|ies|ied|er|est)?\\b', 'i');
+      return re.test(userAns);
+    });
     if (matchedKw.length < q.keywords.length / 2) {
       warnings.push(`⚠️ 关键词不够 (用了 ${matchedKw.length}/${q.keywords.length}: ${q.keywords.join(', ')})`);
     }
@@ -1330,7 +1355,13 @@ function _renderSciOe() {
         // 规则: 关键词全中 → 2 / ≥⌈n/2⌉ → 1 / 否则 0; Yes/No opener 封顶 1; 长度 <50 封顶 1; 比较题缺 than → 封顶 1; 用 it 指代 → 封顶 1
         const userAnsTrim = userAns.trim();
         const lowerAns = userAnsTrim.toLowerCase();
-        const matchedKw = q.keywords.filter(k => lowerAns.includes(k.toLowerCase()));
+        // v19.14f: 同上, word boundary + stem 词干, 防误判
+        const matchedKw = q.keywords.filter(k => {
+          const stem = k.toLowerCase().replace(/(s|ed|ing|es|ies|ied|er|est)$/, '');
+          const safeStem = stem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const re = new RegExp('\\b' + safeStem + '(s|ed|ing|es|ies|ied|er|est)?\\b', 'i');
+          return re.test(userAnsTrim);
+        });
         const half = Math.ceil(q.keywords.length / 2);
         let autoScore = matchedKw.length >= q.keywords.length ? 2 : matchedKw.length >= half ? 1 : 0;
         const reasons = [];
@@ -6714,7 +6745,14 @@ function closeUnitGame() {
 let _mcqGameState = null;
 function openGrammarGame() { _openMcqGame('grammar', 'Grammar 选择题', 'q'); }
 function openClozeGame() { _openMcqGame('cloze', 'Cloze 单空填', 'sentence'); }
-function openSciMcqGame() { _openMcqGame('scimcq', '科学 MCQ', 'q'); }
+// v19.14f (科学专家 P3): openSciMcqGame 加 chapter 参数, 按当前周对应章节过滤题库
+function openSciMcqGame(chapterFilter) {
+  const cur = chapterFilter
+    ? (window.SCIENCE_CHAPTERS || []).find(c => c.chapterId === chapterFilter)
+    : (window.getCurrentScienceChapter ? window.getCurrentScienceChapter(state.currentWeek || 1) : null);
+  const title = '科学 MCQ' + (cur ? ' · ' + cur.title : '');
+  _openMcqGame('scimcq', title, 'q', cur);
+}
 function openChineseMcqGame() { _openMcqGame('chinese', '华文 MCQ', 'q'); }
 function openSstGame() { _openMcqGame('sst', 'SST 句型转换', 'q'); }
 
@@ -6770,18 +6808,35 @@ function openPaper2MockGame() {
   }, 1000);
 }
 window.openPaper2MockGame = openPaper2MockGame;
-function _openMcqGame(key, title, qField) {
+function _openMcqGame(key, title, qField, chapter) {
   if (!_checkGameDailyLock(key)) return;
   const diff = window.getDifficulty ? window.getDifficulty(state, key) : 4;
   const fn = key === 'grammar' ? window.getGrammarByDiff : key === 'cloze' ? window.getClozeByDiff : key === 'scimcq' ? window.getSciMcqByDiff : key === 'chinese' ? window.getChineseMcqByDiff : key === 'sst' ? window.getSstByDiff : window.getGrammarByDiff;
-  const rawQs = fn(diff, 10);
+  let rawQs = fn(diff, 10);
+  // v19.14f (科学专家 P3): scimcq 加章节 filter — keyword 子串匹配, 不足 5 题 fallback 全库
+  if (key === 'scimcq' && chapter && chapter.keywords && chapter.keywords.length && window.SCIENCE_MCQ) {
+    const kws = chapter.keywords.map(k => k.toLowerCase());
+    const filtered = window.SCIENCE_MCQ.filter(q => {
+      const text = (q.q + ' ' + (q.opts || []).join(' ') + ' ' + (q.explain || '')).toLowerCase();
+      return kws.some(k => text.includes(k));
+    });
+    if (filtered.length >= 5) {
+      // 取本章 8 题 + 综合 2 题 防偏
+      const onChapter = filtered.sort(() => Math.random() - 0.5).slice(0, 8);
+      const others = fn(diff, 2);
+      rawQs = [...onChapter, ...others];
+      setTimeout(() => showToast(`📚 ${chapter.title} 章节 ${onChapter.length} 题 + 2 综合`, 'success'), 100);
+    } else {
+      setTimeout(() => showToast(`本章题量不足 (${filtered.length}<5), 走全库 diff ${diff}`, 'warn'), 100);
+    }
+  }
   const qs = rawQs.map(q => {
     const correctOpt = q.opts[q.ans];
     const shuffled = [...q.opts].sort(() => Math.random() - 0.5);
     const newAns = shuffled.indexOf(correctOpt);
     return Object.assign({}, q, { opts: shuffled, ans: newAns, _orig: q });
   });
-  _mcqGameState = { key, title, qField, qs, idx: 0, correct: 0, wrong: 0, diff, lastFeedback: null };
+  _mcqGameState = { key, title, qField, qs, idx: 0, correct: 0, wrong: 0, diff, lastFeedback: null, chapter };
   _renderMcqGame();
 }
 function _renderMcqGame() {

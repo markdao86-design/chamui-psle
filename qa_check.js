@@ -411,8 +411,13 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.14e/.test(idxSrc) && !/\?v=19\.14d[^0-9]/.test(idxSrc),
-  'v19.14e: cache buster 已更新到 19.14e');
+assert(/\?v=19\.14f/.test(idxSrc) && !/\?v=19\.14e[^0-9]/.test(idxSrc),
+  'v19.14f: cache buster 已更新到 19.14f');
+// v19.14f 科学章节 filter + 子串漏洞修 (app 类)
+assert(/word boundary.*stem|safeStem.*RegExp/.test(appSrc), 'v19.14f: 关键词匹配改 word boundary + stem');
+assert(/openSciMcqGame\(chapterFilter\)|chapter && chapter\.keywords/.test(appSrc), 'v19.14f: openSciMcqGame 加 chapter filter');
+assert(/openScienceOEGame\(chapterFilter\)|onChapter\.length >= 3/.test(appSrc), 'v19.14f: openScienceOEGame 加 chapter filter');
+// data 类断言移到 dataSrcV14 之后
 // v19.14e 英语 5 项
 assert(/<details \${isQ1 \? 'open' : ''}|定位法 3 步.*\$\{isQ1/.test(appSrc), 'v19.14e P5: Comp OE 每题定位法 (Q1 open, 后题折叠)');
 assert(/svSubmitTyping|_levenshtein/.test(appSrc), 'v19.14e P3: 词汇 typing (zh→en + Levenshtein)');
@@ -442,6 +447,9 @@ const dataSrcV14 = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
 // v19.14e data 类断言
 assert(/guessClozeTopic|CLOZE_TOPIC_MAP/.test(dataSrcV14), 'v19.14e: data.js 有 Cloze 主题词聚类');
 assert(/errorBankByTopic/.test(dataSrcV14), 'v19.14e: data.js 有 errorBankByTopic');
+// v19.14f data 类断言
+assert(/chapterId:\s*'p4_plant_transport'/.test(dataSrcV14), 'v19.14f: SCIENCE_CHAPTERS 加 chapterId');
+assert(/keywords:\s*\[[^\]]*'xylem'/.test(dataSrcV14), 'v19.14f: Plant Transport 章节 keywords');
 
 // v19.14d data 类断言 (在 dataSrcV14 之后)
 assert(/WEEKDAY_LOCKED_GAMES\s*=\s*\['chinese',\s*'unit'\]/.test(dataSrcV14), 'v19.14d: 数学从 hard lock 移除');

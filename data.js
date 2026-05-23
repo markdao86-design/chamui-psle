@@ -8738,21 +8738,32 @@ const ESSAY_TEMPLATES = {
 };
 
 // ============ 4. 科学章节里程碑 (W1-W14 P3-P4 系统过, 手册 v14) ============
+// v19.14f (科学专家 P3): 加 chapterId + keywords 字段, 用于 openSciMcqGame / OE 章节过滤
 const SCIENCE_CHAPTERS = [
-  { weeks: [1,1],   title: 'P3 Diversity', difficulty: '易', stars: '', focus: '动植物分类 + 材料分类', diagram: null },
-  { weeks: [2,2],   title: 'P3 Plant Life Cycle', difficulty: '中', stars: '', focus: '种子萌发 → 幼苗 → 开花 → 结果', diagram: null },
-  { weeks: [3,3],   title: 'P3 Animal Life Cycle', difficulty: '中', stars: '', focus: '完全/不完全变态, 蝴蝶/青蛙/鸡', diagram: null },
-  { weeks: [4,4],   title: 'P3 Plant Parts & Functions', difficulty: '中', stars: '', focus: '根/茎/叶/花的功能 + P3 整合', diagram: null },
-  { weeks: [5,6],   title: 'P4 Plant Transport', difficulty: '难', stars: '⭐', focus: '木质部/韧皮部 + 蒸腾 + 芹菜实验', diagram: 'plant_transport' },
-  { weeks: [7,8],   title: 'P4 Digestive System', difficulty: '难', stars: '⭐⭐', focus: '完整消化路径: 口→食道→胃→小肠→大肠', diagram: 'digestive' },
-  { weeks: [9,9],   title: 'P4 Matter + Mass/Volume', difficulty: '易', stars: '', focus: '三态 + 质量体积区别 (P5 已熟)', diagram: null },
-  { weeks: [10,11], title: 'P4 Light & Shadow', difficulty: '难', stars: '⭐', focus: '光直线传播 + 影子形成 + 实验题', diagram: 'light' },
-  { weeks: [12,13], title: 'P4 Heat Energy', difficulty: '难', stars: '⭐⭐', focus: '导体/绝缘体 + 传导/对流/辐射 (PSLE 高频)', diagram: 'heat' },
-  { weeks: [14,14], title: 'P4 Magnets + 综合卷', difficulty: '中', stars: '', focus: '磁极/吸排 + P3-P4 模拟卷收尾', diagram: null },
-  // W15+ 进入 P5/P6 综合 — 手册第二阶段
-  { weeks: [15,26], title: 'P5 同步 + 题型综合', difficulty: '混合', stars: '', focus: 'P5 课堂同步 + 周末综合卷错题分析', diagram: null },
-  { weeks: [27,42], title: 'P6 难题专项', difficulty: '难', stars: '⭐⭐', focus: 'PSLE 真题 Section B OE + 实验设计', diagram: null },
-  { weeks: [43,73], title: 'PSLE 真题刷题 + 冲刺', difficulty: '难', stars: '⭐⭐⭐', focus: '真题完整套 + 错题总结 + 模考冲刺', diagram: null }
+  { chapterId: 'p3_diversity', weeks: [1,1], title: 'P3 Diversity', difficulty: '易', stars: '', focus: '动植物分类 + 材料分类', diagram: null,
+    keywords: ['classify','classified','classification','vertebrate','invertebrate','mammal','reptile','bird','fish','amphibian','insect','arachnid','spider','penguin','whale','bat','dolphin','crocodile','spine','feather','scales','fur','gills','fungi','mushroom'] },
+  { chapterId: 'p3_plant_life', weeks: [2,2], title: 'P3 Plant Life Cycle', difficulty: '中', stars: '', focus: '种子萌发 → 幼苗 → 开花 → 结果', diagram: null,
+    keywords: ['germination','germinate','seed','seedling','cotyledon','sprout','life cycle','reproduction'] },
+  { chapterId: 'p3_animal_life', weeks: [3,3], title: 'P3 Animal Life Cycle', difficulty: '中', stars: '', focus: '完全/不完全变态, 蝴蝶/青蛙/鸡', diagram: null,
+    keywords: ['life cycle','larva','pupa','tadpole','metamorphosis','butterfly','frog','egg','adult','chick','caterpillar','cocoon'] },
+  { chapterId: 'p3_plant_parts', weeks: [4,4], title: 'P3 Plant Parts & Functions', difficulty: '中', stars: '', focus: '根/茎/叶/花的功能 + P3 整合', diagram: null,
+    keywords: ['root','stem','leaf','leaves','flower','anther','stigma','pollen','pollination','ovule','sepal','petal','filament','fertilisation'] },
+  { chapterId: 'p4_plant_transport', weeks: [5,6], title: 'P4 Plant Transport', difficulty: '难', stars: '⭐', focus: '木质部/韧皮部 + 蒸腾 + 芹菜实验', diagram: 'plant_transport',
+    keywords: ['xylem','phloem','transpiration','water','mineral','mineral salt','root hair','transport','translocation','vascular','stem','sap'] },
+  { chapterId: 'p4_digestive', weeks: [7,8], title: 'P4 Digestive System', difficulty: '难', stars: '⭐⭐', focus: '完整消化路径: 口→食道→胃→小肠→大肠', diagram: 'digestive',
+    keywords: ['digest','digestion','stomach','intestine','villi','bile','liver','pancreas','absorb','oesophagus','nutrient','enzyme','saliva','rectum','anus','emulsify'] },
+  { chapterId: 'p4_matter', weeks: [9,9], title: 'P4 Matter + Mass/Volume', difficulty: '易', stars: '', focus: '三态 + 质量体积区别 (P5 已熟)', diagram: null,
+    keywords: ['solid','liquid','gas','mass','volume','melting','boiling','condensation','evaporation','expand','contract','matter','particle','state'] },
+  { chapterId: 'p4_light', weeks: [10,11], title: 'P4 Light & Shadow', difficulty: '难', stars: '⭐', focus: '光直线传播 + 影子形成 + 实验题', diagram: 'light',
+    keywords: ['light','shadow','opaque','transparent','translucent','straight','reflection','refraction','mirror','ray','illuminate','block','source'] },
+  { chapterId: 'p4_heat', weeks: [12,13], title: 'P4 Heat Energy', difficulty: '难', stars: '⭐⭐', focus: '导体/绝缘体 + 传导/对流/辐射 (PSLE 高频)', diagram: 'heat',
+    keywords: ['heat','conductor','insulator','conduction','convection','radiation','temperature','warm','cool','cold','thermos','expand','contract','thermal'] },
+  { chapterId: 'p4_magnet', weeks: [14,14], title: 'P4 Magnets + 综合卷', difficulty: '中', stars: '', focus: '磁极/吸排 + P3-P4 模拟卷收尾', diagram: null,
+    keywords: ['magnet','magnetic','attract','repel','pole','iron','north','south','field','compass','magnetise'] },
+  // W15+ 进入 P5/P6 综合 — 不做 keyword filter (走全库)
+  { chapterId: 'p5_mix', weeks: [15,26], title: 'P5 同步 + 题型综合', difficulty: '混合', stars: '', focus: 'P5 课堂同步 + 周末综合卷错题分析', diagram: null, keywords: null },
+  { chapterId: 'p6_hard', weeks: [27,42], title: 'P6 难题专项', difficulty: '难', stars: '⭐⭐', focus: 'PSLE 真题 Section B OE + 实验设计', diagram: null, keywords: null },
+  { chapterId: 'psle', weeks: [43,73], title: 'PSLE 真题刷题 + 冲刺', difficulty: '难', stars: '⭐⭐⭐', focus: '真题完整套 + 错题总结 + 模考冲刺', diagram: null, keywords: null }
 ];
 
 function getCurrentScienceChapter(week) {
