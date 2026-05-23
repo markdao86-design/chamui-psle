@@ -411,8 +411,12 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.14k/.test(idxSrc) && !/\?v=19\.14j[^0-9]/.test(idxSrc),
-  'v19.14k: cache buster 已更新到 19.14k');
+assert(/\?v=19\.14l/.test(idxSrc) && !/\?v=19\.14k[^0-9]/.test(idxSrc),
+  'v19.14l: cache buster 已更新到 19.14l');
+// v19.14l Cloze 3 件事改 MCQ
+assert(/pickClozeSyn|getClozeSynonymOptions/.test(appSrc), 'v19.14l: Cloze syn MCQ 函数');
+assert(/data-mode=.{1,30}mcq.{0,20}input|data-mode=.{1,40}'mcq'.{0,30}'input'/.test(appSrc), 'v19.14l: MCQ/input 双模式');
+assert(/c3-syn-opt/.test(appSrc), 'v19.14l: MCQ 选项渲染');
 // v19.14k 今日 3 件事科学项加章节内进度 + 今日 S2 任务
 assert(/chapterSubProgress|第 \$\{chapterWeekIdx\}\/\$\{chapterTotalWeeks\} 周/.test(appSrc), 'v19.14k: 章节内周进度');
 assert(/概念建立|深化与应用/.test(appSrc), 'v19.14k: 难章 2 周分阶段标签');
@@ -491,6 +495,12 @@ assert(/errorBankByTopic/.test(dataSrcV14), 'v19.14e: data.js 有 errorBankByTop
 // v19.14j data 类断言
 assert(/function inferScimcqChapter/.test(dataSrcV14), 'v19.14j: data.js 有 inferScimcqChapter');
 assert(/function tagScimcqChapters/.test(dataSrcV14), 'v19.14j: data.js 有 tagScimcqChapters');
+// v19.14l data 类断言: SYNONYM_DICT 同义词字典 + helper
+assert(/CLOZE_SYNONYM_DICT/.test(dataSrcV14), 'v19.14l: data.js 有 CLOZE_SYNONYM_DICT');
+assert(/function getClozeSynonymOptions/.test(dataSrcV14), 'v19.14l: getClozeSynonymOptions helper');
+// 字典 ≥ 100 词
+const synDictCount = (dataSrcV14.match(/'[a-z][a-z\s\-]+':\s*\{\s*syn:/g) || []).length;
+assert(synDictCount >= 100, `v19.14l: 同义词字典 ≥ 100 词 (实际 ${synDictCount})`);
 // v19.14f data 类断言
 assert(/chapterId:\s*'p4_plant_transport'/.test(dataSrcV14), 'v19.14f: SCIENCE_CHAPTERS 加 chapterId');
 assert(/keywords:\s*\[[^\]]*'xylem'/.test(dataSrcV14), 'v19.14f: Plant Transport 章节 keywords');

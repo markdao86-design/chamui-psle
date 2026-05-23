@@ -6984,17 +6984,34 @@ function submitMcqAnswer(idx) {
       : `❌ 应是 <b>${String.fromCharCode(65+q.ans)}. ${escapeHtml(q.opts[q.ans])}</b><br>💡 ${escapeHtml(expl)}`;
     fb.className = 'mcq-feedback show ' + (isCorrect ? 'fb-correct' : 'fb-wrong');
 
-    // v19.14e (P2) + v19.14h: Cloze 错题"3 件事卡" — 去 6s 倒计时改显式按钮 + fingerprint 抓取 + syn 质量校验
+    // v19.14e/h/l: Cloze 错题"3 件事卡" — v19.14l 同义词改 3 选 1 MCQ (心理学家原建议, 接受度 30→75%)
     if (!isCorrect && g.key === 'cloze') {
       const word = q.opts[q.ans];
-      // fingerprint 用 题干+正确词, saveCloze3Things 据此找题, 不再依赖 wrongs[-1]
       const fp = (q[g.qField] || '') + '|' + word;
-      g._pendingCloze3 = { fp, word };  // v19.14h: 暂存待保存的 fingerprint
-      fb.insertAdjacentHTML('beforeend', `
-        <div id="cloze3things" data-fp="${escapeAttr(fp)}" data-word="${escapeAttr(word)}" style="margin-top:8px;padding:8px;background:#FFF;border-radius:4px;border:1px solid #DDD">
-          <div style="font-size:11px;color:#555;font-weight:700;margin-bottom:4px">📝 三件事查 (同义词必填 ≥3 字英文, 其他可空):</div>
+      g._pendingCloze3 = { fp, word };
+      // v19.14l: 查字典看能否走 MCQ 模式
+      const synOpts = window.getClozeSynonymOptions ? window.getClozeSynonymOptions(word) : null;
+      let synBlockHtml;
+      if (synOpts) {
+        // MCQ 模式 (字典覆盖词)
+        synBlockHtml = `
+          <div style="font-size:11px;color:#555;font-weight:700;margin-bottom:6px">📝 同义词 3 选 1 (找跟 "<b>${escapeHtml(word)}</b>" 意思最接近的):</div>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:6px" data-correct-idx="${synOpts.correctIdx}" data-correct-syn="${escapeAttr(synOpts.correctSyn)}">
+            ${synOpts.opts.map((o, i) => `<button onclick="pickClozeSyn(${i})" data-idx="${i}" class="c3-syn-opt" style="padding:8px;background:#FFF;border:1px solid #CCC;border-radius:4px;font-size:13px;cursor:pointer;text-align:left">${String.fromCharCode(65+i)}. ${escapeHtml(o)}</button>`).join('')}
+          </div>
+          <input id="c3-syn" type="hidden" value="">
+        `;
+      } else {
+        // Fallback: 字典无此词, 走旧 input 模式
+        synBlockHtml = `
+          <div style="font-size:11px;color:#555;font-weight:700;margin-bottom:4px">📝 同义词 (字典无 "<b>${escapeHtml(word)}</b>", 自己想一个 ≥3 字英文):</div>
           <input id="c3-syn" placeholder="同义词 (如 glad / pleased)" style="width:100%;padding:5px;font-size:12px;margin-bottom:3px;border:1px solid #CCC;border-radius:4px;box-sizing:border-box">
-          <input id="c3-pos" placeholder="词性 n./v./adj./adv." style="width:48%;padding:5px;font-size:12px;border:1px solid #CCC;border-radius:4px;box-sizing:border-box">
+        `;
+      }
+      fb.insertAdjacentHTML('beforeend', `
+        <div id="cloze3things" data-fp="${escapeAttr(fp)}" data-word="${escapeAttr(word)}" data-mode="${synOpts ? 'mcq' : 'input'}" style="margin-top:8px;padding:8px;background:#FFF;border-radius:4px;border:1px solid #DDD">
+          ${synBlockHtml}
+          <input id="c3-pos" placeholder="词性 n./v./adj./adv. (可空)" style="width:48%;padding:5px;font-size:12px;border:1px solid #CCC;border-radius:4px;box-sizing:border-box">
           <input id="c3-col" placeholder="搭配 (good AT, 可空)" style="width:48%;padding:5px;font-size:12px;margin-left:4%;border:1px solid #CCC;border-radius:4px;box-sizing:border-box">
           <div style="display:flex;gap:4px;margin-top:6px">
             <button onclick="saveCloze3ThingsAndNext()" style="flex:2;padding:8px;background:#4ECDC4;color:#FFF;border:none;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer">✅ 保存 +2 分 + 下一题</button>
@@ -7034,7 +7051,26 @@ function _advanceMcqNext() {
   }, 400);
 }
 
-// v19.14e + v19.14h: Cloze 3 件事卡 - 保存 (加 fingerprint 抓取 + syn 质量校验, return 成功/失败)
+// v19.14l: Cloze 3 件事 MCQ 模式 — 点击选项
+function pickClozeSyn(idx) {
+  const c3 = document.getElementById('cloze3things');
+  if (!c3) return;
+  const correctIdx = parseInt(c3.querySelector('[data-correct-idx]').getAttribute('data-correct-idx'));
+  const correctSyn = c3.querySelector('[data-correct-syn]').getAttribute('data-correct-syn');
+  // 视觉反馈
+  c3.querySelectorAll('.c3-syn-opt').forEach((b, i) => {
+    if (i === correctIdx) { b.style.background = '#C8E6C9'; b.style.borderColor = '#2E7D32'; }
+    else if (i === idx) { b.style.background = '#FFCDD2'; b.style.borderColor = '#C62828'; }
+    b.disabled = true;
+  });
+  // 把选中值塞到 c3-syn (hidden input), 供 saveCloze3Things 读取
+  const synInput = document.getElementById('c3-syn');
+  if (synInput) synInput.value = correctSyn;  // 总是存正确同义词, 即使选错 (孩子已经看到正确答案)
+  c3.setAttribute('data-mcq-picked', idx === correctIdx ? '1' : '0');
+}
+window.pickClozeSyn = pickClozeSyn;
+
+// v19.14e + v19.14h + v19.14l: Cloze 3 件事卡 - 保存 (MCQ 模式 + input 模式 双兼容)
 function saveCloze3Things() {
   const c3 = document.getElementById('cloze3things');
   if (!c3) return false;
@@ -7044,20 +7080,30 @@ function saveCloze3Things() {
   const synTrim = syn.trim();
   const fp = c3.getAttribute('data-fp') || '';
   const word = (c3.getAttribute('data-word') || '').toLowerCase();
-  // v19.14h: syn 质量校验
-  if (synTrim.length < 3) {
-    showToast('❌ 同义词 ≥3 字符英文 (如 glad / pleased)', 'warn');
-    const sy = document.getElementById('c3-syn'); if (sy) sy.focus();
-    return false;
-  }
-  if (!/^[a-zA-Z\s,\/\-']+$/.test(synTrim)) {
-    showToast('❌ 同义词必须是英文 (不能含数字/中文)', 'warn');
-    return false;
-  }
-  if (synTrim.toLowerCase() === word || synTrim.toLowerCase().includes(word)) {
-    showToast('❌ 同义词不能是原词本身, 想个意思接近的词', 'warn');
-    const sy = document.getElementById('c3-syn'); if (sy) sy.focus();
-    return false;
+  const mode = c3.getAttribute('data-mode') || 'input';
+  // v19.14l: MCQ 模式校验 — 必须先点了选项 (synInput 有值)
+  if (mode === 'mcq') {
+    if (!synTrim) {
+      showToast('❌ 请先点 A/B/C 选一个同义词', 'warn');
+      return false;
+    }
+    // MCQ 模式不再做质量校验 (字典已保证质量), 直接保存
+  } else {
+    // input 模式 - 字典无此词, 走质量校验
+    if (synTrim.length < 3) {
+      showToast('❌ 同义词 ≥3 字符英文 (如 glad / pleased)', 'warn');
+      const sy = document.getElementById('c3-syn'); if (sy) sy.focus();
+      return false;
+    }
+    if (!/^[a-zA-Z\s,\/\-']+$/.test(synTrim)) {
+      showToast('❌ 同义词必须是英文 (不能含数字/中文)', 'warn');
+      return false;
+    }
+    if (synTrim.toLowerCase() === word || synTrim.toLowerCase().includes(word)) {
+      showToast('❌ 同义词不能是原词本身, 想个意思接近的词', 'warn');
+      const sy = document.getElementById('c3-syn'); if (sy) sy.focus();
+      return false;
+    }
   }
   // v19.14h: 用 fingerprint 找题, 不再依赖 wrongs[-1]
   const wrongs = state.wrongAnswers || [];
