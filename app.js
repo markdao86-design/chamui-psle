@@ -840,36 +840,45 @@ window.renderTodayThreeCard = renderTodayThreeCard;
 function renderTargetSchoolMini() {
   const card = document.getElementById('targetSchoolMini');
   if (!card || !window.getAdmissionForecasts) return;
-  const f = window.getAdmissionForecasts(state);
-  const { bySubject, total_AL, schools, ifEnglishImproved } = f;
+  // v19.15k: 走 effective (real || whatIf), 不直接 getAdmissionForecasts(state)
+  const f = (typeof _getEffectiveForecast === 'function') ? _getEffectiveForecast() : window.getAdmissionForecasts(state);
+  const { bySubject, total_AL, schools, ifEnglishImproved, isWhatIf, realBySubject, realTotalAL } = f;
   // 默认主目标校 = 用户存的 mainTargetSchool, 否则取第一个 top tier
   const mainId = state.mainTargetSchool || (schools.find(s => s.tier === 'top') || schools[0]).id;
   const main = schools.find(s => s.id === mainId) || schools[0];
   const mainImproved = ifEnglishImproved.schools.find(s => s.id === main.id);
-  const probColor = main.probability >= 80 ? '#2E7D32' : main.probability >= 50 ? '#FFA500' : '#C62828';
   const lift = mainImproved ? mainImproved.probability - main.probability : 0;
-  // v19.15e: 暗调 + 青色发光 + 校牌色 (匹配打卡页)
   const probColorBright = main.probability >= 80 ? '#66BB6A' : main.probability >= 50 ? '#FFB74D' : '#EF5350';
+  // v19.15k: whatIf 真实概率对比 (用 realBySubject 重算 main 校真实概率)
+  const realMainProb = window.PSLE_TARGET_SCHOOLS && realTotalAL
+    ? (function(){
+        const cop = main.cop;
+        const delta = cop - realTotalAL;
+        return delta >= 3 ? 98 : delta >= 2 ? 92 : delta >= 1 ? 82 : delta >= 0 ? 65 : delta >= -1 ? 35 : delta >= -2 ? 15 : delta >= -3 ? 5 : 1;
+      })()
+    : main.probability;
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <div style="font-size:15px;font-weight:900;color:#4FC3F7">🏫 目标校 · ${main.name}</div>
       <button onclick="openAllSchoolsModal()" style="margin-left:auto;background:none;border:none;color:#4FC3F7;font-size:12px;cursor:pointer;text-decoration:underline">查看全部 8 校 →</button>
     </div>
     <div style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,212,255,0.02));border:1px solid rgba(0,212,255,0.30);box-shadow:0 0 10px rgba(0,212,255,0.08);border-radius:8px;padding:12px">
-      <div style="text-align:center;flex:0 0 80px">
+      <div style="text-align:center;flex:0 0 90px">
         <div style="font-size:28px;color:${probColorBright};font-weight:900;line-height:1">${main.probability}%</div>
-        <div style="font-size:11px;color:#A0A0A0;margin-top:2px">录取概率</div>
+        <div style="font-size:11px;color:#A0A0A0;margin-top:2px">${isWhatIf ? '💭 模拟概率' : '录取概率'}</div>
+        ${isWhatIf ? `<div style="font-size:10px;color:#94A3B8;margin-top:4px;text-decoration:line-through">真实 ${realMainProb}%</div>` : ''}
       </div>
       <div style="flex:1;font-size:12px;color:#E0E0E0;line-height:1.6">
-        <div>当前综合 AL: <b style="color:#FF8A65">${total_AL}</b> ${f.isManual ? '<span style="font-size:10px;color:#FFB74D;font-weight:700">✏️ 已手动</span>' : '<span style="font-size:10px;color:#888">(自动算)</span>'}</div>
-        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
+        <div>${isWhatIf ? '💭 模拟综合 AL' : '当前综合 AL'}: <b style="color:#FF8A65;font-size:14px">${total_AL}</b> ${isWhatIf ? `<span style="font-size:10px;color:#94A3B8">(真实 <s>${realTotalAL}</s>)</span>` : '<span style="font-size:10px;color:#888">(自动算)</span>'}</div>
+        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center">
           ${_renderALEditor('english', '英', bySubject.english_AL)}
           ${_renderALEditor('math', '数', bySubject.math_AL)}
           ${_renderALEditor('science', '科', bySubject.science_AL)}
           ${_renderALEditor('chinese', '华', bySubject.chinese_AL)}
-          ${f.isManual ? `<button onclick="resetSubjectALToAuto()" style="font-size:10px;padding:2px 6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:3px;color:#A0A0A0;cursor:pointer">↻ 自动</button>` : ''}
+          ${isWhatIf ? `<button onclick="clearAlWhatIf()" style="font-size:11px;padding:6px 10px;background:rgba(255,184,0,0.12);border:1px solid rgba(255,184,0,0.40);border-radius:4px;color:#FFB74D;cursor:pointer;font-weight:700">↻ 清除模拟</button>` : ''}
         </div>
         <div style="margin-top:6px">${main.name} COP: <b style="color:#FFD180">${main.cop}</b></div>
+        ${!isWhatIf ? `<div style="margin-top:4px;font-size:10px;color:#94A3B8;font-style:italic">💡 按 +/- 模拟"如果 AL 提到 N, 录取率会变多少%" (不动真实 AL)</div>` : ''}
         ${lift > 0 ? `<div style="margin-top:4px;padding:6px;background:linear-gradient(135deg, rgba(255,184,0,0.12), rgba(255,107,53,0.06));border:1px solid rgba(255,184,0,0.30);border-radius:4px"><b style="color:#FFB74D">💡 英语 AL${bySubject.english_AL} → AL3</b> = 录取 <b style="color:#FFD180">${main.probability}% → ${mainImproved.probability}%</b> (+${lift}%)</div>` : ''}
       </div>
     </div>
@@ -877,49 +886,72 @@ function renderTargetSchoolMini() {
 }
 window.renderTargetSchoolMini = renderTargetSchoolMini;
 
-// v19.15j: 4 科 AL 内联编辑 helper (供 renderTargetSchoolMini + openAllSchoolsModal 共用)
+// v19.15k: 4 科 AL what-if 模拟 (in-memory, 不持久化, 关 app 自动恢复真实 AL)
+// 设计目的: 孩子看"如果英语提到 AL3, 立化会变多少%", 不能篡改真实 AL
+let _alWhatIf = null;  // null = 用真实自动算; {english,math,science,chinese} = 模拟覆盖
+
+function _getEffectiveForecast() {
+  if (!window.getAdmissionForecasts) return null;
+  return window.getAdmissionForecasts(state, _alWhatIf);
+}
+
+// 4 科 AL 内联编辑 helper, 按钮 32×32 触控达 WCAG (v19.15j 18×18 太小)
 function _renderALEditor(key, label, val) {
   return `
-    <span style="display:inline-flex;align-items:center;gap:2px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:4px;padding:2px 4px">
-      <span style="color:#94A3B8;font-size:11px">${label}</span>
-      <button onclick="bumpManualAL('${key}',-1)" style="width:18px;height:18px;border:1px solid rgba(255,255,255,0.20);background:rgba(255,255,255,0.05);color:#4FC3F7;border-radius:3px;cursor:pointer;font-weight:900;font-size:12px;line-height:1;padding:0">−</button>
-      <b style="color:#FF8A65;font-size:13px;min-width:14px;text-align:center;display:inline-block">${val}</b>
-      <button onclick="bumpManualAL('${key}',+1)" style="width:18px;height:18px;border:1px solid rgba(255,255,255,0.20);background:rgba(255,255,255,0.05);color:#4FC3F7;border-radius:3px;cursor:pointer;font-weight:900;font-size:12px;line-height:1;padding:0">+</button>
+    <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:6px;padding:3px 6px">
+      <span style="color:#94A3B8;font-size:12px;font-weight:700">${label}</span>
+      <button onclick="bumpWhatIfAL('${key}',-1)" style="min-width:32px;min-height:32px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.06);color:#4FC3F7;border-radius:4px;cursor:pointer;font-weight:900;font-size:16px;line-height:1;padding:0">−</button>
+      <b style="color:#FF8A65;font-size:15px;min-width:18px;text-align:center;display:inline-block">${val}</b>
+      <button onclick="bumpWhatIfAL('${key}',+1)" style="min-width:32px;min-height:32px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.06);color:#4FC3F7;border-radius:4px;cursor:pointer;font-weight:900;font-size:16px;line-height:1;padding:0">+</button>
     </span>`;
 }
 
-function bumpManualAL(subj, delta) {
-  if (!window.setManualSubjectAL || !window.getAdmissionForecasts) return;
-  const cur = window.getAdmissionForecasts(state).bySubject[subj + '_AL'] || 6;
+function bumpWhatIfAL(subj, delta) {
+  if (!window.getAdmissionForecasts) return;
+  // 当前 effective (whatIf || real) 作为基准
+  const cur = _getEffectiveForecast().bySubject[subj + '_AL'] || 6;
   const next = Math.max(1, Math.min(8, cur + delta));
   if (next === cur) return;
-  window.setManualSubjectAL(state, subj, next);
-  saveState(state);
-  renderAll();
-  // 若有 8 校 modal 在打开, 重渲
+  // 初次模拟: snapshot 当前 real 值到 _alWhatIf, 再覆盖该科
+  if (!_alWhatIf) {
+    const real = window.getAdmissionForecasts(state).bySubject;
+    _alWhatIf = {
+      english: real.english_AL,
+      math: real.math_AL,
+      science: real.science_AL,
+      chinese: real.chinese_AL
+    };
+  }
+  _alWhatIf[subj] = next;
+  // 不动 state, 不 saveState — 只重渲 UI
+  renderTargetSchoolMini();
   const m = document.getElementById('allSchoolsModal');
   if (m && m.classList.contains('show')) openAllSchoolsModal();
 }
 
-function resetSubjectALToAuto() {
-  if (!window.resetSubjectALAuto) return;
-  window.resetSubjectALAuto(state);
-  saveState(state);
-  renderAll();
+function clearAlWhatIf() {
+  _alWhatIf = null;
+  renderTargetSchoolMini();
   const m = document.getElementById('allSchoolsModal');
   if (m && m.classList.contains('show')) openAllSchoolsModal();
-  showToast('↻ AL 已恢复自动算', 'success');
+  showToast('↻ 模拟已清除, 显示真实 AL', 'success');
 }
 
+// 兼容旧别名 (历史 inline onclick 可能引用) — v19.15k 实际改名为 bumpWhatIfAL/clearAlWhatIf
 window._renderALEditor = _renderALEditor;
-window.bumpManualAL = bumpManualAL;
-window.resetSubjectALToAuto = resetSubjectALToAuto;
+window.bumpWhatIfAL = bumpWhatIfAL;
+window.clearAlWhatIf = clearAlWhatIf;
+window._getEffectiveForecast = _getEffectiveForecast;
+// 别名兼容 (旧 v19.15j 引用)
+window.bumpManualAL = bumpWhatIfAL;
+window.resetSubjectALToAuto = clearAlWhatIf;
 
 // v19.15i: 8 校全列表 modal (从 "查看全部 8 校 →" 触发)
+// v19.15k: 走 effective (real || whatIf), 让 +/- 调节同步反映在 8 校列表
 function openAllSchoolsModal() {
   if (!window.getAdmissionForecasts) { showToast('数据未就绪', 'warn'); return; }
-  const f = window.getAdmissionForecasts(state);
-  const { bySubject, total_AL, schools, ifEnglishImproved } = f;
+  const f = (typeof _getEffectiveForecast === 'function') ? _getEffectiveForecast() : window.getAdmissionForecasts(state);
+  const { bySubject, total_AL, schools, ifEnglishImproved, isWhatIf, realTotalAL } = f;
   const byTier = { top: [], high: [], mid: [] };
   schools.forEach(s => { (byTier[s.tier] || byTier.mid).push(s); });
   const probColor = (p) => p >= 80 ? '#66FFB0' : p >= 50 ? '#FFB74D' : p >= 20 ? '#FF8A65' : '#EF5350';
@@ -949,15 +981,16 @@ function openAllSchoolsModal() {
     <div class="kt-inner cn-reading-inner" style="max-width:520px;background:var(--color-card);border:1px solid rgba(0,212,255,0.30);box-shadow:0 0 20px rgba(0,212,255,0.10)">
       <div class="kt-header">
         <div style="flex:1">
-          <div class="kt-title" style="color:#4FC3F7">🏫 全部 ${schools.length} 校 录取概率</div>
-          <div class="kt-progress">综合 AL <b style="color:#FF8A65">${total_AL}</b> ${f.isManual ? '<span style="font-size:10px;color:#FFB74D;font-weight:700">✏️ 已手动</span>' : '<span style="font-size:10px;color:#888">(自动算)</span>'}</div>
-          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center">
+          <div class="kt-title" style="color:#4FC3F7">🏫 全部 ${schools.length} 校 ${isWhatIf ? '💭 模拟概率' : '录取概率'}</div>
+          <div class="kt-progress">${isWhatIf ? '💭 模拟综合 AL' : '综合 AL'} <b style="color:#FF8A65">${total_AL}</b> ${isWhatIf ? `<span style="font-size:10px;color:#94A3B8">(真实 <s>${realTotalAL}</s>)</span>` : '<span style="font-size:10px;color:#888">(自动算)</span>'}</div>
+          <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
             ${_renderALEditor('english', '英', bySubject.english_AL)}
             ${_renderALEditor('math', '数', bySubject.math_AL)}
             ${_renderALEditor('science', '科', bySubject.science_AL)}
             ${_renderALEditor('chinese', '华', bySubject.chinese_AL)}
-            ${f.isManual ? `<button onclick="resetSubjectALToAuto()" style="font-size:10px;padding:2px 6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:3px;color:#A0A0A0;cursor:pointer">↻ 自动</button>` : ''}
+            ${isWhatIf ? `<button onclick="clearAlWhatIf()" style="font-size:11px;padding:6px 10px;background:rgba(255,184,0,0.12);border:1px solid rgba(255,184,0,0.40);border-radius:4px;color:#FFB74D;cursor:pointer;font-weight:700">↻ 清除模拟</button>` : ''}
           </div>
+          ${!isWhatIf ? `<div style="margin-top:6px;font-size:10px;color:#94A3B8;font-style:italic">💡 按 +/- 模拟 "如果 AL 提到 N, 8 校录取率会变多少%"</div>` : ''}
         </div>
         <button class="vocab-modal-close" onclick="closeAllSchoolsModal()">×</button>
       </div>

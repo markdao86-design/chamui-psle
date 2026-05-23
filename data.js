@@ -5467,9 +5467,8 @@ function getDefaultState() {
     // v19.12: Paper 2 模拟卷历史 (用于综合 PSLE AL 预测)
     paper2ALHistory: [],
     // v19.12: 4 科预测 AL (人工 + mini-game 加权, 真考实测 fallback)
-    subjectALEstimates: { english: 6, math: 1, science: 2, chinese: 1, lastUpdate: null },
-    // v19.15j: 4 科 AL 手动覆盖 (null = 自动算, {english,math,science,chinese} = 完全覆盖)
-    subjectALManual: null
+    subjectALEstimates: { english: 6, math: 1, science: 2, chinese: 1, lastUpdate: null }
+    // v19.15k: 撤回 subjectALManual 持久化 — 改成 in-memory _alWhatIf 临时模拟 (防 self-deception, 关 app 自动恢复真实 AL)
   };
 }
 
@@ -5516,23 +5515,8 @@ function _gameDiffToAL(diff, subject) {
   return map[diff] || 6;
 }
 
-// 计算综合 PSLE 预测 AL (核心)
+// 计算综合 PSLE 预测 AL (核心) — v19.15k: 永远 auto 算, 不读 manual override
 function computeTotalAL(state) {
-  // v19.15j: 若 user 手动覆盖 4 科 AL, 完全用手动值 (skip auto 算法)
-  if (state.subjectALManual && typeof state.subjectALManual === 'object') {
-    const m = state.subjectALManual;
-    const english_AL = Math.max(1, Math.min(8, m.english || 6));
-    const math_AL = Math.max(1, Math.min(8, m.math || 1));
-    const science_AL = Math.max(1, Math.min(8, m.science || 2));
-    const chinese_AL = Math.max(1, Math.min(8, m.chinese || 1));
-    const total_AL = english_AL + math_AL + science_AL + chinese_AL;
-    return {
-      bySubject: { english_AL, math_AL, science_AL, chinese_AL },
-      total_AL,
-      sgRank_pct: estimateSGRank(total_AL),
-      isManual: true
-    };
-  }
   const est = state.subjectALEstimates || { english: 6, math: 1, science: 2, chinese: 1 };
   // 英语: 取 Paper 2 模拟卷最近 4 次预测 AL 平均, 没有则用 est.english fallback
   const p2Hist = state.paper2ALHistory || [];
@@ -5555,58 +5539,61 @@ function computeTotalAL(state) {
   return {
     bySubject: { english_AL, math_AL, science_AL, chinese_AL },
     total_AL,
-    sgRank_pct: estimateSGRank(total_AL),
-    isManual: false
+    sgRank_pct: estimateSGRank(total_AL)
   };
 }
 
-// v19.15j: 手动设 1 科 AL (+/- 按钮触发)
-function setManualSubjectAL(state, subjectKey, value) {
-  const v = Math.max(1, Math.min(8, parseInt(value) || 1));
-  // 若首次手动设, 用当前 auto 值做基础, 再覆盖该科
-  if (!state.subjectALManual || typeof state.subjectALManual !== 'object') {
-    // 临时去掉 manual 算 auto
-    const tmp = state.subjectALManual;
-    state.subjectALManual = null;
-    const auto = computeTotalAL(state).bySubject;
-    state.subjectALManual = tmp;
-    state.subjectALManual = {
-      english: auto.english_AL,
-      math: auto.math_AL,
-      science: auto.science_AL,
-      chinese: auto.chinese_AL
-    };
-  }
-  state.subjectALManual[subjectKey] = v;
-}
-
-// v19.15j: 撤销手动 AL 回到 auto
-function resetSubjectALAuto(state) {
-  state.subjectALManual = null;
+// v19.15k: getAdmissionForecasts 兼容 whatIfBySubject 临时覆盖 (用于 what-if 模拟, 不动 state)
+function _buildSchools(total_AL, bySubject) {
+  return PSLE_TARGET_SCHOOLS.map(s => ({
+    ...s,
+    probability: admissionProbability(total_AL, s.cop)
+  }));
 }
 
 // 获取所有目标校录取预测 (主页录取概率卡用)
-function getAdmissionForecasts(state) {
-  const calc = computeTotalAL(state);
+// v19.15k: 加 whatIfBySubject 可选参数 (例 {english:3, math:1, science:2, chinese:1}) 临时模拟"如果调到这个 AL"
+function getAdmissionForecasts(state, whatIfBySubject) {
+  const realCalc = computeTotalAL(state);
+  // 若 whatIf 存在, 用它覆盖 4 科算"模拟" total_AL (real 仍保留对比)
+  let effectiveBySubject = realCalc.bySubject;
+  let effectiveTotalAL = realCalc.total_AL;
+  let isWhatIf = false;
+  if (whatIfBySubject && typeof whatIfBySubject === 'object') {
+    const w = whatIfBySubject;
+    effectiveBySubject = {
+      english_AL: Math.max(1, Math.min(8, w.english || realCalc.bySubject.english_AL)),
+      math_AL: Math.max(1, Math.min(8, w.math || realCalc.bySubject.math_AL)),
+      science_AL: Math.max(1, Math.min(8, w.science || realCalc.bySubject.science_AL)),
+      chinese_AL: Math.max(1, Math.min(8, w.chinese || realCalc.bySubject.chinese_AL))
+    };
+    effectiveTotalAL = effectiveBySubject.english_AL + effectiveBySubject.math_AL + effectiveBySubject.science_AL + effectiveBySubject.chinese_AL;
+    isWhatIf = (effectiveTotalAL !== realCalc.total_AL);
+  }
   const schools = PSLE_TARGET_SCHOOLS.map(s => ({
     ...s,
-    probability: admissionProbability(calc.total_AL, s.cop)
+    probability: admissionProbability(effectiveTotalAL, s.cop)
   }));
   // 算英语提到 AL3 的预期: 综合 -3, 各校概率
   const ifEngAL3 = {
-    total_AL: calc.bySubject.english_AL > 3
-      ? calc.total_AL - (calc.bySubject.english_AL - 3)
-      : calc.total_AL,
+    total_AL: effectiveBySubject.english_AL > 3
+      ? effectiveTotalAL - (effectiveBySubject.english_AL - 3)
+      : effectiveTotalAL,
     schools: PSLE_TARGET_SCHOOLS.map(s => ({
       ...s,
       probability: admissionProbability(
-        calc.bySubject.english_AL > 3 ? calc.total_AL - (calc.bySubject.english_AL - 3) : calc.total_AL,
+        effectiveBySubject.english_AL > 3 ? effectiveTotalAL - (effectiveBySubject.english_AL - 3) : effectiveTotalAL,
         s.cop
       )
     }))
   };
   return {
-    ...calc,
+    bySubject: effectiveBySubject,
+    total_AL: effectiveTotalAL,
+    sgRank_pct: estimateSGRank(effectiveTotalAL),
+    isWhatIf,
+    realBySubject: realCalc.bySubject,
+    realTotalAL: realCalc.total_AL,
     schools,
     ifEnglishImproved: ifEngAL3
   };
@@ -5625,8 +5612,6 @@ function recordPaper2AL(state, predictedAL, score, total) {
 }
 
 window.PSLE_TARGET_SCHOOLS = PSLE_TARGET_SCHOOLS;
-window.setManualSubjectAL = setManualSubjectAL;
-window.resetSubjectALAuto = resetSubjectALAuto;
 window.admissionProbability = admissionProbability;
 window.estimateSGRank = estimateSGRank;
 window.computeTotalAL = computeTotalAL;

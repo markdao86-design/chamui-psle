@@ -411,23 +411,37 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.15j/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.15j: cache buster 已更新到 19.15j (4 科 AL 手动编辑 +/- 实时算概率)');
+assert(/\?v=19\.15k/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.15k: cache buster 已更新到 19.15k (AL 改 what-if 模拟 in-memory + 按钮 32px)');
+// v19.15k: AL what-if in-memory (不持久化)
+assert(/let _alWhatIf = null/.test(appSrc), 'v19.15k: in-memory _alWhatIf');
+assert(/function bumpWhatIfAL/.test(appSrc), 'v19.15k: bumpWhatIfAL 函数');
+assert(/function clearAlWhatIf/.test(appSrc), 'v19.15k: clearAlWhatIf 函数');
+assert(/function _getEffectiveForecast/.test(appSrc), 'v19.15k: _getEffectiveForecast 取真实+whatIf');
+// 按钮触控 32×32 达 WCAG (旧 18×18 已撤)
+assert(/min-width:32px;min-height:32px/.test(appSrc), 'v19.15k: AL 按钮 32px 达 WCAG');
+assert(!/width:18px;height:18px;border:1px solid rgba\(255,255,255,0\.20\);background:rgba\(255,255,255,0\.05\);color:#4FC3F7;border-radius:3px;cursor:pointer;font-weight:900;font-size:12px;line-height:1;padding:0">−/.test(appSrc), 'v19.15k: 旧 18x18 AL 按钮已删');
+// "模拟" 标识替换 "已手动"
+assert(/💭 模拟/.test(appSrc), 'v19.15k: 显示 💭 模拟 标识');
+assert(/真实 <s>\$\{realTotalAL\}<\/s>/.test(appSrc), 'v19.15k: 显示真实 AL 对比 (删除线)');
+// data 类 v19.15k 断言移到 dataSrcV14 之后 (下面)
 // v19.15j: 4 科 AL 手动编辑
 assert(/function _renderALEditor/.test(appSrc), 'v19.15j: _renderALEditor helper');
-assert(/function bumpManualAL/.test(appSrc), 'v19.15j: bumpManualAL 函数');
-assert(/function resetSubjectALToAuto/.test(appSrc), 'v19.15j: resetSubjectALToAuto 函数');
-assert(/onclick="bumpManualAL\('\$\{key\}',-1\)"/.test(appSrc), 'v19.15j: - 按钮');
-assert(/onclick="bumpManualAL\('\$\{key\}',\+1\)"/.test(appSrc), 'v19.15j: + 按钮');
+// v19.15k 重命名: function bumpManualAL → bumpWhatIfAL (window 别名兼容)
+assert(/function bumpWhatIfAL/.test(appSrc) && /window\.bumpManualAL = bumpWhatIfAL/.test(appSrc), 'v19.15k: bumpWhatIfAL 函数 + bumpManualAL 兼容别名');
+// v19.15k 重命名 bumpManualAL → bumpWhatIfAL / resetSubjectALToAuto → clearAlWhatIf (旧 window 别名仍保留兼容)
+assert(/window\.resetSubjectALToAuto = clearAlWhatIf/.test(appSrc), 'v19.15k: resetSubjectALToAuto 兼容 window 别名');
+assert(/onclick="bumpWhatIfAL\('\$\{key\}',-1\)"/.test(appSrc), 'v19.15k: - 按钮 (改 bumpWhatIfAL)');
+assert(/onclick="bumpWhatIfAL\('\$\{key\}',\+1\)"/.test(appSrc), 'v19.15k: + 按钮 (改 bumpWhatIfAL)');
 // 接入 renderTargetSchoolMini + openAllSchoolsModal
 const renderALCount = (appSrc.match(/_renderALEditor\('english'/g) || []).length;
 assert(renderALCount >= 2, `v19.15j: _renderALEditor 接入 ≥2 处 (主页 + modal, 实际 ${renderALCount})`);
 // 防回归: 显示文案应包含 ✏️ 已手动 / (自动算) 标识
-assert(/✏️ 已手动/.test(appSrc), 'v19.15j: 手动覆盖标识');
+// v19.15k 撤回 v19.15j "✏️ 已手动" 改 "💭 模拟" (上面已断言 💭 模拟)
 // v19.15i: 8 校 modal
 assert(/function openAllSchoolsModal\(\)/.test(appSrc), 'v19.15i: openAllSchoolsModal 函数');
 assert(/onclick="openAllSchoolsModal\(\)"/.test(appSrc), 'v19.15i: 查看全部 8 校 按钮触发 openAllSchoolsModal');
-assert(/全部 \$\{schools\.length\} 校 录取概率/.test(appSrc), 'v19.15i: 8 校 modal 标题');
+assert(/全部 \$\{schools\.length\} 校 \$\{isWhatIf \? '💭 模拟概率' : '录取概率'\}/.test(appSrc), 'v19.15i+k: 8 校 modal 标题 (含 whatIf 分支)');
 // v19.15i: 装备/皮肤防沉迷封顶
 assert(/function _checkAvatarActionCap/.test(appSrc), 'v19.15i: _checkAvatarActionCap helper');
 assert(/function _bumpAvatarAction/.test(appSrc), 'v19.15i: _bumpAvatarAction helper');
@@ -461,7 +475,8 @@ const newBrightClose = (appSrc.match(/border:2px solid var\(--color-text\);color
 assert(newBrightClose >= 5, `v19.15f: ≥5 处 × button 升级到亮色圆形 (实际 ${newBrightClose})`);
 // v19.15e: 主页配色统一到暗调+青色发光 (匹配 .checkin-item)
 assert(/暗调 \+ 青色发光风格, 匹配打卡页 \.checkin-item/.test(appSrc), 'v19.15e: renderTodayThreeCard 注释说明改暗调');
-assert(/暗调 \+ 青色发光 \+ 校牌色 \(匹配打卡页\)/.test(appSrc), 'v19.15e: renderTargetSchoolMini 改暗调');
+// v19.15k 重构 renderTargetSchoolMini 后该注释撤. 暗调样式仍在 (rgba(0,212,255,...) 渐变)
+assert(/background:linear-gradient\(135deg, rgba\(0,212,255,0\.08\)/.test(appSrc), 'v19.15e+k: renderTargetSchoolMini 仍暗调 (青色渐变)');
 // 验证关键暗色 token 出现
 assert(/color:#4FC3F7/.test(appSrc), 'v19.15e: 目标校标题色 #4FC3F7 (亮青)');
 assert(/probColorBright/.test(appSrc), 'v19.15e: 录取概率色加亮版本 probColorBright');
@@ -618,11 +633,11 @@ assert(/DAILY_GAME_HARD_NUDGE\s*=\s*15/.test(dataSrcV14), 'v19.15 P0-3: DAILY_GA
 // v19.15i data 类: 装备/皮肤防沉迷封顶常量
 assert(/DAILY_AVATAR_ACTIONS_SOFT\s*=\s*8/.test(dataSrcV14), 'v19.15i: DAILY_AVATAR_ACTIONS_SOFT = 8');
 assert(/DAILY_AVATAR_ACTIONS_HARD\s*=\s*15/.test(dataSrcV14), 'v19.15i: DAILY_AVATAR_ACTIONS_HARD = 15');
-// v19.15j data 类: 手动 AL 覆盖
-assert(/state\.subjectALManual && typeof state\.subjectALManual === 'object'/.test(dataSrcV14), 'v19.15j: computeTotalAL 检查 manual override');
-assert(/function setManualSubjectAL/.test(dataSrcV14), 'v19.15j: setManualSubjectAL helper');
-assert(/function resetSubjectALAuto/.test(dataSrcV14), 'v19.15j: resetSubjectALAuto helper');
-assert(/subjectALManual:\s*null/.test(dataSrcV14), 'v19.15j: state default subjectALManual = null');
+// v19.15k 撤回 v19.15j subjectALManual 持久化, 改 in-memory _alWhatIf (data 类断言)
+assert(!/state\.subjectALManual && typeof state\.subjectALManual === 'object'/.test(dataSrcV14), 'v19.15k: computeTotalAL 已撤 manual 持久化分支');
+assert(/getAdmissionForecasts\(state, whatIfBySubject\)/.test(dataSrcV14), 'v19.15k: getAdmissionForecasts 加 whatIfBySubject 参数');
+assert(!/window\.setManualSubjectAL = setManualSubjectAL/.test(dataSrcV14), 'v19.15k: setManualSubjectAL window 暴露已撤');
+assert(!/subjectALManual:\s*null/.test(dataSrcV14), 'v19.15k: state default subjectALManual 已删');
 // v19.15c data 类: currentWeek 自动算 + carry-forward 池
 assert(/function computeCurrentWeekFromToday/.test(dataSrcV14), 'v19.15c: computeCurrentWeekFromToday 函数');
 assert(/function getCarryForwardTasks/.test(dataSrcV14), 'v19.15c: getCarryForwardTasks 函数');
