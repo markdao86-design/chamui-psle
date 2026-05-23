@@ -1557,11 +1557,11 @@ function renderLearningPortraitCard() {
   const gameRuns = weekLogs.filter(l => /Game|游戏|mini-game/.test(l.reason || '')).length;
   // 知识树 ⭐ 总数
   const totalStars = Object.values(state.knowledgeStars || {}).reduce((s, e) => s + (e.stars || 0), 0);
-  // 难度等级
+  // v19.15h: 修 bug — 显示 raw state.gameStats.difficulty 可能 <4 (旧 state 持久化), 改用 getDifficulty 强制 minFloor=4
   const diffs = ['math', 'cloze', 'sst', 'grammar', 'editing', 'vocab'].map(k => ({
     key: k,
     label: {math:'数学', cloze:'Cloze', sst:'SST', grammar:'语法', editing:'改错', vocab:'词汇'}[k],
-    diff: state.gameStats?.[k]?.difficulty || (k === 'math' ? 4 : 3)
+    diff: window.getDifficulty ? window.getDifficulty(state, k) : 4
   }));
   // Paper 2 突击进度
   const p2 = window.getPaper2SprintStatus ? window.getPaper2SprintStatus(state) : null;
@@ -1569,40 +1569,41 @@ function renderLearningPortraitCard() {
   const wrongs = state.wrongAnswers || [];
   const wrongByGame = wrongs.reduce((acc, w) => { acc[w.gameKey] = (acc[w.gameKey] || 0) + 1; return acc; }, {});
 
+  // v19.15h: 整张卡改暗调 + 青色 accent (匹配主题)
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <div style="font-size:14px;font-weight:900">📊 本周学习画像</div>
-      <div style="margin-left:auto;font-size:11px;color:#888">W${week} · 实力数据 (不是积分)</div>
+      <div style="font-size:14px;font-weight:900;color:#E0E0E0">📊 本周学习画像</div>
+      <div style="margin-left:auto;font-size:11px;color:#94A3B8">W${week} · 实力数据 (不是积分)</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-      <div style="background:#F0F8FF;border-left:3px solid #4ECDC4;padding:6px 10px;border-radius:4px">
-        <div style="font-size:10px;color:#666">📅 打卡天数</div>
-        <div style="font-size:16px;font-weight:900;color:#2D3047">${daysChecked}/7 天</div>
+      <div style="background:linear-gradient(135deg, rgba(0,212,255,0.10), rgba(0,212,255,0.02));border-left:3px solid #4FC3F7;padding:6px 10px;border-radius:4px">
+        <div style="font-size:10px;color:#A0A0A0">📅 打卡天数</div>
+        <div style="font-size:16px;font-weight:900;color:#4FC3F7">${daysChecked}/7 天</div>
       </div>
-      <div style="background:#FFF5F0;border-left:3px solid #FF6B6B;padding:6px 10px;border-radius:4px">
-        <div style="font-size:10px;color:#666">🎮 Mini-game 次数</div>
-        <div style="font-size:16px;font-weight:900;color:#2D3047">${gameRuns} 次</div>
+      <div style="background:linear-gradient(135deg, rgba(255,138,101,0.10), rgba(255,138,101,0.02));border-left:3px solid #FF8A65;padding:6px 10px;border-radius:4px">
+        <div style="font-size:10px;color:#A0A0A0">🎮 Mini-game 次数</div>
+        <div style="font-size:16px;font-weight:900;color:#FF8A65">${gameRuns} 次</div>
       </div>
-      <div style="background:#FFFCE6;border-left:3px solid #FFA500;padding:6px 10px;border-radius:4px">
-        <div style="font-size:10px;color:#666">⭐ 知识树掌握</div>
-        <div style="font-size:16px;font-weight:900;color:#2D3047">${totalStars}/105 ⭐</div>
+      <div style="background:linear-gradient(135deg, rgba(255,184,0,0.10), rgba(255,184,0,0.02));border-left:3px solid #FFB74D;padding:6px 10px;border-radius:4px">
+        <div style="font-size:10px;color:#A0A0A0">⭐ 知识树掌握</div>
+        <div style="font-size:16px;font-weight:900;color:#FFB74D">${totalStars}/105 ⭐</div>
       </div>
-      <div style="background:#F5F0FF;border-left:3px solid #A788E0;padding:6px 10px;border-radius:4px">
-        <div style="font-size:10px;color:#666">📓 错题待清</div>
-        <div style="font-size:16px;font-weight:900;color:#2D3047">${wrongs.length} 题</div>
+      <div style="background:linear-gradient(135deg, rgba(167,136,224,0.10), rgba(167,136,224,0.02));border-left:3px solid #B39DDB;padding:6px 10px;border-radius:4px">
+        <div style="font-size:10px;color:#A0A0A0">📓 错题待清</div>
+        <div style="font-size:16px;font-weight:900;color:#B39DDB">${wrongs.length} 题</div>
       </div>
     </div>
-    <div style="background:#FAFAFA;border-radius:4px;padding:6px 10px;font-size:11px;line-height:1.6">
-      <div style="font-weight:700;margin-bottom:3px">🎯 各科当前难度</div>
-      ${diffs.map(d => `<span style="display:inline-block;margin-right:8px;color:${d.diff >= 5 ? '#4ECDC4' : d.diff >= 4 ? '#FFA500' : '#999'}">${d.label} Lv ${d.diff}</span>`).join('')}
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:4px;padding:8px 10px;font-size:11px;line-height:1.8;color:#E0E0E0">
+      <div style="font-weight:700;margin-bottom:4px;color:#4FC3F7">🎯 各科当前难度 <span style="font-weight:400;font-size:10px;color:#A0A0A0">(Lv 1-6, 起步 Lv 4, 最近 3 次 ≥80% 升级, 最近 2 次 ≤40% 降级)</span></div>
+      ${diffs.map(d => `<span style="display:inline-block;margin-right:10px;font-weight:700;color:${d.diff >= 5 ? '#66FFB0' : d.diff >= 4 ? '#FFB74D' : '#EF5350'}">${d.label} Lv ${d.diff}</span>`).join('')}
     </div>
     ${p2 && (p2.cloze.done > 0 || p2.sst.done > 0) ? `
-    <div style="background:#FFF0F0;border-radius:4px;padding:6px 10px;font-size:11px;line-height:1.5;margin-top:6px;border-left:3px solid #FF6B6B">
-      <div style="font-weight:700;color:#FF6B6B;margin-bottom:3px">🎯 Paper 2 突击进度</div>
-      <div>Cloze ${p2.cloze.done}/${p2.cloze.target} 题 ${p2.cloze.recentAcc !== null ? `· 近 5 次 ${p2.cloze.recentAcc}%` : ''}</div>
-      <div>SST ${p2.sst.done}/${p2.sst.target} 题 ${p2.sst.recentAcc !== null ? `· 近 5 次 ${p2.sst.recentAcc}%` : ''}</div>
+    <div style="background:linear-gradient(135deg, rgba(255,51,102,0.10), rgba(255,51,102,0.02));border:1px solid rgba(255,51,102,0.30);border-radius:4px;padding:8px 10px;font-size:11px;line-height:1.5;margin-top:6px;border-left:3px solid #FF3366">
+      <div style="font-weight:700;color:#FF6B9D;margin-bottom:3px">🎯 Paper 2 突击进度</div>
+      <div style="color:#E0E0E0">Cloze ${p2.cloze.done}/${p2.cloze.target} 题 ${p2.cloze.recentAcc !== null ? `· 近 5 次 ${p2.cloze.recentAcc}%` : ''}</div>
+      <div style="color:#E0E0E0">SST ${p2.sst.done}/${p2.sst.target} 题 ${p2.sst.recentAcc !== null ? `· 近 5 次 ${p2.sst.recentAcc}%` : ''}</div>
     </div>` : ''}
-    <div style="text-align:center;font-size:10px;color:#888;margin-top:6px;font-style:italic">
+    <div style="text-align:center;font-size:10px;color:#94A3B8;margin-top:6px;font-style:italic">
       💡 真正的进步看这里, 不在积分和装备
     </div>
   `;

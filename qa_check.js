@@ -411,8 +411,15 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.15g/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.15g: cache buster 已更新到 19.15g (练习中心 4 卡改暗调 + 各科 accent)');
+assert(/\?v=19\.15h/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.15h: cache buster 已更新到 19.15h (本周学习画像卡改暗调 + 修难度 floor)');
+// v19.15h: 难度显示走 getDifficulty (强制 floor=4)
+assert(/diff:\s*window\.getDifficulty\s*\?\s*window\.getDifficulty\(state,\s*k\)\s*:\s*4/.test(appSrc), 'v19.15h: 难度显示用 getDifficulty 强制 floor');
+// 防回归: 不能再有 raw state.gameStats?.[k]?.difficulty || (k === 'math' ? 4 : 3)
+assert(!/diff:\s*state\.gameStats\?\.\[k\]\?\.difficulty\s*\|\|\s*\(k\s*===\s*'math'\s*\?\s*4\s*:\s*3\)/.test(appSrc), 'v19.15h: 旧 raw difficulty fallback 已撤');
+// 画像卡暗调
+assert(/v19\.15h: 整张卡改暗调/.test(appSrc), 'v19.15h: 画像卡注释说明改暗调');
+assert(/起步 Lv 4, 最近 3 次 ≥80% 升级/.test(appSrc), 'v19.15h: 加难度规则说明');
 // v19.15g: 练习中心 4 卡改暗调
 assert(/class="practice-hub-btn" data-accent="green"/.test(idxSrc), 'v19.15g: 知识树 卡 data-accent=green');
 assert(/class="practice-hub-btn" data-accent="orange"/.test(idxSrc), 'v19.15g: 题库 卡 data-accent=orange');
