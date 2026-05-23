@@ -4814,14 +4814,9 @@ function getTodayGameType() {
 }
 
 function renderGameHubCard() {
+  // v19.24: 删主页插入, 改 render 到 page-practice 内的 gameHubCard 容器 (已在 index.html 加)
   let el = document.getElementById('gameHubCard');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'gameHubCard';
-    const heroSection = document.querySelector('.hero-section');
-    if (heroSection) heroSection.parentNode.insertBefore(el, heroSection.nextSibling);
-    else return;
-  }
+  if (!el) return;  // 不存在不插入 (避免出现在主页 hero 后)
   const gameType = getTodayGameType();
   const diff = (state.gameStats && state.gameStats[gameType]) ? state.gameStats[gameType].difficulty : 4;
   const count = _getDailyGameCount(gameType);
@@ -5856,13 +5851,25 @@ function _renderErrorBankReview() {
         <button class="btn btn-primary" style="margin-left:8px" onclick="submitErrorBankMath()">提交</button>
       </div>`;
   }
-  // v19.9: 真考错题红色高亮标记
+  // v19.9: 真考错题红色高亮 / v19.24: 改暗调适配
   const isRealExam = item.source === 'paper2-real';
-  const cardBg = isRealExam ? 'background:linear-gradient(135deg,#FFF0F0,#FFE0E0);border:2px solid #FF6B6B;' : '';
+  const cardBg = isRealExam ? 'background:linear-gradient(135deg, rgba(239,83,80,0.10), rgba(239,83,80,0.04));border:2px solid #FF6B6B;' : '';
   const tagPrefix = isRealExam ? '🔥 真考错题 · ' : '';
-  const tagBg = isRealExam ? 'background:#FF6B6B;color:#FFF' : 'background:rgba(0,212,255,0.1);color:var(--color-primary)';
-  // v19.9: SST 类需要显示 rule
-  const ruleHtml = item.rule ? `<div style="background:#FFF8E0;border-left:3px solid #FFA500;padding:6px 10px;margin-bottom:10px;font-size:12px;color:#5D4500"><b>📝 题目要求:</b> ${escapeHtml(item.rule)}</div>` : '';
+  const tagBg = isRealExam ? 'background:#FF6B6B;color:#FFF' : 'background:rgba(0,212,255,0.10);color:var(--color-primary)';
+  // SST 类显示 rule
+  const ruleHtml = item.rule ? `<div style="background:linear-gradient(135deg, rgba(255,184,0,0.10), rgba(255,107,53,0.04));border:1px solid rgba(255,184,0,0.30);border-left:3px solid #FFB74D;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#FFD180"><b>📝 题目要求:</b> ${escapeHtml(item.q || '')}</div>` : '';
+  // v19.24: 突出错因 + 历史改错记录 (Leitner streak / retries / 上次时间)
+  const retries = item.retries || 0;
+  const streak = item.correctStreak || 0;
+  const lastDate = item.addedDate || item.lastCorrectDate || '';
+  const historyHtml = `
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;color:#A0A0A0;line-height:1.7">
+      <div style="color:#94A3B8;font-weight:700;margin-bottom:2px">📋 改错记录</div>
+      ${retries > 0 ? `<span style="color:#EF5350">❌ 已错过 ${retries} 次</span>` : '<span>🆕 首次复习</span>'}
+      · <span style="color:#66FFB0">✅ 连对 ${streak}/3</span>
+      ${lastDate ? ` · 入库 ${escapeHtml(lastDate)}` : ''}
+      ${streak >= 1 ? ` · 接近毕业 (再 ${3 - streak} 次)` : ''}
+    </div>`;
   modal.innerHTML = `
     <div class="kt-inner cn-reading-inner" style="${cardBg}">
       <div class="kt-header">
@@ -5872,7 +5879,8 @@ function _renderErrorBankReview() {
         </div>
         <button class="vocab-modal-close" onclick="closeErrorBank()">×</button>
       </div>
-      <div style="${tagBg};font-size:11px;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:8px;font-weight:${isRealExam ? '900' : '400'}">${tagPrefix}${tag}${item.tag && isRealExam ? ' · ' + escapeHtml(item.tag) : ''}${item.subj ? ' · ' + escapeHtml(item.subj) : ''}${item.retries ? ' · 已重做 ' + item.retries + ' 次' : ''}</div>
+      <div style="${tagBg};font-size:11px;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:8px;font-weight:${isRealExam ? '900' : '400'}">${tagPrefix}${tag}${item.tag && isRealExam ? ' · ' + escapeHtml(item.tag) : ''}${item.subj ? ' · ' + escapeHtml(item.subj) : ''}</div>
+      ${historyHtml}
       ${ruleHtml}
       <div class="cn-q-text" style="margin-bottom:16px">${escapeHtml(item.q)}</div>
       ${answerArea}

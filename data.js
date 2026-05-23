@@ -4807,6 +4807,35 @@ function openMysteryBoxOnce(state) {
 // ============= v17.5 Phase 2: 反直觉谜题(14 道, 1 题/难章周) =============
 // Loewenstein 信息缺口 + Schultz 预测奖赏 — 必须先猜后看
 const THINK_PUZZLES = [
+  // v19.24: 补 W1-W4 P3 章节简单思考题 (避免 W1-W4 卡片空显)
+  {
+    week: 1, subject: '🔬 P3 Diversity',
+    question: '蝙蝠是哺乳动物 (mammal) 还是鸟 (bird)?',
+    options: ['A. 鸟 — 因为会飞', 'B. 哺乳动物 — 因为有毛 + 喂奶', 'C. 爬行动物 — 像蜥蜴', 'D. 自成一类'],
+    correct: 'B',
+    explanation: '看 5 大关键词: mammal = hair (毛) + lungs (肺) + warm-blooded + give birth to live young + milk (乳)。蝙蝠虽会飞, 但有毛 + 喂奶 + 胎生 → 哺乳动物。PSLE 高频陷阱: 不是"会飞就是鸟"。'
+  },
+  {
+    week: 2, subject: '🔬 P3 Plant Life Cycle',
+    question: '把一颗种子放在干燥的玻璃瓶里 5 年, 然后浇水, 会发生什么?',
+    options: ['A. 不会发芽 (太干变死)', 'B. 可能仍发芽 (种子有"休眠"机制)', 'C. 立刻爆开', 'D. 长成小树'],
+    correct: 'B',
+    explanation: '种子在干燥状态可"休眠 dormant" 几十年甚至几百年, 只要 embryo (胚) 没死。一遇水 + 空气 + 适温, 就能发芽。这就是为什么 PSLE Q "为什么种子能在土里存几十年" — 答案是 dormancy。'
+  },
+  {
+    week: 3, subject: '🔬 P3 Animal Life Cycle',
+    question: '青蛙的幼虫 (蝌蚪 tadpole) 和成体青蛙, 哪一个有鳃 (gills)?',
+    options: ['A. 只有成体青蛙', 'B. 两个都有', 'C. 只有蝌蚪', 'D. 都没有 (青蛙用肺)'],
+    correct: 'C',
+    explanation: '蝌蚪用 gills (鳃) 在水里呼吸 — 像鱼。变态 (metamorphosis) 后, 成体青蛙长出 lungs (肺) 在陆地呼吸, 鳃消失。这是 PSLE 必背"完全变态前后器官变化" — 蝌蚪 → 青蛙 = 鳃 → 肺 + 长腿 + 尾巴消失。'
+  },
+  {
+    week: 4, subject: '🔬 P3 Plant Parts',
+    question: '一棵树的"根"全部腐烂, 但叶子和茎还在 — 树会发生什么?',
+    options: ['A. 不影响, 茎可以代替根吸水', 'B. 不能吸水 + 不能锚固, 几天倒地枯死', 'C. 反而长更快', 'D. 慢慢长出新根'],
+    correct: 'B',
+    explanation: '根的两大功能: (1) absorb water + minerals 从土里吸水, (2) anchor 固定植物。腐烂后两件都做不到 — 树吸不到水 (即使叶子还在蒸腾) + 站不稳。PSLE 高频题"切掉植物某部位会怎样" 用这个反推。'
+  },
   {
     week: 5, subject: '🔬 P4 Plant Transport ⭐',
     question: '把一棵小树苗的所有叶子都摘光, 树根继续吸水, 树会发生什么?',

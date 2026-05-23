@@ -235,9 +235,9 @@ assert(typeof def3.thinkPuzzleAnswers === 'object', 'v17.5: 默认 thinkPuzzleAn
 assert(typeof W.awardMysteryBoxesIfDue === 'function', 'v17.5: awardMysteryBoxesIfDue 存在');
 assert(typeof W.openMysteryBoxOnce === 'function', 'v17.5: openMysteryBoxOnce 存在');
 assert(typeof W.countTotalCompletedSlots === 'function', 'v17.5: countTotalCompletedSlots 存在');
-// 思考题: 14 道, 每个难章 1 题
-assert(Array.isArray(W.THINK_PUZZLES) && W.THINK_PUZZLES.length === 14,
-  `v17.5: THINK_PUZZLES 长度 14 (实际 ${W.THINK_PUZZLES && W.THINK_PUZZLES.length})`);
+// 思考题: 14 道 → v19.24 补 W1-W4 = 18 道, 每个难章 1 题
+assert(Array.isArray(W.THINK_PUZZLES) && W.THINK_PUZZLES.length >= 18,
+  `v17.5+24: THINK_PUZZLES 长度 ≥ 18 (实际 ${W.THINK_PUZZLES && W.THINK_PUZZLES.length})`);
 const tpMissing = W.THINK_PUZZLES.filter(p => !p.question || !p.options || p.options.length !== 4 || !p.correct || !p.explanation);
 assert(tpMissing.length === 0, `v17.5: 所有思考题完整 (缺 ${tpMissing.length})`);
 // 模拟答题 in-memory
@@ -411,8 +411,22 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.23/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.23: cache buster 已更新到 19.23 (目标校下移右栏第 3 位, 教学优先)');
+assert(/\?v=19\.24/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.24: cache buster 已更新到 19.24 (方案 A: gameHub 移练习中心 + 错题本 modal 加历史 + W1-W4 思考题)');
+// v19.24: gameHubCard 移练习中心
+assert(/v19\.24: gameHubCard 从主页迁到练习中心/.test(idxSrc), 'v19.24: 练习中心 gameHubCard 标注');
+assert(/v19\.24: 删主页插入, 改 render 到 page-practice 内的 gameHubCard 容器/.test(appSrc), 'v19.24: renderGameHubCard 改不主页插入');
+const oldHeroInsert = (appSrc.match(/heroSection\.parentNode\.insertBefore\(el, heroSection\.nextSibling\)/g) || []).length;
+assert(oldHeroInsert === 0, `v19.24: 旧 hero 插入逻辑已撤 (实际 ${oldHeroInsert})`);
+// v19.24: 错题本 modal 加历史改错记录
+assert(/📋 改错记录/.test(appSrc), 'v19.24: modal 加"改错记录" 块');
+assert(/接近毕业 \(再 \$\{3 - streak\} 次\)/.test(appSrc), 'v19.24: 显示"接近毕业"');
+// v19.24 data 类断言 (dataSrcV14 需移到下面 declare 后 — 此处用 fs 直读)
+const _v24data = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
+assert(/week: 1, subject: '🔬 P3 Diversity'/.test(_v24data), 'v19.24: W1 P3 Diversity 思考题');
+assert(/week: 2, subject: '🔬 P3 Plant Life Cycle'/.test(_v24data), 'v19.24: W2 P3 Plant Life Cycle');
+assert(/week: 3, subject: '🔬 P3 Animal Life Cycle'/.test(_v24data), 'v19.24: W3 P3 Animal Life Cycle');
+assert(/week: 4, subject: '🔬 P3 Plant Parts'/.test(_v24data), 'v19.24: W4 P3 Plant Parts');
 // v19.23: 右栏顺序 思考题 → 名师秘籍 → 目标校 → 毕业题
 // v19.23: 右栏 4 卡顺序 思考→名师→目标校→毕业
 assert(/id="thinkPuzzleCard"[\s\S]{0,300}id="weekMasterTipCard"[\s\S]{0,300}id="targetSchoolMini"[\s\S]{0,300}id="gradReviewCard"/.test(idxSrc), 'v19.23: 右栏顺序 思考→名师→目标校→毕业');
