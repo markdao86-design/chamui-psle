@@ -411,8 +411,16 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.15k/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.15k: cache buster 已更新到 19.15k (AL 改 what-if 模拟 in-memory + 按钮 32px)');
+assert(/\?v=19\.16/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.16: cache buster 已更新到 19.16 (核心内容补足 英/科/数 + Leitner 中途反馈)');
+// v19.16 app 类 (data 类移到 dataSrcV14 之后)
+assert(/sci_oe_grad|🎓 OE 错题毕业/.test(appSrc), 'v19.16: OE 毕业 +3 标记');
+assert(/sci_oe_consol|💪 OE 巩固/.test(appSrc), 'v19.16: OE 巩固 +1 标记');
+assert(/leitner_consol/.test(appSrc), 'v19.16: Leitner 巩固 log type');
+assert(/💪 错题巩固.*streak.*\+1/.test(appSrc), 'v19.16: 错题巩固 +1 文案');
+assert(/🎓 \+3 错题毕业/.test(appSrc), 'v19.16: 毕业 +3 文案 (原 +5)');
+const old5GradLogs = (appSrc.match(/'🎓 错题毕业 \(Leitner 3 连对\)', points: 5/g) || []).length;
+assert(old5GradLogs === 0, `v19.16: 旧 +5 毕业 log 已撤 (实际 ${old5GradLogs})`);
 // v19.15k: AL what-if in-memory (不持久化)
 assert(/let _alWhatIf = null/.test(appSrc), 'v19.15k: in-memory _alWhatIf');
 assert(/function bumpWhatIfAL/.test(appSrc), 'v19.15k: bumpWhatIfAL 函数');
@@ -521,8 +529,9 @@ assert(forceRemoveCount === 2, `v19.15a hotfix: 两处 Leitner 毕业用 {force:
 // 防回归: 不能有 removeFromErrorBank(state, item.id) 单参形式 (走 mark 双重)
 const naiveRemove = (appSrc.match(/removeFromErrorBank\(state,\s*item\.id\)/g) || []).length;
 assert(naiveRemove === 0, `v19.15a hotfix: 不能有单参 removeFromErrorBank(state, item.id) (实际 ${naiveRemove})`);
-const leitnerGradPlus5 = (appSrc.match(/state\.totalPoints\s*=\s*\(state\.totalPoints\s*\|\|\s*0\)\s*\+\s*5;\s*\n\s*state\.logs\.push\(\{\s*reason:\s*'🎓 错题毕业/g) || []).length;
-assert(leitnerGradPlus5 >= 2, `v19.15 P0-1: 两处 Leitner 分支都 +5 毕业 (实际 ${leitnerGradPlus5})`);
+// v19.16 改成 +3 毕业 (+1 中途 ×2 = 总 +5 仍 cap), 取代原 v19.15 +5 一次性
+const leitnerGradPlus3 = (appSrc.match(/state\.totalPoints\s*=\s*\(state\.totalPoints\s*\|\|\s*0\)\s*\+\s*3;\s*\n\s*state\.logs\.push\(\{\s*reason:\s*'🎓 错题毕业/g) || []).length;
+assert(leitnerGradPlus3 >= 2, `v19.16: 两处 Leitner 分支都 +3 毕业 (实际 ${leitnerGradPlus3})`);
 // 验证已删除 +2 每次 (旧逻辑)
 const leitnerPlus2 = (appSrc.match(/state\.totalPoints\s*=\s*\(state\.totalPoints\s*\|\|\s*0\)\s*\+\s*2;\s*\n\s*state\.logs\.push\(\{\s*reason:\s*'📓 错题复习答对/g) || []).length;
 assert(leitnerPlus2 === 0, `v19.15 P0-1: 旧 +2 每次答对已删除 (实际残留 ${leitnerPlus2})`);
@@ -633,6 +642,16 @@ assert(/DAILY_GAME_HARD_NUDGE\s*=\s*15/.test(dataSrcV14), 'v19.15 P0-3: DAILY_GA
 // v19.15i data 类: 装备/皮肤防沉迷封顶常量
 assert(/DAILY_AVATAR_ACTIONS_SOFT\s*=\s*8/.test(dataSrcV14), 'v19.15i: DAILY_AVATAR_ACTIONS_SOFT = 8');
 assert(/DAILY_AVATAR_ACTIONS_HARD\s*=\s*15/.test(dataSrcV14), 'v19.15i: DAILY_AVATAR_ACTIONS_HARD = 15');
+// v19.16 data 类: 内容补足
+assert(/'turn on':\s*\{\s*syn:\s*'switch on'/.test(dataSrcV14), "v19.16: phrasal verb 'turn on'");
+assert(/'put off':\s*\{\s*syn:\s*'postpone'/.test(dataSrcV14), "v19.16: phrasal verb 'put off'");
+assert(/'disagree':\s*\{\s*syn:\s*'object'/.test(dataSrcV14), "v19.16: dis- 前缀 'disagree'");
+assert(/'disrespect':\s*\{\s*syn:\s*'insult'/.test(dataSrcV14), "v19.16: dis- 前缀 'disrespect'");
+assert(/'pull to safety':\s*\{\s*syn:\s*'rescue'/.test(dataSrcV14), "v19.16: 搭配 'pull to safety'");
+const synDictV16 = (dataSrcV14.match(/'[^']+':\s*\{\s*syn:/g) || []).length;
+assert(synDictV16 >= 370, `v19.16: 同义词字典 ≥ 370 词 (实际 ${synDictV16})`);
+const mathCountV16 = (dataSrcV14.match(/q:\s*'[^']+',\s*ans:/g) || []).length;
+assert(mathCountV16 >= 125, `v19.16: 数学题 ≥ 125 (实际 ${mathCountV16})`);
 // v19.15k 撤回 v19.15j subjectALManual 持久化, 改 in-memory _alWhatIf (data 类断言)
 assert(!/state\.subjectALManual && typeof state\.subjectALManual === 'object'/.test(dataSrcV14), 'v19.15k: computeTotalAL 已撤 manual 持久化分支');
 assert(/getAdmissionForecasts\(state, whatIfBySubject\)/.test(dataSrcV14), 'v19.15k: getAdmissionForecasts 加 whatIfBySubject 参数');

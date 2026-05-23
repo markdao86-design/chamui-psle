@@ -1610,16 +1610,46 @@ function sciOeScore(score) {
   const g = _sciOeGame;
   if (!g) return;
   g.scores[g.qIdx] = score;
-  // 如果 0 分, 加入错题本
-  if (score === 0 && window.addToErrorBank) {
+  // v19.16: 所有 score 入 Leitner 错题本 (科学专家 P0 — 现在 50 道 OE 全部走 spaced repetition)
+  // score=0 当错题 (correctStreak 重置), score≥1 累计 correctStreak, 3 次满分 (score=2) 才毕业
+  if (window.addToErrorBank) {
     const q = g.questions[g.qIdx];
-    window.addToErrorBank(state, {
-      gameKey: 'sci_oe', type: 'oe',
-      q: q.q,
-      correctAns: q.model,
-      explain: '关键词: ' + q.keywords.join(', '),
-      topic: q.topic
-    });
+    const fp = `sci_oe|${(q.q||'').slice(0,50)}|${q.topic||''}`;
+    // 查 wrongs 现有项
+    const existing = (state.wrongAnswers || []).find(w => w._fp === fp);
+    if (score === 0) {
+      // 0 分: 入库 / 重置 streak
+      if (existing) {
+        existing.correctStreak = 0;
+        existing.retries = (existing.retries || 0) + 1;
+      } else {
+        window.addToErrorBank(state, {
+          _fp: fp,
+          gameKey: 'sci_oe', type: 'oe',
+          q: q.q, correctAns: q.model,
+          explain: '关键词: ' + (q.keywords || []).join(', '),
+          topic: q.topic,
+          correctStreak: 0
+        });
+      }
+    } else if (score === 2 && existing) {
+      // 满分: streak++; 达 3 次毕业 (走通用 Leitner 路径)
+      existing.correctStreak = (existing.correctStreak || 0) + 1;
+      const grad = window.LEITNER_GRADUATION || 3;
+      if (existing.correctStreak >= grad) {
+        // 毕业 +3 分 (跟 MCQ/math Leitner cap 一致, 总 cap +5)
+        window.removeFromErrorBank(state, { force: true, id: existing.id });
+        state.totalPoints = (state.totalPoints || 0) + 3;
+        state.logs.push({ reason: `🎓 OE 错题毕业 (3 满分) +3 [${q.topic||'OE'}]`, points: 3, type: 'sci_oe_grad', week: state.currentWeek, timestamp: Date.now() });
+        setTimeout(() => showToast('🎓 OE 错题毕业 +3!', 'happy'), 200);
+      } else {
+        state.totalPoints = (state.totalPoints || 0) + 1;
+        state.logs.push({ reason: `💪 OE 巩固 (streak ${existing.correctStreak}/3) +1`, points: 1, type: 'sci_oe_consol', week: state.currentWeek, timestamp: Date.now() });
+      }
+    } else if (score === 1 && existing) {
+      // 1 分 (部分对): streak 不进不退 (考验严格), 但减 retries
+      // 心理上避免严苛, 不动 streak
+    }
   }
   g.qIdx++;
   _renderSciOe();
@@ -5815,13 +5845,16 @@ function submitErrorBankAnswer(optIdx) {
         const grad = window.LEITNER_GRADUATION || 3;
         if (w.correctStreak >= grad) {
           // v19.15a hotfix: 用 {force:true} 跳过 markErrorAnsweredCorrect 的内部 +1/+5
-          // (否则会双重计分: mark +1 巩固 + mark +5 毕业 + 我们 +5 = +11/题)
           window.removeFromErrorBank(state, { force: true, id: item.id });
           g.removed.push(item.id);
-          state.totalPoints = (state.totalPoints || 0) + 5;
-          state.logs.push({ reason: '🎓 错题毕业 (Leitner 3 连对)', points: 5, week: state.currentWeek, timestamp: Date.now() });
-          showToast('🎓 +5 错题毕业!', 'happy');
+          // v19.16: 毕业 +3 (原 +5), 配合中途 +1+1 = 共 +5 (cap 不变, 反馈分散修第 7 次评审动机不足)
+          state.totalPoints = (state.totalPoints || 0) + 3;
+          state.logs.push({ reason: '🎓 错题毕业 (Leitner 3 连对) +3', points: 3, week: state.currentWeek, timestamp: Date.now() });
+          showToast('🎓 +3 错题毕业!', 'happy');
         } else {
+          // v19.16: 中途 +1 巩固反馈 (修第 7 次评审 数学/英语 共识: 0 分激励不足)
+          state.totalPoints = (state.totalPoints || 0) + 1;
+          state.logs.push({ reason: `💪 错题巩固 (streak ${w.correctStreak}/${grad}) +1`, points: 1, type: 'leitner_consol', week: state.currentWeek, timestamp: Date.now() });
           const intervals = [1, 3, 7];
           w.nextReview = Date.now() + (intervals[w.correctStreak - 1] || 7) * 86400000;
         }
@@ -5853,13 +5886,16 @@ function submitErrorBankMath() {
         const grad = window.LEITNER_GRADUATION || 3;
         if (w.correctStreak >= grad) {
           // v19.15a hotfix: 用 {force:true} 跳过 markErrorAnsweredCorrect 的内部 +1/+5
-          // (否则会双重计分: mark +1 巩固 + mark +5 毕业 + 我们 +5 = +11/题)
           window.removeFromErrorBank(state, { force: true, id: item.id });
           g.removed.push(item.id);
-          state.totalPoints = (state.totalPoints || 0) + 5;
-          state.logs.push({ reason: '🎓 错题毕业 (Leitner 3 连对)', points: 5, week: state.currentWeek, timestamp: Date.now() });
-          showToast('🎓 +5 错题毕业!', 'happy');
+          // v19.16: 毕业 +3 (原 +5), 配合中途 +1+1 = 共 +5 (cap 不变, 反馈分散修第 7 次评审动机不足)
+          state.totalPoints = (state.totalPoints || 0) + 3;
+          state.logs.push({ reason: '🎓 错题毕业 (Leitner 3 连对) +3', points: 3, week: state.currentWeek, timestamp: Date.now() });
+          showToast('🎓 +3 错题毕业!', 'happy');
         } else {
+          // v19.16: 中途 +1 巩固反馈 (修第 7 次评审 数学/英语 共识: 0 分激励不足)
+          state.totalPoints = (state.totalPoints || 0) + 1;
+          state.logs.push({ reason: `💪 错题巩固 (streak ${w.correctStreak}/${grad}) +1`, points: 1, type: 'leitner_consol', week: state.currentWeek, timestamp: Date.now() });
           const intervals = [1, 3, 7];
           w.nextReview = Date.now() + (intervals[w.correctStreak - 1] || 7) * 86400000;
         }

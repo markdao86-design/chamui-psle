@@ -2031,7 +2031,65 @@ const MATH_QUESTIONS = [
   { q: '火车长 200m 时速 72km/h, 过 1000m 桥用几秒', ans: 60, diff: 5 },
   { q: '甲乙速度比 3:5 同向, 甲先走 16km, 乙追上时乙走 (km)', ans: 40, diff: 6 },
   { q: '走 1.2km 用 15min, 速度 (km/h)', ans: 4.8, diff: 4 },
-  { q: '环形跑道 400m, A 5m/s B 4m/s 反向, 几秒相遇一次', ans: 44.4, diff: 6 }
+  { q: '环形跑道 400m, A 5m/s B 4m/s 反向, 几秒相遇一次', ans: 44.4, diff: 6 },
+
+  // v19.16: +35 题 PSLE 5-mark 真题风 (95→130), 配合 Leitner 减重复疲劳
+  // ========== Bar Model 比例题 (PSLE 必考) ==========
+  { q: '甲乙钱比 5:3, 共 $480, 甲多乙 ($)', ans: 120, diff: 4 },
+  { q: 'A:B = 4:7, A 24, B 多少', ans: 42, diff: 4 },
+  { q: '甲乙苹果 7:4, 甲给乙 12 个后相等, 甲原有几个', ans: 56, diff: 5 },
+  { q: '甲乙比 3:4, 乙增 6 后比 1:2, 甲原 (单位)', ans: 9, diff: 5 },
+  { q: 'A B 比 5:2, A 给 B 30 后比 1:1, A 原', ans: 100, diff: 4 },
+  { q: '甲乙钱比 7:3, 共 $200, 甲给乙多少后相等 ($)', ans: 40, diff: 4 },
+
+  // ========== 假设法 / 鸡兔同笼变体 ==========
+  { q: '鸡兔 30 头 88 腿, 兔几只', ans: 14, diff: 4 },
+  { q: '50 题对 +3 错 -1, 得 90 分, 错几题', ans: 15, diff: 4 },
+  { q: '$10 / $5 共 40 张 = $260, $10 几张', ans: 12, diff: 4 },
+  { q: '票 8 元/12 元 共 25 张 $244, 8 元几张', ans: 14, diff: 5 },
+  { q: '3 轮 / 4 轮 共 30 辆 102 轮, 4 轮几辆', ans: 12, diff: 5 },
+
+  // ========== 工程 / 完成率 ==========
+  { q: '甲 6 天乙 4 天, 共做几天', ans: 2.4, diff: 5 },
+  { q: '甲 12 天乙 18 天, 一起几天', ans: 7.2, diff: 5 },
+  { q: '20 人 10 天完工, 改 25 人 几天', ans: 8, diff: 4 },
+  { q: '工程 A 单做 8 天 B 单 12 天, 先 A 做 3 天再 B 接续, B 几天完成', ans: 7.5, diff: 5 },
+
+  // ========== 几何阴影面积 (cm²) ==========
+  { q: '矩形 12 cm × 8 cm 挖半径 2 cm 圆, 余面积 (cm², π=3.14)', ans: 83.44, diff: 4 },
+  { q: '正方形边 10, 4 角各挖 1/4 圆半径 5, 余 (cm², π=3.14)', ans: 21.5, diff: 5 },
+  { q: '三角形底 16 高 9 减去底 8 高 6 的三角形, 余 (cm²)', ans: 48, diff: 4 },
+  { q: '矩形 20 × 14, 挖 1 个直径 10 的半圆, 余 (cm², π=3.14)', ans: 240.75, diff: 5 },
+
+  // ========== 数列规律 ==========
+  { q: '1, 4, 9, 16, 25, 下一个是', ans: 36, diff: 3 },
+  { q: '2, 6, 12, 20, 30, 下一个', ans: 42, diff: 4 },
+  { q: '1, 3, 6, 10, 15, 第 10 个', ans: 55, diff: 4 },
+  { q: '3, 7, 15, 31, 63, 下一个', ans: 127, diff: 4 },
+
+  // ========== 余数 / 同余 ==========
+  { q: '某数除 7 余 3, 除 5 余 2, 最小 (>10)', ans: 17, diff: 5 },
+  { q: '2026÷7 余几', ans: 3, diff: 4 },
+  { q: '100 颗糖, n 人每人分 12 余 4, n 是', ans: 8, diff: 4 },
+
+  // ========== 平均 / 偏差 ==========
+  { q: '5 数平均 18, 加一数后平均 20, 那数是', ans: 30, diff: 4 },
+  { q: '10 人均分 84, 1 人离, 9 人均分 86, 那人原分', ans: 66, diff: 5 },
+  { q: '4 科平均 85, 加 1 科平均到 86, 第 5 科', ans: 90, diff: 4 },
+
+  // ========== 复合百分比深入 ==========
+  { q: '$200 涨 30% 后再 8 折, 现价 ($)', ans: 208, diff: 4 },
+  { q: '$500 降 10% 再涨 20%, 现 ($)', ans: 540, diff: 4 },
+  { q: '某商品 8 折后 +6% 服务费 $254.40, 原价 ($)', ans: 300, diff: 5 },
+
+  // ========== 分数综合 ==========
+  { q: '甲是乙的 2/3, 乙是丙的 3/4, 甲是丙的几分之几 (小数)', ans: 0.5, diff: 5 },
+  { q: '某书 first 1/4 第 1 周, 余 1/3 第 2 周, 第 3 周读完, 第 3 周 75 页, 全书 (页)', ans: 150, diff: 5 },
+  { q: '甲乙糖比 5:7, 甲再 12 后比 8:7, 乙糖几个', ans: 28, diff: 5 },
+
+  // ========== 速率 / 追及补 ==========
+  { q: '走 2.5 km 用 50 min, 速度 (km/h)', ans: 3, diff: 3 },
+  { q: '汽车 90 km/h, 5 h 45 min 走几 km', ans: 517.5, diff: 4 }
 ];
 
 // v18.3: 25 段 PSLE Editing 5 类错(主谓/时态/拼写/介词/冠词), 每段 ~50 词 5 错
@@ -8425,7 +8483,102 @@ const CLOZE_SYNONYM_DICT = {
   'empty': { syn: 'vacant', dis: ['full', 'packed'] },
   'crowded': { syn: 'packed', dis: ['empty', 'deserted'] },
   'busy': { syn: 'occupied', dis: ['free', 'idle'] },
-  'free': { syn: 'available', dis: ['busy', 'occupied'] }
+  'free': { syn: 'available', dis: ['busy', 'occupied'] },
+
+  // v19.16: Phrasal verbs ~32 词 (PSLE Paper 2 Cloze 高频, P5/P6 必背)
+  'turn on': { syn: 'switch on', dis: ['turn off', 'switch off'] },
+  'turn off': { syn: 'switch off', dis: ['turn on', 'open'] },
+  'turn up': { syn: 'arrive', dis: ['leave', 'turn down'] },
+  'turn down': { syn: 'reject', dis: ['accept', 'turn up'] },
+  'turn into': { syn: 'become', dis: ['stay', 'remain'] },
+  'put on': { syn: 'wear', dis: ['take off', 'remove'] },
+  'put off': { syn: 'postpone', dis: ['do now', 'finish'] },
+  'put away': { syn: 'store', dis: ['take out', 'leave'] },
+  'put up with': { syn: 'tolerate', dis: ['reject', 'avoid'] },
+  'take off': { syn: 'remove', dis: ['put on', 'wear'] },
+  'take over': { syn: 'control', dis: ['give up', 'abandon'] },
+  'take after': { syn: 'resemble', dis: ['differ from', 'avoid'] },
+  'take out': { syn: 'remove', dis: ['put in', 'add'] },
+  'look up': { syn: 'search for', dis: ['ignore', 'overlook'] },
+  'look after': { syn: 'care for', dis: ['ignore', 'abandon'] },
+  'look out': { syn: 'beware', dis: ['ignore', 'overlook'] },
+  'look for': { syn: 'search for', dis: ['find', 'ignore'] },
+  'look into': { syn: 'investigate', dis: ['ignore', 'dismiss'] },
+  'look forward to': { syn: 'anticipate', dis: ['dread', 'avoid'] },
+  'get up': { syn: 'rise', dis: ['lie down', 'sit'] },
+  'get on': { syn: 'board', dis: ['get off', 'leave'] },
+  'get off': { syn: 'leave', dis: ['get on', 'board'] },
+  'get over': { syn: 'recover from', dis: ['suffer', 'worsen'] },
+  'get along': { syn: 'cooperate', dis: ['quarrel', 'fight'] },
+  'get rid of': { syn: 'remove', dis: ['keep', 'retain'] },
+  'give up': { syn: 'quit', dis: ['continue', 'persist'] },
+  'give in': { syn: 'surrender', dis: ['resist', 'fight'] },
+  'give away': { syn: 'donate', dis: ['keep', 'sell'] },
+  'give back': { syn: 'return', dis: ['keep', 'take'] },
+  'run away': { syn: 'flee', dis: ['stay', 'face'] },
+  'run out': { syn: 'finish', dis: ['restock', 'fill'] },
+  'run into': { syn: 'meet', dis: ['avoid', 'miss'] },
+  'break down': { syn: 'fail', dis: ['work', 'function'] },
+  'break out': { syn: 'erupt', dis: ['stop', 'end'] },
+  'make up': { syn: 'invent', dis: ['copy', 'recall'] },
+  'set up': { syn: 'establish', dis: ['dismantle', 'remove'] },
+  'carry out': { syn: 'execute', dis: ['cancel', 'postpone'] },
+  'hand in': { syn: 'submit', dis: ['take back', 'keep'] },
+  'hand out': { syn: 'distribute', dis: ['collect', 'keep'] },
+  'find out': { syn: 'discover', dis: ['hide', 'ignore'] },
+  'come across': { syn: 'encounter', dis: ['avoid', 'miss'] },
+
+  // v19.16: dis- 前缀 易混 ~25 词 (PSLE Editing/Cloze 必考反向)
+  'agree': { syn: 'consent', dis: ['disagree', 'object'] },
+  'disagree': { syn: 'object', dis: ['agree', 'accept'] },
+  'appear': { syn: 'show up', dis: ['disappear', 'vanish'] },
+  'like': { syn: 'enjoy', dis: ['dislike', 'hate'] },
+  'dislike': { syn: 'hate', dis: ['like', 'enjoy'] },
+  'encourage': { syn: 'support', dis: ['discourage', 'deter'] },
+  'discourage': { syn: 'deter', dis: ['encourage', 'support'] },
+  'approve': { syn: 'endorse', dis: ['disapprove', 'reject'] },
+  'disapprove': { syn: 'reject', dis: ['approve', 'endorse'] },
+  'believe': { syn: 'trust', dis: ['disbelieve', 'doubt'] },
+  'disbelieve': { syn: 'doubt', dis: ['believe', 'trust'] },
+  'connect': { syn: 'link', dis: ['disconnect', 'separate'] },
+  'disconnect': { syn: 'separate', dis: ['connect', 'link'] },
+  'continue': { syn: 'proceed', dis: ['discontinue', 'stop'] },
+  'discontinue': { syn: 'stop', dis: ['continue', 'proceed'] },
+  'order': { syn: 'arrangement', dis: ['disorder', 'chaos'] },
+  'disorder': { syn: 'chaos', dis: ['order', 'arrangement'] },
+  'obey': { syn: 'comply', dis: ['disobey', 'defy'] },
+  'disobey': { syn: 'defy', dis: ['obey', 'comply'] },
+  'respect': { syn: 'honour', dis: ['disrespect', 'insult'] },
+  'disrespect': { syn: 'insult', dis: ['respect', 'honour'] },
+  'satisfy': { syn: 'please', dis: ['dissatisfy', 'frustrate'] },
+  'advantage': { syn: 'benefit', dis: ['disadvantage', 'drawback'] },
+  'disadvantage': { syn: 'drawback', dis: ['advantage', 'benefit'] },
+  'comfort': { syn: 'ease', dis: ['discomfort', 'pain'] },
+  'discomfort': { syn: 'pain', dis: ['comfort', 'ease'] },
+  'regard': { syn: 'consider', dis: ['disregard', 'ignore'] },
+  'disregard': { syn: 'ignore', dis: ['regard', 'consider'] },
+
+  // v19.16: 搭配陷阱 ~17 词 (孩子真考错 17 道里多次出现)
+  'pull to safety': { syn: 'rescue', dis: ['pull away', 'push down'] },
+  'pull away': { syn: 'retreat', dis: ['pull closer', 'attract'] },
+  'flowing': { syn: 'streaming', dis: ['flooded', 'frozen'] },
+  'flooded': { syn: 'inundated', dis: ['flowing', 'dry'] },
+  'drowning': { syn: 'sinking under water', dis: ['floating', 'swimming'] },
+  'sinking': { syn: 'going under', dis: ['floating', 'rising'] },
+  'arrive at': { syn: 'reach (small place)', dis: ['arrive in', 'depart from'] },
+  'arrive in': { syn: 'reach (large place)', dis: ['arrive at', 'depart from'] },
+  'in time': { syn: 'not late', dis: ['on time', 'too late'] },
+  'on time': { syn: 'punctual', dis: ['in time', 'late'] },
+  'by chance': { syn: 'accidentally', dis: ['on purpose', 'deliberately'] },
+  'on purpose': { syn: 'deliberately', dis: ['by chance', 'accidentally'] },
+  'at once': { syn: 'immediately', dis: ['at the same time', 'later'] },
+  'in the end': { syn: 'finally', dis: ['at the end', 'first'] },
+  'at the end': { syn: 'at the finish line', dis: ['in the end', 'at start'] },
+  'depend on': { syn: 'rely on', dis: ['ignore', 'avoid'] },
+  'rely on': { syn: 'depend on', dis: ['doubt', 'ignore'] },
+  'point out': { syn: 'indicate', dis: ['hide', 'ignore'] },
+  'fall asleep': { syn: 'doze off', dis: ['wake up', 'stay alert'] },
+  'wake up': { syn: 'rouse', dis: ['fall asleep', 'doze off'] }
 };
 
 function getClozeSynonymOptions(word) {
