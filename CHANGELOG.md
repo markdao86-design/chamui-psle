@@ -5,6 +5,41 @@
 
 ---
 
+## v19.13 (2026-05-23) — 7 项对齐手册 v14: 英语 16.5h + 科学 P3-P4
+
+### 痛点
+读 `PSLE_2027_完整备考总手册_v16.pdf` 对比当前 app, 发现 7 大缺口:
+1. ❌ Oral 25min/天 完全缺失 (手册要求每天豆包对话 + 录音回听)
+2. ❌ 学科英语 500 词 (数学 200 + 科学 300) — 中国孩子题干读不懂污染数学/科学 AL1
+3. ❌ 作文反馈结构化 (模板库 + 高级词清单)
+4. ❌ Comp OE 答题套路 ("定位法 → 关键词覆盖") 没体现
+5. ❌ 科学 W1-W14 P3-P4 章节进度 (手册按难易分级, app 未对齐)
+6. ❌ 科学 OE 答题原则 ("不能 Yes/No 开头, 必含关键词")
+7. ❌ 概念图工具 (Plant Transport / Digestive / Light / Heat 难章必备)
+
+### 改造 (单批 deploy)
+- **data.js +1800 行**: ORAL_QUESTIONS (30 题/8 类) · SUBJECT_VOCAB_MATH (220 词) + SUBJECT_VOCAB_SCIENCE (280 词) = **500 词** · ESSAY_TEMPLATES (15 模板 + 50 高级词) · SCIENCE_CHAPTERS (13 章, W1-W14 P3-P4 + 后期) · SCIENCE_OE_PRINCIPLES (5 原则) + SCIENCE_OE_QUESTIONS (15 题, model + keywords) · CONCEPT_DIAGRAMS (4 张 SVG: plant_transport/digestive/light/heat, 含 PSLE 陷阱标注)
+- **app.js +600 行**: renderOralCheckinCard / openOralPracticeModal · renderSubjectVocabCard / openSubjectVocabGame (4 选 1, 同 cat 优先干扰) · renderScienceChapterCard (W → 章节自动匹配) · openScienceOEGame (5 原则 → 5 题, 自动检 Yes/No 开头 + 关键词覆盖度 < 50% 警告) · openConceptDiagram (4 张 SVG 模态 + tab 切换)
+- **app.js 修改**: `_renderCompOe()` Q1 加"定位法 3 步"绿色提示卡 · `_buildEssayInnerHtml()` 顶部插模板库 details 折叠区
+- **index.html**: 3 个新卡容器 · cache bust 19.12 → 19.13
+- **qa_check.js +26 项**: **189 项全过**
+
+### 量化效果
+| 模块 | v19.12 | v19.13 |
+|---|---|---|
+| Oral 训练 | ❌ 无 | ✅ 30 题 + 每日打卡 + 25 min 目标进度 |
+| 学科英语词汇 | ❌ 无 | ✅ 500 词 (数学 220 + 科学 280, 11 类) |
+| 作文模板 | 仅上传 | ✅ 15 模板 (开 5/转 5/结 5) + 50 高级词 |
+| Comp OE | 思考 30s | ✅ Q1 加"定位法 3 步" 强提示 |
+| 科学章节 | 平级 | ✅ W1-W14 P3-P4 难易分级 + 焦点提示 |
+| 科学 OE | ❌ 无 | ✅ 5 原则 + 15 题, 自动检 Yes/No 开头 |
+| 概念图 | ❌ 无 | ✅ 4 张 SVG (难章 ⭐⭐) + 陷阱标注 |
+
+### 主页结构 (v19.13)
+5 张卡: 录取概率 + Paper 2 + Oral + 学科词汇 + 科学章节. 全 0 SGD/钱/角色字眼.
+
+---
+
 ## 📅 版本历史 (v19.6 — v19.11)
 
 ### v19.11.1 — 积分校正 4208 + 数据备份归档 (2026-05-22)
