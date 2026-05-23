@@ -3339,13 +3339,25 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .vocab-modal-title { display: block; font-weight: 700; font-size: 16px; color: var(--color-text); }
 .vocab-modal-meta  { display: block; font-size: 11px; color: var(--color-text-light); margin-top: 4px; }
 .vocab-modal-close {
-  background: var(--color-card);
+  background: rgba(255,255,255,0.10);
   border: 2px solid var(--color-text);
+  color: var(--color-text);  /* v19.15f: × 字符显式亮色, 防暗背景看不见 */
   border-radius: 50%;
-  width: 32px; height: 32px;
-  font-size: 20px;
+  width: 36px; height: 36px;
+  font-size: 22px;
+  font-weight: 900;
   cursor: pointer;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.vocab-modal-close:hover {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #fff;
+  transform: scale(1.08);
 }
 .vocab-modal-body {
   padding: 10px 12px;
@@ -4227,6 +4239,7 @@ p { font-size: 14px; line-height: 1.6; }
 .mcq-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .mcq-opt {
   background: var(--color-card); border: 1px solid var(--color-border);
+  color: var(--color-text);  /* v19.15f: 显式亮文字, 防默认 ButtonText 黑色 */
   border-radius: var(--radius-tight); padding: 12px; font-size: 14px; font-weight: 700;
   cursor: pointer; font-family: inherit; transition: all 0.15s;
   text-align: left;
@@ -5565,9 +5578,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.15e"></script>
-<script src="data.js?v=19.15e"></script>
-<script src="app.js?v=19.15e"></script>
+<script src="character.js?v=19.15f"></script>
+<script src="data.js?v=19.15f"></script>
+<script src="app.js?v=19.15f"></script>
 
 </body>
 </html>

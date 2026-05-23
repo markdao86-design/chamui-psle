@@ -924,7 +924,7 @@ function openOralPracticeModal(seed) {
     <div class="mg-inner" style="max-width:520px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-size:14px;font-weight:900;color:#0277BD">🎤 PSLE Oral 练习</div>
-        <button onclick="closeOralModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">×</button>
+        <button onclick="closeOralModal()" style="background:rgba(255,255,255,0.10);border:2px solid var(--color-text);color:var(--color-text);width:34px;height:34px;border-radius:50%;font-size:20px;font-weight:900;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">×</button>
       </div>
       <div style="background:#E1F5FE;border-radius:6px;padding:10px;margin-bottom:10px">
         <div style="font-size:11px;color:#0277BD;font-weight:700;margin-bottom:4px">📂 ${q.topic} · ${q.cat}</div>
@@ -1064,7 +1064,7 @@ function _renderSvGame() {
     <div class="mg-inner" style="max-width:480px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-size:13px;color:#1565C0;font-weight:700">📚 学科英语 · ${g.qIdx + 1}/${g.questions.length} · 中→英 production</div>
-        <button onclick="closeSvGame()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">×</button>
+        <button onclick="closeSvGame()" style="background:rgba(255,255,255,0.10);border:2px solid var(--color-text);color:var(--color-text);width:34px;height:34px;border-radius:50%;font-size:20px;font-weight:900;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">×</button>
       </div>
       <div style="text-align:center;background:#E3F2FD;border-radius:8px;padding:18px;margin-bottom:12px">
         <div style="font-size:11px;color:#1565C0;margin-bottom:4px">${q.w.cat}</div>
@@ -1328,7 +1328,7 @@ function _renderSciOe() {
       <div class="mg-inner" style="max-width:520px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
           <div style="font-size:14px;font-weight:900;color:#E65100">🧪 PSLE 科学 OE 答题 5 原则</div>
-          <button onclick="closeSciOe()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">×</button>
+          <button onclick="closeSciOe()" style="background:rgba(255,255,255,0.10);border:2px solid var(--color-text);color:var(--color-text);width:34px;height:34px;border-radius:50%;font-size:20px;font-weight:900;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">×</button>
         </div>
         <div style="background:#FFEBEE;border-radius:6px;padding:10px;margin-bottom:10px">
           ${rules}
@@ -1384,7 +1384,7 @@ function _renderSciOe() {
     <div class="mg-inner" style="max-width:560px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-size:13px;color:#E65100;font-weight:700">🧪 科学 OE · ${g.qIdx + 1}/${g.questions.length} · ${q.topic}</div>
-        <button onclick="closeSciOe()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">×</button>
+        <button onclick="closeSciOe()" style="background:rgba(255,255,255,0.10);border:2px solid var(--color-text);color:var(--color-text);width:34px;height:34px;border-radius:50%;font-size:20px;font-weight:900;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">×</button>
       </div>
       <div style="background:#FFF3E0;border-radius:6px;padding:10px;margin-bottom:10px">
         <div style="font-size:13px;color:#BF360C;font-weight:600;line-height:1.5">${escapeHtml(q.q)}</div>
@@ -1513,7 +1513,7 @@ function openConceptDiagram(id) {
           <div style="font-size:15px;font-weight:900;color:#2E7D32">🗺️ ${escapeHtml(d.title)}</div>
           <div style="font-size:11px;color:#666">${escapeHtml(d.subtitle)}</div>
         </div>
-        <button onclick="closeConceptDiagram()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">×</button>
+        <button onclick="closeConceptDiagram()" style="background:rgba(255,255,255,0.10);border:2px solid var(--color-text);color:var(--color-text);width:36px;height:36px;border-radius:50%;font-size:22px;font-weight:900;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">×</button>
       </div>
       <div style="background:#FAFAFA;border-radius:6px;padding:6px;margin-bottom:10px;max-height:65vh;overflow:auto">
         ${d.svg}

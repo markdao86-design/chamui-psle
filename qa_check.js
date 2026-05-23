@@ -411,8 +411,16 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.15e/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.15e: cache buster 已更新到 19.15e (主页今日 3 件事 + 目标校改暗调+青色发光)');
+assert(/\?v=19\.15f/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.15f: cache buster 已更新到 19.15f (修暗主题下隐形黑字 + × 按钮)');
+// v19.15f: MCQ option + close 按钮亮色修复
+assert(/\.mcq-opt\s*\{[^}]*color:\s*var\(--color-text\)/.test(idxSrc), 'v19.15f: .mcq-opt 加 color: var(--color-text)');
+assert(/\.vocab-modal-close\s*\{[^}]*color:\s*var\(--color-text\)/.test(idxSrc), 'v19.15f: .vocab-modal-close 加 color: var(--color-text)');
+// 5 处 inline × button 应已升级 (不能再有 color:#999">×)
+const oldGray999Close = (appSrc.match(/cursor:pointer;color:#999">×/g) || []).length;
+assert(oldGray999Close === 0, `v19.15f: 旧 color:#999 × button 已全升级 (实际 ${oldGray999Close})`);
+const newBrightClose = (appSrc.match(/border:2px solid var\(--color-text\);color:var\(--color-text\)[^"]*">×/g) || []).length;
+assert(newBrightClose >= 5, `v19.15f: ≥5 处 × button 升级到亮色圆形 (实际 ${newBrightClose})`);
 // v19.15e: 主页配色统一到暗调+青色发光 (匹配 .checkin-item)
 assert(/暗调 \+ 青色发光风格, 匹配打卡页 \.checkin-item/.test(appSrc), 'v19.15e: renderTodayThreeCard 注释说明改暗调');
 assert(/暗调 \+ 青色发光 \+ 校牌色 \(匹配打卡页\)/.test(appSrc), 'v19.15e: renderTargetSchoolMini 改暗调');
