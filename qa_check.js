@@ -411,8 +411,15 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.19/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.19: cache buster 已更新到 19.19 (主页左右 2 栏布局)');
+assert(/\?v=19\.20/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.20: cache buster 已更新到 19.20 (全局 inline 浅底自动适配暗主题)');
+// v19.20: 全局适配 CSS
+assert(/\[style\*="background:#F0F8FF"\][\s\S]{0,200}rgba\(0,212,255/.test(idxSrc), 'v19.20: 蓝色调浅底转暗青渐变');
+assert(/\[style\*="background:#E8F5E9"\][\s\S]{0,200}rgba\(0,255,136/.test(idxSrc), 'v19.20: 绿色调浅底转暗绿渐变');
+assert(/\[style\*="background:#FFF3E0"\][\s\S]{0,300}rgba\(255,184,0/.test(idxSrc), 'v19.20: 橙色调浅底转暗橙渐变');
+assert(/\[style\*="background:#FFEBEE"\][\s\S]{0,300}rgba\(255,51,102/.test(idxSrc), 'v19.20: 红色调浅底转暗红渐变');
+assert(/\[style\*="color:#212121"\][\s\S]{0,600}color:\s*#E0E0E0/.test(idxSrc), 'v19.20: 深字转亮灰');
+assert(/\[style\*="color:#666"\][\s\S]{0,200}color:\s*#A0A0A0/.test(idxSrc), 'v19.20: 中灰字提亮');
 // v19.19: 左右 2 栏布局
 assert(/class="home-grid-2col"/.test(idxSrc), 'v19.19: home-grid-2col 容器');
 assert(/class="home-col-left"/.test(idxSrc), 'v19.19: home-col-left');

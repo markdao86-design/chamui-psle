@@ -254,6 +254,73 @@ body::before {
   padding: 12px;
   transition: background 0.8s ease, box-shadow 0.8s ease;
 }
+/* v19.20: 全局 — 所有内嵌 inline 浅底 hex 自动转暗调透明渐变 (适配暗主题) */
+/* 蓝/青色调 */
+[style*="background:#F0F8FF"],
+[style*="background:#E1F5FE"],
+[style*="background:#E3F2FD"],
+[style*="background:#BBDEFB"] {
+  background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,212,255,0.02)) !important;
+  border: 1px solid rgba(0,212,255,0.25) !important;
+}
+/* 绿色调 */
+[style*="background:#E8F5E9"],
+[style*="background:#F1F8E9"],
+[style*="background:#C8E6C9"] {
+  background: linear-gradient(135deg, rgba(0,255,136,0.08), rgba(0,255,136,0.02)) !important;
+  border: 1px solid rgba(0,255,136,0.25) !important;
+}
+/* 黄/橙色调 */
+[style*="background:#FFF3E0"],
+[style*="background:#FFF8E0"],
+[style*="background:#FFF8E1"],
+[style*="background:#FFFCE6"],
+[style*="background:#FFE0B2"] {
+  background: linear-gradient(135deg, rgba(255,184,0,0.10), rgba(255,107,53,0.04)) !important;
+  border: 1px solid rgba(255,184,0,0.25) !important;
+}
+/* 红/粉色调 */
+[style*="background:#FFEBEE"],
+[style*="background:#FCE4EC"],
+[style*="background:#FFF5F0"],
+[style*="background:#F8BBD0"],
+[style*="background:#FFF0F0"] {
+  background: linear-gradient(135deg, rgba(255,51,102,0.08), rgba(255,51,102,0.02)) !important;
+  border: 1px solid rgba(255,51,102,0.25) !important;
+}
+/* 紫色调 */
+[style*="background:#F5F0FF"] {
+  background: linear-gradient(135deg, rgba(167,136,224,0.10), rgba(167,136,224,0.02)) !important;
+  border: 1px solid rgba(167,136,224,0.25) !important;
+}
+/* 中性灰白 */
+[style*="background:#F5F5F5"],
+[style*="background:#FAFAFA"],
+[style*="background:#EEEEEE"] {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+}
+/* 把超深字色 (#212121/#333/#000/#2D3047/#5D4037 类) 强转亮灰 (在被覆盖底色之后看得见) */
+[style*="color:#212121"],
+[style*="color:#2D3047"],
+[style*="color:#5D4037"],
+[style*="color:#5D4500"],
+[style*="color:#5D4045"],
+[style*="color:#33691E"],
+[style*="color:#1B5E20"],
+[style*="color:#0D47A1"],
+[style*="color:#01579B"],
+[style*="color:#880E4F"],
+[style*="color:#BF360C"],
+[style*="color:#C62828"]:not(.intentional-red) {
+  color: #E0E0E0 !important;
+}
+/* 中灰字 #666/#555/#888/#999 提亮到中亮灰 */
+[style*="color:#666"],
+[style*="color:#555"],
+[style*="color:#777"]:not(button) {
+  color: #A0A0A0 !important;
+}
 /* v19.19: 主页左右 2 栏布局 (iPad 横屏 ≥900px), 竖屏/手机 fallback 单栏 */
 .home-grid-2col {
   display: grid;
@@ -5616,9 +5683,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.19"></script>
-<script src="data.js?v=19.19"></script>
-<script src="app.js?v=19.19"></script>
+<script src="character.js?v=19.20"></script>
+<script src="data.js?v=19.20"></script>
+<script src="app.js?v=19.20"></script>
 
 </body>
 </html>
