@@ -411,8 +411,18 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.15f/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.15f: cache buster 已更新到 19.15f (修暗主题下隐形黑字 + × 按钮)');
+assert(/\?v=19\.15g/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.15g: cache buster 已更新到 19.15g (练习中心 4 卡改暗调 + 各科 accent)');
+// v19.15g: 练习中心 4 卡改暗调
+assert(/class="practice-hub-btn" data-accent="green"/.test(idxSrc), 'v19.15g: 知识树 卡 data-accent=green');
+assert(/class="practice-hub-btn" data-accent="orange"/.test(idxSrc), 'v19.15g: 题库 卡 data-accent=orange');
+assert(/class="practice-hub-btn" data-accent="cyan"/.test(idxSrc), 'v19.15g: 词汇 卡 data-accent=cyan');
+assert(/class="practice-hub-btn" data-accent="pink"/.test(idxSrc), 'v19.15g: 作文 卡 data-accent=pink');
+// 防回归: 仅在 hub 4 卡 (5258-5286 范围) 不能有旧亮浅底
+const hubBlock = (idxSrc.match(/page-practice[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/) || [''])[0];
+const oldBrightHub = (hubBlock.match(/#E8F5E9|#FFF3E0|#E3F2FD|#FCE4EC/g) || []).length;
+assert(oldBrightHub === 0, `v19.15g: 练习中心 hub 旧亮浅底已撤 (实际 ${oldBrightHub})`);
+assert(/\.practice-hub-btn:hover/.test(idxSrc), 'v19.15g: 加 hover 动效 translateY + brightness');
 // v19.15f: MCQ option + close 按钮亮色修复
 assert(/\.mcq-opt\s*\{[^}]*color:\s*var\(--color-text\)/.test(idxSrc), 'v19.15f: .mcq-opt 加 color: var(--color-text)');
 assert(/\.vocab-modal-close\s*\{[^}]*color:\s*var\(--color-text\)/.test(idxSrc), 'v19.15f: .vocab-modal-close 加 color: var(--color-text)');

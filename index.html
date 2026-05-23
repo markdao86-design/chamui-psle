@@ -2199,6 +2199,14 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   cursor: pointer;
 }
 .photo-source-cancel:hover { background: var(--color-card-soft); }
+/* v19.15g 练习中心 4 卡 hover 动效 */
+.practice-hub-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+}
+.practice-hub-btn:active {
+  transform: translateY(0);
+}
 /* v19.15b 软打卡逃生口 (fromGuard=true 时显示) */
 .photo-source-guard-banner {
   background: linear-gradient(135deg, rgba(255,184,0,0.18), rgba(255,107,53,0.10));
@@ -5257,28 +5265,28 @@ p { font-size: 14px; line-height: 1.6; }
   <!-- v19.14i: 📚 练习 hub 页 (合并知识树/题库/词汇/作文 4 个旧 tab 入口) -->
   <div class="page" id="page-practice">
     <div class="kt-page-wrap" style="padding:16px">
-      <div style="font-size:18px;font-weight:900;color:#1565C0;margin-bottom:6px">📚 练习中心</div>
-      <div style="font-size:13px;color:#666;margin-bottom:16px">选一项开始练 · 全部在二级页, 不打扰主页"今日 3 件事"</div>
+      <div style="font-size:18px;font-weight:900;color:#4FC3F7;margin-bottom:6px">📚 练习中心</div>
+      <div style="font-size:13px;color:#94A3B8;margin-bottom:16px">选一项开始练 · 全部在二级页, 不打扰主页"今日 3 件事"</div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
-        <button onclick="document.querySelector('[data-page=knowledge]').click()" style="padding:18px 12px;background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border:2px solid #2E7D32;border-radius:8px;cursor:pointer;text-align:left">
+        <button class="practice-hub-btn" data-accent="green" onclick="document.querySelector('[data-page=knowledge]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(0,255,136,0.10),rgba(0,255,136,0.02));border:1px solid rgba(0,255,136,0.45);box-shadow:0 0 12px rgba(0,255,136,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
           <div style="font-size:28px">🌳</div>
-          <div style="font-size:15px;font-weight:900;color:#1B5E20;margin-top:6px">知识树</div>
-          <div style="font-size:11px;color:#388E3C;margin-top:3px">35 节点 · 105 道 PSLE 风练习</div>
+          <div style="font-size:15px;font-weight:900;color:#66FFB0;margin-top:6px">知识树</div>
+          <div style="font-size:11px;color:#A5D6A7;margin-top:3px">35 节点 · 105 道 PSLE 风练习</div>
         </button>
-        <button onclick="document.querySelector('[data-page=paperbank]').click()" style="padding:18px 12px;background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border:2px solid #E65100;border-radius:8px;cursor:pointer;text-align:left">
+        <button class="practice-hub-btn" data-accent="orange" onclick="document.querySelector('[data-page=paperbank]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(255,184,0,0.10),rgba(255,107,53,0.04));border:1px solid rgba(255,184,0,0.45);box-shadow:0 0 12px rgba(255,184,0,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
           <div style="font-size:28px">📚</div>
-          <div style="font-size:15px;font-weight:900;color:#BF360C;margin-top:6px">题库</div>
-          <div style="font-size:11px;color:#E65100;margin-top:3px">PSLE 真题 + Cloze + SST</div>
+          <div style="font-size:15px;font-weight:900;color:#FFB74D;margin-top:6px">题库</div>
+          <div style="font-size:11px;color:#FFD180;margin-top:3px">PSLE 真题 + Cloze + SST</div>
         </button>
-        <button onclick="document.querySelector('[data-page=vocab]').click()" style="padding:18px 12px;background:linear-gradient(135deg,#E3F2FD,#BBDEFB);border:2px solid #1565C0;border-radius:8px;cursor:pointer;text-align:left">
+        <button class="practice-hub-btn" data-accent="cyan" onclick="document.querySelector('[data-page=vocab]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(0,212,255,0.10),rgba(0,212,255,0.02));border:1px solid rgba(0,212,255,0.45);box-shadow:0 0 12px rgba(0,212,255,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
           <div style="font-size:28px">📇</div>
-          <div style="font-size:15px;font-weight:900;color:#0D47A1;margin-top:6px">词汇</div>
-          <div style="font-size:11px;color:#1565C0;margin-top:3px">学科英语 500 词 + 闪卡</div>
+          <div style="font-size:15px;font-weight:900;color:#4FC3F7;margin-top:6px">词汇</div>
+          <div style="font-size:11px;color:#90CAF9;margin-top:3px">学科英语 500 词 + 闪卡</div>
         </button>
-        <button onclick="document.querySelector('[data-page=essay]').click()" style="padding:18px 12px;background:linear-gradient(135deg,#FCE4EC,#F8BBD0);border:2px solid #C2185B;border-radius:8px;cursor:pointer;text-align:left">
+        <button class="practice-hub-btn" data-accent="pink" onclick="document.querySelector('[data-page=essay]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(255,51,102,0.10),rgba(255,51,102,0.02));border:1px solid rgba(255,51,102,0.45);box-shadow:0 0 12px rgba(255,51,102,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
           <div style="font-size:28px">📝</div>
-          <div style="font-size:15px;font-weight:900;color:#880E4F;margin-top:6px">作文</div>
-          <div style="font-size:11px;color:#C2185B;margin-top:3px">73 周 prompt + 升级闭环</div>
+          <div style="font-size:15px;font-weight:900;color:#FF8A9C;margin-top:6px">作文</div>
+          <div style="font-size:11px;color:#F8BBD0;margin-top:3px">73 周 prompt + 升级闭环</div>
         </button>
       </div>
     </div>
@@ -5578,9 +5586,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.15f"></script>
-<script src="data.js?v=19.15f"></script>
-<script src="app.js?v=19.15f"></script>
+<script src="character.js?v=19.15g"></script>
+<script src="data.js?v=19.15g"></script>
+<script src="app.js?v=19.15g"></script>
 
 </body>
 </html>
