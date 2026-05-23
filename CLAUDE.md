@@ -163,7 +163,7 @@ curl -s "https://chamui-psle.web.app/app.js?v=VERSION" | grep "关键文本"
 
 ---
 
-## 7. 当前规模 (v19.14g)
+## 7. 当前规模 (v19.14h)
 
 - **装备 72 件** (含 v19.8 W18/24/40 中期补)
 - **成就 60+ 个** (含周次里程碑 + Paper 2 突击)
@@ -175,7 +175,7 @@ curl -s "https://chamui-psle.web.app/app.js?v=VERSION" | grep "关键文本"
 - **Oral 题库 30 道** + **反向验证 textarea** (≥10 字 v19.14d)
 - **科学 OE 50 道** (v19.14g 完成: PT 7 / Digestive 7 / Light 6 / Heat 9 / 实验设计 6 / Photosynthesis 4 / 其他 11) + **硬规则自动评分** + **章节 filter**
 - **4 张概念图** (Plant Transport / Digestive / Light / Heat) + **PSLE marker scheme 修复** (v19.14d)
-- **QA**: **252 项** 断言
+- **QA**: **259 项** 断言
 
 ### v19.7-v19.14f 新系统
 - **Paper 2 弱点突击卡** (v19.7): Cloze 100 + SST 50 目标进度
@@ -192,6 +192,7 @@ curl -s "https://chamui-psle.web.app/app.js?v=VERSION" | grep "关键文本"
 - **英语 5 大缺口闭环** (v19.14e): Comp OE 定位法每题 + 词汇 zh→en typing + Cloze 3 件事卡 + 作文升级闭环 (3 槽) + 错题色去羞耻化
 - **科学章节 filter** (v19.14f): 子串漏洞修复 (word boundary + stem) + SCIENCE_CHAPTERS 13 章 keywords + openSciMcqGame/openScienceOEGame 按当前 W 过滤题库
 - **科学 OE 题库扩 50** (v19.14g): 15 → 50 道 (+35 道), 按手册 4 难章配比, PSLE 真考风格 model+keywords
+- **第 4 次评审 5 项 bug 修复** (v19.14h): 作文 V2 +10 dedupe 防刷分 / Cloze 3 件事去 6s 倒计时改显式按钮 + fingerprint + syn 质量校验 (拒原词/纯数字/"aa") / Leitner 数学错题硬编码 4 统一到 LEITNER_GRADUATION 常量 / OE 反向题 (INCORRECT/NOT) 缺否定词封顶 1 分
 
 ---
 

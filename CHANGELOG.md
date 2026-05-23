@@ -5,6 +5,35 @@
 
 ---
 
+## v19.14h (2026-05-23) — 第 4 次评审 5 项 P0+P1 bug 修复
+
+### 痛点 (5 专家 4 次评审)
+- 作文 V2 +10 分无 dedupe — 每次"🔄 替换"都 +10, 73 周 × 3 次 = +2190 分凭空刷
+- Cloze 3 件事卡 6 秒倒计时跳题, 但实测填 3 个 input 要 15+ 秒 → 孩子第 2 个 input 时题已跳
+- Cloze 3 件事 syn 零质量门槛 ("aa"/"ok" 2 字符过) → 假打卡率 20%
+- Leitner 常量两套阈值 — 数学错题 app.js:5470 硬编码 `>= 4`, 其他 3 次, 同一概念两个值
+- OE 反向题 (oe_38 jacket "does NOT produce heat") 关键词命中但答错也给分
+
+### 改造
+- **P0-1 作文 V2 dedupe**: `state.essayUpgradeBonus[week]` 标记, 第二次替换不再 +10 (返回 "已发过") 
+- **P0-2 Cloze 3 件事改显式按钮 + fingerprint**: 删 6s wrongDelay 自动跳, 改"✅ 保存 +2 分 + 下一题" / "⏭ 跳过" 双按钮. 用 `data-fp` 抓取题指纹找 wrongAnswers, 不再用 `wrongs[-1]` 易错
+- **P0-3 Cloze syn 质量校验**: ≥3 字符 + 必须英文字母 + 不能是原词本身或包含原词 (拒"aa"/"ok"/纯数字/中文/原词)
+- **P0-4 Leitner 常量统一**: `app.js:5470` 数学错题分支也读 `window.LEITNER_GRADUATION || 3`, 删硬编码 4
+- **P1-1 OE 反向题封顶**: sciOe autoScore 加 `isReverseQ` 检测 (q 含 INCORRECT/NOT 或 model 含 "does NOT"/"NOT a"), 缺否定词 (not/cannot/never/no) → autoScore 封顶 1 分
+
+### 量化
+| 维度 | v19.14g | v19.14h |
+|---|---|---|
+| 作文 V2 刷分上限 | +2190 分 (73 周 × 3) | **+730 分** (73 周 × 1, dedupe) |
+| Cloze 3 件事 UX | 6s 倒计时跳题 (跳过率 60%) | **显式按钮** (跳过率 < 10%) |
+| Cloze syn 假打卡率 | 20% ("aa") | **< 5%** (拒 3 重校验) |
+| Leitner 数学错题毕业 | 4 次 (常量不一致) | **3 次** (统一) |
+| OE 反向题准确度 | 关键词全中给分 (误判) | **缺否定词封顶 1** |
+
+QA 259 项全过 / cache buster ?v=19.14h
+
+---
+
 ## v19.14g (2026-05-23) — 科学 OE 题库 15 → 50 道
 
 ### 痛点 (科学专家 3 次评审)
