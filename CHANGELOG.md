@@ -5,6 +5,118 @@
 
 ---
 
+## v19.14f (2026-05-23) — 科学 3 项 (子串漏洞 + 章节 filter)
+
+### 痛点 (5 专家 3 次评审)
+- 子串匹配漏洞: 关键词 `heat` 误匹配 `wheat`, `cool` 误匹配 `school` — OE 评分系统性高估
+- SCIENCE_CHAPTERS 13 章是 UI 装饰品: sciMcq / sciOe 抽题不过滤, W5 学 Plant Transport 但抽到 Magnet 题
+- 章节卡承诺 vs 实际游戏内容割裂
+
+### 改造
+- **app.js sciOeCheck + 硬规则评分**: keyword 匹配改 `\\b<stem>(s/ed/ing/es/ies)?\\b` 词干正则, 词干 strip 8 种后缀
+- **data.js SCIENCE_CHAPTERS**: 13 章全配 `chapterId` (如 `p4_plant_transport`) + `keywords` 数组. W15+ 综合阶段 keywords=null 走全库
+- **app.js openSciMcqGame(chapterFilter)**: 加可选参数, 默认按 currentWeek 算章节. 本章 8 题 + 综合 2 题防偏, 不足 5 题 fallback 全库
+- **app.js openScienceOEGame(chapterFilter)**: 同上, 章节卡 OE 训练入口直接传当前章节
+
+### 量化
+| 维度 | v19.14e | v19.14f |
+|---|---|---|
+| 关键词匹配精度 | 子串误判 (heat↔wheat) | word boundary + 词干 (准确) |
+| MCQ/OE 章节一致性 | 0% (随机抽题) | 80% 本章 + 20% 综合 |
+| 章节卡承诺 | 装饰 | 兑现 |
+
+QA 247 项全过 / cache buster ?v=19.14f
+
+---
+
+## v19.14e (2026-05-23) — 英语 5 项 (Cloze/词汇/Comp OE/作文)
+
+### 痛点 (5 专家 2 次评审英语)
+- P5 Comp OE 定位法只 Q1 显示 (强化 20%)
+- P3 学科词汇方向反: en→zh recognition (孩子需要 zh→en production)
+- P2 Cloze 错题没"3 件事查" (同义/词性/搭配)
+- P4 作文模板锁死 AL4: 无重写闭环
+- 错题红色高亮 = 羞耻触发器
+
+### 改造
+- **P5 Comp OE 每题定位法**: `<details>` Q1 默认 open, 后题折叠. 加 self-score rubric 提示
+- **P3 词汇 typing**: 显示中文, `<input>` 敲英文. Levenshtein ≤1 容错 + 单复数自动 + 3 秒首字母提示 + 跳过按钮
+- **P2 Cloze 3 件事卡**: 答错弹"同义词必填 / 词性选填 / 搭配选填" + topic 自动聚类 (8 主题 travel/school/nature/emotion/food/family/sport/weather) + 跳过 fallback
+- **P4 作文升级闭环**: 3 槽 (Draft 1 / Draft 2 / Teacher) + 模板词勾选 ≥60% 才解锁 V2 + V2 完成 +10 分
+- **错题色去羞耻化**: 红 #FF6B6B → 蓝灰 #607D8B, "错题/真考" → "待复习/重点"
+- 新 helper: data.js `CLOZE_TOPIC_MAP` + `guessClozeTopic` + `errorBankByTopic`
+- 新 helper: app.js `_levenshtein` + `svSubmitTyping` + `svHint` + `svSkip` + `saveCloze3Things` + `uploadEssayV` + `toggleEssayCheck`
+
+### 量化
+| 维度 | v19.14d | v19.14e |
+|---|---|---|
+| Comp OE 强化密度 | 20% (Q1 only) | 100% (每题折叠) |
+| 词汇训练模式 | recognition (4 选 1) | production (typing + 拼写容错) |
+| Cloze 错题诊断 | 仅入库 | 同义/词性/搭配 + 主题聚类 |
+| 作文反馈闭环 | 仅上传 1 张 | Draft 1 → 模板词检查 → Draft 2 三层 |
+| 错题情感色 | 红色羞耻 | 蓝灰中性 |
+
+QA 242 项全过 / cache buster ?v=19.14e
+
+---
+
+## v19.14d (2026-05-23) — 二次评审 8 项 (科学事实+数学+Oral+Leitner)
+
+5 专家二次评审驱动, 修复:
+- 🐛 Leitner bug (app.js >=4 → 读 LEITNER_GRADUATION 常量)
+- 🔒 Yes/No 正则强化 (加 I agree/It is/True/Sure)
+- 🎤 删 quickOralCheckin 假打卡 + Oral 反向验证 textarea (≥10 字)
+- ➗ 数学 hard lock → soft cap (WEEKDAY_LOCKED_GAMES 移除 math)
+- 🌱 Phloem "双向" → "from leaves to storage organs (translocation)"
+- 🍳 Liver bile "消化" → "emulsify fat (not digest)"
+- 💡 Light translucent 影子加 "lighter not fully dark"
+- 🧪 OE #3/#4/#13 keywords + model 修 (transport+minerals / villi+thin wall / heat 独立)
+- ➕ 数学 +20 题 (几何 10 + 速率追及 10)
+- 🧪 科学 OE 自评 → 硬规则自动评分 (关键词+长度+opener+than+it)
+
+QA 235 项全过 / cache buster ?v=19.14d
+
+---
+
+## v19.14c (2026-05-23) — 我的 tab lock + 宠物加到角色旁
+
+- 平日 装备 toggleEquipment lock + 皮肤 setActiveSkin lock + 宠物 zZz 灰色休眠
+- 周末 全开放 (装备穿戴/宠物活跃/喂食)
+- charPage_petWidget 加到角色 SVG 右下角
+- charPage_lockBanner 平日显示 "📅 装备穿戴已锁 + 宠物在休息"
+
+### v19.14d1 hotfix
+- "我的"页文字+角色 SVG 重叠 — scoped CSS 修 character-display height auto + svg margin-top 0 + 缩到 180px
+
+---
+
+## v19.14b (2026-05-23) — 平日/周末科目隔离
+
+- WEEKDAY_LOCKED_GAMES = [math, chinese, unit] hard lock 平日
+- getDailyTasksFiltered: 平日过滤数学/华文 slot, 周末注入 WSC/WUC
+- 主页"今日 3 件事"按平日/周末分化 (平日 Oral+Cloze+SST+科学 / 周末 数学+华文+Cloze 保手感)
+- mini-game hub math/chinese/unit 平日灰 + 🔒
+
+QA 216 项全过
+
+---
+
+## v19.14a (2026-05-23) — 主页 2 卡 + 数值重平衡 + 弱科软门槛
+
+5 专家评审驱动:
+- 主页 5 卡 → 2 卡 (🎯 今日 3 件事 + 🏫 目标校 1 校)
+- 录取概率 8 → 1 校 + "查看全部" 链接
+- 打卡日封顶 5 项 + 周封顶 200 分
+- Cloze/SST 改 +2 分/题, 20 题封顶, 21-50 衰减 1 分, 51+ 0 分
+- 错题 Leitner — 3 次答对才毕业, 每次 +1 巩固, 毕业 +5
+- 宝箱 30-50 → 10-20 + 周封顶 100 分
+- 强项 game (math/chinese/unit/grammar) 第 3 次需先做 Cloze 5 题 (软门槛)
+- 加 SGD 800 中型 milestone (20000 分 "龙之追随者")
+
+QA 205 项全过
+
+---
+
 ## v19.13 (2026-05-23) — 7 项对齐手册 v14: 英语 16.5h + 科学 P3-P4
 
 ### 痛点
