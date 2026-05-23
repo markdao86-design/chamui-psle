@@ -642,6 +642,8 @@ const DAILY_GAME_HARD_NUDGE = 15;  // 15 局强劝 "今天够了"
 // v19.15i: 防沉迷 — 我的 tab 装备/皮肤/宠物切换日次数 (用户决议 2026-05-23: 周末也要限)
 const DAILY_AVATAR_ACTIONS_SOFT = 8;   // 软提示
 const DAILY_AVATAR_ACTIONS_HARD = 15;  // 硬封顶 (block, 明天再玩)
+// v19.17: 补做池每日上限 (游戏数值 + 心理 第 7/8 次共识)
+const DAILY_CARRY_CAP = 3;  // 每日补打过去周未做任务上限 3 项 (鼓励补但不鼓励刷)
 
 function listeningTodayKey() {
   const d = new Date();
@@ -5525,8 +5527,10 @@ function getDefaultState() {
     // v19.12: Paper 2 模拟卷历史 (用于综合 PSLE AL 预测)
     paper2ALHistory: [],
     // v19.12: 4 科预测 AL (人工 + mini-game 加权, 真考实测 fallback)
-    subjectALEstimates: { english: 6, math: 1, science: 2, chinese: 1, lastUpdate: null }
-    // v19.15k: 撤回 subjectALManual 持久化 — 改成 in-memory _alWhatIf 临时模拟 (防 self-deception, 关 app 自动恢复真实 AL)
+    subjectALEstimates: { english: 6, math: 1, science: 2, chinese: 1, lastUpdate: null },
+    // v19.15k: 撤回 subjectALManual 持久化 — 改成 in-memory _alWhatIf 临时模拟 (防 self-deception)
+    // v19.17: 毕业题间隔复习队列 (14 天后回测, 修数学专家累计 3 次 P0)
+    gradReviewQueue: []
   };
 }
 
@@ -7858,6 +7862,7 @@ window.DAILY_GAME_SOFT_WARN = DAILY_GAME_SOFT_WARN;
 window.DAILY_GAME_HARD_NUDGE = DAILY_GAME_HARD_NUDGE;
 window.DAILY_AVATAR_ACTIONS_SOFT = DAILY_AVATAR_ACTIONS_SOFT;
 window.DAILY_AVATAR_ACTIONS_HARD = DAILY_AVATAR_ACTIONS_HARD;
+window.DAILY_CARRY_CAP = DAILY_CARRY_CAP;
 window.listeningTodayKey = listeningTodayKey;
 window.getListeningSecondsToday = getListeningSecondsToday;
 window.addListeningSeconds = addListeningSeconds;

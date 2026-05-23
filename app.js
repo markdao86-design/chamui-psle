@@ -413,6 +413,7 @@ function renderDashboard() {
   // renderMasterTipCard(); // v18.71: 已合并到 wowCard
   renderDragonProgress();  // v18.55
   renderErrorBankCard();   // v18.59
+  if (typeof renderGradReviewCard === 'function') renderGradReviewCard();   // v19.17 毕业题间隔复习
   renderCompTrackerCard(); // v19.5: 作文质量追踪
   renderWeakChallengeCard(); // v19.5: 弱科挑战
   renderFocusAreasCard();  // v19.5: 模考诊断重点
@@ -4313,6 +4314,16 @@ function doCarryForwardCheckin(srcWeek, srcDay, slot) {
     renderAll();
     return;
   }
+  // v19.17: 每日补做上限守卫 (游戏数值+心理 第 7/8 次共识 P0)
+  const todayMidnight = new Date(); todayMidnight.setHours(0,0,0,0);
+  const todayCarryCount = (state.logs || []).filter(l =>
+    l.type === 'slot_carry' && l.timestamp >= todayMidnight.getTime()
+  ).length;
+  const cap = window.DAILY_CARRY_CAP || 3;
+  if (todayCarryCount >= cap) {
+    showToast(`🔁 今日补打已达 ${cap} 项上限, 明天再补 · 鼓励补但不鼓励集中刷`, 'warn');
+    return;
+  }
   const full = slotPoints(srcWeek, slot) || 0;
   const pts = Math.floor(full * 0.7);
   setDailyCheck(state, srcWeek, srcDay, slot, true);
@@ -5845,12 +5856,20 @@ function submitErrorBankAnswer(optIdx) {
         const grad = window.LEITNER_GRADUATION || 3;
         if (w.correctStreak >= grad) {
           // v19.15a hotfix: 用 {force:true} 跳过 markErrorAnsweredCorrect 的内部 +1/+5
+          // v19.17: 毕业题不删, 迁 gradReviewQueue 14 天后回测 (数学专家累计 3 次 P0)
+          if (!state.gradReviewQueue) state.gradReviewQueue = [];
+          state.gradReviewQueue.push({
+            ...w,
+            graduatedAt: Date.now(),
+            nextReview: Date.now() + 14 * 86400000,
+            recallStreak: 0
+          });
           window.removeFromErrorBank(state, { force: true, id: item.id });
           g.removed.push(item.id);
           // v19.16: 毕业 +3 (原 +5), 配合中途 +1+1 = 共 +5 (cap 不变, 反馈分散修第 7 次评审动机不足)
           state.totalPoints = (state.totalPoints || 0) + 3;
-          state.logs.push({ reason: '🎓 错题毕业 (Leitner 3 连对) +3', points: 3, week: state.currentWeek, timestamp: Date.now() });
-          showToast('🎓 +3 错题毕业!', 'happy');
+          state.logs.push({ reason: '🎓 错题毕业 (Leitner 3 连对) +3 · 14 天后会回测', points: 3, week: state.currentWeek, timestamp: Date.now() });
+          showToast('🎓 +3 错题毕业! (14 天后会回测一次)', 'happy');
         } else {
           // v19.16: 中途 +1 巩固反馈 (修第 7 次评审 数学/英语 共识: 0 分激励不足)
           state.totalPoints = (state.totalPoints || 0) + 1;
@@ -5886,12 +5905,20 @@ function submitErrorBankMath() {
         const grad = window.LEITNER_GRADUATION || 3;
         if (w.correctStreak >= grad) {
           // v19.15a hotfix: 用 {force:true} 跳过 markErrorAnsweredCorrect 的内部 +1/+5
+          // v19.17: 毕业题不删, 迁 gradReviewQueue 14 天后回测 (数学专家累计 3 次 P0)
+          if (!state.gradReviewQueue) state.gradReviewQueue = [];
+          state.gradReviewQueue.push({
+            ...w,
+            graduatedAt: Date.now(),
+            nextReview: Date.now() + 14 * 86400000,
+            recallStreak: 0
+          });
           window.removeFromErrorBank(state, { force: true, id: item.id });
           g.removed.push(item.id);
           // v19.16: 毕业 +3 (原 +5), 配合中途 +1+1 = 共 +5 (cap 不变, 反馈分散修第 7 次评审动机不足)
           state.totalPoints = (state.totalPoints || 0) + 3;
-          state.logs.push({ reason: '🎓 错题毕业 (Leitner 3 连对) +3', points: 3, week: state.currentWeek, timestamp: Date.now() });
-          showToast('🎓 +3 错题毕业!', 'happy');
+          state.logs.push({ reason: '🎓 错题毕业 (Leitner 3 连对) +3 · 14 天后会回测', points: 3, week: state.currentWeek, timestamp: Date.now() });
+          showToast('🎓 +3 错题毕业! (14 天后会回测一次)', 'happy');
         } else {
           // v19.16: 中途 +1 巩固反馈 (修第 7 次评审 数学/英语 共识: 0 分激励不足)
           state.totalPoints = (state.totalPoints || 0) + 1;
@@ -5970,6 +5997,153 @@ window.closeErrorBank = closeErrorBank;
 window.startErrorBankReview = startErrorBankReview;
 window.submitErrorBankAnswer = submitErrorBankAnswer;
 window.submitErrorBankMath = submitErrorBankMath;
+
+// v19.17: 毕业题间隔复习 (14 天后回测一次, 数学专家累计 3 次 P0)
+let _gradReviewState = null;
+function getDueGradReviewCount() {
+  if (!state.gradReviewQueue) return 0;
+  const now = Date.now();
+  return state.gradReviewQueue.filter(g => (g.nextReview || 0) <= now).length;
+}
+function renderGradReviewCard() {
+  const card = document.getElementById('gradReviewCard');
+  if (!card) return;
+  const dueCount = getDueGradReviewCount();
+  const totalQ = (state.gradReviewQueue || []).length;
+  if (totalQ === 0) { card.innerHTML = ''; return; }
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:linear-gradient(135deg, rgba(102,255,176,0.08), rgba(102,255,176,0.02));border:1px solid rgba(102,255,176,0.30);border-radius:8px;margin-top:8px;cursor:${dueCount > 0 ? 'pointer' : 'default'}" ${dueCount > 0 ? 'onclick="openGradReview()"' : ''}>
+      <div style="font-size:20px">📅</div>
+      <div style="flex:1;font-size:12px;line-height:1.5">
+        <div style="color:#E0E0E0;font-weight:700">毕业题间隔复习</div>
+        <div style="color:#A0A0A0;font-size:11px">累计 ${totalQ} 题毕业 · ${dueCount > 0 ? `<b style="color:#66FFB0">${dueCount} 题</b>该 14 天后复测了` : '暂无到期复测'}</div>
+      </div>
+      ${dueCount > 0 ? `<div style="color:#66FFB0;font-size:18px">›</div>` : ''}
+    </div>
+  `;
+}
+function openGradReview() {
+  const due = (state.gradReviewQueue || []).filter(g => (g.nextReview || 0) <= Date.now());
+  if (due.length === 0) { showToast('暂无到期复测题', 'warn'); return; }
+  _gradReviewState = { items: [...due].sort(() => Math.random() - 0.5), idx: 0, correct: 0 };
+  _renderGradReview();
+}
+function _renderGradReview() {
+  const g = _gradReviewState;
+  if (!g) return;
+  let modal = document.getElementById('gradReviewModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'gradReviewModal';
+    modal.className = 'vocab-modal';
+    document.body.appendChild(modal);
+  }
+  if (g.idx >= g.items.length) { _finishGradReview(); return; }
+  const item = g.items[g.idx];
+  let answerArea = '';
+  if (item.type === 'mcq' && item.opts) {
+    answerArea = `<div class="mcq-opts">${item.opts.map((o, oi) =>
+      `<button class="mcq-opt" onclick="submitGradReviewAnswer(${oi})">${String.fromCharCode(65+oi)}. ${escapeHtml(o)}</button>`
+    ).join('')}</div>`;
+  } else if (item.type === 'math') {
+    answerArea = `
+      <div style="text-align:center;margin:16px 0">
+        <input type="number" id="grMathInput" inputmode="numeric"
+               style="font-size:24px;padding:8px 12px;width:160px;text-align:center;border:2px solid var(--color-text);border-radius:8px;color:var(--color-text);background:var(--color-card)" placeholder="答案" />
+        <button class="btn btn-primary" style="margin-left:8px" onclick="submitGradReviewMath()">提交</button>
+      </div>`;
+  } else if (item.type === 'oe') {
+    answerArea = `<div style="background:rgba(255,184,0,0.08);padding:10px;border-radius:6px;color:#E0E0E0;font-size:12px;line-height:1.6"><b>参考答案:</b><br>${escapeHtml(item.correctAns || '')}</div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-primary" onclick="submitGradReviewOE(2)" style="flex:1">✅ 还记得 (满分)</button>
+        <button class="btn btn-warn" onclick="submitGradReviewOE(0)" style="flex:1">❌ 忘了 (重入错题本)</button>
+      </div>`;
+  }
+  modal.innerHTML = `
+    <div class="kt-inner cn-reading-inner" style="background:var(--color-card);border:1px solid rgba(102,255,176,0.30);box-shadow:0 0 16px rgba(102,255,176,0.10)">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title" style="color:#66FFB0">📅 毕业题复测 · ${g.idx+1}/${g.items.length}</div>
+          <div class="kt-progress">✅ ${g.correct} · 答对永久毕业, 答错重入错题本</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeGradReview()">×</button>
+      </div>
+      <div class="cn-q-text" style="margin:16px 0">${escapeHtml(item.q)}</div>
+      ${answerArea}
+    </div>`;
+  modal.classList.add('show');
+  if (item.type === 'math') setTimeout(() => document.getElementById('grMathInput')?.focus(), 100);
+}
+function submitGradReviewAnswer(optIdx) {
+  const g = _gradReviewState; if (!g) return;
+  const item = g.items[g.idx];
+  _handleGradReviewResult(optIdx === item.ans, item);
+}
+function submitGradReviewMath() {
+  const g = _gradReviewState; if (!g) return;
+  const input = document.getElementById('grMathInput');
+  if (!input || input.value === '') return;
+  const item = g.items[g.idx];
+  _handleGradReviewResult(parseInt(input.value) === item.ans, item);
+}
+function submitGradReviewOE(score) {
+  const g = _gradReviewState; if (!g) return;
+  const item = g.items[g.idx];
+  _handleGradReviewResult(score === 2, item);
+}
+function _handleGradReviewResult(isCorrect, item) {
+  const g = _gradReviewState; if (!g) return;
+  if (isCorrect) {
+    g.correct++;
+    // 永久毕业 — 从 gradReviewQueue 删除
+    state.gradReviewQueue = (state.gradReviewQueue || []).filter(q => q.id !== item.id);
+    state.totalPoints = (state.totalPoints || 0) + 2;
+    state.logs.push({ reason: '🏆 毕业题复测答对 +2 (永久毕业)', points: 2, type: 'grad_review_pass', week: state.currentWeek, timestamp: Date.now() });
+  } else {
+    // 答错: 从 gradReviewQueue 移出, 重入错题本 (correctStreak 重置)
+    state.gradReviewQueue = (state.gradReviewQueue || []).filter(q => q.id !== item.id);
+    if (window.addToErrorBank) {
+      window.addToErrorBank(state, { ...item, correctStreak: 0, retries: (item.retries || 0) + 1 });
+    }
+    state.logs.push({ reason: '🔁 毕业题复测答错, 重入错题本', points: 0, type: 'grad_review_fail', week: state.currentWeek, timestamp: Date.now() });
+  }
+  saveState(state);
+  g.idx++;
+  setTimeout(() => _renderGradReview(), 1200);
+}
+function _finishGradReview() {
+  const g = _gradReviewState; if (!g) return;
+  const modal = document.getElementById('gradReviewModal');
+  if (!modal) return;
+  modal.innerHTML = `
+    <div class="kt-inner cn-reading-inner" style="text-align:center;background:var(--color-card);border:1px solid rgba(102,255,176,0.40)">
+      <div class="kt-header">
+        <div class="kt-title" style="color:#66FFB0">🏆 复测完成!</div>
+        <button class="vocab-modal-close" onclick="closeGradReview()">×</button>
+      </div>
+      <div style="padding:20px 0">
+        <div style="font-size:48px">🏆</div>
+        <div style="font-size:16px;font-weight:900;margin-top:10px;color:#E0E0E0">本轮 ${g.correct} / ${g.items.length} 永久毕业</div>
+        <div style="color:#A0A0A0;font-size:12px;margin-top:8px">答错的已重入错题本, 下次再练</div>
+      </div>
+      <button class="btn btn-primary" onclick="closeGradReview()">完成</button>
+    </div>`;
+  _gradReviewState = null;
+  renderAll();
+}
+function closeGradReview() {
+  const m = document.getElementById('gradReviewModal');
+  if (m) m.classList.remove('show');
+  _gradReviewState = null;
+  renderAll();
+}
+window.renderGradReviewCard = renderGradReviewCard;
+window.openGradReview = openGradReview;
+window.closeGradReview = closeGradReview;
+window.submitGradReviewAnswer = submitGradReviewAnswer;
+window.submitGradReviewMath = submitGradReviewMath;
+window.submitGradReviewOE = submitGradReviewOE;
+window.getDueGradReviewCount = getDueGradReviewCount;
 function closeKnowledgePractice() {
   const m = document.getElementById('kpracticeModal');
   if (m) m.classList.remove('show');
@@ -7275,7 +7449,18 @@ function _openMcqGame(key, title, qField, chapter) {
       rawQs = [...onChapter, ...others];
       setTimeout(() => showToast(`📚 ${chapter.title} 章节 ${onChapter.length} 题 + 2 综合`, 'success'), 100);
     } else {
-      setTimeout(() => showToast(`本章题量不足 (${filtered.length}<5), 走全库 diff ${diff}`, 'warn'), 100);
+      // v19.17: 本章 <5 时, 按当前章节难度取同难度题 (从全库) + ±1 难度补足, 不再全库随机
+      // 科学专家累计 4 次评审 P0 — 第 5 周植物运输不应抽到 P6 电学
+      const chapterDiff = chapter.difficulty || 4;
+      const supplementPool = window.SCIENCE_MCQ.filter(q => {
+        if (filtered.includes(q)) return false;
+        const qDiff = q.difficulty || 4;
+        return Math.abs(qDiff - chapterDiff) <= 1;
+      }).sort(() => Math.random() - 0.5);
+      const need = Math.max(0, 10 - filtered.length);
+      const supplement = supplementPool.slice(0, need);
+      rawQs = [...filtered, ...supplement];
+      setTimeout(() => showToast(`📚 ${chapter.title} 仅 ${filtered.length} 题, 补 ${supplement.length} 题同难度 (Lv ${chapterDiff}±1)`, 'warn'), 100);
     }
   }
   const qs = rawQs.map(q => {

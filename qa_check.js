@@ -411,8 +411,23 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.16/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.16: cache buster 已更新到 19.16 (核心内容补足 英/科/数 + Leitner 中途反馈)');
+assert(/\?v=19\.17/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.17: cache buster 已更新到 19.17 (3 大累计共识漏洞修)');
+// v19.17: 补做日上限
+assert(/今日补打已达.*\$\{cap\} 项上限/.test(appSrc), 'v19.17: 补做日上限拦截 toast');
+assert(/window\.DAILY_CARRY_CAP \|\| 3/.test(appSrc), 'v19.17: 读 DAILY_CARRY_CAP 常量');
+// v19.17: 毕业题迁 gradReviewQueue
+assert(/state\.gradReviewQueue\.push/.test(appSrc), 'v19.17: 毕业题迁 gradReviewQueue');
+assert(/nextReview: Date\.now\(\) \+ 14 \* 86400000/.test(appSrc), 'v19.17: 14 天后回测');
+assert(/14 天后会回测/.test(appSrc), 'v19.17: 毕业 toast 提示 14 天后回测');
+// v19.17: 科学降级同难度
+assert(/Math\.abs\(qDiff - chapterDiff\) <= 1/.test(appSrc), 'v19.17: 科学降级 ±1 难度');
+assert(/补 \$\{supplement\.length\} 题同难度/.test(appSrc), 'v19.17: 科学降级 toast');
+// v19.17: 毕业题间隔复习对话框
+assert(/function renderGradReviewCard/.test(appSrc), 'v19.17: renderGradReviewCard');
+assert(/function openGradReview/.test(appSrc), 'v19.17: openGradReview');
+assert(/function getDueGradReviewCount/.test(appSrc), 'v19.17: getDueGradReviewCount');
+assert(/id="gradReviewCard"/.test(idxSrc), 'v19.17: gradReviewCard 容器');
 // v19.16 app 类 (data 类移到 dataSrcV14 之后)
 assert(/sci_oe_grad|🎓 OE 错题毕业/.test(appSrc), 'v19.16: OE 毕业 +3 标记');
 assert(/sci_oe_consol|💪 OE 巩固/.test(appSrc), 'v19.16: OE 巩固 +1 标记');
@@ -642,6 +657,9 @@ assert(/DAILY_GAME_HARD_NUDGE\s*=\s*15/.test(dataSrcV14), 'v19.15 P0-3: DAILY_GA
 // v19.15i data 类: 装备/皮肤防沉迷封顶常量
 assert(/DAILY_AVATAR_ACTIONS_SOFT\s*=\s*8/.test(dataSrcV14), 'v19.15i: DAILY_AVATAR_ACTIONS_SOFT = 8');
 assert(/DAILY_AVATAR_ACTIONS_HARD\s*=\s*15/.test(dataSrcV14), 'v19.15i: DAILY_AVATAR_ACTIONS_HARD = 15');
+// v19.17 data 类
+assert(/DAILY_CARRY_CAP\s*=\s*3/.test(dataSrcV14), 'v19.17: DAILY_CARRY_CAP = 3 常量');
+assert(/gradReviewQueue:\s*\[\]/.test(dataSrcV14), 'v19.17: state.gradReviewQueue 默认 []');
 // v19.16 data 类: 内容补足
 assert(/'turn on':\s*\{\s*syn:\s*'switch on'/.test(dataSrcV14), "v19.16: phrasal verb 'turn on'");
 assert(/'put off':\s*\{\s*syn:\s*'postpone'/.test(dataSrcV14), "v19.16: phrasal verb 'put off'");
