@@ -5,6 +5,37 @@
 
 ---
 
+## v19.14g (2026-05-23) — 科学 OE 题库 15 → 50 道
+
+### 痛点 (科学专家 3 次评审)
+- OE 仅 15 题, Leitner 3 次毕业机制下 5 个原题循环, 第 7 天起孩子背得出 model answer
+- 4 难章覆盖严重失衡: Plant Transport / Digestive / Light 各 1 题, Heat 仅 2 题, 远低于"按手册难易分级配比"
+
+### 改造
++35 道 PSLE 真考风格 OE, 按手册 4 难章 + 实验设计权重:
+- **Plant Transport +6** (oe_16-21): phloem 切环 / root hair 表面积 / 蒸腾 热风 / 染色芹菜 / wilting / magnesium 缺乏
+- **Digestive +6** (oe_22-27): villi 双特征 / 太空蠕动 / bile emulsify / 口腔双消化 / 大肠吸水 / 嚼食物
+- **Light +5** (oe_28-32): 影子距离比例 / translucent 灯影 / 4 floodlight 4 影子 / 潜望镜 / 暗光读书
+- **Heat +7** (oe_33-39): saucepan 双材料 / 烧水对流 / 太阳辐射真空 / 黑白吸热实验 / thermos flask 三机制 / 衣服 reduce heat loss / 大小冰块 mass
+- **实验设计 +5** (oe_40-44): 变量 3 件套 / control setup / 表格结论 / anomalous result / 摆长
+- **Photosynthesis +3** (oe_45-47): 24h 呼吸 / 密封瓶死亡 / 4 要素
+- **其他 +3** (oe_48-50): magnetisation 磁化 / friction useful / water cycle NEWater
+
+每道题: `id / topic / q / keywords[] / model (PSLE 标准答完整句)`
+
+### 量化
+| 维度 | v19.14f | v19.14g |
+|---|---|---|
+| 科学 OE 题量 | 15 | **50** |
+| 4 难章覆盖 | 1+1+1+2 | **7+7+6+9** |
+| 实验设计专项 | 1 | **6** |
+| Photo/Respiration | 1 | **4** |
+| Leitner 重复风险 | 高 (5 题循环) | 低 (50 题池) |
+
+QA 252 项全过 / cache buster ?v=19.14g
+
+---
+
 ## v19.14f (2026-05-23) — 科学 3 项 (子串漏洞 + 章节 filter)
 
 ### 痛点 (5 专家 3 次评审)
