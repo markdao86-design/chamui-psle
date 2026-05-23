@@ -5336,24 +5336,48 @@ function openErrorBank() {
   const byGame = window.errorBankByGame ? window.errorBankByGame(state) : {};
   const GAME_LABEL = {
     knowledge: '🌳 知识树', math: '🔢 数学', grammar: '✏️ Grammar', cloze: '🧩 Cloze',
-    editing: '🔍 Editing', vocab: '📚 词汇', listen: '🎧 听力', scilab: '🔬 科学'
+    editing: '🔍 Editing', vocab: '📚 词汇', listen: '🎧 听力', scilab: '🔬 科学',
+    sci_oe: '🧪 科学 OE', subject_vocab: '📚 学科词汇', chinese: '🇨🇳 华文', sst: '🔄 SST', scimcq: '🧬 科学 MCQ'
   };
   const breakdown = Object.entries(byGame).map(([k, v]) =>
     `<div class="eb-stat"><span class="eb-stat-label">${GAME_LABEL[k] || k}</span><span class="eb-stat-num">${v}</span></div>`
   ).join('');
+  // v19.14i (英语专家): Cloze 错题按 topic 主题聚类显示
+  const byTopic = window.errorBankByTopic ? window.errorBankByTopic(state, 'cloze') : {};
+  const TOPIC_LABEL = {
+    travel: '✈️ travel', school: '🏫 school', nature: '🌳 nature', emotion: '😊 emotion',
+    food: '🍱 food', family: '👨‍👩‍👧 family', sport: '⚽ sport', weather: '🌤 weather', general: '📦 general'
+  };
+  const topicEntries = Object.entries(byTopic).filter(([, v]) => v.count > 0);
+  const topicHtml = topicEntries.length > 0 ? `
+    <div style="margin-top:12px;background:#E3F2FD;border-radius:8px;padding:10px">
+      <div style="font-size:13px;font-weight:900;color:#1565C0;margin-bottom:6px">🧩 Cloze 错题主题聚类 (按 PSLE 高频主题)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${topicEntries.sort((a, b) => b[1].count - a[1].count).map(([t, v]) => `
+          <div style="background:#FFF;border:1px solid #BBDEFB;border-radius:6px;padding:6px 10px;font-size:12px">
+            <span style="font-weight:700">${TOPIC_LABEL[t] || t}</span>
+            <span style="color:#1565C0;margin-left:4px">${v.count}</span>
+            ${v.threeThingsCount > 0 ? `<span style="color:#4CAF50;margin-left:4px;font-size:10px">✓${v.threeThingsCount}</span>` : ''}
+          </div>
+        `).join('')}
+      </div>
+      <div style="font-size:10px;color:#666;margin-top:6px">💡 同主题词集中练 (手册 v14 方法): travel 错多 → 下周 5 题 travel 主题</div>
+    </div>
+  ` : '';
   modal.innerHTML = `
     <div class="kt-inner cn-reading-inner">
       <div class="kt-header">
         <div>
-          <div class="kt-title">📓 错题本</div>
-          <div class="kt-progress">共 <b>${wrongs.length}</b> 题待复习 · 答对自动清空</div>
+          <div class="kt-title">📓 待复习清单</div>
+          <div class="kt-progress">共 <b>${wrongs.length}</b> 题待掌握 · Leitner 3 次答对毕业</div>
         </div>
         <button class="vocab-modal-close" onclick="closeErrorBank()">×</button>
       </div>
-      <div style="background:rgba(255,107,53,0.1);border:2px dashed var(--color-accent);border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;color:var(--color-text-light)">
-        💡 错题反复练 = 真正消灭弱点。每次答对一题, 自动从错题本删掉。答错继续留着。
+      <div style="background:#ECEFF1;border:2px dashed #607D8B;border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;color:#455A64">
+        💡 错题反复练 = 真正消灭弱点。<b>连续 3 次答对</b>自动毕业, 每次 +1 巩固分, 毕业 +5 分。
       </div>
       <div class="eb-stats">${breakdown}</div>
+      ${topicHtml}
       <div class="kp-actions" style="margin-top:16px">
         <button class="btn btn-primary" onclick="startErrorBankReview()">🎯 开始复习 (${wrongs.length} 题)</button>
         <button class="btn btn-secondary" onclick="closeErrorBank()">稍后再说</button>
@@ -5603,7 +5627,9 @@ async function openCompositionModal(week) {
   const templateWords = (window.ESSAY_TEMPLATES && window.ESSAY_TEMPLATES.highVocab || []).slice(0, 10);
   const hitCount = templateWords.filter(w => checked[w.word]).length;
   const hitRatio = templateWords.length ? hitCount / templateWords.length : 0;
-  const canUploadV2 = hitRatio >= 0.6;  // 命中 ≥ 60% 才解锁 Draft 2
+  // v19.14i (UI 专家 B 方案): 60% 锁改软提示 — 不锁上传, 但 V2 奖励按命中率调整 (+5 vs +10)
+  const canUploadV2 = true;  // 永远可上传
+  const hitTier = hitRatio >= 0.6 ? 'full' : hitRatio >= 0.3 ? 'half' : 'low';
 
   const picsHtml = p.pictures.map(pic => `<li>${escapeHtml(pic)}</li>`).join('');
   const wordCheckboxes = templateWords.map(w => `
@@ -5650,17 +5676,19 @@ async function openCompositionModal(week) {
         <div style="background:#FFF;border-radius:6px;padding:8px;margin-top:6px">
           <div style="font-size:12px;font-weight:700;color:#5D4037;margin-bottom:4px">📋 模板词自查 (用了几个?)</div>
           <div style="line-height:1.8">${wordCheckboxes}</div>
-          <div style="font-size:11px;color:${hitRatio >= 0.6 ? '#2E7D32' : '#FFA000'};margin-top:4px;font-weight:700">
-            命中: ${hitCount}/${templateWords.length} (${Math.round(hitRatio*100)}%) ${hitRatio >= 0.6 ? '✅ Draft 2 已解锁' : '⚠️ ≥ 60% 才能传 Draft 2'}
+          <div style="font-size:11px;color:${hitTier === 'full' ? '#2E7D32' : hitTier === 'half' ? '#FFA000' : '#FF6B6B'};margin-top:4px;font-weight:700">
+            命中: ${hitCount}/${templateWords.length} (${Math.round(hitRatio*100)}%) ·
+            ${hitTier === 'full' ? '✅ V2 升级奖 +10 分' : hitTier === 'half' ? '⚠️ V2 升级奖 +5 分 (≥60% 才 +10)' : '💪 V2 升级奖 +2 分 (≥30% 才 +5, ≥60% 才 +10)'}
           </div>
         </div>
 
-        <div style="background:${canUploadV2 ? '#FFF' : '#F5F5F5'};border-radius:6px;padding:8px;margin-top:6px;${canUploadV2 ? '' : 'opacity:0.6'}">
+        <div style="background:#FFF;border-radius:6px;padding:8px;margin-top:6px">
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700">
             ${hasV2 ? '✅' : '②'} <span>Draft 2 (升级版 — 改 5 句不是重写全文)</span>
-            <button onclick="${canUploadV2 ? `uploadEssayV(${week}, 'V2')` : `showToast('🔒 先勾够 60% 模板词才能升级', 'warn')`}" style="margin-left:auto;padding:4px 10px;background:${canUploadV2 ? '#7B1FA2' : '#9E9E9E'};color:#FFF;border:none;border-radius:4px;font-size:11px;cursor:${canUploadV2 ? 'pointer' : 'not-allowed'}">${hasV2 ? '🔄 替换' : (canUploadV2 ? '📷 上传' : '🔒 锁定')}</button>
+            <button onclick="uploadEssayV(${week}, 'V2')" style="margin-left:auto;padding:4px 10px;background:#7B1FA2;color:#FFF;border:none;border-radius:4px;font-size:11px;cursor:pointer">${hasV2 ? '🔄 替换' : '📷 上传'}</button>
             ${hasV2 ? `<button onclick="viewEssayV(${week}, 'V2')" style="padding:4px 8px;background:none;border:1px solid #7B1FA2;color:#7B1FA2;border-radius:4px;font-size:11px;cursor:pointer">查看</button>` : ''}
           </div>
+          <div style="font-size:10px;color:#888;margin-top:4px">v19.14i: 不再硬锁 — V2 奖励按模板词命中率给 (+10/+5/+2), 鼓励真用词不假勾</div>
         </div>
 
         <div style="background:#FFF;border-radius:6px;padding:8px;margin-top:6px">
@@ -5730,19 +5758,26 @@ function uploadEssayV(week, version) {
         const blob = await compressImage(file);
         await window.photoPut(week, 'Wed', slot, blob);
         await refreshPhotoKeyCache();
-        // V2 完成 +10 分 (升级闭环奖励) — v19.14h P0: 加 dedupe 防"替换上传"刷分
+        // v19.14i (UI 专家 B): V2 奖励按模板词命中率分级 (+10/+5/+2), 鼓励真用词不假勾
+        // v19.14h P0: 加 dedupe 防"替换上传"刷分
         if (version === 'V2') {
           const v1Rec = await window.photoGet(week, 'Wed', 'ESSAY_V1');
           if (!state.essayUpgradeBonus) state.essayUpgradeBonus = {};
           const alreadyAwarded = !!state.essayUpgradeBonus[week];
           if (v1Rec && v1Rec.blob && !alreadyAwarded) {
+            // 算命中率决定奖励
+            const checked = (state.essayChecks || {})[week] || {};
+            const templateWordsT = (window.ESSAY_TEMPLATES && window.ESSAY_TEMPLATES.highVocab || []).slice(0, 10);
+            const hitCntT = templateWordsT.filter(w => checked[w.word]).length;
+            const hitRatioT = templateWordsT.length ? hitCntT / templateWordsT.length : 0;
+            const bonus = hitRatioT >= 0.6 ? 10 : hitRatioT >= 0.3 ? 5 : 2;
             state.essayUpgradeBonus[week] = Date.now();
-            state.totalPoints = (state.totalPoints || 0) + 10;
-            state.logs.push({ reason: `📝 W${week} 作文升级闭环完成 +10`, points: 10, week: state.currentWeek, timestamp: Date.now() });
+            state.totalPoints = (state.totalPoints || 0) + bonus;
+            state.logs.push({ reason: `📝 W${week} 作文升级 (命中 ${Math.round(hitRatioT*100)}%) +${bonus}`, points: bonus, week: state.currentWeek, timestamp: Date.now() });
             saveState(state);
-            showToast(`🎉 升级闭环完成 +10 分!`, 'happy');
+            showToast(`🎉 升级闭环完成 +${bonus} 分! (命中 ${hitCntT}/${templateWordsT.length} 模板词)`, 'happy');
           } else if (alreadyAwarded) {
-            showToast(`✅ W${week} V2 已替换 (升级奖已发过, 不再 +10)`, 'success');
+            showToast(`✅ W${week} V2 已替换 (升级奖已发过)`, 'success');
           }
         }
         showToast(`📝 W${week} ${label}已存 (${Math.round(blob.size/1024)} KB)`, 'success');

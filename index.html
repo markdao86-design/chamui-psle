@@ -3728,6 +3728,17 @@ p { font-size: 14px; line-height: 1.6; }
 .pet-widget.pet-proud   .ham-face-proud   { display: block; }
 #page-dashboard .character-card { position: relative; }
 
+/* v19.14i (UI 专家累计 4 版未做): 字号 11/10 → 13/12px 全局升 (WCAG AA) */
+.tab-btn { font-size: 14px !important; padding: 10px 6px !important; min-height: 48px; }
+@media (min-width: 768px) { .tab-btn { font-size: 15px !important; } }
+/* 主页 + 角色页内联 11px / 10px 字号一律升 */
+#page-dashboard [style*="font-size:11px"], #page-character [style*="font-size:11px"] { font-size: 13px !important; }
+#page-dashboard [style*="font-size:10px"], #page-character [style*="font-size:10px"] { font-size: 12px !important; }
+#page-dashboard [style*="font-size:12px"], #page-character [style*="font-size:12px"] { font-size: 13px !important; }
+/* 卡片标题 14px → 15px */
+#page-dashboard [style*="font-size:14px"][style*="font-weight:900"] { font-size: 16px !important; }
+#page-dashboard [style*="font-size:15px"][style*="font-weight:900"] { font-size: 17px !important; }
+
 /* ===== v19.14d: "👤 我的" tab 角色卡布局修复 — 防文字+角色重叠 ===== */
 #page-character .character-display {
   height: auto !important;          /* 不再固定 220px 给后面元素留空间 */
@@ -4911,16 +4922,19 @@ p { font-size: 14px; line-height: 1.6; }
 </header>
 
 <nav class="tabs">
+  <!-- v19.14i (UI 专家累计 4 版未做项): 9 tab → 5 tab -->
+  <!-- 合并 知识树/题库/词汇/作文 → 📚 练习 (内含 segmented control); 隐藏 ⚙️ 管理 (移到 👤 我的) -->
   <button class="tab-btn active" data-page="dashboard">🏠 主页</button>
   <button class="tab-btn" data-page="checkin">✅ 打卡</button>
+  <button class="tab-btn" data-page="practice">📚 练习</button>
   <button class="tab-btn" data-page="history">📊 能力</button>
-  <button class="tab-btn" data-page="knowledge">🌳 知识树</button>
-  <button class="tab-btn" data-page="essay">📝 作文</button>
-  <button class="tab-btn" data-page="vocab">📇 词汇</button>
-  <button class="tab-btn paper-bank-tab" data-page="paperbank">📚 题库</button>
-  <!-- v19.12: 角色/装备/双龙 移到独立 tab, 主页不再被推送 -->
   <button class="tab-btn" data-page="character">👤 我的</button>
-  <button class="tab-btn" data-page="admin">⚙️ 管理</button>
+  <!-- 旧 4 个英语类 tab + 管理 tab 隐藏 (page 容器仍存在, JS 跳转可访问) -->
+  <button class="tab-btn" data-page="knowledge" style="display:none">🌳 知识树</button>
+  <button class="tab-btn" data-page="essay" style="display:none">📝 作文</button>
+  <button class="tab-btn" data-page="vocab" style="display:none">📇 词汇</button>
+  <button class="tab-btn paper-bank-tab" data-page="paperbank" style="display:none">📚 题库</button>
+  <button class="tab-btn" data-page="admin" style="display:none">⚙️ 管理</button>
 </nav>
 
 <main class="main-container">
@@ -5003,9 +5017,14 @@ p { font-size: 14px; line-height: 1.6; }
       </div>
     </div>
 
-    <!-- v18 Phase 5.1: 🏆 成就墙 -->
-    <details class="dashboard-collapse">
-      <summary class="collapse-toggle">📋 更多详情 (点击展开)</summary>
+    <!-- v18.59: 错题本入口卡 (v19.14i 从折叠区提到主页) -->
+    <div class="card" id="errorBankCardNew" style="border-left:4px solid #607D8B;display:none"></div>
+
+    <!-- v19.14i (UI 专家): "📋 更多详情" 折叠区改为彻底隐藏 (display:none), DOM 保留以兼容 render 函数 -->
+    <!-- 内容 (智慧教练/进度/成就墙/皮肤更衣室/装备/双龙) 在 👤 我的 tab 已经有完整渲染 -->
+    <div id="_dashboardLegacy" style="display:none">
+      <!-- 原 details summary 已删 -->
+      <span></span>
 
     <!-- v17.6: 今日铁律已删除 (用户反馈) -->
 
@@ -5086,7 +5105,7 @@ p { font-size: 14px; line-height: 1.6; }
       </p>
       <div class="equipment-grid" id="equipmentGrid"></div>
     </div>
-    </details>
+    </div>
   </div>
 
   <!-- 打卡页 -->
@@ -5174,6 +5193,36 @@ p { font-size: 14px; line-height: 1.6; }
         <p style="color: var(--color-text-light); font-style: italic;">暂无兑换记录</p>
       </div>
       <button class="btn btn-primary" onclick="addExchange()" style="margin-top: 12px;">＋ 记录新兑换</button>
+    </div>
+  </div>
+
+  <!-- v19.14i: 📚 练习 hub 页 (合并知识树/题库/词汇/作文 4 个旧 tab 入口) -->
+  <div class="page" id="page-practice">
+    <div class="kt-page-wrap" style="padding:16px">
+      <div style="font-size:18px;font-weight:900;color:#1565C0;margin-bottom:6px">📚 练习中心</div>
+      <div style="font-size:13px;color:#666;margin-bottom:16px">选一项开始练 · 全部在二级页, 不打扰主页"今日 3 件事"</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+        <button onclick="document.querySelector('[data-page=knowledge]').click()" style="padding:18px 12px;background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border:2px solid #2E7D32;border-radius:8px;cursor:pointer;text-align:left">
+          <div style="font-size:28px">🌳</div>
+          <div style="font-size:15px;font-weight:900;color:#1B5E20;margin-top:6px">知识树</div>
+          <div style="font-size:11px;color:#388E3C;margin-top:3px">35 节点 · 105 道 PSLE 风练习</div>
+        </button>
+        <button onclick="document.querySelector('[data-page=paperbank]').click()" style="padding:18px 12px;background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border:2px solid #E65100;border-radius:8px;cursor:pointer;text-align:left">
+          <div style="font-size:28px">📚</div>
+          <div style="font-size:15px;font-weight:900;color:#BF360C;margin-top:6px">题库</div>
+          <div style="font-size:11px;color:#E65100;margin-top:3px">PSLE 真题 + Cloze + SST</div>
+        </button>
+        <button onclick="document.querySelector('[data-page=vocab]').click()" style="padding:18px 12px;background:linear-gradient(135deg,#E3F2FD,#BBDEFB);border:2px solid #1565C0;border-radius:8px;cursor:pointer;text-align:left">
+          <div style="font-size:28px">📇</div>
+          <div style="font-size:15px;font-weight:900;color:#0D47A1;margin-top:6px">词汇</div>
+          <div style="font-size:11px;color:#1565C0;margin-top:3px">学科英语 500 词 + 闪卡</div>
+        </button>
+        <button onclick="document.querySelector('[data-page=essay]').click()" style="padding:18px 12px;background:linear-gradient(135deg,#FCE4EC,#F8BBD0);border:2px solid #C2185B;border-radius:8px;cursor:pointer;text-align:left">
+          <div style="font-size:28px">📝</div>
+          <div style="font-size:15px;font-weight:900;color:#880E4F;margin-top:6px">作文</div>
+          <div style="font-size:11px;color:#C2185B;margin-top:3px">73 周 prompt + 升级闭环</div>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -5458,9 +5507,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.14h"></script>
-<script src="data.js?v=19.14h"></script>
-<script src="app.js?v=19.14h"></script>
+<script src="character.js?v=19.14i"></script>
+<script src="data.js?v=19.14i"></script>
+<script src="app.js?v=19.14i"></script>
 
 </body>
 </html>

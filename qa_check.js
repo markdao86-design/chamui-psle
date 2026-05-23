@@ -411,8 +411,18 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.14h/.test(idxSrc) && !/\?v=19\.14g[^0-9]/.test(idxSrc),
-  'v19.14h: cache buster 已更新到 19.14h');
+assert(/\?v=19\.14i/.test(idxSrc) && !/\?v=19\.14h[^0-9]/.test(idxSrc),
+  'v19.14i: cache buster 已更新到 19.14i');
+// v19.14i UI 5 项
+assert(/font-size:\s*14px\s*!important[\s\S]*\.tab-btn/.test(idxSrc) || /\.tab-btn\s*\{[^}]*font-size:\s*14px/.test(idxSrc), 'v19.14i 字号: tab-btn 升 14px');
+assert(/font-size:11px["'][\s\S]{0,200}font-size:\s*13px\s*!important/.test(idxSrc), 'v19.14i 字号: 11→13 全局升');
+assert(/id="page-practice"/.test(idxSrc), 'v19.14i: page-practice hub 容器');
+assert(/data-page="practice"/.test(idxSrc), 'v19.14i: tab-btn 加 📚 练习');
+assert(/data-page="knowledge"\s+style="display:none"/.test(idxSrc), 'v19.14i: 知识树 tab 隐藏');
+assert(/_dashboardLegacy/.test(idxSrc), 'v19.14i: dashboard-collapse 改 display:none');
+assert(/errorBankByTopic.*'cloze'|errorBankByTopic\(state,\s*'cloze'\)/.test(appSrc), 'v19.14i: 错题 modal 加 topic 聚类调用');
+assert(/Cloze 错题主题聚类|topic 主题聚类/.test(appSrc), 'v19.14i: 错题 modal 显示主题块');
+assert(/hitRatioT\s*>=\s*0\.6\s*\?\s*10\s*:\s*hitRatioT\s*>=\s*0\.3\s*\?\s*5/.test(appSrc), 'v19.14i: 作文 V2 +10/+5/+2 分级');
 // v19.14h 5 项 P0+P1 修复
 assert(/essayUpgradeBonus\[week\]|state\.essayUpgradeBonus/.test(appSrc), 'v19.14h P0-1: 作文 V2 +10 dedupe');
 assert(/saveCloze3ThingsAndNext|skipCloze3ThingsAndNext/.test(appSrc), 'v19.14h P0-2: Cloze 3 件事去倒计时改显式按钮');
