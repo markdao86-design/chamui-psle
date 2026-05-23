@@ -411,8 +411,20 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.14f/.test(idxSrc) && !/\?v=19\.14e[^0-9]/.test(idxSrc),
-  'v19.14f: cache buster 已更新到 19.14f');
+assert(/\?v=19\.14g/.test(idxSrc) && !/\?v=19\.14f[^0-9]/.test(idxSrc),
+  'v19.14g: cache buster 已更新到 19.14g');
+// v19.14g: OE 题库扩到 50 题
+const oeCountV14g = (fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8').match(/id:\s*'oe_\d+'/g) || []).length;
+assert(oeCountV14g >= 50, `v19.14g: 科学 OE 题 ≥ 50 (实际 ${oeCountV14g})`);
+// v19.14g: 4 难章配比验证 (Plant Transport / Digestive / Light / Heat 各至少 6 道)
+const ptCount = (fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8').match(/topic:\s*'Plant Transport'/g) || []).length;
+const digCount = (fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8').match(/topic:\s*'Digestion'/g) || []).length;
+const lightCount = (fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8').match(/topic:\s*'Light'/g) || []).length;
+const heatCount = (fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8').match(/topic:\s*'Heat'/g) || []).length;
+assert(ptCount >= 6, `v19.14g: Plant Transport OE ≥ 6 (${ptCount})`);
+assert(digCount >= 6, `v19.14g: Digestion OE ≥ 6 (${digCount})`);
+assert(lightCount >= 6, `v19.14g: Light OE ≥ 6 (${lightCount})`);
+assert(heatCount >= 7, `v19.14g: Heat OE ≥ 7 (${heatCount})`);
 // v19.14f 科学章节 filter + 子串漏洞修 (app 类)
 assert(/word boundary.*stem|safeStem.*RegExp/.test(appSrc), 'v19.14f: 关键词匹配改 word boundary + stem');
 assert(/openSciMcqGame\(chapterFilter\)|chapter && chapter\.keywords/.test(appSrc), 'v19.14f: openSciMcqGame 加 chapter filter');
