@@ -5,6 +5,34 @@
 
 ---
 
+## v19.14i (2026-05-23) — UI 收尾 + 内容 5 项
+
+### 痛点 (5 专家 4 次评审累计未做项)
+- UI 专家累计 4 版指 3 大未做: 9 tab / 字号 / 主页折叠区
+- 英语专家: errorBankByTopic 函数写了没人调用, Cloze 同主题闭环只做一半
+- UI 专家: 作文 60% 硬锁可被绕过 (孩子假勾)
+
+### 改造
+- **字号全局升 (WCAG AA)**: `.tab-btn` → 14px / 48px 触控高度; #page-dashboard 内联 11px → 13px / 10px → 12px (所有 11/10/12 内联自动覆盖)
+- **9 tab → 5 tab**: 🏠 主页 / ✅ 打卡 / 📚 练习 (新, hub 4 大入口) / 📊 能力 / 👤 我的; 知识树/题库/词汇/作文/管理 5 个 tab 隐藏 (page 容器仍存在, JS 跳转可访问)
+- **新 page-practice hub**: 2×2 网格 4 个大按钮 (🌳/📚/📇/📝), 进入即 setActive 对应 page (data-page click 跳转), 静态不需 render 函数
+- **真删主页"📋 更多详情" 折叠区**: `<details class="dashboard-collapse">` 改 `<div id="_dashboardLegacy" style="display:none">`, DOM 保留以兼容 renderDashboard 函数, 视觉上主页 "2 卡极简" 真兑现
+- **错题 modal Cloze topic 聚类**: 调用 `errorBankByTopic(state, 'cloze')`, 8 主题彩色 chip + 命中数 + ✓3件事数 (travel/school/nature/emotion/food/family/sport/weather/general)
+- **作文 60% 锁 → 软提示**: 删 canUploadV2 = hitRatio >= 0.6 硬锁, 改永远可上传; V2 奖励按命中率分级 ≥60% +10 / ≥30% +5 / <30% +2; 鼓励真用词不假勾
+
+### 量化
+| 维度 | v19.14h | v19.14i |
+|---|---|---|
+| 字号 | 11px/10px (WCAG AA 违反) | **13px/12px** (达标) |
+| Tab 数 | 9 | **5** |
+| 主页折叠区"详情" | 6 个卡藏在折叠区 | **DOM hide, 主页真 2 卡** |
+| Cloze 错题主题闭环 | 写了没用 | **modal 显示 + 计数** |
+| 作文 60% 锁 | 硬锁可绕过 (假勾) | **软提示 + 命中率分级奖励** |
+
+QA 268 项全过 / cache buster ?v=19.14i
+
+---
+
 ## v19.14h (2026-05-23) — 第 4 次评审 5 项 P0+P1 bug 修复
 
 ### 痛点 (5 专家 4 次评审)
