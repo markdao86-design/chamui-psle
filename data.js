@@ -7775,4 +7775,1024 @@ window.generateFocusAreas = generateFocusAreas;
 window.getFocusAreas = getFocusAreas;
 // v18.40: 题库 (华文阅读)
 window.CHINESE_READING = CHINESE_READING;
+
+// ============================================================
+// v19.13: 5 大新模块 (对齐手册 v14 英语 16.5h / 科学 P3-P4 系统过)
+// 痛点: 孩子真考英语 AL6, 但 app 缺 Oral / 学科词汇 / 作文模板 / Comp OE 定位法
+// / 科学章节进度 / OE 答题套路 / 概念图。本批补齐 7 项。
+// ============================================================
+
+// ============ 1. Oral 题库 (PSLE 风格 30 题, 8 类) ============
+const ORAL_QUESTIONS = [
+  // family (5)
+  { id: 'o_fam_1', cat: 'family', topic: '家庭', q: 'Tell me about a memorable family dinner. What made it special?', hint: '3 句扩展: 谁在 / 吃什么 / 为什么难忘' },
+  { id: 'o_fam_2', cat: 'family', topic: '家庭', q: 'Who in your family do you admire most and why?', hint: '具体说一件事 + 你的感受' },
+  { id: 'o_fam_3', cat: 'family', topic: '家庭', q: 'How do you help your parents at home?', hint: '至少 2 件具体的事' },
+  { id: 'o_fam_4', cat: 'family', topic: '家庭', q: 'Describe a weekend activity you enjoy with your family.', hint: '时间 / 地点 / 大家做什么' },
+  { id: 'o_fam_5', cat: 'family', topic: '家庭', q: 'What would you do if you had only one hour with your grandparents?', hint: '想象 + 解释为什么这样选' },
+  // school (5)
+  { id: 'o_sch_1', cat: 'school', topic: '学校', q: 'Tell me about your favourite teacher.', hint: '名字 / 教什么 / 为什么喜欢' },
+  { id: 'o_sch_2', cat: 'school', topic: '学校', q: 'Describe a school event you enjoyed recently.', hint: '什么活动 / 你做了什么 / 感受' },
+  { id: 'o_sch_3', cat: 'school', topic: '学校', q: 'What is the most challenging subject for you? How do you cope?', hint: '诚实回答 + 解决方法' },
+  { id: 'o_sch_4', cat: 'school', topic: '学校', q: 'If you could change one school rule, what would it be?', hint: '观点 + 理由' },
+  { id: 'o_sch_5', cat: 'school', topic: '学校', q: 'Describe a friend you made in school.', hint: '怎么认识 / 共同爱好' },
+  // hobby (4)
+  { id: 'o_hob_1', cat: 'hobby', topic: '爱好', q: 'What is your favourite hobby and why?', hint: '什么 / 多久玩一次 / 给你什么' },
+  { id: 'o_hob_2', cat: 'hobby', topic: '爱好', q: 'Describe a book or movie that you would recommend.', hint: '名字 / 剧情 / 为什么推荐' },
+  { id: 'o_hob_3', cat: 'hobby', topic: '爱好', q: 'If you could learn any new skill, what would it be?', hint: '什么 / 为什么 / 怎么学' },
+  { id: 'o_hob_4', cat: 'hobby', topic: '爱好', q: 'Tell me about a sport or game you enjoy.', hint: '怎么玩 / 你的水平 / 喜欢什么' },
+  // food (3)
+  { id: 'o_fd_1', cat: 'food', topic: '食物', q: 'Describe your favourite local Singapore food.', hint: '名字 / 味道 / 在哪里吃' },
+  { id: 'o_fd_2', cat: 'food', topic: '食物', q: 'What would you cook if you had to prepare dinner for your family?', hint: '菜名 / 步骤 / 为什么' },
+  { id: 'o_fd_3', cat: 'food', topic: '食物', q: 'Tell me about a time you tried a new food. How did it taste?', hint: '什么时候 / 食物 / 味道感受' },
+  // festival/culture (3)
+  { id: 'o_ft_1', cat: 'festival', topic: '节日', q: 'Describe how your family celebrates Chinese New Year.', hint: '吃什么 / 做什么 / 红包' },
+  { id: 'o_ft_2', cat: 'festival', topic: '节日', q: 'Tell me about a festival you would like to learn more about.', hint: '哪个节 / 为什么感兴趣' },
+  { id: 'o_ft_3', cat: 'festival', topic: '节日', q: 'What does National Day mean to you?', hint: '观点 + 一个具体例子' },
+  // future/dream (3)
+  { id: 'o_fu_1', cat: 'future', topic: '未来', q: 'What do you want to be when you grow up? Why?', hint: '职业 / 理由 / 怎么努力' },
+  { id: 'o_fu_2', cat: 'future', topic: '未来', q: 'If you could travel anywhere in the world, where would you go?', hint: '地点 / 想做什么 / 为什么' },
+  { id: 'o_fu_3', cat: 'future', topic: '未来', q: 'How do you think technology will change schools in 10 years?', hint: '2 个具体改变 + 你的看法' },
+  // nature/environment (3)
+  { id: 'o_na_1', cat: 'nature', topic: '环境', q: 'How can students help protect the environment?', hint: '3 个具体行动' },
+  { id: 'o_na_2', cat: 'nature', topic: '环境', q: 'Describe your favourite place in nature.', hint: '在哪 / 长什么样 / 感受' },
+  { id: 'o_na_3', cat: 'nature', topic: '环境', q: 'What would you do if you saw someone littering?', hint: '诚实 + 给理由' },
+  // technology/lifestyle (4)
+  { id: 'o_tc_1', cat: 'tech', topic: '科技', q: 'How much screen time do you have each day? Is it healthy?', hint: '时长 + 评价 + 平衡' },
+  { id: 'o_tc_2', cat: 'tech', topic: '科技', q: 'Describe one app or website that helps you learn.', hint: '名字 / 怎么用 / 为什么有用' },
+  { id: 'o_tc_3', cat: 'tech', topic: '科技', q: 'If your phone broke and you had no replacement for a week, what would you do?', hint: '想象 + 3 件代替的事' },
+  { id: 'o_tc_4', cat: 'tech', topic: '科技', q: 'Tell me about a time you helped someone learn how to use a device.', hint: '谁 / 学什么 / 结果' }
+];
+
+function getOralQuestion(seed) {
+  if (!ORAL_QUESTIONS.length) return null;
+  const idx = (typeof seed === 'number' ? seed : Math.floor(Math.random() * ORAL_QUESTIONS.length)) % ORAL_QUESTIONS.length;
+  return ORAL_QUESTIONS[idx];
+}
+
+function recordOralPractice(state, qId, durationSec) {
+  if (!state.oralPractice) state.oralPractice = { totalSec: 0, sessions: [], byDate: {} };
+  const today = (window.todayKey ? window.todayKey() : new Date().toISOString().slice(0,10));
+  state.oralPractice.totalSec += (durationSec || 30);
+  state.oralPractice.sessions.push({ qId, ts: Date.now(), sec: durationSec || 30 });
+  if (state.oralPractice.sessions.length > 200) state.oralPractice.sessions = state.oralPractice.sessions.slice(-200);
+  state.oralPractice.byDate[today] = (state.oralPractice.byDate[today] || 0) + (durationSec || 30);
+  // 每完成 1 题 +3 分 (轻奖励, 不刷分)
+  state.totalPoints = (state.totalPoints || 0) + 3;
+  if (window.saveState) window.saveState(state);
+  return { totalSec: state.oralPractice.totalSec, todaySec: state.oralPractice.byDate[today] };
+}
+
+function getOralStatus(state) {
+  const today = (window.todayKey ? window.todayKey() : new Date().toISOString().slice(0,10));
+  const op = state.oralPractice || { totalSec: 0, byDate: {} };
+  const todaySec = op.byDate[today] || 0;
+  const targetSec = 25 * 60; // 25 min
+  return {
+    todaySec, targetSec,
+    pct: Math.min(100, Math.round(todaySec / targetSec * 100)),
+    done: todaySec >= targetSec,
+    totalSessions: (op.sessions || []).length
+  };
+}
+
+// ============ 2. 学科英语词汇 500 (数学 200 + 科学 300) ============
+// 来源: PSLE 教学大纲 + 手册 v14 附录 B 列出的高频术语类别
+// 格式: { en, zh, cat } — cat 用于错题本主题分类 + game 检索
+const SUBJECT_VOCAB_MATH = [
+  // 几何 (40)
+  { en: 'perimeter', zh: '周长', cat: '几何' },
+  { en: 'area', zh: '面积', cat: '几何' },
+  { en: 'volume', zh: '体积', cat: '几何' },
+  { en: 'circumference', zh: '圆周', cat: '几何' },
+  { en: 'radius', zh: '半径', cat: '几何' },
+  { en: 'diameter', zh: '直径', cat: '几何' },
+  { en: 'equilateral', zh: '等边的', cat: '几何' },
+  { en: 'isosceles', zh: '等腰的', cat: '几何' },
+  { en: 'scalene', zh: '不等边的', cat: '几何' },
+  { en: 'parallel', zh: '平行', cat: '几何' },
+  { en: 'perpendicular', zh: '垂直', cat: '几何' },
+  { en: 'angle', zh: '角', cat: '几何' },
+  { en: 'acute', zh: '锐角', cat: '几何' },
+  { en: 'obtuse', zh: '钝角', cat: '几何' },
+  { en: 'reflex', zh: '反向角', cat: '几何' },
+  { en: 'right angle', zh: '直角', cat: '几何' },
+  { en: 'vertex', zh: '顶点', cat: '几何' },
+  { en: 'edge', zh: '边', cat: '几何' },
+  { en: 'face', zh: '面', cat: '几何' },
+  { en: 'cube', zh: '立方体', cat: '几何' },
+  { en: 'cuboid', zh: '长方体', cat: '几何' },
+  { en: 'cylinder', zh: '圆柱', cat: '几何' },
+  { en: 'cone', zh: '圆锥', cat: '几何' },
+  { en: 'sphere', zh: '球体', cat: '几何' },
+  { en: 'prism', zh: '棱柱', cat: '几何' },
+  { en: 'pyramid', zh: '棱锥', cat: '几何' },
+  { en: 'polygon', zh: '多边形', cat: '几何' },
+  { en: 'quadrilateral', zh: '四边形', cat: '几何' },
+  { en: 'pentagon', zh: '五边形', cat: '几何' },
+  { en: 'hexagon', zh: '六边形', cat: '几何' },
+  { en: 'rectangle', zh: '矩形', cat: '几何' },
+  { en: 'square', zh: '正方形', cat: '几何' },
+  { en: 'triangle', zh: '三角形', cat: '几何' },
+  { en: 'rhombus', zh: '菱形', cat: '几何' },
+  { en: 'trapezium', zh: '梯形', cat: '几何' },
+  { en: 'parallelogram', zh: '平行四边形', cat: '几何' },
+  { en: 'symmetry', zh: '对称', cat: '几何' },
+  { en: 'rotation', zh: '旋转', cat: '几何' },
+  { en: 'reflection', zh: '反射 (几何)', cat: '几何' },
+  { en: 'tessellation', zh: '镶嵌', cat: '几何' },
+  // 数 / 运算 (40)
+  { en: 'quotient', zh: '商', cat: '数与运算' },
+  { en: 'remainder', zh: '余数', cat: '数与运算' },
+  { en: 'dividend', zh: '被除数', cat: '数与运算' },
+  { en: 'divisor', zh: '除数', cat: '数与运算' },
+  { en: 'numerator', zh: '分子', cat: '数与运算' },
+  { en: 'denominator', zh: '分母', cat: '数与运算' },
+  { en: 'mixed number', zh: '带分数', cat: '数与运算' },
+  { en: 'improper fraction', zh: '假分数', cat: '数与运算' },
+  { en: 'proper fraction', zh: '真分数', cat: '数与运算' },
+  { en: 'equivalent fraction', zh: '等值分数', cat: '数与运算' },
+  { en: 'simplest form', zh: '最简形式', cat: '数与运算' },
+  { en: 'common denominator', zh: '公分母', cat: '数与运算' },
+  { en: 'lowest common multiple', zh: '最小公倍数', cat: '数与运算' },
+  { en: 'highest common factor', zh: '最大公因数', cat: '数与运算' },
+  { en: 'prime number', zh: '质数', cat: '数与运算' },
+  { en: 'composite number', zh: '合数', cat: '数与运算' },
+  { en: 'factor', zh: '因数', cat: '数与运算' },
+  { en: 'multiple', zh: '倍数', cat: '数与运算' },
+  { en: 'product', zh: '乘积', cat: '数与运算' },
+  { en: 'sum', zh: '和', cat: '数与运算' },
+  { en: 'difference', zh: '差', cat: '数与运算' },
+  { en: 'decimal', zh: '小数', cat: '数与运算' },
+  { en: 'whole number', zh: '整数', cat: '数与运算' },
+  { en: 'place value', zh: '数位', cat: '数与运算' },
+  { en: 'round off', zh: '取整', cat: '数与运算' },
+  { en: 'estimate', zh: '估算', cat: '数与运算' },
+  { en: 'approximate', zh: '约等于', cat: '数与运算' },
+  { en: 'evaluate', zh: '求值', cat: '数与运算' },
+  { en: 'simplify', zh: '化简', cat: '数与运算' },
+  { en: 'substitute', zh: '代入', cat: '数与运算' },
+  { en: 'expression', zh: '表达式', cat: '数与运算' },
+  { en: 'equation', zh: '方程', cat: '数与运算' },
+  { en: 'unknown', zh: '未知数', cat: '数与运算' },
+  { en: 'variable', zh: '变量', cat: '数与运算' },
+  { en: 'consecutive', zh: '连续的', cat: '数与运算' },
+  { en: 'ascending order', zh: '升序', cat: '数与运算' },
+  { en: 'descending order', zh: '降序', cat: '数与运算' },
+  { en: 'order of operations', zh: '运算顺序', cat: '数与运算' },
+  { en: 'long division', zh: '长除法', cat: '数与运算' },
+  { en: 'distribute', zh: '分配 (律)', cat: '数与运算' },
+  // 比/百分比/速度 (30)
+  { en: 'ratio', zh: '比', cat: '比例' },
+  { en: 'proportion', zh: '比例', cat: '比例' },
+  { en: 'percentage', zh: '百分比', cat: '比例' },
+  { en: 'percent', zh: '百分之', cat: '比例' },
+  { en: 'fraction', zh: '分数', cat: '比例' },
+  { en: 'scale', zh: '比例尺', cat: '比例' },
+  { en: 'rate', zh: '比率', cat: '比例' },
+  { en: 'speed', zh: '速度', cat: '比例' },
+  { en: 'average speed', zh: '平均速度', cat: '比例' },
+  { en: 'distance', zh: '距离', cat: '比例' },
+  { en: 'time taken', zh: '所用时间', cat: '比例' },
+  { en: 'velocity', zh: '速率', cat: '比例' },
+  { en: 'increase', zh: '增加', cat: '比例' },
+  { en: 'decrease', zh: '减少', cat: '比例' },
+  { en: 'discount', zh: '折扣', cat: '比例' },
+  { en: 'profit', zh: '利润', cat: '比例' },
+  { en: 'loss', zh: '亏损', cat: '比例' },
+  { en: 'cost price', zh: '成本价', cat: '比例' },
+  { en: 'selling price', zh: '售价', cat: '比例' },
+  { en: 'interest', zh: '利息', cat: '比例' },
+  { en: 'GST', zh: '消费税', cat: '比例' },
+  { en: 'directly proportional', zh: '正比', cat: '比例' },
+  { en: 'inversely proportional', zh: '反比', cat: '比例' },
+  { en: 'per hour', zh: '每小时', cat: '比例' },
+  { en: 'kilometre per hour', zh: '千米每小时', cat: '比例' },
+  { en: 'metres per second', zh: '米每秒', cat: '比例' },
+  { en: 'overtake', zh: '追上', cat: '比例' },
+  { en: 'head start', zh: '先行', cat: '比例' },
+  { en: 'meet', zh: '相遇', cat: '比例' },
+  { en: 'travel towards', zh: '相向行驶', cat: '比例' },
+  // 统计 / 概率 (20)
+  { en: 'mean', zh: '平均数', cat: '统计' },
+  { en: 'median', zh: '中位数', cat: '统计' },
+  { en: 'mode', zh: '众数', cat: '统计' },
+  { en: 'range', zh: '极差', cat: '统计' },
+  { en: 'bar graph', zh: '条形图', cat: '统计' },
+  { en: 'line graph', zh: '折线图', cat: '统计' },
+  { en: 'pie chart', zh: '饼图', cat: '统计' },
+  { en: 'pictogram', zh: '象形图', cat: '统计' },
+  { en: 'tally chart', zh: '计数表', cat: '统计' },
+  { en: 'frequency', zh: '频数', cat: '统计' },
+  { en: 'data', zh: '数据', cat: '统计' },
+  { en: 'category', zh: '类别', cat: '统计' },
+  { en: 'axis', zh: '坐标轴', cat: '统计' },
+  { en: 'label', zh: '标签', cat: '统计' },
+  { en: 'title', zh: '标题', cat: '统计' },
+  { en: 'scale (graph)', zh: '坐标刻度', cat: '统计' },
+  { en: 'probability', zh: '可能性', cat: '统计' },
+  { en: 'certain', zh: '一定 (会发生)', cat: '统计' },
+  { en: 'impossible', zh: '不可能', cat: '统计' },
+  { en: 'likely', zh: '可能', cat: '统计' },
+  // 单位 / 测量 (30)
+  { en: 'millimetre', zh: '毫米', cat: '单位' },
+  { en: 'centimetre', zh: '厘米', cat: '单位' },
+  { en: 'metre', zh: '米', cat: '单位' },
+  { en: 'kilometre', zh: '千米', cat: '单位' },
+  { en: 'gram', zh: '克', cat: '单位' },
+  { en: 'kilogram', zh: '千克', cat: '单位' },
+  { en: 'tonne', zh: '吨', cat: '单位' },
+  { en: 'millilitre', zh: '毫升', cat: '单位' },
+  { en: 'litre', zh: '升', cat: '单位' },
+  { en: 'second', zh: '秒', cat: '单位' },
+  { en: 'minute', zh: '分钟', cat: '单位' },
+  { en: 'hour', zh: '小时', cat: '单位' },
+  { en: 'day', zh: '天', cat: '单位' },
+  { en: 'week', zh: '周', cat: '单位' },
+  { en: 'month', zh: '月', cat: '单位' },
+  { en: 'year', zh: '年', cat: '单位' },
+  { en: 'decade', zh: '十年', cat: '单位' },
+  { en: 'century', zh: '世纪', cat: '单位' },
+  { en: 'leap year', zh: '闰年', cat: '单位' },
+  { en: 'noon', zh: '中午', cat: '单位' },
+  { en: 'midnight', zh: '午夜', cat: '单位' },
+  { en: 'duration', zh: '时长', cat: '单位' },
+  { en: 'square metre', zh: '平方米', cat: '单位' },
+  { en: 'cubic centimetre', zh: '立方厘米', cat: '单位' },
+  { en: 'capacity', zh: '容量', cat: '单位' },
+  { en: 'temperature', zh: '温度', cat: '单位' },
+  { en: 'degree Celsius', zh: '摄氏度', cat: '单位' },
+  { en: 'altitude', zh: '海拔', cat: '单位' },
+  { en: 'depth', zh: '深度', cat: '单位' },
+  { en: 'height', zh: '高度', cat: '单位' },
+  // 操作 / 题干 (40)
+  { en: 'altogether', zh: '总共', cat: '题干' },
+  { en: 'in total', zh: '总计', cat: '题干' },
+  { en: 'left', zh: '剩下', cat: '题干' },
+  { en: 'each', zh: '每个', cat: '题干' },
+  { en: 'twice as many', zh: '是…的两倍', cat: '题干' },
+  { en: 'three times as much', zh: '是…的三倍', cat: '题干' },
+  { en: 'half of', zh: '一半', cat: '题干' },
+  { en: 'a quarter of', zh: '四分之一', cat: '题干' },
+  { en: 'how many', zh: '多少 (可数)', cat: '题干' },
+  { en: 'how much', zh: '多少 (不可数)', cat: '题干' },
+  { en: 'difference', zh: '差', cat: '题干' },
+  { en: 'total', zh: '总和', cat: '题干' },
+  { en: 'shared equally', zh: '平均分', cat: '题干' },
+  { en: 'spent', zh: '花了', cat: '题干' },
+  { en: 'gave away', zh: '送出', cat: '题干' },
+  { en: 'received', zh: '收到', cat: '题干' },
+  { en: 'reduced by', zh: '减少', cat: '题干' },
+  { en: 'increased by', zh: '增加', cat: '题干' },
+  { en: 'find the value of', zh: '求…的值', cat: '题干' },
+  { en: 'express in', zh: '用…表示', cat: '题干' },
+  { en: 'in terms of', zh: '关于', cat: '题干' },
+  { en: 'at most', zh: '至多', cat: '题干' },
+  { en: 'at least', zh: '至少', cat: '题干' },
+  { en: 'exceed', zh: '超过', cat: '题干' },
+  { en: 'less than', zh: '少于', cat: '题干' },
+  { en: 'more than', zh: '多于', cat: '题干' },
+  { en: 'inclusive', zh: '包括 (端点)', cat: '题干' },
+  { en: 'exclusive', zh: '不包括', cat: '题干' },
+  { en: 'consecutively', zh: '连续地', cat: '题干' },
+  { en: 'remaining', zh: '剩余', cat: '题干' },
+  { en: 'altogether they', zh: '他们一共', cat: '题干' },
+  { en: 'fewer', zh: '更少 (可数)', cat: '题干' },
+  { en: 'as many as', zh: '一样多', cat: '题干' },
+  { en: 'difference in mass', zh: '质量差', cat: '题干' },
+  { en: 'unit price', zh: '单价', cat: '题干' },
+  { en: 'find the smallest', zh: '求最小值', cat: '题干' },
+  { en: 'show your working', zh: '写出过程', cat: '题干' },
+  { en: 'leave your answer in', zh: '答案保留为', cat: '题干' },
+  { en: 'correct to', zh: '精确到', cat: '题干' },
+  { en: 'state', zh: '写出', cat: '题干' }
+];
+
+const SUBJECT_VOCAB_SCIENCE = [
+  // 力 / 运动 (40)
+  { en: 'force', zh: '力', cat: '力学' },
+  { en: 'friction', zh: '摩擦力', cat: '力学' },
+  { en: 'gravity', zh: '重力', cat: '力学' },
+  { en: 'weight', zh: '重量', cat: '力学' },
+  { en: 'mass', zh: '质量', cat: '力学' },
+  { en: 'inertia', zh: '惯性', cat: '力学' },
+  { en: 'push', zh: '推力', cat: '力学' },
+  { en: 'pull', zh: '拉力', cat: '力学' },
+  { en: 'magnetic force', zh: '磁力', cat: '力学' },
+  { en: 'elastic force', zh: '弹力', cat: '力学' },
+  { en: 'spring force', zh: '弹簧力', cat: '力学' },
+  { en: 'pressure', zh: '压力', cat: '力学' },
+  { en: 'motion', zh: '运动', cat: '力学' },
+  { en: 'at rest', zh: '静止', cat: '力学' },
+  { en: 'speed', zh: '速度', cat: '力学' },
+  { en: 'direction', zh: '方向', cat: '力学' },
+  { en: 'newton', zh: '牛顿 (单位)', cat: '力学' },
+  { en: 'balanced force', zh: '平衡力', cat: '力学' },
+  { en: 'unbalanced force', zh: '不平衡力', cat: '力学' },
+  { en: 'lubricant', zh: '润滑剂', cat: '力学' },
+  { en: 'streamlined', zh: '流线型', cat: '力学' },
+  { en: 'magnet', zh: '磁铁', cat: '力学' },
+  { en: 'magnetic pole', zh: '磁极', cat: '力学' },
+  { en: 'attract', zh: '吸引', cat: '力学' },
+  { en: 'repel', zh: '排斥', cat: '力学' },
+  { en: 'magnetic field', zh: '磁场', cat: '力学' },
+  { en: 'temporary magnet', zh: '临时磁铁', cat: '力学' },
+  { en: 'permanent magnet', zh: '永久磁铁', cat: '力学' },
+  { en: 'electromagnet', zh: '电磁铁', cat: '力学' },
+  { en: 'compass', zh: '指南针', cat: '力学' },
+  { en: 'magnetise', zh: '磁化', cat: '力学' },
+  { en: 'demagnetise', zh: '去磁', cat: '力学' },
+  { en: 'iron filings', zh: '铁粉', cat: '力学' },
+  { en: 'parachute', zh: '降落伞', cat: '力学' },
+  { en: 'air resistance', zh: '空气阻力', cat: '力学' },
+  { en: 'effort', zh: '施力', cat: '力学' },
+  { en: 'load', zh: '负载', cat: '力学' },
+  { en: 'pivot', zh: '支点', cat: '力学' },
+  { en: 'pulley', zh: '滑轮', cat: '力学' },
+  { en: 'lever', zh: '杠杆', cat: '力学' },
+  // 光 (20)
+  { en: 'light', zh: '光', cat: '光学' },
+  { en: 'transparent', zh: '透明', cat: '光学' },
+  { en: 'translucent', zh: '半透明', cat: '光学' },
+  { en: 'opaque', zh: '不透明', cat: '光学' },
+  { en: 'reflect', zh: '反射', cat: '光学' },
+  { en: 'refract', zh: '折射', cat: '光学' },
+  { en: 'absorb', zh: '吸收', cat: '光学' },
+  { en: 'shadow', zh: '影子', cat: '光学' },
+  { en: 'block', zh: '阻挡', cat: '光学' },
+  { en: 'light source', zh: '光源', cat: '光学' },
+  { en: 'natural light', zh: '自然光', cat: '光学' },
+  { en: 'artificial light', zh: '人造光', cat: '光学' },
+  { en: 'beam', zh: '光束', cat: '光学' },
+  { en: 'ray', zh: '光线', cat: '光学' },
+  { en: 'mirror', zh: '镜子', cat: '光学' },
+  { en: 'lens', zh: '透镜', cat: '光学' },
+  { en: 'prism', zh: '棱镜', cat: '光学' },
+  { en: 'spectrum', zh: '光谱', cat: '光学' },
+  { en: 'travel in straight lines', zh: '直线传播', cat: '光学' },
+  { en: 'illuminate', zh: '照亮', cat: '光学' },
+  // 热 (20)
+  { en: 'heat', zh: '热', cat: '热学' },
+  { en: 'temperature', zh: '温度', cat: '热学' },
+  { en: 'thermometer', zh: '温度计', cat: '热学' },
+  { en: 'conductor', zh: '导体', cat: '热学' },
+  { en: 'insulator', zh: '绝缘体', cat: '热学' },
+  { en: 'heat gain', zh: '吸热', cat: '热学' },
+  { en: 'heat loss', zh: '散热', cat: '热学' },
+  { en: 'conduction', zh: '传导', cat: '热学' },
+  { en: 'convection', zh: '对流', cat: '热学' },
+  { en: 'radiation', zh: '辐射', cat: '热学' },
+  { en: 'expand', zh: '膨胀', cat: '热学' },
+  { en: 'contract', zh: '收缩', cat: '热学' },
+  { en: 'evaporation', zh: '蒸发', cat: '热学' },
+  { en: 'condensation', zh: '凝结', cat: '热学' },
+  { en: 'boiling', zh: '沸腾', cat: '热学' },
+  { en: 'melting', zh: '融化', cat: '热学' },
+  { en: 'freezing', zh: '凝固', cat: '热学' },
+  { en: 'sublimation', zh: '升华', cat: '热学' },
+  { en: 'hotter', zh: '更热', cat: '热学' },
+  { en: 'colder', zh: '更冷', cat: '热学' },
+  // 物质 (20)
+  { en: 'matter', zh: '物质', cat: '物质' },
+  { en: 'solid', zh: '固体', cat: '物质' },
+  { en: 'liquid', zh: '液体', cat: '物质' },
+  { en: 'gas', zh: '气体', cat: '物质' },
+  { en: 'volume', zh: '体积', cat: '物质' },
+  { en: 'mass', zh: '质量 (物质)', cat: '物质' },
+  { en: 'density', zh: '密度', cat: '物质' },
+  { en: 'state', zh: '状态', cat: '物质' },
+  { en: 'particle', zh: '颗粒', cat: '物质' },
+  { en: 'definite shape', zh: '固定形状', cat: '物质' },
+  { en: 'definite volume', zh: '固定体积', cat: '物质' },
+  { en: 'flow', zh: '流动', cat: '物质' },
+  { en: 'compress', zh: '压缩', cat: '物质' },
+  { en: 'expand to fill', zh: '充满', cat: '物质' },
+  { en: 'dissolve', zh: '溶解', cat: '物质' },
+  { en: 'solute', zh: '溶质', cat: '物质' },
+  { en: 'solvent', zh: '溶剂', cat: '物质' },
+  { en: 'solution', zh: '溶液', cat: '物质' },
+  { en: 'mixture', zh: '混合物', cat: '物质' },
+  { en: 'separate', zh: '分离', cat: '物质' },
+  // 生命 / 植物 (50)
+  { en: 'plant', zh: '植物', cat: '植物' },
+  { en: 'flowering plant', zh: '开花植物', cat: '植物' },
+  { en: 'non-flowering plant', zh: '不开花植物', cat: '植物' },
+  { en: 'roots', zh: '根', cat: '植物' },
+  { en: 'stem', zh: '茎', cat: '植物' },
+  { en: 'leaves', zh: '叶', cat: '植物' },
+  { en: 'flower', zh: '花', cat: '植物' },
+  { en: 'petal', zh: '花瓣', cat: '植物' },
+  { en: 'stamen', zh: '雄蕊', cat: '植物' },
+  { en: 'anther', zh: '花药', cat: '植物' },
+  { en: 'filament', zh: '花丝', cat: '植物' },
+  { en: 'pistil', zh: '雌蕊', cat: '植物' },
+  { en: 'stigma', zh: '柱头', cat: '植物' },
+  { en: 'style', zh: '花柱', cat: '植物' },
+  { en: 'ovary', zh: '子房', cat: '植物' },
+  { en: 'ovule', zh: '胚珠', cat: '植物' },
+  { en: 'sepal', zh: '萼片', cat: '植物' },
+  { en: 'pollination', zh: '授粉', cat: '植物' },
+  { en: 'self-pollination', zh: '自花授粉', cat: '植物' },
+  { en: 'cross-pollination', zh: '异花授粉', cat: '植物' },
+  { en: 'fertilisation', zh: '受精', cat: '植物' },
+  { en: 'seed', zh: '种子', cat: '植物' },
+  { en: 'fruit', zh: '果实', cat: '植物' },
+  { en: 'germination', zh: '萌发', cat: '植物' },
+  { en: 'seedling', zh: '幼苗', cat: '植物' },
+  { en: 'photosynthesis', zh: '光合作用', cat: '植物' },
+  { en: 'chlorophyll', zh: '叶绿素', cat: '植物' },
+  { en: 'carbon dioxide', zh: '二氧化碳', cat: '植物' },
+  { en: 'oxygen', zh: '氧气', cat: '植物' },
+  { en: 'water vapour', zh: '水蒸气', cat: '植物' },
+  { en: 'transpiration', zh: '蒸腾', cat: '植物' },
+  { en: 'xylem', zh: '木质部', cat: '植物' },
+  { en: 'phloem', zh: '韧皮部', cat: '植物' },
+  { en: 'root hair', zh: '根毛', cat: '植物' },
+  { en: 'mineral salt', zh: '矿物盐', cat: '植物' },
+  { en: 'starch', zh: '淀粉', cat: '植物' },
+  { en: 'sugar', zh: '糖分', cat: '植物' },
+  { en: 'sunlight', zh: '阳光', cat: '植物' },
+  { en: 'absorb water', zh: '吸水', cat: '植物' },
+  { en: 'release', zh: '释放', cat: '植物' },
+  { en: 'pollen', zh: '花粉', cat: '植物' },
+  { en: 'wind pollination', zh: '风媒授粉', cat: '植物' },
+  { en: 'insect pollination', zh: '虫媒授粉', cat: '植物' },
+  { en: 'seed dispersal', zh: '种子传播', cat: '植物' },
+  { en: 'dispersal by wind', zh: '风力传播', cat: '植物' },
+  { en: 'dispersal by water', zh: '水力传播', cat: '植物' },
+  { en: 'dispersal by animals', zh: '动物传播', cat: '植物' },
+  { en: 'explosive dispersal', zh: '弹射传播', cat: '植物' },
+  { en: 'reproduction', zh: '繁殖', cat: '植物' },
+  { en: 'life cycle', zh: '生命周期', cat: '植物' },
+  // 动物 (40)
+  { en: 'animal', zh: '动物', cat: '动物' },
+  { en: 'mammal', zh: '哺乳动物', cat: '动物' },
+  { en: 'bird', zh: '鸟类', cat: '动物' },
+  { en: 'fish', zh: '鱼', cat: '动物' },
+  { en: 'reptile', zh: '爬行动物', cat: '动物' },
+  { en: 'amphibian', zh: '两栖动物', cat: '动物' },
+  { en: 'insect', zh: '昆虫', cat: '动物' },
+  { en: 'vertebrate', zh: '脊椎动物', cat: '动物' },
+  { en: 'invertebrate', zh: '无脊椎动物', cat: '动物' },
+  { en: 'feather', zh: '羽毛', cat: '动物' },
+  { en: 'scales', zh: '鳞片', cat: '动物' },
+  { en: 'fur', zh: '毛皮', cat: '动物' },
+  { en: 'gills', zh: '鳃', cat: '动物' },
+  { en: 'lungs', zh: '肺', cat: '动物' },
+  { en: 'fins', zh: '鳍', cat: '动物' },
+  { en: 'limbs', zh: '四肢', cat: '动物' },
+  { en: 'spine', zh: '脊椎', cat: '动物' },
+  { en: 'larva', zh: '幼虫', cat: '动物' },
+  { en: 'pupa', zh: '蛹', cat: '动物' },
+  { en: 'adult', zh: '成虫', cat: '动物' },
+  { en: 'egg', zh: '卵', cat: '动物' },
+  { en: 'tadpole', zh: '蝌蚪', cat: '动物' },
+  { en: 'metamorphosis', zh: '变态', cat: '动物' },
+  { en: 'complete metamorphosis', zh: '完全变态', cat: '动物' },
+  { en: 'incomplete metamorphosis', zh: '不完全变态', cat: '动物' },
+  { en: 'cold-blooded', zh: '冷血', cat: '动物' },
+  { en: 'warm-blooded', zh: '温血', cat: '动物' },
+  { en: 'lay eggs', zh: '产卵', cat: '动物' },
+  { en: 'give birth', zh: '胎生', cat: '动物' },
+  { en: 'oviparous', zh: '卵生', cat: '动物' },
+  { en: 'viviparous', zh: '胎生', cat: '动物' },
+  { en: 'habitat', zh: '栖息地', cat: '动物' },
+  { en: 'adaptation', zh: '适应', cat: '动物' },
+  { en: 'predator', zh: '捕食者', cat: '动物' },
+  { en: 'prey', zh: '被捕食者', cat: '动物' },
+  { en: 'camouflage', zh: '伪装', cat: '动物' },
+  { en: 'migration', zh: '迁徙', cat: '动物' },
+  { en: 'hibernation', zh: '冬眠', cat: '动物' },
+  { en: 'nocturnal', zh: '夜行的', cat: '动物' },
+  { en: 'diurnal', zh: '昼行的', cat: '动物' },
+  // 人体 / 消化 (40)
+  { en: 'digestive system', zh: '消化系统', cat: '人体' },
+  { en: 'mouth', zh: '口腔', cat: '人体' },
+  { en: 'saliva', zh: '唾液', cat: '人体' },
+  { en: 'teeth', zh: '牙齿', cat: '人体' },
+  { en: 'tongue', zh: '舌头', cat: '人体' },
+  { en: 'oesophagus', zh: '食道', cat: '人体' },
+  { en: 'stomach', zh: '胃', cat: '人体' },
+  { en: 'small intestine', zh: '小肠', cat: '人体' },
+  { en: 'large intestine', zh: '大肠', cat: '人体' },
+  { en: 'rectum', zh: '直肠', cat: '人体' },
+  { en: 'anus', zh: '肛门', cat: '人体' },
+  { en: 'liver', zh: '肝脏', cat: '人体' },
+  { en: 'pancreas', zh: '胰腺', cat: '人体' },
+  { en: 'gall bladder', zh: '胆囊', cat: '人体' },
+  { en: 'absorption', zh: '吸收', cat: '人体' },
+  { en: 'digestion', zh: '消化', cat: '人体' },
+  { en: 'enzyme', zh: '酶', cat: '人体' },
+  { en: 'nutrient', zh: '营养素', cat: '人体' },
+  { en: 'carbohydrate', zh: '碳水化合物', cat: '人体' },
+  { en: 'protein', zh: '蛋白质', cat: '人体' },
+  { en: 'fat', zh: '脂肪', cat: '人体' },
+  { en: 'vitamin', zh: '维生素', cat: '人体' },
+  { en: 'mineral', zh: '矿物质', cat: '人体' },
+  { en: 'fibre', zh: '纤维', cat: '人体' },
+  { en: 'water', zh: '水', cat: '人体' },
+  { en: 'circulatory system', zh: '循环系统', cat: '人体' },
+  { en: 'heart', zh: '心脏', cat: '人体' },
+  { en: 'blood vessel', zh: '血管', cat: '人体' },
+  { en: 'artery', zh: '动脉', cat: '人体' },
+  { en: 'vein', zh: '静脉', cat: '人体' },
+  { en: 'respiratory system', zh: '呼吸系统', cat: '人体' },
+  { en: 'trachea', zh: '气管', cat: '人体' },
+  { en: 'bronchus', zh: '支气管', cat: '人体' },
+  { en: 'inhale', zh: '吸气', cat: '人体' },
+  { en: 'exhale', zh: '呼气', cat: '人体' },
+  { en: 'breathing rate', zh: '呼吸速率', cat: '人体' },
+  { en: 'pulse rate', zh: '脉搏速率', cat: '人体' },
+  { en: 'skeleton', zh: '骨骼', cat: '人体' },
+  { en: 'muscle', zh: '肌肉', cat: '人体' },
+  { en: 'joint', zh: '关节', cat: '人体' },
+  // 实验 / 题干 (40)
+  { en: 'experiment', zh: '实验', cat: '实验' },
+  { en: 'hypothesis', zh: '假设', cat: '实验' },
+  { en: 'variable (changed)', zh: '改变量 (自变量)', cat: '实验' },
+  { en: 'variable (measured)', zh: '测量量 (因变量)', cat: '实验' },
+  { en: 'variable (kept constant)', zh: '不变量', cat: '实验' },
+  { en: 'fair test', zh: '公平测试', cat: '实验' },
+  { en: 'observation', zh: '观察', cat: '实验' },
+  { en: 'conclusion', zh: '结论', cat: '实验' },
+  { en: 'predict', zh: '预测', cat: '实验' },
+  { en: 'set up', zh: '设置', cat: '实验' },
+  { en: 'apparatus', zh: '仪器', cat: '实验' },
+  { en: 'beaker', zh: '烧杯', cat: '实验' },
+  { en: 'measuring cylinder', zh: '量筒', cat: '实验' },
+  { en: 'thermometer', zh: '温度计', cat: '实验' },
+  { en: 'stopwatch', zh: '秒表', cat: '实验' },
+  { en: 'control', zh: '对照组', cat: '实验' },
+  { en: 'result', zh: '结果', cat: '实验' },
+  { en: 'analyse', zh: '分析', cat: '实验' },
+  { en: 'evidence', zh: '证据', cat: '实验' },
+  { en: 'support', zh: '支持 (结论)', cat: '实验' },
+  { en: 'explain why', zh: '解释为什么', cat: '题干' },
+  { en: 'state and explain', zh: '陈述并解释', cat: '题干' },
+  { en: 'suggest', zh: '提出', cat: '题干' },
+  { en: 'identify', zh: '指出', cat: '题干' },
+  { en: 'describe', zh: '描述', cat: '题干' },
+  { en: 'compare', zh: '比较', cat: '题干' },
+  { en: 'contrast', zh: '对比', cat: '题干' },
+  { en: 'function', zh: '功能', cat: '题干' },
+  { en: 'characteristic', zh: '特征', cat: '题干' },
+  { en: 'property', zh: '性质', cat: '题干' },
+  { en: 'similarity', zh: '相似点', cat: '题干' },
+  { en: 'difference', zh: '不同点', cat: '题干' },
+  { en: 'because', zh: '因为 (因果)', cat: '题干' },
+  { en: 'therefore', zh: '因此', cat: '题干' },
+  { en: 'as a result', zh: '结果是', cat: '题干' },
+  { en: 'in order to', zh: '为了', cat: '题干' },
+  { en: 'so that', zh: '以便', cat: '题干' },
+  { en: 'which means that', zh: '这意味着', cat: '题干' },
+  { en: 'evaporates faster', zh: '蒸发更快', cat: '题干' },
+  { en: 'most likely', zh: '最有可能', cat: '题干' },
+  // 环境 / 能量 (30)
+  { en: 'environment', zh: '环境', cat: '环境/能量' },
+  { en: 'ecosystem', zh: '生态系统', cat: '环境/能量' },
+  { en: 'food chain', zh: '食物链', cat: '环境/能量' },
+  { en: 'food web', zh: '食物网', cat: '环境/能量' },
+  { en: 'producer', zh: '生产者', cat: '环境/能量' },
+  { en: 'consumer', zh: '消费者', cat: '环境/能量' },
+  { en: 'decomposer', zh: '分解者', cat: '环境/能量' },
+  { en: 'herbivore', zh: '食草动物', cat: '环境/能量' },
+  { en: 'carnivore', zh: '食肉动物', cat: '环境/能量' },
+  { en: 'omnivore', zh: '杂食动物', cat: '环境/能量' },
+  { en: 'population', zh: '种群', cat: '环境/能量' },
+  { en: 'community', zh: '群落', cat: '环境/能量' },
+  { en: 'water cycle', zh: '水循环', cat: '环境/能量' },
+  { en: 'precipitation', zh: '降水', cat: '环境/能量' },
+  { en: 'evaporation', zh: '蒸发 (水循环)', cat: '环境/能量' },
+  { en: 'condensation', zh: '凝结 (水循环)', cat: '环境/能量' },
+  { en: 'collection', zh: '汇集', cat: '环境/能量' },
+  { en: 'energy', zh: '能量', cat: '环境/能量' },
+  { en: 'kinetic energy', zh: '动能', cat: '环境/能量' },
+  { en: 'potential energy', zh: '势能', cat: '环境/能量' },
+  { en: 'chemical energy', zh: '化学能', cat: '环境/能量' },
+  { en: 'electrical energy', zh: '电能', cat: '环境/能量' },
+  { en: 'sound energy', zh: '声能', cat: '环境/能量' },
+  { en: 'thermal energy', zh: '热能', cat: '环境/能量' },
+  { en: 'light energy', zh: '光能', cat: '环境/能量' },
+  { en: 'energy conversion', zh: '能量转换', cat: '环境/能量' },
+  { en: 'renewable', zh: '可再生', cat: '环境/能量' },
+  { en: 'non-renewable', zh: '不可再生', cat: '环境/能量' },
+  { en: 'pollution', zh: '污染', cat: '环境/能量' },
+  { en: 'conservation', zh: '保护', cat: '环境/能量' }
+];
+
+// 取今日 5 个学科词 (基于日期种子, 同一天稳定)
+function getDailySubjectVocab(state, n) {
+  n = n || 5;
+  const seed = (window.todayKey ? window.todayKey() : new Date().toISOString().slice(0,10));
+  const hash = Array.from(seed).reduce((h,c) => h * 31 + c.charCodeAt(0), 7) >>> 0;
+  const pool = SUBJECT_VOCAB_MATH.concat(SUBJECT_VOCAB_SCIENCE);
+  const out = [];
+  const used = new Set();
+  for (let i = 0; i < n; i++) {
+    let idx = (hash + i * 37 + i * i * 17) % pool.length;
+    while (used.has(idx)) idx = (idx + 1) % pool.length;
+    used.add(idx);
+    out.push(pool[idx]);
+  }
+  return out;
+}
+
+function recordSubjectVocabRun(state, correct, total) {
+  if (!state.subjectVocabStats) state.subjectVocabStats = { totalRuns: 0, totalCorrect: 0, totalTried: 0, byDate: {} };
+  const sv = state.subjectVocabStats;
+  sv.totalRuns += 1;
+  sv.totalCorrect += correct;
+  sv.totalTried += total;
+  const today = (window.todayKey ? window.todayKey() : new Date().toISOString().slice(0,10));
+  sv.byDate[today] = (sv.byDate[today] || 0) + total;
+  // 每个正确词 +1 分
+  state.totalPoints = (state.totalPoints || 0) + correct;
+  if (window.saveState) window.saveState(state);
+  return sv;
+}
+
+// ============ 3. 作文模板库 (开头 5 + 转折 5 + 结尾 5 + 50 高级词) ============
+const ESSAY_TEMPLATES = {
+  openings: [
+    { id: 'op_dialogue', label: '对话开头', tpl: '"________," I screamed, my heart pounding wildly. The day had started off so ordinary, but in a split second, everything changed.', usage: '紧张/惊险事件' },
+    { id: 'op_flashback', label: '回忆开头', tpl: 'Even now, years later, the memory still sends a shiver down my spine. It was a humid afternoon in June when ________.', usage: '回忆/有教训的故事' },
+    { id: 'op_scene', label: '场景开头', tpl: 'The sun beat down mercilessly on the bustling pavement. Crowds of shoppers jostled past me as I clutched ________ tightly to my chest.', usage: '人物/物品故事' },
+    { id: 'op_question', label: '反问开头', tpl: 'Have you ever experienced a moment so terrifying that time seemed to stop? That was exactly what happened to me last ________.', usage: '议论/经历' },
+    { id: 'op_action', label: '动作开头', tpl: 'I sprinted down the corridor, my schoolbag bouncing against my back. I had only ten minutes to ________ before disaster struck.', usage: '动作/紧张事件' }
+  ],
+  transitions: [
+    { id: 'tr_suddenly', label: '突变转折', tpl: 'Just as I thought everything was under control, a piercing scream shattered the silence.', usage: '事件突变' },
+    { id: 'tr_realise', label: '醒悟转折', tpl: 'It was at that very moment that the truth dawned on me — I had been wrong all along.', usage: '主角醒悟' },
+    { id: 'tr_however', label: '对比转折', tpl: 'However, what I did not expect was that my actions would have far greater consequences than I had imagined.', usage: '正反对比' },
+    { id: 'tr_time', label: '时间转折', tpl: 'Hours seemed to crawl by like wounded snails. Finally, just as hope was slipping away, ________.', usage: '漫长等待→转机' },
+    { id: 'tr_decision', label: '决断转折', tpl: 'Taking a deep breath, I made up my mind. There was no turning back now — I had to do what was right.', usage: '主角下决心' }
+  ],
+  endings: [
+    { id: 'en_lesson', label: '教训式结尾', tpl: 'That experience taught me a valuable lesson I would carry with me for the rest of my life: ________. I am thankful for that day, painful as it was.', usage: '品德/教训作文' },
+    { id: 'en_callback', label: '呼应开头', tpl: 'Looking back, the words I had screamed that morning still echo in my mind. But now, they remind me not of fear, but of how far I have come.', usage: '与对话开头呼应' },
+    { id: 'en_reflection', label: '反思结尾', tpl: 'As I lay in bed that night, the events of the day replayed in my mind. I realised that ________ was not just an experience — it was the moment I grew up.', usage: '成长类作文' },
+    { id: 'en_action', label: '行动结尾', tpl: 'From that day onwards, I made a promise to myself: I would never again ________. Some lessons, after all, are only learnt the hard way.', usage: '决心/行动作文' },
+    { id: 'en_quote', label: '名言结尾', tpl: 'My grandmother used to say, "________." I had never understood her words until that day. Now, they made perfect sense.', usage: '智慧/品德主题' }
+  ],
+  highVocab: [
+    { word: 'meticulous', meaning: '细致认真的', example: 'She was meticulous in her preparation for the exam.' },
+    { word: 'apprehensive', meaning: '忧虑的, 担心的', example: 'I felt apprehensive as I waited for the results.' },
+    { word: 'exhilarating', meaning: '令人兴奋的', example: 'The roller coaster ride was absolutely exhilarating.' },
+    { word: 'devastated', meaning: '极度沮丧的', example: 'She was devastated by the news of her grandfather’s passing.' },
+    { word: 'reluctantly', meaning: '不情愿地', example: 'He reluctantly agreed to help his sister with her homework.' },
+    { word: 'frantically', meaning: '疯狂地, 慌乱地', example: 'I searched frantically for my missing wallet.' },
+    { word: 'gingerly', meaning: '小心翼翼地', example: 'She gingerly picked up the fragile vase.' },
+    { word: 'inevitable', meaning: '不可避免的', example: 'A confrontation seemed inevitable.' },
+    { word: 'mesmerised', meaning: '着迷的', example: 'The children were mesmerised by the magician’s tricks.' },
+    { word: 'pristine', meaning: '崭新的, 原始的', example: 'The pristine beach stretched out before us.' },
+    { word: 'sceptical', meaning: '怀疑的', example: 'I was sceptical of his explanation.' },
+    { word: 'unbearable', meaning: '难以忍受的', example: 'The heat in the room was unbearable.' },
+    { word: 'compassionate', meaning: '富有同情心的', example: 'My teacher is one of the most compassionate people I know.' },
+    { word: 'painstaking', meaning: '煞费苦心的', example: 'After painstaking effort, we finally finished the project.' },
+    { word: 'mortified', meaning: '羞愧的', example: 'I was mortified when I realised I had been talking to the wrong person.' },
+    { word: 'jubilant', meaning: '欢呼的, 喜悦的', example: 'The jubilant crowd cheered as the team won the trophy.' },
+    { word: 'reminisce', meaning: '回忆', example: 'We sat by the fire to reminisce about our childhood.' },
+    { word: 'tentatively', meaning: '试探地', example: 'I tentatively raised my hand to answer.' },
+    { word: 'inquisitive', meaning: '好奇的, 爱问的', example: 'The inquisitive boy asked endless questions.' },
+    { word: 'audible', meaning: '听得见的', example: 'Her whisper was barely audible.' },
+    { word: 'resilient', meaning: '坚韧的', example: 'Children are surprisingly resilient.' },
+    { word: 'plummeted', meaning: '骤降', example: 'Her grades plummeted after she stopped studying.' },
+    { word: 'tantalising', meaning: '诱人的', example: 'The tantalising aroma of curry filled the air.' },
+    { word: 'feeble', meaning: '虚弱的', example: 'He gave a feeble smile.' },
+    { word: 'glistened', meaning: '闪烁', example: 'Tears glistened in her eyes.' },
+    { word: 'thunderous', meaning: '雷鸣般的', example: 'The thunderous applause filled the hall.' },
+    { word: 'sprinted', meaning: '冲刺', example: 'I sprinted to catch the bus.' },
+    { word: 'reassured', meaning: '宽慰', example: 'Her smile reassured me that everything was fine.' },
+    { word: 'oblivious', meaning: '没察觉的', example: 'He was oblivious to the danger lurking behind him.' },
+    { word: 'persevere', meaning: '坚持', example: 'I knew I had to persevere despite the difficulties.' },
+    { word: 'plead', meaning: '恳求', example: 'I pleaded with my mother to let me go.' },
+    { word: 'gleam', meaning: '微光', example: 'A gleam of hope appeared on her face.' },
+    { word: 'pondered', meaning: '沉思', example: 'She pondered the question for a long time.' },
+    { word: 'fragile', meaning: '易碎的', example: 'Handle the fragile vase with care.' },
+    { word: 'desperate', meaning: '绝望的', example: 'I was desperate to find a solution.' },
+    { word: 'humiliated', meaning: '受辱的', example: 'I felt humiliated when everyone laughed at my mistake.' },
+    { word: 'astonished', meaning: '惊讶的', example: 'I was astonished at how much he had grown.' },
+    { word: 'bewildered', meaning: '困惑的', example: 'The lost tourist looked bewildered.' },
+    { word: 'fidgeted', meaning: '坐立不安', example: 'I fidgeted with my pen as I waited.' },
+    { word: 'eavesdrop', meaning: '偷听', example: 'I did not mean to eavesdrop on their conversation.' },
+    { word: 'mischievous', meaning: '调皮的', example: 'The mischievous boy played a prank on his sister.' },
+    { word: 'tactful', meaning: '圆滑的, 得体的', example: 'A tactful reply saved her from embarrassment.' },
+    { word: 'commendable', meaning: '值得称赞的', example: 'His commendable effort impressed the teacher.' },
+    { word: 'grudgingly', meaning: '勉强地', example: 'He grudgingly admitted his mistake.' },
+    { word: 'astonishment', meaning: '惊讶', example: 'To my astonishment, the gift was for me.' },
+    { word: 'cautiously', meaning: '谨慎地', example: 'I cautiously stepped into the dark room.' },
+    { word: 'reluctance', meaning: '不情愿', example: 'With great reluctance, I returned the toy.' },
+    { word: 'shrugged', meaning: '耸肩', example: 'He shrugged and walked away.' },
+    { word: 'lurked', meaning: '潜伏', example: 'A shadow lurked behind the door.' },
+    { word: 'pounding', meaning: '怦怦跳', example: 'My heart was pounding with fear.' }
+  ]
+};
+
+// ============ 4. 科学章节里程碑 (W1-W14 P3-P4 系统过, 手册 v14) ============
+const SCIENCE_CHAPTERS = [
+  { weeks: [1,1],   title: 'P3 Diversity', difficulty: '易', stars: '', focus: '动植物分类 + 材料分类', diagram: null },
+  { weeks: [2,2],   title: 'P3 Plant Life Cycle', difficulty: '中', stars: '', focus: '种子萌发 → 幼苗 → 开花 → 结果', diagram: null },
+  { weeks: [3,3],   title: 'P3 Animal Life Cycle', difficulty: '中', stars: '', focus: '完全/不完全变态, 蝴蝶/青蛙/鸡', diagram: null },
+  { weeks: [4,4],   title: 'P3 Plant Parts & Functions', difficulty: '中', stars: '', focus: '根/茎/叶/花的功能 + P3 整合', diagram: null },
+  { weeks: [5,6],   title: 'P4 Plant Transport', difficulty: '难', stars: '⭐', focus: '木质部/韧皮部 + 蒸腾 + 芹菜实验', diagram: 'plant_transport' },
+  { weeks: [7,8],   title: 'P4 Digestive System', difficulty: '难', stars: '⭐⭐', focus: '完整消化路径: 口→食道→胃→小肠→大肠', diagram: 'digestive' },
+  { weeks: [9,9],   title: 'P4 Matter + Mass/Volume', difficulty: '易', stars: '', focus: '三态 + 质量体积区别 (P5 已熟)', diagram: null },
+  { weeks: [10,11], title: 'P4 Light & Shadow', difficulty: '难', stars: '⭐', focus: '光直线传播 + 影子形成 + 实验题', diagram: 'light' },
+  { weeks: [12,13], title: 'P4 Heat Energy', difficulty: '难', stars: '⭐⭐', focus: '导体/绝缘体 + 传导/对流/辐射 (PSLE 高频)', diagram: 'heat' },
+  { weeks: [14,14], title: 'P4 Magnets + 综合卷', difficulty: '中', stars: '', focus: '磁极/吸排 + P3-P4 模拟卷收尾', diagram: null },
+  // W15+ 进入 P5/P6 综合 — 手册第二阶段
+  { weeks: [15,26], title: 'P5 同步 + 题型综合', difficulty: '混合', stars: '', focus: 'P5 课堂同步 + 周末综合卷错题分析', diagram: null },
+  { weeks: [27,42], title: 'P6 难题专项', difficulty: '难', stars: '⭐⭐', focus: 'PSLE 真题 Section B OE + 实验设计', diagram: null },
+  { weeks: [43,73], title: 'PSLE 真题刷题 + 冲刺', difficulty: '难', stars: '⭐⭐⭐', focus: '真题完整套 + 错题总结 + 模考冲刺', diagram: null }
+];
+
+function getCurrentScienceChapter(week) {
+  const w = week || 1;
+  return SCIENCE_CHAPTERS.find(c => w >= c.weeks[0] && w <= c.weeks[1]) || SCIENCE_CHAPTERS[0];
+}
+
+// ============ 5. 科学 OE 答题原则 + 15 道训练题 ============
+const SCIENCE_OE_PRINCIPLES = [
+  { rule: '不能用 Yes/No 开头', why: '问"为什么/解释"必先 explain 再 conclude, Yes/No 开头直接 0 分' },
+  { rule: '必含题干关键词', why: '答案重复题干关键词 (heat / friction / dissolve 等), 否则 marker 找不到 link' },
+  { rule: '因果链完整', why: '物理结果必带 "because…" 或 "so that…", 不能跳步骤' },
+  { rule: '比较题用 than', why: 'A is hotter THAN B (不能只写 A is hotter)' },
+  { rule: '"It"指代要清楚', why: '不能用 "it"; 必须重复名词 (the metal spoon / the ice cube)' }
+];
+
+const SCIENCE_OE_QUESTIONS = [
+  { id: 'oe_1', topic: 'Heat', q: 'Why does the metal spoon feel colder than the wooden spoon when both are at room temperature?',
+    keywords: ['conductor', 'heat', 'transfer', 'faster', 'hand'],
+    model: 'The metal spoon is a better conductor of heat than the wooden spoon. Heat from the hand is transferred to the metal spoon faster than to the wooden spoon, so the hand loses heat faster and feels colder.' },
+  { id: 'oe_2', topic: 'Light', q: 'Explain why the shadow of an object becomes longer in the late afternoon.',
+    keywords: ['sun', 'lower', 'angle', 'light', 'block'],
+    model: 'In the late afternoon, the sun is at a lower position in the sky. Light rays from the sun strike the object at a low angle. Since light travels in straight lines and the object blocks the light, the shadow formed on the ground is longer.' },
+  { id: 'oe_3', topic: 'Plant Transport', q: 'Explain why a plant placed in salt water will eventually die.',
+    keywords: ['water', 'roots', 'absorb', 'photosynthesis'],
+    model: 'The salt water has a higher concentration of salt than the plant cells. Water moves out of the roots into the salt water instead of being absorbed in. Without water, the plant cannot carry out photosynthesis and will eventually die.' },
+  { id: 'oe_4', topic: 'Digestion', q: 'State and explain the function of the small intestine.',
+    keywords: ['absorb', 'nutrient', 'blood', 'digested'],
+    model: 'The small intestine absorbs digested nutrients into the bloodstream. Its inner wall has many tiny villi that increase the surface area for faster absorption.' },
+  { id: 'oe_5', topic: 'Friction', q: 'Why are the soles of football boots made with studs?',
+    keywords: ['friction', 'grip', 'slip'],
+    model: 'The studs increase the friction between the boots and the ground. This gives the player a better grip so that they do not slip while running.' },
+  { id: 'oe_6', topic: 'Magnet', q: 'How would you find out if a hidden object inside a box is made of iron, without opening the box?',
+    keywords: ['magnet', 'attract', 'iron'],
+    model: 'Bring a magnet close to the box. If the object inside the box is attracted to the magnet, the object is made of iron. If there is no attraction, the object is not made of iron.' },
+  { id: 'oe_7', topic: 'Water Cycle', q: 'Explain how the water in the sea reaches the clouds.',
+    keywords: ['evaporation', 'heat', 'water vapour', 'condense', 'cool'],
+    model: 'Heat from the sun causes the water in the sea to evaporate, turning it into water vapour. The water vapour rises into the sky. As it cools at high altitudes, the water vapour condenses into tiny water droplets that form clouds.' },
+  { id: 'oe_8', topic: 'Plant Reproduction', q: 'Explain why a flower needs to be pollinated before it can produce seeds.',
+    keywords: ['pollen', 'stigma', 'fertilisation', 'ovule'],
+    model: 'Pollination transfers pollen from the anther to the stigma of the flower. Without pollination, the pollen cannot reach the ovule and fertilisation cannot occur. As a result, no seeds will be formed.' },
+  { id: 'oe_9', topic: 'Photosynthesis', q: 'Why are most leaves green?',
+    keywords: ['chlorophyll', 'absorb', 'sunlight'],
+    model: 'Leaves contain chlorophyll, which is a green pigment. Chlorophyll absorbs sunlight for photosynthesis but reflects green light, which is why leaves appear green to us.' },
+  { id: 'oe_10', topic: 'Heat (insulator)', q: 'Explain why the handle of a saucepan is usually made of plastic instead of metal.',
+    keywords: ['poor conductor', 'insulator', 'heat', 'burn'],
+    model: 'Plastic is a poor conductor of heat (an insulator). It does not transfer heat from the hot saucepan to the user’s hand easily, so the user can hold the saucepan safely without getting burnt.' },
+  { id: 'oe_11', topic: 'Animal Adaptation', q: 'Explain why polar bears have a thick layer of fur and fat.',
+    keywords: ['insulator', 'heat loss', 'cold', 'survive'],
+    model: 'The thick fur and fat act as insulators that reduce heat loss from the polar bear’s body to the cold surroundings. This helps the polar bear stay warm and survive in cold polar regions.' },
+  { id: 'oe_12', topic: 'Matter (gas)', q: 'A balloon left in the sun for a long time bursts. Explain why.',
+    keywords: ['heated', 'gas', 'expand', 'pressure', 'burst'],
+    model: 'When the balloon is heated by the sun, the gas inside the balloon expands. The expanding gas pushes against the wall of the balloon with greater pressure. When the pressure exceeds what the balloon can hold, the balloon bursts.' },
+  { id: 'oe_13', topic: 'Energy', q: 'Describe two energy changes that happen when a torch is switched on.',
+    keywords: ['chemical', 'electrical', 'light', 'heat'],
+    model: 'When the torch is switched on, chemical energy stored in the battery is converted into electrical energy. The electrical energy is then converted into light energy (and some heat energy) at the bulb.' },
+  { id: 'oe_14', topic: 'Force', q: 'Why is it harder to push a heavy box across a carpet than across a smooth floor?',
+    keywords: ['friction', 'rough', 'greater'],
+    model: 'The carpet has a rougher surface than the smooth floor. This causes greater friction between the box and the carpet, so a larger pushing force is needed to overcome the friction and move the box.' },
+  { id: 'oe_15', topic: 'Experiment', q: 'In an experiment to test how surface area affects evaporation, what variables must be kept constant?',
+    keywords: ['temperature', 'volume', 'wind', 'humidity', 'fair'],
+    model: 'To make it a fair test, the volume of water, the temperature of the surroundings, the wind speed and the humidity must all be kept constant. Only the surface area should be changed so that any difference in evaporation rate is due to the change in surface area only.' }
+];
+
+// ============ 6. 概念图 SVG (4 张静态难章) ============
+// 简化设计: SVG 800x500, 标注英文术语 + 箭头表示流程
+const CONCEPT_DIAGRAMS = {
+  plant_transport: {
+    title: 'Plant Transport — 植物运输系统',
+    subtitle: '水/矿物盐从根上升 (xylem) · 食物从叶下降 (phloem)',
+    pitfall: 'Xylem ↑ 水矿物盐 (向上单向) / Phloem ↕ 食物 (双向都行) · 蒸腾 transpiration 是动力',
+    svg: `<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" style="background:#F0F8E8;border-radius:8px">
+      <!-- 树干轮廓 -->
+      <path d="M380 480 L380 200 Q360 100 400 80 Q440 100 420 200 L420 480 Z" fill="#8B7355" stroke="#5D4E37" stroke-width="2"/>
+      <!-- 叶子 -->
+      <ellipse cx="320" cy="120" rx="60" ry="35" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+      <ellipse cx="480" cy="120" rx="60" ry="35" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+      <ellipse cx="400" cy="60" rx="50" ry="30" fill="#66BB6A" stroke="#2E7D32" stroke-width="2"/>
+      <text x="400" y="125" text-anchor="middle" font-size="13" font-weight="bold" fill="#FFF">Leaves</text>
+      <text x="400" y="142" text-anchor="middle" font-size="11" fill="#FFF">(photosynthesis ☀️)</text>
+      <!-- 根 -->
+      <path d="M380 480 Q300 500 280 530 M420 480 Q500 500 520 530 M400 490 L400 540" stroke="#5D4E37" stroke-width="3" fill="none"/>
+      <text x="400" y="555" text-anchor="middle" font-size="13" font-weight="bold" fill="#5D4E37">Roots (root hair absorb water 💧)</text>
+      <!-- Xylem 向上箭头 (蓝色 - 水) -->
+      <line x1="390" y1="470" x2="390" y2="180" stroke="#2196F3" stroke-width="3" marker-end="url(#arrowblue)"/>
+      <text x="320" y="280" font-size="12" fill="#1565C0" font-weight="bold">Xylem ↑</text>
+      <text x="280" y="298" font-size="10" fill="#1565C0">water + mineral salts</text>
+      <text x="290" y="312" font-size="10" fill="#1565C0">(向上, 单向)</text>
+      <!-- Phloem 双向箭头 (黄色 - 食物) -->
+      <line x1="410" y1="180" x2="410" y2="470" stroke="#FFA000" stroke-width="3" marker-end="url(#arroworange)"/>
+      <line x1="412" y1="470" x2="412" y2="180" stroke="#FFA000" stroke-width="3" marker-end="url(#arroworange)"/>
+      <text x="490" y="280" font-size="12" fill="#E65100" font-weight="bold">Phloem ↕</text>
+      <text x="475" y="298" font-size="10" fill="#E65100">food (sugar) 🍯</text>
+      <text x="475" y="312" font-size="10" fill="#E65100">(双向流动)</text>
+      <!-- Transpiration 标注 -->
+      <text x="600" y="100" font-size="12" fill="#0277BD" font-weight="bold">💨 Transpiration</text>
+      <text x="600" y="118" font-size="10" fill="#0277BD">叶背气孔失水</text>
+      <text x="600" y="132" font-size="10" fill="#0277BD">→ 拉动 xylem 中水</text>
+      <text x="600" y="146" font-size="10" fill="#0277BD">→ 整株水流向上</text>
+      <!-- 题型陷阱 -->
+      <rect x="30" y="380" width="320" height="100" fill="#FFEBEE" stroke="#C62828" stroke-width="2" rx="6"/>
+      <text x="40" y="400" font-size="12" font-weight="bold" fill="#C62828">⚠️ PSLE 常错点:</text>
+      <text x="40" y="420" font-size="11" fill="#333">• Xylem 单向 ↑ (不能 ↓), Phloem 双向 ↕</text>
+      <text x="40" y="438" font-size="11" fill="#333">• 切断 phloem → 叶仍活但根饿死</text>
+      <text x="40" y="456" font-size="11" fill="#333">• 切断 xylem → 整株缺水枯死</text>
+      <text x="40" y="474" font-size="11" fill="#333">• 蒸腾是 transport 的"动力", 不是浪费水</text>
+      <defs>
+        <marker id="arrowblue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#2196F3"/>
+        </marker>
+        <marker id="arroworange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#FFA000"/>
+        </marker>
+      </defs>
+    </svg>`
+  },
+  digestive: {
+    title: 'Human Digestive System — 完整消化路径',
+    subtitle: 'Mouth → Oesophagus → Stomach → Small Intestine → Large Intestine → Anus',
+    pitfall: 'Small intestine 才是 absorb nutrient 的地方, 不是 stomach. Liver/Pancreas 是 accessory (出酶) 不是路径上的器官',
+    svg: `<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" style="background:#FFF8E1;border-radius:8px">
+      <!-- 人体轮廓 -->
+      <path d="M400 50 Q360 50 360 80 Q360 110 400 110 Q440 110 440 80 Q440 50 400 50 Z" fill="#FFE0B2" stroke="#8D6E63" stroke-width="2"/>
+      <text x="400" y="90" text-anchor="middle" font-size="13" font-weight="bold" fill="#5D4037">1. Mouth 👄</text>
+      <text x="500" y="80" font-size="11" fill="#5D4037">→ saliva (enzyme)</text>
+      <text x="500" y="95" font-size="11" fill="#5D4037">→ teeth chew (mechanical)</text>
+      <!-- 食道 -->
+      <rect x="390" y="115" width="20" height="80" fill="#FFCCBC" stroke="#8D6E63" stroke-width="2"/>
+      <text x="420" y="160" font-size="12" font-weight="bold" fill="#5D4037">2. Oesophagus</text>
+      <text x="420" y="178" font-size="10" fill="#5D4037">食道 (只输送, 不消化)</text>
+      <!-- 胃 -->
+      <ellipse cx="380" cy="240" rx="60" ry="40" fill="#FFAB91" stroke="#BF360C" stroke-width="2"/>
+      <text x="380" y="245" text-anchor="middle" font-size="12" font-weight="bold" fill="#FFF">3. Stomach 🫃</text>
+      <text x="460" y="232" font-size="11" fill="#BF360C">→ gastric juice</text>
+      <text x="460" y="248" font-size="11" fill="#BF360C">→ protein digestion</text>
+      <!-- 小肠 -->
+      <path d="M340 280 Q300 300 320 330 Q340 360 280 380 Q260 410 320 430 Q360 450 320 470 Q300 490 360 500" fill="none" stroke="#FF6F00" stroke-width="16" stroke-linecap="round"/>
+      <text x="170" y="380" font-size="13" font-weight="bold" fill="#E65100">4. Small Intestine</text>
+      <text x="170" y="398" font-size="11" fill="#E65100">⭐ absorb nutrients</text>
+      <text x="170" y="414" font-size="11" fill="#E65100">(villi 增大表面积)</text>
+      <text x="170" y="430" font-size="11" fill="#E65100">→ into bloodstream</text>
+      <!-- 大肠 -->
+      <path d="M380 510 Q450 520 470 480 Q480 440 460 400 Q450 370 470 340 Q480 320 460 310" fill="none" stroke="#6D4C41" stroke-width="18" stroke-linecap="round"/>
+      <text x="490" y="430" font-size="13" font-weight="bold" fill="#3E2723">5. Large Intestine</text>
+      <text x="490" y="448" font-size="11" fill="#3E2723">→ absorb water 💧</text>
+      <text x="490" y="464" font-size="11" fill="#3E2723">→ form waste</text>
+      <!-- 直肠/肛门 -->
+      <text x="400" y="565" text-anchor="middle" font-size="12" font-weight="bold" fill="#3E2723">6. Rectum → Anus (排出 undigested)</text>
+      <!-- 辅助器官 (Liver / Pancreas) -->
+      <rect x="600" y="180" width="170" height="80" fill="#E1BEE7" stroke="#6A1B9A" stroke-width="1" rx="4"/>
+      <text x="610" y="200" font-size="11" font-weight="bold" fill="#4A148C">辅助器官 (出酶, 非路径):</text>
+      <text x="610" y="218" font-size="10" fill="#4A148C">🟤 Liver → bile (消化 fat)</text>
+      <text x="610" y="234" font-size="10" fill="#4A148C">🟡 Pancreas → 消化酶 (多种)</text>
+      <text x="610" y="250" font-size="10" fill="#4A148C">🟢 Gall bladder → 储 bile</text>
+      <!-- 题型陷阱 -->
+      <rect x="20" y="20" width="320" height="100" fill="#FFEBEE" stroke="#C62828" stroke-width="2" rx="6"/>
+      <text x="30" y="40" font-size="12" font-weight="bold" fill="#C62828">⚠️ PSLE 高频考点:</text>
+      <text x="30" y="60" font-size="11" fill="#333">• absorb nutrient 在 small intestine (不是 stomach)</text>
+      <text x="30" y="78" font-size="11" fill="#333">• absorb water 在 large intestine</text>
+      <text x="30" y="96" font-size="11" fill="#333">• Liver/Pancreas 是 accessory (出酶, 非路径器官)</text>
+      <text x="30" y="114" font-size="11" fill="#333">• Oesophagus 只输送, 不消化</text>
+    </svg>`
+  },
+  light: {
+    title: 'Light & Shadow — 光与影',
+    subtitle: '光直线传播 · 不透明体阻挡 → 影子在背光面',
+    pitfall: '影子大小 = 光源-物体距离 vs 物体-屏幕距离的比. 光源越近 → 影子越大',
+    svg: `<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" style="background:#FFFDE7;border-radius:8px">
+      <!-- 光源 (太阳) -->
+      <circle cx="120" cy="150" r="40" fill="#FFA000" stroke="#E65100" stroke-width="2"/>
+      <text x="120" y="155" text-anchor="middle" font-size="14" font-weight="bold" fill="#FFF">☀️</text>
+      <text x="120" y="210" text-anchor="middle" font-size="12" font-weight="bold" fill="#E65100">Light source</text>
+      <!-- 光线 (直线传播) -->
+      <line x1="160" y1="140" x2="380" y2="120" stroke="#FFC107" stroke-width="2" stroke-dasharray="4,4"/>
+      <line x1="160" y1="160" x2="380" y2="270" stroke="#FFC107" stroke-width="2" stroke-dasharray="4,4"/>
+      <line x1="160" y1="155" x2="600" y2="180" stroke="#FFC107" stroke-width="1.5" stroke-dasharray="3,3"/>
+      <line x1="160" y1="180" x2="600" y2="300" stroke="#FFC107" stroke-width="1.5" stroke-dasharray="3,3"/>
+      <text x="250" y="105" font-size="10" fill="#E65100" font-style="italic">light travels in straight lines</text>
+      <!-- 不透明物体 -->
+      <rect x="380" y="120" width="40" height="150" fill="#3E2723" stroke="#000" stroke-width="2"/>
+      <text x="400" y="105" text-anchor="middle" font-size="11" font-weight="bold" fill="#3E2723">Opaque object</text>
+      <text x="400" y="295" text-anchor="middle" font-size="10" fill="#3E2723">blocks light</text>
+      <!-- 屏幕 -->
+      <line x1="600" y1="100" x2="600" y2="350" stroke="#5D4037" stroke-width="3"/>
+      <text x="615" y="100" font-size="11" font-weight="bold" fill="#5D4037">Screen</text>
+      <!-- 影子 (在屏幕上, 物体背后) -->
+      <rect x="595" y="170" width="10" height="140" fill="#212121" opacity="0.7"/>
+      <text x="630" y="245" font-size="12" font-weight="bold" fill="#212121">Shadow 影子</text>
+      <text x="630" y="263" font-size="10" fill="#212121">(在物体的</text>
+      <text x="630" y="277" font-size="10" fill="#212121">背光面)</text>
+      <!-- 三种透光性对比 -->
+      <rect x="40" y="320" width="180" height="160" fill="#E8F5E9" stroke="#2E7D32" stroke-width="1" rx="4"/>
+      <text x="50" y="340" font-size="11" font-weight="bold" fill="#1B5E20">3 种透光性 (Diversity):</text>
+      <circle cx="65" cy="365" r="8" fill="transparent" stroke="#0277BD" stroke-width="2"/>
+      <text x="80" y="370" font-size="11" fill="#333"><tspan font-weight="bold">Transparent</tspan> 透明 (玻璃)</text>
+      <text x="80" y="384" font-size="9" fill="#666">100% 透光, 清楚看见</text>
+      <circle cx="65" cy="400" r="8" fill="#B3E5FC" opacity="0.5" stroke="#0277BD" stroke-width="2"/>
+      <text x="80" y="405" font-size="11" fill="#333"><tspan font-weight="bold">Translucent</tspan> 半透明 (磨砂)</text>
+      <text x="80" y="419" font-size="9" fill="#666">部分透光, 看模糊</text>
+      <circle cx="65" cy="435" r="8" fill="#3E2723" stroke="#000" stroke-width="2"/>
+      <text x="80" y="440" font-size="11" fill="#333"><tspan font-weight="bold">Opaque</tspan> 不透明 (木)</text>
+      <text x="80" y="454" font-size="9" fill="#666">0% 透光, 形成影子</text>
+      <!-- 题型陷阱 -->
+      <rect x="430" y="320" width="350" height="160" fill="#FFEBEE" stroke="#C62828" stroke-width="2" rx="6"/>
+      <text x="440" y="340" font-size="12" font-weight="bold" fill="#C62828">⚠️ PSLE 高频陷阱:</text>
+      <text x="440" y="360" font-size="11" fill="#333">• 光不能"绕过"物体 (直线传播)</text>
+      <text x="440" y="378" font-size="11" fill="#333">• 影子永远在<b>背光面</b> (跟光源相反方向)</text>
+      <text x="440" y="396" font-size="11" fill="#333">• 光源越近物体 → 影子越大 (光线发散)</text>
+      <text x="440" y="414" font-size="11" fill="#333">• 同光源, 物体越近屏幕 → 影子越小越清晰</text>
+      <text x="440" y="432" font-size="11" fill="#333">• 影子颜色 = 黑 (不是物体的颜色)</text>
+      <text x="440" y="450" font-size="11" fill="#333">• 多光源 → 多重影子 (各方向不同浓度)</text>
+      <text x="440" y="468" font-size="11" fill="#333">• Translucent 也有影子, 但比 opaque 浅</text>
+    </svg>`
+  },
+  heat: {
+    title: 'Heat Energy — 热能传递',
+    subtitle: '热从高温 → 低温. Conductor (金属) 快 · Insulator (木/塑料) 慢',
+    pitfall: '"温度相同"和"含热量相同"不一样. 大块冰比小块冰温度一样但热量更多需融化时间更长',
+    svg: `<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" style="background:#FFF3E0;border-radius:8px">
+      <!-- 热源 -->
+      <ellipse cx="150" cy="200" rx="60" ry="80" fill="url(#flameGrad)" stroke="#BF360C" stroke-width="2"/>
+      <text x="150" y="305" text-anchor="middle" font-size="13" font-weight="bold" fill="#BF360C">🔥 Heat source</text>
+      <text x="150" y="322" text-anchor="middle" font-size="11" fill="#BF360C">(higher temp)</text>
+      <!-- 金属棒 (conductor) -->
+      <rect x="220" y="180" width="200" height="20" fill="url(#metalGrad)" stroke="#37474F" stroke-width="2" rx="3"/>
+      <text x="320" y="170" text-anchor="middle" font-size="12" font-weight="bold" fill="#37474F">Metal rod (Conductor 导体)</text>
+      <text x="320" y="215" text-anchor="middle" font-size="10" fill="#FFF">heat conducts FAST →</text>
+      <!-- 木棒 (insulator) -->
+      <rect x="220" y="280" width="200" height="20" fill="url(#woodGrad)" stroke="#5D4037" stroke-width="2" rx="3"/>
+      <text x="320" y="270" text-anchor="middle" font-size="12" font-weight="bold" fill="#5D4037">Wood (Insulator 绝缘体)</text>
+      <text x="320" y="315" text-anchor="middle" font-size="10" fill="#5D4037">heat conducts SLOW →</text>
+      <!-- 手 (低温) -->
+      <text x="450" y="195" font-size="20">✋</text>
+      <text x="450" y="295" font-size="20">✋</text>
+      <text x="490" y="195" font-size="11" fill="#37474F">→ feel hot 很快</text>
+      <text x="490" y="295" font-size="11" fill="#5D4037">→ feel hot 很慢</text>
+      <!-- 三种传热方式 -->
+      <rect x="20" y="370" width="760" height="115" fill="#E8F5E9" stroke="#2E7D32" stroke-width="1" rx="4"/>
+      <text x="30" y="390" font-size="12" font-weight="bold" fill="#1B5E20">3 种传热方式 (PSLE 必考):</text>
+      <text x="30" y="412" font-size="11" fill="#1B5E20"><b>1. Conduction (传导)</b>: 固体内, 颗粒振动传给邻居 — 例: 金属勺烫手</text>
+      <text x="30" y="432" font-size="11" fill="#1B5E20"><b>2. Convection (对流)</b>: 流体 (液/气), 受热上升冷的下沉形成环流 — 例: 烧水 / 冷气</text>
+      <text x="30" y="452" font-size="11" fill="#1B5E20"><b>3. Radiation (辐射)</b>: 不需介质, 通过波传 — 例: 太阳光晒, 烤箱热</text>
+      <text x="30" y="472" font-size="11" fill="#1B5E20">💡 真空只能 radiation, conduction 和 convection 都需介质 (颗粒)</text>
+      <!-- 题型陷阱 -->
+      <rect x="500" y="20" width="280" height="140" fill="#FFEBEE" stroke="#C62828" stroke-width="2" rx="6"/>
+      <text x="510" y="40" font-size="12" font-weight="bold" fill="#C62828">⚠️ PSLE 陷阱:</text>
+      <text x="510" y="60" font-size="11" fill="#333">• "温度" ≠ "热量". 大冰块温度同小冰</text>
+      <text x="510" y="76" font-size="11" fill="#333">  但热量多, 融化更慢</text>
+      <text x="510" y="94" font-size="11" fill="#333">• 热 GAIN (吸热) / 热 LOSS (失热)</text>
+      <text x="510" y="112" font-size="11" fill="#333">  双向都要 explain</text>
+      <text x="510" y="128" font-size="11" fill="#333">• 衣服不是"产热", 是 reduce heat loss</text>
+      <text x="510" y="146" font-size="11" fill="#333">• 黑色 absorb 多 / 白色 reflect 多</text>
+      <defs>
+        <radialGradient id="flameGrad" cx="50%" cy="50%">
+          <stop offset="0%" stop-color="#FFEB3B"/>
+          <stop offset="60%" stop-color="#FF9800"/>
+          <stop offset="100%" stop-color="#D84315"/>
+        </radialGradient>
+        <linearGradient id="metalGrad" x1="0%" x2="100%">
+          <stop offset="0%" stop-color="#FF5722"/>
+          <stop offset="100%" stop-color="#90A4AE"/>
+        </linearGradient>
+        <linearGradient id="woodGrad" x1="0%" x2="100%">
+          <stop offset="0%" stop-color="#A1887F"/>
+          <stop offset="100%" stop-color="#D7CCC8"/>
+        </linearGradient>
+      </defs>
+    </svg>`
+  }
+};
+
+function getConceptDiagram(id) {
+  return CONCEPT_DIAGRAMS[id] || null;
+}
+
+// ============ window 导出 ============
+window.ORAL_QUESTIONS = ORAL_QUESTIONS;
+window.getOralQuestion = getOralQuestion;
+window.recordOralPractice = recordOralPractice;
+window.getOralStatus = getOralStatus;
+window.SUBJECT_VOCAB_MATH = SUBJECT_VOCAB_MATH;
+window.SUBJECT_VOCAB_SCIENCE = SUBJECT_VOCAB_SCIENCE;
+window.getDailySubjectVocab = getDailySubjectVocab;
+window.recordSubjectVocabRun = recordSubjectVocabRun;
+window.ESSAY_TEMPLATES = ESSAY_TEMPLATES;
+window.SCIENCE_CHAPTERS = SCIENCE_CHAPTERS;
+window.getCurrentScienceChapter = getCurrentScienceChapter;
+window.SCIENCE_OE_PRINCIPLES = SCIENCE_OE_PRINCIPLES;
+window.SCIENCE_OE_QUESTIONS = SCIENCE_OE_QUESTIONS;
+window.CONCEPT_DIAGRAMS = CONCEPT_DIAGRAMS;
+window.getConceptDiagram = getConceptDiagram;
 window.getChineseReadingByDiff = getChineseReadingByDiff;

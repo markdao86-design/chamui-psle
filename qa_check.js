@@ -411,8 +411,47 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.12/.test(idxSrc) && !/\?v=19\.11[^0-9]/.test(idxSrc),
-  'v19.12: cache buster 已更新到 19.12');
+assert(/\?v=19\.13/.test(idxSrc) && !/\?v=19\.12[^0-9]/.test(idxSrc),
+  'v19.13: cache buster 已更新到 19.13');
+
+// v19.13: 5 大新模块数据 (oral / vocab / essay tmpl / sci chapter / OE / diagrams)
+const dataSrc = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
+assert(/ORAL_QUESTIONS\s*=\s*\[/.test(dataSrc), 'v19.13: data.js 有 ORAL_QUESTIONS');
+assert(/SUBJECT_VOCAB_MATH\s*=\s*\[/.test(dataSrc), 'v19.13: data.js 有 SUBJECT_VOCAB_MATH');
+assert(/SUBJECT_VOCAB_SCIENCE\s*=\s*\[/.test(dataSrc), 'v19.13: data.js 有 SUBJECT_VOCAB_SCIENCE');
+assert(/ESSAY_TEMPLATES\s*=/.test(dataSrc), 'v19.13: data.js 有 ESSAY_TEMPLATES');
+assert(/SCIENCE_CHAPTERS\s*=/.test(dataSrc), 'v19.13: data.js 有 SCIENCE_CHAPTERS');
+assert(/SCIENCE_OE_QUESTIONS\s*=/.test(dataSrc), 'v19.13: data.js 有 SCIENCE_OE_QUESTIONS');
+assert(/CONCEPT_DIAGRAMS\s*=/.test(dataSrc), 'v19.13: data.js 有 CONCEPT_DIAGRAMS');
+// 5 个 render 函数都在 app.js
+assert(/function renderOralCheckinCard/.test(appSrc), 'v19.13: app.js 有 renderOralCheckinCard');
+assert(/function renderSubjectVocabCard/.test(appSrc), 'v19.13: app.js 有 renderSubjectVocabCard');
+assert(/function renderScienceChapterCard/.test(appSrc), 'v19.13: app.js 有 renderScienceChapterCard');
+assert(/function openScienceOEGame/.test(appSrc), 'v19.13: app.js 有 openScienceOEGame');
+assert(/function openConceptDiagram/.test(appSrc), 'v19.13: app.js 有 openConceptDiagram');
+// renderDashboard 调用新卡
+assert(/renderOralCheckinCard\(\);/.test(appSrc), 'v19.13: renderDashboard 调用 oral 卡');
+assert(/renderSubjectVocabCard\(\);/.test(appSrc), 'v19.13: renderDashboard 调用 vocab 卡');
+assert(/renderScienceChapterCard\(\);/.test(appSrc), 'v19.13: renderDashboard 调用 science 卡');
+// HTML 有新容器
+assert(/id="oralCheckinCard"/.test(idxSrc), 'v19.13: index.html 有 oralCheckinCard');
+assert(/id="subjectVocabCard"/.test(idxSrc), 'v19.13: index.html 有 subjectVocabCard');
+assert(/id="scienceChapterCard"/.test(idxSrc), 'v19.13: index.html 有 scienceChapterCard');
+// 学科词汇 ≥ 500
+const mathVocabMatches = (dataSrc.match(/cat:\s*'(几何|数与运算|比例|统计|单位|题干)'/g) || []).length;
+const sciVocabMatches = (dataSrc.match(/cat:\s*'(力学|光学|热学|物质|植物|动物|人体|实验|环境\/能量)'/g) || []).length;
+assert(mathVocabMatches >= 195, `v19.13: 数学词汇 ≥ 195 (实际 ${mathVocabMatches})`);
+assert(sciVocabMatches >= 280, `v19.13: 科学词汇 ≥ 280 (实际 ${sciVocabMatches})`);
+// 30+ Oral 题
+const oralCount = (dataSrc.match(/id:\s*'o_/g) || []).length;
+assert(oralCount >= 28, `v19.13: Oral 题库 ≥ 28 (实际 ${oralCount})`);
+// 15 OE 题
+const oeCount = (dataSrc.match(/id:\s*'oe_\d+'/g) || []).length;
+assert(oeCount >= 13, `v19.13: 科学 OE 题 ≥ 13 (实际 ${oeCount})`);
+// 4 概念图
+['plant_transport', 'digestive', 'light', 'heat'].forEach(k => {
+  assert(new RegExp(`'${k}'\\s*:`).test(dataSrc) || new RegExp(`\\b${k}\\b\\s*:`).test(dataSrc), `v19.13: 概念图 ${k} 存在`);
+});
 
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');

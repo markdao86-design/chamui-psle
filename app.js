@@ -381,6 +381,10 @@ function renderDashboard() {
   renderReviewCard();  // v18 Phase 5.3
   renderAdmissionForecastCard();  // v19.12: 主页核心 — 目标校录取概率
   renderPaper2SprintCard();  // v19.7
+  // v19.13: 主页极简 4 卡 — 录取概率 / Paper 2 / Oral / 学科词汇 / 科学章节
+  renderOralCheckinCard();
+  renderSubjectVocabCard();
+  renderScienceChapterCard();
   // v19.12: 学习画像移到二级 "我的" tab, 主页不渲染 (避免信息超载)
   // renderLearningPortraitCard();
   renderWeeklyCoach();
@@ -668,6 +672,473 @@ function renderAdmissionForecastCard() {
   `;
 }
 window.renderAdmissionForecastCard = renderAdmissionForecastCard;
+
+// ============================================================
+// v19.13: 5 大新模块 render + 游戏逻辑 (对齐手册 v14)
+// ============================================================
+
+// --------- 1. Oral 25min/天 打卡 + 题库 ---------
+function renderOralCheckinCard() {
+  const card = document.getElementById('oralCheckinCard');
+  if (!card || !window.getOralStatus) return;
+  const s = window.getOralStatus(state);
+  const minDone = Math.round(s.todaySec / 60);
+  const minTarget = Math.round(s.targetSec / 60);
+  const barColor = s.pct >= 100 ? '#4ECDC4' : s.pct >= 50 ? '#FFA500' : '#FF8A65';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div style="font-size:14px;font-weight:900;color:#0277BD">🗣️ 今日 Oral 训练</div>
+      <div style="margin-left:auto;font-size:11px;color:#666">目标 ${minTarget} min/天 · Paper 4 占 30 分</div>
+    </div>
+    <div style="font-size:11px;color:#666;margin-bottom:8px;line-height:1.5">
+      孩子英语 AL6, Oral 口试是失分大头. 每天用<b>豆包 App</b>对话或<b>朗读 1 段英文</b>录音回听.
+    </div>
+    <div style="background:#EEE;border-radius:4px;height:10px;overflow:hidden;margin-bottom:6px">
+      <div style="background:${barColor};height:100%;width:${s.pct}%;transition:width 0.4s"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:8px">
+      <span style="color:#0277BD;font-weight:700">${minDone} / ${minTarget} min ${s.done ? '✅' : ''}</span>
+      <span style="color:#888;font-size:10px">累计 ${s.totalSessions} 次练习</span>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button onclick="openOralPracticeModal()" style="flex:1;padding:8px;background:linear-gradient(135deg,#0277BD,#01579B);color:#FFF;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer">
+        🎤 抽一题 PSLE Oral
+      </button>
+      <button onclick="quickOralCheckin(5)" style="padding:8px 10px;background:#4ECDC4;color:#FFF;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer" title="豆包对话/朗读 5 分钟 → 直接打卡">
+        +5min 已练
+      </button>
+    </div>
+  `;
+}
+window.renderOralCheckinCard = renderOralCheckinCard;
+
+let _oralModalQ = null;
+function openOralPracticeModal(seed) {
+  if (!window.getOralQuestion) return;
+  const q = window.getOralQuestion(seed);
+  if (!q) { showToast('暂无题库', 'warn'); return; }
+  _oralModalQ = q;
+  let modal = document.getElementById('oralPracticeModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'oralPracticeModal';
+    modal.className = 'mb-result-modal';
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div class="mg-inner" style="max-width:520px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:14px;font-weight:900;color:#0277BD">🎤 PSLE Oral 练习</div>
+        <button onclick="closeOralModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">×</button>
+      </div>
+      <div style="background:#E1F5FE;border-radius:6px;padding:10px;margin-bottom:10px">
+        <div style="font-size:11px;color:#0277BD;font-weight:700;margin-bottom:4px">📂 ${q.topic} · ${q.cat}</div>
+        <div style="font-size:14px;color:#01579B;font-weight:600;line-height:1.5">${escapeHtml(q.q)}</div>
+      </div>
+      <div style="background:#FFF8E1;border-radius:6px;padding:8px;margin-bottom:10px;font-size:11px;color:#5D4037">
+        💡 ${escapeHtml(q.hint)}
+      </div>
+      <div style="background:#F5F5F5;border-radius:6px;padding:10px;margin-bottom:10px;font-size:11px;color:#555">
+        <b>建议流程</b> (2-3 min):<br>
+        1. 朗读题目 1 遍 · 2. 思考 30s · 3. 对豆包/家长口头回答 1-2 min · 4. 录音回听一次, 找 1 个改进点
+      </div>
+      <div style="display:flex;gap:6px">
+        <button onclick="openOralPracticeModal()" style="flex:1;padding:10px;background:#FFA000;color:#FFF;border:none;border-radius:6px;font-weight:700;cursor:pointer">🔄 换一题</button>
+        <button onclick="completeOralPractice()" style="flex:2;padding:10px;background:linear-gradient(135deg,#4ECDC4,#26A69A);color:#FFF;border:none;border-radius:6px;font-weight:900;cursor:pointer">✅ 练完此题 (+3 分, 计 3 min)</button>
+      </div>
+    </div>
+  `;
+  modal.classList.add('show');
+}
+function closeOralModal() {
+  const m = document.getElementById('oralPracticeModal');
+  if (m) { m.classList.remove('show'); m.innerHTML = ''; }
+  _oralModalQ = null;
+}
+function completeOralPractice() {
+  if (!_oralModalQ || !window.recordOralPractice) { closeOralModal(); return; }
+  window.recordOralPractice(state, _oralModalQ.id, 180);  // 3 min/题
+  showToast('🎤 +3 分 · 累计今日 Oral +3 min', 'success');
+  closeOralModal();
+  if (typeof renderAll === 'function') renderAll();
+  else renderOralCheckinCard();
+}
+function quickOralCheckin(min) {
+  if (!window.recordOralPractice) return;
+  window.recordOralPractice(state, '_quick_' + min, (min || 5) * 60);
+  showToast(`🗣️ +${min} min Oral 已记 (+3 分)`, 'success');
+  if (typeof renderAll === 'function') renderAll();
+  else renderOralCheckinCard();
+}
+window.openOralPracticeModal = openOralPracticeModal;
+window.closeOralModal = closeOralModal;
+window.completeOralPractice = completeOralPractice;
+window.quickOralCheckin = quickOralCheckin;
+
+// --------- 2. 学科英语词汇 500 (今日 5 词 + mini-game) ---------
+function renderSubjectVocabCard() {
+  const card = document.getElementById('subjectVocabCard');
+  if (!card || !window.getDailySubjectVocab) return;
+  const words = window.getDailySubjectVocab(state, 5);
+  const sv = state.subjectVocabStats || { totalRuns: 0, totalCorrect: 0, totalTried: 0 };
+  const acc = sv.totalTried ? Math.round(sv.totalCorrect / sv.totalTried * 100) : null;
+  const today = (window.todayKey ? window.todayKey() : new Date().toISOString().slice(0,10));
+  const todayCnt = (sv.byDate && sv.byDate[today]) || 0;
+  const doneTag = todayCnt >= 5 ? '<span style="color:#4ECDC4;font-weight:900">✅ 已练</span>' : '<span style="color:#FFA500">未练</span>';
+  const wordsHtml = words.map(w => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px;background:#F5F5F5;border-radius:4px;margin-bottom:3px;font-size:12px">
+      <span style="color:#1565C0;font-weight:700">${escapeHtml(w.en)}</span>
+      <span style="color:#777;font-size:11px">${escapeHtml(w.zh)} <span style="font-size:9px;color:#999">(${w.cat})</span></span>
+    </div>
+  `).join('');
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div style="font-size:14px;font-weight:900;color:#1565C0">📚 今日学科英语 5 词</div>
+      <div style="margin-left:auto;font-size:11px">${doneTag} · 今日 ${todayCnt}/5</div>
+    </div>
+    <div style="font-size:11px;color:#666;margin-bottom:6px;line-height:1.4">
+      手册 v14 关键: 中国孩子题干读不懂会污染数学/科学 AL1. 数学 200 + 科学 300 共 500 词。
+    </div>
+    ${wordsHtml}
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button onclick="openSubjectVocabGame()" style="flex:1;padding:8px;background:linear-gradient(135deg,#1565C0,#0D47A1);color:#FFF;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer">
+        🎯 测一下 (5 题)
+      </button>
+      ${acc !== null ? `<div style="padding:8px;background:#E8F5E9;color:#2E7D32;border-radius:6px;font-size:11px;font-weight:700">总命中 ${acc}%</div>` : ''}
+    </div>
+  `;
+}
+window.renderSubjectVocabCard = renderSubjectVocabCard;
+
+let _svGame = null;
+function openSubjectVocabGame() {
+  if (!window.getDailySubjectVocab) return;
+  const words = window.getDailySubjectVocab(state, 5);
+  const pool = (window.SUBJECT_VOCAB_MATH || []).concat(window.SUBJECT_VOCAB_SCIENCE || []);
+  // 给每题生成 3 个干扰项 (同一 cat 优先)
+  const questions = words.map(w => {
+    const distractorsPool = pool.filter(p => p.zh !== w.zh && p.en !== w.en);
+    const sameCat = distractorsPool.filter(p => p.cat === w.cat);
+    const dst = (sameCat.length >= 3 ? sameCat : distractorsPool);
+    const shuffled = dst.slice().sort(() => Math.random() - 0.5).slice(0, 3);
+    const opts = [w.zh, ...shuffled.map(d => d.zh)].sort(() => Math.random() - 0.5);
+    return { w, opts, correctIdx: opts.indexOf(w.zh) };
+  });
+  _svGame = { questions, qIdx: 0, correct: 0, picks: [] };
+  _renderSvGame();
+}
+function _renderSvGame() {
+  const g = _svGame;
+  if (!g) return;
+  let modal = document.getElementById('svGameModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'svGameModal';
+    modal.className = 'mb-result-modal';
+    document.body.appendChild(modal);
+  }
+  if (g.qIdx >= g.questions.length) {
+    const pct = Math.round(g.correct / g.questions.length * 100);
+    if (window.recordSubjectVocabRun) window.recordSubjectVocabRun(state, g.correct, g.questions.length);
+    modal.innerHTML = `
+      <div class="mg-inner" style="max-width:480px;text-align:center">
+        <div style="font-size:18px;font-weight:900;margin-bottom:10px">🎯 完成!</div>
+        <div style="font-size:32px;color:${pct>=80?'#4ECDC4':pct>=60?'#FFA500':'#FF6B6B'};font-weight:900;margin:14px 0">${g.correct} / ${g.questions.length}</div>
+        <div style="color:#666;margin-bottom:12px">+${g.correct} 积分 · ${pct >= 80 ? '🌟 优秀, 继续保持' : pct >= 60 ? '👍 还行, 多练几遍' : '💪 这批先背熟, 明天重测'}</div>
+        <button onclick="closeSvGame()" style="padding:10px 30px;background:#4ECDC4;color:#FFF;border:none;border-radius:6px;font-weight:700;cursor:pointer">关闭</button>
+      </div>
+    `;
+    modal.classList.add('show');
+    return;
+  }
+  const q = g.questions[g.qIdx];
+  modal.innerHTML = `
+    <div class="mg-inner" style="max-width:480px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:13px;color:#1565C0;font-weight:700">📚 学科英语 · ${g.qIdx + 1}/${g.questions.length}</div>
+        <button onclick="closeSvGame()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">×</button>
+      </div>
+      <div style="text-align:center;background:#E3F2FD;border-radius:8px;padding:18px;margin-bottom:12px">
+        <div style="font-size:11px;color:#1565C0;margin-bottom:4px">${q.w.cat}</div>
+        <div style="font-size:24px;color:#0D47A1;font-weight:900">${escapeHtml(q.w.en)}</div>
+        <div style="font-size:10px;color:#888;margin-top:4px">中文意思是?</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${q.opts.map((o, i) => `<button onclick="svPick(${i})" style="padding:10px;background:#FFF;border:2px solid #DDD;border-radius:6px;cursor:pointer;font-size:14px;text-align:left">${String.fromCharCode(65+i)}. ${escapeHtml(o)}</button>`).join('')}
+      </div>
+    </div>
+  `;
+  modal.classList.add('show');
+}
+function svPick(i) {
+  const g = _svGame;
+  if (!g) return;
+  const q = g.questions[g.qIdx];
+  const isRight = i === q.correctIdx;
+  if (isRight) {
+    g.correct++;
+    playSound && playSound('ding');
+  } else {
+    playSound && playSound('sad');
+    if (window.addToErrorBank) {
+      window.addToErrorBank(state, {
+        gameKey: 'subject_vocab',
+        type: 'mcq',
+        q: `${q.w.en} (${q.w.cat})`,
+        correctAns: q.w.zh,
+        explain: `${q.w.en} = ${q.w.zh}`,
+        topic: q.w.cat
+      });
+    }
+  }
+  // 显示一秒结果再下一题
+  const modal = document.getElementById('svGameModal');
+  if (modal) {
+    const btns = modal.querySelectorAll('button[onclick^="svPick"]');
+    btns.forEach((b, idx) => {
+      if (idx === q.correctIdx) b.style.background = '#C8E6C9';
+      if (idx === i && !isRight) b.style.background = '#FFCDD2';
+      b.disabled = true;
+    });
+  }
+  setTimeout(() => { g.qIdx++; _renderSvGame(); }, 900);
+}
+function closeSvGame() {
+  const m = document.getElementById('svGameModal');
+  if (m) { m.classList.remove('show'); m.innerHTML = ''; }
+  _svGame = null;
+  if (typeof renderAll === 'function') renderAll();
+}
+window.openSubjectVocabGame = openSubjectVocabGame;
+window.svPick = svPick;
+window.closeSvGame = closeSvGame;
+
+// --------- 5. 科学章节里程碑卡 (W1-W14 P3-P4 系统过) ---------
+function renderScienceChapterCard() {
+  const card = document.getElementById('scienceChapterCard');
+  if (!card || !window.getCurrentScienceChapter) return;
+  const week = state.currentWeek || 1;
+  const cur = window.getCurrentScienceChapter(week);
+  const next = (window.SCIENCE_CHAPTERS || []).find(c => c.weeks[0] > week);
+  const weekInChapter = week - cur.weeks[0] + 1;
+  const chapterWeeks = cur.weeks[1] - cur.weeks[0] + 1;
+  const diffColor = cur.difficulty === '难' ? '#C62828' : cur.difficulty === '中' ? '#FFA000' : cur.difficulty === '易' ? '#2E7D32' : '#7B1FA2';
+  const diagramBtn = cur.diagram ? `<button onclick="openConceptDiagram('${cur.diagram}')" style="padding:8px 12px;background:linear-gradient(135deg,#2E7D32,#1B5E20);color:#FFF;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;margin-top:6px">🗺️ 看本章概念图</button>` : '';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div style="font-size:14px;font-weight:900;color:#2E7D32">🔬 本周科学 (W${week})</div>
+      <div style="margin-left:auto;font-size:11px;color:#666">手册 v14 P3-P4 系统过</div>
+    </div>
+    <div style="background:#E8F5E9;border-radius:8px;padding:10px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span style="font-size:15px;font-weight:900;color:#1B5E20">${escapeHtml(cur.title)} ${cur.stars}</span>
+        <span style="margin-left:auto;padding:2px 8px;background:${diffColor};color:#FFF;border-radius:3px;font-size:10px;font-weight:700">${cur.difficulty}</span>
+      </div>
+      <div style="font-size:12px;color:#388E3C;margin-bottom:4px">🎯 ${escapeHtml(cur.focus)}</div>
+      <div style="font-size:10px;color:#666">第 ${weekInChapter}/${chapterWeeks} 周 · 章节范围 W${cur.weeks[0]}-W${cur.weeks[1]}</div>
+    </div>
+    ${diagramBtn}
+    <div style="display:flex;gap:6px;margin-top:6px">
+      <button onclick="openScienceOEGame()" style="flex:1;padding:8px;background:#FFA000;color:#FFF;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer">🧪 OE 答题训练</button>
+      <button onclick="openSciMcqGame && openSciMcqGame()" style="flex:1;padding:8px;background:#7B1FA2;color:#FFF;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer">🔬 科学 MCQ</button>
+    </div>
+    ${next ? `<div style="font-size:10px;color:#888;margin-top:6px;text-align:center">下章 W${next.weeks[0]}: ${escapeHtml(next.title)} ${next.stars}</div>` : ''}
+  `;
+}
+window.renderScienceChapterCard = renderScienceChapterCard;
+
+// --------- 6. 科学 OE 答题训练 mini-game ---------
+let _sciOeGame = null;
+function openScienceOEGame() {
+  if (!window.SCIENCE_OE_QUESTIONS) { showToast('OE 题库未加载', 'warn'); return; }
+  const all = window.SCIENCE_OE_QUESTIONS.slice();
+  const shuffled = all.sort(() => Math.random() - 0.5).slice(0, 5);
+  _sciOeGame = { questions: shuffled, qIdx: 0, scores: [], answers: [], step: 'principles' };
+  _renderSciOe();
+}
+function _renderSciOe() {
+  const g = _sciOeGame;
+  if (!g) return;
+  let modal = document.getElementById('sciOeModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'sciOeModal';
+    modal.className = 'mb-result-modal';
+    document.body.appendChild(modal);
+  }
+  // 第 0 步: 先看 5 条 OE 原则
+  if (g.step === 'principles') {
+    const rules = (window.SCIENCE_OE_PRINCIPLES || []).map((r, i) => `
+      <div style="background:#FFF;border-left:3px solid #C62828;padding:6px 10px;margin-bottom:6px">
+        <div style="font-size:12px;color:#C62828;font-weight:900">${i+1}. ${escapeHtml(r.rule)}</div>
+        <div style="font-size:11px;color:#555;margin-top:2px">${escapeHtml(r.why)}</div>
+      </div>
+    `).join('');
+    modal.innerHTML = `
+      <div class="mg-inner" style="max-width:520px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:14px;font-weight:900;color:#E65100">🧪 PSLE 科学 OE 答题 5 原则</div>
+          <button onclick="closeSciOe()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">×</button>
+        </div>
+        <div style="background:#FFEBEE;border-radius:6px;padding:10px;margin-bottom:10px">
+          ${rules}
+        </div>
+        <button onclick="sciOeStart()" style="width:100%;padding:12px;background:linear-gradient(135deg,#FFA000,#E65100);color:#FFF;border:none;border-radius:6px;font-weight:900;cursor:pointer">⏯️ 开始练 5 题 OE</button>
+      </div>
+    `;
+    modal.classList.add('show');
+    return;
+  }
+  // 完成
+  if (g.qIdx >= g.questions.length) {
+    const total = g.scores.reduce((a,b) => a+b, 0);
+    const max = g.questions.length * 2;
+    const pct = Math.round(total / max * 100);
+    state.totalPoints = (state.totalPoints || 0) + total * 3;
+    if (window.recordGameRun) window.recordGameRun(state, 'sci_oe', total, max);
+    if (window.saveState) window.saveState(state);
+    modal.innerHTML = `
+      <div class="mg-inner" style="max-width:520px;text-align:center">
+        <div style="font-size:18px;font-weight:900;margin-bottom:10px">🧪 OE 训练完成!</div>
+        <div style="font-size:30px;color:${pct>=80?'#4ECDC4':pct>=50?'#FFA500':'#FF6B6B'};font-weight:900;margin:14px 0">${total} / ${max} 分</div>
+        <div style="color:#666;margin-bottom:12px">+${total * 3} 积分 · ${pct >= 80 ? '🌟 OE 模板熟练!' : pct >= 50 ? '👍 不错, 多对照 model answer 找差距' : '💪 重温 5 条原则, 关键词必须用上'}</div>
+        <button onclick="closeSciOe()" style="padding:10px 30px;background:#4ECDC4;color:#FFF;border:none;border-radius:6px;font-weight:700;cursor:pointer">关闭</button>
+      </div>
+    `;
+    return;
+  }
+  // 答题
+  const q = g.questions[g.qIdx];
+  const showModel = g.scores[g.qIdx] !== undefined;
+  // 检查孩子答案
+  const userAns = (g.answers[g.qIdx] || '').trim();
+  let warnings = [];
+  if (userAns) {
+    const lowerAns = userAns.toLowerCase();
+    if (/^(yes[\.,\s]|no[\.,\s]|yes$|no$)/i.test(userAns)) warnings.push('❌ 不能用 Yes/No 开头 (-1)');
+    const matchedKw = q.keywords.filter(k => lowerAns.includes(k.toLowerCase()));
+    if (matchedKw.length < q.keywords.length / 2) {
+      warnings.push(`⚠️ 关键词不够 (用了 ${matchedKw.length}/${q.keywords.length}: ${q.keywords.join(', ')})`);
+    }
+    if (lowerAns.length < 30) warnings.push('⚠️ 答案太短, OE 通常需 2-3 句');
+  }
+  modal.innerHTML = `
+    <div class="mg-inner" style="max-width:560px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:13px;color:#E65100;font-weight:700">🧪 科学 OE · ${g.qIdx + 1}/${g.questions.length} · ${q.topic}</div>
+        <button onclick="closeSciOe()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">×</button>
+      </div>
+      <div style="background:#FFF3E0;border-radius:6px;padding:10px;margin-bottom:10px">
+        <div style="font-size:13px;color:#BF360C;font-weight:600;line-height:1.5">${escapeHtml(q.q)}</div>
+      </div>
+      ${showModel ? `
+        <div style="background:#E8F5E9;border-left:3px solid #2E7D32;padding:10px;margin-bottom:10px">
+          <div style="font-size:11px;color:#1B5E20;font-weight:900;margin-bottom:4px">✅ Model Answer (关键词: ${q.keywords.join(', ')})</div>
+          <div style="font-size:12px;color:#1B5E20;line-height:1.6">${escapeHtml(q.model)}</div>
+        </div>
+        <div style="text-align:center;margin-bottom:10px">
+          <div style="font-size:13px;color:#666;margin-bottom:6px">你的答案对照 model, 自评:</div>
+          <button onclick="sciOeScore(0)" style="padding:8px 14px;background:#FF6B6B;color:#FFF;border:none;border-radius:6px;margin:0 4px;cursor:pointer">❌ 0 分</button>
+          <button onclick="sciOeScore(1)" style="padding:8px 14px;background:#FFA000;color:#FFF;border:none;border-radius:6px;margin:0 4px;cursor:pointer">⚠️ 1 分</button>
+          <button onclick="sciOeScore(2)" style="padding:8px 14px;background:#4ECDC4;color:#FFF;border:none;border-radius:6px;margin:0 4px;cursor:pointer">✅ 2 分</button>
+        </div>
+      ` : `
+        <textarea id="sciOeInput" placeholder="用 2-3 句答, 必含关键词, 不能 Yes/No 开头..." style="width:100%;min-height:90px;padding:8px;border:1px solid #DDD;border-radius:6px;font-size:13px;font-family:inherit;box-sizing:border-box;margin-bottom:6px"></textarea>
+        ${warnings.length ? `<div style="background:#FFF3E0;border-radius:4px;padding:6px;margin-bottom:8px;font-size:11px;color:#BF360C">${warnings.join('<br>')}</div>` : ''}
+        <button onclick="sciOeCheck()" style="width:100%;padding:10px;background:linear-gradient(135deg,#FFA000,#E65100);color:#FFF;border:none;border-radius:6px;font-weight:700;cursor:pointer">📋 提交 + 看 Model Answer</button>
+      `}
+    </div>
+  `;
+  modal.classList.add('show');
+}
+function sciOeStart() {
+  if (!_sciOeGame) return;
+  _sciOeGame.step = 'questions';
+  _renderSciOe();
+}
+function sciOeCheck() {
+  const g = _sciOeGame;
+  if (!g) return;
+  const inp = document.getElementById('sciOeInput');
+  g.answers[g.qIdx] = inp ? inp.value : '';
+  g.scores[g.qIdx] = -1;  // 占位, 等用户自评
+  _renderSciOe();
+}
+function sciOeScore(score) {
+  const g = _sciOeGame;
+  if (!g) return;
+  g.scores[g.qIdx] = score;
+  // 如果 0 分, 加入错题本
+  if (score === 0 && window.addToErrorBank) {
+    const q = g.questions[g.qIdx];
+    window.addToErrorBank(state, {
+      gameKey: 'sci_oe', type: 'oe',
+      q: q.q,
+      correctAns: q.model,
+      explain: '关键词: ' + q.keywords.join(', '),
+      topic: q.topic
+    });
+  }
+  g.qIdx++;
+  _renderSciOe();
+}
+function closeSciOe() {
+  const m = document.getElementById('sciOeModal');
+  if (m) { m.classList.remove('show'); m.innerHTML = ''; }
+  _sciOeGame = null;
+  if (typeof renderAll === 'function') renderAll();
+}
+window.openScienceOEGame = openScienceOEGame;
+window.sciOeStart = sciOeStart;
+window.sciOeCheck = sciOeCheck;
+window.sciOeScore = sciOeScore;
+window.closeSciOe = closeSciOe;
+
+// --------- 7. 概念图 modal (4 张静态 SVG) ---------
+function openConceptDiagram(id) {
+  if (!window.getConceptDiagram) return;
+  const d = window.getConceptDiagram(id);
+  if (!d) { showToast('未找到概念图: ' + id, 'warn'); return; }
+  let modal = document.getElementById('conceptDiagModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'conceptDiagModal';
+    modal.className = 'mb-result-modal';
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div class="mg-inner" style="max-width:900px;width:95%">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div>
+          <div style="font-size:15px;font-weight:900;color:#2E7D32">🗺️ ${escapeHtml(d.title)}</div>
+          <div style="font-size:11px;color:#666">${escapeHtml(d.subtitle)}</div>
+        </div>
+        <button onclick="closeConceptDiagram()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">×</button>
+      </div>
+      <div style="background:#FAFAFA;border-radius:6px;padding:6px;margin-bottom:10px;max-height:65vh;overflow:auto">
+        ${d.svg}
+      </div>
+      <div style="background:#FFEBEE;border-left:3px solid #C62828;padding:8px 10px;border-radius:4px;font-size:12px;color:#C62828">
+        💡 <b>核心要点</b>: ${escapeHtml(d.pitfall)}
+      </div>
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+        ${['plant_transport', 'digestive', 'light', 'heat'].map(k => {
+          const dd = window.getConceptDiagram(k);
+          if (!dd) return '';
+          const active = k === id;
+          return `<button onclick="openConceptDiagram('${k}')" style="flex:1;min-width:100px;padding:8px;background:${active ? 'linear-gradient(135deg,#2E7D32,#1B5E20)' : '#FFF'};color:${active ? '#FFF' : '#2E7D32'};border:1px solid #2E7D32;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer">${escapeHtml(dd.title.split(' — ')[0])}</button>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+  modal.classList.add('show');
+}
+function closeConceptDiagram() {
+  const m = document.getElementById('conceptDiagModal');
+  if (m) { m.classList.remove('show'); m.innerHTML = ''; }
+}
+window.openConceptDiagram = openConceptDiagram;
+window.closeConceptDiagram = closeConceptDiagram;
 
 // v19.8 P0-2: 本周学习画像 (v19.12 移到二级 "我的" tab, 主页不渲染)
 // 心理学原理: 内在动机需要"能力反馈"而不是"行为奖励"
@@ -4850,11 +5321,50 @@ async function _buildEssayInnerHtml(forPage) {
   const lockedMsg = locked > 0
     ? `<div class="essay-locked-tip">🔒 还有 <b>${locked}</b> 篇 · 每完成 10 篇自动解锁下一批，专注当前就好</div>`
     : (filed === total && total > 0 ? `<div class="essay-locked-tip" style="color:#4ECDC4">🎉 全部 ${total} 篇已完成！</div>` : '');
+  // v19.13: 作文 page 顶部加"模板库" (开头 5 + 转折 5 + 结尾 5 + 50 高级词)
+  const T = window.ESSAY_TEMPLATES || { openings:[], transitions:[], endings:[], highVocab:[] };
+  const renderTpl = (arr, color) => arr.map(t => `
+    <details style="background:#FFF;border-left:3px solid ${color};border-radius:4px;padding:6px 10px;margin-bottom:6px">
+      <summary style="cursor:pointer;font-size:13px;font-weight:700;color:${color}">${escapeHtml(t.label)} <span style="font-size:10px;color:#888;font-weight:400">— ${escapeHtml(t.usage)}</span></summary>
+      <div style="font-size:12px;color:#333;line-height:1.6;margin-top:6px;font-style:italic">"${escapeHtml(t.tpl)}"</div>
+    </details>
+  `).join('');
+  const vocabHtml = T.highVocab.map(v => `
+    <details style="background:#F5F5F5;border-radius:4px;padding:4px 8px;margin-bottom:3px">
+      <summary style="cursor:pointer;font-size:12px;font-weight:700;color:#1565C0">${escapeHtml(v.word)} <span style="color:#666;font-weight:400">— ${escapeHtml(v.meaning)}</span></summary>
+      <div style="font-size:11px;color:#555;margin-top:4px;font-style:italic">e.g. ${escapeHtml(v.example)}</div>
+    </details>
+  `).join('');
+  const tplLibHtml = `
+    <div style="background:linear-gradient(135deg,#FFF8E1,#FFE082);border-radius:8px;padding:12px;margin-bottom:14px">
+      <div style="font-size:15px;font-weight:900;color:#E65100;margin-bottom:6px">📝 作文模板库 (手册 v14: 套用 → 拿 30+ 分关键)</div>
+      <div style="font-size:11px;color:#5D4037;margin-bottom:10px;line-height:1.4">
+        每周作文从这 15 个模板里选 1 开 + 1 转 + 1 结 套用, 配 3-5 个高级词。背熟比临场想强。
+      </div>
+      <details open>
+        <summary style="cursor:pointer;font-size:13px;font-weight:900;color:#BF360C;margin-bottom:6px">🎬 5 个开头模板 (展开)</summary>
+        ${renderTpl(T.openings, '#BF360C')}
+      </details>
+      <details>
+        <summary style="cursor:pointer;font-size:13px;font-weight:900;color:#7B1FA2;margin-top:8px;margin-bottom:6px">🔀 5 个转折模板 (展开)</summary>
+        ${renderTpl(T.transitions, '#7B1FA2')}
+      </details>
+      <details>
+        <summary style="cursor:pointer;font-size:13px;font-weight:900;color:#1565C0;margin-top:8px;margin-bottom:6px">🎯 5 个结尾模板 (展开)</summary>
+        ${renderTpl(T.endings, '#1565C0')}
+      </details>
+      <details>
+        <summary style="cursor:pointer;font-size:13px;font-weight:900;color:#2E7D32;margin-top:8px;margin-bottom:6px">📚 50 个高级词汇 (P5 少用, 每周用 3-5 个)</summary>
+        <div style="margin-top:6px;max-height:280px;overflow-y:auto">${vocabHtml}</div>
+      </details>
+    </div>
+  `;
   return `
     <div class="kt-inner">
+      ${tplLibHtml}
       <div class="kt-header">
         <div>
-          <div class="kt-title">📚 作文模板库</div>
+          <div class="kt-title">📚 73 周作文清单</div>
           <div class="kt-progress">已存 <b>${filed}/${visibleCount}</b> · 点已精修看模板, 点未上传去写</div>
         </div>
         ${forPage ? '' : '<button class="vocab-modal-close" onclick="closeEssayLibrary()">×</button>'}
@@ -8152,10 +8662,22 @@ function _renderCompOe() {
   const isRevealed = g.revealed[g.qIdx];
   const typeLabel = q.type === 'literal' ? '📖 Literal' : q.type === 'inferential' ? '🧠 Inferential' : '💭 Evaluative';
   const passageHtml = g.qIdx === 0 ? `<div class="comp-passage">${escapeHtml(p.passage)}</div>` : `<div class="comp-passage-mini">📄 <em>${escapeHtml(p.title)}</em> (scroll up if needed)</div>`;
+  // v19.13: Q1 显示"定位法"3 步训练 (手册 v14 关键技巧)
+  const locationMethodHtml = g.qIdx === 0 ? `
+    <div style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-left:4px solid #2E7D32;border-radius:6px;padding:10px;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:900;color:#1B5E20;margin-bottom:6px">📍 OE 定位法 3 步 (手册 v14):</div>
+      <div style="font-size:11px;color:#2E7D32;line-height:1.6">
+        <b>① 先看题</b>: 圈出题目里的关键词 (who/what/where/why)<br>
+        <b>② 再回原文找</b>: 不是先读全文, 是带着问题去定位<br>
+        <b>③ 答案必含原文核心词</b>: 直接抄原文关键词不算违规, 是得分必要条件
+      </div>
+    </div>
+  ` : '';
   modal.innerHTML = `
     <div class="mg-inner comp-oe-inner">
       <div class="mg-stats">📖 Comprehension OE · ${p.title} · Q${g.qIdx+1}/${totalQ}</div>
       ${g.qIdx === 0 ? `<div class="comp-passage">${escapeHtml(p.passage)}</div>` : ''}
+      ${locationMethodHtml}
       <div class="comp-q-box">
         <div class="comp-type">${typeLabel} · ${q.marks} mark${q.marks > 1 ? 's' : ''}</div>
         <div class="comp-q">${escapeHtml(q.q)}</div>
