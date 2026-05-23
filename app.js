@@ -1375,6 +1375,16 @@ function _renderSciOe() {
         if (/\bit\b\s+(is|has|was|will|can|does|gets)/i.test(userAnsTrim) && userAnsTrim.length < 120) {
           autoScore = Math.min(autoScore, 1); reasons.push('⚠️ 用 "it" 模糊指代 → 应重复名词');
         }
+        // v19.14h (科学专家 #2): 反向题封顶 — 题问 INCORRECT/NOT/wrong 时, 答案必须有否定词, 否则封顶 1
+        const isReverseQ = /\b(incorrect|not\s+correct|why\s+his\s+statement|wrong|why\s+is\s+this\s+wrong)\b/i.test(q.q) ||
+                           /does\s+NOT|does\s+not|NOT\s+a\s+|NOT\s+digest|NOT\s+produce/i.test(q.model || '');
+        if (isReverseQ) {
+          const hasNegation = /\b(not|n['']t|cannot|never|no\s+|none|nor|neither)\b/i.test(userAnsTrim);
+          if (!hasNegation) {
+            autoScore = Math.min(autoScore, 1);
+            reasons.push('❌ 反向题 (NOT/INCORRECT) 但答案无否定词 → 封顶 1 分');
+          }
+        }
         const scoreColor = autoScore === 2 ? '#2E7D32' : autoScore === 1 ? '#FFA000' : '#C62828';
         const scoreIcon = autoScore === 2 ? '✅' : autoScore === 1 ? '⚠️' : '❌';
         const nextLabel = (g.qIdx + 1 >= g.questions.length) ? '完成 →' : '下一题 →';
@@ -5428,8 +5438,7 @@ function submitErrorBankAnswer(optIdx) {
   _handleErrorBankResult(isCorrect, item, () => {
     if (isCorrect) {
       g.correct++; petExpress('pet-excited', 800);
-      // v19.14d bug fix: 读 LEITNER_GRADUATION 常量 (=3), 不再硬编码 4
-      // v19.3 注释保留: Leitner 间隔复习
+      // v19.14d + v19.14h: 统一读 LEITNER_GRADUATION 常量, 不再硬编码 4
       const w = (state.wrongAnswers || []).find(w => w.id === item.id);
       if (w) {
         w.correctStreak = (w.correctStreak || 0) + 1;
@@ -5464,10 +5473,12 @@ function submitErrorBankMath() {
   _handleErrorBankResult(isCorrect, item, () => {
     if (isCorrect) {
       g.correct++;
+      // v19.14h: 统一读 LEITNER_GRADUATION 常量 (=3), 修数学错题硬编码 4 的 bug
       const w = (state.wrongAnswers || []).find(w => w.id === item.id);
       if (w) {
         w.correctStreak = (w.correctStreak || 0) + 1;
-        if (w.correctStreak >= 4) {
+        const grad = window.LEITNER_GRADUATION || 3;
+        if (w.correctStreak >= grad) {
           window.removeFromErrorBank(state, item.id);
           g.removed.push(item.id);
         } else {
@@ -5719,14 +5730,19 @@ function uploadEssayV(week, version) {
         const blob = await compressImage(file);
         await window.photoPut(week, 'Wed', slot, blob);
         await refreshPhotoKeyCache();
-        // V2 完成 +10 分 (升级闭环奖励)
+        // V2 完成 +10 分 (升级闭环奖励) — v19.14h P0: 加 dedupe 防"替换上传"刷分
         if (version === 'V2') {
           const v1Rec = await window.photoGet(week, 'Wed', 'ESSAY_V1');
-          if (v1Rec && v1Rec.blob) {
+          if (!state.essayUpgradeBonus) state.essayUpgradeBonus = {};
+          const alreadyAwarded = !!state.essayUpgradeBonus[week];
+          if (v1Rec && v1Rec.blob && !alreadyAwarded) {
+            state.essayUpgradeBonus[week] = Date.now();
             state.totalPoints = (state.totalPoints || 0) + 10;
             state.logs.push({ reason: `📝 W${week} 作文升级闭环完成 +10`, points: 10, week: state.currentWeek, timestamp: Date.now() });
             saveState(state);
             showToast(`🎉 升级闭环完成 +10 分!`, 'happy');
+          } else if (alreadyAwarded) {
+            showToast(`✅ W${week} V2 已替换 (升级奖已发过, 不再 +10)`, 'success');
           }
         }
         showToast(`📝 W${week} ${label}已存 (${Math.round(blob.size/1024)} KB)`, 'success');
@@ -6915,67 +6931,116 @@ function submitMcqAnswer(idx) {
       : `❌ 应是 <b>${String.fromCharCode(65+q.ans)}. ${escapeHtml(q.opts[q.ans])}</b><br>💡 ${escapeHtml(expl)}`;
     fb.className = 'mcq-feedback show ' + (isCorrect ? 'fb-correct' : 'fb-wrong');
 
-    // v19.14e (P2): Cloze 错题 "3 件事卡" — 同义词必填, 词性/搭配选填, "跳过"不阻塞
+    // v19.14e (P2) + v19.14h: Cloze 错题"3 件事卡" — 去 6s 倒计时改显式按钮 + fingerprint 抓取 + syn 质量校验
     if (!isCorrect && g.key === 'cloze') {
       const word = q.opts[q.ans];
+      // fingerprint 用 题干+正确词, saveCloze3Things 据此找题, 不再依赖 wrongs[-1]
+      const fp = (q[g.qField] || '') + '|' + word;
+      g._pendingCloze3 = { fp, word };  // v19.14h: 暂存待保存的 fingerprint
       fb.insertAdjacentHTML('beforeend', `
-        <div id="cloze3things" data-word="${escapeAttr(word)}" style="margin-top:8px;padding:8px;background:#FFF;border-radius:4px;border:1px solid #DDD">
-          <div style="font-size:11px;color:#555;font-weight:700;margin-bottom:4px">📝 三件事查 (同义词必填, 其他可空):</div>
-          <input id="c3-syn" placeholder="同义词 (≥1 个, 如 happy→glad)" style="width:100%;padding:5px;font-size:12px;margin-bottom:3px;border:1px solid #CCC;border-radius:4px;box-sizing:border-box">
-          <input id="c3-pos" placeholder="词性 n./v./adj./adv. (可空)" style="width:48%;padding:5px;font-size:12px;border:1px solid #CCC;border-radius:4px;box-sizing:border-box">
-          <input id="c3-col" placeholder="搭配 (如 good AT, 可空)" style="width:48%;padding:5px;font-size:12px;margin-left:4%;border:1px solid #CCC;border-radius:4px;box-sizing:border-box">
-          <div style="display:flex;gap:4px;margin-top:4px">
-            <button onclick="saveCloze3Things()" style="flex:2;padding:5px;background:#4ECDC4;color:#FFF;border:none;border-radius:4px;font-size:12px;cursor:pointer">✅ 保存 +2 分</button>
-            <button onclick="skipCloze3Things()" style="flex:1;padding:5px;background:#9E9E9E;color:#FFF;border:none;border-radius:4px;font-size:12px;cursor:pointer">⏭ 跳过</button>
+        <div id="cloze3things" data-fp="${escapeAttr(fp)}" data-word="${escapeAttr(word)}" style="margin-top:8px;padding:8px;background:#FFF;border-radius:4px;border:1px solid #DDD">
+          <div style="font-size:11px;color:#555;font-weight:700;margin-bottom:4px">📝 三件事查 (同义词必填 ≥3 字英文, 其他可空):</div>
+          <input id="c3-syn" placeholder="同义词 (如 glad / pleased)" style="width:100%;padding:5px;font-size:12px;margin-bottom:3px;border:1px solid #CCC;border-radius:4px;box-sizing:border-box">
+          <input id="c3-pos" placeholder="词性 n./v./adj./adv." style="width:48%;padding:5px;font-size:12px;border:1px solid #CCC;border-radius:4px;box-sizing:border-box">
+          <input id="c3-col" placeholder="搭配 (good AT, 可空)" style="width:48%;padding:5px;font-size:12px;margin-left:4%;border:1px solid #CCC;border-radius:4px;box-sizing:border-box">
+          <div style="display:flex;gap:4px;margin-top:6px">
+            <button onclick="saveCloze3ThingsAndNext()" style="flex:2;padding:8px;background:#4ECDC4;color:#FFF;border:none;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer">✅ 保存 +2 分 + 下一题</button>
+            <button onclick="skipCloze3ThingsAndNext()" style="flex:1;padding:8px;background:#9E9E9E;color:#FFF;border:none;border-radius:4px;font-size:12px;cursor:pointer">⏭ 跳过</button>
           </div>
         </div>
       `);
+      // v19.14h: 答错且有 3 件事卡 → 不自动跳, 等用户点保存/跳过
+      return;
     }
   }
-  // v19.14e: Cloze 答错延时改 6 秒, 给孩子时间填 3 件事卡
-  const wrongDelay = (g.key === 'cloze' && !isCorrect) ? 6000 : 2200;
+  // 答对 1.2s / 答错非 Cloze 2.2s 后跳
   setTimeout(() => {
     g.idx++;
     if (g.idx >= g.qs.length) _finishMcqGame();
     else _renderMcqGame();
-  }, isCorrect ? 1200 : wrongDelay);
+  }, isCorrect ? 1200 : 2200);
 }
 
-// v19.14e (英语 P2): Cloze 3 件事卡 - 保存
+// v19.14h: 保存 3 件事并进入下一题 (显式按钮替代倒计时)
+function saveCloze3ThingsAndNext() {
+  const ok = saveCloze3Things();
+  if (ok) _advanceMcqNext();
+}
+function skipCloze3ThingsAndNext() {
+  const c3 = document.getElementById('cloze3things');
+  if (c3) c3.innerHTML = '<div style="color:#9E9E9E;font-size:11px;text-align:center;padding:4px">⏭ 跳过</div>';
+  _advanceMcqNext();
+}
+function _advanceMcqNext() {
+  const g = _mcqGameState;
+  if (!g) return;
+  setTimeout(() => {
+    g.idx++;
+    if (g.idx >= g.qs.length) _finishMcqGame();
+    else _renderMcqGame();
+  }, 400);
+}
+
+// v19.14e + v19.14h: Cloze 3 件事卡 - 保存 (加 fingerprint 抓取 + syn 质量校验, return 成功/失败)
 function saveCloze3Things() {
   const c3 = document.getElementById('cloze3things');
-  if (!c3) return;
+  if (!c3) return false;
   const syn = (document.getElementById('c3-syn') || {}).value || '';
   const pos = (document.getElementById('c3-pos') || {}).value || '';
   const col = (document.getElementById('c3-col') || {}).value || '';
-  if (syn.trim().length < 2) {
-    showToast('❌ 同义词至少写 2 字符 (如 glad 同 happy)', 'warn');
+  const synTrim = syn.trim();
+  const fp = c3.getAttribute('data-fp') || '';
+  const word = (c3.getAttribute('data-word') || '').toLowerCase();
+  // v19.14h: syn 质量校验
+  if (synTrim.length < 3) {
+    showToast('❌ 同义词 ≥3 字符英文 (如 glad / pleased)', 'warn');
     const sy = document.getElementById('c3-syn'); if (sy) sy.focus();
-    return;
+    return false;
   }
-  // 找到最后一条 cloze 错题写入 3 件事
+  if (!/^[a-zA-Z\s,\/\-']+$/.test(synTrim)) {
+    showToast('❌ 同义词必须是英文 (不能含数字/中文)', 'warn');
+    return false;
+  }
+  if (synTrim.toLowerCase() === word || synTrim.toLowerCase().includes(word)) {
+    showToast('❌ 同义词不能是原词本身, 想个意思接近的词', 'warn');
+    const sy = document.getElementById('c3-syn'); if (sy) sy.focus();
+    return false;
+  }
+  // v19.14h: 用 fingerprint 找题, 不再依赖 wrongs[-1]
   const wrongs = state.wrongAnswers || [];
+  let entry = null;
   for (let i = wrongs.length - 1; i >= 0; i--) {
-    if (wrongs[i].gameKey === 'cloze') {
-      wrongs[i].synonym = syn.trim();
-      wrongs[i].wordClass = pos.trim();
-      wrongs[i].collocation = col.trim();
-      wrongs[i].threeThings = true;
-      break;
+    if (wrongs[i].gameKey === 'cloze' && (wrongs[i]._fp || '').startsWith(fp.split('|')[0].substring(0, 30))) {
+      entry = wrongs[i]; break;
     }
+  }
+  // fallback: 找最后一条 cloze (兼容旧逻辑)
+  if (!entry) {
+    for (let i = wrongs.length - 1; i >= 0; i--) {
+      if (wrongs[i].gameKey === 'cloze') { entry = wrongs[i]; break; }
+    }
+  }
+  if (entry) {
+    entry.synonym = synTrim;
+    entry.wordClass = pos.trim();
+    entry.collocation = col.trim();
+    entry.threeThings = true;
   }
   state.totalPoints = (state.totalPoints || 0) + 2;
   state.logs.push({ reason: '📝 Cloze 3 件事查 +2', points: 2, week: state.currentWeek, timestamp: Date.now() });
   saveState(state);
   c3.innerHTML = '<div style="color:#4ECDC4;font-weight:900;text-align:center;padding:8px">✅ 已保存 +2 分</div>';
-  showToast('✅ 3 件事查 +2 分 · 错题本已记主题词聚类', 'happy');
+  return true;
 }
 function skipCloze3Things() {
   const c3 = document.getElementById('cloze3things');
-  if (c3) c3.innerHTML = '<div style="color:#9E9E9E;font-size:11px;text-align:center;padding:4px">⏭ 跳过 (错题已入库, 无 3 件事查)</div>';
+  if (c3) c3.innerHTML = '<div style="color:#9E9E9E;font-size:11px;text-align:center;padding:4px">⏭ 跳过</div>';
 }
 window.saveCloze3Things = saveCloze3Things;
 window.skipCloze3Things = skipCloze3Things;
+window.saveCloze3ThingsAndNext = saveCloze3ThingsAndNext;
+window.skipCloze3ThingsAndNext = skipCloze3ThingsAndNext;
+window._advanceMcqNext = _advanceMcqNext;
 // escapeAttr helper (若不存在)
 if (typeof window.escapeAttr === 'undefined') {
   window.escapeAttr = function(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); };

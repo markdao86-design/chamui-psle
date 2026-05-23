@@ -411,8 +411,19 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.14g/.test(idxSrc) && !/\?v=19\.14f[^0-9]/.test(idxSrc),
-  'v19.14g: cache buster 已更新到 19.14g');
+assert(/\?v=19\.14h/.test(idxSrc) && !/\?v=19\.14g[^0-9]/.test(idxSrc),
+  'v19.14h: cache buster 已更新到 19.14h');
+// v19.14h 5 项 P0+P1 修复
+assert(/essayUpgradeBonus\[week\]|state\.essayUpgradeBonus/.test(appSrc), 'v19.14h P0-1: 作文 V2 +10 dedupe');
+assert(/saveCloze3ThingsAndNext|skipCloze3ThingsAndNext/.test(appSrc), 'v19.14h P0-2: Cloze 3 件事去倒计时改显式按钮');
+assert(/data-fp.*escapeAttr\(fp\)|getAttribute\('data-fp'\)/.test(appSrc), 'v19.14h P0-2: fingerprint 抓取');
+assert(/必须是英文|不能是原词本身|synTrim\.length < 3/.test(appSrc), 'v19.14h P0-3: syn 质量校验');
+// Leitner: 两处都用 LEITNER_GRADUATION (没 hardcoded >= 4)
+const leitnerHardcoded = (appSrc.match(/correctStreak\s*>=\s*4/g) || []).length;
+assert(leitnerHardcoded === 0, `v19.14h P0-4: Leitner 硬编码 4 = 0 (实际 ${leitnerHardcoded})`);
+const leitnerGrad = (appSrc.match(/LEITNER_GRADUATION\s*\|\|\s*3/g) || []).length;
+assert(leitnerGrad >= 2, `v19.14h P0-4: 两处都读 LEITNER_GRADUATION (实际 ${leitnerGrad})`);
+assert(/isReverseQ|反向题 \(NOT\/INCORRECT\)/.test(appSrc), 'v19.14h P1-1: OE 反向题封顶');
 // v19.14g: OE 题库扩到 50 题
 const oeCountV14g = (fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8').match(/id:\s*'oe_\d+'/g) || []).length;
 assert(oeCountV14g >= 50, `v19.14g: 科学 OE 题 ≥ 50 (实际 ${oeCountV14g})`);
