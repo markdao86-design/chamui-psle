@@ -411,8 +411,11 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.14c/.test(idxSrc) && !/\?v=19\.14b[^0-9]/.test(idxSrc),
-  'v19.14c: cache buster 已更新到 19.14c');
+assert(/\?v=19\.14d1/.test(idxSrc) && !/\?v=19\.14c[^0-9]/.test(idxSrc),
+  'v19.14d1: cache buster 已更新到 19.14d1');
+// v19.14d1: 我的 tab 角色卡布局 hotfix — 防文字+角色重叠
+assert(/#page-character\s+\.character-display[\s\S]{0,200}height:\s*auto/.test(idxSrc), 'v19.14d1: page-character display height auto');
+assert(/#page-character\s+\.character-svg[\s\S]{0,200}margin-top:\s*0/.test(idxSrc), 'v19.14d1: page-character svg margin-top 0');
 
 // v19.14c: 我的 tab 平日 lock 装备/皮肤 + 宠物休眠/活跃
 assert(/toggleEquipment[\s\S]{0,500}?isWeekdayToday/.test(appSrc), 'v19.14c: toggleEquipment 加平日 lock');

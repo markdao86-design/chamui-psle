@@ -3728,6 +3728,46 @@ p { font-size: 14px; line-height: 1.6; }
 .pet-widget.pet-proud   .ham-face-proud   { display: block; }
 #page-dashboard .character-card { position: relative; }
 
+/* ===== v19.14d: "👤 我的" tab 角色卡布局修复 — 防文字+角色重叠 ===== */
+#page-character .character-display {
+  height: auto !important;          /* 不再固定 220px 给后面元素留空间 */
+  margin-bottom: 12px !important;   /* 取消旧设计的 -30px 重叠 */
+  padding: 16px 0 !important;
+}
+#page-character .character-svg {
+  margin-top: 0 !important;          /* 取消旧设计的 80px 偏移 */
+  width: 180px !important;            /* 缩到 180px 给宠物留位 */
+  height: 180px !important;
+}
+#page-character .character-card {
+  padding: 20px 16px !important;
+}
+#page-character .character-name {
+  font-size: 20px !important;
+  margin: 8px 0 4px !important;
+}
+#page-character .character-title-big {
+  font-size: 14px !important;
+  margin: 4px 0 8px !important;
+}
+#page-character #charPage_petWidget {
+  position: absolute !important;
+  right: 10px !important;
+  bottom: 10px !important;
+  z-index: 5;
+}
+/* charPage 宠物 widget 内部图标尺寸 */
+#page-character #charPage_petWidget .pet-svg-wrap {
+  width: 70px !important;
+  height: 70px !important;
+}
+/* 移动端缩小 */
+@media (max-width: 480px) {
+  #page-character .character-svg { width: 150px !important; height: 150px !important; }
+  #page-character #charPage_petWidget { width: 70px !important; height: 70px !important; }
+  #page-character #charPage_petWidget .pet-svg-wrap { width: 60px !important; height: 60px !important; }
+}
+
 /* ===== v18.20: A 活的伙伴 — 对话气泡 + 庆祝动画 ===== */
 .pet-bubble {
   position: absolute;
@@ -5418,9 +5458,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.14c"></script>
-<script src="data.js?v=19.14c"></script>
-<script src="app.js?v=19.14c"></script>
+<script src="character.js?v=19.14d1"></script>
+<script src="data.js?v=19.14d1"></script>
+<script src="app.js?v=19.14d1"></script>
 
 </body>
 </html>
