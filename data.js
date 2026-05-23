@@ -7600,6 +7600,58 @@ async function compressImage(file, maxDim = 1280, quality = 0.75) {
   }
 }
 
+// ============= v19.15c: 自动算当前周 + carry-forward 池 =============
+// 启动 + renderAll 都用此函数同步 state.currentWeek = today 所在周
+// W1 起 2026-05-04 (周一), 每 7 天一周, 73 周满 2027-09-26
+function computeCurrentWeekFromToday(today = new Date()) {
+  const W1_START = new Date(2026, 4, 4);  // 2026-05-04 (月份 0-indexed)
+  W1_START.setHours(0, 0, 0, 0);
+  const t = new Date(today);
+  t.setHours(0, 0, 0, 0);
+  const daysSince = Math.floor((t - W1_START) / 86400000);
+  if (daysSince < 0) return 1;
+  const week = Math.floor(daysSince / 7) + 1;
+  return Math.min(73, Math.max(1, week));
+}
+
+// 扫最近 N 周内 (排除当前周) 未打 slot, 返回 carry-forward 项数组
+// 输出: [{srcWeek, srcDay, slot, task, pts (×0.7), fullPts, missedAt}]
+function getCarryForwardTasks(state, currentWeek, lookback = 4) {
+  if (!state || !currentWeek) return [];
+  const out = [];
+  const start = Math.max(1, currentWeek - lookback);
+  for (let w = start; w < currentWeek; w++) {
+    DAY_KEYS.forEach(day => {
+      let tasks;
+      try {
+        tasks = (typeof getDailyTasksFiltered === 'function')
+          ? getDailyTasksFiltered(w, day)
+          : getDailyTasks(w, day);
+      } catch (e) { tasks = []; }
+      (tasks || []).forEach(t => {
+        // 跳过加练池 slot (它们走 weeklyPool 独立路径)
+        if (typeof POOL_TARGET !== 'undefined' && POOL_TARGET[t.slot]) return;
+        if (!getDailyCheck(state, w, day, t.slot)) {
+          const full = slotPoints(w, t.slot) || 0;
+          out.push({
+            srcWeek: w,
+            srcDay: day,
+            slot: t.slot,
+            task: t.task,
+            pts: Math.floor(full * 0.7),
+            fullPts: full,
+            missedAt: WEEK_DATES[w - 1] || ''
+          });
+        }
+      });
+    });
+  }
+  return out;
+}
+
+window.computeCurrentWeekFromToday = computeCurrentWeekFromToday;
+window.getCarryForwardTasks = getCarryForwardTasks;
+
 // ============= 暴露 =============
 window.WEEK_DATES = WEEK_DATES;
 window.WEEK_THEMES = WEEK_THEMES;

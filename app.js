@@ -25,6 +25,10 @@ async function init() {
     console.warn('loadStateAsync 失败:', e);
     state = loadState();
   }
+  // v19.15c: 启动自动算 currentWeek (today vs WEEK_DATES, 不再依赖手动切换)
+  if (window.computeCurrentWeekFromToday) {
+    state.currentWeek = window.computeCurrentWeekFromToday();
+  }
   recalcTotalPoints(state);
   if (window._loadMastered) window._loadMastered(state);
   // v19.3: 一次性积分回退修正 (5/12 toggle刷分漏洞修复)
@@ -144,6 +148,14 @@ function updateSyncBadge(status) {
 }
 
 function renderAll() {
+  // v19.15c: 每次重渲先同步 currentWeek (防 user 跨日打开 app 时 stale)
+  if (window.computeCurrentWeekFromToday) {
+    const newWeek = window.computeCurrentWeekFromToday();
+    if (newWeek !== state.currentWeek) {
+      state.currentWeek = newWeek;
+      saveState(state);
+    }
+  }
   renderHeader();
   renderDashboard();
   renderCheckinPage();
@@ -3041,7 +3053,8 @@ window.toggleKtHint = toggleKtHint;
 // ============ 打卡页 (v2 — 每日) ============
 function renderCheckinPage() {
   const week = _displayWeek || state.currentWeek;
-  const isViewOnly = (week !== state.currentWeek);
+  // v19.15c: 过去周也可点击打卡 (走 carry-forward 路径或直接 toggleDailyCheck), 只对未来周设 view-only
+  const isViewOnly = (week > state.currentWeek);
   const wt = getWeekTasks(week);
 
   // 标题
@@ -3258,6 +3271,31 @@ function renderCheckinPage() {
     }
     // v19.6: 加练池卡 (主线下方, 始终显示)
     slotsHtml += renderWeeklyPoolCard(week);
+    // v19.15c: 补做池 (carry-forward, 最近 4 周未打), 仅当前周显示
+    if (week === state.currentWeek && window.getCarryForwardTasks) {
+      const carryItems = window.getCarryForwardTasks(state, week, 4) || [];
+      if (carryItems.length > 0) {
+        const shown = carryItems.slice(0, 50);
+        slotsHtml += `
+          <details class="carry-forward-card" style="margin:14px 0;border:2px dashed rgba(255,184,0,0.45);border-radius:10px;padding:10px 14px;background:linear-gradient(135deg,rgba(255,184,0,0.06),rgba(255,107,53,0.04))">
+            <summary style="cursor:pointer;font-weight:900;color:#FF9800;font-size:14px;list-style:none">
+              📦 补做池 (${carryItems.length} 项, 最近 4 周) — 补打拿 ×0.7 分
+            </summary>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:13px">
+              ${shown.map(c => `
+                <div class="carry-item" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,184,0,0.25);border-radius:8px;cursor:pointer;transition:all 0.15s" onclick="doCarryForwardCheckin(${c.srcWeek},'${c.srcDay}','${escapeAttr(c.slot)}')">
+                  <div style="font-size:10px;color:#FFB300;font-weight:700;white-space:nowrap">W${c.srcWeek} ${c.srcDay}</div>
+                  <div style="flex:1;color:#E0E0E0">${escapeHtml(c.task)}</div>
+                  <div style="font-weight:900;color:#FF9800;font-size:16px;white-space:nowrap">+${c.pts}</div>
+                </div>
+              `).join('')}
+              ${carryItems.length > 50 ? `<div style="text-align:center;color:#888;font-size:11px;padding:6px">… 还有 ${carryItems.length - 50} 项 (本批先打前 50)</div>` : ''}
+              <div style="text-align:center;color:#888;font-size:11px;padding:6px;line-height:1.5">💡 补打 ×0.7 分 · 不需照片 · 不计入今日封顶 · 鼓励补但不鼓励拖延</div>
+            </div>
+          </details>
+        `;
+      }
+    }
   }
 
   // === 4) 周汇总情况 ===
@@ -3610,9 +3648,9 @@ function toggleDailyCheck(week, day, slot, evt) {
   const oldOnTrack = (calcWeekCompletion(week, state) || {}).onTrack;
   const wasChecked = getDailyCheck(state, week, day, slot);
 
-  // v19.3: 禁止跨周打卡(取消不限制,防误勾无法撤销)
-  if (!wasChecked && week !== state.currentWeek) {
-    showToast('⚠️ 只能打卡当前周的任务', 'warn');
+  // v19.15c: 只 block 未来周 (防误勾), 过去周允许补打 (走暴击关 + 走"slot_carry"独立日志)
+  if (!wasChecked && week > state.currentWeek) {
+    showToast('⚠️ 不能提前打卡未来周', 'warn');
     return;
   }
 
@@ -4029,8 +4067,9 @@ function pickPhotoForSlot(week, day, slot, fromGuard) {
 
 // v19.15b: 软打卡 — 无照片打卡, 分数 ×0.5, 标记 state.softCheckins 供后续审计/补传
 function softCheckin(week, day, slot) {
-  if (week !== state.currentWeek) {
-    showToast('⚠️ 只能打卡当前周', 'warn');
+  // v19.15c: 同 toggleDailyCheck, 只 block 未来周
+  if (week > state.currentWeek) {
+    showToast('⚠️ 不能提前打卡未来周', 'warn');
     return;
   }
   if (getDailyCheck(state, week, day, slot)) {
@@ -4068,6 +4107,36 @@ function softCheckin(week, day, slot) {
   renderAll();
 }
 window.softCheckin = softCheckin;
+
+// v19.15c: 补打过去周未打的 slot (carry-forward), 给原分 × 0.7, 不需照片, 不计入今日封顶
+function doCarryForwardCheckin(srcWeek, srcDay, slot) {
+  if (srcWeek >= state.currentWeek) {
+    showToast('⚠️ 补做只对过去周生效, 当前周走正常打卡', 'warn');
+    return;
+  }
+  if (getDailyCheck(state, srcWeek, srcDay, slot)) {
+    showToast('已打过, 重复无效', 'warn');
+    renderAll();
+    return;
+  }
+  const full = slotPoints(srcWeek, slot) || 0;
+  const pts = Math.floor(full * 0.7);
+  setDailyCheck(state, srcWeek, srcDay, slot, true);
+  state.totalPoints = (state.totalPoints || 0) + pts;
+  if (!state.lifetimeEarned || state.totalPoints > state.lifetimeEarned) state.lifetimeEarned = state.totalPoints;
+  state.logs.push({
+    reason: `🔁 补打 W${srcWeek} ${srcDay} ${slot} +${pts} (×0.7, 原 ${full})`,
+    points: pts,
+    type: 'slot_carry',
+    week: state.currentWeek,  // log 归当前周 (用户操作时间), 但 srcWeek/srcDay/slot 可追溯原任务
+    srcWeek, srcDay, slot,
+    timestamp: Date.now()
+  });
+  saveState(state);
+  showToast(`🔁 补打 W${srcWeek} ${srcDay} ${slot} +${pts} (×0.7, 原 ${full})`, 'happy');
+  renderAll();
+}
+window.doCarryForwardCheckin = doCarryForwardCheckin;
 
 function _doPhotoUpload(week, day, slot, useCamera) {
   const input = document.createElement('input');

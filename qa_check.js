@@ -411,8 +411,18 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.15b/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.15b: cache buster 已更新到 19.15b (软打卡逃生口 + 视觉对比)');
+assert(/\?v=19\.15c/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.15c: cache buster 已更新到 19.15c (currentWeek 自动算 + 跨周打卡 + 补做池)');
+// v19.15c app 类 (data 类移到 dataSrcV14 declare 之后)
+assert(/state\.currentWeek\s*=\s*window\.computeCurrentWeekFromToday\(\)/.test(appSrc), 'v19.15c: init/renderAll 自动同步 currentWeek');
+assert(/if \(!wasChecked && week > state\.currentWeek\)/.test(appSrc), 'v19.15c: toggleDailyCheck 守卫改 week > currentWeek');
+assert(/不能提前打卡未来周/.test(appSrc), 'v19.15c: 守卫文案改"不能提前打卡未来周"');
+const oldCrossWeekGuard = (appSrc.match(/week\s*!==\s*state\.currentWeek/g) || []).length;
+assert(oldCrossWeekGuard === 0, `v19.15c: 旧 !== 跨周守卫已删 (实际 ${oldCrossWeekGuard})`);
+assert(/function doCarryForwardCheckin/.test(appSrc), 'v19.15c: doCarryForwardCheckin 函数');
+assert(/slot_carry/.test(appSrc), 'v19.15c: log type "slot_carry" 标识补打');
+assert(/carry-forward-card/.test(appSrc), 'v19.15c: 补做卡 carry-forward-card UI');
+assert(/补做池 \(\$\{carryItems\.length\} 项, 最近 4 周\)/.test(appSrc), 'v19.15c: 补做卡标题');
 // v19.15b 软打卡逃生口 + 视觉对比加强
 assert(/function softCheckin\(week, day, slot\)/.test(appSrc), 'v19.15b: softCheckin 函数');
 assert(/state\.softCheckins/.test(appSrc), 'v19.15b: state.softCheckins 标记软打卡');
@@ -542,6 +552,10 @@ assert(/'thought':\s*\{\s*syn:/.test(dataSrcV14), 'v19.15 P0-2: 含思考动词 
 // v19.15 P0-3 data 类: 沉迷闸常量
 assert(/DAILY_GAME_SOFT_WARN\s*=\s*10/.test(dataSrcV14), 'v19.15 P0-3: DAILY_GAME_SOFT_WARN = 10');
 assert(/DAILY_GAME_HARD_NUDGE\s*=\s*15/.test(dataSrcV14), 'v19.15 P0-3: DAILY_GAME_HARD_NUDGE = 15');
+// v19.15c data 类: currentWeek 自动算 + carry-forward 池
+assert(/function computeCurrentWeekFromToday/.test(dataSrcV14), 'v19.15c: computeCurrentWeekFromToday 函数');
+assert(/function getCarryForwardTasks/.test(dataSrcV14), 'v19.15c: getCarryForwardTasks 函数');
+assert(/W1_START\s*=\s*new Date\(2026,\s*4,\s*4\)/.test(dataSrcV14), 'v19.15c: W1 起 2026-05-04');
 // v19.14f data 类断言
 assert(/chapterId:\s*'p4_plant_transport'/.test(dataSrcV14), 'v19.14f: SCIENCE_CHAPTERS 加 chapterId');
 assert(/keywords:\s*\[[^\]]*'xylem'/.test(dataSrcV14), 'v19.14f: Plant Transport 章节 keywords');
