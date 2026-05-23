@@ -550,10 +550,9 @@ function renderCharacterPage() {
   if (typeof studentBeatPercent === 'function') {
     document.getElementById('charPage_beat').textContent = studentBeatPercent(pts);
   }
-  // 装备 grid — v19.14c: 平日加视觉灰锁
-  const isWeekdayCp = window.isWeekdayToday ? window.isWeekdayToday() : false;
+  // v19.14j: 撤回 v19.14c 装备视觉灰锁 — 装备随时可换
   const lockBanner = document.getElementById('charPage_lockBanner');
-  if (lockBanner) lockBanner.style.display = isWeekdayCp ? 'block' : 'none';
+  if (lockBanner) lockBanner.style.display = 'none';
   const grid = document.getElementById('charPage_equipmentGrid');
   if (grid && window.CHAMUI) {
     const disabled = new Set(state.equipmentDisabled || []);
@@ -564,18 +563,15 @@ function renderCharacterPage() {
       const cls = !unlocked ? 'locked' : (equipped ? 'unlocked equipped' : 'unlocked unequipped');
       const click = unlocked ? `onclick="toggleEquipment('${eq.id}')"` : '';
       const status = !unlocked ? eq.hint : equipped ? '✓ 穿戴中' : '👜 已收藏';
-      // v19.14c: 平日已解锁装备加 🔒 视觉 (但仍可点 — toggleEquipment 内 lock 弹 toast)
-      const lockStyle = (isWeekdayCp && unlocked) ? 'opacity:0.55;filter:grayscale(0.5)' : '';
-      const lockBadge = (isWeekdayCp && unlocked) ? '<div style="position:absolute;top:2px;right:2px;font-size:12px;background:rgba(0,0,0,0.6);color:#FFF;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center">🔒</div>' : '';
-      return `<div class="equipment-item ${cls}" ${click} style="position:relative;${lockStyle}">
-        ${lockBadge}
+      return `<div class="equipment-item ${cls}" ${click}>
         <span class="equipment-icon">${eq.icon}</span>
         <div class="equipment-name">${eq.name}</div>
         <div class="equipment-condition" style="font-size:9px">${status}</div>
       </div>`;
     }).join('');
   }
-  // v19.14c: 宠物 widget 在角色旁 — 平日 zZz 灰色休眠, 周末活跃
+  // v19.14j: 撤回 v19.14c 宠物 zZz 平日休眠 — 心理学家"误读间歇强化"警告 + 用户去 lock 方向
+  // 宠物一直活跃 (颜色 + 动画 + 喂食 enabled)
   const petEl = document.getElementById('charPage_petWidget');
   if (petEl && window.getCurrentPetForm) {
     if (!state.pet) state.pet = { name: '球球', formIdx: 0, spawnedAt: Date.now(), feedCount: 0, happiness: 100, lastFedDate: null };
@@ -583,27 +579,13 @@ function renderCharacterPage() {
     state.pet.formIdx = Math.max(state.pet.formIdx || 0, calcForm.idx);
     const form = window.PET_FORMS[state.pet.formIdx] || calcForm;
     const happy = state.pet.happiness || 0;
-    if (isWeekdayCp) {
-      // 平日: 灰色 + zZz + 静默
-      petEl.innerHTML = `
-        <div class="pet-svg-wrap" style="filter:grayscale(0.85);opacity:0.7;animation:none">${form.svg}</div>
-        <div style="position:absolute;top:-6px;right:-4px;font-size:18px">💤</div>
-      `;
-      petEl.style.cursor = 'default';
-      petEl.title = `${state.pet.name || '球球'} 在休息 · 周末才活跃`;
-      petEl.onclick = () => showToast(`💤 ${state.pet.name || '球球'} 在休息 — 周末打开 app 我才有精神陪你玩!`, 'warn');
-      petEl.classList.add('pet-sleepy');
-      petEl.classList.remove('pet-happy', 'pet-proud');
-    } else {
-      // 周末: 彩色动画 + petSay enabled + 喂食 enabled
-      petEl.innerHTML = `<div class="pet-svg-wrap">${form.svg}</div>`;
-      petEl.style.cursor = 'pointer';
-      petEl.title = `${state.pet.name || '球球'} (${form.name}) · 心情 ${happy}/100\n点击查看/改名`;
-      petEl.onclick = window.openPetModal || (() => {});
-      petEl.classList.remove('pet-sleepy');
-      if (happy >= 70) petEl.classList.add('pet-happy');
-      else if (happy < 30) petEl.classList.add('pet-sad');
-    }
+    petEl.innerHTML = `<div class="pet-svg-wrap">${form.svg}</div>`;
+    petEl.style.cursor = 'pointer';
+    petEl.title = `${state.pet.name || '球球'} (${form.name}) · 心情 ${happy}/100\n点击查看/改名`;
+    petEl.onclick = window.openPetModal || (() => {});
+    petEl.classList.remove('pet-sleepy');
+    if (happy >= 70) petEl.classList.add('pet-happy');
+    else if (happy < 30) petEl.classList.add('pet-sad');
   }
   // 皮肤 grid (复用 renderSkinGrid 如果存在, 否则简化版)
   if (typeof renderSkinGrid === 'function') {
@@ -1582,26 +1564,30 @@ function renderErrorBankCard() {
   card.style.display = '';
   const realExam = wrongs.filter(w => w.source === 'paper2-real').length;
   const appErrors = wrongs.length - realExam;
-  // v19.14e (心理学家): 去羞耻化 — 红色 #FF6B6B → 蓝灰 #607D8B, "错题/真考" → "待复习/重点"
-  card.style.borderLeft = realExam > 0 ? '4px solid #607D8B' : '4px solid #4ECDC4';
+  // v19.14j (UI 专家): "待复习" → "已收集 N 题" (绿系收集感), 进一步去羞耻
+  // 颜色: 蓝灰 #607D8B → 绿 #66BB6A, 标签 "重点" → "已收集"
+  card.style.borderLeft = '4px solid #66BB6A';
+  // 算 Leitner 毕业进度 (collected = 答对至少 1 次的题数)
+  const collectedItems = wrongs.filter(w => (w.correctStreak || 0) >= 1);
+  const masteredItems = wrongs.filter(w => (w.correctStreak || 0) >= 2);
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <div style="font-size:14px;font-weight:900;color:#455A64">📓 待复习清单 ${realExam > 0 ? '<span style="color:#607D8B">⭐</span>' : ''}</div>
-      <div style="margin-left:auto;font-size:11px;color:#666">${wrongs.length} 题待掌握</div>
+      <div style="font-size:14px;font-weight:900;color:#2E7D32">📓 已收集 ${wrongs.length} 题 🌱</div>
+      <div style="margin-left:auto;font-size:11px;color:#666">${collectedItems.length} 题已答对 1+ 次 · ${masteredItems.length} 题接近毕业</div>
     </div>
     ${realExam > 0 ? `
-    <div style="background:linear-gradient(135deg,#ECEFF1,#CFD8DC);border:1px solid #B0BEC5;border-radius:6px;padding:8px;margin-bottom:6px">
+    <div style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border:1px solid #81C784;border-radius:6px;padding:8px;margin-bottom:6px">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:12px;font-weight:900;color:#455A64">⭐ Paper 2 重点: ${realExam} 题</div>
-        <button onclick="openErrorBank()" style="padding:4px 12px;background:#607D8B;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">现在练 →</button>
+        <div style="font-size:12px;font-weight:900;color:#1B5E20">🌟 Paper 2 真题集 (${realExam} 题)</div>
+        <button onclick="openErrorBank()" style="padding:4px 12px;background:#66BB6A;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">练一题 →</button>
       </div>
-      <div style="font-size:10px;color:#546E7A;margin-top:4px">基于你的 Paper 2 表现挑出, 练到掌握就毕业 (Leitner 3 次答对)</div>
+      <div style="font-size:10px;color:#2E7D32;margin-top:4px">从 Paper 2 真考收集的精华题 · 连续 3 次答对自动毕业 +5 分</div>
     </div>` : ''}
     ${appErrors > 0 ? `
-    <div style="background:#F0F8FF;border:1px solid #C8E0F0;border-radius:6px;padding:8px">
+    <div style="background:#F1F8E9;border:1px solid #AED581;border-radius:6px;padding:8px">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:12px">📓 平日积累: ${appErrors} 题</div>
-        ${realExam === 0 ? `<button onclick="openErrorBank()" style="padding:4px 12px;background:#4ECDC4;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">练 →</button>` : ''}
+        <div style="font-size:12px;color:#33691E">🌱 平日收集: ${appErrors} 题</div>
+        ${realExam === 0 ? `<button onclick="openErrorBank()" style="padding:4px 12px;background:#66BB6A;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">练 →</button>` : ''}
       </div>
     </div>` : ''}
   `;
@@ -2902,11 +2888,8 @@ window.doEvolve = doEvolve;
 function toggleEquipment(equipId) {
   const unlocked = CHAMUI.checkEquipmentUnlocked(equipId, state);
   if (!unlocked) { showToast('该装备还没解锁哦', 'sad'); return; }
-  // v19.14c: 平日 lock 装备穿戴/卸下 — 防止"研究装备耗时", 周末才能换
-  if (window.isWeekdayToday && window.isWeekdayToday()) {
-    showToast('🔒 装备穿戴只在周末开放 — 平日先攻克英语 (周末换装等你来玩 👗)', 'warn');
-    return;
-  }
+  // v19.14j: 撤回 v19.14c 装备平日 lock — 心理学家"5 lock 累积致弃用" + 用户反馈"周六还失灵"
+  // 装备穿戴随时可用, 不再 lock
   if (!state.equipmentDisabled) state.equipmentDisabled = [];
   const idx = state.equipmentDisabled.indexOf(equipId);
   const eq = CHAMUI.equipment.find(e => e.id === equipId);
@@ -2948,11 +2931,7 @@ function setActiveSkin(skinId) {
     return;
   }
   if (state.activeSkin === skinId) return;
-  // v19.14c: 平日 lock 皮肤切换 — 跟装备一样, 防止"研究皮肤耗时"
-  if (window.isWeekdayToday && window.isWeekdayToday()) {
-    showToast('🔒 皮肤切换只在周末开放 — 平日先攻克英语 👕', 'warn');
-    return;
-  }
+  // v19.14j: 撤回 v19.14c 皮肤平日 lock — 同装备, 不再阻挠
   state.activeSkin = skinId;
   saveState(state);
   renderAll();
@@ -6864,13 +6843,22 @@ function _openMcqGame(key, title, qField, chapter) {
   const diff = window.getDifficulty ? window.getDifficulty(state, key) : 4;
   const fn = key === 'grammar' ? window.getGrammarByDiff : key === 'cloze' ? window.getClozeByDiff : key === 'scimcq' ? window.getSciMcqByDiff : key === 'chinese' ? window.getChineseMcqByDiff : key === 'sst' ? window.getSstByDiff : window.getGrammarByDiff;
   let rawQs = fn(diff, 10);
-  // v19.14f (科学专家 P3): scimcq 加章节 filter — keyword 子串匹配, 不足 5 题 fallback 全库
-  if (key === 'scimcq' && chapter && chapter.keywords && chapter.keywords.length && window.SCIENCE_MCQ) {
-    const kws = chapter.keywords.map(k => k.toLowerCase());
-    const filtered = window.SCIENCE_MCQ.filter(q => {
-      const text = (q.q + ' ' + (q.opts || []).join(' ') + ' ' + (q.explain || '')).toLowerCase();
-      return kws.some(k => text.includes(k));
-    });
+  // v19.14j: scimcq 章节 filter 升级 — 优先用 _chapterId tag (准确), fallback keyword 子串
+  if (key === 'scimcq' && chapter && chapter.chapterId && window.SCIENCE_MCQ) {
+    // v19.14j: 先 lazy tag (启动后第一次会跑)
+    if (window.tagScimcqChapters && window.SCIENCE_MCQ[0] && window.SCIENCE_MCQ[0]._chapterId === undefined) {
+      window.tagScimcqChapters();
+    }
+    // 优先用 _chapterId 精确匹配
+    let filtered = window.SCIENCE_MCQ.filter(q => q._chapterId === chapter.chapterId);
+    // fallback: keyword 子串匹配 (兼容旧)
+    if (filtered.length < 5 && chapter.keywords && chapter.keywords.length) {
+      const kws = chapter.keywords.map(k => k.toLowerCase());
+      filtered = window.SCIENCE_MCQ.filter(q => {
+        const text = (q.q + ' ' + (q.opts || []).join(' ') + ' ' + (q.explain || '')).toLowerCase();
+        return kws.some(k => text.includes(k));
+      });
+    }
     if (filtered.length >= 5) {
       // 取本章 8 题 + 综合 2 题 防偏
       const onChapter = filtered.sort(() => Math.random() - 0.5).slice(0, 8);

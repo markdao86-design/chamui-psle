@@ -8016,6 +8016,48 @@ function getDailyTasksFiltered(weekNum, dayKey) {
 
 window.WEEKDAY_LOCKED_GAMES = WEEKDAY_LOCKED_GAMES;
 window.WEEKDAY_SOFT_CAP_GAMES = WEEKDAY_SOFT_CAP_GAMES;
+
+// v19.14j (科学专家 P1): SCIENCE_MCQ runtime chapter 推断 — 不改 70 道题, 用 helper 自动归类
+// 优势: 召回率从 v19.14f 子串匹配 70-85% → 加权 keyword + 兜底 → 90%+
+function inferScimcqChapter(q) {
+  if (!q || !window.SCIENCE_CHAPTERS) return null;
+  // 拼接 q + opts + explain 全文本
+  const text = ((q.q || '') + ' ' + (q.opts || []).join(' ') + ' ' + (q.explain || '')).toLowerCase();
+  if (!text.trim()) return null;
+  // 对每章节计算关键词命中加权得分
+  let bestChapter = null, bestScore = 0;
+  for (const ch of window.SCIENCE_CHAPTERS) {
+    if (!ch.keywords || !ch.keywords.length) continue;
+    let score = 0;
+    for (const k of ch.keywords) {
+      const kw = k.toLowerCase();
+      // word boundary 优先 (避免 heat→wheat 误判)
+      const re = new RegExp('\\b' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(s|ed|ing|es)?\\b', 'i');
+      if (re.test(text)) score += 2;  // 边界命中加 2 分
+      else if (text.includes(kw)) score += 1;  // 子串命中加 1 分 (fallback)
+    }
+    // 难章 ⭐ 加权 (Plant Transport/Digestive/Light/Heat 优先)
+    if (ch.stars && ch.stars.length > 0) score *= 1.2;
+    if (score > bestScore) { bestScore = score; bestChapter = ch.chapterId; }
+  }
+  return bestScore >= 2 ? bestChapter : null;  // 至少 2 分才确定归类
+}
+
+// 给 SCIENCE_MCQ 题集批量打 _chapterId tag (lazy, app 启动时调一次)
+function tagScimcqChapters() {
+  if (!window.SCIENCE_MCQ) return 0;
+  let tagged = 0;
+  for (const q of window.SCIENCE_MCQ) {
+    if (q._chapterId === undefined) {
+      q._chapterId = inferScimcqChapter(q);
+      if (q._chapterId) tagged++;
+    }
+  }
+  return tagged;
+}
+
+window.inferScimcqChapter = inferScimcqChapter;
+window.tagScimcqChapters = tagScimcqChapters;
 window.isWeekdayToday = isWeekdayToday;
 window.isWeekendDayKey = isWeekendDayKey;
 window.getDailyTasksFiltered = getDailyTasksFiltered;

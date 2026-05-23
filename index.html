@@ -5259,6 +5259,19 @@ p { font-size: 14px; line-height: 1.6; }
     <div id="characterPageContent" style="padding:8px">
       <p style="color:var(--color-text-light);text-align:center;padding:30px">加载中...</p>
     </div>
+    <!-- v19.14j: 主页折叠区内容恢复入口 (用户反馈"不是删主页, 还是保存在我的") -->
+    <details style="margin:12px 8px;padding:10px;background:#F5F5F5;border-radius:8px">
+      <summary style="cursor:pointer;font-size:14px;font-weight:700;color:#455A64">📋 主页旧详情入口 (智慧教练 / 升级进度 / 错题本 / 报告)</summary>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px">
+        <button onclick="openReportModal && openReportModal()" style="padding:10px;background:#E1F5FE;border:1px solid #0277BD;border-radius:6px;cursor:pointer;font-size:12px;color:#01579B;font-weight:700">📋 教练报告</button>
+        <button onclick="openErrorBank && openErrorBank()" style="padding:10px;background:#ECEFF1;border:1px solid #607D8B;border-radius:6px;cursor:pointer;font-size:12px;color:#455A64;font-weight:700">📓 待复习清单</button>
+        <button onclick="showFutureSelfModal && showFutureSelfModal()" style="padding:10px;background:#FFF3E0;border:1px solid #E65100;border-radius:6px;cursor:pointer;font-size:12px;color:#BF360C;font-weight:700">🌅 看 W73 的我</button>
+        <button onclick="document.querySelector('[data-page=history]').click()" style="padding:10px;background:#F3E5F5;border:1px solid #7B1FA2;border-radius:6px;cursor:pointer;font-size:12px;color:#4A148C;font-weight:700">📊 能力 + 升级进度</button>
+        <button onclick="document.querySelector('[data-page=admin]').click()" style="padding:10px;background:#EFEBE9;border:1px solid #6D4C41;border-radius:6px;cursor:pointer;font-size:12px;color:#3E2723;font-weight:700">⚙️ 父母管理面板</button>
+        <button onclick="openMysteryBoxModal && openMysteryBoxModal()" style="padding:10px;background:#FFF8E1;border:1px solid #F57F17;border-radius:6px;cursor:pointer;font-size:12px;color:#E65100;font-weight:700">🎁 神秘宝箱</button>
+      </div>
+      <div style="font-size:10px;color:#888;margin-top:8px;text-align:center">v19.14i 主页极简后, 旧内容入口保留在这里 (不删, 一键访问)</div>
+    </details>
   </div>
 
   <!-- 管理页 -->
@@ -5507,9 +5520,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.14i"></script>
-<script src="data.js?v=19.14i"></script>
-<script src="app.js?v=19.14i"></script>
+<script src="character.js?v=19.14j"></script>
+<script src="data.js?v=19.14j"></script>
+<script src="app.js?v=19.14j"></script>
 
 </body>
 </html>

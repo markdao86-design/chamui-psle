@@ -411,8 +411,15 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.14i/.test(idxSrc) && !/\?v=19\.14h[^0-9]/.test(idxSrc),
-  'v19.14i: cache buster 已更新到 19.14i');
+assert(/\?v=19\.14j/.test(idxSrc) && !/\?v=19\.14i[^0-9]/.test(idxSrc),
+  'v19.14j: cache buster 已更新到 19.14j');
+// v19.14j 4 项: 装备 lock 撤 + 主页恢复入口 + 错题绿系 + SCIENCE_MCQ chapterId
+assert(!/平日 lock 装备穿戴\/卸下 — 防止/.test(appSrc), 'v19.14j: toggleEquipment 平日 lock 已撤');
+assert(!/showToast\('🔒 皮肤切换只在周末开放/.test(appSrc), 'v19.14j: setActiveSkin 平日 lock 已撤');
+assert(/已收集 \$\{wrongs\.length\} 题 🌱|borderLeft\s*=\s*'4px solid #66BB6A'/.test(appSrc), 'v19.14j: 错题色绿系 + 已收集文案');
+assert(/inferScimcqChapter|tagScimcqChapters/.test(appSrc) || /inferScimcqChapter/.test(appSrc), 'v19.14j: SCIENCE_MCQ chapterId runtime');
+// data 类
+// v19.14j data 类断言放后面 (在 dataSrcV14 之后)
 // v19.14i UI 5 项
 assert(/font-size:\s*14px\s*!important[\s\S]*\.tab-btn/.test(idxSrc) || /\.tab-btn\s*\{[^}]*font-size:\s*14px/.test(idxSrc), 'v19.14i 字号: tab-btn 升 14px');
 assert(/font-size:11px["'][\s\S]{0,200}font-size:\s*13px\s*!important/.test(idxSrc), 'v19.14i 字号: 11→13 全局升');
@@ -467,12 +474,9 @@ assert(/quickOralCheckin[\s\S]{0,200}已禁用/.test(appSrc), 'v19.14d: quickOra
 assert(/oralReverseInput/.test(appSrc), 'v19.14d: Oral 反向验证 textarea');
 assert(/自动评分:\s*\$\{autoScore\}|关键词命中.*matchedKw\.length/.test(appSrc), 'v19.14d: OE 改硬规则自动评分');
 
-// v19.14c: 我的 tab 平日 lock 装备/皮肤 + 宠物休眠/活跃
-assert(/toggleEquipment[\s\S]{0,500}?isWeekdayToday/.test(appSrc), 'v19.14c: toggleEquipment 加平日 lock');
-assert(/setActiveSkin[\s\S]{0,800}?isWeekdayToday/.test(appSrc), 'v19.14c: setActiveSkin 加平日 lock');
-assert(/charPage_petWidget/.test(appSrc), 'v19.14c: charPage 加宠物 widget');
-assert(/pet-sleepy|💤.*休息|宠物.*休眠/.test(appSrc), 'v19.14c: 平日宠物 zZz 状态');
-assert(/charPage_lockBanner/.test(appSrc), 'v19.14c: charPage 平日 lock banner');
+// v19.14c → v19.14j: 我的 tab 装备/皮肤平日 lock 已撤 (用户反馈+心理学家), 宠物保留 widget 但去掉 zZz
+assert(/charPage_petWidget/.test(appSrc), 'v19.14j: charPage 加宠物 widget (lock 已撤但 widget 保留)');
+assert(/charPage_lockBanner/.test(appSrc), 'v19.14j: charPage lock banner DOM 保留 (已 hide)');
 
 // v19.14a 新模块断言
 const dataSrcV14 = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
@@ -480,6 +484,9 @@ const dataSrcV14 = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
 // v19.14e data 类断言
 assert(/guessClozeTopic|CLOZE_TOPIC_MAP/.test(dataSrcV14), 'v19.14e: data.js 有 Cloze 主题词聚类');
 assert(/errorBankByTopic/.test(dataSrcV14), 'v19.14e: data.js 有 errorBankByTopic');
+// v19.14j data 类断言
+assert(/function inferScimcqChapter/.test(dataSrcV14), 'v19.14j: data.js 有 inferScimcqChapter');
+assert(/function tagScimcqChapters/.test(dataSrcV14), 'v19.14j: data.js 有 tagScimcqChapters');
 // v19.14f data 类断言
 assert(/chapterId:\s*'p4_plant_transport'/.test(dataSrcV14), 'v19.14f: SCIENCE_CHAPTERS 加 chapterId');
 assert(/keywords:\s*\[[^\]]*'xylem'/.test(dataSrcV14), 'v19.14f: Plant Transport 章节 keywords');
