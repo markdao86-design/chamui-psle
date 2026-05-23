@@ -4013,20 +4013,14 @@ function showAdminHint(label) {
 // ============ 作业照片 (方案 A 防虚假打卡) ============
 // v18.19: 弹 modal 让用户选 拍照 / 从相册
 function pickPhotoForSlot(week, day, slot, fromGuard) {
-  // v19.15b: fromGuard=true 时 (从 toggleDailyCheck 自动弹), 加"软打卡 -50%"逃生口
+  // v19.15d: 取消软打卡 — 必须上传作业照才能打卡 (用户决议 2026-05-23)
+  // fromGuard=true 时显示强提示横幅, 但不再给"不传照片只标记"的逃生口
   const overlay = document.createElement('div');
   overlay.className = 'photo-source-modal';
   const guardHeader = fromGuard ? `
     <div class="photo-source-guard-banner">
-      📸 <b>打卡需要作业照</b> · 防止假勾刷分 — 学习真过了才算
+      📸 <b>打卡必须先传作业照</b> · 防止假勾刷分 — 学习真过了才算
     </div>
-  ` : '';
-  const softBtnHtml = fromGuard ? `
-    <button class="photo-source-soft-btn" data-source="soft">
-      <span class="ps-icon">🤚</span>
-      <span class="ps-label">没拍照, 只标记完成</span>
-      <span class="ps-sub">⚠️ 分数 ×0.5 (诚信打卡)</span>
-    </button>
   ` : '';
   overlay.innerHTML = `
     <div class="photo-source-card">
@@ -4044,19 +4038,12 @@ function pickPhotoForSlot(week, day, slot, fromGuard) {
           <span class="ps-sub">已拍好的照片</span>
         </button>
       </div>
-      ${softBtnHtml}
       <button class="photo-source-cancel" onclick="this.closest('.photo-source-modal').remove()">取消</button>
     </div>
   `;
   document.body.appendChild(overlay);
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) overlay.remove();
-    const softBtn = e.target.closest('.photo-source-soft-btn');
-    if (softBtn) {
-      overlay.remove();
-      softCheckin(week, day, slot);
-      return;
-    }
     const btn = e.target.closest('.photo-source-btn');
     if (!btn) return;
     const source = btn.dataset.source;
@@ -9518,6 +9505,16 @@ function bindEvents() {
       btn.classList.add('active');
       document.getElementById(`page-${page}`).classList.add('active');
 
+      // v19.15d: 点 ✅ 打卡 tab 时强制跳到当周 + 今日 (防 _displayWeek 残留旧值)
+      if (page === 'checkin') {
+        if (window.computeCurrentWeekFromToday) {
+          state.currentWeek = window.computeCurrentWeekFromToday();
+        }
+        _displayWeek = null;  // 用 state.currentWeek
+        const todayKey = todayDayKeyForWeek(state.currentWeek);
+        if (todayKey) selectedDay = todayKey;
+        renderCheckinPage();
+      }
       if (page === 'history') {
         setTimeout(drawChart, 100);
       }

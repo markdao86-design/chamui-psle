@@ -411,8 +411,8 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.15c/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.15c: cache buster 已更新到 19.15c (currentWeek 自动算 + 跨周打卡 + 补做池)');
+assert(/\?v=19\.15d/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.15d: cache buster 已更新到 19.15d (取消软打卡 + checkin tab 跳今日)');
 // v19.15c app 类 (data 类移到 dataSrcV14 declare 之后)
 assert(/state\.currentWeek\s*=\s*window\.computeCurrentWeekFromToday\(\)/.test(appSrc), 'v19.15c: init/renderAll 自动同步 currentWeek');
 assert(/if \(!wasChecked && week > state\.currentWeek\)/.test(appSrc), 'v19.15c: toggleDailyCheck 守卫改 week > currentWeek');
@@ -426,7 +426,13 @@ assert(/补做池 \(\$\{carryItems\.length\} 项, 最近 4 周\)/.test(appSrc), 
 // v19.15b 软打卡逃生口 + 视觉对比加强
 assert(/function softCheckin\(week, day, slot\)/.test(appSrc), 'v19.15b: softCheckin 函数');
 assert(/state\.softCheckins/.test(appSrc), 'v19.15b: state.softCheckins 标记软打卡');
-assert(/photo-source-soft-btn/.test(appSrc) && /photo-source-soft-btn/.test(idxSrc), 'v19.15b: photo 弹窗加软打卡按钮 + CSS');
+// v19.15d: 软打卡 UI 已撤 (用户决议 — 必须传照片), CSS 可保留兼容
+assert(!/data-source="soft"/.test(appSrc), 'v19.15d: pickPhotoForSlot 软打卡按钮已删');
+assert(!/softCheckin\(week, day, slot\);/.test(appSrc) || (appSrc.match(/softCheckin\(/g) || []).length <= 1, 'v19.15d: softCheckin 仅函数定义残留(无 UI 触发)');
+assert(/打卡必须先传作业照/.test(appSrc), 'v19.15d: guard 文案强调"必须先传"');
+// v19.15d: checkin tab 跳今日
+assert(/if \(page === 'checkin'\)[\s\S]{0,400}_displayWeek\s*=\s*null/.test(appSrc), 'v19.15d: tab checkin 重置 _displayWeek');
+assert(/if \(page === 'checkin'\)[\s\S]{0,400}selectedDay\s*=\s*todayKey/.test(appSrc), 'v19.15d: tab checkin 重置 selectedDay 到 today');
 assert(/photo-source-guard-banner/.test(appSrc) && /photo-source-guard-banner/.test(idxSrc), 'v19.15b: photo guard 横幅提示');
 assert(/pickPhotoForSlot\(week, day, slot, true\)/.test(appSrc), 'v19.15b: toggleDailyCheck 用 fromGuard=true');
 assert(/软打卡升级|slot_soft_promote/.test(appSrc), 'v19.15b: 照片上传后软打卡补差');
