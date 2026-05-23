@@ -411,8 +411,22 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.21/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.21: cache buster 已更新到 19.21 (Paper 2 卡 + 全局 #FFF/#EEE/linear-gradient 补)');
+assert(/\?v=19\.22/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.22: cache buster 已更新到 19.22 (错题本卡可点+分类+大按钮 / 答错暂停 / 毕业卡移右栏)');
+// v19.22: 错题本卡 改进
+assert(/v19\.22: 错题本卡 \(整张可点 \+ game\/topic 分类 \+ 显眼大按钮\)/.test(appSrc), 'v19.22: 错题本卡注释');
+assert(/card\.onclick = \(e\) =>/.test(appSrc), 'v19.22: 错题本卡整张可点');
+assert(/📊 按科目分布:/.test(appSrc), 'v19.22: 按 game 分类显示');
+assert(/🎯 立即开始复习/.test(appSrc), 'v19.22: 显眼大按钮');
+// v19.22: 答错 modal 暂停
+assert(/function _ebNextManual/.test(appSrc), 'v19.22: 手动下一题函数');
+assert(/_ebPendingNext/.test(appSrc), 'v19.22: pending next 缓存');
+assert(/为什么<\/b>: \$\{escapeHtml\(item\.explain/.test(appSrc), 'v19.22: 错答 modal 显示"为什么" + explain');
+// 防回归: 旧"setTimeout(...) isCorrect ? 1200 : 2200" 已撤
+const oldEbDualTimer = (appSrc.match(/setTimeout\(\(\) => _renderErrorBankReview\(\), isCorrect \? 1200 : 2200\)/g) || []).length;
+assert(oldEbDualTimer === 0, `v19.22: 旧 1200/2200 双 setTimeout 已撤 (实际 ${oldEbDualTimer})`);
+// v19.22: gradReviewCard 移到右栏
+assert(/<!-- 右栏: 目标 \+ 教学 \+ 复盘[\s\S]{0,800}id="gradReviewCard"/.test(idxSrc), 'v19.22: gradReviewCard 移到右栏');
 // v19.21: Paper 2 弱点卡改暗调
 assert(/color:#FF8A9C">🎯 Paper 2 弱点突击/.test(appSrc), 'v19.21: Paper 2 标题用亮粉 #FF8A9C');
 assert(/rgba\(255,255,255,0\.04\);border:1px solid rgba\(255,255,255,0\.10\)[\s\S]{0,500}Cloze 单空填/.test(appSrc), 'v19.21: Cloze 块用透明背景');

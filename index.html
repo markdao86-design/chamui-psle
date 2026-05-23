@@ -5181,20 +5181,20 @@ p { font-size: 14px; line-height: 1.6; }
 
     <!-- v19.19: 主页 2 栏布局 (左行动 / 右信息教学), hero 上方已全宽 -->
     <div class="home-grid-2col">
-      <!-- 左栏: 今日必做 行动驱动 -->
+      <!-- 左栏: 今日必做 行动驱动 (v19.22: gradReviewCard 移到右栏减拥挤) -->
       <div class="home-col-left">
         <div style="font-size:12px;font-weight:900;color:#FF6B6B;letter-spacing:1px;margin-bottom:6px">⚡ 今日必做</div>
         <div class="card" id="todayThreeCard" style="border-left:4px solid #FF6B6B"></div>
         <div class="card" id="paper2SprintCard"></div>
         <div class="card" id="errorBankCard"></div>
-        <div id="gradReviewCard"></div>
       </div>
-      <!-- 右栏: 信息 + 教学 -->
+      <!-- 右栏: 目标 + 教学 + 复盘 (v19.22: 加 gradReviewCard) -->
       <div class="home-col-right">
-        <div style="font-size:12px;font-weight:900;color:#4FC3F7;letter-spacing:1px;margin-bottom:6px">🎓 目标 + 教学</div>
+        <div style="font-size:12px;font-weight:900;color:#4FC3F7;letter-spacing:1px;margin-bottom:6px">🎓 目标 + 教学 + 复盘</div>
         <div class="card" id="targetSchoolMini" style="border-left:1px solid #E0E0E0"></div>
         <div class="card think-puzzle-card" id="thinkPuzzleCard" style="display:none"></div>
         <div class="card" id="weekMasterTipCard"></div>
+        <div id="gradReviewCard"></div>
       </div>
     </div>
 
@@ -5699,9 +5699,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.21"></script>
-<script src="data.js?v=19.21"></script>
-<script src="app.js?v=19.21"></script>
+<script src="character.js?v=19.22"></script>
+<script src="data.js?v=19.22"></script>
+<script src="app.js?v=19.22"></script>
 
 </body>
 </html>

@@ -1786,8 +1786,7 @@ function renderLearningPortraitCard() {
 }
 window.renderLearningPortraitCard = renderLearningPortraitCard;
 
-// v19.9: 错题本卡 (区分真考错题 + app 错题)
-// v19.18: 改暗调适配主页学习入口区 + 加红 badge 提升 visibility (但内部仍绿系去羞耻)
+// v19.9 + v19.18 + v19.22: 错题本卡 (整张可点 + game/topic 分类 + 显眼大按钮)
 function renderErrorBankCard() {
   const card = document.getElementById('errorBankCard');
   if (!card) return;
@@ -1800,31 +1799,50 @@ function renderErrorBankCard() {
   const realExam = wrongs.filter(w => w.source === 'paper2-real').length;
   const appErrors = wrongs.length - realExam;
   card.style.borderLeft = '4px solid #66BB6A';
-  // 算 Leitner 毕业进度 (collected = 答对至少 1 次的题数)
+  card.style.cursor = 'pointer';
+  card.onclick = (e) => {
+    // 点内部按钮 (有自己 onclick) 时不触发外层
+    if (e.target.closest('button')) return;
+    openErrorBank();
+  };
+  // 算 Leitner 毕业进度
   const collectedItems = wrongs.filter(w => (w.correctStreak || 0) >= 1);
   const masteredItems = wrongs.filter(w => (w.correctStreak || 0) >= 2);
-  // v19.18: 红 badge 提醒数字, 视觉入口强化 (绿系收集感保留在内部)
+  // v19.22: 按 gameKey 分布统计 (孩子看到错题分布, 知道哪科弱)
+  const GAME_LABEL = {
+    knowledge: '🌳 知识树', math: '🔢 数学', grammar: '✏️ 语法', cloze: '🧩 Cloze',
+    sst: '🔄 SST', editing: '🔍 改错', vocab: '📚 词汇', listen: '🎧 听力',
+    scilab: '🔬 科学', scimcq: '🔬 科学', sci_oe: '🔬 科学 OE', chinese: '🇨🇳 华文'
+  };
+  const byGame = {};
+  wrongs.forEach(w => {
+    const g = w.source === 'paper2-real' ? '🔥 真考' : (GAME_LABEL[w.gameKey] || w.gameKey || '其他');
+    byGame[g] = (byGame[g] || 0) + 1;
+  });
+  const breakdown = Object.entries(byGame)
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, v]) => `<span style="display:inline-block;margin:2px 4px 2px 0;padding:3px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:10px;font-size:11px;color:#E0E0E0"><b style="color:#FF8A65">${v}</b> ${k}</span>`)
+    .join('');
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <div style="font-size:15px;font-weight:900;color:#66FFB0">📓 错题本 · 已收集 ${wrongs.length} 题 🌱</div>
       <div style="background:#EF5350;color:#FFF;font-size:13px;font-weight:900;padding:2px 10px;border-radius:14px;min-width:28px;text-align:center;box-shadow:0 0 8px rgba(239,83,80,0.4)">${wrongs.length}</div>
     </div>
-    <div style="font-size:11px;color:#A0A0A0;margin-bottom:8px">${collectedItems.length} 题已答对 1+ 次 · ${masteredItems.length} 题接近毕业 · 连续 3 次答对 +5 自动毕业</div>
-    ${realExam > 0 ? `
-    <div style="background:linear-gradient(135deg, rgba(102,187,106,0.10), rgba(102,187,106,0.02));border:1px solid rgba(102,187,106,0.40);border-radius:6px;padding:10px;margin-bottom:6px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:12px;font-weight:900;color:#66FFB0">🌟 Paper 2 真题集 (${realExam} 题)</div>
-        <button onclick="openErrorBank()" style="padding:6px 14px;background:#66BB6A;color:#FFF;border:none;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer">练一题 →</button>
-      </div>
-      <div style="font-size:10px;color:#A5D6A7;margin-top:4px">从 Paper 2 真考收集的精华题 · 优先复习</div>
-    </div>` : ''}
-    ${appErrors > 0 ? `
-    <div style="background:rgba(102,187,106,0.06);border:1px solid rgba(102,187,106,0.25);border-radius:6px;padding:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:12px;color:#A5D6A7">🌱 平日收集: ${appErrors} 题</div>
-        ${realExam === 0 ? `<button onclick="openErrorBank()" style="padding:6px 14px;background:#66BB6A;color:#FFF;border:none;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer">立即复习 →</button>` : ''}
-      </div>
-    </div>` : ''}
+    <div style="font-size:11px;color:#A0A0A0;margin-bottom:8px">
+      ${collectedItems.length} 题已答对 1+ 次 · ${masteredItems.length} 题接近毕业 · 连续 3 次答对 +3 自动毕业 (14 天后回测)
+    </div>
+    <!-- v19.22: 按 game 分类 chips, 一眼看错题分布 -->
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px;margin-bottom:8px">
+      <div style="font-size:10px;color:#94A3B8;margin-bottom:4px">📊 按科目分布:</div>
+      ${breakdown}
+    </div>
+    <!-- v19.22: 显眼大按钮 (整张卡也可点) -->
+    <button onclick="event.stopPropagation(); openErrorBank()" style="width:100%;padding:12px;background:linear-gradient(135deg,#66BB6A,#43A047);color:#FFF;border:none;border-radius:6px;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 2px 8px rgba(102,187,106,0.30)">
+      🎯 立即开始复习 ${realExam > 0 ? `(真考 ${realExam} 题优先)` : `(${wrongs.length} 题)`} →
+    </button>
+    <div style="font-size:10px;color:#94A3B8;margin-top:6px;text-align:center;font-style:italic">
+      💡 答错会显示正确答案 + 解析, 可点"下一题"再走
+    </div>
   `;
 }
 window.renderErrorBankCard = renderErrorBankCard;
@@ -5908,7 +5926,7 @@ function submitErrorBankAnswer(optIdx) {
     }
     saveState(state);
     g.idx++;
-    setTimeout(() => _renderErrorBankReview(), isCorrect ? 1200 : 2200);
+    _renderErrorBankReview();  // v19.22: 延迟已由 _handleErrorBankResult 控制 (答对 1.5s 自动, 答错等"下一题" 按钮)
   });
 }
 function submitErrorBankMath() {
@@ -5957,22 +5975,29 @@ function submitErrorBankMath() {
     }
     saveState(state);
     g.idx++;
-    setTimeout(() => _renderErrorBankReview(), isCorrect ? 1200 : 2200);
+    _renderErrorBankReview();  // v19.22: 延迟已由 _handleErrorBankResult 控制 (答对 1.5s 自动, 答错等"下一题" 按钮)
   });
 }
+// v19.22: 答错时停留, 加"下一题 →" 按钮手动控制, 不自动跳
+let _ebPendingNext = null;
 function _handleErrorBankResult(isCorrect, item, next) {
   const fb = document.getElementById('ebFeedback');
   if (fb) {
     if (isCorrect) {
-      fb.innerHTML = `✅ <b>答对了!</b> 此题已从错题本删除 🎉 ${escapeHtml(item.explain || '')}`;
-      fb.style.color = '#2E7D32';
+      fb.innerHTML = `<div style="background:rgba(102,255,176,0.10);border:1px solid rgba(102,255,176,0.30);border-radius:6px;padding:10px;color:#66FFB0"><b>✅ 答对了!</b> ${item.explain ? '<br><span style="color:#E0E0E0">💡 ' + escapeHtml(item.explain) + '</span>' : ''}</div>`;
       playSound('ding');
     } else {
       const correctText = item.type === 'mcq' && item.opts
         ? String.fromCharCode(65 + item.ans) + '. ' + (item.opts[item.ans] || '')
         : item.ans;
-      fb.innerHTML = `❌ 应是 <b>${escapeHtml(String(correctText))}</b><br>💡 ${escapeHtml(item.explain || '')}<br><span style="color:#FF9800">仍留在错题本, 下次再练</span>`;
-      fb.style.color = '#C62828';
+      // v19.22: 答错后不自动跳, 加"下一题 →"按钮, 让孩子充分读 explain
+      fb.innerHTML = `
+        <div style="background:rgba(239,83,80,0.10);border:1px solid rgba(239,83,80,0.30);border-radius:6px;padding:12px">
+          <div style="color:#EF5350;font-weight:900;margin-bottom:6px">❌ 错了 · 正确答案: <span style="color:#66FFB0">${escapeHtml(String(correctText))}</span></div>
+          ${item.explain ? `<div style="color:#E0E0E0;font-size:12px;line-height:1.7;margin-bottom:8px">💡 <b>为什么</b>: ${escapeHtml(item.explain)}</div>` : ''}
+          <div style="color:#FFB74D;font-size:11px;margin-bottom:8px">⚠️ 仍留在错题本, 下次再练 · 已重做 ${(item.retries || 0) + 1} 次</div>
+          <button onclick="_ebNextManual()" style="width:100%;padding:10px;background:#4FC3F7;color:#FFF;border:none;border-radius:4px;font-size:13px;font-weight:900;cursor:pointer">下一题 →</button>
+        </div>`;
       playSound('sad');
     }
   }
@@ -5980,8 +6005,21 @@ function _handleErrorBankResult(isCorrect, item, next) {
   document.querySelectorAll('.mcq-opt').forEach(b => b.disabled = true);
   const ebInput = document.getElementById('ebMathInput');
   if (ebInput) ebInput.disabled = true;
-  next();
+  // 答对自动跳 (1.5s 读完反馈), 答错等用户点按钮
+  if (isCorrect) {
+    setTimeout(next, 1500);
+  } else {
+    _ebPendingNext = next;
+  }
 }
+function _ebNextManual() {
+  if (_ebPendingNext) {
+    const fn = _ebPendingNext;
+    _ebPendingNext = null;
+    fn();
+  }
+}
+window._ebNextManual = _ebNextManual;
 function _finishErrorBankReview() {
   const g = _errorBankState;
   if (!g) return;
