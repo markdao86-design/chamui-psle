@@ -411,11 +411,25 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.14a/.test(idxSrc) && !/\?v=19\.13[^0-9]/.test(idxSrc),
-  'v19.14a: cache buster 已更新到 19.14a');
+assert(/\?v=19\.14b/.test(idxSrc) && !/\?v=19\.14a[^0-9]/.test(idxSrc),
+  'v19.14b: cache buster 已更新到 19.14b');
 
 // v19.14a 新模块断言
 const dataSrcV14 = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
+
+// v19.14b 平日/周末科目隔离断言 (放到 dataSrcV14 declare 之后)
+assert(/function isWeekdayToday/.test(dataSrcV14), 'v19.14b: isWeekdayToday 函数');
+assert(/function isWeekendDayKey/.test(dataSrcV14), 'v19.14b: isWeekendDayKey 函数');
+assert(/WEEKDAY_LOCKED_GAMES\s*=\s*\['math',\s*'chinese',\s*'unit'\]/.test(dataSrcV14), 'v19.14b: WEEKDAY_LOCKED_GAMES = math/chinese/unit');
+assert(/function getDailyTasksFiltered/.test(dataSrcV14), 'v19.14b: getDailyTasksFiltered 函数');
+assert(/SLOT_BASE_POINTS\.WSC\s*=\s*5/.test(dataSrcV14), 'v19.14b: SLOT_BASE_POINTS.WSC = 5');
+assert(/SLOT_BASE_POINTS\.WUC\s*=\s*4/.test(dataSrcV14), 'v19.14b: SLOT_BASE_POINTS.WUC = 4');
+assert(/SLOT_SUBJECT\.WSC\s*=\s*'华文'/.test(dataSrcV14), 'v19.14b: WSC = 华文');
+assert(/WEEKDAY_LOCKED_GAMES.*includes\(gameKey\)/.test(appSrc), 'v19.14b: _checkGameDailyLock 加 hard lock 检查');
+assert(/isWeekday\s*\?\s*\[?weekend|周末 3 件事|isWeekdayToday\(\)/.test(appSrc), 'v19.14b: renderTodayThreeCard 加 weekday/weekend 分支');
+assert(/getDailyTasksFiltered/.test(appSrc), 'v19.14b: renderCheckinPage 调用 getDailyTasksFiltered');
+assert(/🔒.*周末专属|周末才开放/.test(appSrc), 'v19.14b: hub 加 lock badge');
+
 assert(/DAILY_SLOT_CAP\s*=\s*5/.test(dataSrcV14), 'v19.14a: DAILY_SLOT_CAP = 5');
 assert(/WEEKLY_CHECKIN_CAP\s*=\s*200/.test(dataSrcV14), 'v19.14a: WEEKLY_CHECKIN_CAP = 200');
 assert(/LEITNER_GRADUATION\s*=\s*3/.test(dataSrcV14), 'v19.14a: LEITNER_GRADUATION = 3');

@@ -7902,6 +7902,55 @@ window.MYSTERY_BOX_NEW_MAX = MYSTERY_BOX_NEW_MAX;
 window.MYSTERY_BOX_WEEKLY_CAP = MYSTERY_BOX_WEEKLY_CAP;
 window.STRONG_SUBJECT_GAMES = STRONG_SUBJECT_GAMES;
 window.countTodaySlotChecks = countTodaySlotChecks;
+
+// ============================================================
+// v19.14b: 平日/周末科目隔离 (英语+科学 vs 数学+华文)
+// 平日 hard lock 数学/华文 game · 周末 3 件事分化 · 加 WSC/WUC 周末华文 slot
+// ============================================================
+
+// 平日 hard-lock 的 mini-game (周末才能玩)
+const WEEKDAY_LOCKED_GAMES = ['math', 'chinese', 'unit'];
+
+function isWeekdayToday() {
+  const d = new Date().getDay();  // 0=Sun, 1=Mon ... 6=Sat
+  return d >= 1 && d <= 5;
+}
+function isWeekendDayKey(dayKey) {
+  return dayKey === 'Sat' || dayKey === 'Sun';
+}
+
+// 周末新增华文 slot (复用 SLOT_BASE_POINTS / SLOT_SUBJECT 模式)
+SLOT_BASE_POINTS.WSC = 5;  // 周六华文 30min
+SLOT_BASE_POINTS.WUC = 4;  // 周日华文 + 复盘 30min
+SLOT_SUBJECT.WSC = '华文';
+SLOT_SUBJECT.WUC = '华文';
+SLOT_TIER.WSC = 2;
+SLOT_TIER.WUC = 2;
+
+// v19.14b: 打卡页用的过滤 wrapper — 不动 73 周 WEEK_TASKS 数据
+function getDailyTasksFiltered(weekNum, dayKey) {
+  const raw = getDailyTasks(weekNum, dayKey);
+  if (isWeekendDayKey(dayKey)) {
+    // 周末: 注入 WSC/WUC 华文 slot (若 WEEK_TASKS 里没有同科目)
+    const has华文 = raw.some(t => SLOT_SUBJECT[t.slot] === '华文');
+    if (!has华文) {
+      const newSlot = dayKey === 'Sat' ? 'WSC' : 'WUC';
+      raw.push({ slot: newSlot, time: '30min', task: '🇨🇳 华文阅读 + 练习 30min (v19.14b 新加)' });
+    }
+    return raw;
+  }
+  // 平日: 过滤掉数学/华文 slot
+  return raw.filter(t => {
+    const subj = SLOT_SUBJECT[t.slot];
+    return subj !== '数学' && subj !== '华文';
+  });
+}
+
+window.WEEKDAY_LOCKED_GAMES = WEEKDAY_LOCKED_GAMES;
+window.isWeekdayToday = isWeekdayToday;
+window.isWeekendDayKey = isWeekendDayKey;
+window.getDailyTasksFiltered = getDailyTasksFiltered;
+
 window.calcWeekSlotPoints = calcWeekSlotPoints;
 window.getTodayClozeSstCount = getTodayClozeSstCount;
 window.clozeSstReward = clozeSstReward;

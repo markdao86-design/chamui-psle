@@ -683,23 +683,13 @@ window.renderAdmissionForecastCard = renderAdmissionForecastCard;
 // 取代 v19.12-13 的 5 卡布局, 直接对接 5 专家评审决议
 // ============================================================
 
-// A1: 今日 3 件事 sticky 卡
+// A1: 今日 3 件事 sticky 卡 — v19.14b 加平日/周末分化
 function renderTodayThreeCard() {
   const card = document.getElementById('todayThreeCard');
   if (!card) return;
-  // 算 3 件事进度
-  const oral = window.getOralStatus ? window.getOralStatus(state) : { todaySec: 0, targetSec: 1500, pct: 0, done: false };
-  const oralDone = oral.done || oral.todaySec >= 1500;
-  // Paper 2 (Cloze + SST)
-  const sprint = window.getPaper2SprintStatus ? window.getPaper2SprintStatus(state) : null;
-  const todayPaper2 = window.getTodayClozeSstCount ? window.getTodayClozeSstCount(state) : 0;
-  const paper2Done = todayPaper2 >= 15;  // 10 Cloze + 5 SST
-  // 本周科学
-  const week = state.currentWeek || 1;
-  const chapter = window.getCurrentScienceChapter ? window.getCurrentScienceChapter(week) : null;
-  const sciToday = ((state.gameDailyCount && state.gameDailyCount.counts) || {});
-  const sciDone = (sciToday.scimcq || 0) >= 1 || (sciToday.sci_oe || 0) >= 1;
+  const isWeekday = window.isWeekdayToday ? window.isWeekdayToday() : true;
 
+  // 通用 item renderer
   const item = (icon, label, sub, done, onclick, color) => `
     <div onclick="${onclick}" style="display:flex;align-items:center;gap:10px;padding:14px;background:${done ? '#E8F5E9' : '#FFF'};border:2px solid ${done ? '#4CAF50' : '#E0E0E0'};border-radius:8px;margin-bottom:8px;cursor:pointer;min-height:64px;transition:all 0.2s">
       <div style="font-size:24px;width:32px;text-align:center">${done ? '✅' : icon}</div>
@@ -710,17 +700,57 @@ function renderTodayThreeCard() {
       <div style="color:${color};font-size:20px">›</div>
     </div>
   `;
+
+  const todayCounts = ((state.gameDailyCount && state.gameDailyCount.counts) || {});
+  const todayPaper2 = window.getTodayClozeSstCount ? window.getTodayClozeSstCount(state) : 0;
+
+  let itemsHtml, doneCount, headerSub, tipHtml;
+
+  if (isWeekday) {
+    // 平日 3 件事: Oral + Cloze+SST + 科学章节
+    const oral = window.getOralStatus ? window.getOralStatus(state) : { todaySec: 0, targetSec: 1500, pct: 0, done: false };
+    const oralDone = oral.done || oral.todaySec >= 1500;
+    const paper2Done = todayPaper2 >= 15;
+    const week = state.currentWeek || 1;
+    const chapter = window.getCurrentScienceChapter ? window.getCurrentScienceChapter(week) : null;
+    const sciDone = (todayCounts.scimcq || 0) >= 1 || (todayCounts.sci_oe || 0) >= 1;
+    doneCount = (oralDone?1:0) + (paper2Done?1:0) + (sciDone?1:0);
+    headerSub = `平日 · 英语 70% + 科学 30%`;
+    itemsHtml = [
+      item('🗣️', 'Oral 25 min', `${Math.round(oral.todaySec/60)}/25 min · 抽 PSLE 口试题`, oralDone, 'openOralPracticeModal()', '#0277BD'),
+      item('🎯', '10 Cloze + 5 SST', `今日 ${todayPaper2}/15 题 · 英语 AL6→AL2 关键`, paper2Done, 'openPaper2MockGame()', '#FF6B6B'),
+      item('🔬', chapter ? '本周科学 1 节' : '科学练习', chapter ? `${chapter.title} ${chapter.stars} · 含概念图` : '科学 MCQ + OE 训练', sciDone, chapter && chapter.diagram ? `openConceptDiagram('${chapter.diagram}'); setTimeout(openScienceOEGame, 100)` : 'openSciMcqGame()', '#2E7D32')
+    ].join('');
+    tipHtml = `<div style="margin-top:8px;padding:8px;background:#FFF3E0;border-radius:6px;font-size:11px;color:#5D4037;line-height:1.5;text-align:center">
+      📅 <b>数学 / 华文 周末才开放</b> — 平日全力攻英语 (AL6 → AL2 是综合 AL 4-5 最大杠杆)
+    </div>`;
+  } else {
+    // 周末 3 件事: 数学 + 华文 + Cloze 5 题 (保英语手感) + 科学 1 套
+    const mathDone = (todayCounts.math || 0) >= 1;
+    const chineseDone = (todayCounts.chinese || 0) >= 1;
+    const cloze5Done = todayPaper2 >= 5;
+    const sciDone = (todayCounts.scimcq || 0) >= 1 || (todayCounts.sci_oe || 0) >= 1;
+    const item3Done = cloze5Done && sciDone;  // 第 3 件 = Cloze 5 + 科学 1 套
+    doneCount = (mathDone?1:0) + (chineseDone?1:0) + (item3Done?1:0);
+    headerSub = `周末 · 数学 + 华文 (+ 5 题 Cloze + 1 套科学保手感)`;
+    itemsHtml = [
+      item('➗', '数学 P5/P6 模拟卷', '10 题 · PSLE 5-mark 难度 · 维持 AL1', mathDone, 'openMathGame()', '#FFA000'),
+      item('🇨🇳', '华文阅读 1 套', '10 题 · 维持 AL1 + 作文素材', chineseDone, 'openChineseMcqGame()', '#C62828'),
+      item('📖', '5 题 Cloze + 1 套科学', `Cloze ${todayPaper2}/5 · 科学 MCQ — 保英语+科学手感`, item3Done, cloze5Done ? 'openSciMcqGame()' : 'openClozeGame()', '#7B1FA2')
+    ].join('');
+    tipHtml = `<div style="margin-top:8px;padding:8px;background:#E8F5E9;border-radius:6px;font-size:11px;color:#1B5E20;line-height:1.5;text-align:center">
+      🎉 <b>周末科目全开放</b> — 数学 / 华文 mini-game 已解锁 · 周日下午 14-18 完全休息 (手册硬红线)
+    </div>`;
+  }
+
   card.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <div style="font-size:17px;font-weight:900;color:#FF6B6B">🎯 今日要做的 3 件事</div>
-      <div style="margin-left:auto;font-size:12px;color:#666">${(oralDone?1:0) + (paper2Done?1:0) + (sciDone?1:0)} / 3 完成</div>
+      <div style="margin-left:auto;font-size:12px;color:#666">${doneCount} / 3 完成</div>
     </div>
-    ${item('🗣️', 'Oral 25 min', `${Math.round(oral.todaySec/60)}/25 min · 抽 PSLE 口试题`, oralDone, 'openOralPracticeModal()', '#0277BD')}
-    ${item('🎯', '10 Cloze + 5 SST', `今日 ${todayPaper2}/15 题 · 英语 AL6→AL2 关键`, paper2Done, 'openPaper2MockGame()', '#FF6B6B')}
-    ${item('🔬', chapter ? '本周科学 1 节' : '科学练习', chapter ? `${chapter.title} ${chapter.stars} · 含概念图` : '科学 MCQ + OE 训练', sciDone, chapter && chapter.diagram ? `openConceptDiagram('${chapter.diagram}'); setTimeout(openScienceOEGame, 100)` : 'openSciMcqGame()', '#2E7D32')}
-    <div style="margin-top:8px;font-size:11px;color:#888;text-align:center;line-height:1.4">
-      💡 完成 3 件事 = 撑住每日学习节奏 · 强项 game 第 3 次起需先做 Paper 2 5 题
-    </div>
+    <div style="font-size:11px;color:#888;margin-bottom:10px">${headerSub}</div>
+    ${itemsHtml}
+    ${tipHtml}
   `;
 }
 window.renderTodayThreeCard = renderTodayThreeCard;
@@ -2782,7 +2812,8 @@ function renderCheckinPage() {
   `;
 
   // === 3) 当日任务列表 ===
-  const dayTasksRaw = getDailyTasks(week, selectedDay);
+  // v19.14b: 用 getDailyTasksFiltered — 平日过滤掉数学/华文 slot, 周末注入 WSC/WUC 华文
+  const dayTasksRaw = (window.getDailyTasksFiltered || getDailyTasks)(week, selectedDay);
   // v19.6: 加练池 slot (OR/WSE/WSL/WUE1/WUE2) 从打卡页彻底移除, 进本周池子
   const dayTasks = dayTasksRaw.filter(t => !(window.POOL_TARGET && window.POOL_TARGET[t.slot]));
   const allDoneToday = dayTasks.length > 0 && dayTasks.every(t => getDailyCheck(state, week, selectedDay, t.slot));
@@ -4537,6 +4568,14 @@ function _getMultiplierLabel(playNum) {
 }
 // 检查游戏是否可玩, 不可玩则弹提示并返回 false
 function _checkGameDailyLock(gameKey) {
+  // v19.14b: 平日 hard lock — math/chinese/unit 平日完全不能玩
+  if (window.WEEKDAY_LOCKED_GAMES && window.WEEKDAY_LOCKED_GAMES.includes(gameKey)) {
+    if (window.isWeekdayToday && window.isWeekdayToday()) {
+      const gameLabel = { math: '数学速算', chinese: '华文 MCQ', unit: '单位换算' }[gameKey] || gameKey;
+      showToast(`🔒 ${gameLabel} 周末才开放 — 平日全力攻英语 AL6 → AL2 (综合 AL 4-5 最大杠杆)`, 'warn');
+      return false;
+    }
+  }
   // v19.4: 取消日次数锁, 允许无限练习 (第 2 次起不给积分, 但能玩)
   // v19.14a B6/B7: 弱科燃料 + 软门槛 — 强项 game 需先做 Paper 2 (Cloze/SST ≥ 5 题)
   if (window.STRONG_SUBJECT_GAMES && window.STRONG_SUBJECT_GAMES.includes(gameKey)) {
@@ -6113,13 +6152,24 @@ function openMiniGameHub() {
   const modal = document.getElementById('miniGameHubModal');
   if (!modal) return;
   // v18.38: 每 game 每天 1 次, 都满奖, 第 2 次锁
+  // v19.14b: 平日 math/chinese/unit hard lock — 灰显示 + 🔒 角标
+  const isWeekday = window.isWeekdayToday ? window.isWeekdayToday() : true;
+  const locked = (k) => isWeekday && window.WEEKDAY_LOCKED_GAMES && window.WEEKDAY_LOCKED_GAMES.includes(k);
   const stars = (d) => '★'.repeat(d) + '☆'.repeat(5 - d);
   const status = (k) => {
+    if (locked(k)) {
+      return `<div class="mgh-status" style="color:#999">🔒 <b>周末专属</b> · 平日不开放</div>`;
+    }
     const c = _getDailyGameCount(k);
     const d = window.getDifficulty ? window.getDifficulty(state, k) : 1;
     const lockState = c >= 1 ? '<span class="mgh-lock">🔄 练习模式</span>' : '<span class="mgh-ready">▶ 可玩 (满奖)</span>';
     return `<div class="mgh-status">难度 <b>${stars(d)}</b> · ${lockState}</div>`;
   };
+  // v19.14b: 锁定 game 按钮 style + onclick (点击只弹 toast, 不关闭 hub)
+  const lockStyle = (k) => locked(k) ? 'opacity:0.45;filter:grayscale(0.7);position:relative' : '';
+  const lockClick = (k, normalClick) => locked(k)
+    ? `event.stopPropagation(); showToast('🔒 ${({math:'数学速算',chinese:'华文 MCQ',unit:'单位换算'})[k] || k} 周末才开放 — 平日攻英语 AL6→AL2', 'warn')`
+    : normalClick;
   modal.innerHTML = `
     <div class="mgh-inner">
       <div class="mgh-header">
@@ -6131,13 +6181,13 @@ function openMiniGameHub() {
         <button class="mgh-game" onclick="closeMiniGameHub(); openVocabGame(${state.currentWeek})">
           📚<br><b>词汇连连看</b><br><small>6×6 配对</small>${status('vocab')}
         </button>
-        <button class="mgh-game" onclick="closeMiniGameHub(); openMathGame()">
+        <button class="mgh-game" style="${lockStyle('math')}" onclick="${lockClick('math', 'closeMiniGameHub(); openMathGame()')}">
           ➗<br><b>数学速算</b><br><small>10 题限时</small>${status('math')}
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openSciMcqGame()">
           🧬<br><b>科学 MCQ</b><br><small>10 题概念</small>${status('scimcq')}
         </button>
-        <button class="mgh-game" onclick="closeMiniGameHub(); openChineseMcqGame()">
+        <button class="mgh-game" style="${lockStyle('chinese')}" onclick="${lockClick('chinese', 'closeMiniGameHub(); openChineseMcqGame()')}">
           🇨🇳<br><b>华文 MCQ</b><br><small>10 题选择</small>${status('chinese')}
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openEditingGame()">
@@ -6146,7 +6196,7 @@ function openMiniGameHub() {
         <button class="mgh-game" onclick="closeMiniGameHub(); openListenGame()">
           🎧<br><b>听写练习</b><br><small>听 1 段填 5 词</small>${status('listen')}
         </button>
-        <button class="mgh-game" onclick="closeMiniGameHub(); openUnitGame()">
+        <button class="mgh-game" style="${lockStyle('unit')}" onclick="${lockClick('unit', 'closeMiniGameHub(); openUnitGame()')}">
           ⚗️<br><b>单位换算</b><br><small>10 题限时</small>${status('unit')}
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openGrammarGame()">
