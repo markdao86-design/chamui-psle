@@ -411,8 +411,17 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.15a/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.15a: cache buster 已更新到 19.15a (hotfix Leitner 双重计分)');
+assert(/\?v=19\.15b/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.15b: cache buster 已更新到 19.15b (软打卡逃生口 + 视觉对比)');
+// v19.15b 软打卡逃生口 + 视觉对比加强
+assert(/function softCheckin\(week, day, slot\)/.test(appSrc), 'v19.15b: softCheckin 函数');
+assert(/state\.softCheckins/.test(appSrc), 'v19.15b: state.softCheckins 标记软打卡');
+assert(/photo-source-soft-btn/.test(appSrc) && /photo-source-soft-btn/.test(idxSrc), 'v19.15b: photo 弹窗加软打卡按钮 + CSS');
+assert(/photo-source-guard-banner/.test(appSrc) && /photo-source-guard-banner/.test(idxSrc), 'v19.15b: photo guard 横幅提示');
+assert(/pickPhotoForSlot\(week, day, slot, true\)/.test(appSrc), 'v19.15b: toggleDailyCheck 用 fromGuard=true');
+assert(/软打卡升级|slot_soft_promote/.test(appSrc), 'v19.15b: 照片上传后软打卡补差');
+assert(/opacity:\s*0\.38/.test(idxSrc), 'v19.15b CSS: 已打卡 opacity 0.38 灰掉');
+assert(/border:\s*1px solid rgba\(0,212,255,0\.45\)/.test(idxSrc), 'v19.15b CSS: 未打卡 border 高亮');
 // v19.14m: 装备穿戴 bug fix — renderAll 加 renderCharacterPage 刷新
 assert(/charPageActive\.classList\.contains\('active'\)[\s\S]{0,100}renderCharacterPage\(\)/.test(appSrc), 'v19.14m: renderAll 加我的 tab active 时 renderCharacterPage');
 

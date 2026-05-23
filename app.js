@@ -3616,13 +3616,11 @@ function toggleDailyCheck(week, day, slot, evt) {
     return;
   }
 
-  // v18.22: 打卡必须先有照片 (取消勾选不限制); 4 mini-game 走独立路径不受此限制
+  // v18.22 + v19.15b: 打卡必须先有照片 (取消勾选不限制). v19.15b 弹 modal 含 3 选项: 拍照/相册/软打卡-50%
   if (!wasChecked) {
     const hasPhoto = hasPhotoCached(week, day, slot);
     if (!hasPhoto) {
-      showToast('📸 请先上传作业照才能打卡', 'warn');
-      // 自动弹出拍照/相册选择
-      pickPhotoForSlot(week, day, slot);
+      pickPhotoForSlot(week, day, slot, true);  // fromGuard=true → 显示软打卡逃生口
       return;
     }
   }
@@ -3976,11 +3974,25 @@ function showAdminHint(label) {
 
 // ============ 作业照片 (方案 A 防虚假打卡) ============
 // v18.19: 弹 modal 让用户选 拍照 / 从相册
-function pickPhotoForSlot(week, day, slot) {
+function pickPhotoForSlot(week, day, slot, fromGuard) {
+  // v19.15b: fromGuard=true 时 (从 toggleDailyCheck 自动弹), 加"软打卡 -50%"逃生口
   const overlay = document.createElement('div');
   overlay.className = 'photo-source-modal';
+  const guardHeader = fromGuard ? `
+    <div class="photo-source-guard-banner">
+      📸 <b>打卡需要作业照</b> · 防止假勾刷分 — 学习真过了才算
+    </div>
+  ` : '';
+  const softBtnHtml = fromGuard ? `
+    <button class="photo-source-soft-btn" data-source="soft">
+      <span class="ps-icon">🤚</span>
+      <span class="ps-label">没拍照, 只标记完成</span>
+      <span class="ps-sub">⚠️ 分数 ×0.5 (诚信打卡)</span>
+    </button>
+  ` : '';
   overlay.innerHTML = `
     <div class="photo-source-card">
+      ${guardHeader}
       <div class="photo-source-title">📸 上传作业照</div>
       <div class="photo-source-buttons">
         <button class="photo-source-btn" data-source="camera">
@@ -3994,12 +4006,19 @@ function pickPhotoForSlot(week, day, slot) {
           <span class="ps-sub">已拍好的照片</span>
         </button>
       </div>
+      ${softBtnHtml}
       <button class="photo-source-cancel" onclick="this.closest('.photo-source-modal').remove()">取消</button>
     </div>
   `;
   document.body.appendChild(overlay);
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) overlay.remove();
+    const softBtn = e.target.closest('.photo-source-soft-btn');
+    if (softBtn) {
+      overlay.remove();
+      softCheckin(week, day, slot);
+      return;
+    }
     const btn = e.target.closest('.photo-source-btn');
     if (!btn) return;
     const source = btn.dataset.source;
@@ -4007,6 +4026,48 @@ function pickPhotoForSlot(week, day, slot) {
     _doPhotoUpload(week, day, slot, source === 'camera');
   });
 }
+
+// v19.15b: 软打卡 — 无照片打卡, 分数 ×0.5, 标记 state.softCheckins 供后续审计/补传
+function softCheckin(week, day, slot) {
+  if (week !== state.currentWeek) {
+    showToast('⚠️ 只能打卡当前周', 'warn');
+    return;
+  }
+  if (getDailyCheck(state, week, day, slot)) {
+    showToast('已打过卡了, 重复无效', 'warn');
+    return;
+  }
+  // 标记软打卡 (供后续审计 + 上传照片时补差)
+  if (!state.softCheckins) state.softCheckins = {};
+  state.softCheckins[`${week}_${day}_${slot}`] = { date: new Date().toISOString(), promotedAt: null };
+
+  setDailyCheck(state, week, day, slot, true);
+  recalcTotalPoints(state);
+
+  // 计算软打卡奖励 (full reward × 0.5, 不给暴击)
+  let reward = { pts: slotPoints(week, slot), isCrit: false, base: slotPoints(week, slot) };
+  if (window.calcSlotReward) {
+    reward = window.calcSlotReward(state, slot, week);
+  }
+  const fullPts = reward.pts || reward.base || slotPoints(week, slot);
+  const softPts = Math.floor(fullPts * 0.5);
+  // recalc 已加了 base, 现在调整到 soft (即 -base + softPts)
+  const adjust = softPts - (reward.base || slotPoints(week, slot));
+  state.totalPoints = Math.max(0, (state.totalPoints || 0) + adjust);
+  if (!state.lifetimeEarned || state.totalPoints > state.lifetimeEarned) state.lifetimeEarned = state.totalPoints;
+
+  state.logs.push({
+    reason: `🤚 软打卡 W${week} ${day} ${slot} +${softPts} [无照片 ×0.5, 全 ${fullPts}]`,
+    points: softPts,
+    type: 'slot_soft',
+    week: state.currentWeek,
+    timestamp: Date.now()
+  });
+  saveState(state);
+  showToast(`🤚 软打卡 +${softPts} 分 (×0.5, 全 ${fullPts}) · 传作业照可补差 +${fullPts - softPts}`, 'happy');
+  renderAll();
+}
+window.softCheckin = softCheckin;
 
 function _doPhotoUpload(week, day, slot, useCamera) {
   const input = document.createElement('input');
@@ -4045,6 +4106,26 @@ function _doPhotoUpload(week, day, slot, useCamera) {
         }
       } else {
         showToast(`📸 照片已本地保存 (${Math.round(blob.size / 1024)} KB) — 联网后自动同步到云端`, 'warn');
+      }
+      // v19.15b: 若此 slot 是软打卡过的, 补差另 50% 分 + 标记 promoted
+      const softKey = `${week}_${day}_${slot}`;
+      if (state.softCheckins && state.softCheckins[softKey] && !state.softCheckins[softKey].promotedAt) {
+        let reward = { pts: slotPoints(week, slot), base: slotPoints(week, slot) };
+        if (window.calcSlotReward) reward = window.calcSlotReward(state, slot, week);
+        const fullPts = reward.pts || reward.base || slotPoints(week, slot);
+        const promotedDelta = fullPts - Math.floor(fullPts * 0.5);
+        state.totalPoints = (state.totalPoints || 0) + promotedDelta;
+        if (!state.lifetimeEarned || state.totalPoints > state.lifetimeEarned) state.lifetimeEarned = state.totalPoints;
+        state.softCheckins[softKey].promotedAt = new Date().toISOString();
+        state.logs.push({
+          reason: `📸 软打卡升级 W${week} ${day} ${slot} +${promotedDelta} (补差到全分 ${fullPts})`,
+          points: promotedDelta,
+          type: 'slot_soft_promote',
+          week: state.currentWeek,
+          timestamp: Date.now()
+        });
+        saveState(state);
+        showToast(`🎉 软打卡升级 +${promotedDelta} 分! 现在 W${week} ${day} ${slot} 是全分 ${fullPts}`, 'happy');
       }
       renderAll();
     } catch (err) {
