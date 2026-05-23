@@ -5,6 +5,34 @@
 
 ---
 
+## v19.14j (2026-05-23) — 撤 lock + 主页内容恢复 + 绿系收集 4 项
+
+### 痛点 (用户反馈 + 心理学家警告)
+- 用户: "装备目前穿戴取下都失灵的, 今天是周六, 是不是有 bug" (iPad 缓存旧版 + v19.14c 5 套 lock 累积)
+- 用户: "不是删主页, 还是保存在我的" (v19.14i 把主页折叠区 hide 但内容没移到我的)
+- 心理学家持续警告: 5 套 lock 累积 (math/chinese/装备/皮肤/宠物) → 平日 app 多巴胺 4/5 通道断 → 弃用率 ↑
+- UI 专家: 错题色 "待复习" 仍像"未完成 KPI", 应改"已收集 N 题"绿系收集感
+
+### 改造 4 项
+- **撤回 v19.14c 装备 + 皮肤平日 lock**: `toggleEquipment` / `setActiveSkin` 删 isWeekdayToday 检测, 装备穿戴随时可用
+- **撤回 v19.14c 宠物 zZz 休眠**: charPage 宠物 widget 一直活跃彩色, 不再灰显
+- **主页折叠区入口移到 👤 我的 tab**: page-character 末尾加 `<details>` "📋 主页旧详情入口", 6 个一键按钮 (📋 教练报告 / 📓 待复习清单 / 🌅 看 W73 的我 / 📊 能力页 / ⚙️ 父母面板 / 🎁 神秘宝箱). 旧 #_dashboardLegacy 保留供 renderDashboard 兼容
+- **错题色"已收集"绿系**: #607D8B 蓝灰 → #66BB6A 绿; "待复习 N 题" → "已收集 N 题 🌱"; 加"已答对 1+ 次 X 题 · 接近毕业 Y 题" Leitner 进度统计
+- **SCIENCE_MCQ runtime chapter 推断**: 新 `inferScimcqChapter(q)` + `tagScimcqChapters()` lazy tag, 加权 keyword 匹配 (word boundary +2 / 子串 +1 / 难章 1.2× 加权); `_openMcqGame` 优先用 `_chapterId` 精确匹配, fallback 旧 keyword 子串. 召回率 70-85% → 90%+
+
+### 量化
+| 维度 | v19.14i | v19.14j |
+|---|---|---|
+| 装备穿戴可用性 | 平日 lock 弹 toast | **随时可用** |
+| 宠物状态 | 平日 zZz 灰 | **一直活跃彩色** |
+| 主页旧内容入口 | display:none 无入口 | **👤 我的 tab 末尾 6 个一键按钮** |
+| 错题情感色 | 蓝灰中性 | **绿系收集感 ("已收集 N 题 🌱")** |
+| SCIENCE_MCQ chapter 召回 | 70-85% (子串) | **90%+** (chapterId tag + 加权) |
+
+QA 271 项全过 / cache buster ?v=19.14j
+
+---
+
 ## v19.14i (2026-05-23) — UI 收尾 + 内容 5 项
 
 ### 痛点 (5 专家 4 次评审累计未做项)
