@@ -412,8 +412,11 @@ function renderDashboard() {
   renderWeeklyCoach();
   // renderMasterTipCard(); // v18.71: 已合并到 wowCard
   renderDragonProgress();  // v18.55
-  renderErrorBankCard();   // v18.59
+  renderErrorBankCard();   // v18.59 (v19.18 主页学习入口区)
   if (typeof renderGradReviewCard === 'function') renderGradReviewCard();   // v19.17 毕业题间隔复习
+  // v19.18: 主页学习入口区 4 卡复活 — 思考题 + 名师秘籍 (paper2/error 已在上面)
+  if (typeof renderThinkPuzzleCard === 'function') renderThinkPuzzleCard(state.currentWeek);
+  if (typeof renderWeekMasterTipCard === 'function') renderWeekMasterTipCard();
   renderCompTrackerCard(); // v19.5: 作文质量追踪
   renderWeakChallengeCard(); // v19.5: 弱科挑战
   renderFocusAreasCard();  // v19.5: 模考诊断重点
@@ -1784,6 +1787,7 @@ function renderLearningPortraitCard() {
 window.renderLearningPortraitCard = renderLearningPortraitCard;
 
 // v19.9: 错题本卡 (区分真考错题 + app 错题)
+// v19.18: 改暗调适配主页学习入口区 + 加红 badge 提升 visibility (但内部仍绿系去羞耻)
 function renderErrorBankCard() {
   const card = document.getElementById('errorBankCard');
   if (!card) return;
@@ -1795,30 +1799,30 @@ function renderErrorBankCard() {
   card.style.display = '';
   const realExam = wrongs.filter(w => w.source === 'paper2-real').length;
   const appErrors = wrongs.length - realExam;
-  // v19.14j (UI 专家): "待复习" → "已收集 N 题" (绿系收集感), 进一步去羞耻
-  // 颜色: 蓝灰 #607D8B → 绿 #66BB6A, 标签 "重点" → "已收集"
   card.style.borderLeft = '4px solid #66BB6A';
   // 算 Leitner 毕业进度 (collected = 答对至少 1 次的题数)
   const collectedItems = wrongs.filter(w => (w.correctStreak || 0) >= 1);
   const masteredItems = wrongs.filter(w => (w.correctStreak || 0) >= 2);
+  // v19.18: 红 badge 提醒数字, 视觉入口强化 (绿系收集感保留在内部)
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <div style="font-size:14px;font-weight:900;color:#2E7D32">📓 已收集 ${wrongs.length} 题 🌱</div>
-      <div style="margin-left:auto;font-size:11px;color:#666">${collectedItems.length} 题已答对 1+ 次 · ${masteredItems.length} 题接近毕业</div>
+      <div style="font-size:15px;font-weight:900;color:#66FFB0">📓 错题本 · 已收集 ${wrongs.length} 题 🌱</div>
+      <div style="background:#EF5350;color:#FFF;font-size:13px;font-weight:900;padding:2px 10px;border-radius:14px;min-width:28px;text-align:center;box-shadow:0 0 8px rgba(239,83,80,0.4)">${wrongs.length}</div>
     </div>
+    <div style="font-size:11px;color:#A0A0A0;margin-bottom:8px">${collectedItems.length} 题已答对 1+ 次 · ${masteredItems.length} 题接近毕业 · 连续 3 次答对 +5 自动毕业</div>
     ${realExam > 0 ? `
-    <div style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border:1px solid #81C784;border-radius:6px;padding:8px;margin-bottom:6px">
+    <div style="background:linear-gradient(135deg, rgba(102,187,106,0.10), rgba(102,187,106,0.02));border:1px solid rgba(102,187,106,0.40);border-radius:6px;padding:10px;margin-bottom:6px">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:12px;font-weight:900;color:#1B5E20">🌟 Paper 2 真题集 (${realExam} 题)</div>
-        <button onclick="openErrorBank()" style="padding:4px 12px;background:#66BB6A;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">练一题 →</button>
+        <div style="font-size:12px;font-weight:900;color:#66FFB0">🌟 Paper 2 真题集 (${realExam} 题)</div>
+        <button onclick="openErrorBank()" style="padding:6px 14px;background:#66BB6A;color:#FFF;border:none;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer">练一题 →</button>
       </div>
-      <div style="font-size:10px;color:#2E7D32;margin-top:4px">从 Paper 2 真考收集的精华题 · 连续 3 次答对自动毕业 +5 分</div>
+      <div style="font-size:10px;color:#A5D6A7;margin-top:4px">从 Paper 2 真考收集的精华题 · 优先复习</div>
     </div>` : ''}
     ${appErrors > 0 ? `
-    <div style="background:#F1F8E9;border:1px solid #AED581;border-radius:6px;padding:8px">
+    <div style="background:rgba(102,187,106,0.06);border:1px solid rgba(102,187,106,0.25);border-radius:6px;padding:10px">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:12px;color:#33691E">🌱 平日收集: ${appErrors} 题</div>
-        ${realExam === 0 ? `<button onclick="openErrorBank()" style="padding:4px 12px;background:#66BB6A;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">练 →</button>` : ''}
+        <div style="font-size:12px;color:#A5D6A7">🌱 平日收集: ${appErrors} 题</div>
+        ${realExam === 0 ? `<button onclick="openErrorBank()" style="padding:6px 14px;background:#66BB6A;color:#FFF;border:none;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer">立即复习 →</button>` : ''}
       </div>
     </div>` : ''}
   `;
@@ -2755,6 +2759,26 @@ function renderIronRule() {
   if (titleEl) titleEl.textContent = r.title;
   if (bodyEl) bodyEl.textContent = r.body;
 }
+
+// v19.18: 本周名师秘籍卡 (主页学习入口区) — 直接取 WEEK_MASTER_TIPS[week-1] (周本主题, 不轮换)
+function renderWeekMasterTipCard() {
+  const el = document.getElementById('weekMasterTipCard');
+  if (!el || !window.WEEK_MASTER_TIPS) return;
+  const week = state.currentWeek || 1;
+  const tip = window.WEEK_MASTER_TIPS[week - 1];
+  if (!tip) { el.innerHTML = ''; return; }
+  el.style.borderLeft = '4px solid #FFB74D';
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div style="font-size:15px;font-weight:900;color:#FFB74D">🌟 本周名师秘籍</div>
+      <div style="margin-left:auto;font-size:11px;color:#94A3B8">W${week} · PSLE 答题模板</div>
+    </div>
+    <div style="font-size:13px;color:#4FC3F7;font-weight:700;margin-bottom:6px">${escapeHtml(tip.subject)} — ${escapeHtml(tip.title)}</div>
+    <div style="font-size:12px;color:#E0E0E0;line-height:1.7;background:rgba(255,184,0,0.06);border:1px solid rgba(255,184,0,0.20);border-radius:6px;padding:10px">${escapeHtml(tip.content)}</div>
+    <div style="margin-top:6px;font-size:10px;color:#888;font-style:italic;text-align:right">💡 PSLE 真考必背关键词 · 73 周专项轮换</div>
+  `;
+}
+window.renderWeekMasterTipCard = renderWeekMasterTipCard;
 
 // ============ 名师秘诀 (右栏卡,跟升级进度对齐) ============
 function renderMasterTipCard() {

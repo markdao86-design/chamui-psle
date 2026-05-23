@@ -411,8 +411,23 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.17/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.17: cache buster 已更新到 19.17 (3 大累计共识漏洞修)');
+assert(/\?v=19\.18/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.18: cache buster 已更新到 19.18 (主页学习入口区 4 卡复活)');
+// v19.18: 主页学习入口区 4 卡
+assert(/📚 学习入口/.test(idxSrc), 'v19.18: 学习入口分区标题');
+assert(/id="thinkPuzzleCard"/.test(idxSrc), 'v19.18: thinkPuzzleCard 在主页');
+assert(/id="paper2SprintCard"/.test(idxSrc), 'v19.18: paper2SprintCard 在主页');
+assert(/id="weekMasterTipCard"/.test(idxSrc), 'v19.18: weekMasterTipCard 在主页');
+// 旧位置改 id 防冲
+assert(/id="thinkPuzzleCardOld"/.test(idxSrc), 'v19.18: 打卡页 thinkPuzzleCard 改 thinkPuzzleCardOld 避冲');
+// renderDashboard 调用新卡
+assert(/renderWeekMasterTipCard\(\)/.test(appSrc), 'v19.18: renderWeekMasterTipCard 被调用');
+assert(/renderThinkPuzzleCard\(state\.currentWeek\)/.test(appSrc), 'v19.18: renderThinkPuzzleCard 被主页调用');
+// 错题本卡红 badge
+assert(/background:#EF5350;color:#FFF[\s\S]{0,150}border-radius:14px/.test(appSrc), 'v19.18: 错题本红 badge 强提醒');
+// renderWeekMasterTipCard 函数
+assert(/function renderWeekMasterTipCard/.test(appSrc), 'v19.18: renderWeekMasterTipCard 函数');
+assert(/window\.WEEK_MASTER_TIPS\[week - 1\]/.test(appSrc), 'v19.18: 取 WEEK_MASTER_TIPS[week-1]');
 // v19.17: 补做日上限
 assert(/今日补打已达.*\$\{cap\} 项上限/.test(appSrc), 'v19.17: 补做日上限拦截 toast');
 assert(/window\.DAILY_CARRY_CAP \|\| 3/.test(appSrc), 'v19.17: 读 DAILY_CARRY_CAP 常量');

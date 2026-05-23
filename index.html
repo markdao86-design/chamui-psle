@@ -5074,7 +5074,7 @@ p { font-size: 14px; line-height: 1.6; }
         <!-- v17.4: Wow 卡 移到 hero 右栏 (代替原 streak-rules 位置) — 第一屏右侧大卡 -->
         <div class="card wow-card-big" id="wowCard" style="display:none"></div>
 
-        <!-- 名师秘诀 -->
+        <!-- v19.18: masterTipCard 已迁主页"学习入口"区, 此处用旧 id 占位防 render 错 -->
         <div class="master-tip-card" id="masterTipCard" style="display:none"></div>
 
         <!-- v18.5: 间隔重复 + 每日任务 -->
@@ -5085,6 +5085,15 @@ p { font-size: 14px; line-height: 1.6; }
 
     <!-- v18.59: 错题本入口卡 (v19.14i 从折叠区提到主页) -->
     <div class="card" id="errorBankCardNew" style="border-left:4px solid #607D8B;display:none"></div>
+
+    <!-- v19.18: 学习入口区 (4 卡复活, 替代旧 "2 卡极简") -->
+    <div style="margin:14px 0 8px;font-size:13px;font-weight:900;color:#4FC3F7;letter-spacing:1px">📚 学习入口</div>
+    <div class="card think-puzzle-card" id="thinkPuzzleCard" style="display:none"></div>
+    <div class="card" id="paper2SprintCard"></div>
+    <div class="card" id="errorBankCard"></div>
+    <div class="card" id="weekMasterTipCard"></div>
+    <!-- v19.17: 毕业题间隔复习卡 (14 天后回测) -->
+    <div id="gradReviewCard"></div>
 
     <!-- v19.14i (UI 专家): "📋 更多详情" 折叠区改为彻底隐藏 (display:none), DOM 保留以兼容 render 函数 -->
     <!-- 内容 (智慧教练/进度/成就墙/皮肤更衣室/装备/双龙) 在 👤 我的 tab 已经有完整渲染 -->
@@ -5146,11 +5155,9 @@ p { font-size: 14px; line-height: 1.6; }
       <div class="skin-grid" id="skinGrid"></div>
     </div>
 
-    <!-- v18.59: 错题本入口卡 -->
-    <div class="card" id="errorBankCard"></div>
+    <!-- v19.18: errorBankCard 已移到学习入口区 (主区), 此处删 -->
+    <!-- v19.18: gradReviewCard 已移到学习入口区 (主区), 此处删 -->
 
-    <!-- v19.17: 毕业题间隔复习卡 (14 天后回测) -->
-    <div id="gradReviewCard"></div>
 
     <!-- v19.5: 作文质量追踪卡 -->
     <div class="card" id="compTrackerCard" style="display:none"></div>
@@ -5187,8 +5194,8 @@ p { font-size: 14px; line-height: 1.6; }
       </div>
     </div>
 
-    <!-- v17.5 Phase 2: 反直觉思考题 (难章周才显示) -->
-    <div class="card think-puzzle-card" id="thinkPuzzleCard" style="display:none"></div>
+    <!-- v19.18: thinkPuzzleCard 移到主页"学习入口"区, 此处用旧 id 占位防 render 错 -->
+    <div class="card think-puzzle-card" id="thinkPuzzleCardOld" style="display:none"></div>
 
     <div class="card">
       <div class="card-title">✏️ 本周任务清单</div>
@@ -5589,9 +5596,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.17"></script>
-<script src="data.js?v=19.17"></script>
-<script src="app.js?v=19.17"></script>
+<script src="character.js?v=19.18"></script>
+<script src="data.js?v=19.18"></script>
+<script src="app.js?v=19.18"></script>
 
 </body>
 </html>
