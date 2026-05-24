@@ -1418,6 +1418,8 @@ function submitLmAnswer(optIdx) {
     playSound && playSound('wrong');
   }
   saveState(state);
+  // v19.32: 英语 scaffold 升降级检查
+  if (window._checkEnglishModeHook) window._checkEnglishModeHook('listen_mcq', isCorrect);
   // 1.5s 后自动下一题 (答错延 3s 让看原文)
   setTimeout(() => { g.idx++; _renderLmQuestion(); }, isCorrect ? 1500 : 3000);
 }
@@ -1454,6 +1456,37 @@ window.playLmAudio = playLmAudio;
 window.stopLmAudio = stopLmAudio;
 window.submitLmAnswer = submitLmAnswer;
 window.closeLmGame = closeLmGame;
+
+// =========== v19.32: English scaffold 模式切换 (Expert 6 P1 — AL6 +20 gap 弱生分层) ===========
+function setEnglishMode(mode) {
+  if (!['weak', 'normal', 'strong'].includes(mode)) return;
+  state.englishMode = mode;
+  state.englishStreak = { correct: 0, wrong: 0 };  // 切换重置
+  saveState(state);
+  const label = { weak: '🌱 弱生模式 (Lv ≤ 2)', normal: '⚖️ 自适应模式', strong: '🔥 强生模式 (Lv ≥ 4)' }[mode];
+  showToast(`已切到 ${label}, 下局英语 game 生效`, 'success');
+  // 刷新 mini-game hub modal
+  if (document.getElementById('miniGameHubModal') && document.getElementById('miniGameHubModal').classList.contains('show')) {
+    openMiniGameHub();
+  }
+}
+window.setEnglishMode = setEnglishMode;
+
+// 接入 _openMcqGame 答题后 — 在 submitMcqAnswer 流程末加 hook 检查升降级提示
+function _checkEnglishModeHook(gameKey, isCorrect) {
+  if (!window.checkEnglishModeAdjust) return;
+  const sug = window.checkEnglishModeAdjust(state, gameKey, isCorrect);
+  if (!sug) return;
+  saveState(state);
+  // 用 toast 提示, 给操作 (点 toast 自动切)
+  const acceptBtn = `<button onclick="setEnglishMode('${sug.suggest}'); this.parentElement.parentElement.remove()" style="margin-left:8px;padding:4px 10px;background:#4FC3F7;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">切到 ${sug.suggest}</button>`;
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:80px;right:20px;z-index:10001;background:rgba(20,33,58,0.95);border:1px solid rgba(0,212,255,0.40);border-radius:8px;padding:12px;max-width:320px;font-size:13px;color:#E0E0E0;box-shadow:0 4px 16px rgba(0,0,0,0.4)';
+  t.innerHTML = `<div style="display:flex;align-items:flex-start;justify-content:space-between"><div>💡 ${escapeHtml(sug.reason)}${acceptBtn}</div><button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:18px;line-height:1;margin-left:8px">×</button></div>`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 8000);
+}
+window._checkEnglishModeHook = _checkEnglishModeHook;
 
 // --------- 2. 学科英语词汇 500 (今日 5 词 + mini-game) ---------
 function renderSubjectVocabCard() {
@@ -7626,11 +7659,23 @@ function openMiniGameHub() {
   const lockClick = (k, normalClick) => locked(k)
     ? `event.stopPropagation(); showToast('🔒 ${({math:'数学速算',chinese:'华文 MCQ',unit:'单位换算'})[k] || k} 周末才开放 — 平日攻英语 AL6→AL2', 'warn')`
     : normalClick;
+  // v19.32: English mode chip (scaffold 弱生模式, Expert 6 P1)
+  const eMode = state.englishMode || 'normal';
+  const modeChip = (m, label, color) => `<button onclick="setEnglishMode('${m}')" style="padding:6px 12px;background:${eMode === m ? color : 'rgba(255,255,255,0.04)'};color:${eMode === m ? '#FFF' : '#94A3B8'};border:1px solid ${eMode === m ? color : 'rgba(255,255,255,0.15)'};border-radius:6px;font-size:12px;font-weight:${eMode === m ? '900' : '600'};cursor:pointer;transition:all 0.15s">${label}</button>`;
   modal.innerHTML = `
     <div class="mgh-inner">
       <div class="mgh-header">
         <span class="mgh-title">🎮 Mini-game 大厅</span>
         <button class="vocab-modal-close" onclick="closeMiniGameHub()">×</button>
+      </div>
+      <div style="background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.20);border-radius:8px;padding:10px;margin-bottom:8px">
+        <div style="font-size:11px;color:#4FC3F7;font-weight:700;margin-bottom:6px">🎓 英语 scaffold 模式 (grammar/cloze/sst/editing/listen 适用)</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${modeChip('weak', '🌱 weak · 弱基础 (Lv ≤ 2)', '#66BB6A')}
+          ${modeChip('normal', '⚖️ normal · 自适应', '#4FC3F7')}
+          ${modeChip('strong', '🔥 strong · 高难 (Lv ≥ 4)', '#FF8A65')}
+        </div>
+        <div style="font-size:10px;color:#94A3B8;margin-top:4px">💡 ${eMode === 'weak' ? '弱生模式: 优先刷 Lv 1-2 基础题, 信心比难题重要' : eMode === 'strong' ? '强生模式: 直接刷 Lv 4-5 高难, 不浪费时间在简单题' : '自适应: 答对升级, 答错降级, 自动找你的节奏'}</div>
       </div>
       <div class="mgh-rules">📋 每 game 第 1 次满奖, 之后可继续练但不计分 · 想练多少练多少!</div>
       <div class="mgh-grid">
@@ -7971,6 +8016,8 @@ function submitMcqAnswer(idx) {
       window._saveMastered(state);
     }
   } else { g.wrong++; playSound('sad'); }
+  // v19.32: 英语 scaffold 升降级检查 (grammar/cloze/sst/editing 命中)
+  if (window._checkEnglishModeHook) window._checkEnglishModeHook(g.key, isCorrect);
   // v18.59: 错题入错题本 + v19.14e: Cloze 加 topic 自动归类 (travel/school/nature/emotion 等)
   if (!isCorrect && window.addToErrorBank) {
     const correctWord = q.opts && q.opts[q.ans];

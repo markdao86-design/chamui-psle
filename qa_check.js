@@ -411,8 +411,22 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.31/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.31: cache buster 已更新到 19.31 (英语 #2 — Listening MCQ 20 题, Paper 3 13.5% 裸考修复)');
+assert(/\?v=19\.32/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.32: cache buster 已更新到 19.32 (英语 #5 — Scaffold 弱生模式: weak/normal/strong 难度分层)');
+// v19.32: getDifficulty 加 englishMode 钩子
+const _v32data = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
+assert(/state\.englishMode \|\| 'normal'/.test(_v32data), 'v19.32: getDifficulty 加 englishMode 钩子');
+assert(/function checkEnglishModeAdjust\(/.test(_v32data), 'v19.32: checkEnglishModeAdjust 升降级函数');
+assert(/window\.checkEnglishModeAdjust = checkEnglishModeAdjust/.test(_v32data), 'v19.32: checkEnglishModeAdjust window 导出');
+// v19.32: setEnglishMode UI 切换接入
+assert(/function setEnglishMode\(mode\)/.test(appSrc), 'v19.32: setEnglishMode 已定义');
+assert(/window\.setEnglishMode = setEnglishMode/.test(appSrc), 'v19.32: setEnglishMode window 导出');
+// mini-game hub 用 template literal 渲染 chip, 检查 modeChip 函数定义 + 3 个 mode key 出现
+assert(/modeChip\('weak'/.test(appSrc) && /modeChip\('normal'/.test(appSrc) && /modeChip\('strong'/.test(appSrc), 'v19.32: 3 个 mode chip 接入 mini-game hub');
+// v19.32: hook 接入 _openMcqGame + listen MCQ (防死代码)
+const hookCount = (appSrc.match(/_checkEnglishModeHook/g) || []).length;
+assert(hookCount >= 3, `v19.32: _checkEnglishModeHook 接入 ≥ 3 处 (定义+window+grammar+listen, 实际 ${hookCount})`);
+assert(/v19\.32: 英语 scaffold 升降级检查/.test(appSrc), 'v19.32: mcq submit 加 scaffold 检查');
 // v19.31: Listening MCQ 20 题
 const _lmCount = (() => {
   const txt = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');

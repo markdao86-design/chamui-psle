@@ -2580,9 +2580,52 @@ function recordGameRun(state, gameKey, correct, total) {
 function getDifficulty(state, gameKey) {
   // v18.54: math = 4, 其他 = 4 (v19.2: 统一)
   const minFloor = _gameMinFloor(gameKey);
-  if (!state.gameStats || !state.gameStats[gameKey]) return minFloor;
-  return Math.max(minFloor, state.gameStats[gameKey].difficulty || minFloor);
+  let d = (state.gameStats && state.gameStats[gameKey]) ? state.gameStats[gameKey].difficulty || minFloor : minFloor;
+  d = Math.max(minFloor, d);
+  // v19.32: 英语 scaffold 弱生模式 cap (Expert 6 P1 — AL6 +20 gap 弱生需要难度分层)
+  const ENGLISH_KEYS = ['grammar', 'cloze', 'sst', 'editing', 'listen_mcq'];
+  const mode = state.englishMode || 'normal';
+  if (mode === 'weak' && ENGLISH_KEYS.includes(gameKey)) {
+    d = Math.min(d, 2);  // 弱生 Lv ≤ 2, 给基础题不被中高难度题压垮
+  } else if (mode === 'strong' && ENGLISH_KEYS.includes(gameKey)) {
+    d = Math.max(d, 4);  // 强生 Lv ≥ 4, 直接刷难题
+  }
+  return d;
 }
+
+// v19.32: English mode 自动升降级提示触发器
+// 连对 5 题英语 → 建议升级; 连错 3 题英语 → 建议降级
+function checkEnglishModeAdjust(state, gameKey, isCorrect) {
+  const ENGLISH_KEYS = ['grammar', 'cloze', 'sst', 'editing', 'listen_mcq'];
+  if (!ENGLISH_KEYS.includes(gameKey)) return null;
+  if (!state.englishStreak) state.englishStreak = { correct: 0, wrong: 0 };
+  if (isCorrect) {
+    state.englishStreak.correct = (state.englishStreak.correct || 0) + 1;
+    state.englishStreak.wrong = 0;
+  } else {
+    state.englishStreak.wrong = (state.englishStreak.wrong || 0) + 1;
+    state.englishStreak.correct = 0;
+  }
+  const mode = state.englishMode || 'normal';
+  if (mode === 'weak' && state.englishStreak.correct >= 5) {
+    state.englishStreak.correct = 0;
+    return { suggest: 'normal', reason: '连对 5 题! 可以试试 normal 模式挑战中等难度' };
+  }
+  if (mode === 'normal' && state.englishStreak.correct >= 8) {
+    state.englishStreak.correct = 0;
+    return { suggest: 'strong', reason: '连对 8 题! 可以挑战 strong 模式高难度' };
+  }
+  if (mode === 'strong' && state.englishStreak.wrong >= 3) {
+    state.englishStreak.wrong = 0;
+    return { suggest: 'normal', reason: '连错 3 题, 不如换 normal 模式稳一稳' };
+  }
+  if (mode === 'normal' && state.englishStreak.wrong >= 4) {
+    state.englishStreak.wrong = 0;
+    return { suggest: 'weak', reason: '连错 4 题, 切到 weak 模式刷基础, 信心比刷难题重要' };
+  }
+  return null;
+}
+window.checkEnglishModeAdjust = checkEnglishModeAdjust;
 
 // 从池中按难度采样: 主难度 70% + ±1 难度 30%  (v18.97: 优先选未答题)
 // v19.0: 答对的题永久排除 (mastered), 全 pool 都 mastered 才重置
