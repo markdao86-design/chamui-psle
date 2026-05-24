@@ -8758,13 +8758,159 @@ const ORAL_QUESTIONS = [
   { id: 'o_tc_1', cat: 'tech', topic: '科技', q: 'How much screen time do you have each day? Is it healthy?', hint: '时长 + 评价 + 平衡' },
   { id: 'o_tc_2', cat: 'tech', topic: '科技', q: 'Describe one app or website that helps you learn.', hint: '名字 / 怎么用 / 为什么有用' },
   { id: 'o_tc_3', cat: 'tech', topic: '科技', q: 'If your phone broke and you had no replacement for a week, what would you do?', hint: '想象 + 3 件代替的事' },
-  { id: 'o_tc_4', cat: 'tech', topic: '科技', q: 'Tell me about a time you helped someone learn how to use a device.', hint: '谁 / 学什么 / 结果' }
+  { id: 'o_tc_4', cat: 'tech', topic: '科技', q: 'Tell me about a time you helped someone learn how to use a device.', hint: '谁 / 学什么 / 结果' },
+
+  // v19.30: PSLE Oral SBC 扩 50 题 (Expert 1+6 P1 — 30 → 80, 覆盖 6 大 PSLE 主题)
+  // ---- Community & Society (10) ----
+  { id: 'o_com_1', cat: 'community', topic: '社区', q: 'Describe a neighbour who has been kind to your family.', hint: '是谁 / 做了什么 / 你的感受' },
+  { id: 'o_com_2', cat: 'community', topic: '社区', q: 'How can young people contribute to their community?', hint: '2 个具体方式 + 一个亲身例子' },
+  { id: 'o_com_3', cat: 'community', topic: '社区', q: 'Tell me about a time you volunteered or helped a stranger.', hint: '在哪 / 做什么 / 学到什么' },
+  { id: 'o_com_4', cat: 'community', topic: '社区', q: 'What makes a good neighbourhood for families to live in?', hint: '3 个要素 + 解释' },
+  { id: 'o_com_5', cat: 'community', topic: '社区', q: 'Describe a place in your estate (HDB/condo) where children like to play.', hint: '哪里 / 玩什么 / 安全吗' },
+  { id: 'o_com_6', cat: 'community', topic: '社区', q: 'How can we show appreciation for community workers like cleaners or security guards?', hint: '具体行动 + 为什么重要' },
+  { id: 'o_com_7', cat: 'community', topic: '社区', q: 'Tell me about a community event you joined recently.', hint: '什么活动 / 你做什么 / 印象最深的事' },
+  { id: 'o_com_8', cat: 'community', topic: '社区', q: 'Why is it important to greet your neighbours?', hint: '观点 + 一个亲身例子' },
+  { id: 'o_com_9', cat: 'community', topic: '社区', q: 'If you could organise a community project, what would it be?', hint: '项目 / 谁参加 / 目标' },
+  { id: 'o_com_10', cat: 'community', topic: '社区', q: 'How can children show care for elderly neighbours?', hint: '3 件小事 + 一个故事' },
+
+  // ---- Personal Values (10) ----
+  { id: 'o_val_1', cat: 'values', topic: '价值观', q: 'Tell me about a time you were honest even when it was hard.', hint: '情境 / 你的选择 / 结果' },
+  { id: 'o_val_2', cat: 'values', topic: '价值观', q: 'What does responsibility mean to a Primary 6 student?', hint: '定义 + 2 个例子' },
+  { id: 'o_val_3', cat: 'values', topic: '价值观', q: 'Describe a time you had to apologise. How did you feel?', hint: '为什么 / 怎么道歉 / 之后' },
+  { id: 'o_val_4', cat: 'values', topic: '价值观', q: 'Why is perseverance important when learning a new skill?', hint: '观点 + 亲身故事' },
+  { id: 'o_val_5', cat: 'values', topic: '价值观', q: 'Tell me about someone who inspires you outside your family.', hint: '是谁 / 做了什么 / 影响' },
+  { id: 'o_val_6', cat: 'values', topic: '价值观', q: 'What would you do if your friend asked you to copy their homework?', hint: '诚实选择 + 理由' },
+  { id: 'o_val_7', cat: 'values', topic: '价值观', q: 'How do you show kindness to people you do not know well?', hint: '3 个小行动' },
+  { id: 'o_val_8', cat: 'values', topic: '价值观', q: 'Describe a time you took the lead in a group project.', hint: '什么项目 / 你的角色 / 成果' },
+  { id: 'o_val_9', cat: 'values', topic: '价值观', q: 'Why is it important to keep your promises?', hint: '观点 + 例子 + 后果如果不守' },
+  { id: 'o_val_10', cat: 'values', topic: '价值观', q: 'Tell me about a time you stood up for someone being bullied.', hint: '情况 / 你做什么 / 之后' },
+
+  // ---- Current Issues (适龄) (10) ----
+  { id: 'o_cur_1', cat: 'current', topic: '时事', q: 'Should plastic bags be banned in supermarkets? Why?', hint: '观点 + 2 个理由 + 替代方案' },
+  { id: 'o_cur_2', cat: 'current', topic: '时事', q: 'How has online learning changed the way students study?', hint: '2 个好处 + 2 个挑战' },
+  { id: 'o_cur_3', cat: 'current', topic: '时事', q: 'Why is mental health important for students your age?', hint: '观点 + 1 个减压方法' },
+  { id: 'o_cur_4', cat: 'current', topic: '时事', q: 'Tell me how you would encourage a friend to read more books.', hint: '3 个具体方法' },
+  { id: 'o_cur_5', cat: 'current', topic: '时事', q: 'Should schools have longer recess time? Share your view.', hint: '立场 + 2 理由' },
+  { id: 'o_cur_6', cat: 'current', topic: '时事', q: 'How can young people stay safe online?', hint: '3 条原则 + 一个故事' },
+  { id: 'o_cur_7', cat: 'current', topic: '时事', q: 'What do you think about cashless payment in Singapore?', hint: '好处 + 担忧 + 自己用过吗' },
+  { id: 'o_cur_8', cat: 'current', topic: '时事', q: 'Should students be allowed to bring phones to school?', hint: '立场 + 2 理由 + 解决担忧' },
+  { id: 'o_cur_9', cat: 'current', topic: '时事', q: 'How can we encourage healthier eating habits among children?', hint: '3 个具体做法' },
+  { id: 'o_cur_10', cat: 'current', topic: '时事', q: 'Why is it important to learn about other cultures in Singapore?', hint: '观点 + 1 个亲身经历' },
+
+  // ---- Environment & Nature 扩 (8) ----
+  { id: 'o_env_1', cat: 'nature', topic: '环境', q: 'Describe a time you saw the impact of pollution.', hint: '在哪 / 看到什么 / 你的感受' },
+  { id: 'o_env_2', cat: 'nature', topic: '环境', q: 'How can your family reduce food waste at home?', hint: '3 个习惯 + 谁负责' },
+  { id: 'o_env_3', cat: 'nature', topic: '环境', q: 'Tell me about a park or nature reserve you enjoy.', hint: '名字 / 看到什么 / 为什么喜欢' },
+  { id: 'o_env_4', cat: 'nature', topic: '环境', q: 'Why is it important to protect endangered animals?', hint: '观点 + 1 个例子 (如新加坡 pangolin)' },
+  { id: 'o_env_5', cat: 'nature', topic: '环境', q: 'How does climate change affect Singapore?', hint: '2 个具体影响' },
+  { id: 'o_env_6', cat: 'nature', topic: '环境', q: 'Describe a small change your school can make to be greener.', hint: '具体建议 + 谁来做' },
+  { id: 'o_env_7', cat: 'nature', topic: '环境', q: 'What would you do on a rainy day stuck at home?', hint: '3 件事 + 为什么' },
+  { id: 'o_env_8', cat: 'nature', topic: '环境', q: 'Tell me about a time the weather changed your plans.', hint: '原本计划 / 怎么变 / 结果' },
+
+  // ---- Technology in Daily Life 扩 (8) ----
+  { id: 'o_tc_5', cat: 'tech', topic: '科技', q: 'Describe a smart device in your home and how it helps your family.', hint: '什么 / 怎么用 / 好处' },
+  { id: 'o_tc_6', cat: 'tech', topic: '科技', q: 'How can you use the Internet to help with your studies?', hint: '2 个具体方式 + 注意什么' },
+  { id: 'o_tc_7', cat: 'tech', topic: '科技', q: 'Tell me about a video or social media post that taught you something.', hint: '内容 / 学到什么 / 跟谁分享' },
+  { id: 'o_tc_8', cat: 'tech', topic: '科技', q: 'What is one downside of spending too much time on devices?', hint: '具体问题 + 解决建议' },
+  { id: 'o_tc_9', cat: 'tech', topic: '科技', q: 'Describe how technology helps elderly people in Singapore.', hint: '2 个例子 + 你帮过谁' },
+  { id: 'o_tc_10', cat: 'tech', topic: '科技', q: 'If you could invent a new app for students, what would it do?', hint: '名字 / 功能 / 谁会用' },
+  { id: 'o_tc_11', cat: 'tech', topic: '科技', q: 'How do you balance studies and screen time?', hint: '你的方法 + 谁监督' },
+  { id: 'o_tc_12', cat: 'tech', topic: '科技', q: 'Tell me about a time technology helped you in an emergency.', hint: '情况 / 怎么用 / 结果' },
+
+  // ---- Travel & Experiences (4) ----
+  { id: 'o_trv_1', cat: 'travel', topic: '旅行', q: 'Describe the most memorable trip you have been on.', hint: '在哪 / 跟谁 / 印象最深' },
+  { id: 'o_trv_2', cat: 'travel', topic: '旅行', q: 'If you could spend a day showing a tourist around Singapore, where would you take them?', hint: '3 个地方 + 为什么' },
+  { id: 'o_trv_3', cat: 'travel', topic: '旅行', q: 'Tell me about a new place you tried near your home.', hint: '什么 / 怎么发现 / 推荐吗' },
+  { id: 'o_trv_4', cat: 'travel', topic: '旅行', q: 'How does travelling help you learn about the world?', hint: '观点 + 1 个亲身经历' }
 ];
 
 function getOralQuestion(seed) {
   if (!ORAL_QUESTIONS.length) return null;
   const idx = (typeof seed === 'number' ? seed : Math.floor(Math.random() * ORAL_QUESTIONS.length)) % ORAL_QUESTIONS.length;
   return ORAL_QUESTIONS[idx];
+}
+
+// ============= v19.30: Oral Reading Aloud 文段 (Expert 1+6 P1) =============
+// PSLE Paper 4 Reading Aloud 20 分 — 文段 100-150 词, 含描述/对话/情绪转折, 评 Pronunciation/Fluency/Rhythm/Expressiveness
+const ORAL_RA_PASSAGES = [
+  { id: 'ra_1', title: 'The Lost Wallet', level: 'P5', wordCount: 118,
+    passage: 'On a busy Friday afternoon, Marcus was walking home from school when he noticed a small leather wallet lying on the pavement. He looked around. The street was crowded with strangers rushing past. His heart began to race. Should he keep it? Should he hand it in? He bent down slowly and picked it up. Inside, there were several notes and an old photo of a smiling family. Marcus took a deep breath and walked straight to the nearest police post. The kind officer thanked him warmly. As he left, Marcus felt a quiet pride glowing inside him. Honesty, he realised, did not always feel easy, but it always felt right.',
+    focus: '注意 "race"/"raise" 区分; 对话停顿 (Should he...?) 上扬; 结尾 "right" 重读' },
+  { id: 'ra_2', title: 'A Stormy Night', level: 'P5', wordCount: 124,
+    passage: 'The wind howled fiercely outside as Mei Lin pulled her blanket up to her chin. Heavy rain pounded against the window like tiny drums. Suddenly, the lights flickered and the whole house plunged into darkness. "Mum!" she called out, her voice shaky. Her mother appeared at the door with a glowing candle. "Don\'t worry, dear. It\'s only the power. Come, let\'s sit together." They sat by the warm candlelight, telling stories and giggling. Outside the storm raged on, but inside, Mei Lin felt safe and loved. By the time the lights came back, she had almost forgotten to be afraid. Some of the brightest moments, she thought, happen in the dark.',
+    focus: '拟声词 "howled"/"pounded" 加重; 对话情绪 (shaky → reassuring); 结尾哲理句放慢' },
+  { id: 'ra_3', title: 'The Birthday Surprise', level: 'P5', wordCount: 110,
+    passage: 'It was supposed to be just another ordinary Tuesday. Ahmad walked into his classroom expecting Maths and Science as usual. But the lights were off, and the room was silent. Confused, he flicked the switch. "SURPRISE!" his classmates shouted, jumping out from behind the desks. A huge chocolate cake sat on his table with eleven flickering candles. Ahmad\'s eyes grew wide and his cheeks turned pink. He had completely forgotten his own birthday! His best friend Daniel patted his shoulder. "We didn\'t forget, even if you did." Ahmad smiled so widely that his face hurt. It was a Tuesday he would always remember.',
+    focus: '"SURPRISE!" 必须大声短促; 数字 "eleven" 清晰; 对话亲切语调' },
+  { id: 'ra_4', title: 'The Old Photograph', level: 'P6', wordCount: 132,
+    passage: 'Inside the dusty attic, Priya found an old wooden box hidden under stacks of yellowed newspapers. Curious, she lifted the lid carefully. Inside was a single black-and-white photograph of two young children standing in front of a kampung house. Their faces beamed with mischievous grins. "Grandma!" she called downstairs. "Whose photo is this?" Her grandmother came up slowly, her eyes softening as she took the picture. "That is me and my brother, taken seventy years ago. Life was simpler then. We had nothing, but we had everything." Priya looked closer and noticed the same sparkling eyes she saw every day. She suddenly understood that her grandmother had once been a child too, dreaming dreams of her own.',
+    focus: '描述性形容词 "dusty"/"yellowed"/"mischievous" 清晰; 对话内省语调; "everything" 含感情' },
+  { id: 'ra_5', title: 'The Helping Hand', level: 'P5', wordCount: 116,
+    passage: 'Aisha was hurrying to catch her bus when she spotted an elderly man struggling to lift a bag of groceries up the staircase. She paused. The bus would arrive in two minutes. If she stopped to help, she might miss it. But the old man\'s face was tight with effort. Without thinking further, Aisha rushed over. "Uncle, let me help you with that." She took half the load and slowly climbed up beside him. He smiled gratefully, his wrinkled eyes shining. By the time they reached the top, the bus had long gone. Yet somehow, Aisha did not mind at all. She walked the rest of the way humming a tune.',
+    focus: '紧张感 "two minutes" 重读; "Uncle" 礼貌语调; 结尾 humming 放松' },
+  { id: 'ra_6', title: 'The First Race', level: 'P5', wordCount: 121,
+    passage: 'My hands were shaking as I stepped onto the running track for the first time. The bright sun beat down on my face. Around me, the other runners stretched and shook their legs. They looked so confident! I gulped. The starter raised his pistol. "On your marks. Get set. GO!" I burst forward, pumping my arms as hard as I could. The wind roared past my ears. My heart pounded like a drum. As I crossed the finish line, I realised I had not won, but I had not come last either. I had finished. Coach gave me a thumbs up. In that moment, I felt a kind of joy I had never known before.',
+    focus: '"On your marks. Get set. GO!" 节奏分明递进; 动词 "pumping"/"roared"/"pounded" 加重; 结尾感悟放慢' },
+  { id: 'ra_7', title: 'The Forgotten Lunchbox', level: 'P5', wordCount: 109,
+    passage: 'Wei Ming opened his bag at lunchtime and his stomach dropped. His lunchbox was missing! He had left it on the kitchen counter that morning. He sighed loudly and slumped onto the bench. Just then, his friend Hafiz appeared with two sandwiches. "Here, take one. I made extra." Wei Ming looked up, surprised. "Are you sure?" Hafiz nodded with a wide grin. They sat together under the shady tree, sharing the sandwich and laughing about silly things. Wei Ming realised that a forgotten lunch was not such a bad thing after all. Some of the best meals, he learned, were the ones shared with a good friend.',
+    focus: '"stomach dropped" 失望低; "Are you sure?" 上扬问句; 结尾温暖语调' },
+  { id: 'ra_8', title: 'The Library Discovery', level: 'P6', wordCount: 130,
+    passage: 'Tucked away in a quiet corner of the library, Sarah pulled a dusty old book from the bottom shelf. The cover was faded and the pages smelled of vanilla and time. As she turned to the first chapter, her eyes widened. The story was about a girl just like her — curious, shy, but full of dreams. Page after page, Sarah felt as though the author understood her secret thoughts. When the closing bell rang two hours later, she could hardly believe how quickly the time had flown. She borrowed the book and tucked it carefully into her bag. From that day on, Sarah discovered that books were not just words on paper. They were windows into worlds she never knew existed.',
+    focus: '"dusty old"/"faded"/"vanilla" 描述细腻; "page after page" 节奏均匀; 结尾隐喻句放慢' },
+  { id: 'ra_9', title: 'A Walk in the Rain', level: 'P5', wordCount: 113,
+    passage: 'The clouds had gathered all morning, and by recess they finally burst. Sheets of rain poured down, drumming hard on the roof. The teacher announced that PE would be cancelled. Some classmates groaned in disappointment. But not Adam. He pressed his nose against the cool glass and watched the raindrops dance on the puddles. To him, the rain was beautiful. After school, he stepped outside without an umbrella, lifted his face to the sky, and laughed as the cool drops splashed his cheeks. His mother shook her head and smiled. "You are a strange one, Adam," she said. He grinned. "I just like the rain."',
+    focus: '"drumming"/"dance"/"splashed" 动词生动; "I just like the rain." 单句简洁清晰' },
+  { id: 'ra_10', title: 'The Big Decision', level: 'P6', wordCount: 128,
+    passage: 'Ravi stared at the two envelopes on his desk. One was from the football academy. The other was from the orchestra. Both had accepted him, but he could only choose one. He had loved football since he was five. The cheers of the crowd, the rush of scoring a goal — nothing felt better. But the violin had also been a part of him for years. When he played, time seemed to stand still. His parents had told him gently, "Follow your heart, son. We will support you either way." Ravi closed his eyes. He thought of his future. He thought of who he wanted to become. Then slowly, with a deep breath, he reached out and picked up one envelope. His decision was made.',
+    focus: '对比句 "One...The other..." 平衡节奏; 父母语调 gentle; 结尾悬念 "His decision was made." 重读' }
+];
+
+function getRandomRA(level) {
+  const pool = level ? ORAL_RA_PASSAGES.filter(p => p.level === level) : ORAL_RA_PASSAGES;
+  if (!pool.length) return ORAL_RA_PASSAGES[0];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ============= v19.30: Situational Writing 题库 (Expert PSLE 真卷考官 P1) =============
+// PSLE Paper 1 Section A Situational Writing 15 分 — 通常是邮件/信/演讲稿/便条/报告
+// 每题: id, type, situation (背景), reader (收件人/听众), purpose (目的), points (必含 3 点), tone, opening
+const SITUATIONAL_WRITING = [
+  { id: 'sw_1', type: 'email', label: '邮件给老师', situation: '你下周一无法参加学校的科学考察 (因为家人结婚)', reader: 'Mrs Lim (科学老师)', purpose: '请假并说明原因',
+    points: ['请假的具体日期与活动', '无法参加的原因 (家人婚礼)', '如何补做错过的功课'], tone: '礼貌、正式', opening: 'Dear Mrs Lim, I am writing to inform you that I will be unable to attend the science excursion next Monday...' },
+  { id: 'sw_2', type: 'email', label: '邮件给校长', situation: '学校食堂的食物最近不够多样化, 学生希望加新选择', reader: 'Mr Tan (校长)', purpose: '建议菜单改进',
+    points: ['描述目前的问题 (选择少 / 总是同样几道菜)', '建议 2-3 种新菜', '解释好处 (营养 / 学生满意度)'], tone: '尊敬、建设性', opening: 'Dear Mr Tan, I am writing on behalf of the Primary 6 students with a suggestion regarding the canteen menu...' },
+  { id: 'sw_3', type: 'email', label: '邮件给朋友', situation: '你想邀请远方的好朋友 (新加坡以外) 在学校假期来玩 1 周', reader: 'Jamie (好朋友)', purpose: '发出邀请',
+    points: ['日期与停留时长', '住宿安排 (你家)', '你们可以一起做的 3 件事'], tone: '热情、亲切', opening: 'Hi Jamie! I have exciting news — Mum said you can come and stay with us during the December holidays!' },
+  { id: 'sw_4', type: 'email', label: '邮件给老师', situation: '你想感谢老师在你最近生病时的关心和帮忙补课', reader: 'Mrs Wong (班主任)', purpose: '表达感谢',
+    points: ['具体说哪一周生病 / 病情', '老师做了什么帮你', '你想怎样回报 (努力学习)'], tone: '真诚、温暖', opening: 'Dear Mrs Wong, I wanted to take a moment to thank you for all the support you gave me during my recent illness...' },
+  { id: 'sw_5', type: 'email', label: '邮件给市议员', situation: '你家附近的公园游乐场坏了 3 个月没人修', reader: 'Mr Chong (市议员办公室)', purpose: '反映问题、请求修缮',
+    points: ['公园位置与坏掉的设施', '影响 (小孩没地方玩)', '希望多快能修好'], tone: '客气但坚定', opening: 'Dear Mr Chong, I am a Primary 6 student writing to bring an issue at the Tampines East playground to your attention...' },
+  { id: 'sw_6', type: 'note', label: '便条给妈妈', situation: '你放学后要去同学家做小组作业, 妈妈不在家', reader: '妈妈', purpose: '留言告知',
+    points: ['你在哪里 (同学的住址)', '回家时间', '冰箱里有你的晚饭吗 / 需要带什么'], tone: '简短、关心', opening: 'Mum, I have gone to Daniel\'s house at Blk 124 to do our group project...' },
+  { id: 'sw_7', type: 'note', label: '便条给同学', situation: '你借了同学一本书, 现在要还但他不在座位上', reader: 'Lisa (同学)', purpose: '还书并感谢',
+    points: ['书的名字', '感谢的话', '推荐她另一本书或邀请下次再借'], tone: '友好', opening: 'Hi Lisa, I have returned The Magic Tree House on your desk. Thanks so much for lending it to me!' },
+  { id: 'sw_8', type: 'speech', label: '集会演讲', situation: '你被选为班长, 在第一次集会上向全班发表 1 分钟讲话', reader: '全班同学', purpose: '介绍自己、表达决心',
+    points: ['简短自我介绍 (姓名 / 你为什么愿意当班长)', '你想为班级做的 2 件事', '请求大家支持'], tone: '诚恳、有干劲', opening: 'Good morning, everyone. Many of you already know me, but for those who don\'t, my name is...' },
+  { id: 'sw_9', type: 'speech', label: '主题演讲', situation: '学校 World Reading Day, 你被邀请做 2 分钟分享 "为什么我爱读书"', reader: 'P3-P6 全体学生', purpose: '鼓励大家多读书',
+    points: ['你最喜欢的一本书 + 一句感受', '读书改变你的具体一件事', '推荐 2 本书 + 借阅地点'], tone: '热情、亲切', opening: 'Good morning, friends. Have you ever opened a book and felt like you stepped into another world?' },
+  { id: 'sw_10', type: 'letter', label: '信给报社', situation: '你认为学校应该禁止学生在校内带手机', reader: '《海峡时报》编辑', purpose: '投书表达观点',
+    points: ['你的立场 (支持禁止)', '2 个具体理由', '解决担忧 (家长怎么联系孩子)'], tone: '正式、有理有据', opening: 'Dear Editor, I am a Primary 6 student writing to share my view on the recent debate about mobile phones in schools...' },
+  { id: 'sw_11', type: 'letter', label: '信给社区中心', situation: '你想申请加入社区中心的免费华文阅读俱乐部', reader: 'Mrs Lee (社区中心负责人)', purpose: '申请加入',
+    points: ['自我介绍 + 年级', '为什么想加入 (兴趣 / 学习目标)', '可以参加的时间 (周末/平日)'], tone: '礼貌、热情', opening: 'Dear Mrs Lee, My name is Wei Han and I am a Primary 6 student at Mei Chin Primary School. I am writing to apply for...' },
+  { id: 'sw_12', type: 'report', label: '班长报告', situation: '上周班级组织了 "Eco Week", 你作为班长要写简短报告给训导主任', reader: 'Mr Sim (训导主任)', purpose: '汇报活动情况',
+    points: ['活动日期与目标', '参加人数与 3 个主要项目', '收获和下一步建议'], tone: '客观、简洁', opening: 'Dear Mr Sim, Below is the summary report of the Eco Week activities conducted by Primary 6A from 5 to 9 August...' },
+  { id: 'sw_13', type: 'invitation', label: '邀请函给家长', situation: '你的小组要在学校开放日表演短剧, 邀请家长参加', reader: '家长们', purpose: '邀请观看表演',
+    points: ['日期、时间、地点', '表演名字与时长', '怎样确认出席 (回执 / 联系老师)'], tone: '温暖、正式', opening: 'Dear Parents, We warmly invite you to join us at the Primary 6 Open Day on Saturday, 14 September...' },
+  { id: 'sw_14', type: 'note', label: '便条给楼下邻居', situation: '你周六晚生日派对, 提前告知邻居可能有点吵', reader: 'Uncle Raj (楼下邻居)', purpose: '事先告知、致歉',
+    points: ['派对日期与时间段 (e.g. 6-9 pm)', '可能的噪音类型 (音乐 / 笑声)', '欢迎他来或表达歉意'], tone: '礼貌、邻里友好', opening: 'Dear Uncle Raj, I am writing this short note to let you know that we will be hosting my 12th birthday party this Saturday from 6 pm to 9 pm...' },
+  { id: 'sw_15', type: 'email', label: '邮件给图书馆', situation: '你预约的英文图书还没来, 已等 3 周', reader: 'Tampines Regional Library (借阅部)', purpose: '查询进度',
+    points: ['书名与预约日期', '当前等待时间 (3 周)', '请求估计什么时候可取'], tone: '客气、清晰', opening: 'Dear Library Staff, I would like to enquire about the status of a book I reserved three weeks ago...' }
+];
+
+function getRandomSW(type) {
+  const pool = type ? SITUATIONAL_WRITING.filter(s => s.type === type) : SITUATIONAL_WRITING;
+  if (!pool.length) return SITUATIONAL_WRITING[0];
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function recordOralPractice(state, qId, durationSec) {
@@ -9892,6 +10038,11 @@ window.ORAL_QUESTIONS = ORAL_QUESTIONS;
 window.getOralQuestion = getOralQuestion;
 window.recordOralPractice = recordOralPractice;
 window.getOralStatus = getOralStatus;
+// v19.30: Oral RA + Situational Writing
+window.ORAL_RA_PASSAGES = ORAL_RA_PASSAGES;
+window.getRandomRA = getRandomRA;
+window.SITUATIONAL_WRITING = SITUATIONAL_WRITING;
+window.getRandomSW = getRandomSW;
 window.SUBJECT_VOCAB_MATH = SUBJECT_VOCAB_MATH;
 window.SUBJECT_VOCAB_SCIENCE = SUBJECT_VOCAB_SCIENCE;
 window.getDailySubjectVocab = getDailySubjectVocab;

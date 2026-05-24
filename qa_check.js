@@ -411,8 +411,42 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.29/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.29: cache buster 已更新到 19.29 (死代码清理 — 删 SRS 5 函数 + 接 petBreaksHappiness)');
+assert(/\?v=19\.30/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.30: cache buster 已更新到 19.30 (英语 #3+#4+#7 — Oral SBC 扩 80 + RA 10 段 + SW 15 题)');
+// v19.30: 题库规模
+const _v30data = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
+function _countItems(name) {
+  const re = new RegExp('const '+name+'\\s*=\\s*\\[','m');
+  const m = re.exec(_v30data); if (!m) return 0;
+  let i = m.index+m[0].length, depth=1, c=0, inStr=false, q='';
+  for (; i<_v30data.length && depth>0; i++) {
+    const ch = _v30data[i];
+    if (inStr) { if (ch===q && _v30data[i-1]!=='\\') inStr=false; continue; }
+    if (ch==='"'||ch==="'"||ch==='`') { inStr=true; q=ch; continue; }
+    if (ch==='[') depth++;
+    else if (ch===']') depth--;
+    else if (ch==='{' && depth===1) c++;
+  }
+  return c;
+}
+const _oralCount = _countItems('ORAL_QUESTIONS');
+const _raCount = _countItems('ORAL_RA_PASSAGES');
+const _swCount = _countItems('SITUATIONAL_WRITING');
+assert(_oralCount >= 80, `v19.30 #7: Oral SBC 应 ≥ 80 题 (实际 ${_oralCount})`);
+assert(_raCount >= 10, `v19.30 #3: Oral RA 应 ≥ 10 段 (实际 ${_raCount})`);
+assert(_swCount >= 15, `v19.30 #4: Situational Writing 应 ≥ 15 题 (实际 ${_swCount})`);
+// v19.30: 防死代码 — modal 函数必须接入 mini-game hub
+assert(/function openOralRAModal\(/.test(appSrc), 'v19.30: openOralRAModal 已定义');
+assert(/function openSituationalWritingModal\(/.test(appSrc), 'v19.30: openSituationalWritingModal 已定义');
+assert(/closeMiniGameHub\(\); openOralRAModal\(\)/.test(appSrc), 'v19.30: 朗读 RA 接入 mini-game hub');
+assert(/closeMiniGameHub\(\); openSituationalWritingModal\(\)/.test(appSrc), 'v19.30: 情境写作 SW 接入 mini-game hub');
+// v19.30: window 导出齐
+assert(/window\.ORAL_RA_PASSAGES = ORAL_RA_PASSAGES/.test(_v30data), 'v19.30: ORAL_RA_PASSAGES window 导出');
+assert(/window\.SITUATIONAL_WRITING = SITUATIONAL_WRITING/.test(_v30data), 'v19.30: SITUATIONAL_WRITING window 导出');
+assert(/window\.openOralRAModal = openOralRAModal/.test(appSrc), 'v19.30: openOralRAModal window 导出');
+assert(/window\.openSituationalWritingModal = openSituationalWritingModal/.test(appSrc), 'v19.30: openSituationalWritingModal window 导出');
+// v19.30: TTS 接入 (P4 RA 需要)
+assert(/speechSynthesis\.speak/.test(appSrc), 'v19.30: 接入 speechSynthesis TTS (RA 听示范)');
 // v19.29: SRS 死代码已删 (data.js 不应再含这些函数定义)
 const _v29data = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
 assert(!/function scheduleWrongAnswer\(/.test(_v29data), 'v19.29 死代码清理: scheduleWrongAnswer 已删');

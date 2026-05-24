@@ -1136,6 +1136,175 @@ window.closeOralModal = closeOralModal;
 window.completeOralPractice = completeOralPractice;
 window.quickOralCheckin = function() { showToast('⚠️ 一键打卡已禁用 (v19.14d) — 用"抽一题"做反向验证', 'warn'); };
 
+// =========== v19.30: Oral Reading Aloud modal (P4 RA 20 分模块, Expert 1+6) ===========
+let _raPassage = null;
+function openOralRAModal(level) {
+  if (!window.getRandomRA) { showToast('RA 题库未加载', 'warn'); return; }
+  const p = window.getRandomRA(level);
+  if (!p) { showToast('暂无 RA 文段', 'warn'); return; }
+  _raPassage = p;
+  let modal = document.getElementById('oralRAModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'oralRAModal';
+    modal.className = 'kt-modal';
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div class="kt-inner" style="max-width:680px">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title">🎤 Reading Aloud · ${escapeHtml(p.title)}</div>
+          <div class="kt-progress">PSLE Paper 4 · ${p.level} · ${p.wordCount} 词 · 评 Pronunciation / Fluency / Rhythm / Expressiveness (20 分)</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeOralRAModal()">×</button>
+      </div>
+      <div style="background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.25);border-radius:10px;padding:16px;margin-bottom:12px;font-size:16px;line-height:1.9;color:#E0E0E0;font-family:Georgia,serif">
+        ${escapeHtml(p.passage)}
+      </div>
+      <div style="background:rgba(255,184,0,0.08);border-left:3px solid #FFB74D;border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#FFD180;line-height:1.6">
+        <b>💡 朗读重点 (intonation/pronunciation):</b><br>${escapeHtml(p.focus)}
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:8px;padding:12px;margin-bottom:12px;font-size:12px;color:#94A3B8;line-height:1.7">
+        <b style="color:#E0E0E0">📋 练习流程</b>:<br>
+        1. 点 🔊 听示范 1-2 遍, 注意语调起伏<br>
+        2. 跟读 1 遍, 模仿节奏<br>
+        3. 独立朗读 1 遍 (家长用手机录音)<br>
+        4. 回放对比, 找出 3 个待改进点<br>
+        <b style="color:#FF8A65">PSLE 评分: 流畅 + 准确 + 有感情 = 满分</b>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="playRATTS()" style="flex:1;min-width:120px;padding:12px;background:linear-gradient(135deg,#26A69A,#00897B);color:#FFF;border:none;border-radius:8px;font-weight:900;cursor:pointer;font-size:14px">🔊 听示范</button>
+        <button onclick="stopRATTS()" style="padding:12px;background:rgba(255,255,255,0.10);color:#E0E0E0;border:1px solid rgba(255,255,255,0.20);border-radius:8px;font-weight:700;cursor:pointer">⏹ 停</button>
+        <button onclick="openOralRAModal()" style="padding:12px 16px;background:#FFA000;color:#FFF;border:none;border-radius:8px;font-weight:700;cursor:pointer">🔄 换一段</button>
+        <button onclick="recordRAPractice()" style="flex:1;min-width:140px;padding:12px;background:linear-gradient(135deg,#4ECDC4,#26A69A);color:#FFF;border:none;border-radius:8px;font-weight:900;cursor:pointer">✅ 已练完 (+5 分)</button>
+      </div>
+    </div>`;
+  modal.classList.add('show');
+}
+function closeOralRAModal() {
+  const m = document.getElementById('oralRAModal');
+  if (m) m.classList.remove('show');
+  stopRATTS();
+  _raPassage = null;
+}
+function playRATTS() {
+  if (!_raPassage || typeof speechSynthesis === 'undefined') {
+    showToast('此设备不支持语音合成, 请家长示范朗读', 'warn');
+    return;
+  }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(_raPassage.passage);
+  u.lang = 'en-GB';  // 英式英语更接近 PSLE 标准
+  u.rate = 0.85;     // 略慢便于跟读
+  u.pitch = 1.0;
+  speechSynthesis.speak(u);
+}
+function stopRATTS() {
+  if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+}
+function recordRAPractice() {
+  if (!_raPassage) { closeOralRAModal(); return; }
+  if (!state.oralRAStats) state.oralRAStats = { totalPracticed: 0, lastIds: [], byDate: {} };
+  state.oralRAStats.totalPracticed++;
+  state.oralRAStats.lastIds = [_raPassage.id, ...(state.oralRAStats.lastIds || [])].slice(0, 10);
+  const today = (window.todayKey ? window.todayKey() : new Date().toISOString().slice(0,10));
+  state.oralRAStats.byDate[today] = (state.oralRAStats.byDate[today] || 0) + 1;
+  state.totalPoints = (state.totalPoints || 0) + 5;
+  state.logs.push({ reason: `🎤 RA 朗读练习 (${_raPassage.title}) +5`, points: 5, week: state.currentWeek, timestamp: Date.now() });
+  saveState(state);
+  showToast(`🎤 +5 分 · RA 累计已练 ${state.oralRAStats.totalPracticed} 段`, 'success');
+  closeOralRAModal();
+  if (typeof renderAll === 'function') renderAll();
+}
+window.openOralRAModal = openOralRAModal;
+window.closeOralRAModal = closeOralRAModal;
+window.playRATTS = playRATTS;
+window.stopRATTS = stopRATTS;
+window.recordRAPractice = recordRAPractice;
+
+// =========== v19.30: Situational Writing modal (P1 Section A 15 分, Expert 1) ===========
+let _swPrompt = null;
+function openSituationalWritingModal(type) {
+  if (!window.getRandomSW) { showToast('SW 题库未加载', 'warn'); return; }
+  const s = window.getRandomSW(type);
+  if (!s) { showToast('暂无 SW 题', 'warn'); return; }
+  _swPrompt = s;
+  let modal = document.getElementById('swModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'swModal';
+    modal.className = 'kt-modal';
+    document.body.appendChild(modal);
+  }
+  const typeIcon = { email: '📧', note: '📝', speech: '🎙️', letter: '✉️', report: '📊', invitation: '💌' }[s.type] || '📝';
+  const pointsHtml = s.points.map((p, i) => `<li style="margin-bottom:4px"><b style="color:#FF8A65">${i+1}.</b> ${escapeHtml(p)}</li>`).join('');
+  modal.innerHTML = `
+    <div class="kt-inner" style="max-width:680px">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title">${typeIcon} Situational Writing · ${escapeHtml(s.label)}</div>
+          <div class="kt-progress">PSLE Paper 1 Section A · 15 分 · 必须涵盖 3 个 points + 正确格式</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeSWModal()">×</button>
+      </div>
+      <div style="background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.25);border-radius:10px;padding:14px;margin-bottom:12px">
+        <div style="font-size:11px;color:#4FC3F7;font-weight:700;margin-bottom:4px">📌 情境 (situation)</div>
+        <div style="font-size:14px;color:#E0E0E0;line-height:1.6">${escapeHtml(s.situation)}</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:180px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:8px;padding:10px">
+          <div style="font-size:10px;color:#94A3B8;font-weight:700">👤 收件人/听众</div>
+          <div style="font-size:13px;color:#E0E0E0;margin-top:2px">${escapeHtml(s.reader)}</div>
+        </div>
+        <div style="flex:1;min-width:180px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:8px;padding:10px">
+          <div style="font-size:10px;color:#94A3B8;font-weight:700">🎯 目的 + 语气</div>
+          <div style="font-size:13px;color:#E0E0E0;margin-top:2px">${escapeHtml(s.purpose)} · ${escapeHtml(s.tone)}</div>
+        </div>
+      </div>
+      <div style="background:rgba(255,184,0,0.08);border-left:3px solid #FFB74D;border-radius:6px;padding:12px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:900;color:#FFD180;margin-bottom:6px">✅ 必含 3 点 (漏一点扣分)</div>
+        <ul style="margin:0;padding-left:20px;font-size:13px;color:#E0E0E0;line-height:1.7">${pointsHtml}</ul>
+      </div>
+      <div style="background:rgba(102,255,176,0.06);border-left:3px solid #66FFB0;border-radius:6px;padding:12px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:900;color:#66FFB0;margin-bottom:4px">💡 开头示例 (可仿写)</div>
+        <div style="font-size:13px;color:#E0E0E0;font-style:italic;line-height:1.6">"${escapeHtml(s.opening)}"</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:#94A3B8;line-height:1.7">
+        <b style="color:#E0E0E0">📋 写作流程 (10-15 min)</b>:<br>
+        1. 读情境 → 想 receiver + tone → 列 3 点 outline<br>
+        2. 用提供的开头, 1 段写 1 点, 不要混<br>
+        3. 用合适称呼 + 结尾 (邮件 Yours sincerely / 便条 Love)<br>
+        4. 写好让家长检查 3 点齐全 + 格式对
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="openSituationalWritingModal()" style="flex:1;min-width:120px;padding:12px;background:#FFA000;color:#FFF;border:none;border-radius:8px;font-weight:700;cursor:pointer">🔄 换一题</button>
+        <button onclick="completeSWPractice()" style="flex:2;min-width:140px;padding:12px;background:linear-gradient(135deg,#4ECDC4,#26A69A);color:#FFF;border:none;border-radius:8px;font-weight:900;cursor:pointer">✅ 写完了 (+5 分)</button>
+      </div>
+    </div>`;
+  modal.classList.add('show');
+}
+function closeSWModal() {
+  const m = document.getElementById('swModal');
+  if (m) m.classList.remove('show');
+  _swPrompt = null;
+}
+function completeSWPractice() {
+  if (!_swPrompt) { closeSWModal(); return; }
+  if (!state.swStats) state.swStats = { totalWritten: 0, byType: {} };
+  state.swStats.totalWritten++;
+  state.swStats.byType[_swPrompt.type] = (state.swStats.byType[_swPrompt.type] || 0) + 1;
+  state.totalPoints = (state.totalPoints || 0) + 5;
+  state.logs.push({ reason: `📝 Situational Writing (${_swPrompt.label}) +5`, points: 5, week: state.currentWeek, timestamp: Date.now() });
+  saveState(state);
+  showToast(`📝 +5 分 · SW 累计已写 ${state.swStats.totalWritten} 篇 · 记得让家长检查 3 点齐全`, 'success');
+  closeSWModal();
+  if (typeof renderAll === 'function') renderAll();
+}
+window.openSituationalWritingModal = openSituationalWritingModal;
+window.closeSWModal = closeSWModal;
+window.completeSWPractice = completeSWPractice;
+
 // --------- 2. 学科英语词汇 500 (今日 5 词 + mini-game) ---------
 function renderSubjectVocabCard() {
   const card = document.getElementById('subjectVocabCard');
@@ -7349,6 +7518,13 @@ function openMiniGameHub() {
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openCompOeGame()">
           📖<br><b>阅读理解 OE</b><br><small>读文+自评</small>${status('comp_oe')}
+        </button>
+        <!-- v19.30: 英语 P1 Section A + P4 RA 新增 (Expert 1+6 P1) -->
+        <button class="mgh-game" onclick="closeMiniGameHub(); openOralRAModal()" style="border:2px solid rgba(0,212,255,0.40)">
+          🎤<br><b>朗读 RA</b><br><small>P4 文段·20 分</small><div class="mgh-status" style="color:#4FC3F7">🆕 +5/段</div>
+        </button>
+        <button class="mgh-game" onclick="closeMiniGameHub(); openSituationalWritingModal()" style="border:2px solid rgba(0,212,255,0.40)">
+          📧<br><b>情境写作 SW</b><br><small>P1·15 分</small><div class="mgh-status" style="color:#4FC3F7">🆕 +5/篇</div>
         </button>
       </div>
     </div>
