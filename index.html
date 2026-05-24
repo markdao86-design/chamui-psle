@@ -293,7 +293,7 @@ body::before {
   background: linear-gradient(135deg, rgba(167,136,224,0.10), rgba(167,136,224,0.02)) !important;
   border: 1px solid rgba(167,136,224,0.25) !important;
 }
-/* 中性灰白 */
+/* 中性灰白 (v19.25: 加 #ECEFF1 浅灰蓝) */
 [style*="background:#F5F5F5"],
 [style*="background:#FAFAFA"],
 [style*="background:#EEEEEE"],
@@ -303,6 +303,7 @@ body::before {
 [style*="background:#FFF "],
 [style*="background:#FFFFFF"],
 [style*="background:#FFF8F0"],
+[style*="background:#ECEFF1"],
 [style*="background:white"],
 [style*="background: white"] {
   background: rgba(255,255,255,0.04) !important;
@@ -328,7 +329,9 @@ body::before {
 [style*="color:#01579B"],
 [style*="color:#880E4F"],
 [style*="color:#BF360C"],
-[style*="color:#C62828"]:not(.intentional-red) {
+[style*="color:#C62828"]:not(.intentional-red),
+[style*="color:#455A64"],
+[style*="color:#1565C0"] {
   color: #E0E0E0 !important;
 }
 /* 中灰字 #666/#555/#888/#999 提亮到中亮灰 */
@@ -5702,9 +5705,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.24"></script>
-<script src="data.js?v=19.24"></script>
-<script src="app.js?v=19.24"></script>
+<script src="character.js?v=19.25"></script>
+<script src="data.js?v=19.25"></script>
+<script src="app.js?v=19.25"></script>
 
 </body>
 </html>

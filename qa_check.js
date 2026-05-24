@@ -411,8 +411,21 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.24/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.24: cache buster 已更新到 19.24 (方案 A: gameHub 移练习中心 + 错题本 modal 加历史 + W1-W4 思考题)');
+assert(/\?v=19\.25/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.25: cache buster 已更新到 19.25 (修思考题被打卡页覆盖 + 待复习 modal 暗调)');
+// v19.25 Bug 1: 删 renderCheckinPage 的 renderThinkPuzzleCard 调用
+assert(/v19\.25: 删 renderThinkPuzzleCard 调用/.test(appSrc), 'v19.25 Bug1: renderCheckinPage 不再调 renderThinkPuzzleCard');
+// 防回归: 全局只有 1 处 renderThinkPuzzleCard call (在 renderDashboard 用 state.currentWeek), 不再有 (week) 调用
+const tpCalls = (appSrc.match(/\brenderThinkPuzzleCard\(/g) || []).length;
+// 期望: 1 处 function 定义 + 1 处 dashboard 调用 = 2 个匹配 (definition + call)
+assert(tpCalls === 2, `v19.25 Bug1: renderThinkPuzzleCard 调用收敛 (定义 + 主页 1 处 = 2, 实际 ${tpCalls})`);
+// v19.25 Bug 2: openErrorBank modal 暗调
+assert(/v19\.25: 顶部提示改暗调透明黄 \+ 亮黄字/.test(appSrc), 'v19.25 Bug2: 顶部提示改暗调');
+assert(/border:1px solid rgba\(0,212,255,0\.30\);border-radius:6px;padding:6px 10px;font-size:12px;color:#E0E0E0/.test(appSrc), 'v19.25 Bug2: chip 暗调样式');
+// v19.25 全局 CSS 补 hex
+assert(/\[style\*="background:#ECEFF1"\]/.test(idxSrc), 'v19.25: 全局补 #ECEFF1 适配');
+assert(/\[style\*="color:#455A64"\]/.test(idxSrc), 'v19.25: 全局补 #455A64 字色提亮');
+assert(/\[style\*="color:#1565C0"\]/.test(idxSrc), 'v19.25: 全局补 #1565C0 字色提亮');
 // v19.24: gameHubCard 移练习中心
 assert(/v19\.24: gameHubCard 从主页迁到练习中心/.test(idxSrc), 'v19.24: 练习中心 gameHubCard 标注');
 assert(/v19\.24: 删主页插入, 改 render 到 page-practice 内的 gameHubCard 容器/.test(appSrc), 'v19.24: renderGameHubCard 改不主页插入');

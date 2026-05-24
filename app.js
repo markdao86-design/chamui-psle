@@ -3314,7 +3314,8 @@ function renderCheckinPage() {
   document.getElementById('prevWeekBtn').disabled = week <= 1;
   document.getElementById('nextWeekBtn').disabled = week >= 73;
 
-  renderThinkPuzzleCard(week);
+  // v19.25: 删 renderThinkPuzzleCard 调用 — 打卡页 thinkPuzzleCardOld 永久 hide
+  // 主页 renderDashboard 已用 state.currentWeek 正确调, 此处调会用 _displayWeek 覆盖主页显示 (bug)
 
   // 整个 checkinList 区域我们整体重渲(含日期 tab + slot 列表 + 周汇总)
   const list = document.getElementById('checkinList');
@@ -5766,7 +5767,7 @@ function openErrorBank() {
   const breakdown = Object.entries(byGame).map(([k, v]) =>
     `<div class="eb-stat"><span class="eb-stat-label">${GAME_LABEL[k] || k}</span><span class="eb-stat-num">${v}</span></div>`
   ).join('');
-  // v19.14i (英语专家): Cloze 错题按 topic 主题聚类显示
+  // v19.14i + v19.25: Cloze 错题按 topic 主题聚类显示 (暗调适配)
   const byTopic = window.errorBankByTopic ? window.errorBankByTopic(state, 'cloze') : {};
   const TOPIC_LABEL = {
     travel: '✈️ travel', school: '🏫 school', nature: '🌳 nature', emotion: '😊 emotion',
@@ -5774,18 +5775,18 @@ function openErrorBank() {
   };
   const topicEntries = Object.entries(byTopic).filter(([, v]) => v.count > 0);
   const topicHtml = topicEntries.length > 0 ? `
-    <div style="margin-top:12px;background:#E3F2FD;border-radius:8px;padding:10px">
-      <div style="font-size:13px;font-weight:900;color:#1565C0;margin-bottom:6px">🧩 Cloze 错题主题聚类 (按 PSLE 高频主题)</div>
+    <div style="margin-top:12px;background:linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,212,255,0.02));border:1px solid rgba(0,212,255,0.30);border-radius:8px;padding:10px">
+      <div style="font-size:13px;font-weight:900;color:#4FC3F7;margin-bottom:6px">🧩 Cloze 错题主题聚类 (按 PSLE 高频主题)</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         ${topicEntries.sort((a, b) => b[1].count - a[1].count).map(([t, v]) => `
-          <div style="background:#FFF;border:1px solid #BBDEFB;border-radius:6px;padding:6px 10px;font-size:12px">
+          <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(0,212,255,0.30);border-radius:6px;padding:6px 10px;font-size:12px;color:#E0E0E0">
             <span style="font-weight:700">${TOPIC_LABEL[t] || t}</span>
-            <span style="color:#1565C0;margin-left:4px">${v.count}</span>
-            ${v.threeThingsCount > 0 ? `<span style="color:#4CAF50;margin-left:4px;font-size:10px">✓${v.threeThingsCount}</span>` : ''}
+            <span style="color:#FF8A65;margin-left:4px;font-weight:900">${v.count}</span>
+            ${v.threeThingsCount > 0 ? `<span style="color:#66FFB0;margin-left:4px;font-size:10px">✓${v.threeThingsCount}</span>` : ''}
           </div>
         `).join('')}
       </div>
-      <div style="font-size:10px;color:#666;margin-top:6px">💡 同主题词集中练 (手册 v14 方法): travel 错多 → 下周 5 题 travel 主题</div>
+      <div style="font-size:10px;color:#A0A0A0;margin-top:6px">💡 同主题词集中练 (手册 v14 方法): travel 错多 → 下周 5 题 travel 主题</div>
     </div>
   ` : '';
   modal.innerHTML = `
@@ -5793,12 +5794,13 @@ function openErrorBank() {
       <div class="kt-header">
         <div>
           <div class="kt-title">📓 待复习清单</div>
-          <div class="kt-progress">共 <b>${wrongs.length}</b> 题待掌握 · Leitner 3 次答对毕业</div>
+          <div class="kt-progress">共 <b style="color:#FF8A65">${wrongs.length}</b> 题待掌握 · Leitner 3 次答对毕业</div>
         </div>
         <button class="vocab-modal-close" onclick="closeErrorBank()">×</button>
       </div>
-      <div style="background:#ECEFF1;border:2px dashed #607D8B;border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;color:#455A64">
-        💡 错题反复练 = 真正消灭弱点。<b>连续 3 次答对</b>自动毕业, 每次 +1 巩固分, 毕业 +5 分。
+      <!-- v19.25: 顶部提示改暗调透明黄 + 亮黄字 -->
+      <div style="background:linear-gradient(135deg, rgba(255,184,0,0.10), rgba(255,107,53,0.04));border:1px dashed rgba(255,184,0,0.40);border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;color:#FFD180;line-height:1.6">
+        💡 错题反复练 = 真正消灭弱点。<b style="color:#FFB74D">连续 3 次答对</b>自动毕业, 每次 +1 巩固分, 毕业 +3 分 (14 天后回测)。
       </div>
       <div class="eb-stats">${breakdown}</div>
       ${topicHtml}
