@@ -701,11 +701,15 @@ function renderAdmissionForecastCard() {
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <div style="font-size:15px;font-weight:900">🏫 你的目标校 录取概率</div>
-      <div style="margin-left:auto;font-size:11px;color:#666">基于综合 PSLE 预测 AL</div>
+      <div style="margin-left:auto;font-size:11px;color:#666" title="MOE 真实公式: 4 科 AL 加总 (4-32). 例: 英6+数1+科2+华1=10. 越小越好.">PSLE 综合 AL ⓘ</div>
     </div>
-    <div style="background:#F0F8FF;border-radius:6px;padding:8px;margin-bottom:8px;font-size:12px;display:flex;justify-content:space-between">
-      <span>综合 AL: <b style="font-size:14px;color:#FF6B6B">${total_AL}</b> (英${bySubject.english_AL}+数${bySubject.math_AL}+科${bySubject.science_AL}+华${bySubject.chinese_AL})</span>
-      <span>击败 <b>${sgRank_pct === 5 ? '95+' : (100-sgRank_pct)}%</b> P6 学生</span>
+    <!-- v19.34: P0-1 综合 AL 显示澄清 — 加 MOE 标识 + 范围标尺 + 一键看说明 -->
+    <div style="background:#F0F8FF;border-radius:6px;padding:8px;margin-bottom:8px;font-size:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span>综合 AL: <b style="font-size:16px;color:#FF6B6B">${total_AL}</b><span style="font-size:10px;color:#888">/32</span> = 英${bySubject.english_AL}+数${bySubject.math_AL}+科${bySubject.science_AL}+华${bySubject.chinese_AL}</span>
+        <span>击败 <b>${sgRank_pct === 5 ? '95+' : (100-sgRank_pct)}%</b> P6</span>
+      </div>
+      <div style="font-size:10px;color:#666;margin-top:3px">📐 <b>MOE 标准</b>: 4 科 AL 等权加总 (范围 4-32, 越小越好). 立化/华侨/莱佛士 COP 6 = 4 科平均 AL 1.5 (顶级). <a href="javascript:void(0)" onclick="showALExplain()" style="color:#1565C0;text-decoration:underline">查看完整说明</a></div>
     </div>
 
     ${byTier.top.length ? `
@@ -1456,6 +1460,73 @@ window.playLmAudio = playLmAudio;
 window.stopLmAudio = stopLmAudio;
 window.submitLmAnswer = submitLmAnswer;
 window.closeLmGame = closeLmGame;
+
+// =========== v19.34: P0-1 AL 公式说明弹窗 (评审 11 轮 P0 — 让家长一眼看懂综合 AL) ===========
+function showALExplain() {
+  let modal = document.getElementById('alExplainModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'alExplainModal';
+    modal.className = 'kt-modal';
+    document.body.appendChild(modal);
+  }
+  const f = window.getAdmissionForecasts ? window.getAdmissionForecasts(state) : null;
+  const cur = f ? f.realTotalAL || f.total_AL : '?';
+  const bs = f ? (f.realBySubject || f.bySubject) : { english_AL: '?', math_AL: '?', science_AL: '?', chinese_AL: '?' };
+  modal.innerHTML = `
+    <div class="kt-inner" style="max-width:680px">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title">📐 综合 AL 完整说明</div>
+          <div class="kt-progress">PSLE MOE 真实评分逻辑</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeALExplain()">×</button>
+      </div>
+      <div style="background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.25);border-radius:8px;padding:12px;margin-bottom:12px;color:#E0E0E0;line-height:1.7;font-size:13px">
+        <div style="font-weight:900;color:#4FC3F7;margin-bottom:6px">🎯 公式 (MOE 官方)</div>
+        综合 AL = <b>4 科 AL 等权加总</b> = 英语 + 数学 + 科学 + 华文<br>
+        范围 <b>4-32</b>, <b style="color:#66FFB0">越小越好</b> (4 = 4 科全 AL1, 32 = 4 科全 AL8)<br>
+        <span style="color:#888">注: 知识树 ⭐ 不计入综合 AL, 仅作辅助掌握度诊断</span>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:8px;padding:12px;margin-bottom:12px;color:#E0E0E0;line-height:1.7;font-size:13px">
+        <div style="font-weight:900;color:#FFD180;margin-bottom:6px">📊 单科 AL 1-8 分档 (MOE 真实 cut-off)</div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.10)"><td style="padding:4px"><b>AL 1</b></td><td>≥ 90 分</td><td>顶级</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.10)"><td style="padding:4px"><b>AL 2</b></td><td>85-89 分</td><td>优</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.10)"><td style="padding:4px"><b>AL 3</b></td><td>80-84 分</td><td>良</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.10)"><td style="padding:4px"><b>AL 4</b></td><td>75-79 分</td><td>中上</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.10)"><td style="padding:4px"><b>AL 5</b></td><td>65-74 分</td><td>中</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.10)"><td style="padding:4px"><b>AL 6</b></td><td>45-64 分</td><td>合格</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.10)"><td style="padding:4px"><b>AL 7</b></td><td>20-44 分</td><td>待加强</td></tr>
+          <tr><td style="padding:4px"><b>AL 8</b></td><td>< 20 分</td><td>未达标</td></tr>
+        </table>
+      </div>
+      <div style="background:rgba(102,255,176,0.06);border:1px solid rgba(102,255,176,0.30);border-radius:8px;padding:12px;margin-bottom:12px;color:#E0E0E0;line-height:1.7;font-size:13px">
+        <div style="font-weight:900;color:#66FFB0;margin-bottom:6px">🏫 名校 COP 对照 (Cut-off Point, 综合 AL)</div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.10)"><td style="padding:4px">🏛️ 莱佛士女中 / 立化 / 华侨</td><td style="text-align:right"><b style="color:#66FFB0">COP 6</b> (顶级)</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.10)"><td style="padding:4px">🏛️ 英华自主 / 淡马锡附中</td><td style="text-align:right"><b style="color:#66FFB0">COP 8</b></td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.10)"><td style="padding:4px">🏫 实龙岗中学</td><td style="text-align:right"><b style="color:#FFD180">COP 10</b></td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.10)"><td style="padding:4px">🏫 南华中学</td><td style="text-align:right"><b style="color:#FFD180">COP 11</b></td></tr>
+          <tr><td style="padding:4px">🏫 公教中学</td><td style="text-align:right"><b style="color:#FFD180">COP 12</b></td></tr>
+        </table>
+      </div>
+      <div style="background:rgba(255,184,0,0.08);border-left:3px solid #FFB74D;border-radius:6px;padding:12px;margin-bottom:12px;color:#FFD180;font-size:13px;line-height:1.7">
+        <div style="font-weight:900;margin-bottom:4px">👧 你家孩子当前状态</div>
+        综合 AL = <b style="color:#FF8A65">${cur}</b>/32 = 英${bs.english_AL}+数${bs.math_AL}+科${bs.science_AL}+华${bs.chinese_AL}<br>
+        目标 AL 4-6 → 对应名校 COP 6-8 范围<br>
+        <b>关键杠杆</b>: 英语从 AL${bs.english_AL} 提到 AL3 → 综合 -${Math.max(0, bs.english_AL - 3)} → 跨入顶级 COP 6
+      </div>
+      <button onclick="closeALExplain()" style="width:100%;padding:12px;background:linear-gradient(135deg,#4ECDC4,#26A69A);color:#FFF;border:none;border-radius:8px;font-weight:900;cursor:pointer;font-size:14px">明白了</button>
+    </div>`;
+  modal.classList.add('show');
+}
+function closeALExplain() {
+  const m = document.getElementById('alExplainModal');
+  if (m) m.classList.remove('show');
+}
+window.showALExplain = showALExplain;
+window.closeALExplain = closeALExplain;
 
 // =========== v19.32: English scaffold 模式切换 (Expert 6 P1 — AL6 +20 gap 弱生分层) ===========
 function setEnglishMode(mode) {
@@ -7682,8 +7753,12 @@ function openMiniGameHub() {
         <button class="mgh-game" onclick="closeMiniGameHub(); openVocabGame(${state.currentWeek})">
           📚<br><b>词汇连连看</b><br><small>6×6 配对</small>${status('vocab')}
         </button>
-        <button class="mgh-game" style="${lockStyle('math')}" onclick="${lockClick('math', 'closeMiniGameHub(); openMathGame()')}">
-          ➗<br><b>数学速算</b><br><small>10 题限时</small>${status('math')}
+        <!-- v19.34: P0-3 数学分卷 — 替换"数学速算"为 P1 (无计算器) + P2 (problem sums) 双入口 -->
+        <button class="mgh-game" style="${lockStyle('math')}" onclick="${lockClick('math', 'closeMiniGameHub(); openMathGame(1)')}">
+          🔢<br><b>数学 P1 速算</b><br><small>无计算器·心算</small>${status('math')}
+        </button>
+        <button class="mgh-game" style="${lockStyle('math')}" onclick="${lockClick('math', 'closeMiniGameHub(); openMathGame(2)')}">
+          🧮<br><b>数学 P2 应用</b><br><small>problem sums·宽时</small>${status('math')}
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openSciMcqGame()">
           🧬<br><b>科学 MCQ</b><br><small>10 题概念</small>${status('scimcq')}
@@ -8454,14 +8529,24 @@ window.closeSciGame = closeSciGame;
 // 数学速算
 let _mathGameState = null;
 let _mathTimer = null;
-function openMathGame() {
+function openMathGame(paper) {
   if (!_checkGameDailyLock('math')) return;  // v18.38
   // v18.25: 按当前难度采样
   const diff = window.getDifficulty ? window.getDifficulty(state, 'math') : 1;
-  const qs = window.getMathQuestionsByDiff ? window.getMathQuestionsByDiff(diff, 10)
-           : (window.getDailyMathQuestions ? window.getDailyMathQuestions(10) : [...window.MATH_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10));
-  const mathTimeBudget = diff >= 5 ? 240 : diff >= 4 ? 150 : 90;
-  _mathGameState = { qs, idx: 0, correct: 0, wrong: 0, startedAt: Date.now(), timeLeft: mathTimeBudget, totalTime: mathTimeBudget, diff };
+  // v19.34: P0-3 分卷 — paper=1 (无计算器速算, 时间紧) / paper=2 (problem sums, 时间宽) / undefined (混合)
+  let qs;
+  if (paper && window.getMathQuestionsByPaper) {
+    qs = window.getMathQuestionsByPaper(diff, 10, paper);
+  } else {
+    qs = window.getMathQuestionsByDiff ? window.getMathQuestionsByDiff(diff, 10)
+       : (window.getDailyMathQuestions ? window.getDailyMathQuestions(10) : [...window.MATH_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10));
+  }
+  // P1 无计算器 → 时间更紧 (心算); P2 应用题 → 时间宽 (allows working)
+  let mathTimeBudget;
+  if (paper === 1) mathTimeBudget = diff >= 4 ? 90 : 60;          // P1 速算, 心算压力
+  else if (paper === 2) mathTimeBudget = diff >= 5 ? 360 : 240;   // P2 应用题, 给 working 时间
+  else mathTimeBudget = diff >= 5 ? 240 : diff >= 4 ? 150 : 90;   // 混合 (旧行为)
+  _mathGameState = { qs, idx: 0, correct: 0, wrong: 0, startedAt: Date.now(), timeLeft: mathTimeBudget, totalTime: mathTimeBudget, diff, paper };
   _renderMathGame();
   // v18.11: 计时器只更新 stats 文字, 不重渲染 input (避免 iPad 键盘跳)
   if (_mathTimer) clearInterval(_mathTimer);
@@ -8491,8 +8576,13 @@ function _renderMathGame() {
   }
   const q = g.qs[g.idx];
   // v18.12: 整页只在首次构建一次, 之后用 _updateMathQuestion 部分更新, 保留 input 元素
+  // v19.34: paper badge 让玩家清楚现在练 P1 (无计算器心算) vs P2 (problem sums)
+  const paperBadge = g.paper === 1 ? `<div style="display:inline-block;background:#FF6B6B;color:#FFF;font-size:10px;font-weight:900;padding:3px 8px;border-radius:4px;margin-bottom:6px">🔢 Paper 1 · 无计算器·心算</div>`
+                   : g.paper === 2 ? `<div style="display:inline-block;background:#4FC3F7;color:#FFF;font-size:10px;font-weight:900;padding:3px 8px;border-radius:4px;margin-bottom:6px">🧮 Paper 2 · 应用题·宽时</div>`
+                   : '';
   modal.innerHTML = `
     <div class="mg-inner">
+      ${paperBadge}
       <div class="mg-stats" id="mgStats">⏱️ ${g.timeLeft}s · ✅ ${g.correct} · ❌ ${g.wrong} · ${g.idx + 1}/10</div>
       <div class="mg-q" id="mgQ">${q.q} = ?</div>
       <input type="text" inputmode="numeric" pattern="-?[0-9]*" id="mgInput" value="" class="mg-input" onkeydown="if(event.key==='Enter') submitMathAnswer()" placeholder="点这里输入答案">

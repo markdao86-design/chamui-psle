@@ -411,8 +411,25 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.33/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.33: cache buster 已更新到 19.33 (科学 Systems OE 补 10 — Circulatory 4 + Respiratory 3 + Circuits 3, 第 9+10 轮 P0 修复)');
+assert(/\?v=19\.34/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.34: cache buster 已更新到 19.34 (P0-1 AL 公式澄清 + P0-3 数学分卷 P1/P2)');
+// v19.34 P0-3: 数学 paper auto-tag + 抽题函数 + mini-game hub 2 入口
+const _v34data = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
+assert(/function getMathQuestionsByPaper\(diff, n, paper\)/.test(_v34data), 'v19.34 P0-3: getMathQuestionsByPaper 已加');
+assert(/function _autoTagMathPaper\(/.test(_v34data), 'v19.34 P0-3: _autoTagMathPaper 启发式分类');
+assert(/window\.getMathQuestionsByPaper/.test(_v34data), 'v19.34 P0-3: getMathQuestionsByPaper window 导出');
+assert(/openMathGame\(1\)/.test(appSrc) && /openMathGame\(2\)/.test(appSrc), 'v19.34 P0-3: mini-game hub 加 P1 + P2 双入口');
+assert(/function openMathGame\(paper\)/.test(appSrc), 'v19.34 P0-3: openMathGame 接 paper 参数');
+assert(/数学 P1 速算/.test(appSrc) && /数学 P2 应用/.test(appSrc), 'v19.34 P0-3: P1/P2 入口 label');
+// v19.34 P0-1: AL 公式澄清 + showALExplain 弹窗
+assert(/function showALExplain\(/.test(appSrc), 'v19.34 P0-1: showALExplain 弹窗函数');
+assert(/window\.showALExplain = showALExplain/.test(appSrc), 'v19.34 P0-1: showALExplain window 导出');
+assert(/MOE 标准.*4 科 AL 等权加总/.test(appSrc), 'v19.34 P0-1: 录取卡顶部加 MOE 标识');
+assert(/onclick="showALExplain\(\)"/.test(appSrc), 'v19.34 P0-1: 录取卡链接到 AL 完整说明');
+// v19.34 P0-1: CLAUDE.md 修正陈旧加权描述
+const claudemd = fs.readFileSync(path.join(__dirname, 'CLAUDE.md'), 'utf8');
+assert(/v19\.34 文档纠错/.test(claudemd), 'v19.34 P0-1: CLAUDE.md 修正陈旧公式描述');
+assert(!/AL = f\(数学 25%/.test(claudemd), 'v19.34 P0-1: CLAUDE.md 陈旧 25/25/20/10/20 公式已删');
 // v19.33: 科学 OE 60 题 (50 → 60), 3 个 Systems 主题填补
 const _v33data = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
 function _countOEByTopic(topic) {

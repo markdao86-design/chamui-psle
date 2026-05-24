@@ -41,12 +41,17 @@
 - 5 级自适应: 最近 3 次 ≥80% 升级, 最近 2 次 ≤40% 降级
 - 题库: math 65 道全 Diff 4-5 PSLE 5-mark / grammar 40 / cloze 33 / vocab 150 / listen 16 段
 
-### AL 预测公式 (v18.55 修过 bug)
+### AL 预测公式 (v19.34 文档纠错: 之前写的 25/25/20/10/20 加权是错的, 真实代码是 MOE 等权)
 ```
-AL = f(数学 25% + 英语 25% + 科学 20% + 华文 10% + 知识树⭐ 20%)
-⭐ 用 totalStars/(35×3) 绝对完成度, 不是 avgStars/3 (那是 bug, 1 节点 3⭐ 就拉高 AL 1-2 级)
+综合 AL = english_AL + math_AL + science_AL + chinese_AL  (4 科 AL 等权加总, 范围 4-32)
 ```
-映射 (PSLE 真实 AL 1-9): ≥90% AL1 / ≥85% AL2 / ≥80% AL3 / ≥75% AL4 / ≥65% AL5 / ≥45% AL6 / ≥20% AL7 / <20% AL8
+实现见 `data.js:computeTotalAL` line 5737. **知识树 ⭐ 不计入综合 AL**, 仅作辅助掌握度诊断 (computeTotalAL 不读 ⭐).
+
+PSLE 单科 AL cut-off (MOE 真实): ≥90 AL1 / 85-89 AL2 / 80-84 AL3 / 75-79 AL4 / 65-74 AL5 / 45-64 AL6 / 20-44 AL7 / <20 AL8
+
+COP 对照 (`data.js:PSLE_TARGET_SCHOOLS`): 立化/华侨/莱佛士 COP 6 · 英华/淡马锡 COP 8 · 实龙岗 COP 10 · 南华 COP 11 · 公教 COP 12.
+
+孩子当前 (2026.5): 英 AL6 + 数 AL1 + 科 AL2 + 华 AL1 = 综合 10 → 目标 AL 4-6 (跨入 COP 6-8 顶级)
 
 ### 双层龙系统 (v18.55-v18.60)
 - **🐲 银龙** = 10000 分 解锁 → SGD 500 + 称号"银龙骑士" + 永久 +10% mini-game buff

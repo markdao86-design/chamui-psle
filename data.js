@@ -2729,6 +2729,33 @@ function getMathQuestionsByDiff(diff, n) {
   return _sampleByDiff(MATH_QUESTIONS, diff, n || 10);
 }
 
+// v19.34: Paper 1 (无计算器, 速算/直选) vs Paper 2 (problem sums, 含 $/比例/几何应用)
+// 启发式 auto-tag: 含 $ 或长描述 (≥18 char) 或含中文应用描述词 → P2; 其他 → P1
+function _autoTagMathPaper(q) {
+  if (q._paper) return q._paper;
+  const text = q.q || '';
+  // P2 indicators
+  const P2_KEYWORDS = ['$', '原 (', '余 (', '甲', '乙', '工程', '几天', '比例', '几只', '几张', '几辆', '原价', '面积', '体积', '速度', '小时', 'cm²', 'cm³', '总价'];
+  const hasP2Keyword = P2_KEYWORDS.some(kw => text.includes(kw));
+  const isLong = text.length >= 18;
+  q._paper = (hasP2Keyword || isLong) ? 2 : 1;
+  return q._paper;
+}
+function tagAllMathPapers() {
+  MATH_QUESTIONS.forEach(_autoTagMathPaper);
+}
+function getMathQuestionsByPaper(diff, n, paper) {
+  if (!MATH_QUESTIONS[0]._paper) tagAllMathPapers();
+  const pool = paper ? MATH_QUESTIONS.filter(q => q._paper === paper) : MATH_QUESTIONS;
+  return _sampleByDiff(pool, diff, n || 10);
+}
+function getMathPaperCounts() {
+  if (!MATH_QUESTIONS[0]._paper) tagAllMathPapers();
+  let p1 = 0, p2 = 0;
+  MATH_QUESTIONS.forEach(q => { if (q._paper === 1) p1++; else p2++; });
+  return { p1, p2 };
+}
+
 // v19.3: Mini-game 本周关联模式 — 优先出与本周主题相关的题
 function getWeeklyLinkedQuestions(pool, weekN, diff, n) {
   n = n || 10;
@@ -8069,6 +8096,10 @@ window.getDailyListenDictation = getDailyListenDictation;
 window.recordGameRun = recordGameRun;
 window.getDifficulty = getDifficulty;
 window.getMathQuestionsByDiff = getMathQuestionsByDiff;
+// v19.34: Paper 分卷抽题
+window.getMathQuestionsByPaper = getMathQuestionsByPaper;
+window.getMathPaperCounts = getMathPaperCounts;
+window.tagAllMathPapers = tagAllMathPapers;
 window.getWeeklyLinkedQuestions = getWeeklyLinkedQuestions;
 window.getEditingByDiff = getEditingByDiff;
 window.getListenByDiff = getListenByDiff;
