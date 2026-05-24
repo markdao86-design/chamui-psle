@@ -411,8 +411,18 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.27/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.27: cache buster 已更新到 19.27 (修 modal 透明 — overlay+inner 改不透明底色)');
+assert(/\?v=19\.28/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.28: cache buster 已更新到 19.28 (错题分类训练 + 接入艾宾浩斯曲线)');
+// v19.28: startErrorBankReview 接 (filterGameKey, mode) 参数
+assert(/function startErrorBankReview\(filterGameKey, mode\)/.test(appSrc), 'v19.28: startErrorBankReview 加 (filterGameKey, mode) 参数');
+// v19.28: due 队列过滤 (艾宾浩斯曲线接入)
+assert(/wrongs\.filter\(w => !w\.nextReview \|\| w\.nextReview <= now\)/.test(appSrc), 'v19.28: 按 nextReview 过滤 due 题 (艾宾浩斯生效)');
+// v19.28: chip 按钮 — 学科分类入口
+assert(/startErrorBankReview\('\$\{k\}','due'\)/.test(appSrc), 'v19.28: 学科 chip 按钮调 startErrorBankReview(gameKey)');
+// v19.28: 全部混练副入口
+assert(/startErrorBankReview\(null,'all'\)/.test(appSrc), 'v19.28: 全部混练副入口');
+// v19.28: 艾宾浩斯曲线说明出现在 modal
+assert(/艾宾浩斯曲线/.test(appSrc), 'v19.28: modal 加艾宾浩斯曲线说明');
 // v19.26: index.html 加 no-cache meta
 assert(/http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/.test(idxSrc), 'v19.26: index.html 加 no-cache meta');
 assert(/http-equiv="Pragma" content="no-cache"/.test(idxSrc), 'v19.26: index.html 加 Pragma no-cache');
@@ -426,8 +436,8 @@ assert(/v19\.25: 删 renderThinkPuzzleCard 调用/.test(appSrc), 'v19.25 Bug1: r
 const tpCalls = (appSrc.match(/\brenderThinkPuzzleCard\(/g) || []).length;
 // 期望: 1 处 function 定义 + 1 处 dashboard 调用 = 2 个匹配 (definition + call)
 assert(tpCalls === 2, `v19.25 Bug1: renderThinkPuzzleCard 调用收敛 (定义 + 主页 1 处 = 2, 实际 ${tpCalls})`);
-// v19.25 Bug 2: openErrorBank modal 暗调
-assert(/v19\.25: 顶部提示改暗调透明黄 \+ 亮黄字/.test(appSrc), 'v19.25 Bug2: 顶部提示改暗调');
+// v19.25 Bug 2: openErrorBank modal 暗调 (v19.28: 注释标签升级保留 rgba 暗调样式)
+assert(/background:linear-gradient\(135deg, rgba\(255,184,0,0\.10\), rgba\(255,107,53,0\.04\)\);border:1px dashed rgba\(255,184,0,0\.40\)/.test(appSrc), 'v19.25 Bug2: 顶部提示暗调样式保留');
 assert(/border:1px solid rgba\(0,212,255,0\.30\);border-radius:6px;padding:6px 10px;font-size:12px;color:#E0E0E0/.test(appSrc), 'v19.25 Bug2: chip 暗调样式');
 // v19.25 全局 CSS 补 hex
 assert(/\[style\*="background:#ECEFF1"\]/.test(idxSrc), 'v19.25: 全局补 #ECEFF1 适配');

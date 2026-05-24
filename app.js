@@ -5764,9 +5764,22 @@ function openErrorBank() {
     editing: '🔍 Editing', vocab: '📚 词汇', listen: '🎧 听力', scilab: '🔬 科学',
     sci_oe: '🧪 科学 OE', subject_vocab: '📚 学科词汇', chinese: '🇨🇳 华文', sst: '🔄 SST', scimcq: '🧬 科学 MCQ'
   };
-  const breakdown = Object.entries(byGame).map(([k, v]) =>
-    `<div class="eb-stat"><span class="eb-stat-label">${GAME_LABEL[k] || k}</span><span class="eb-stat-num">${v}</span></div>`
-  ).join('');
+  // v19.28: 学科 chip 按钮 — 点击只复习这一类 (替代原静态 stats)
+  const now = Date.now();
+  const dueByGame = {};
+  (state.wrongAnswers || []).forEach(w => {
+    if (!w.nextReview || w.nextReview <= now) dueByGame[w.gameKey] = (dueByGame[w.gameKey] || 0) + 1;
+  });
+  const totalDue = Object.values(dueByGame).reduce((a, b) => a + b, 0);
+  const breakdown = Object.entries(byGame).map(([k, v]) => {
+    const due = dueByGame[k] || 0;
+    const dueColor = due > 0 ? '#FF8A65' : '#66FFB0';
+    return `<button onclick="startErrorBankReview('${k}','due')" style="background:rgba(255,255,255,0.04);border:1px solid rgba(0,212,255,0.30);border-radius:8px;padding:10px 14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:96px;transition:all 0.15s" onmouseover="this.style.background='rgba(0,212,255,0.10)'" onmouseout="this.style.background='rgba(255,255,255,0.04)'">
+      <span style="font-size:14px;font-weight:700;color:#E0E0E0">${GAME_LABEL[k] || k}</span>
+      <span style="font-size:11px;color:#94A3B8">共 <b style="color:#E0E0E0">${v}</b> 题</span>
+      <span style="font-size:11px;color:${dueColor};font-weight:900">${due > 0 ? '🔥 今日 ' + due + ' 题待练' : '✓ 已巩固'}</span>
+    </button>`;
+  }).join('');
   // v19.14i + v19.25: Cloze 错题按 topic 主题聚类显示 (暗调适配)
   const byTopic = window.errorBankByTopic ? window.errorBankByTopic(state, 'cloze') : {};
   const TOPIC_LABEL = {
@@ -5798,15 +5811,20 @@ function openErrorBank() {
         </div>
         <button class="vocab-modal-close" onclick="closeErrorBank()">×</button>
       </div>
-      <!-- v19.25: 顶部提示改暗调透明黄 + 亮黄字 -->
-      <div style="background:linear-gradient(135deg, rgba(255,184,0,0.10), rgba(255,107,53,0.04));border:1px dashed rgba(255,184,0,0.40);border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;color:#FFD180;line-height:1.6">
-        💡 错题反复练 = 真正消灭弱点。<b style="color:#FFB74D">连续 3 次答对</b>自动毕业, 每次 +1 巩固分, 毕业 +3 分 (14 天后回测)。
+      <!-- v19.28: 顶部提示 + 艾宾浩斯曲线说明 -->
+      <div style="background:linear-gradient(135deg, rgba(255,184,0,0.10), rgba(255,107,53,0.04));border:1px dashed rgba(255,184,0,0.40);border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;color:#FFD180;line-height:1.7">
+        💡 错题反复练 = 真正消灭弱点。<b style="color:#FFB74D">艾宾浩斯曲线</b>: 答对后<b>不立即重练</b>, 第 1→3→7 天间隔回测, 连对 3 次毕业 (再隔 14 天回测一次)。
       </div>
-      <div class="eb-stats">${breakdown}</div>
+      <!-- v19.28: 按学科分类训练 (chip 按钮) -->
+      <div style="font-size:12px;color:#94A3B8;margin-bottom:6px;font-weight:700">📂 按类型选练 (点 chip 只练此类):</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">${breakdown}</div>
       ${topicHtml}
-      <div class="kp-actions" style="margin-top:16px">
-        <button class="btn btn-primary" onclick="startErrorBankReview()">🎯 开始复习 (${wrongs.length} 题)</button>
-        <button class="btn btn-secondary" onclick="closeErrorBank()">稍后再说</button>
+      <div class="kp-actions" style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-primary" onclick="startErrorBankReview(null,'due')" ${totalDue === 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>🎯 今日 due 全练 (${totalDue} 题)</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary" onclick="startErrorBankReview(null,'all')" style="flex:1">📚 不管曲线·全部混练 (${wrongs.length} 题)</button>
+          <button class="btn btn-secondary" onclick="closeErrorBank()">稍后</button>
+        </div>
       </div>
     </div>`;
   modal.classList.add('show');
@@ -5817,13 +5835,32 @@ function closeErrorBank() {
   _errorBankState = null;
   if (typeof renderDashboard === 'function') renderDashboard();
 }
-function startErrorBankReview() {
-  const wrongs = (state.wrongAnswers || []).slice();
+// v19.28: 接入 SRS 艾宾浩斯 + 学科分类训练
+// filterGameKey: null=全部 | 'cloze'|'knowledge'|... ; mode: 'due'(默认仅今日 due) | 'all'(强制全部)
+function startErrorBankReview(filterGameKey, mode) {
+  filterGameKey = filterGameKey || null;
+  mode = mode || 'due';
+  const now = Date.now();
+  let wrongs = (state.wrongAnswers || []).slice();
+  if (filterGameKey) wrongs = wrongs.filter(w => w.gameKey === filterGameKey);
   if (wrongs.length === 0) { closeErrorBank(); return; }
+  // v19.28: 只取 nextReview 已到的题 (艾宾浩斯曲线); 没有 nextReview 字段 = 历史题, 视为 due
+  if (mode === 'due') {
+    const due = wrongs.filter(w => !w.nextReview || w.nextReview <= now);
+    if (due.length === 0) {
+      // 没 due 题: 报告下次最近的回测时间
+      const next = wrongs.reduce((m, w) => Math.min(m, w.nextReview || now), Infinity);
+      const days = next > now ? Math.ceil((next - now) / 86400000) : 0;
+      showToast(`🕓 ${filterGameKey ? '此类' : '所有'}错题都已巩固, 下次回测 ${days} 天后`, 'happy');
+      closeErrorBank();
+      return;
+    }
+    wrongs = due;
+  }
   // v19.9: 真考错题优先 (paper2-real source 排前), 同源内随机
   const real = wrongs.filter(w => w.source === 'paper2-real').sort(() => Math.random() - 0.5);
   const others = wrongs.filter(w => w.source !== 'paper2-real').sort(() => Math.random() - 0.5);
-  _errorBankState = { items: [...real, ...others], idx: 0, correct: 0, removed: [] };
+  _errorBankState = { items: [...real, ...others], idx: 0, correct: 0, removed: [], filterGameKey, mode };
   _renderErrorBankReview();
 }
 function _renderErrorBankReview() {
