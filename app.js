@@ -175,41 +175,43 @@ function renderAll() {
 }
 
 // v19.35: 左右栏自动对齐 — 短栏 filler 内插激励/进度提示文案
+// v19.36 修 bug: align-self stretch 让 column offsetHeight 已等高, 必须改用"sum 子元素高"测纯内容
+function _sumChildrenHeights(col) {
+  let total = 0, n = 0;
+  for (const child of col.children) {
+    if (!child) continue;
+    if (child.classList && child.classList.contains('col-balance-filler')) continue;
+    const h = child.offsetHeight || 0;
+    if (h === 0) continue;
+    if (n > 0) total += 10;  // gap
+    total += h;
+    n++;
+  }
+  return total;
+}
 function balanceHomeColumns() {
   const left = document.querySelector('.home-col-left');
   const right = document.querySelector('.home-col-right');
   const leftFiller = document.getElementById('leftColFiller');
   const rightFiller = document.getElementById('rightColFiller');
   if (!left || !right || !leftFiller || !rightFiller) return;
-
-  // 先两个都显示 + 文案占位, 让 flex-grow 自动撑空
-  leftFiller.classList.remove('balance-hidden');
-  rightFiller.classList.remove('balance-hidden');
-  leftFiller.innerHTML = _getFillerContent('left');
-  rightFiller.innerHTML = _getFillerContent('right');
-
-  // 测量 (用 requestAnimationFrame 等渲染完)
+  // 先两个都隐藏, 在 RAF 中测纯内容高 (排除 filler 自身)
+  leftFiller.classList.add('balance-hidden');
+  rightFiller.classList.add('balance-hidden');
   requestAnimationFrame(() => {
-    // 临时把两 filler 隐藏测纯卡片高度
-    leftFiller.style.display = 'none';
-    rightFiller.style.display = 'none';
-    const lh = left.offsetHeight;
-    const rh = right.offsetHeight;
-    leftFiller.style.display = '';
-    rightFiller.style.display = '';
+    const lh = _sumChildrenHeights(left);
+    const rh = _sumChildrenHeights(right);
     const delta = Math.abs(lh - rh);
-    // 高度差 <30px 不补 (避免噪音)
     if (delta < 30) {
-      leftFiller.classList.add('balance-hidden');
-      rightFiller.classList.add('balance-hidden');
+      // 内容已经接近等高, 两 filler 都不显示
       return;
     }
-    // 短栏 filler 显示, 长栏 filler 隐藏 (避免长栏多余 spacer)
+    // 短栏 filler 显示文案 + flex-grow 撑空到与长栏等高
     if (lh > rh) {
-      leftFiller.classList.add('balance-hidden');
+      rightFiller.innerHTML = _getFillerContent('right');
       rightFiller.classList.remove('balance-hidden');
     } else {
-      rightFiller.classList.add('balance-hidden');
+      leftFiller.innerHTML = _getFillerContent('left');
       leftFiller.classList.remove('balance-hidden');
     }
   });

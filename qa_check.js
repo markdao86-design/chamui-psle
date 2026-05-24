@@ -411,8 +411,11 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.35/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.35: cache buster 已更新到 19.35 (信任度 + CI 区间显示 + 主页左右栏自动对齐)');
+assert(/\?v=19\.36/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.36: cache buster 已更新到 19.36 (修 v19.35 左右栏对齐 bug — align-self stretch 导致 offsetHeight 必等, 改 sum 子元素)');
+// v19.36: balanceHomeColumns 改用 _sumChildrenHeights 排除 filler 自身高度
+assert(/function _sumChildrenHeights\(col\)/.test(appSrc), 'v19.36: _sumChildrenHeights 已加 (排除 filler 测纯内容高)');
+assert(/_sumChildrenHeights\(left\)/.test(appSrc) && /_sumChildrenHeights\(right\)/.test(appSrc), 'v19.36: balanceHomeColumns 调用 _sumChildrenHeights');
 // v19.35 信任度引擎 (data.js)
 const _v35data = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
 assert(/function getConfidenceLevel\(state\)/.test(_v35data), 'v19.35: getConfidenceLevel 已定义');
