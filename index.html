@@ -355,6 +355,7 @@ body::before {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  align-self: stretch;  /* v19.35: 撑满 grid cell 高度, 让 filler 能 flex-grow */
 }
 @media (min-width: 900px) {
   .home-grid-2col {
@@ -362,6 +363,29 @@ body::before {
     gap: 18px;
   }
 }
+/* v19.35: 左右栏自动对齐机制 — filler flex-grow 撑空, 短栏自动填补到与长栏等高 */
+.col-balance-filler {
+  flex-grow: 1;
+  min-height: 0;  /* 长栏时被挤到 0 不留痕; 短栏时撑空 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(0,212,255,0.04), rgba(0,255,136,0.03));
+  border: 1px dashed rgba(0,212,255,0.20);
+  border-radius: 10px;
+  padding: 16px 20px;
+  color: #94A3B8;
+  font-size: 12px;
+  font-style: italic;
+  text-align: center;
+  line-height: 1.6;
+  transition: opacity 0.3s;
+}
+.col-balance-filler.balance-hidden {
+  /* 高度差 <30px 时整个隐藏, 不留 spacer 痕迹 */
+  display: none;
+}
+.col-balance-filler b { color: #E0E0E0; font-weight: 700; font-style: normal; }
 /* v19.12: 主页极简化 — 主页隐藏角色/装备/双龙/皮肤/兑换/成就墙 (移到 "我的" tab) */
 #page-dashboard .hero-section,
 #page-dashboard #dragonProgressCard,
@@ -5197,6 +5221,8 @@ p { font-size: 14px; line-height: 1.6; }
         <div class="card" id="todayThreeCard" style="border-left:4px solid #FF6B6B"></div>
         <div class="card" id="paper2SprintCard"></div>
         <div class="card" id="errorBankCard"></div>
+        <!-- v19.35: 自动对齐 filler — 长栏时被挤为 0 不留痕 -->
+        <div class="col-balance-filler" id="leftColFiller"></div>
       </div>
       <!-- 右栏: 教学 + 信息 + 复盘 (v19.23: 目标校下移到第 3, 教学卡上提) -->
       <div class="home-col-right">
@@ -5205,6 +5231,8 @@ p { font-size: 14px; line-height: 1.6; }
         <div class="card" id="weekMasterTipCard"></div>
         <div class="card" id="targetSchoolMini" style="border-left:1px solid #E0E0E0"></div>
         <div id="gradReviewCard"></div>
+        <!-- v19.35: 自动对齐 filler — 短栏时撑空到与长栏等高 -->
+        <div class="col-balance-filler" id="rightColFiller"></div>
       </div>
     </div>
 
@@ -5712,9 +5740,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.34"></script>
-<script src="data.js?v=19.34"></script>
-<script src="app.js?v=19.34"></script>
+<script src="character.js?v=19.35"></script>
+<script src="data.js?v=19.35"></script>
+<script src="app.js?v=19.35"></script>
 
 </body>
 </html>

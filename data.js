@@ -5694,7 +5694,11 @@ function getDefaultState() {
     subjectALEstimates: { english: 6, math: 1, science: 2, chinese: 1, lastUpdate: null },
     // v19.15k: 撤回 subjectALManual 持久化 — 改成 in-memory _alWhatIf 临时模拟 (防 self-deception)
     // v19.17: 毕业题间隔复习队列 (14 天后回测, 修数学专家累计 3 次 P0)
-    gradReviewQueue: []
+    gradReviewQueue: [],
+    // v19.35: 月度 4 科完整模考历史 (信任度 ★ 升级唯一通路, 第 11 轮 P0 修复)
+    monthlyMockHistory: [],
+    // v19.35: PSLE 真考完成 flag (设为 true 后信任度直升 ★5)
+    psleDone: false
   };
 }
 
@@ -5710,6 +5714,107 @@ const PSLE_TARGET_SCHOOLS = [
   { id: 'nhss', name: '南华中学', cop: 11, tier: 'mid', emoji: '🏫' },
   { id: 'cchs', name: '公教中学', cop: 12, tier: 'mid', emoji: '🏫' }
 ];
+
+// =========== v19.35: 置信度机制 + 月度模考评分 (第 11 轮 P0 修复) ===========
+
+// 单科 raw mark → AL band (MOE 真实 cut-off)
+function rawMarkToAL(score) {
+  if (score >= 90) return 1;
+  if (score >= 85) return 2;
+  if (score >= 80) return 3;
+  if (score >= 75) return 4;
+  if (score >= 65) return 5;
+  if (score >= 45) return 6;
+  if (score >= 20) return 7;
+  return 8;
+}
+
+// 信任度 5 档 + AL ± N 区间宽度 (Plan agent 验证: 方差替代 Wilson, 月考唯一通路)
+function getConfidenceLevel(state) {
+  const monthly = (state && state.monthlyMockHistory) || [];
+  const count = monthly.length;
+  if (state && state.psleDone) {
+    return { stars: 5, alWidth: 0, schoolWidth: 0, monthlyCount: count, reason: 'PSLE 真考已完成 — 实测无误差' };
+  }
+  if (count >= 6) {
+    // ★4 需近 2 次总 AL 极差 ≤ 1 (防偶发高分升级)
+    const last2 = monthly.slice(-2).map(m => m.totalAL || 32);
+    const range = Math.abs(last2[0] - last2[1]);
+    if (range <= 1) {
+      return { stars: 4, alWidth: 2, schoolWidth: 15, monthlyCount: count, reason: `${count} 次月考 + 近 2 次综合 AL 稳定 (极差 ${range})` };
+    }
+    // 月考 ≥6 但近 2 次仍波动 → 保持 ★3
+    return { stars: 3, alWidth: 3, schoolWidth: 25, monthlyCount: count, reason: `${count} 次月考但近 2 次波动 (极差 ${range}), 需稳定后升 ★4` };
+  }
+  if (count >= 3) {
+    return { stars: 3, alWidth: 3, schoolWidth: 25, monthlyCount: count, reason: `${count} 次月考, 数据中等可信` };
+  }
+  if (count >= 1) {
+    return { stars: 2, alWidth: 4, schoolWidth: 35, monthlyCount: count, reason: `${count} 次月考, 数据稀薄` };
+  }
+  return { stars: 1, alWidth: 5, schoolWidth: 45, monthlyCount: 0, reason: '零月考数据, 全是 mini-game 难度推算' };
+}
+
+// 录取概率带 CI (clamp [4,30] 防边界错档, Plan agent 修订)
+function admissionProbabilityWithCI(childAL, schoolCOP, alWidth) {
+  const center = admissionProbability(childAL, schoolCOP);
+  const lo = admissionProbability(Math.min(30, childAL + (alWidth || 0)), schoolCOP);  // 悲观 (AL 高 = 概率低)
+  const hi = admissionProbability(Math.max(4, childAL - (alWidth || 0)), schoolCOP);   // 乐观
+  return { center, lower: lo, upper: hi };
+}
+
+// 月度模考抽题 — 弱科加权 (英 12 / 数 10 / 科 8 / 华 5 = 35 题)
+function getMonthlyMockQuestions() {
+  const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+  const sample = (arr, n) => shuffle(arr).slice(0, n);
+  const eng = [
+    ...sample((typeof GRAMMAR_QUESTIONS !== 'undefined' ? GRAMMAR_QUESTIONS : []).filter(q => (q.diff || 3) >= 3), 5).map(q => ({ ...q, _subj: 'eng', _kind: 'grammar', _qField: 'q' })),
+    ...sample((typeof CLOZE_QUESTIONS !== 'undefined' ? CLOZE_QUESTIONS : []).filter(q => (q.diff || 3) >= 3), 4).map(q => ({ ...q, _subj: 'eng', _kind: 'cloze', _qField: 'sentence' })),
+    ...sample((typeof SST_QUESTIONS !== 'undefined' ? SST_QUESTIONS : []).filter(q => (q.diff || 3) >= 3), 3).map(q => ({ ...q, _subj: 'eng', _kind: 'sst', _qField: 'q' }))
+  ];
+  const math = [];
+  if (typeof MATH_QUESTIONS !== 'undefined') {
+    if (!MATH_QUESTIONS[0]._paper && typeof tagAllMathPapers === 'function') tagAllMathPapers();
+    const p1Pool = MATH_QUESTIONS.filter(q => q._paper === 1 && (q.diff || 3) >= 3);
+    const p2Pool = MATH_QUESTIONS.filter(q => q._paper === 2 && (q.diff || 3) >= 3);
+    math.push(...sample(p1Pool, 6).map(q => ({ ...q, _subj: 'math', _kind: 'math_p1', _qField: 'q' })));
+    math.push(...sample(p2Pool, 4).map(q => ({ ...q, _subj: 'math', _kind: 'math_p2', _qField: 'q' })));
+  }
+  const sci = [
+    ...sample((typeof SCIENCE_MCQ !== 'undefined' ? SCIENCE_MCQ : []).filter(q => (q.difficulty || q.diff || 3) >= 3), 5).map(q => ({ ...q, _subj: 'sci', _kind: 'sci_mcq', _qField: 'q' })),
+    ...sample((typeof SCIENCE_OE_QUESTIONS !== 'undefined' ? SCIENCE_OE_QUESTIONS : []), 3).map(q => ({ ...q, _subj: 'sci', _kind: 'sci_oe', _qField: 'q' }))
+  ];
+  const chi = sample((typeof CHINESE_MCQ !== 'undefined' ? CHINESE_MCQ : []), 5).map(q => ({ ...q, _subj: 'chi', _kind: 'chi_mcq', _qField: 'q' }));
+  return { eng, math, sci, chi, total: eng.length + math.length + sci.length + chi.length };
+}
+
+// 单次月考完成 → 算 4 科 AL + 写入历史
+function recordMonthlyMock(state, scores, rubricHits, durationSec) {
+  if (!state.monthlyMockHistory) state.monthlyMockHistory = [];
+  const alBands = {
+    eng: rawMarkToAL(scores.eng || 0),
+    math: rawMarkToAL(scores.math || 0),
+    sci: rawMarkToAL(scores.sci || 0),
+    chi: rawMarkToAL(scores.chi || 0)
+  };
+  const totalAL = alBands.eng + alBands.math + alBands.sci + alBands.chi;
+  const entry = {
+    ts: Date.now(),
+    scores, alBands, totalAL,
+    durationSec: durationSec || 0,
+    rubricHits: rubricHits || {}
+  };
+  state.monthlyMockHistory.push(entry);
+  // 同步更新 subjectALEstimates (用最新月考结果覆盖)
+  if (state.subjectALEstimates) {
+    state.subjectALEstimates.english = alBands.eng;
+    state.subjectALEstimates.math = alBands.math;
+    state.subjectALEstimates.science = alBands.sci;
+    state.subjectALEstimates.chinese = alBands.chi;
+    state.subjectALEstimates.lastUpdate = Date.now();
+  }
+  return entry;
+}
 
 // 录取概率公式 (简化正态 CDF — delta = COP - childAL, 越正越好)
 function admissionProbability(childAL, schoolCOP) {
@@ -5840,6 +5945,12 @@ function recordPaper2AL(state, predictedAL, score, total) {
 window.PSLE_TARGET_SCHOOLS = PSLE_TARGET_SCHOOLS;
 window.admissionProbability = admissionProbability;
 window.estimateSGRank = estimateSGRank;
+// v19.35: 置信度机制 + 月考
+window.getConfidenceLevel = getConfidenceLevel;
+window.admissionProbabilityWithCI = admissionProbabilityWithCI;
+window.rawMarkToAL = rawMarkToAL;
+window.getMonthlyMockQuestions = getMonthlyMockQuestions;
+window.recordMonthlyMock = recordMonthlyMock;
 window.computeTotalAL = computeTotalAL;
 window.getAdmissionForecasts = getAdmissionForecasts;
 window.recordPaper2AL = recordPaper2AL;

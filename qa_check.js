@@ -411,8 +411,28 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.34/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.34: cache buster 已更新到 19.34 (P0-1 AL 公式澄清 + P0-3 数学分卷 P1/P2)');
+assert(/\?v=19\.35/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.35: cache buster 已更新到 19.35 (信任度 + CI 区间显示 + 主页左右栏自动对齐)');
+// v19.35 信任度引擎 (data.js)
+const _v35data = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
+assert(/function getConfidenceLevel\(state\)/.test(_v35data), 'v19.35: getConfidenceLevel 已定义');
+assert(/function admissionProbabilityWithCI\(childAL, schoolCOP, alWidth\)/.test(_v35data), 'v19.35: admissionProbabilityWithCI 已定义 (含 clamp)');
+assert(/function rawMarkToAL\(score\)/.test(_v35data), 'v19.35: rawMarkToAL 已定义');
+assert(/window\.getConfidenceLevel = getConfidenceLevel/.test(_v35data), 'v19.35: getConfidenceLevel window 导出');
+assert(/window\.admissionProbabilityWithCI/.test(_v35data), 'v19.35: admissionProbabilityWithCI window 导出');
+assert(/monthlyMockHistory: \[\]/.test(_v35data), 'v19.35: state schema 加 monthlyMockHistory');
+assert(/psleDone: false/.test(_v35data), 'v19.35: state schema 加 psleDone flag');
+// v19.35 UI 信任度显示 + CI 区间 (app.js)
+assert(/信任度 \$\{starStr\}/.test(appSrc), 'v19.35: 主页录取卡显示信任度 ★');
+assert(/admissionProbabilityWithCI\(total_AL, s\.cop, conf\.alWidth\)/.test(appSrc), 'v19.35: renderSchool 调 admissionProbabilityWithCI');
+assert(/为什么 \? 怎么涨信任度\?/.test(appSrc) || /为什么 ± N\? 怎么涨信任度/.test(appSrc), 'v19.35: showALExplain 加第 5 节');
+// v19.35 防 broken refs: openMonthlyMockExam 不能出现 (本轮拆分 ship)
+assert(!/openMonthlyMockExam/.test(appSrc), 'v19.35: openMonthlyMockExam 引用全删 (本轮未实施, 拆分 ship)');
+// v19.35 左右栏自动对齐
+assert(/function balanceHomeColumns\(\)/.test(appSrc), 'v19.35: balanceHomeColumns 已定义');
+assert(/balanceHomeColumns\(\)/.test(appSrc), 'v19.35: balanceHomeColumns 在 renderAll 调用');
+assert(/col-balance-filler/.test(idxSrc), 'v19.35: index.html 加 col-balance-filler CSS 类');
+assert(/id="leftColFiller"/.test(idxSrc) && /id="rightColFiller"/.test(idxSrc), 'v19.35: index.html 左右栏末加 filler 元素');
 // v19.34 P0-3: 数学 paper auto-tag + 抽题函数 + mini-game hub 2 入口
 const _v34data = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
 assert(/function getMathQuestionsByPaper\(diff, n, paper\)/.test(_v34data), 'v19.34 P0-3: getMathQuestionsByPaper 已加');

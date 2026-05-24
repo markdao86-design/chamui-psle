@@ -170,7 +170,75 @@ function renderAll() {
   if (typeof _checkAndTriggerDragonCeremony === 'function') _checkAndTriggerDragonCeremony();
   // v18.20 E: 总分变化时数字跳动
   if (typeof _bumpScoreNumber === 'function') _bumpScoreNumber();
+  // v19.35: 主页左右栏自动对齐 (用户反馈"左边长于右边")
+  if (typeof balanceHomeColumns === 'function') balanceHomeColumns();
 }
+
+// v19.35: 左右栏自动对齐 — 短栏 filler 内插激励/进度提示文案
+function balanceHomeColumns() {
+  const left = document.querySelector('.home-col-left');
+  const right = document.querySelector('.home-col-right');
+  const leftFiller = document.getElementById('leftColFiller');
+  const rightFiller = document.getElementById('rightColFiller');
+  if (!left || !right || !leftFiller || !rightFiller) return;
+
+  // 先两个都显示 + 文案占位, 让 flex-grow 自动撑空
+  leftFiller.classList.remove('balance-hidden');
+  rightFiller.classList.remove('balance-hidden');
+  leftFiller.innerHTML = _getFillerContent('left');
+  rightFiller.innerHTML = _getFillerContent('right');
+
+  // 测量 (用 requestAnimationFrame 等渲染完)
+  requestAnimationFrame(() => {
+    // 临时把两 filler 隐藏测纯卡片高度
+    leftFiller.style.display = 'none';
+    rightFiller.style.display = 'none';
+    const lh = left.offsetHeight;
+    const rh = right.offsetHeight;
+    leftFiller.style.display = '';
+    rightFiller.style.display = '';
+    const delta = Math.abs(lh - rh);
+    // 高度差 <30px 不补 (避免噪音)
+    if (delta < 30) {
+      leftFiller.classList.add('balance-hidden');
+      rightFiller.classList.add('balance-hidden');
+      return;
+    }
+    // 短栏 filler 显示, 长栏 filler 隐藏 (避免长栏多余 spacer)
+    if (lh > rh) {
+      leftFiller.classList.add('balance-hidden');
+      rightFiller.classList.remove('balance-hidden');
+    } else {
+      rightFiller.classList.add('balance-hidden');
+      leftFiller.classList.remove('balance-hidden');
+    }
+  });
+}
+function _getFillerContent(side) {
+  // 根据状态轮换文案 — 进度/激励/信任度提示
+  const week = state.currentWeek || 1;
+  const points = state.totalPoints || 0;
+  const totalWeeks = 73;
+  const weeksLeft = totalWeeks - week;
+  const errorBankCount = (state.wrongAnswers || []).length;
+  const monthlyCount = (state.monthlyMockHistory || []).length;
+
+  const messages = [
+    `📚 W${week}/73 · 距 PSLE 还 <b>${weeksLeft}</b> 周 · 一步一脚印`,
+    `💪 累计 <b>${points}</b> 分 · 持续打卡, 龙在等你`,
+    `🎯 当前错题 <b>${errorBankCount}</b> 题 · 错题反复练 = 真正消灭弱点`,
+    `🌱 中国 → 新加坡 P5 · 17 月长跑 · 跑得稳比跑得快重要`,
+    `📊 月考 ${monthlyCount}/6 · 多 1 次月考 = 信任度 +★`,
+    `🎓 英语 AL6 → AL3 = 跨入立化/华侨 COP 6 顶级范围`,
+    `⏰ 每天 30 分钟 · 17 月 = 约 ${Math.floor(17 * 30 * 30 / 60)} 小时 · 时间花在刀刃上`
+  ];
+  // 简单基于日期 + side 选 (每天看不同的, 左右也不同)
+  const today = new Date().toISOString().slice(0, 10);
+  const seed = today.split('-').join('') | 0;
+  const idx = (seed + (side === 'left' ? 0 : 3)) % messages.length;
+  return messages[idx];
+}
+window.balanceHomeColumns = balanceHomeColumns;
 
 // ============ 日期工具 ============
 function parseWeekStart(weekDateRange) {
@@ -678,18 +746,34 @@ function renderAdmissionForecastCard() {
   const f = window.getAdmissionForecasts(state);
   const { bySubject, total_AL, sgRank_pct, schools, ifEnglishImproved } = f;
 
+  // v19.35: 加置信度 + CI 区间 (Plan agent 验证: 信任度 ★4+ 区间窄时隐藏避免噪音)
+  const conf = window.getConfidenceLevel ? window.getConfidenceLevel(state) : { stars: 1, alWidth: 5, schoolWidth: 45, monthlyCount: 0, reason: '' };
+  const starStr = '★'.repeat(conf.stars) + '☆'.repeat(5 - conf.stars);
+
   // 学校按 tier + cop 排序
   const byTier = { top: [], high: [], mid: [] };
   schools.forEach(s => { (byTier[s.tier] || byTier.mid).push(s); });
   const probColor = (p) => p >= 80 ? '#2E7D32' : p >= 50 ? '#FFA500' : p >= 20 ? '#E67E22' : '#C62828';
   const probIcon = (p) => p >= 80 ? '✅' : p >= 50 ? '⚠️' : '❌';
 
-  const renderSchool = (s) => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px">
-      <span>${s.emoji} ${s.name} <span style="color:#888;font-size:10px">(COP ${s.cop})</span></span>
-      <span style="color:${probColor(s.probability)};font-weight:900">${probIcon(s.probability)} ${s.probability}%</span>
-    </div>
-  `;
+  // v19.35: renderSchool 加 CI 区间 (lower-upper) — ★4+ 且区间窄 ≤10% 时隐藏
+  const renderSchool = (s) => {
+    let ciHtml = '';
+    if (window.admissionProbabilityWithCI && conf.stars < 5) {
+      const ci = window.admissionProbabilityWithCI(total_AL, s.cop, conf.alWidth);
+      const range = ci.upper - ci.lower;
+      // 信任度 ★4+ 且区间宽 ≤ 10% 隐藏区间, 只显示中心 (避免噪音)
+      if (!(conf.stars >= 4 && range <= 10)) {
+        ciHtml = ` <span style="color:#94A3B8;font-size:10px">[${ci.lower}-${ci.upper}%]</span>`;
+      }
+    }
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px">
+        <span>${s.emoji} ${s.name} <span style="color:#888;font-size:10px">(COP ${s.cop})</span></span>
+        <span style="color:${probColor(s.probability)};font-weight:900">${probIcon(s.probability)} ${s.probability}%${ciHtml}</span>
+      </div>
+    `;
+  };
 
   // 算英语提到 AL3 的杠杆效应 (top 校)
   const topSchool = schools.find(s => s.tier === 'top');
@@ -703,13 +787,17 @@ function renderAdmissionForecastCard() {
       <div style="font-size:15px;font-weight:900">🏫 你的目标校 录取概率</div>
       <div style="margin-left:auto;font-size:11px;color:#666" title="MOE 真实公式: 4 科 AL 加总 (4-32). 例: 英6+数1+科2+华1=10. 越小越好.">PSLE 综合 AL ⓘ</div>
     </div>
-    <!-- v19.34: P0-1 综合 AL 显示澄清 — 加 MOE 标识 + 范围标尺 + 一键看说明 -->
+    <!-- v19.34: P0-1 综合 AL 显示澄清 / v19.35: 加置信度 ★ + AL ± N + 月考进度 -->
     <div style="background:#F0F8FF;border-radius:6px;padding:8px;margin-bottom:8px;font-size:12px">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span>综合 AL: <b style="font-size:16px;color:#FF6B6B">${total_AL}</b><span style="font-size:10px;color:#888">/32</span> = 英${bySubject.english_AL}+数${bySubject.math_AL}+科${bySubject.science_AL}+华${bySubject.chinese_AL}</span>
+        <span>综合 AL: <b style="font-size:16px;color:#FF6B6B">${total_AL}</b>${conf.stars < 5 ? `<span style="color:#94A3B8;font-size:11px"> ± ${conf.alWidth}</span>` : ''}<span style="font-size:10px;color:#888">/32</span> = 英${bySubject.english_AL}+数${bySubject.math_AL}+科${bySubject.science_AL}+华${bySubject.chinese_AL}</span>
         <span>击败 <b>${sgRank_pct === 5 ? '95+' : (100-sgRank_pct)}%</b> P6</span>
       </div>
-      <div style="font-size:10px;color:#666;margin-top:3px">📐 <b>MOE 标准</b>: 4 科 AL 等权加总 (范围 4-32, 越小越好). 立化/华侨/莱佛士 COP 6 = 4 科平均 AL 1.5 (顶级). <a href="javascript:void(0)" onclick="showALExplain()" style="color:#1565C0;text-decoration:underline">查看完整说明</a></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:11px">
+        <span style="color:${conf.stars >= 4 ? '#2E7D32' : conf.stars >= 3 ? '#F57C00' : '#C62828'};font-weight:700" title="${escapeHtml(conf.reason || '')}">信任度 ${starStr}</span>
+        <span style="color:#94A3B8;font-size:10px">数据稀薄, 预测仅供参考</span>
+      </div>
+      <div style="font-size:10px;color:#666;margin-top:3px">📐 <b>MOE 标准</b>: 4 科 AL 等权加总 (范围 4-32, 越小越好). 立化/华侨/莱佛士 COP 6. <a href="javascript:void(0)" onclick="showALExplain()" style="color:#1565C0;text-decoration:underline">完整说明</a></div>
     </div>
 
     ${byTier.top.length ? `
@@ -1516,6 +1604,19 @@ function showALExplain() {
         综合 AL = <b style="color:#FF8A65">${cur}</b>/32 = 英${bs.english_AL}+数${bs.math_AL}+科${bs.science_AL}+华${bs.chinese_AL}<br>
         目标 AL 4-6 → 对应名校 COP 6-8 范围<br>
         <b>关键杠杆</b>: 英语从 AL${bs.english_AL} 提到 AL3 → 综合 -${Math.max(0, bs.english_AL - 3)} → 跨入顶级 COP 6
+      </div>
+      <!-- v19.35: 第 5 节 — 为什么 ± N? 怎么涨信任度? -->
+      <div style="background:rgba(186,104,200,0.08);border:1px solid rgba(186,104,200,0.30);border-radius:8px;padding:12px;margin-bottom:12px;color:#E0E0E0;line-height:1.7;font-size:13px">
+        <div style="font-weight:900;color:#CE93D8;margin-bottom:6px">🎯 为什么 ± N? 怎么涨信任度?</div>
+        AL ± N 是 <b>预测误差范围</b>. 数据越多越准, 0 月考时 ± 5 (区间极宽), 6 次月考 + 近 2 次稳定后 ± 2 (高可信).
+        <table style="width:100%;font-size:12px;border-collapse:collapse;margin-top:6px">
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.10)"><td style="padding:4px"><b>★☆☆☆☆</b></td><td>0 月考</td><td>AL ± 5</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.10)"><td style="padding:4px"><b>★★☆☆☆</b></td><td>≥1 月考</td><td>AL ± 4</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.10)"><td style="padding:4px"><b>★★★☆☆</b></td><td>≥3 月考</td><td>AL ± 3</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.10)"><td style="padding:4px"><b>★★★★☆</b></td><td>≥6 月考 + 近 2 次稳定</td><td>AL ± 2</td></tr>
+          <tr><td style="padding:4px"><b>★★★★★</b></td><td>PSLE 真考完成</td><td>AL ± 0</td></tr>
+        </table>
+        <div style="margin-top:8px;font-size:12px;color:#94A3B8"><b>升级机制</b>: 后续会加月度 4 科完整模考模块, 累积数据自动升 ★. 当前 ★ 1-2 时, 综合 AL 预测仅作参考, 别拿这个数下重大决定.</div>
       </div>
       <button onclick="closeALExplain()" style="width:100%;padding:12px;background:linear-gradient(135deg,#4ECDC4,#26A69A);color:#FFF;border:none;border-radius:8px;font-weight:900;cursor:pointer;font-size:14px">明白了</button>
     </div>`;
