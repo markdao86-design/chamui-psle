@@ -411,8 +411,19 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.28/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.28: cache buster 已更新到 19.28 (错题分类训练 + 接入艾宾浩斯曲线)');
+assert(/\?v=19\.29/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.29: cache buster 已更新到 19.29 (死代码清理 — 删 SRS 5 函数 + 接 petBreaksHappiness)');
+// v19.29: SRS 死代码已删 (data.js 不应再含这些函数定义)
+const _v29data = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
+assert(!/function scheduleWrongAnswer\(/.test(_v29data), 'v19.29 死代码清理: scheduleWrongAnswer 已删');
+assert(!/function promoteSRS\(/.test(_v29data), 'v19.29 死代码清理: promoteSRS 已删');
+assert(!/function demoteSRS\(/.test(_v29data), 'v19.29 死代码清理: demoteSRS 已删');
+assert(!/function getOverdueReviews\(/.test(_v29data), 'v19.29 死代码清理: getOverdueReviews 已删');
+assert(!/^const SRS_INTERVALS\s*=/m.test(_v29data), 'v19.29 死代码清理: SRS_INTERVALS 已删');
+// v19.29: petBreaksHappiness 必须被 app.js 调用 (锁住调用关系防再死)
+assert(/petBreaksHappiness\(state\)/.test(appSrc), 'v19.29: petBreaksHappiness 已接入 app.js (renderDashboard)');
+// v19.29: petBreaksHappiness 改按天衰减
+assert(/lastBreakCheck/.test(_v29data), 'v19.29: petBreaksHappiness 加 lastBreakCheck 防同日重复扣');
 // v19.28: startErrorBankReview 接 (filterGameKey, mode) 参数
 assert(/function startErrorBankReview\(filterGameKey, mode\)/.test(appSrc), 'v19.28: startErrorBankReview 加 (filterGameKey, mode) 参数');
 // v19.28: due 队列过滤 (艾宾浩斯曲线接入)

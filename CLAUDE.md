@@ -136,6 +136,25 @@ python build.py && node qa_check.js   # 149 必过
 # GitHub Pages: https://markdao86-design.github.io/chamui-psle/ (备份)
 ```
 
+### ⚠️ 死代码警钟 (v19.28 真实事故 — 不要再犯!)
+
+**事故**: data.js line 5378-5404 写了完整艾宾浩斯 SRS 系统 (`SRS_INTERVALS=[1,3,7,14,30]` + `scheduleWrongAnswer` + `promoteSRS` + `demoteSRS` + `getOverdueReviews`), 半年没人调用。错题本表面"按曲线复习", 实际用户连答 3 次就毕业 — **写了等于白写, 用户被骗**。
+
+**根因**: 加新函数后没在 app.js render/handler 里 wire, 也没加 QA 断言验证"该函数至少被调用 1 次"。
+
+**新铁律 — 任何新 helper / 算法都要做 3 件事**:
+1. **写完立即接入** UI handler 或 render — 不接入不 commit
+2. **加 QA 断言** 验证函数被调用 ≥ 1 次:
+   ```js
+   assert(new RegExp('\\b' + funcName + '\\(').test(appSrc), `${funcName} 必须被 app.js 调用`);
+   ```
+3. **window.X 导出**, 即使内部用 — 方便 console 排查 + 防止 minifier 删
+
+**自检三问** (改完一个 feature 必做):
+- 这个函数/常量被谁调用了? grep 一次确认
+- 用户操作时这条 code path 真走到了? console.log 一行验证
+- QA 里有断言锁住这个调用关系吗? 没有就加
+
 ### ⚠️ 部署铁律 (每次改动必须全做)
 
 ```bash

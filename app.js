@@ -300,6 +300,17 @@ function _renderStreakBrokenModal(prevDays) {
 
 // ============ Dashboard ============
 function renderDashboard() {
+  // v19.29: 接入 petBreaksHappiness — 每天进入主页时按"距上次检查天数 × 5"衰减心情
+  // (旧 bug: 函数定义了但从未调用, 宠物心情永远 100, 防沉迷设计失效)
+  if (typeof petBreaksHappiness === 'function') {
+    const dec = petBreaksHappiness(state);
+    if (dec > 0) {
+      saveState(state);
+      if (state.pet && state.pet.happiness <= 30) {
+        showToast(`🐾 ${state.pet.name || '宠物'} 心情有点低 (${state.pet.happiness}/100), 喂食陪它吧!`, 'sad');
+      }
+    }
+  }
   const points = state.totalPoints;
   const levelInfo = CHAMUI.getLevelInfo(points);
   const nextLevel = CHAMUI.getNextLevelInfo(points);

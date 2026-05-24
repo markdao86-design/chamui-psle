@@ -1472,9 +1472,19 @@ function feedPet(state) {
   state.pet.formIdx = Math.max(state.pet.formIdx || 0, form.idx);
 }
 
+// v19.29: 接入 renderDashboard — 之前定义了从不调, 宠物心情永远 100 (防沉迷设计失效)
+// 改: 按天衰减 (每天 -5, 上限当天扣一次), 不再一次扣 50
 function petBreaksHappiness(state) {
-  if (!state.pet) return;
-  state.pet.happiness = Math.max(0, (state.pet.happiness || 100) - 50);
+  if (!state.pet) return 0;
+  const today = new Date().toISOString().slice(0, 10);
+  const last = state.pet.lastBreakCheck || state.pet.lastFedDate || today;
+  if (last === today) return 0;
+  const days = Math.floor((new Date(today).getTime() - new Date(last).getTime()) / 86400000);
+  if (days <= 0) { state.pet.lastBreakCheck = today; return 0; }
+  const dec = Math.min(days * 5, 50);  // 每天 -5, 单次封顶 -50 (防长假断崖)
+  state.pet.happiness = Math.max(0, (state.pet.happiness || 100) - dec);
+  state.pet.lastBreakCheck = today;
+  return dec;
 }
 
 // ============= v18 Phase 5.1: 🏆 隐藏成就 =============
@@ -5375,34 +5385,10 @@ function decayKnowledgeStars(state) {
   }
 }
 
-// ============= v19.3: SRS 错题间隔复习 (1→3→7→14→30 天) =============
-const SRS_INTERVALS = [1, 3, 7, 14, 30];
-
-function scheduleWrongAnswer(entry) {
-  if (!entry.interval) entry.interval = 0;
-  entry.interval = Math.min(entry.interval, SRS_INTERVALS.length - 1);
-  const days = SRS_INTERVALS[entry.interval];
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  entry.nextReviewDate = d.toISOString().slice(0, 10);
-}
-
-function promoteSRS(entry) {
-  entry.interval = Math.min((entry.interval || 0) + 1, SRS_INTERVALS.length - 1);
-  scheduleWrongAnswer(entry);
-}
-
-function demoteSRS(entry) {
-  entry.interval = 0;
-  entry.retries = (entry.retries || 0) + 1;
-  scheduleWrongAnswer(entry);
-}
-
-function getOverdueReviews(state) {
-  if (!state.wrongAnswers || !state.wrongAnswers.length) return [];
-  const today = new Date().toISOString().slice(0, 10);
-  return state.wrongAnswers.filter(e => e.nextReviewDate && e.nextReviewDate <= today);
-}
+// ============= v19.3 SRS 已删 (v19.29 死代码清理) =============
+// 旧 SRS_INTERVALS/scheduleWrongAnswer/promoteSRS/demoteSRS/getOverdueReviews 5 个函数从未被 app.js 调用,
+// v19.28 已用 inline `w.nextReview = now + intervals[streak-1]*86400000` 在 startErrorBankReview 接入艾宾浩斯,
+// 旧实现冗余, 删除以防再误以为"已接入". 教训见 CLAUDE.md §6 死代码警钟.
 
 // ============= 默认数据结构 (v2) =============
 function getDefaultState() {
@@ -7829,10 +7815,7 @@ window.getCharacterPower = getCharacterPower;
 window.calcSlotReward = calcSlotReward;
 window.evolveEquipment = evolveEquipment;
 window.decayKnowledgeStars = decayKnowledgeStars;
-window.scheduleWrongAnswer = scheduleWrongAnswer;
-window.promoteSRS = promoteSRS;
-window.demoteSRS = demoteSRS;
-window.getOverdueReviews = getOverdueReviews;
+// v19.29 删: scheduleWrongAnswer/promoteSRS/demoteSRS/getOverdueReviews — 见 line 5378 注释
 window.getCurrentChapter = getCurrentChapter;
 window.getNextChapter = getNextChapter;
 window.aggregateScores = aggregateScores;
