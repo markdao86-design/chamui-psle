@@ -2387,6 +2387,85 @@ LISTEN_DICTATIONS.forEach(d => {
   else d.diff = 4;
 });
 
+// ============= v19.31: PSLE Paper 3 Listening MCQ 题库 (Expert 1+6 P0) =============
+// PSLE 听力 Paper 3 实考: 短对话 / 学校通知 / 信息描述 / 简短指令, 4 选项 MCQ
+// 每题: audio (TTS 朗读内容) + context (背景说明) + q (问题) + opts + ans (索引) + explain
+const LISTENING_MCQ = [
+  // ---- Conversation (8) ----
+  { id: 'lm_1', type: 'conversation', context: '两个学生在学校走廊', audio: 'Hey Sarah, are you joining the after-school art class today? — I would love to, but I have to help my mum at the bakery this afternoon. Maybe tomorrow.',
+    q: 'Why can Sarah not join the art class today?', opts: ['She does not like art.', 'She has to help her mother at work.', 'She is unwell.', 'She forgot about it.'], ans: 1,
+    explain: 'Sarah 说 "I have to help my mum at the bakery" — 妈妈烘焙店要帮忙' },
+  { id: 'lm_2', type: 'conversation', context: '兄妹在家中', audio: 'Where did you put my football shoes, Tommy? — I think I saw them under the staircase yesterday. Did you check there? — Yes, twice, but they are not there.',
+    q: 'Where had Tommy last seen the football shoes?', opts: ['In the bedroom', 'Under the staircase', 'In the kitchen', 'Outside the door'], ans: 1,
+    explain: '"I saw them under the staircase yesterday" — 楼梯下面' },
+  { id: 'lm_3', type: 'conversation', context: '同学讨论作业', audio: 'Did you finish the Maths worksheet? — Not yet. I got stuck on question seven. — Oh, that one was tricky. Mr Tan said we should use the bar model. — Really? I will try that tonight.',
+    q: 'What does Mr Tan suggest for question seven?', opts: ['Skip it', 'Use the bar model', 'Ask a friend', 'Use a calculator'], ans: 1,
+    explain: '"Mr Tan said we should use the bar model" — 老师建议用 bar model' },
+  { id: 'lm_4', type: 'conversation', context: '父母讨论周末计划', audio: 'Shall we go to the zoo on Saturday? — The weather forecast says it will rain heavily. How about the science centre instead? — Good idea, the children love it there.',
+    q: 'Where will the family most likely go on Saturday?', opts: ['The zoo', 'The science centre', 'A park', 'Home'], ans: 1,
+    explain: '改去 science centre 因为下雨' },
+  { id: 'lm_5', type: 'conversation', context: '学生与图书管理员', audio: 'Excuse me, I would like to borrow this book. — Sure, may I see your library card? — Oh no, I left it at home today. — Don\'t worry. You can use your school ID this once, but bring the card next time.',
+    q: 'What does the librarian allow the student to do?', opts: ['Borrow the book another day', 'Use the school ID this time', 'Use a friend\'s card', 'Pay a small fee'], ans: 1,
+    explain: '"You can use your school ID this once"' },
+  { id: 'lm_6', type: 'conversation', context: '邻居打招呼', audio: 'Good morning, Mrs Lim! Going to the market? — Yes, but it\'s starting to drizzle. Maybe I should wait. — I have an extra umbrella here, please take it. — Oh, that\'s so kind of you. Thank you!',
+    q: 'What does Mrs Lim accept from the neighbour?', opts: ['A ride to the market', 'An umbrella', 'A bag', 'A raincoat'], ans: 1,
+    explain: '"I have an extra umbrella here, please take it" — 借伞' },
+  { id: 'lm_7', type: 'conversation', context: '老师课后留学生', audio: 'David, please stay back for a moment. Your essay was very creative, but you forgot to write your name on it. — Oh, sorry Miss! I was in a rush. — Please remember next time, otherwise I cannot give marks.',
+    q: 'What mistake did David make?', opts: ['Wrote a short essay', 'Forgot his name on the paper', 'Used wrong format', 'Was late to class'], ans: 1,
+    explain: 'David 忘了在试卷上写名字' },
+  { id: 'lm_8', type: 'conversation', context: '学生与教练对话', audio: 'Coach, can I leave practice early today? My grandmother is visiting. — Of course, but please warm up a bit first, and try to do the stretches at home. — Sure, I will. Thanks Coach!',
+    q: 'What does the coach ask the student to do?', opts: ['Skip practice entirely', 'Warm up and stretch at home', 'Practice with a partner', 'Practice on Sunday'], ans: 1,
+    explain: '教练要她"warm up a bit first, and try to do the stretches at home"' },
+
+  // ---- Announcement (5) ----
+  { id: 'lm_9', type: 'announcement', context: '学校广播 (周一早上)', audio: 'Good morning, students. This is the principal speaking. Due to the heavy rain expected today, the PE lessons for all Primary 5 and Primary 6 classes will be held in the indoor sports hall instead of the field. Please proceed there directly after assembly.',
+    q: 'Why has the PE lesson been moved indoors?', opts: ['The field is being repaired', 'Heavy rain is expected', 'A school event is on', 'Too many students'], ans: 1,
+    explain: '"Due to the heavy rain expected today"' },
+  { id: 'lm_10', type: 'announcement', context: '商场广播', audio: 'Attention shoppers. We are pleased to announce that our annual Children\'s Day sale will begin this Saturday at the toy department on the third floor. Enjoy up to thirty per cent off on selected items.',
+    q: 'Where will the sale take place?', opts: ['First floor', 'Second floor', 'Third floor', 'Fourth floor'], ans: 2,
+    explain: '"at the toy department on the third floor"' },
+  { id: 'lm_11', type: 'announcement', context: '学校集会通知', audio: 'Good morning, everyone. The Inter-class Spelling Bee competition has been postponed from this Wednesday to next Tuesday because of the public holiday. Please inform your teachers if you cannot attend.',
+    q: 'When will the Spelling Bee now take place?', opts: ['This Wednesday', 'This Friday', 'Next Tuesday', 'Next Thursday'], ans: 2,
+    explain: '"postponed from this Wednesday to next Tuesday" — 改到下周二' },
+  { id: 'lm_12', type: 'announcement', context: '图书馆广播', audio: 'Dear visitors, the library will be closing in fifteen minutes. Please return all books to the front desk before leaving. The library will reopen tomorrow at nine in the morning.',
+    q: 'What should visitors do before they leave?', opts: ['Buy a book', 'Return books to the front desk', 'Sign a register', 'Wait at the exit'], ans: 1,
+    explain: '"Please return all books to the front desk before leaving"' },
+  { id: 'lm_13', type: 'announcement', context: 'MRT 站内广播', audio: 'Attention all commuters. Due to a power fault, train services between Bishan and Toa Payoh stations are delayed by approximately ten minutes. We apologise for the inconvenience and thank you for your patience.',
+    q: 'How long is the train delay?', opts: ['Five minutes', 'Ten minutes', 'Fifteen minutes', 'Twenty minutes'], ans: 1,
+    explain: '"delayed by approximately ten minutes"' },
+
+  // ---- Info/Description (5) ----
+  { id: 'lm_14', type: 'info', context: '导游讲解新加坡植物园', audio: 'The Singapore Botanic Gardens, founded in eighteen fifty-nine, is one of the oldest gardens in Asia. Spanning over eighty hectares, it is famous for its National Orchid Garden, which displays more than a thousand species of orchids.',
+    q: 'What is the Botanic Gardens famous for?', opts: ['Its giant trees', 'Its orchid garden', 'Its zoo section', 'Its waterfall'], ans: 1,
+    explain: '"famous for its National Orchid Garden"' },
+  { id: 'lm_15', type: 'info', context: '新闻报道天气', audio: 'Today\'s weather will be partly cloudy with temperatures ranging between twenty-six and thirty-two degrees Celsius. Light showers are expected in the afternoon, especially in the western parts of the island.',
+    q: 'When are showers expected today?', opts: ['Morning', 'Afternoon', 'Evening', 'Night'], ans: 1,
+    explain: '"Light showers are expected in the afternoon"' },
+  { id: 'lm_16', type: 'info', context: '科学课老师介绍植物', audio: 'The Venus flytrap is an unusual plant because it eats insects. When a small insect lands on its leaves, the leaves snap shut quickly, trapping the insect inside. The plant then slowly digests the insect to get nutrients.',
+    q: 'How does the Venus flytrap catch insects?', opts: ['It releases poison', 'Its leaves snap shut', 'It uses sticky liquid', 'It glows at night'], ans: 1,
+    explain: '"the leaves snap shut quickly, trapping the insect"' },
+  { id: 'lm_17', type: 'info', context: '运动会前介绍', audio: 'The Inter-school Swimming Championships will take place at the Sports Hub on the twenty-third of June. Our school will be sending fifteen swimmers, including ten boys and five girls, to compete in various events.',
+    q: 'How many swimmers will the school send?', opts: ['Ten', 'Twelve', 'Fifteen', 'Twenty'], ans: 2,
+    explain: '"sending fifteen swimmers"' },
+  { id: 'lm_18', type: 'info', context: '历史课讲解', audio: 'Sir Stamford Raffles arrived in Singapore on the twenty-eighth of January, eighteen nineteen. He saw the great potential of the island as a trading port and signed a treaty with the local rulers to establish a British settlement.',
+    q: 'Why did Raffles want to establish a settlement in Singapore?', opts: ['For farming', 'Its trading port potential', 'For its forests', 'For its weather'], ans: 1,
+    explain: '"saw the great potential of the island as a trading port"' },
+
+  // ---- Instruction (2) ----
+  { id: 'lm_19', type: 'instruction', context: '老师布置作业', audio: 'For tomorrow\'s homework, please complete pages forty-two and forty-three in your workbook. Remember to show all your working clearly. If you have any questions, you may email me by eight pm tonight.',
+    q: 'By what time should students email questions?', opts: ['Six pm', 'Seven pm', 'Eight pm', 'Nine pm'], ans: 2,
+    explain: '"email me by eight pm tonight"' },
+  { id: 'lm_20', type: 'instruction', context: '食谱教程录音', audio: 'First, crack two eggs into a bowl and add a pinch of salt. Then beat the mixture with a fork for thirty seconds. Heat the pan over medium fire, pour in the eggs, and cook for two minutes on each side.',
+    q: 'How long should you cook the eggs on each side?', opts: ['One minute', 'Two minutes', 'Three minutes', 'Five minutes'], ans: 1,
+    explain: '"cook for two minutes on each side"' }
+];
+
+function getRandomListenMcq(n) {
+  n = n || 10;
+  const pool = [...LISTENING_MCQ].sort(() => Math.random() - 0.5);
+  return pool.slice(0, n);
+}
+
 // 高级英语词汇 + 例句 (供 vocab game diff 4-5 用)
 const VOCAB_HARD = [
   { en: 'photosynthesis', zh: '光合作用', diff: 3, sent: 'Plants use photosynthesis to make food from sunlight.' },
@@ -10043,6 +10122,9 @@ window.ORAL_RA_PASSAGES = ORAL_RA_PASSAGES;
 window.getRandomRA = getRandomRA;
 window.SITUATIONAL_WRITING = SITUATIONAL_WRITING;
 window.getRandomSW = getRandomSW;
+// v19.31: Listening MCQ
+window.LISTENING_MCQ = LISTENING_MCQ;
+window.getRandomListenMcq = getRandomListenMcq;
 window.SUBJECT_VOCAB_MATH = SUBJECT_VOCAB_MATH;
 window.SUBJECT_VOCAB_SCIENCE = SUBJECT_VOCAB_SCIENCE;
 window.getDailySubjectVocab = getDailySubjectVocab;

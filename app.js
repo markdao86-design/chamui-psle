@@ -1305,6 +1305,156 @@ window.openSituationalWritingModal = openSituationalWritingModal;
 window.closeSWModal = closeSWModal;
 window.completeSWPractice = completeSWPractice;
 
+// =========== v19.31: Paper 3 Listening MCQ game (Expert 1+6 P0 — 13.5% PSLE 分裸考修复) ===========
+let _lmState = null;  // { items, idx, correct, wrong }
+function openListenMcqGame() {
+  if (!window.getRandomListenMcq) { showToast('Listening MCQ 题库未加载', 'warn'); return; }
+  const items = window.getRandomListenMcq(10);
+  if (!items.length) { showToast('暂无听力 MCQ 题', 'warn'); return; }
+  _lmState = { items, idx: 0, correct: 0, wrong: 0, playCount: 0 };
+  let modal = document.getElementById('lmModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'lmModal';
+    modal.className = 'kt-modal';
+    document.body.appendChild(modal);
+  }
+  _renderLmQuestion();
+}
+function _renderLmQuestion() {
+  const g = _lmState;
+  if (!g) return;
+  if (g.idx >= g.items.length) { _finishLmGame(); return; }
+  const item = g.items[g.idx];
+  g.playCount = 0;  // 每题重置播放计数
+  const typeLabel = { conversation: '👥 对话', announcement: '📢 通知', info: '📖 信息', instruction: '📋 指令' }[item.type] || item.type;
+  const modal = document.getElementById('lmModal');
+  if (!modal) return;
+  const opts = item.opts.map((o, oi) =>
+    `<button class="mcq-opt" id="lmOpt${oi}" onclick="submitLmAnswer(${oi})">${String.fromCharCode(65+oi)}. ${escapeHtml(o)}</button>`
+  ).join('');
+  modal.innerHTML = `
+    <div class="kt-inner" style="max-width:640px">
+      <div class="kt-header">
+        <div>
+          <div class="kt-title">🎧 Listening MCQ · ${g.idx + 1}/${g.items.length}</div>
+          <div class="kt-progress">PSLE Paper 3 · ✅ ${g.correct} · ❌ ${g.wrong}</div>
+        </div>
+        <button class="vocab-modal-close" onclick="closeLmGame()">×</button>
+      </div>
+      <div style="background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.30);border-radius:8px;padding:10px;margin-bottom:12px">
+        <div style="font-size:11px;color:#4FC3F7;font-weight:700;margin-bottom:4px">${typeLabel} · ${escapeHtml(item.context)}</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+          <button onclick="playLmAudio()" id="lmPlayBtn" style="flex:1;padding:14px;background:linear-gradient(135deg,#26A69A,#00897B);color:#FFF;border:none;border-radius:8px;font-weight:900;cursor:pointer;font-size:15px">▶ 播放录音 (可重听 2 次, 总 3 遍)</button>
+          <button onclick="stopLmAudio()" style="padding:14px 16px;background:rgba(255,255,255,0.10);color:#E0E0E0;border:1px solid rgba(255,255,255,0.20);border-radius:8px;cursor:pointer">⏹</button>
+        </div>
+        <div id="lmPlayInfo" style="font-size:11px;color:#94A3B8;margin-top:6px;text-align:center">PSLE 真考: 每题听 2 遍, 建议先听 1 遍记大意, 再听 1 遍核对答案</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-bottom:10px">
+        <div style="font-size:14px;font-weight:900;color:#E0E0E0">❓ ${escapeHtml(item.q)}</div>
+      </div>
+      <div class="mcq-opts" style="display:flex;flex-direction:column;gap:8px">${opts}</div>
+      <div id="lmFeedback" style="min-height:32px;margin-top:12px;font-size:13px"></div>
+    </div>`;
+  modal.classList.add('show');
+}
+function playLmAudio() {
+  const g = _lmState;
+  if (!g) return;
+  if (g.playCount >= 3) {
+    showToast('🎧 已播 3 次, PSLE 真考最多 2 次, 该选答案了!', 'warn');
+    return;
+  }
+  if (typeof speechSynthesis === 'undefined') {
+    showToast('设备不支持 TTS, 显示文字代替', 'warn');
+    const fb = document.getElementById('lmFeedback');
+    if (fb) fb.innerHTML = `<div style="background:rgba(255,184,0,0.10);padding:8px;border-radius:6px;color:#FFD180">📜 ${escapeHtml(g.items[g.idx].audio)}</div>`;
+    return;
+  }
+  const item = g.items[g.idx];
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(item.audio);
+  u.lang = 'en-GB';
+  u.rate = 0.95;
+  u.pitch = 1.0;
+  speechSynthesis.speak(u);
+  g.playCount++;
+  const info = document.getElementById('lmPlayInfo');
+  if (info) info.textContent = `已播 ${g.playCount}/3 次 · ${g.playCount >= 2 ? '⚠️ PSLE 真考最多 2 次' : '可再听 ' + (3 - g.playCount) + ' 次'}`;
+}
+function stopLmAudio() {
+  if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+}
+function submitLmAnswer(optIdx) {
+  const g = _lmState;
+  if (!g) return;
+  const item = g.items[g.idx];
+  const isCorrect = optIdx === item.ans;
+  stopLmAudio();
+  const fb = document.getElementById('lmFeedback');
+  // 高亮选项
+  for (let i = 0; i < item.opts.length; i++) {
+    const b = document.getElementById('lmOpt' + i);
+    if (!b) continue;
+    b.disabled = true;
+    if (i === item.ans) b.style.background = 'rgba(102,255,176,0.20)', b.style.borderColor = '#66FFB0';
+    if (i === optIdx && !isCorrect) b.style.background = 'rgba(239,83,80,0.20)', b.style.borderColor = '#EF5350';
+  }
+  if (isCorrect) {
+    g.correct++;
+    state.totalPoints = (state.totalPoints || 0) + 2;
+    if (fb) fb.innerHTML = `<div style="background:rgba(102,255,176,0.10);border:1px solid rgba(102,255,176,0.30);border-radius:6px;padding:10px;color:#66FFB0"><b>✅ 答对 +2</b> · ${escapeHtml(item.explain || '')}</div>`;
+    playSound && playSound('ding');
+  } else {
+    g.wrong++;
+    // 接错题本
+    if (window.addToErrorBank) {
+      window.addToErrorBank(state, {
+        gameKey: 'listen_mcq', type: 'mcq', q: item.q, opts: item.opts, ans: item.ans,
+        explain: item.explain, source: 'listen_mcq', subj: item.type, audioText: item.audio
+      });
+    }
+    if (fb) fb.innerHTML = `<div style="background:rgba(239,83,80,0.10);border:1px solid rgba(239,83,80,0.30);border-radius:6px;padding:10px;color:#FF8A65"><b>❌ 答错</b> · 正确: ${String.fromCharCode(65+item.ans)} · ${escapeHtml(item.explain || '')}<br><span style="font-size:11px;color:#94A3B8">📜 原文: "${escapeHtml(item.audio)}"</span></div>`;
+    playSound && playSound('wrong');
+  }
+  saveState(state);
+  // 1.5s 后自动下一题 (答错延 3s 让看原文)
+  setTimeout(() => { g.idx++; _renderLmQuestion(); }, isCorrect ? 1500 : 3000);
+}
+function _finishLmGame() {
+  const g = _lmState;
+  if (!g) return;
+  const modal = document.getElementById('lmModal');
+  const acc = g.items.length ? Math.round(g.correct / g.items.length * 100) : 0;
+  const bonus = acc >= 80 ? 5 : 0;
+  if (bonus) state.totalPoints = (state.totalPoints || 0) + bonus;
+  saveState(state);
+  if (modal) {
+    modal.innerHTML = `
+      <div class="kt-inner" style="max-width:480px;text-align:center">
+        <div style="font-size:48px;margin:20px 0">${acc >= 80 ? '🏆' : acc >= 60 ? '👍' : '💪'}</div>
+        <div style="font-size:22px;font-weight:900;color:#E0E0E0">Listening 完成!</div>
+        <div style="font-size:14px;color:#94A3B8;margin:10px 0">${g.correct}/${g.items.length} 正确 · ${acc}% · +${g.correct * 2}${bonus ? ' +' + bonus + ' (准确率奖)' : ''} 分</div>
+        <div style="font-size:11px;color:#94A3B8;margin-bottom:16px">错题已入错题本, 可在"📓 待复习清单"中选 🎧 Listening MCQ 专项练</div>
+        <button onclick="closeLmGame()" style="padding:12px 24px;background:linear-gradient(135deg,#4ECDC4,#26A69A);color:#FFF;border:none;border-radius:8px;font-weight:900;cursor:pointer">关闭</button>
+      </div>`;
+  }
+  showToast(`🎧 +${g.correct * 2 + bonus} 分 · 听力 MCQ 完成`, 'success');
+  _lmState = null;
+}
+function closeLmGame() {
+  stopLmAudio();
+  const m = document.getElementById('lmModal');
+  if (m) m.classList.remove('show');
+  _lmState = null;
+  if (typeof renderAll === 'function') renderAll();
+}
+window.openListenMcqGame = openListenMcqGame;
+window.playLmAudio = playLmAudio;
+window.stopLmAudio = stopLmAudio;
+window.submitLmAnswer = submitLmAnswer;
+window.closeLmGame = closeLmGame;
+
 // --------- 2. 学科英语词汇 500 (今日 5 词 + mini-game) ---------
 function renderSubjectVocabCard() {
   const card = document.getElementById('subjectVocabCard');
@@ -5942,7 +6092,8 @@ function openErrorBank() {
   const GAME_LABEL = {
     knowledge: '🌳 知识树', math: '🔢 数学', grammar: '✏️ Grammar', cloze: '🧩 Cloze',
     editing: '🔍 Editing', vocab: '📚 词汇', listen: '🎧 听力', scilab: '🔬 科学',
-    sci_oe: '🧪 科学 OE', subject_vocab: '📚 学科词汇', chinese: '🇨🇳 华文', sst: '🔄 SST', scimcq: '🧬 科学 MCQ'
+    sci_oe: '🧪 科学 OE', subject_vocab: '📚 学科词汇', chinese: '🇨🇳 华文', sst: '🔄 SST', scimcq: '🧬 科学 MCQ',
+    listen_mcq: '🎧 听力 MCQ'  // v19.31
   };
   // v19.28: 学科 chip 按钮 — 点击只复习这一类 (替代原静态 stats)
   const now = Date.now();
@@ -7525,6 +7676,10 @@ function openMiniGameHub() {
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openSituationalWritingModal()" style="border:2px solid rgba(0,212,255,0.40)">
           📧<br><b>情境写作 SW</b><br><small>P1·15 分</small><div class="mgh-status" style="color:#4FC3F7">🆕 +5/篇</div>
+        </button>
+        <!-- v19.31: Paper 3 Listening MCQ (Expert 1+6 P0 — 13.5% 裸考修复) -->
+        <button class="mgh-game" onclick="closeMiniGameHub(); openListenMcqGame()" style="border:2px solid rgba(0,212,255,0.40)">
+          🎧<br><b>听力 MCQ</b><br><small>P3·10 题/局</small><div class="mgh-status" style="color:#4FC3F7">🆕 +2/题</div>
         </button>
       </div>
     </div>

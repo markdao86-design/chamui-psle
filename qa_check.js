@@ -411,8 +411,31 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.30/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.30: cache buster 已更新到 19.30 (英语 #3+#4+#7 — Oral SBC 扩 80 + RA 10 段 + SW 15 题)');
+assert(/\?v=19\.31/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.31: cache buster 已更新到 19.31 (英语 #2 — Listening MCQ 20 题, Paper 3 13.5% 裸考修复)');
+// v19.31: Listening MCQ 20 题
+const _lmCount = (() => {
+  const txt = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
+  const re = /const LISTENING_MCQ\s*=\s*\[/m, m = re.exec(txt); if (!m) return 0;
+  let i = m.index + m[0].length, depth = 1, c = 0, inStr = false, q = '';
+  for (; i < txt.length && depth > 0; i++) {
+    const ch = txt[i];
+    if (inStr) { if (ch === q && txt[i-1] !== '\\') inStr = false; continue; }
+    if (ch === '"' || ch === "'" || ch === '`') { inStr = true; q = ch; continue; }
+    if (ch === '[') depth++; else if (ch === ']') depth--;
+    else if (ch === '{' && depth === 1) c++;
+  }
+  return c;
+})();
+assert(_lmCount >= 20, `v19.31 #2: Listening MCQ ≥ 20 题 (实际 ${_lmCount})`);
+// v19.31 防死代码: openListenMcqGame 已接入 + window 导出 + 错题本 GAME_LABEL
+assert(/function openListenMcqGame\(/.test(appSrc), 'v19.31: openListenMcqGame 已定义');
+assert(/closeMiniGameHub\(\); openListenMcqGame\(\)/.test(appSrc), 'v19.31: 听力 MCQ 接入 mini-game hub');
+assert(/window\.openListenMcqGame = openListenMcqGame/.test(appSrc), 'v19.31: openListenMcqGame window 导出');
+assert(/listen_mcq: '🎧 听力 MCQ'/.test(appSrc), 'v19.31: 错题本 GAME_LABEL 加 listen_mcq');
+assert(/window\.LISTENING_MCQ = LISTENING_MCQ/.test(fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8')), 'v19.31: LISTENING_MCQ window 导出');
+// v19.31: 接入错题本 (答错自动入库)
+assert(/gameKey: 'listen_mcq', type: 'mcq'/.test(appSrc), 'v19.31: 听力 MCQ 错题接入错题本');
 // v19.30: 题库规模
 const _v30data = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
 function _countItems(name) {
