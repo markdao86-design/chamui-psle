@@ -411,8 +411,22 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.32/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.32: cache buster 已更新到 19.32 (英语 #5 — Scaffold 弱生模式: weak/normal/strong 难度分层)');
+assert(/\?v=19\.33/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.33: cache buster 已更新到 19.33 (科学 Systems OE 补 10 — Circulatory 4 + Respiratory 3 + Circuits 3, 第 9+10 轮 P0 修复)');
+// v19.33: 科学 OE 60 题 (50 → 60), 3 个 Systems 主题填补
+const _v33data = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
+function _countOEByTopic(topic) {
+  const re = new RegExp("\\{ id: 'oe_\\d+', topic: '" + topic + "'", 'g');
+  return (_v33data.match(re) || []).length;
+}
+function _countOEAll() {
+  const re = /\{ id: 'oe_\d+', topic:/g;
+  return (_v33data.match(re) || []).length;
+}
+assert(_countOEAll() >= 60, `v19.33: SCIENCE_OE_QUESTIONS ≥ 60 题 (实际 ${_countOEAll()})`);
+assert(_countOEByTopic('Circulatory') >= 4, `v19.33: Circulatory OE ≥ 4 题 (Expert 4 P0, 实际 ${_countOEByTopic('Circulatory')})`);
+assert(_countOEByTopic('Respiratory') >= 3, `v19.33: Respiratory OE ≥ 3 题 (Expert 4 P0, 实际 ${_countOEByTopic('Respiratory')})`);
+assert(_countOEByTopic('Electrical Circuits') >= 3, `v19.33: Electrical Circuits OE ≥ 3 题 (Expert 4 P0, 实际 ${_countOEByTopic('Electrical Circuits')})`);
 // v19.32: getDifficulty 加 englishMode 钩子
 const _v32data = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
 assert(/state\.englishMode \|\| 'normal'/.test(_v32data), 'v19.32: getDifficulty 加 englishMode 钩子');

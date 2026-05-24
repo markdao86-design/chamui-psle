@@ -9939,7 +9939,45 @@ const SCIENCE_OE_QUESTIONS = [
   { id: 'oe_50', topic: 'Water Cycle',
     q: 'Singapore turns used water into clean drinking water called NEWater. Briefly describe how the natural water cycle also "cleans" water as it moves through the cycle.',
     keywords: ['evaporation', 'water vapour', 'pure', 'condensation', 'cloud', 'rain'],
-    model: 'In the natural water cycle, the heat from the Sun causes water on the surface of the sea, lakes and rivers to evaporate. Only pure water becomes water vapour and rises into the sky — any salts, dirt and impurities are left behind. The water vapour then cools and condenses into tiny water droplets that form clouds, and eventually falls back to the ground as clean rain. So the water cycle naturally cleans water through evaporation and condensation.' }
+    model: 'In the natural water cycle, the heat from the Sun causes water on the surface of the sea, lakes and rivers to evaporate. Only pure water becomes water vapour and rises into the sky — any salts, dirt and impurities are left behind. The water vapour then cools and condenses into tiny water droplets that form clouds, and eventually falls back to the ground as clean rain. So the water cycle naturally cleans water through evaporation and condensation.' },
+
+  // ============ v19.33: PSLE Systems 主题补全 (Expert 4 第 9+10 轮重复 P0) ============
+  // Circulatory (4) + Respiratory (3) + Electrical Circuits (3) = 10 题, OE 50 → 60
+  // ---- Circulatory System (4) ----
+  { id: 'oe_51', topic: 'Circulatory', q: 'The diagram shows blood flowing from the heart to the body. Explain why the blood pumped from the left side of the heart to the body is described as "oxygenated".',
+    keywords: ['oxygen', 'lungs', 'left', 'heart', 'pumped', 'body'],
+    model: 'Blood flows from the lungs to the left side of the heart. In the lungs, the blood picks up oxygen from the air we breathe in. Because this blood is rich in oxygen, it is called oxygenated blood. The left side of the heart then pumps this oxygenated blood to all parts of the body, so that the cells can use the oxygen for respiration.' },
+  { id: 'oe_52', topic: 'Circulatory', q: 'Doctors often check a patient\'s pulse at the wrist. Explain what the pulse is and what it tells the doctor.',
+    keywords: ['heart', 'pumps', 'blood', 'artery', 'wrist', 'rate'],
+    model: 'The pulse is caused by the surge of blood pushed through an artery each time the heart pumps. When the doctor presses the artery in the wrist, he can feel the artery expanding with each heartbeat. By counting the number of pulses per minute, the doctor can tell how fast the heart is beating, so he knows if the heart is healthy or working too hard.' },
+  { id: 'oe_53', topic: 'Circulatory', q: 'After running quickly for five minutes, Mei Lin\'s heart beats faster than usual. Explain why her heart rate increases when she exercises.',
+    keywords: ['oxygen', 'muscles', 'energy', 'blood', 'faster', 'respiration'],
+    model: 'When Mei Lin exercises, her muscles need more energy to keep moving. To release more energy, the muscles need more oxygen for respiration. The heart therefore beats faster to pump more oxygenated blood to her muscles in a shorter time, so that enough oxygen is delivered to meet the higher demand.' },
+  { id: 'oe_54', topic: 'Circulatory', q: 'Blood vessels are described as a "transport system" in the human body. State two substances, apart from oxygen, that the blood carries to all parts of the body.',
+    keywords: ['digested food', 'nutrients', 'water', 'carbon dioxide', 'waste'],
+    model: 'Apart from oxygen, the blood also carries digested food (such as glucose) to provide energy for cells, and water to keep the cells hydrated. The blood also collects waste materials like carbon dioxide from the cells and brings them to the lungs and kidneys to be removed from the body.' },
+
+  // ---- Respiratory System (3) ----
+  { id: 'oe_55', topic: 'Respiratory', q: 'The diagram shows the human respiratory system. Explain how oxygen from the air we breathe in reaches the blood.',
+    keywords: ['nose', 'windpipe', 'lungs', 'alveoli', 'thin', 'oxygen', 'blood'],
+    model: 'When we breathe in, air enters through the nose and passes down the windpipe into the lungs. Inside the lungs are millions of tiny air sacs called alveoli, surrounded by thin blood vessels. The walls of the alveoli and the blood vessels are very thin, allowing oxygen from the air to pass through into the blood. The blood then carries the oxygen to the rest of the body.' },
+  { id: 'oe_56', topic: 'Respiratory', q: 'When we breathe out, the air contains less oxygen and more carbon dioxide than the air we breathe in. Explain why.',
+    keywords: ['respiration', 'cells', 'oxygen', 'used', 'carbon dioxide', 'waste'],
+    model: 'When we breathe in, oxygen from the air enters the blood and is carried to the cells. The cells use this oxygen for respiration to release energy from digested food. During this process, carbon dioxide is produced as a waste product. The blood collects this carbon dioxide and brings it back to the lungs, where it is released and breathed out. This is why exhaled air has less oxygen and more carbon dioxide.' },
+  { id: 'oe_57', topic: 'Respiratory', q: 'A smoker often has difficulty breathing during exercise. Suggest one possible reason, linking your answer to the structure of the lungs.',
+    keywords: ['alveoli', 'damaged', 'smoke', 'less oxygen', 'thinner', 'breathing'],
+    model: 'Smoke from cigarettes damages the alveoli inside the lungs. When alveoli are damaged, the surface area for oxygen to pass into the blood becomes much smaller. So less oxygen can enter the blood with each breath. During exercise, when the body needs more oxygen, the smoker\'s damaged lungs cannot supply enough, making him breathe heavily or feel out of breath.' },
+
+  // ---- Electrical Circuits (3) ----
+  { id: 'oe_58', topic: 'Electrical Circuits', q: 'In the diagram, Bulb A and Bulb B are connected in a series circuit. When Bulb A is removed, Bulb B also stops lighting up. Explain why.',
+    keywords: ['series', 'circuit', 'broken', 'electricity', 'flow', 'incomplete'],
+    model: 'In a series circuit, the bulbs are connected one after another in a single loop. The electricity must flow through every component to complete the circuit. When Bulb A is removed, there is a gap in the circuit. The circuit is no longer complete, so electricity cannot flow through it. As a result, Bulb B also stops lighting up.' },
+  { id: 'oe_59', topic: 'Electrical Circuits', q: 'Pinky wants to find out whether copper is a good conductor of electricity. Using a battery, two wires, a bulb and a piece of copper, describe an experiment she can do to test this.',
+    keywords: ['circuit', 'battery', 'wires', 'bulb', 'copper', 'lights up', 'conductor'],
+    model: 'Pinky should set up a circuit using the battery, the two wires and the bulb, but leave a gap in the circuit. She then places the piece of copper across the gap so that the copper completes the circuit. If the bulb lights up, it means electricity can flow through the copper, so copper is a good conductor of electricity. If the bulb does not light up, copper would be an insulator. To make it a fair test, she should keep the battery, wires and bulb the same when testing other materials.' },
+  { id: 'oe_60', topic: 'Electrical Circuits', q: 'In a torch, two batteries are usually arranged so that their positive (+) and negative (-) ends face the same direction. Explain why placing one battery the wrong way round would prevent the torch from working.',
+    keywords: ['flow', 'electricity', 'direction', 'positive', 'negative', 'cancel'],
+    model: 'For electricity to flow from a battery, the positive end of one battery must connect to the negative end of the next, so the batteries push the electricity in the same direction. If one battery is placed the wrong way round, the two batteries push the electricity in opposite directions. The two pushes cancel each other out, so there is no flow of electricity through the circuit and the bulb in the torch does not light up.' }
 ];
 
 // ============ 6. 概念图 SVG (4 张静态难章) ============
