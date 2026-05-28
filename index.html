@@ -5128,6 +5128,7 @@ p { font-size: 14px; line-height: 1.6; }
   <button class="tab-btn active" data-page="dashboard">🏠 主页</button>
   <button class="tab-btn" data-page="checkin">✅ 打卡</button>
   <button class="tab-btn" data-page="practice">📚 练习</button>
+  <button class="tab-btn" data-page="summer">📅 暑假</button>
   <button class="tab-btn" data-page="history">📊 能力</button>
   <button class="tab-btn" data-page="character">👤 我的</button>
   <!-- 旧 4 个英语类 tab + 管理 tab 隐藏 (page 容器仍存在, JS 跳转可访问) -->
@@ -5492,6 +5493,161 @@ p { font-size: 14px; line-height: 1.6; }
       </div>
       <div style="font-size:10px;color:#888;margin-top:8px;text-align:center">v19.14i 主页极简后, 旧内容入口保留在这里 (不删, 一键访问)</div>
     </details>
+  </div>
+
+  <!-- 暑假课表页 (v19.6+: 2026 暑期英语强化 31 天) -->
+  <div class="page" id="page-summer">
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title">📅 暑假英语强化课表 · 31 天</div>
+      <div style="font-size:13px;color:var(--color-text-light);line-height:1.7;margin-top:6px">
+        <b>2026-05-29 周五 → 2026-06-28 周日</b> (5 周)<br>
+        目标: 英语 65 → 75 (AL5 → AL4)<br>
+        4-4.5h/天 · <b>只休息周日</b> · <b>8 点起床, 9 点睡觉</b>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title">1️⃣ 整体节奏</div>
+      <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px">
+        <thead><tr style="background:rgba(168,85,247,0.10)"><th style="text-align:left;padding:6px">周</th><th style="text-align:left;padding:6px">日期</th><th style="text-align:left;padding:6px">焦点</th></tr></thead>
+        <tbody>
+          <tr><td style="padding:6px"><b>W0 启动</b></td><td style="padding:6px">5-29 ~ 5-31 (3 天)</td><td style="padding:6px">诊断 + 立 baseline</td></tr>
+          <tr><td style="padding:6px"><b>W1 P2 攻坚</b></td><td style="padding:6px">6-1 ~ 6-7</td><td style="padding:6px">Comp OE + Cloze + Vocab</td></tr>
+          <tr><td style="padding:6px"><b>W2 P1 攻坚</b></td><td style="padding:6px">6-8 ~ 6-14</td><td style="padding:6px">SST + Composition + 作文模板</td></tr>
+          <tr><td style="padding:6px"><b>W3 P3+Oral</b></td><td style="padding:6px">6-15 ~ 6-21</td><td style="padding:6px">Listening + Oral SBC + RA</td></tr>
+          <tr><td style="padding:6px"><b>W4 综合模考</b></td><td style="padding:6px">6-22 ~ 6-28</td><td style="padding:6px">完整 P1+P2+P3 模考 + 复盘</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title">2️⃣ 每日时间表 (8AM 起床 → 9PM 睡觉)</div>
+      <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px">
+        <thead><tr style="background:rgba(168,85,247,0.10)"><th style="text-align:left;padding:6px">时间</th><th style="text-align:left;padding:6px">时长</th><th style="text-align:left;padding:6px">内容</th></tr></thead>
+        <tbody>
+          <tr><td style="padding:6px">08:00-08:30</td><td style="padding:6px">30min</td><td style="padding:6px">起床 + 早餐</td></tr>
+          <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>08:30-09:30 A</b></td><td style="padding:6px">60min</td><td style="padding:6px">📚 Comp OE 阅读 + 8-10 题</td></tr>
+          <tr><td style="padding:6px">09:30-10:00</td><td style="padding:6px">30min</td><td style="padding:6px">休 (水/水果)</td></tr>
+          <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>10:00-11:00 B</b></td><td style="padding:6px">60min</td><td style="padding:6px">📇 Vocab 闪卡 30min + Cloze 30min</td></tr>
+          <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>11:00-11:20</b></td><td style="padding:6px">20min</td><td style="padding:6px">📓 错题本艾宾浩斯 due</td></tr>
+          <tr><td style="padding:6px">11:20-12:30</td><td style="padding:6px">70min</td><td style="padding:6px">自由 / 英文小书</td></tr>
+          <tr><td style="padding:6px">12:30-13:30</td><td style="padding:6px">60min</td><td style="padding:6px">午餐</td></tr>
+          <tr><td style="padding:6px">13:30-14:30</td><td style="padding:6px">60min</td><td style="padding:6px">午休 / 自由</td></tr>
+          <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>14:30-15:30 C</b></td><td style="padding:6px">60min</td><td style="padding:6px">📝 Composition / SST 隔天轮换</td></tr>
+          <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>15:30-15:45</b></td><td style="padding:6px">15min</td><td style="padding:6px">🎮 他科 mini-game (轮换)</td></tr>
+          <tr><td style="padding:6px">15:45-18:30</td><td style="padding:6px">2h45min</td><td style="padding:6px">自由玩 / 出门 / 朋友</td></tr>
+          <tr><td style="padding:6px">18:30-19:30</td><td style="padding:6px">60min</td><td style="padding:6px">晚餐 + 家庭时间</td></tr>
+          <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>19:30-20:00 D</b></td><td style="padding:6px">30min</td><td style="padding:6px">🗣️ Oral SBC / Listen MCQ / RA</td></tr>
+          <tr><td style="padding:6px">20:00-20:45</td><td style="padding:6px">45min</td><td style="padding:6px">洗澡 + 睡前阅读</td></tr>
+          <tr><td style="padding:6px">20:45-21:00</td><td style="padding:6px">15min</td><td style="padding:6px">关灯前 chat</td></tr>
+          <tr style="background:rgba(255,184,0,0.10)"><td style="padding:6px"><b>21:00 🌙</b></td><td style="padding:6px">—</td><td style="padding:6px"><b>睡觉</b></td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:12px;color:var(--color-text-light);margin-top:8px;padding:8px;background:rgba(0,255,136,0.06);border-radius:6px">
+        💡 <b>结构化学习总计</b>: A 60 + B 60 + 错题 20 + C 60 + 他科 15 + D 30 = <b>4h05min ✓</b>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title">3️⃣ 每周日程模板 (内容前进, 节奏不变)</div>
+      <div style="font-size:13px;line-height:1.8;color:var(--color-text)">
+        <p><b>周一 — 英语精读日</b>: A Comp OE P5 · B Vocab 30 词+Cloze 5 · C Composition 1 篇 · D Oral SBC 5 · 他科 数学</p>
+        <p><b>周二 — 英语综合日</b>: A Comp OE P6 · B Vocab Cloze+同义词 MCQ · C SST 3 · D Listen MCQ+RA · 他科 科学</p>
+        <p><b>周三 — Paper 2 重点日</b>: A Comp OE+错题精讲 · B Cloze 词义+Vocab · C Composition V2 修周一 · D Oral SBC · 他科 华文</p>
+        <p><b>周四 — 听说日</b>: A Comp OE · B Vocab+Editing · C SST 3 · D Listen MCQ+RA · 他科 数学 unit</p>
+        <p><b>周五 — Paper 2 模拟测</b>: A Comp OE · B Cloze · C Comp V2 final · D Oral SBC · 🎯 <b>Paper 2 模拟卷 28min</b> · 他科 科学</p>
+        <p><b>周六 — Paper 1 模拟 + 周复盘</b>: A Comp OE · B Cloze · 🎯 <b>Paper 1 模拟 60min</b> · D Oral · 复盘 10min · 他科 华文</p>
+        <p style="background:rgba(255,184,0,0.10);padding:8px;border-radius:6px"><b>周日 — 全休 🌴</b>: 完全不学 / 不打卡 / 出去玩 / 1 集英语动画当娱乐</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title">4️⃣ 5 周分主题进度</div>
+      <div style="font-size:13px;line-height:1.7;color:var(--color-text)">
+        <h4 style="color:#C084FC;margin:12px 0 4px">W0 (5-29 ~ 5-31) — 启动诊断</h4>
+        <p style="margin:4px 0"><b>5-29 周五 基线日</b>: 测起点 (Comp OE / Vocab / Composition / Oral / Paper 2 模拟卷 1 套)</p>
+        <p style="margin:4px 0"><b>5-30 周六</b>: 标准周六模板 + 10min 基线分析</p>
+        <p style="margin:4px 0"><b>5-31 周日</b>: 全休 🌴</p>
+
+        <h4 style="color:#C084FC;margin:12px 0 4px">W1 (6-1 ~ 6-7) — Paper 2 攻坚</h4>
+        <p style="margin:4px 0">Comp OE 5 篇 · Vocab Cloze 25 题 · 50 新词 · Composition 2 V1+1 V2 · Paper 2 模拟 1 套 (周五)</p>
+
+        <h4 style="color:#C084FC;margin:12px 0 4px">W2 (6-8 ~ 6-14) — Paper 1 攻坚</h4>
+        <p style="margin:4px 0">SST 15 题全过 · Composition 3 篇 (3 模板) · 模板库 15 全看 · 50 高级词全进 · Paper 1 模拟 1 套 (周六)</p>
+
+        <h4 style="color:#C084FC;margin:12px 0 4px">W3 (6-15 ~ 6-21) — Paper 3 + Oral</h4>
+        <p style="margin:4px 0">Listening MCQ 20 题全过 + 二刷 · Oral SBC 30 (周一/三/五) · RA 10 段 + 跟读 · Comp OE 维持 5 篇 · Paper 3 模拟 (周五)</p>
+
+        <h4 style="color:#C084FC;margin:12px 0 4px">W4 (6-22 ~ 6-28) — 综合模考周</h4>
+        <p style="margin:4px 0"><b>周一</b>: 🎯 Paper 2 完整模考 (110min)</p>
+        <p style="margin:4px 0"><b>周二</b>: 模考错题精讲日</p>
+        <p style="margin:4px 0"><b>周三</b>: 🎯 Paper 1 完整模考 (70min)</p>
+        <p style="margin:4px 0"><b>周四</b>: Paper 1 错题精讲 + Composition V2</p>
+        <p style="margin:4px 0"><b>周五</b>: 🎯 Paper 3 (35min) + Oral 模考 (15min)</p>
+        <p style="margin:4px 0"><b>周六</b>: 标准周六 + 总复盘 10min + 写"开学前给自己的话"</p>
+        <p style="margin:4px 0"><b>周日</b>: 全休 🌴 收书包</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title">5️⃣ 量化指标 (家长监督看板)</div>
+      <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px">
+        <thead><tr style="background:rgba(168,85,247,0.10)"><th style="text-align:left;padding:6px">维度</th><th style="text-align:center;padding:6px">W0 起点</th><th style="text-align:center;padding:6px">W4 目标</th></tr></thead>
+        <tbody>
+          <tr><td style="padding:6px">Comp OE 正确率</td><td style="text-align:center;padding:6px">~60%</td><td style="text-align:center;padding:6px;color:var(--color-success)"><b>75%+</b></td></tr>
+          <tr><td style="padding:6px">Vocab Cloze 正确率</td><td style="text-align:center;padding:6px">~55%</td><td style="text-align:center;padding:6px;color:var(--color-success)"><b>75%+</b></td></tr>
+          <tr><td style="padding:6px">Composition 字数</td><td style="text-align:center;padding:6px">~150</td><td style="text-align:center;padding:6px;color:var(--color-success)"><b>220+</b></td></tr>
+          <tr><td style="padding:6px">Composition 高级词</td><td style="text-align:center;padding:6px">&lt;5</td><td style="text-align:center;padding:6px;color:var(--color-success)"><b>15+</b></td></tr>
+          <tr><td style="padding:6px">Listening MCQ 正确率</td><td style="text-align:center;padding:6px">~60%</td><td style="text-align:center;padding:6px;color:var(--color-success)"><b>75%+</b></td></tr>
+          <tr><td style="padding:6px"><b>AL 预测</b></td><td style="text-align:center;padding:6px">AL5</td><td style="text-align:center;padding:6px;color:var(--color-success)"><b>AL4</b></td></tr>
+          <tr><td style="padding:6px">错题本累计消灭</td><td style="text-align:center;padding:6px">0</td><td style="text-align:center;padding:6px;color:var(--color-success)"><b>150+</b></td></tr>
+          <tr><td style="padding:6px">Paper 2 模拟卷做了几套</td><td style="text-align:center;padding:6px">1</td><td style="text-align:center;padding:6px;color:var(--color-success)"><b>5</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title">6️⃣ App 训练入口对照</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-top:8px">
+        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Comp OE 阅读 + 定位法<br><b style="color:#38BDF8">📚 题库 → Comp OE</b></div>
+        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Vocab 闪卡 (艾宾浩斯)<br><b style="color:#38BDF8">📇 词汇 tab</b></div>
+        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Vocab Cloze 50 PSLE<br><b style="color:#38BDF8">主页 Paper 2 突击卡</b></div>
+        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Cloze 同义词 MCQ<br><b style="color:#38BDF8">练习 → Cloze</b></div>
+        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Composition<br><b style="color:#38BDF8">📝 作文 tab</b></div>
+        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">作文模板 15 + 50 高级词<br><b style="color:#38BDF8">📝 作文 → 模板库</b></div>
+        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">SST 15 题<br><b style="color:#38BDF8">练习 → SST</b></div>
+        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Listening MCQ 20 题<br><b style="color:#38BDF8">练习 → Listen MCQ</b></div>
+        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Oral SBC 80 题<br><b style="color:#38BDF8">主页 → Oral SBC</b></div>
+        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Oral RA 10 段 TTS<br><b style="color:#38BDF8">主页 → Reading Aloud</b></div>
+        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Editing 找错<br><b style="color:#38BDF8">练习 → Editing</b></div>
+        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">错题本艾宾浩斯<br><b style="color:#38BDF8">训练中心 → 错题本</b></div>
+        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">数学维持<br><b style="color:#38BDF8">练习 → 数学/unit</b></div>
+        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">科学维持<br><b style="color:#38BDF8">练习 → SciMCQ/SciOE</b></div>
+        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">华文维持<br><b style="color:#38BDF8">练习 → 华文 MCQ/阅读</b></div>
+        <div style="padding:6px 8px;background:rgba(255,184,0,0.10);border-radius:5px">🎯 Paper 2 模拟卷 28min<br><b style="color:#FFB800">主页 → Paper 2 模拟卷</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">7️⃣ 给孩子 / 给家长</div>
+      <div style="font-size:13px;line-height:1.7;color:var(--color-text);margin-top:8px">
+        <p><b>给孩子</b>:</p>
+        <ul style="padding-left:20px;margin:6px 0">
+          <li>暑假 31 天, 每天 4 小时. 之后随便玩.</li>
+          <li>周日不学, 一定出去.</li>
+          <li>每周五写本周收获 1 句话.</li>
+          <li>7 月开学时英语课会突然不吃力 — 那就是 31 天换来的.</li>
+        </ul>
+        <p style="margin-top:12px"><b>给家长</b>:</p>
+        <ul style="padding-left:20px;margin:6px 0">
+          <li>周三 / 周六 抽 15min 看错题本 → 错最多的类是真弱点, 下周加强它</li>
+          <li>周五帮孩子改 Composition V2 (对照模板库)</li>
+          <li><b>不追加任务</b>, 不"再多做 1 篇" — 一次破规矩就破整个暑假</li>
+          <li>孩子某天 4h 撑不下来 → 砍到 3h, 周末补回 1h</li>
+          <li>看 <b>错题消灭数</b> &gt; 看 AL 数字, 那才是真进步</li>
+        </ul>
+      </div>
+    </div>
   </div>
 
   <!-- 管理页 -->
