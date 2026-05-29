@@ -2096,6 +2096,77 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   color: var(--color-text-light);
 }
 
+/* ===== v19.27: 暑假 31 天互动课表 ===== */
+.summer-day-row {
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+  transition: all 0.2s;
+}
+.summer-day-today {
+  background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,184,0,0.04));
+  box-shadow: 0 0 0 2px rgba(255,184,0,0.55), 0 4px 12px rgba(255,184,0,0.15);
+}
+.summer-day-complete {
+  background: linear-gradient(135deg, rgba(0,255,136,0.10), rgba(0,255,136,0.02));
+  box-shadow: 0 0 0 1px rgba(0,255,136,0.30) inset;
+}
+.summer-day-missed { opacity: 0.55; }
+.summer-day-rest { background: rgba(255,184,0,0.06); }
+.summer-day-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+.summer-day-date { font-weight: 700; font-size: 14px; color: var(--color-text); }
+.summer-day-dow { color: var(--color-text-light); }
+.summer-day-week { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: rgba(255,255,255,0.05); }
+.summer-day-title { color: var(--color-text-light); font-size: 11px; flex-basis: 100%; }
+.summer-day-prog { margin-left: auto; font-size: 12px; font-weight: 700; color: #C084FC; }
+.summer-day-full-badge { color: #FFB800; font-weight: 700; font-size: 12px; }
+.summer-day-today-badge { color: #FFB800; font-weight: 700; font-size: 12px; animation: pulse 2s infinite; }
+.summer-day-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.summer-task-chip {
+  background: rgba(168,85,247,0.10);
+  border: 1px solid rgba(168,85,247,0.30);
+  color: var(--color-text);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  font-family: inherit;
+  line-height: 1.4;
+}
+.summer-task-chip b { font-weight: 700; margin-right: 2px; opacity: 0.7; }
+.summer-task-chip:hover {
+  transform: translateY(-1px);
+  background: rgba(168,85,247,0.20);
+  box-shadow: 0 2px 8px rgba(168,85,247,0.35);
+}
+.summer-task-done {
+  background: rgba(0,255,136,0.12) !important;
+  border-color: rgba(0,255,136,0.45) !important;
+  color: var(--color-success) !important;
+  text-decoration: line-through;
+}
+.summer-task-highlight {
+  background: rgba(255,184,0,0.18);
+  border-color: rgba(255,184,0,0.55);
+  font-weight: 600;
+}
+.summer-rest-tag {
+  color: #FFB800;
+  font-weight: 600;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
 .checkin-item.tier-core { border-left: 3px solid var(--color-primary); }
 .checkin-item.tier-extend { border-left: 3px solid var(--color-accent); }
 .checkin-item.tier-bonus { border-left: 3px solid var(--color-purple); opacity: 0.85; }
@@ -5527,15 +5598,14 @@ p { font-size: 14px; line-height: 1.6; }
         <tbody>
           <tr><td style="padding:6px">08:00-08:30</td><td style="padding:6px">30min</td><td style="padding:6px">起床 + 早餐</td></tr>
           <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>08:30-09:30 A</b></td><td style="padding:6px">60min</td><td style="padding:6px">📚 Comp OE 阅读 + 8-10 题</td></tr>
-          <tr><td style="padding:6px">09:30-10:00</td><td style="padding:6px">30min</td><td style="padding:6px">休 (水/水果)</td></tr>
+          <tr style="background:rgba(255,184,0,0.10)"><td style="padding:6px"><b>09:30-10:00</b></td><td style="padding:6px">30min</td><td style="padding:6px">🤸 跳绳 (运动)</td></tr>
           <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>10:00-11:00 B</b></td><td style="padding:6px">60min</td><td style="padding:6px">📇 Vocab 闪卡 30min + Cloze 30min</td></tr>
           <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>11:00-11:20</b></td><td style="padding:6px">20min</td><td style="padding:6px">📓 错题本艾宾浩斯 due</td></tr>
           <tr><td style="padding:6px">11:20-12:30</td><td style="padding:6px">70min</td><td style="padding:6px">自由 / 英文小书</td></tr>
           <tr><td style="padding:6px">12:30-13:30</td><td style="padding:6px">60min</td><td style="padding:6px">午餐</td></tr>
           <tr><td style="padding:6px">13:30-14:30</td><td style="padding:6px">60min</td><td style="padding:6px">午休 / 自由</td></tr>
           <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>14:30-15:30 C</b></td><td style="padding:6px">60min</td><td style="padding:6px">📝 Composition / SST 隔天轮换</td></tr>
-          <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>15:30-15:45</b></td><td style="padding:6px">15min</td><td style="padding:6px">🎮 他科 mini-game (轮换)</td></tr>
-          <tr><td style="padding:6px">15:45-18:30</td><td style="padding:6px">2h45min</td><td style="padding:6px">自由玩 / 出门 / 朋友</td></tr>
+          <tr style="background:rgba(255,107,53,0.10)"><td style="padding:6px"><b>15:30-18:30</b></td><td style="padding:6px">3h</td><td style="padding:6px">📖 <b>美玲课</b> (外课 · 英语强化)</td></tr>
           <tr><td style="padding:6px">18:30-19:30</td><td style="padding:6px">60min</td><td style="padding:6px">晚餐 + 家庭时间</td></tr>
           <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>19:30-20:00 D</b></td><td style="padding:6px">30min</td><td style="padding:6px">🗣️ Oral SBC / Listen MCQ / RA</td></tr>
           <tr><td style="padding:6px">20:00-20:45</td><td style="padding:6px">45min</td><td style="padding:6px">洗澡 + 睡前阅读</td></tr>
@@ -5544,7 +5614,7 @@ p { font-size: 14px; line-height: 1.6; }
         </tbody>
       </table>
       <div style="font-size:12px;color:var(--color-text-light);margin-top:8px;padding:8px;background:rgba(0,255,136,0.06);border-radius:6px">
-        💡 <b>结构化学习总计</b>: A 60 + B 60 + 错题 20 + C 60 + 他科 15 + D 30 = <b>4h05min ✓</b>
+        💡 <b>结构化学习总计</b>: A 60 + B 60 + 错题 20 + C 60 + D 30 = <b>3h50min app 训练</b> + 美玲课 3h + 跳绳 30min = 全天约 <b>6h50min</b>
       </div>
     </div>
 
@@ -5562,30 +5632,12 @@ p { font-size: 14px; line-height: 1.6; }
     </div>
 
     <div class="card" style="margin-bottom:12px">
-      <div class="card-title">4️⃣ 5 周分主题进度</div>
-      <div style="font-size:13px;line-height:1.7;color:var(--color-text)">
-        <h4 style="color:#C084FC;margin:12px 0 4px">W0 (5-29 ~ 5-31) — 启动诊断</h4>
-        <p style="margin:4px 0"><b>5-29 周五 基线日</b>: 测起点 (Comp OE / Vocab / Composition / Oral / Paper 2 模拟卷 1 套)</p>
-        <p style="margin:4px 0"><b>5-30 周六</b>: 标准周六模板 + 10min 基线分析</p>
-        <p style="margin:4px 0"><b>5-31 周日</b>: 全休 🌴</p>
-
-        <h4 style="color:#C084FC;margin:12px 0 4px">W1 (6-1 ~ 6-7) — Paper 2 攻坚</h4>
-        <p style="margin:4px 0">Comp OE 5 篇 · Vocab Cloze 25 题 · 50 新词 · Composition 2 V1+1 V2 · Paper 2 模拟 1 套 (周五)</p>
-
-        <h4 style="color:#C084FC;margin:12px 0 4px">W2 (6-8 ~ 6-14) — Paper 1 攻坚</h4>
-        <p style="margin:4px 0">SST 15 题全过 · Composition 3 篇 (3 模板) · 模板库 15 全看 · 50 高级词全进 · Paper 1 模拟 1 套 (周六)</p>
-
-        <h4 style="color:#C084FC;margin:12px 0 4px">W3 (6-15 ~ 6-21) — Paper 3 + Oral</h4>
-        <p style="margin:4px 0">Listening MCQ 20 题全过 + 二刷 · Oral SBC 30 (周一/三/五) · RA 10 段 + 跟读 · Comp OE 维持 5 篇 · Paper 3 模拟 (周五)</p>
-
-        <h4 style="color:#C084FC;margin:12px 0 4px">W4 (6-22 ~ 6-28) — 综合模考周</h4>
-        <p style="margin:4px 0"><b>周一</b>: 🎯 Paper 2 完整模考 (110min)</p>
-        <p style="margin:4px 0"><b>周二</b>: 模考错题精讲日</p>
-        <p style="margin:4px 0"><b>周三</b>: 🎯 Paper 1 完整模考 (70min)</p>
-        <p style="margin:4px 0"><b>周四</b>: Paper 1 错题精讲 + Composition V2</p>
-        <p style="margin:4px 0"><b>周五</b>: 🎯 Paper 3 (35min) + Oral 模考 (15min)</p>
-        <p style="margin:4px 0"><b>周六</b>: 标准周六 + 总复盘 10min + 写"开学前给自己的话"</p>
-        <p style="margin:4px 0"><b>周日</b>: 全休 🌴 收书包</p>
+      <div class="card-title">4️⃣ 31 天互动日历 (点任务直接跳, 自动打勾)</div>
+      <div style="font-size:11px;color:var(--color-text-light);margin:6px 0 10px;padding:6px 10px;background:rgba(255,184,0,0.10);border-radius:6px">
+        💡 今日金色边框自动滚动到顶 · 点 chip 跳 app 功能 + 自动 ✓ · 再点 ✓ 取消 · 全天做完 → 🌟 全勤撒花
+      </div>
+      <div id="summerCalendarContainer">
+        <div style="text-align:center;color:var(--color-text-light);padding:20px">加载中…</div>
       </div>
     </div>
 
@@ -5896,9 +5948,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.36"></script>
-<script src="data.js?v=19.36"></script>
-<script src="app.js?v=19.36"></script>
+<script src="character.js?v=19.37"></script>
+<script src="data.js?v=19.37"></script>
+<script src="app.js?v=19.37"></script>
 
 </body>
 </html>

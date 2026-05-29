@@ -316,6 +316,199 @@ function grantWeeklyPerfect(state, week) {
   });
 }
 
+// ============= v19.27: 暑假 31 天互动课表 =============
+// 每天 4-6 个 chip, 点击 → 跳 app 功能 + 自动打勾
+// state.summerDone[date][taskId] = bool
+
+const _SUMMER_TEMPLATES = {
+  // 标准模板 by 周几 - W1-W3 通用
+  '周一': [
+    { id: 'A', icon: '📚', label: 'Comp OE 1 篇', fn: 'openCompOeGame' },
+    { id: 'B', icon: '📇', label: 'Vocab 闪卡 30 + Cloze 5 题', fn: 'openClozeGame' },
+    { id: 'C', icon: '✍️', label: 'Composition 1 篇 (用模板)', fn: 'openCompositionModal', useWeek: true },
+    { id: 'D', icon: '🗣️', label: 'Oral SBC 5 题', fn: 'openOralPracticeModal' },
+    { id: 'E', icon: '📓', label: '错题本艾宾浩斯', fn: 'openErrorBank' }
+  ],
+  '周二': [
+    { id: 'A',  icon: '📚', label: 'Comp OE 1 篇 (P6)',           fn: 'openCompOeGame' },
+    { id: 'B',  icon: '📇', label: 'Vocab Cloze + 同义词 MCQ',    fn: 'openClozeGame' },
+    { id: 'C',  icon: '✍️', label: 'SST 3 题',                    fn: 'openSstGame' },
+    { id: 'D',  icon: '🎧', label: 'Listening MCQ 5 题',           fn: 'openListenMcqGame' },
+    { id: 'D2', icon: '🗣️', label: 'Oral RA 1 段',                fn: 'openOralRAModal' },
+    { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                fn: 'openErrorBank' }
+  ],
+  '周三': [
+    { id: 'A', icon: '📚', label: 'Comp OE 1 篇 + 错题精讲', fn: 'openCompOeGame' },
+    { id: 'B', icon: '📇', label: 'Cloze 真考词义 + Vocab 10 新词', fn: 'openClozeGame' },
+    { id: 'C', icon: '✍️', label: 'Composition V2 修周一', fn: 'openCompositionModal', useWeek: true },
+    { id: 'D', icon: '🗣️', label: 'Oral SBC 5 题', fn: 'openOralPracticeModal' },
+    { id: 'E', icon: '📓', label: '错题本艾宾浩斯', fn: 'openErrorBank' }
+  ],
+  '周四': [
+    { id: 'A',  icon: '📚', label: 'Comp OE 1 篇',            fn: 'openCompOeGame' },
+    { id: 'B',  icon: '📇', label: 'Vocab + Editing 10 题',   fn: 'openEditingGame' },
+    { id: 'C',  icon: '✍️', label: 'SST 3 题',                fn: 'openSstGame' },
+    { id: 'D',  icon: '🎧', label: 'Listening MCQ 5 题',       fn: 'openListenMcqGame' },
+    { id: 'D2', icon: '🗣️', label: 'Oral RA 2 段',            fn: 'openOralRAModal' },
+    { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',            fn: 'openErrorBank' }
+  ],
+  '周五': [
+    { id: 'A',  icon: '📚', label: 'Comp OE 1 篇',                       fn: 'openCompOeGame' },
+    { id: 'B',  icon: '📇', label: 'Vocab Cloze 10 题',                  fn: 'openClozeGame' },
+    { id: 'C',  icon: '✍️', label: 'Composition V2 final',              fn: 'openCompositionModal', useWeek: true },
+    { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题',                     fn: 'openOralPracticeModal' },
+    { id: 'X1', icon: '🎯', label: 'Paper 2 模拟卷 28min',                fn: 'openPaper2MockGame', highlight: true },
+    { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                       fn: 'openErrorBank' }
+  ],
+  '周六': [
+    { id: 'A',  icon: '📚', label: 'Comp OE 1 篇',                fn: 'openCompOeGame' },
+    { id: 'B',  icon: '📇', label: 'Vocab Cloze 10 题',           fn: 'openClozeGame' },
+    { id: 'X1', icon: '🎯', label: 'Paper 1 模拟 SST 4 题',       fn: 'openSstGame', highlight: true },
+    { id: 'X2', icon: '🎯', label: 'Paper 1 模拟 Composition',    fn: 'openCompositionModal', useWeek: true, highlight: true },
+    { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题',              fn: 'openOralPracticeModal' },
+    { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                fn: 'openErrorBank' }
+  ]
+};
+
+// 特殊日期覆盖 (W0 启动 + W4 综合模考周)
+const _SUMMER_SPECIAL = {
+  '2026-05-29': {  // 周五 基线日
+    type: 'baseline', title: '基线日 — 测起点',
+    tasks: [
+      { id: 'A',  icon: '📚', label: 'Comp OE 1 篇 P5 (记基线)',     fn: 'openCompOeGame', note: '记下正确率' },
+      { id: 'B',  icon: '📇', label: 'Vocab 50 词 + Cloze 10 题',   fn: 'openClozeGame' },
+      { id: 'C',  icon: '✍️', label: 'Composition PSLE 真题',       fn: 'openCompositionModal', useWeek: true, note: '记字数/句数/高级词' },
+      { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题 (录音留底)',    fn: 'openOralPracticeModal' },
+      { id: 'X1', icon: '🎯', label: 'Paper 2 模拟卷 (记 AL 起点)',  fn: 'openPaper2MockGame', highlight: true },
+      { id: 'E',  icon: '📓', label: '错题本入库 (基线)',             fn: 'openErrorBank' }
+    ]
+  },
+  '2026-05-30': {  // 周六 基线分析
+    type: 'test', title: '标准周六 + 基线分析'
+    // 用周六标准模板
+  },
+  '2026-06-22': {  // W4 周一 P2 完整模考
+    type: 'test', title: 'Paper 2 完整模考 (110min)',
+    tasks: [
+      { id: 'B',  icon: '📇', label: 'Vocab 30 词热身',           fn: 'openClozeGame' },
+      { id: 'X1', icon: '🎯', label: 'Paper 2 完整模考 110min',    fn: 'openPaper2MockGame', highlight: true },
+      { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题',            fn: 'openOralPracticeModal' },
+      { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',              fn: 'openErrorBank' }
+    ]
+  },
+  '2026-06-23': {  // W4 周二 错题精讲
+    type: 'study', title: '模考错题精讲日',
+    tasks: [
+      { id: 'A', icon: '📚', label: 'Comp OE 1 篇 (新)',             fn: 'openCompOeGame' },
+      { id: 'B', icon: '📇', label: '重做周一 Vocab Cloze 错题',      fn: 'openClozeGame' },
+      { id: 'C', icon: '✍️', label: '重做周一 SST 错题',              fn: 'openSstGame' },
+      { id: 'D', icon: '🎧', label: 'Listening MCQ 5 题',            fn: 'openListenMcqGame' },
+      { id: 'E', icon: '📓', label: '错题本艾宾浩斯',                  fn: 'openErrorBank' }
+    ]
+  },
+  '2026-06-24': {  // W4 周三 P1 完整模考
+    type: 'test', title: 'Paper 1 完整模考 (70min)',
+    tasks: [
+      { id: 'A',  icon: '📚', label: 'Comp OE 1 篇热身',                fn: 'openCompOeGame' },
+      { id: 'B',  icon: '📇', label: 'Vocab Cloze 5 题热身',            fn: 'openClozeGame' },
+      { id: 'X1', icon: '🎯', label: 'Paper 1 SST 15 题',              fn: 'openSstGame', highlight: true },
+      { id: 'X2', icon: '🎯', label: 'Paper 1 Composition (限时)',     fn: 'openCompositionModal', useWeek: true, highlight: true },
+      { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题',                 fn: 'openOralPracticeModal' },
+      { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                    fn: 'openErrorBank' }
+    ]
+  },
+  '2026-06-25': {  // W4 周四 P1 错题精讲
+    type: 'study', title: 'Paper 1 错题精讲 + V2',
+    tasks: [
+      { id: 'A',  icon: '📚', label: 'Comp OE 1 篇',                       fn: 'openCompOeGame' },
+      { id: 'B',  icon: '📇', label: 'Vocab Cloze + Editing 找错',         fn: 'openEditingGame' },
+      { id: 'C',  icon: '✍️', label: 'Composition V2 修周三 (用 30 高级词)', fn: 'openCompositionModal', useWeek: true },
+      { id: 'D',  icon: '🗣️', label: 'RA 跟读 2 段',                       fn: 'openOralRAModal' },
+      { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                        fn: 'openErrorBank' }
+    ]
+  },
+  '2026-06-26': {  // W4 周五 P3+Oral 模考
+    type: 'test', title: 'Paper 3 + Oral 完整模考',
+    tasks: [
+      { id: 'A',  icon: '📚', label: 'Comp OE 1 篇',                      fn: 'openCompOeGame' },
+      { id: 'B',  icon: '📇', label: 'Vocab Cloze 10 题',                 fn: 'openClozeGame' },
+      { id: 'C',  icon: '✍️', label: 'Composition 1 篇 (限时 50min)',     fn: 'openCompositionModal', useWeek: true },
+      { id: 'X1', icon: '🎯', label: 'Paper 3 Listening 模考 35min',       fn: 'openListenMcqGame', highlight: true },
+      { id: 'X2', icon: '🎯', label: 'Oral 模考 SBC + RA 15min',           fn: 'openOralPracticeModal', highlight: true },
+      { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                       fn: 'openErrorBank' }
+    ]
+  },
+  '2026-06-27': {  // W4 周六 总复盘
+    type: 'test', title: '标准周六 + 总复盘 + 开学前给自己的话'
+    // 用周六标准模板
+  }
+};
+
+// 周日全休
+const _SUMMER_REST_DAYS = ['2026-05-31', '2026-06-07', '2026-06-14', '2026-06-21', '2026-06-28'];
+
+function _weekLabelFor(dateStr) {
+  if (dateStr <= '2026-05-31') return 'W0 启动';
+  if (dateStr <= '2026-06-07') return 'W1 P2 攻坚';
+  if (dateStr <= '2026-06-14') return 'W2 P1 攻坚';
+  if (dateStr <= '2026-06-21') return 'W3 P3+Oral';
+  return 'W4 综合模考';
+}
+
+const _DOW_ZH = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+const SUMMER_CURRICULUM = (function buildCurriculum() {
+  const out = [];
+  const start = new Date(2026, 4, 29);  // month is 0-indexed: 4 = May
+  for (let i = 0; i < 31; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const dow = _DOW_ZH[d.getDay()];
+    const weekLabel = _weekLabelFor(dateStr);
+    if (_SUMMER_REST_DAYS.indexOf(dateStr) >= 0) {
+      out.push({ date: dateStr, dow, weekLabel, type: 'rest', tasks: [] });
+      continue;
+    }
+    const special = _SUMMER_SPECIAL[dateStr];
+    const tasks = (special && special.tasks) || _SUMMER_TEMPLATES[dow] || [];
+    // 深拷贝 tasks 避免修改模板
+    const tasksCopy = tasks.map(t => Object.assign({}, t));
+    out.push({
+      date: dateStr,
+      dow,
+      weekLabel,
+      type: (special && special.type) || (dow === '周五' || dow === '周六' ? 'test' : 'study'),
+      title: special && special.title,
+      tasks: tasksCopy
+    });
+  }
+  return out;
+})();
+
+function getSummerDayByDate(dateStr) {
+  return SUMMER_CURRICULUM.find(d => d.date === dateStr);
+}
+function getTodaySummerDate() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function getSummerProgress(state, dateStr) {
+  const day = getSummerDayByDate(dateStr);
+  if (!day || day.type === 'rest') return { done: 0, total: 0, full: false };
+  const done = (state.summerDone && state.summerDone[dateStr]) || {};
+  const total = day.tasks.length;
+  const completed = day.tasks.filter(t => done[t.id]).length;
+  return { done: completed, total, full: completed >= total && total > 0 };
+}
+function markSummerTaskDone(state, dateStr, taskId) {
+  if (!state.summerDone) state.summerDone = {};
+  if (!state.summerDone[dateStr]) state.summerDone[dateStr] = {};
+  state.summerDone[dateStr][taskId] = true;
+}
+function unmarkSummerTaskDone(state, dateStr, taskId) {
+  if (state.summerDone && state.summerDone[dateStr]) delete state.summerDone[dateStr][taskId];
+}
+
 // ============= v19.2: 暴击系统 =============
 // v19.3: 暴击精通触发 (降基础概率, 硬顶25%, ×2封顶)
 const CRIT_CHANCE_BASE = 0.08;
@@ -5680,6 +5873,8 @@ function getDefaultState() {
     activePetType: 'hamster',
     // v19.6: 加练池 — 替代旧 tier 2/3 每日固定. 每周独立, 不 carry
     weeklyPool: {},
+    // v19.27: 暑假课表打勾状态 — { '2026-05-29': { A: true, B: false, ... } }
+    summerDone: {},
     // v19.7: Paper 2 弱点突击 (真实考试 AL6, Cloze 几乎全错 + 句式转换错不少)
     paper2Sprint: {
       startWeek: 1,
@@ -8059,6 +8254,13 @@ window.addPoolEntry = addPoolEntry;
 window.ensureCurrentWeekPool = ensureCurrentWeekPool;
 window.calcWeeklyPerfect = calcWeeklyPerfect;
 window.grantWeeklyPerfect = grantWeeklyPerfect;
+// v19.27: 暑假 31 天互动课表
+window.SUMMER_CURRICULUM = SUMMER_CURRICULUM;
+window.getSummerDayByDate = getSummerDayByDate;
+window.getTodaySummerDate = getTodaySummerDate;
+window.getSummerProgress = getSummerProgress;
+window.markSummerTaskDone = markSummerTaskDone;
+window.unmarkSummerTaskDone = unmarkSummerTaskDone;
 window.CRIT_CHANCE_BASE = CRIT_CHANCE_BASE;
 window.CRIT_CHANCE_MAX = CRIT_CHANCE_MAX;
 window.CRIT_MULT_BASE = CRIT_MULT_BASE;

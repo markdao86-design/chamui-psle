@@ -4232,6 +4232,106 @@ function _checkWeeklyPerfect(week) {
 }
 window._checkWeeklyPerfect = _checkWeeklyPerfect;
 
+// ============ v19.27: 暑假 31 天互动课表 ============
+// 点 chip → 跳 app 功能 + 自动 toggle 打勾
+const _SUMMER_WEEK_COLORS = {
+  'W0 启动':     '#9333EA',
+  'W1 P2 攻坚':  '#10B981',
+  'W2 P1 攻坚':  '#38BDF8',
+  'W3 P3+Oral':  '#FB923C',
+  'W4 综合模考': '#F59E0B'
+};
+
+function renderSummerCalendar() {
+  const container = document.getElementById('summerCalendarContainer');
+  if (!container || !window.SUMMER_CURRICULUM) return;
+  const today = window.getTodaySummerDate();
+  const html = window.SUMMER_CURRICULUM.map(day => _renderSummerDay(day, today)).join('');
+  container.innerHTML = html;
+  // 自动滚动到今日 row (只在今天 in range 时)
+  setTimeout(() => {
+    const todayRow = document.querySelector('[data-summer-date="' + today + '"]');
+    if (todayRow) todayRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 120);
+}
+
+function _renderSummerDay(day, today) {
+  const prog = window.getSummerProgress(state, day.date);
+  const isToday = day.date === today;
+  const isPast = day.date < today;
+  const isRest = day.type === 'rest';
+  const weekColor = _SUMMER_WEEK_COLORS[day.weekLabel] || '#888';
+  const rowCls = ['summer-day-row',
+    isToday && 'summer-day-today',
+    isPast && !prog.full && !isRest && 'summer-day-missed',
+    prog.full && !isRest && 'summer-day-complete',
+    isRest && 'summer-day-rest'].filter(Boolean).join(' ');
+  const chipsHtml = isRest
+    ? '<div class="summer-rest-tag">🌴 全休 — 出去玩, 不打卡</div>'
+    : day.tasks.map(t => _renderSummerChip(day.date, t)).join('');
+  const titleHtml = day.title ? `<span class="summer-day-title">— ${escapeHtml(day.title)}</span>` : '';
+  return `
+    <div class="${rowCls}" data-summer-date="${day.date}" style="border-left:4px solid ${weekColor}">
+      <div class="summer-day-header">
+        <span class="summer-day-date">${day.date.slice(5)}</span>
+        <span class="summer-day-dow">${day.dow}</span>
+        <span class="summer-day-week" style="color:${weekColor}">${day.weekLabel}</span>
+        ${titleHtml}
+        ${!isRest ? `<span class="summer-day-prog">${prog.done}/${prog.total}</span>` : ''}
+        ${prog.full && !isRest ? '<span class="summer-day-full-badge">🌟 全勤</span>' : ''}
+        ${isToday ? '<span class="summer-day-today-badge">📍 今日</span>' : ''}
+      </div>
+      <div class="summer-day-chips">${chipsHtml}</div>
+    </div>`;
+}
+
+function _renderSummerChip(date, task) {
+  const done = ((state.summerDone || {})[date] || {})[task.id];
+  const cls = ['summer-task-chip', done && 'summer-task-done', task.highlight && 'summer-task-highlight']
+    .filter(Boolean).join(' ');
+  const noteAttr = task.note ? ` title="${escapeAttr(task.note)}"` : '';
+  return `<button class="${cls}" onclick="doSummerTask('${date}','${task.id}')"${noteAttr}>${done ? '✓' : task.icon} <b>${task.id}</b> ${escapeHtml(task.label)}</button>`;
+}
+
+function doSummerTask(dateStr, taskId) {
+  const day = window.getSummerDayByDate(dateStr);
+  if (!day) return;
+  const task = day.tasks.find(t => t.id === taskId);
+  if (!task) return;
+  const wasDone = !!(((state.summerDone || {})[dateStr] || {})[taskId]);
+  if (wasDone) {
+    window.unmarkSummerTaskDone(state, dateStr, taskId);
+  } else {
+    window.markSummerTaskDone(state, dateStr, taskId);
+  }
+  saveState(state);
+  renderSummerCalendar();
+  if (wasDone) return;  // 取消打勾时不跳转
+  // 跳转
+  if (task.fn === 'tab:vocab') {
+    const btn = document.querySelector('[data-page="vocab"]');
+    if (btn) btn.click();
+  } else if (typeof window[task.fn] === 'function') {
+    try {
+      const args = task.useWeek ? [state.currentWeek] : [];
+      window[task.fn](...args);
+    } catch (e) {
+      console.error('summer task launch failed', task.fn, e);
+      showToast(`⚠️ ${task.label} 启动失败`, 'warn');
+    }
+  } else {
+    showToast(`⚠️ ${task.label} 暂不可用 (${task.fn})`, 'warn');
+  }
+  const prog = window.getSummerProgress(state, dateStr);
+  if (prog.full) {
+    if (typeof spawnConfetti === 'function') spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40);
+    if (typeof playSound === 'function') playSound('tada');
+    showToast(`🌟 ${dateStr.slice(5)} 全部 ${prog.total} 项完成!`, 'happy');
+  }
+}
+window.doSummerTask = doSummerTask;
+window.renderSummerCalendar = renderSummerCalendar;
+
 function countDayDone(week, day) {
   const tasks = getDailyTasks(week, day);
   return tasks.filter(t => getDailyCheck(state, week, day, t.slot)).length;
@@ -10618,6 +10718,9 @@ function bindEvents() {
       }
       if (page === 'vocab') {
         renderVocabPage();
+      }
+      if (page === 'summer') {
+        renderSummerCalendar();
       }
       // v19.12: 角色/装备/双龙/皮肤/学习画像/兑换 全部移到 "我的" tab
       if (page === 'character') {

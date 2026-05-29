@@ -411,8 +411,8 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.36/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.36: cache buster 已更新到 19.36 (修 v19.35 左右栏对齐 bug — align-self stretch 导致 offsetHeight 必等, 改 sum 子元素)');
+assert(/\?v=19\.3[67]/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  'v19.36+: cache buster ≥ 19.36');
 // v19.36: balanceHomeColumns 改用 _sumChildrenHeights 排除 filler 自身高度
 assert(/function _sumChildrenHeights\(col\)/.test(appSrc), 'v19.36: _sumChildrenHeights 已加 (排除 filler 测纯内容高)');
 assert(/_sumChildrenHeights\(left\)/.test(appSrc) && /_sumChildrenHeights\(right\)/.test(appSrc), 'v19.36: balanceHomeColumns 调用 _sumChildrenHeights');
@@ -1005,6 +1005,37 @@ assert(oeCount >= 13, `v19.13: 科学 OE 题 ≥ 13 (实际 ${oeCount})`);
 ['plant_transport', 'digestive', 'light', 'heat'].forEach(k => {
   assert(new RegExp(`'${k}'\\s*:`).test(dataSrc) || new RegExp(`\\b${k}\\b\\s*:`).test(dataSrc), `v19.13: 概念图 ${k} 存在`);
 });
+
+// ===== v19.27: 暑假 31 天互动课表 =====
+assert(Array.isArray(W.SUMMER_CURRICULUM) && W.SUMMER_CURRICULUM.length === 31,
+  `v19.27: SUMMER_CURRICULUM 31 天 (实际 ${W.SUMMER_CURRICULUM && W.SUMMER_CURRICULUM.length})`);
+assert(W.SUMMER_CURRICULUM && W.SUMMER_CURRICULUM[0].date === '2026-05-29', 'v19.27: 首日 5-29');
+assert(W.SUMMER_CURRICULUM && W.SUMMER_CURRICULUM[30].date === '2026-06-28', 'v19.27: 末日 6-28');
+const _sundays = (W.SUMMER_CURRICULUM || []).filter(d => d.type === 'rest');
+assert(_sundays.length === 5, `v19.27: 5 个周日休息日 (实际 ${_sundays.length})`);
+const _underTasked = (W.SUMMER_CURRICULUM || []).filter(d => d.type !== 'rest' && d.tasks.length < 3);
+assert(_underTasked.length === 0, `v19.27: 所有学习日 ≥3 task (异常 ${_underTasked.length})`);
+const _fns27 = new Set();
+(W.SUMMER_CURRICULUM || []).forEach(d => d.tasks.forEach(t => t.fn && _fns27.add(t.fn)));
+const _missingFns27 = [];
+_fns27.forEach(f => {
+  if (f.indexOf('tab:') === 0) return;
+  if (!new RegExp(`function\\s+${f}\\b`).test(appSrc) && !new RegExp(`window\\.${f}\\s*=`).test(appSrc)) {
+    _missingFns27.push(f);
+  }
+});
+assert(_missingFns27.length === 0, `v19.27: 所有 fn 在 app.js 有定义 (缺失: ${_missingFns27.join(',')})`);
+['getSummerDayByDate', 'getTodaySummerDate', 'getSummerProgress', 'markSummerTaskDone', 'unmarkSummerTaskDone'].forEach(f => {
+  assert(typeof W[f] === 'function', `v19.27: ${f} 已 window 导出`);
+});
+assert(/summerDone:\s*\{\}/.test(_v35data), 'v19.27: state.summerDone defaultState 加');
+assert(/function renderSummerCalendar\(/.test(appSrc), 'v19.27: app.js 有 renderSummerCalendar');
+assert(/function doSummerTask\(/.test(appSrc), 'v19.27: app.js 有 doSummerTask');
+assert(/if \(page === 'summer'\)[\s\S]{0,80}renderSummerCalendar\(\)/.test(appSrc),
+  'v19.27: tab summer 触发 renderSummerCalendar');
+assert(/id="summerCalendarContainer"/.test(idxSrc), 'v19.27: page-summer 有 #summerCalendarContainer');
+assert(!/5 周分主题进度/.test(idxSrc), 'v19.27: 老静态 section "5 周分主题进度" 已替换');
+assert(/\?v=19\.37/.test(idxSrc), 'v19.27: cache buster 升到 19.37');
 
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
