@@ -9091,9 +9091,11 @@ const WEEKDAY_LOCKED_GAMES = ['chinese', 'unit'];
 // 平日 soft cap: math 每日 1 次满奖, 第 2+ 次 0 分但可练
 const WEEKDAY_SOFT_CAP_GAMES = { math: 1 };
 
+// v19.38: 周末改为只能周日操作 — Sat 已变成正式学习日 (Paper 1 模拟 + 周复盘),
+// 不再算自由日. 函数名保留但含义扩到 Mon-Sat (1-6), 只 Sun (0) 为自由日.
 function isWeekdayToday() {
   const d = new Date().getDay();  // 0=Sun, 1=Mon ... 6=Sat
-  return d >= 1 && d <= 5;
+  return d !== 0;  // Mon-Sat 都锁, 只 Sun 解锁
 }
 function isWeekendDayKey(dayKey) {
   return dayKey === 'Sat' || dayKey === 'Sun';

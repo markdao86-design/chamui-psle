@@ -411,7 +411,7 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.3[67]/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+assert(/\?v=19\.3[678]/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
   'v19.36+: cache buster ≥ 19.36');
 // v19.36: balanceHomeColumns 改用 _sumChildrenHeights 排除 filler 自身高度
 assert(/function _sumChildrenHeights\(col\)/.test(appSrc), 'v19.36: _sumChildrenHeights 已加 (排除 filler 测纯内容高)');
@@ -1035,7 +1035,21 @@ assert(/if \(page === 'summer'\)[\s\S]{0,80}renderSummerCalendar\(\)/.test(appSr
   'v19.27: tab summer 触发 renderSummerCalendar');
 assert(/id="summerCalendarContainer"/.test(idxSrc), 'v19.27: page-summer 有 #summerCalendarContainer');
 assert(!/5 周分主题进度/.test(idxSrc), 'v19.27: 老静态 section "5 周分主题进度" 已替换');
-assert(/\?v=19\.37/.test(idxSrc), 'v19.27: cache buster 升到 19.37');
+assert(/\?v=19\.3[78]/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
+
+// ===== v19.38: 周末 → 只周日 (装备/皮肤/mini-game lock) =====
+// isWeekdayToday() 含义扩到 Mon-Sat (周六不再是自由日)
+assert(/return d !== 0/.test(_v35data), 'v19.38: isWeekdayToday 返回 d !== 0 (Mon-Sat 都锁)');
+assert(typeof W.isWeekdayToday === 'function', 'v19.38: isWeekdayToday window 导出');
+// toggleEquipment / setActiveSkin 加 Sun-only 锁
+assert(/装备穿戴只能周日/.test(appSrc), 'v19.38: toggleEquipment 加周日锁文案');
+assert(/皮肤切换只能周日/.test(appSrc), 'v19.38: setActiveSkin 加周日锁文案');
+// charPage_lockBanner 改为按 isWeekdayToday 显示
+assert(/lockBanner\.style\.display = locked \? 'block' : 'none'/.test(appSrc),
+  'v19.38: charPage_lockBanner Mon-Sat 显示');
+// 老 "周末才开放" 文案改成 "周日才开放"
+assert(!/周末才开放/.test(appSrc), 'v19.38: 老"周末才开放"文案已改成"周日才开放"');
+assert(/周日才开放/.test(appSrc), 'v19.38: app.js 含"周日才开放"新文案');
 
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');

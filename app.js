@@ -613,8 +613,8 @@ function renderCharacterPage() {
         </div>
         <!-- v19.14c: 平日 lock 提示横幅 -->
         <div id="charPage_lockBanner" style="display:none;margin-top:10px;padding:10px;background:linear-gradient(135deg,#FFF8E1,#FFE082);border-radius:6px;font-size:12px;color:#5D4037;text-align:center;line-height:1.5">
-          📅 <b>平日装备 + 皮肤穿戴已锁</b> · 宠物在休息 💤<br>
-          <span style="font-size:11px;color:#888">周末打开 → 换装备 + 喂宠物 + 看动画</span>
+          📅 <b>装备 + 皮肤切换已锁 (Mon-Sat)</b><br>
+          <span style="font-size:11px;color:#888">周日才开放 → 换装备 + 看动画</span>
         </div>
       </div>
 
@@ -652,9 +652,12 @@ function renderCharacterPage() {
   if (typeof studentBeatPercent === 'function') {
     document.getElementById('charPage_beat').textContent = studentBeatPercent(pts);
   }
-  // v19.14j: 撤回 v19.14c 装备视觉灰锁 — 装备随时可换
+  // v19.38: 装备/皮肤只能周日切换 — Mon-Sat 显示 lock banner 提示
   const lockBanner = document.getElementById('charPage_lockBanner');
-  if (lockBanner) lockBanner.style.display = 'none';
+  if (lockBanner) {
+    const locked = window.isWeekdayToday && window.isWeekdayToday();
+    lockBanner.style.display = locked ? 'block' : 'none';
+  }
   const grid = document.getElementById('charPage_equipmentGrid');
   if (grid && window.CHAMUI) {
     const disabled = new Set(state.equipmentDisabled || []);
@@ -908,7 +911,7 @@ function renderTodayThreeCard() {
       item('🔬', chapter ? '本周科学 1 节' : '科学练习', sciSub, sciDone, chapter && chapter.diagram ? `openConceptDiagram('${chapter.diagram}'); setTimeout(openScienceOEGame, 100)` : 'openSciMcqGame()', '#2E7D32')
     ].join('');
     tipHtml = `<div style="margin-top:8px;padding:8px;background:linear-gradient(135deg, rgba(255,184,0,0.10), rgba(255,107,53,0.05));border:1px solid rgba(255,184,0,0.30);border-radius:6px;font-size:11px;color:#FFD180;line-height:1.5;text-align:center">
-      📅 <b>数学 / 华文 周末才开放</b> — 平日全力攻英语 (AL6 → AL2 是综合 AL 4-5 最大杠杆)
+      📅 <b>数学 / 华文 周日才开放</b> — Mon-Sat 全力攻英语 (AL6 → AL2 是综合 AL 4-5 最大杠杆)
     </div>`;
   } else {
     // v19.15 P0-3: 周末改"自选推荐"模式 — 从"必做 3 件"→"挑 1-2 件就好, 休息也算赢"
@@ -3724,10 +3727,13 @@ function _bumpAvatarAction() {
 function toggleEquipment(equipId) {
   const unlocked = CHAMUI.checkEquipmentUnlocked(equipId, state);
   if (!unlocked) { showToast('该装备还没解锁哦', 'sad'); return; }
-  // v19.15i: 防沉迷封顶 (周末也限)
+  // v19.38: 装备穿戴只能周日 (Sat 已变学习日, Mon-Sat 全力英语)
+  if (window.isWeekdayToday && window.isWeekdayToday()) {
+    showToast('🔒 装备穿戴只能周日切换 — Mon-Sat 全力学习, 周日放心换装备', 'warn');
+    return;
+  }
+  // v19.15i: 防沉迷封顶 (周日内仍有日次数上限)
   if (!_checkAvatarActionCap()) return;
-  // v19.14j: 撤回 v19.14c 装备平日 lock — 心理学家"5 lock 累积致弃用" + 用户反馈"周六还失灵"
-  // 装备穿戴随时可用, 不再 lock
   if (!state.equipmentDisabled) state.equipmentDisabled = [];
   const idx = state.equipmentDisabled.indexOf(equipId);
   const eq = CHAMUI.equipment.find(e => e.id === equipId);
@@ -3770,9 +3776,13 @@ function setActiveSkin(skinId) {
     return;
   }
   if (state.activeSkin === skinId) return;
-  // v19.15i: 防沉迷封顶
+  // v19.38: 皮肤切换只能周日
+  if (window.isWeekdayToday && window.isWeekdayToday()) {
+    showToast('🔒 皮肤切换只能周日 — Mon-Sat 全力学习', 'warn');
+    return;
+  }
+  // v19.15i: 防沉迷封顶 (周日内仍限)
   if (!_checkAvatarActionCap()) return;
-  // v19.14j: 撤回 v19.14c 皮肤平日 lock — 同装备, 不再阻挠
   state.activeSkin = skinId;
   _bumpAvatarAction();  // v19.15i 防沉迷计数
   saveState(state);
@@ -5892,7 +5902,7 @@ function _checkGameDailyLock(gameKey) {
   if (window.WEEKDAY_LOCKED_GAMES && window.WEEKDAY_LOCKED_GAMES.includes(gameKey)) {
     if (window.isWeekdayToday && window.isWeekdayToday()) {
       const gameLabel = { math: '数学速算', chinese: '华文 MCQ', unit: '单位换算' }[gameKey] || gameKey;
-      showToast(`🔒 ${gameLabel} 周末才开放 — 平日全力攻英语 AL6 → AL2 (综合 AL 4-5 最大杠杆)`, 'warn');
+      showToast(`🔒 ${gameLabel} 周日才开放 — Mon-Sat 全力攻英语 AL6 → AL2`, 'warn');
       return false;
     }
   }
@@ -7931,7 +7941,7 @@ function openMiniGameHub() {
   // v19.14b: 锁定 game 按钮 style + onclick (点击只弹 toast, 不关闭 hub)
   const lockStyle = (k) => locked(k) ? 'opacity:0.45;filter:grayscale(0.7);position:relative' : '';
   const lockClick = (k, normalClick) => locked(k)
-    ? `event.stopPropagation(); showToast('🔒 ${({math:'数学速算',chinese:'华文 MCQ',unit:'单位换算'})[k] || k} 周末才开放 — 平日攻英语 AL6→AL2', 'warn')`
+    ? `event.stopPropagation(); showToast('🔒 ${({math:'数学速算',chinese:'华文 MCQ',unit:'单位换算'})[k] || k} 周日才开放 — Mon-Sat 攻英语', 'warn')`
     : normalClick;
   // v19.32: English mode chip (scaffold 弱生模式, Expert 6 P1)
   const eMode = state.englishMode || 'normal';
