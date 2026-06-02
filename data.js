@@ -320,126 +320,135 @@ function grantWeeklyPerfect(state, week) {
 // 每天 4-6 个 chip, 点击 → 跳 app 功能 + 自动打勾
 // state.summerDone[date][taskId] = bool
 
+// v19.39: 基于英文老师 5-29 反馈重排 — 弱点 OE 4/15 + T3 看图作文
+// 每周 OE/Composition/Picture 加重, Listen/Editing 维持 (不弱)
 const _SUMMER_TEMPLATES = {
-  // 标准模板 by 周几 - W1-W3 通用
   '周一': [
-    { id: 'A', icon: '📚', label: 'Comp OE 1 篇', fn: 'openCompOeGame' },
-    { id: 'B', icon: '📇', label: 'Vocab 闪卡 30 + Cloze 5 题', fn: 'openClozeGame' },
-    { id: 'C', icon: '✍️', label: 'Composition 1 篇 (用模板)', fn: 'openCompositionModal', useWeek: true },
-    { id: 'D', icon: '🗣️', label: 'Oral SBC 5 题', fn: 'openOralPracticeModal' },
-    { id: 'E', icon: '📓', label: '错题本艾宾浩斯', fn: 'openErrorBank' }
+    // OE 精读日 — 重点训 B 册 OE 4/15 → 8+/15
+    { id: 'A',  icon: '📚', label: 'Comp OE 2 篇 (inference + 个人观点)', fn: 'openCompOeGame', highlight: true, note: '弱点: B册 4/15. 重做错题' },
+    { id: 'B',  icon: '📇', label: 'Vocab Cloze 同义词辨析',              fn: 'openClozeGame' },
+    { id: 'C',  icon: '✍️', label: 'Composition V1 (看 emoji 描述当 picture)', fn: 'openCompositionModal', useWeek: true, note: 'T3 看图作文准备' },
+    { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题 (picture-related theme)', fn: 'openOralPracticeModal' },
+    { id: 'E',  icon: '📓', label: '错题本 (B册 OE 错题优先)',             fn: 'openErrorBank' }
   ],
   '周二': [
-    { id: 'A',  icon: '📚', label: 'Comp OE 1 篇 (P6)',           fn: 'openCompOeGame' },
-    { id: 'B',  icon: '📇', label: 'Vocab Cloze + 同义词 MCQ',    fn: 'openClozeGame' },
-    { id: 'C',  icon: '✍️', label: 'SST 3 题',                    fn: 'openSstGame' },
-    { id: 'D',  icon: '🎧', label: 'Listening MCQ 5 题',           fn: 'openListenMcqGame' },
-    { id: 'D2', icon: '🗣️', label: 'Oral RA 1 段',                fn: 'openOralRAModal' },
-    { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                fn: 'openErrorBank' }
+    // Vocab 精准日 — 易混选项重点 (85% → 95%)
+    { id: 'A',  icon: '📚', label: 'Comp OE 1 篇 (P6 难度)',              fn: 'openCompOeGame' },
+    { id: 'B',  icon: '📇', label: 'Vocab Cloze 10 题 (易混选项)',         fn: 'openClozeGame', note: '老师反馈: 选项接近' },
+    { id: 'C',  icon: '✍️', label: 'SST 3 题',                            fn: 'openSstGame' },
+    { id: 'D',  icon: '🎧', label: 'Listen MCQ 5 题 (维持 85%)',           fn: 'openListenMcqGame' },
+    { id: 'D2', icon: '🗣️', label: 'Oral RA 1 段',                        fn: 'openOralRAModal' },
+    { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                        fn: 'openErrorBank' }
   ],
   '周三': [
-    { id: 'A', icon: '📚', label: 'Comp OE 1 篇 + 错题精讲', fn: 'openCompOeGame' },
-    { id: 'B', icon: '📇', label: 'Cloze 真考词义 + Vocab 10 新词', fn: 'openClozeGame' },
-    { id: 'C', icon: '✍️', label: 'Composition V2 修周一', fn: 'openCompositionModal', useWeek: true },
-    { id: 'D', icon: '🗣️', label: 'Oral SBC 5 题', fn: 'openOralPracticeModal' },
-    { id: 'E', icon: '📓', label: '错题本艾宾浩斯', fn: 'openErrorBank' }
+    // OE 重做 + Composition 修 — V2 加 50 高级词
+    { id: 'A',  icon: '📚', label: 'Comp OE 2 篇 (1 新 + 1 重做周一错的)',   fn: 'openCompOeGame', highlight: true },
+    { id: 'B',  icon: '📇', label: 'Cloze 同义词 MCQ 10 题',                fn: 'openClozeGame' },
+    { id: 'C',  icon: '✍️', label: 'Composition V2 修周一 (加 50 高级词)',   fn: 'openCompositionModal', useWeek: true },
+    { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题',                       fn: 'openOralPracticeModal' },
+    { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                         fn: 'openErrorBank' }
   ],
   '周四': [
-    { id: 'A',  icon: '📚', label: 'Comp OE 1 篇',            fn: 'openCompOeGame' },
-    { id: 'B',  icon: '📇', label: 'Vocab + Editing 10 题',   fn: 'openEditingGame' },
-    { id: 'C',  icon: '✍️', label: 'SST 3 题',                fn: 'openSstGame' },
-    { id: 'D',  icon: '🎧', label: 'Listening MCQ 5 题',       fn: 'openListenMcqGame' },
-    { id: 'D2', icon: '🗣️', label: 'Oral RA 2 段',            fn: 'openOralRAModal' },
-    { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',            fn: 'openErrorBank' }
+    // 综合复盘 — 维持各项, 不退步
+    { id: 'A',  icon: '📚', label: 'Comp OE 1 篇',                         fn: 'openCompOeGame' },
+    { id: 'B',  icon: '📇', label: 'Vocab + Editing 10 题',                fn: 'openEditingGame' },
+    { id: 'C',  icon: '✍️', label: 'SST 3 题',                             fn: 'openSstGame' },
+    { id: 'D',  icon: '🎧', label: 'Listen MCQ 5 题',                      fn: 'openListenMcqGame' },
+    { id: 'D2', icon: '🗣️', label: 'Oral RA 2 段',                        fn: 'openOralRAModal' },
+    { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                         fn: 'openErrorBank' }
   ],
   '周五': [
-    { id: 'A',  icon: '📚', label: 'Comp OE 1 篇',                       fn: 'openCompOeGame' },
-    { id: 'B',  icon: '📇', label: 'Vocab Cloze 10 题',                  fn: 'openClozeGame' },
-    { id: 'C',  icon: '✍️', label: 'Composition V2 final',              fn: 'openCompositionModal', useWeek: true },
-    { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题',                     fn: 'openOralPracticeModal' },
-    { id: 'X1', icon: '🎯', label: 'Paper 2 模拟卷 28min',                fn: 'openPaper2MockGame', highlight: true },
-    { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                       fn: 'openErrorBank' }
+    // Paper 2 模拟 + B 册 OE 周中测 (追踪 4/15 进度)
+    { id: 'A',  icon: '📚', label: 'Comp OE 1 篇',                          fn: 'openCompOeGame' },
+    { id: 'B',  icon: '📇', label: 'Vocab Cloze 10 题',                     fn: 'openClozeGame' },
+    { id: 'C',  icon: '✍️', label: 'Composition V3 final (本周作文成稿)',    fn: 'openCompositionModal', useWeek: true },
+    { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题',                        fn: 'openOralPracticeModal' },
+    { id: 'X1', icon: '🎯', label: 'Paper 2 模拟卷 28min',                   fn: 'openPaper2MockGame', highlight: true },
+    { id: 'X2', icon: '🎯', label: '加测 1 套 B 册 OE (追踪 4/15)',          fn: 'openCompOeGame', highlight: true, note: '记本周 OE 分数' },
+    { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                          fn: 'openErrorBank' }
   ],
   '周六': [
-    { id: 'A',  icon: '📚', label: 'Comp OE 1 篇',                fn: 'openCompOeGame' },
-    { id: 'B',  icon: '📇', label: 'Vocab Cloze 10 题',           fn: 'openClozeGame' },
-    { id: 'X1', icon: '🎯', label: 'Paper 1 模拟 SST 4 题',       fn: 'openSstGame', highlight: true },
-    { id: 'X2', icon: '🎯', label: 'Paper 1 模拟 Composition',    fn: 'openCompositionModal', useWeek: true, highlight: true },
-    { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题',              fn: 'openOralPracticeModal' },
-    { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                fn: 'openErrorBank' }
+    // Paper 1 模拟 + Picture Composition (T3 准备)
+    { id: 'A',  icon: '📚', label: 'Comp OE 1 篇',                          fn: 'openCompOeGame' },
+    { id: 'B',  icon: '📇', label: 'Vocab Cloze 10 题',                     fn: 'openClozeGame' },
+    { id: 'X1', icon: '🎯', label: 'Paper 1 SST 4 题',                      fn: 'openSstGame', highlight: true },
+    { id: 'X2', icon: '🎯', label: 'Paper 1 Picture Composition (T3 风格)',  fn: 'openCompositionModal', useWeek: true, highlight: true, note: 'T3 重灾区' },
+    { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题',                        fn: 'openOralPracticeModal' },
+    { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                          fn: 'openErrorBank' }
   ]
 };
 
-// 特殊日期覆盖 (W0 启动 + W4 综合模考周)
+// v19.39: 特殊日期覆盖 (W0 启动 + W4 综合模考周) — 基于老师反馈调整
 const _SUMMER_SPECIAL = {
-  '2026-05-29': {  // 周五 基线日
-    type: 'baseline', title: '基线日 — 测起点',
+  '2026-05-29': {  // 周五 基线日 — 测起点 (含 B 册 OE 4/15 基线)
+    type: 'baseline', title: '基线日 — 测 B 册 OE 起点 (老师反馈 4/15)',
     tasks: [
-      { id: 'A',  icon: '📚', label: 'Comp OE 1 篇 P5 (记基线)',     fn: 'openCompOeGame', note: '记下正确率' },
-      { id: 'B',  icon: '📇', label: 'Vocab 50 词 + Cloze 10 题',   fn: 'openClozeGame' },
-      { id: 'C',  icon: '✍️', label: 'Composition PSLE 真题',       fn: 'openCompositionModal', useWeek: true, note: '记字数/句数/高级词' },
-      { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题 (录音留底)',    fn: 'openOralPracticeModal' },
-      { id: 'X1', icon: '🎯', label: 'Paper 2 模拟卷 (记 AL 起点)',  fn: 'openPaper2MockGame', highlight: true },
-      { id: 'E',  icon: '📓', label: '错题本入库 (基线)',             fn: 'openErrorBank' }
+      { id: 'A',  icon: '📚', label: 'Comp OE 2 篇 P5 (记基线分数)',         fn: 'openCompOeGame', note: '老师反馈 B 册 OE 4/15. 算单篇 OE %' },
+      { id: 'B',  icon: '📇', label: 'Vocab Cloze 同义词 10 题 (易混)',      fn: 'openClozeGame', note: '老师反馈选项接近' },
+      { id: 'C',  icon: '✍️', label: 'Composition 1 篇 (含 emoji 描述)',     fn: 'openCompositionModal', useWeek: true, note: 'T3 看图作文准备. 记字数/句数/高级词' },
+      { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题 (录音留底, T3 用)',     fn: 'openOralPracticeModal' },
+      { id: 'X1', icon: '🎯', label: 'Paper 2 模拟卷 (记 AL 起点)',          fn: 'openPaper2MockGame', highlight: true },
+      { id: 'E',  icon: '📓', label: '错题本入库 (基线, B 册 OE 错题置顶)',    fn: 'openErrorBank' }
     ]
   },
   '2026-05-30': {  // 周六 基线分析
-    type: 'test', title: '标准周六 + 基线分析'
+    type: 'test', title: '标准周六 + 基线分析 (写下 5-29 真实分数)'
     // 用周六标准模板
   },
-  '2026-06-22': {  // W4 周一 P2 完整模考
-    type: 'test', title: 'Paper 2 完整模考 (110min)',
+  '2026-06-22': {  // W4 周一 P2 完整模考 + B 册 OE 模考
+    type: 'test', title: 'Paper 2 完整模考 + B 册 OE 单独追踪',
     tasks: [
-      { id: 'B',  icon: '📇', label: 'Vocab 30 词热身',           fn: 'openClozeGame' },
-      { id: 'X1', icon: '🎯', label: 'Paper 2 完整模考 110min',    fn: 'openPaper2MockGame', highlight: true },
-      { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题',            fn: 'openOralPracticeModal' },
-      { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',              fn: 'openErrorBank' }
+      { id: 'B',  icon: '📇', label: 'Vocab 30 词热身 (高频考点)',          fn: 'openClozeGame' },
+      { id: 'X1', icon: '🎯', label: 'Paper 2 完整模考 110min',             fn: 'openPaper2MockGame', highlight: true },
+      { id: 'X3', icon: '🎯', label: 'B 册 OE 完整 1 套 (4/15 → 进度)',     fn: 'openCompOeGame', highlight: true, note: '今天专门测 B 册 OE' },
+      { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题',                      fn: 'openOralPracticeModal' },
+      { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                        fn: 'openErrorBank' }
     ]
   },
-  '2026-06-23': {  // W4 周二 错题精讲
-    type: 'study', title: '模考错题精讲日',
+  '2026-06-23': {  // W4 周二 错题精讲 (重点 OE 错题)
+    type: 'study', title: '模考错题精讲日 (重点 B 册 OE)',
     tasks: [
-      { id: 'A', icon: '📚', label: 'Comp OE 1 篇 (新)',             fn: 'openCompOeGame' },
-      { id: 'B', icon: '📇', label: '重做周一 Vocab Cloze 错题',      fn: 'openClozeGame' },
-      { id: 'C', icon: '✍️', label: '重做周一 SST 错题',              fn: 'openSstGame' },
-      { id: 'D', icon: '🎧', label: 'Listening MCQ 5 题',            fn: 'openListenMcqGame' },
-      { id: 'E', icon: '📓', label: '错题本艾宾浩斯',                  fn: 'openErrorBank' }
+      { id: 'A', icon: '📚', label: 'Comp OE 2 篇 (重做周一 B 册 OE 错题)',  fn: 'openCompOeGame', highlight: true },
+      { id: 'B', icon: '📇', label: '重做周一 Vocab Cloze 错题',             fn: 'openClozeGame' },
+      { id: 'C', icon: '✍️', label: 'Composition V2 (修周一 P2 作文)',      fn: 'openCompositionModal', useWeek: true },
+      { id: 'D', icon: '🎧', label: 'Listening MCQ 5 题',                   fn: 'openListenMcqGame' },
+      { id: 'E', icon: '📓', label: '错题本艾宾浩斯',                         fn: 'openErrorBank' }
     ]
   },
-  '2026-06-24': {  // W4 周三 P1 完整模考
-    type: 'test', title: 'Paper 1 完整模考 (70min)',
+  '2026-06-24': {  // W4 周三 P1 完整模考 + Picture Composition T3 模拟
+    type: 'test', title: 'Paper 1 完整模考 + Picture Composition T3 模拟',
     tasks: [
-      { id: 'A',  icon: '📚', label: 'Comp OE 1 篇热身',                fn: 'openCompOeGame' },
-      { id: 'B',  icon: '📇', label: 'Vocab Cloze 5 题热身',            fn: 'openClozeGame' },
-      { id: 'X1', icon: '🎯', label: 'Paper 1 SST 15 题',              fn: 'openSstGame', highlight: true },
-      { id: 'X2', icon: '🎯', label: 'Paper 1 Composition (限时)',     fn: 'openCompositionModal', useWeek: true, highlight: true },
-      { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题',                 fn: 'openOralPracticeModal' },
-      { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                    fn: 'openErrorBank' }
+      { id: 'A',  icon: '📚', label: 'Comp OE 1 篇热身',                    fn: 'openCompOeGame' },
+      { id: 'B',  icon: '📇', label: 'Vocab Cloze 5 题热身',                fn: 'openClozeGame' },
+      { id: 'X1', icon: '🎯', label: 'Paper 1 SST 15 题',                  fn: 'openSstGame', highlight: true },
+      { id: 'X2', icon: '🎯', label: 'Picture Composition T3 风格 (限时)',  fn: 'openCompositionModal', useWeek: true, highlight: true, note: 'T3 真考模拟' },
+      { id: 'D',  icon: '🗣️', label: 'Oral SBC 5 题 (picture 主题)',       fn: 'openOralPracticeModal' },
+      { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                        fn: 'openErrorBank' }
     ]
   },
-  '2026-06-25': {  // W4 周四 P1 错题精讲
-    type: 'study', title: 'Paper 1 错题精讲 + V2',
+  '2026-06-25': {  // W4 周四 P1 错题精讲 + Picture Composition V2 修
+    type: 'study', title: 'Picture Composition V2 修 + 错题精讲',
     tasks: [
       { id: 'A',  icon: '📚', label: 'Comp OE 1 篇',                       fn: 'openCompOeGame' },
       { id: 'B',  icon: '📇', label: 'Vocab Cloze + Editing 找错',         fn: 'openEditingGame' },
-      { id: 'C',  icon: '✍️', label: 'Composition V2 修周三 (用 30 高级词)', fn: 'openCompositionModal', useWeek: true },
+      { id: 'C',  icon: '✍️', label: 'Picture Composition V2 (用 30 高级词)', fn: 'openCompositionModal', useWeek: true, highlight: true },
       { id: 'D',  icon: '🗣️', label: 'RA 跟读 2 段',                       fn: 'openOralRAModal' },
       { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                        fn: 'openErrorBank' }
     ]
   },
-  '2026-06-26': {  // W4 周五 P3+Oral 模考
-    type: 'test', title: 'Paper 3 + Oral 完整模考',
+  '2026-06-26': {  // W4 周五 P3+Oral 模考 + B 册 OE 终测
+    type: 'test', title: 'Paper 3 + Oral 模考 + B 册 OE 终测',
     tasks: [
-      { id: 'A',  icon: '📚', label: 'Comp OE 1 篇',                      fn: 'openCompOeGame' },
-      { id: 'B',  icon: '📇', label: 'Vocab Cloze 10 题',                 fn: 'openClozeGame' },
-      { id: 'C',  icon: '✍️', label: 'Composition 1 篇 (限时 50min)',     fn: 'openCompositionModal', useWeek: true },
+      { id: 'A',  icon: '📚', label: 'Comp OE 1 篇',                       fn: 'openCompOeGame' },
+      { id: 'B',  icon: '📇', label: 'Vocab Cloze 10 题',                  fn: 'openClozeGame' },
+      { id: 'X3', icon: '🎯', label: 'B 册 OE 终测 (vs 5-29 基线 4/15)',    fn: 'openCompOeGame', highlight: true, note: '记终值看进步' },
       { id: 'X1', icon: '🎯', label: 'Paper 3 Listening 模考 35min',       fn: 'openListenMcqGame', highlight: true },
       { id: 'X2', icon: '🎯', label: 'Oral 模考 SBC + RA 15min',           fn: 'openOralPracticeModal', highlight: true },
       { id: 'E',  icon: '📓', label: '错题本艾宾浩斯',                       fn: 'openErrorBank' }
     ]
   },
   '2026-06-27': {  // W4 周六 总复盘
-    type: 'test', title: '标准周六 + 总复盘 + 开学前给自己的话'
+    type: 'test', title: '标准周六 + 总复盘 (算 B 册 OE 4/15 → 终值) + 开学前给自己的话'
     // 用周六标准模板
   }
 };

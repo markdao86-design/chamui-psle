@@ -411,8 +411,31 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.3[678]/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+assert(/\?v=19\.3[6789]/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
   'v19.36+: cache buster ≥ 19.36');
+
+// ===== v19.39: 基于老师反馈重排 =====
+// page-summer 顶部加老师反馈卡
+assert(/英文老师 5-29 反馈/.test(idxSrc), 'v19.39: page-summer 加老师反馈卡');
+assert(/4\/15 \(27%\)/.test(idxSrc), 'v19.39: 反馈卡含 B 册 OE 4/15');
+assert(/10\/15\+/.test(idxSrc), 'v19.39: 反馈卡含目标 10/15+');
+// 整体节奏表更新
+assert(/W1 OE 攻坚/.test(idxSrc), 'v19.39: W1 主题改为 OE 攻坚');
+assert(/W2 Composition 看图/.test(idxSrc), 'v19.39: W2 主题改为 Composition 看图');
+// SUMMER_CURRICULUM 弱点导向 — 周一加重 OE 2 篇
+const _mondayTask = (W.SUMMER_CURRICULUM || []).find(d => d.dow === '周一' && d.weekLabel === 'W1 P2 攻坚')
+                 || (W.SUMMER_CURRICULUM || []).find(d => d.dow === '周一' && d.weekLabel !== 'W0 启动');
+assert(_mondayTask && /Comp OE 2 篇/.test(_mondayTask.tasks[0].label),
+  'v19.39: 周一 A 时段改为 Comp OE 2 篇');
+// 5-29 基线日加 B 册 OE 起点
+const _baseline = (W.SUMMER_CURRICULUM || []).find(d => d.date === '2026-05-29');
+assert(_baseline && /4\/15/.test(_baseline.title || ''),
+  'v19.39: 5-29 baseline title 提及 4/15');
+// 周五加 X2 B 册 OE 加测
+const _friday = (W.SUMMER_CURRICULUM || []).find(d => d.dow === '周五' && d.weekLabel !== 'W0 启动');
+const _x2 = _friday && _friday.tasks.find(t => t.id === 'X2');
+assert(_x2 && /B 册 OE/.test(_x2.label),
+  'v19.39: 周五 X2 chip = B 册 OE 加测');
 // v19.36: balanceHomeColumns 改用 _sumChildrenHeights 排除 filler 自身高度
 assert(/function _sumChildrenHeights\(col\)/.test(appSrc), 'v19.36: _sumChildrenHeights 已加 (排除 filler 测纯内容高)');
 assert(/_sumChildrenHeights\(left\)/.test(appSrc) && /_sumChildrenHeights\(right\)/.test(appSrc), 'v19.36: balanceHomeColumns 调用 _sumChildrenHeights');
@@ -1035,7 +1058,7 @@ assert(/if \(page === 'summer'\)[\s\S]{0,80}renderSummerCalendar\(\)/.test(appSr
   'v19.27: tab summer 触发 renderSummerCalendar');
 assert(/id="summerCalendarContainer"/.test(idxSrc), 'v19.27: page-summer 有 #summerCalendarContainer');
 assert(!/5 周分主题进度/.test(idxSrc), 'v19.27: 老静态 section "5 周分主题进度" 已替换');
-assert(/\?v=19\.3[78]/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
+assert(/\?v=19\.3[789]/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
 
 // ===== v19.38: 周末 → 只周日 (装备/皮肤/mini-game lock) =====
 // isWeekdayToday() 含义扩到 Mon-Sat (周六不再是自由日)

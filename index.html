@@ -5568,11 +5568,22 @@ p { font-size: 14px; line-height: 1.6; }
 
   <!-- 暑假课表页 (v19.6+: 2026 暑期英语强化 31 天) -->
   <div class="page" id="page-summer">
+    <!-- v19.39: 老师反馈卡 - 精准弱点暴露 -->
+    <div class="card" style="margin-bottom:12px;background:linear-gradient(135deg,rgba(255,107,53,0.10),rgba(255,184,0,0.04));border-left:4px solid #FF6B35">
+      <div class="card-title">📞 英文老师 5-29 反馈 (基于此重排课表)</div>
+      <div style="font-size:12px;line-height:1.8;margin-top:8px;color:var(--color-text)">
+        ✅ <b>Oral</b>: T1 表现尚可 (T3 才有真测) — 加强 picture-related<br>
+        ✅ <b>Comp + Vocab MCQ</b>: <b>85%</b> 不弱, 但选项接近易混 — Cloze 同义词训练<br>
+        ✅ <b>Writing A 册 MCQ</b>: 尚可<br>
+        🚨 <b>Writing B 册 OE 主观题: 4/15 (27%)</b> — 最弱, T3 重灾 → <b>暑假目标 10/15+</b><br>
+        🎯 <b>T3 考试</b>: 看图描述 + 展开 + 个人观点 → <b>Picture Composition 攻坚</b>
+      </div>
+    </div>
     <div class="card" style="margin-bottom:12px">
       <div class="card-title">📅 暑假英语强化课表 · 31 天</div>
       <div style="font-size:13px;color:var(--color-text-light);line-height:1.7;margin-top:6px">
         <b>2026-05-29 周五 → 2026-06-28 周日</b> (5 周)<br>
-        目标: 英语 65 → 75 (AL5 → AL4)<br>
+        目标: <b>B 册 OE 4/15 → 10/15+</b> · 英语 65 → 75 (AL5 → AL4)<br>
         4-4.5h/天 · <b>只休息周日</b> · <b>8 点起床, 9 点睡觉</b>
       </div>
     </div>
@@ -5582,11 +5593,11 @@ p { font-size: 14px; line-height: 1.6; }
       <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px">
         <thead><tr style="background:rgba(168,85,247,0.10)"><th style="text-align:left;padding:6px">周</th><th style="text-align:left;padding:6px">日期</th><th style="text-align:left;padding:6px">焦点</th></tr></thead>
         <tbody>
-          <tr><td style="padding:6px"><b>W0 启动</b></td><td style="padding:6px">5-29 ~ 5-31 (3 天)</td><td style="padding:6px">诊断 + 立 baseline</td></tr>
-          <tr><td style="padding:6px"><b>W1 P2 攻坚</b></td><td style="padding:6px">6-1 ~ 6-7</td><td style="padding:6px">Comp OE + Cloze + Vocab</td></tr>
-          <tr><td style="padding:6px"><b>W2 P1 攻坚</b></td><td style="padding:6px">6-8 ~ 6-14</td><td style="padding:6px">SST + Composition + 作文模板</td></tr>
-          <tr><td style="padding:6px"><b>W3 P3+Oral</b></td><td style="padding:6px">6-15 ~ 6-21</td><td style="padding:6px">Listening + Oral SBC + RA</td></tr>
-          <tr><td style="padding:6px"><b>W4 综合模考</b></td><td style="padding:6px">6-22 ~ 6-28</td><td style="padding:6px">完整 P1+P2+P3 模考 + 复盘</td></tr>
+          <tr><td style="padding:6px"><b>W0 启动</b></td><td style="padding:6px">5-29 ~ 5-31 (3 天)</td><td style="padding:6px">诊断 + 测 B 册 OE 起点 4/15</td></tr>
+          <tr><td style="padding:6px"><b>W1 OE 攻坚</b></td><td style="padding:6px">6-1 ~ 6-7</td><td style="padding:6px"><b>每天 2 篇 Comp OE</b> + Composition V1+V2</td></tr>
+          <tr><td style="padding:6px"><b>W2 Composition 看图</b></td><td style="padding:6px">6-8 ~ 6-14</td><td style="padding:6px">Picture Composition V1+V2+V3 (T3 准备)</td></tr>
+          <tr><td style="padding:6px"><b>W3 Picture Oral + OE</b></td><td style="padding:6px">6-15 ~ 6-21</td><td style="padding:6px">Oral picture-related + OE 持续</td></tr>
+          <tr><td style="padding:6px"><b>W4 T3 模考综合</b></td><td style="padding:6px">6-22 ~ 6-28</td><td style="padding:6px">P1+P2+P3 模考 + <b>B 册 OE 终测</b></td></tr>
         </tbody>
       </table>
     </div>
@@ -5948,9 +5959,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.38"></script>
-<script src="data.js?v=19.38"></script>
-<script src="app.js?v=19.38"></script>
+<script src="character.js?v=19.39"></script>
+<script src="data.js?v=19.39"></script>
+<script src="app.js?v=19.39"></script>
 
 </body>
 </html>
