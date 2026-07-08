@@ -411,43 +411,47 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.(3[6789]|4[01])/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+assert(/\?v=19\.(3[6789]|4[012])/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
   'v19.36+: cache buster ≥ 19.36');
 
-// ===== v19.40: 闪卡反面 例句 + 常考题型 =====
-assert(typeof W.VOCAB_META === 'object' && Object.keys(W.VOCAB_META).length >= 100,
-  `v19.40: VOCAB_META ≥ 100 词 (实际 ${W.VOCAB_META ? Object.keys(W.VOCAB_META).length : 0})`);
-assert(typeof W.getVocabMeta === 'function', 'v19.40: getVocabMeta 已导出');
-['come across', 'photosynthesis', 'furious'].forEach(w => {
-  const m = W.getVocabMeta(w);
-  assert(m && m.sent && m.qtype, `v19.40: "${w}" 有 sent + qtype`);
-});
-const _fbMeta = W.getVocabMeta('hibernation');
-assert(_fbMeta && _fbMeta.qtype && /Science/.test(_fbMeta.qtype),
-  'v19.40: 未列词 fallback 返回 Science category qtype');
-assert(/window\.getVocabMeta\s*\?\s*window\.getVocabMeta\(word\)/.test(appSrc),
-  'v19.40: _renderFlashcardSession 调 getVocabMeta');
-assert(/fc-card-qtype/.test(appSrc), 'v19.40: 闪卡 back render 加 .fc-card-qtype');
-assert(/\.fc-card-qtype\s*\{/.test(idxSrc), 'v19.40: CSS 加 .fc-card-qtype');
-assert(/height:320px/.test(idxSrc), 'v19.40/41: 闪卡 height 320px (4 段)');
-
-// ===== v19.41: 所有 flashcard 词都有 中文 + 英文解释 =====
-assert(typeof W.VOCAB_EN === 'object' && Object.keys(W.VOCAB_EN).length >= 440,
-  `v19.41: VOCAB_EN ≥ 440 词 (实际 ${W.VOCAB_EN ? Object.keys(W.VOCAB_EN).length : 0})`);
+// ===== v19.42: 闪卡反面 = 中文 + 考题 (去例句/英文解释, 省内存) =====
+assert(typeof W.VOCAB_QUIZ === 'object' && Object.keys(W.VOCAB_QUIZ).length >= 440,
+  `v19.42: VOCAB_QUIZ ≥ 440 词 (实际 ${W.VOCAB_QUIZ ? Object.keys(W.VOCAB_QUIZ).length : 0})`);
+assert(typeof W.getVocabQuiz === 'function', 'v19.42: getVocabQuiz 已导出');
+// 旧结构已删 (省内存)
+assert(typeof W.VOCAB_META === 'undefined', 'v19.42: VOCAB_META 已删');
+assert(typeof W.VOCAB_EN === 'undefined', 'v19.42: VOCAB_EN 已删');
 (function(){
   const decks = W.FLASHCARD_DECKS || [];
   const allW = [...new Set(decks.flatMap(d => d.words))];
   const noZh = allW.filter(w => W.getVocabMeaning(w) === w);
-  assert(noZh.length === 0, `v19.41: 所有 flashcard 词有中文 (缺 ${noZh.length}: ${noZh.slice(0,5).join(',')})`);
-  const noEn = allW.filter(w => !W.getVocabMeta(w).en);
-  assert(noEn.length === 0, `v19.41: 所有 flashcard 词有英文解释 (缺 ${noEn.length}: ${noEn.slice(0,5).join(',')})`);
+  assert(noZh.length === 0, `v19.42: 所有词有中文 (缺 ${noZh.length}: ${noZh.slice(0,5).join(',')})`);
+  const noQuiz = allW.filter(w => !W.getVocabQuiz(w));
+  assert(noQuiz.length === 0, `v19.42: 所有词有考题 (缺 ${noQuiz.length}: ${noQuiz.slice(0,5).join(',')})`);
 })();
-// getVocabMeta 返回 en 字段
-assert(W.getVocabMeta('furious').en && /angry/.test(W.getVocabMeta('furious').en),
-  'v19.41: getVocabMeta 返回 en 字段');
-// UI 渲染英文解释段
-assert(/fc-card-endef/.test(appSrc), 'v19.41: 闪卡 render 加 .fc-card-endef 段');
-assert(/\.fc-card-endef\s*\{/.test(idxSrc), 'v19.41: CSS 加 .fc-card-endef');
+// 科学/数学修正已应用 (逐条核准, 防误导)
+assert(!/6CO2|C6H12O6|6H2O/.test(W.getVocabQuiz('photosynthesis')),
+  'v19.42: photosynthesis 去掉超纲化学式');
+// quotient: 商 = 算式结果 (12÷4=3 或 48÷6=8 均正确, 校验算式与✓答案自洽)
+(function(){
+  const q = W.getVocabQuiz('quotient');
+  const m = q.match(/(\d+)\s*÷\s*(\d+)[^✓]*✓\s*(\d+)/);
+  assert(m && parseInt(m[1]) / parseInt(m[2]) === parseInt(m[3]),
+    `v19.42: quotient 算式与答案自洽 (${q})`);
+})();
+assert(/不需光|water\/air\/warmth|水\+?空气\+?温暖|水\/空气\/温暖/.test(W.getVocabQuiz('germination')),
+  'v19.42: germination 强调不需光 (PSLE 陷阱)');
+assert(/1\s*不是|✓\s*2/.test(W.getVocabQuiz('prime')),
+  'v19.42: prime 最小质数 2, 1 不是');
+// area cm² / perimeter cm 单位正确
+assert(/cm²/.test(W.getVocabQuiz('area')), 'v19.42: area 有 cm² 单位');
+assert(/cm(?![²³])/.test(W.getVocabQuiz('perimeter')), 'v19.42: perimeter 有 cm 单位');
+// UI 反面渲染考题
+assert(/getVocabQuiz/.test(appSrc), 'v19.42: _renderFlashcardSession 调 getVocabQuiz');
+assert(/fc-card-qtype/.test(appSrc), 'v19.42: 闪卡 render 保留 .fc-card-qtype');
+assert(!/fc-card-endef/.test(appSrc), 'v19.42: 英文解释段已删');
+assert(!/fc-card-sentence/.test(idxSrc), 'v19.42: 例句 CSS 已删');
+assert(/height:260px/.test(idxSrc), 'v19.42: 闪卡 height 260px (2 段紧凑)');
 
 // ===== v19.39: 基于老师反馈重排 =====
 // page-summer 顶部加老师反馈卡
@@ -1093,7 +1097,7 @@ assert(/if \(page === 'summer'\)[\s\S]{0,80}renderSummerCalendar\(\)/.test(appSr
   'v19.27: tab summer 触发 renderSummerCalendar');
 assert(/id="summerCalendarContainer"/.test(idxSrc), 'v19.27: page-summer 有 #summerCalendarContainer');
 assert(!/5 周分主题进度/.test(idxSrc), 'v19.27: 老静态 section "5 周分主题进度" 已替换');
-assert(/\?v=19\.(3[789]|4[01])/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
+assert(/\?v=19\.(3[789]|4[012])/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
 
 // ===== v19.38: 周末 → 只周日 (装备/皮肤/mini-game lock) =====
 // isWeekdayToday() 含义扩到 Mon-Sat (周六不再是自由日)
