@@ -411,47 +411,53 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.(3[6789]|4[012])/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+assert(/\?v=19\.(3[6789]|4[0123])/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
   'v19.36+: cache buster ≥ 19.36');
 
-// ===== v19.42: 闪卡反面 = 中文 + 考题 (去例句/英文解释, 省内存) =====
+// ===== v19.43: 闪卡反面 4 段 = 中文 + 英文解释(短语) + 例句 + 考题 =====
 assert(typeof W.VOCAB_QUIZ === 'object' && Object.keys(W.VOCAB_QUIZ).length >= 440,
-  `v19.42: VOCAB_QUIZ ≥ 440 词 (实际 ${W.VOCAB_QUIZ ? Object.keys(W.VOCAB_QUIZ).length : 0})`);
-assert(typeof W.getVocabQuiz === 'function', 'v19.42: getVocabQuiz 已导出');
-// 旧结构已删 (省内存)
-assert(typeof W.VOCAB_META === 'undefined', 'v19.42: VOCAB_META 已删');
-assert(typeof W.VOCAB_EN === 'undefined', 'v19.42: VOCAB_EN 已删');
+  `v19.43: VOCAB_QUIZ ≥ 440 词 (实际 ${W.VOCAB_QUIZ ? Object.keys(W.VOCAB_QUIZ).length : 0})`);
+assert(typeof W.VOCAB_EN === 'object' && Object.keys(W.VOCAB_EN).length >= 440,
+  `v19.43: VOCAB_EN ≥ 440 词 (实际 ${W.VOCAB_EN ? Object.keys(W.VOCAB_EN).length : 0})`);
+assert(typeof W.VOCAB_SENT === 'object' && Object.keys(W.VOCAB_SENT).length >= 440,
+  `v19.43: VOCAB_SENT ≥ 440 词 (实际 ${W.VOCAB_SENT ? Object.keys(W.VOCAB_SENT).length : 0})`);
+assert(typeof W.getVocabQuiz === 'function' && typeof W.getVocabEn === 'function' && typeof W.getVocabSent === 'function',
+  'v19.43: getVocabQuiz/En/Sent 全导出');
 (function(){
   const decks = W.FLASHCARD_DECKS || [];
   const allW = [...new Set(decks.flatMap(d => d.words))];
   const noZh = allW.filter(w => W.getVocabMeaning(w) === w);
-  assert(noZh.length === 0, `v19.42: 所有词有中文 (缺 ${noZh.length}: ${noZh.slice(0,5).join(',')})`);
+  assert(noZh.length === 0, `v19.43: 所有词有中文 (缺 ${noZh.length}: ${noZh.slice(0,5).join(',')})`);
+  const noEn = allW.filter(w => !W.getVocabEn(w));
+  assert(noEn.length === 0, `v19.43: 所有词有英文解释 (缺 ${noEn.length}: ${noEn.slice(0,5).join(',')})`);
+  const noS = allW.filter(w => !W.getVocabSent(w));
+  assert(noS.length === 0, `v19.43: 所有词有例句 (缺 ${noS.length}: ${noS.slice(0,5).join(',')})`);
   const noQuiz = allW.filter(w => !W.getVocabQuiz(w));
-  assert(noQuiz.length === 0, `v19.42: 所有词有考题 (缺 ${noQuiz.length}: ${noQuiz.slice(0,5).join(',')})`);
+  assert(noQuiz.length === 0, `v19.43: 所有词有考题 (缺 ${noQuiz.length}: ${noQuiz.slice(0,5).join(',')})`);
 })();
-// 科学/数学修正已应用 (逐条核准, 防误导)
+// 科学/数学考题准确性 (逐条核准, 防误导)
 assert(!/6CO2|C6H12O6|6H2O/.test(W.getVocabQuiz('photosynthesis')),
-  'v19.42: photosynthesis 去掉超纲化学式');
-// quotient: 商 = 算式结果 (12÷4=3 或 48÷6=8 均正确, 校验算式与✓答案自洽)
+  'v19.43: photosynthesis 去掉超纲化学式');
 (function(){
   const q = W.getVocabQuiz('quotient');
   const m = q.match(/(\d+)\s*÷\s*(\d+)[^✓]*✓\s*(\d+)/);
   assert(m && parseInt(m[1]) / parseInt(m[2]) === parseInt(m[3]),
-    `v19.42: quotient 算式与答案自洽 (${q})`);
+    `v19.43: quotient 算式与答案自洽 (${q})`);
 })();
 assert(/不需光|water\/air\/warmth|水\+?空气\+?温暖|水\/空气\/温暖/.test(W.getVocabQuiz('germination')),
-  'v19.42: germination 强调不需光 (PSLE 陷阱)');
+  'v19.43: germination 强调不需光 (PSLE 陷阱)');
 assert(/1\s*不是|✓\s*2/.test(W.getVocabQuiz('prime')),
-  'v19.42: prime 最小质数 2, 1 不是');
-// area cm² / perimeter cm 单位正确
-assert(/cm²/.test(W.getVocabQuiz('area')), 'v19.42: area 有 cm² 单位');
-assert(/cm(?![²³])/.test(W.getVocabQuiz('perimeter')), 'v19.42: perimeter 有 cm 单位');
-// UI 反面渲染考题
-assert(/getVocabQuiz/.test(appSrc), 'v19.42: _renderFlashcardSession 调 getVocabQuiz');
-assert(/fc-card-qtype/.test(appSrc), 'v19.42: 闪卡 render 保留 .fc-card-qtype');
-assert(!/fc-card-endef/.test(appSrc), 'v19.42: 英文解释段已删');
-assert(!/fc-card-sentence/.test(idxSrc), 'v19.42: 例句 CSS 已删');
-assert(/height:260px/.test(idxSrc), 'v19.42: 闪卡 height 260px (2 段紧凑)');
+  'v19.43: prime 最小质数 2, 1 不是');
+assert(/cm²/.test(W.getVocabQuiz('area')), 'v19.43: area 有 cm² 单位');
+assert(/cm(?![²³])/.test(W.getVocabQuiz('perimeter')), 'v19.43: perimeter 有 cm 单位');
+// UI 反面 4 段渲染
+assert(/getVocabEn/.test(appSrc) && /getVocabSent/.test(appSrc) && /getVocabQuiz/.test(appSrc),
+  'v19.43: render 调 getVocabEn/Sent/Quiz');
+assert(/fc-card-endef/.test(appSrc) && /fc-card-sentence/.test(appSrc) && /fc-card-qtype/.test(appSrc),
+  'v19.43: render 有 endef+sentence+qtype 3 段');
+assert(/\.fc-card-endef\s*\{/.test(idxSrc) && /\.fc-card-sentence\s*\{/.test(idxSrc),
+  'v19.43: CSS 有 endef + sentence');
+assert(/height:360px/.test(idxSrc), 'v19.43: 闪卡 height 360px (4 段)');
 
 // ===== v19.39: 基于老师反馈重排 =====
 // page-summer 顶部加老师反馈卡
@@ -1097,7 +1103,7 @@ assert(/if \(page === 'summer'\)[\s\S]{0,80}renderSummerCalendar\(\)/.test(appSr
   'v19.27: tab summer 触发 renderSummerCalendar');
 assert(/id="summerCalendarContainer"/.test(idxSrc), 'v19.27: page-summer 有 #summerCalendarContainer');
 assert(!/5 周分主题进度/.test(idxSrc), 'v19.27: 老静态 section "5 周分主题进度" 已替换');
-assert(/\?v=19\.(3[789]|4[012])/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
+assert(/\?v=19\.(3[789]|4[0123])/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
 
 // ===== v19.38: 周末 → 只周日 (装备/皮肤/mini-game lock) =====
 // isWeekdayToday() 含义扩到 Mon-Sat (周六不再是自由日)

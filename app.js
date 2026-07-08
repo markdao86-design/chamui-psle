@@ -2596,7 +2596,9 @@ function _renderFlashcardSession() {
   if (s.idx >= s.words.length) { _endFlashcardSession(); return; }
   const word = s.words[s.idx];
   const meaning = getVocabMeaning(word);
-  // v19.42: 反面 = 中文 + 该词考题 (省内存, 去例句/英文解释. 科学/数学答案已逐条核准)
+  // v19.43: 反面 = 中文 + 英文解释(短语) + 例句 + 考题 (科学/数学答案已逐条核准)
+  const enDef = window.getVocabEn ? window.getVocabEn(word) : '';
+  const sentence = window.getVocabSent ? window.getVocabSent(word) : '';
   const quiz = window.getVocabQuiz ? window.getVocabQuiz(word) : '';
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -2607,10 +2609,12 @@ function _renderFlashcardSession() {
       <div class="fc-card-inner">
         <div class="fc-card-front">
           <div class="fc-card-word">${word}</div>
-          <div class="fc-card-hint">点击翻转看中文 + 考题</div>
+          <div class="fc-card-hint">点击翻转看解释 + 例句 + 考题</div>
         </div>
         <div class="fc-card-back">
           <div class="fc-card-meaning">${meaning}</div>
+          ${enDef ? `<div class="fc-card-endef">📖 英文解释: ${escapeHtml(enDef)}</div>` : ''}
+          ${sentence ? `<div class="fc-card-sentence">💬 例句: ${escapeHtml(sentence)}</div>` : ''}
           ${quiz ? `<div class="fc-card-qtype">📝 ${escapeHtml(quiz)}</div>` : ''}
         </div>
       </div>

@@ -2187,8 +2187,8 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .comp-step-btn:hover:not(:disabled) { background:#F0FDF4; border-color:#10B981; }
 .comp-step-btn.done { background:#D1FAE5; border-color:#059669; color:#065F46; cursor:default; }
 
-/* v19.5: 词汇闪卡 · v19.42: 反面 = 中文 + 考题 (省内存, 去例句/英文解释) */
-.fc-card { perspective:800px; width:100%; max-width:360px; height:260px; margin:16px auto; cursor:pointer; }
+/* v19.5 · v19.43: 反面 4 段 = 中文 + 📖 英文解释(短语) + 💬 例句 + 📝 考题 */
+.fc-card { perspective:800px; width:100%; max-width:360px; height:360px; margin:16px auto; cursor:pointer; }
 .fc-card-inner { position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d; border-radius:12px; }
 .fc-card.flipped .fc-card-inner { transform:rotateY(180deg); }
 .fc-card-front, .fc-card-back { position:absolute; inset:0; backface-visibility:hidden; border-radius:12px; display:flex; flex-direction:column; padding:16px; }
@@ -2196,10 +2196,12 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .fc-card-back { background:linear-gradient(135deg,#064E3B,#065F46); border:2px solid #10B981; color:#D1FAE5; transform:rotateY(180deg); align-items:stretch; justify-content:flex-start; overflow-y:auto; }
 .fc-card-word { font-size:26px; font-weight:700; margin-bottom:8px; text-align:center; }
 .fc-card-hint { font-size:12px; color:#94A3B8; }
-.fc-card-meaning { font-size:22px; font-weight:700; margin:4px 0 10px; text-align:center; color:#FFFFFF; }
+.fc-card-meaning { font-size:22px; font-weight:700; margin:4px 0 8px; text-align:center; color:#FFFFFF; }
+.fc-card-endef { font-size:13px; color:#E0F2FE; line-height:1.45; padding:6px 8px; background:rgba(56,189,248,0.12); border-radius:6px; margin-bottom:6px; }
+.fc-card-sentence { font-size:13px; color:#A7F3D0; font-style:italic; line-height:1.5; padding:6px 8px; margin-bottom:6px; background:rgba(16,185,129,0.10); border-radius:6px; }
 .fc-card-qtype {
   font-size:13px; color:#FEF3C7; background:rgba(251,191,36,0.14);
-  border-left:3px solid #F59E0B; padding:8px 10px; margin-top:4px;
+  border-left:3px solid #F59E0B; padding:8px 10px; margin-top:2px;
   text-align:left; border-radius:4px; line-height:1.55;
 }
 .fc-btns { display:flex; gap:12px; justify-content:center; margin-top:12px; }
@@ -5963,9 +5965,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.42"></script>
-<script src="data.js?v=19.42"></script>
-<script src="app.js?v=19.42"></script>
+<script src="character.js?v=19.43"></script>
+<script src="data.js?v=19.43"></script>
+<script src="app.js?v=19.43"></script>
 
 </body>
 </html>
