@@ -411,7 +411,7 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.(3[6789]|40)/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+assert(/\?v=19\.(3[6789]|4[01])/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
   'v19.36+: cache buster ≥ 19.36');
 
 // ===== v19.40: 闪卡反面 例句 + 常考题型 =====
@@ -429,7 +429,25 @@ assert(/window\.getVocabMeta\s*\?\s*window\.getVocabMeta\(word\)/.test(appSrc),
   'v19.40: _renderFlashcardSession 调 getVocabMeta');
 assert(/fc-card-qtype/.test(appSrc), 'v19.40: 闪卡 back render 加 .fc-card-qtype');
 assert(/\.fc-card-qtype\s*\{/.test(idxSrc), 'v19.40: CSS 加 .fc-card-qtype');
-assert(/height:280px/.test(idxSrc), 'v19.40: 闪卡 height 增到 280px');
+assert(/height:320px/.test(idxSrc), 'v19.40/41: 闪卡 height 320px (4 段)');
+
+// ===== v19.41: 所有 flashcard 词都有 中文 + 英文解释 =====
+assert(typeof W.VOCAB_EN === 'object' && Object.keys(W.VOCAB_EN).length >= 440,
+  `v19.41: VOCAB_EN ≥ 440 词 (实际 ${W.VOCAB_EN ? Object.keys(W.VOCAB_EN).length : 0})`);
+(function(){
+  const decks = W.FLASHCARD_DECKS || [];
+  const allW = [...new Set(decks.flatMap(d => d.words))];
+  const noZh = allW.filter(w => W.getVocabMeaning(w) === w);
+  assert(noZh.length === 0, `v19.41: 所有 flashcard 词有中文 (缺 ${noZh.length}: ${noZh.slice(0,5).join(',')})`);
+  const noEn = allW.filter(w => !W.getVocabMeta(w).en);
+  assert(noEn.length === 0, `v19.41: 所有 flashcard 词有英文解释 (缺 ${noEn.length}: ${noEn.slice(0,5).join(',')})`);
+})();
+// getVocabMeta 返回 en 字段
+assert(W.getVocabMeta('furious').en && /angry/.test(W.getVocabMeta('furious').en),
+  'v19.41: getVocabMeta 返回 en 字段');
+// UI 渲染英文解释段
+assert(/fc-card-endef/.test(appSrc), 'v19.41: 闪卡 render 加 .fc-card-endef 段');
+assert(/\.fc-card-endef\s*\{/.test(idxSrc), 'v19.41: CSS 加 .fc-card-endef');
 
 // ===== v19.39: 基于老师反馈重排 =====
 // page-summer 顶部加老师反馈卡
@@ -1075,7 +1093,7 @@ assert(/if \(page === 'summer'\)[\s\S]{0,80}renderSummerCalendar\(\)/.test(appSr
   'v19.27: tab summer 触发 renderSummerCalendar');
 assert(/id="summerCalendarContainer"/.test(idxSrc), 'v19.27: page-summer 有 #summerCalendarContainer');
 assert(!/5 周分主题进度/.test(idxSrc), 'v19.27: 老静态 section "5 周分主题进度" 已替换');
-assert(/\?v=19\.(3[789]|40)/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
+assert(/\?v=19\.(3[789]|4[01])/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
 
 // ===== v19.38: 周末 → 只周日 (装备/皮肤/mini-game lock) =====
 // isWeekdayToday() 含义扩到 Mon-Sat (周六不再是自由日)

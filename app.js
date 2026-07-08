@@ -2596,11 +2596,12 @@ function _renderFlashcardSession() {
   if (s.idx >= s.words.length) { _endFlashcardSession(); return; }
   const word = s.words[s.idx];
   const meaning = getVocabMeaning(word);
-  // v19.40: 反面加例句 + 常考题型 (VOCAB_META 主 + 类别 fallback)
-  const meta = window.getVocabMeta ? window.getVocabMeta(word) : { sent: '', qtype: '' };
+  // v19.40/41: 反面 = 中文 + 英文解释 + 例句 + 常考题型 (VOCAB_META/EN 主 + 类别 fallback)
+  const meta = window.getVocabMeta ? window.getVocabMeta(word) : { sent: '', qtype: '', en: '' };
   const hardEntry = (window.VOCAB_HARD || []).find(v => v.en === word);
   const sentence = meta.sent || (hardEntry ? hardEntry.sent : '');
   const qtype = meta.qtype || '';
+  const enDef = meta.en || '';
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <button class="btn-sm" onclick="exitFlashcardSession()">← 返回</button>
@@ -2614,6 +2615,7 @@ function _renderFlashcardSession() {
         </div>
         <div class="fc-card-back">
           <div class="fc-card-meaning">${meaning}</div>
+          ${enDef ? `<div class="fc-card-endef">📖 ${escapeHtml(enDef)}</div>` : ''}
           ${sentence ? `<div class="fc-card-sentence">"${escapeHtml(sentence)}"</div>` : ''}
           ${qtype ? `<div class="fc-card-qtype">🎯 ${escapeHtml(qtype)}</div>` : ''}
         </div>
