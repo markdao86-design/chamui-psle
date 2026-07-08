@@ -2187,17 +2187,22 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .comp-step-btn:hover:not(:disabled) { background:#F0FDF4; border-color:#10B981; }
 .comp-step-btn.done { background:#D1FAE5; border-color:#059669; color:#065F46; cursor:default; }
 
-/* v19.5: 词汇闪卡 */
-.fc-card { perspective:600px; width:100%; max-width:320px; height:180px; margin:16px auto; cursor:pointer; }
+/* v19.5: 词汇闪卡 · v19.40: 反面加 例句 + 常考题型 (height 180→280px) */
+.fc-card { perspective:800px; width:100%; max-width:360px; height:280px; margin:16px auto; cursor:pointer; }
 .fc-card-inner { position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d; border-radius:12px; }
 .fc-card.flipped .fc-card-inner { transform:rotateY(180deg); }
-.fc-card-front, .fc-card-back { position:absolute; inset:0; backface-visibility:hidden; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; }
-.fc-card-front { background:linear-gradient(135deg,#1E293B,#334155); border:2px solid #475569; color:#F8FAFC; }
-.fc-card-back { background:linear-gradient(135deg,#064E3B,#065F46); border:2px solid #10B981; color:#D1FAE5; transform:rotateY(180deg); }
-.fc-card-word { font-size:24px; font-weight:700; margin-bottom:8px; }
+.fc-card-front, .fc-card-back { position:absolute; inset:0; backface-visibility:hidden; border-radius:12px; display:flex; flex-direction:column; padding:16px; }
+.fc-card-front { background:linear-gradient(135deg,#1E293B,#334155); border:2px solid #475569; color:#F8FAFC; align-items:center; justify-content:center; }
+.fc-card-back { background:linear-gradient(135deg,#064E3B,#065F46); border:2px solid #10B981; color:#D1FAE5; transform:rotateY(180deg); align-items:stretch; justify-content:flex-start; overflow-y:auto; }
+.fc-card-word { font-size:26px; font-weight:700; margin-bottom:8px; text-align:center; }
 .fc-card-hint { font-size:12px; color:#94A3B8; }
-.fc-card-meaning { font-size:20px; font-weight:600; margin-bottom:8px; }
-.fc-card-sentence { font-size:12px; color:#A7F3D0; font-style:italic; text-align:center; line-height:1.4; }
+.fc-card-meaning { font-size:22px; font-weight:700; margin:4px 0 10px; text-align:center; color:#FFFFFF; }
+.fc-card-sentence { font-size:13px; color:#A7F3D0; font-style:italic; text-align:center; line-height:1.5; padding:6px 4px 4px; border-top:1px solid rgba(255,255,255,0.10); }
+.fc-card-qtype {
+  font-size:12px; color:#FEF3C7; background:rgba(251,191,36,0.14);
+  border-left:3px solid #F59E0B; padding:6px 8px; margin-top:8px;
+  text-align:left; border-radius:4px; line-height:1.4;
+}
 .fc-btns { display:flex; gap:12px; justify-content:center; margin-top:12px; }
 .fc-btn-know, .fc-btn-dont { padding:10px 24px; border-radius:8px; border:none; font-size:14px; font-weight:600; cursor:pointer; }
 .fc-btn-know { background:#10B981; color:#fff; }
@@ -5959,9 +5964,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.39b"></script>
-<script src="data.js?v=19.39b"></script>
-<script src="app.js?v=19.39b"></script>
+<script src="character.js?v=19.40"></script>
+<script src="data.js?v=19.40"></script>
+<script src="app.js?v=19.40"></script>
 
 </body>
 </html>

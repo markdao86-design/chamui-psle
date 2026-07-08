@@ -5523,6 +5523,271 @@ const FLASHCARD_DECKS = [
     words: ['quotient','remainder','dividend','divisor','numerator','denominator','mixed number','improper fraction','equivalent fraction','simplest form','decimal','factor','multiple','prime','composite','product','sum','difference','ratio','proportion','percentage','discount','profit','loss','GST','interest','average','median','mode','ascending','descending','estimate','approximate','round off'] }
 ];
 
+// ============= v19.40: 闪卡反面 例句 + 常考题型 =============
+// 兜底: 按 deck category 给通用题型 (每个 flashcard 都有内容)
+const _DECK_QTYPE_FALLBACK = {
+  'Cloze必考':  'Cloze 常考: 填空/词义辨析/搭配',
+  'Comp+作文':  'Comp+作文常考: 描写词, 替换 basic word (said/walk/happy)',
+  'Comp阅读':   'Comp 阅读常考: 说明文/议论文 高频词',
+  '作文加分':   '作文加分句 — 精妙比喻, 慎用适度 (1-2 句/篇)',
+  '科学':       'Science Booklet A/B MCQ+OE 关键词',
+  '数学':       'Math word problem 关键词 (Cloze/OE 题干)'
+};
+
+// 主字典 — 手工填充的高频 PSLE 词 (未列词走 fallback)
+const VOCAB_META = {
+  // ==== 🔗 Phrasal Verbs (Cloze 必考, 每年 3-5 题) ====
+  'come across':      { s: 'While cleaning her room, Mei Ling came across an old photo.', q: 'Cloze 常考: 偶然遇到/发现 = encounter, stumble upon' },
+  'carry out':        { s: 'The scientists carried out the experiment yesterday.', q: 'Cloze 常考: 执行/进行, 常搭 experiment / plan / task' },
+  'give in':          { s: 'Despite the pressure, he refused to give in to bullies.', q: 'Cloze 常考: 屈服/让步 = surrender; 搭 to sb' },
+  'look up to':       { s: 'Many students look up to their teachers as role models.', q: 'Cloze 常考: 敬佩/仰慕 = admire, respect' },
+  'turn out':         { s: 'The rumour turned out to be completely false.', q: 'Cloze 常考: 结果证明是 = prove to be' },
+  'set off':          { s: 'We set off for school before dawn.', q: 'Cloze 常考: 出发 = depart, embark' },
+  'put up with':      { s: 'She could not put up with his rudeness any longer.', q: 'Cloze 常考: 忍受 = tolerate, endure' },
+  'break down':       { s: 'The car broke down on the way to the airport.', q: 'Cloze 常考: 抛锚/崩溃; 也可用于哭泣 (break down in tears)' },
+  'look forward to':  { s: 'I look forward to meeting you next Monday.', q: 'Cloze 常考: 期待. 后接 -ing (不是原形!)' },
+  'take after':       { s: 'Amir takes after his father in appearance.', q: 'Cloze 常考: 像 (家人), 遗传特点 = resemble' },
+  'bring up':         { s: 'His grandparents brought him up after his parents passed away.', q: 'Cloze 常考: 抚养 = raise; 也可"提起话题"' },
+  'get along with':   { s: 'She gets along well with her classmates.', q: 'Cloze 常考: 与...相处融洽' },
+  'make up':          { s: 'The friends made up after their quarrel.', q: 'Cloze 常考: 和解; 也可"编造/化妆"' },
+  'run out of':       { s: 'We have run out of milk — could you buy some?', q: 'Cloze 常考: 用完 = exhaust; 后接名词' },
+  'figure out':       { s: 'It took me hours to figure out the puzzle.', q: 'Cloze 常考: 弄明白 = solve, work out' },
+  'cut down on':      { s: 'The doctor advised him to cut down on sugar.', q: 'Cloze 常考: 减少 = reduce; 常搭 sugar/salt/sleep' },
+  'keep up with':     { s: 'It is hard to keep up with the fast pace of technology.', q: 'Cloze 常考: 跟上 = catch up with' },
+  'give up':          { s: 'Never give up on your dreams.', q: 'Cloze 常考: 放弃 = abandon, quit' },
+  'look into':        { s: 'The police are looking into the theft.', q: 'Cloze 常考: 调查 = investigate' },
+  'put off':          { s: 'They put off the meeting to next Monday.', q: 'Cloze 常考: 推迟 = postpone, delay' },
+  'take over':        { s: 'She will take over the company next year.', q: 'Cloze 常考: 接管/接手 = assume control' },
+  'turn down':        { s: 'He turned down the job offer politely.', q: 'Cloze 常考: 拒绝 = reject, decline; 也可"调低音量"' },
+  'break into':       { s: 'Burglars broke into the house last night.', q: 'Cloze 常考: 闯入; 也可"突然开始 (break into tears/laughter)"' },
+  'come up with':     { s: 'She came up with a brilliant idea for the project.', q: 'Cloze 常考: 想出/提出 = propose, invent' },
+  'go through':       { s: 'They went through many hardships during the war.', q: 'Cloze 常考: 经历 = experience, endure' },
+  'call off':         { s: 'The match was called off due to heavy rain.', q: 'Cloze 常考: 取消 = cancel' },
+  'hand in':          { s: 'Please hand in your homework by Friday.', q: 'Cloze 常考: 上交 = submit' },
+  'pick up':          { s: 'Mother picked up the children after school.', q: 'Cloze 常考: 接 (人); 拿起; 学会 (语言)' },
+  'stand out':        { s: 'Her red dress made her stand out in the crowd.', q: 'Cloze 常考: 突出/引人注目 = be prominent' },
+  'end up':           { s: 'If you keep doing that, you will end up in trouble.', q: 'Cloze 常考: 最终成为/落得 = finally become' },
+  'let down':         { s: 'Do not let down your parents — study hard.', q: 'Cloze 常考: 使失望 = disappoint' },
+  'back up':          { s: 'Always back up your files on a cloud drive.', q: 'Cloze 常考: 备份; 也可"支持 (back sb up)"' },
+  'sort out':         { s: 'We need to sort out this problem quickly.', q: 'Cloze 常考: 解决/整理 = resolve, organise' },
+  'pull through':     { s: 'The patient pulled through after the surgery.', q: 'Cloze 常考: 挺过难关/康复 = survive' },
+  'dawn on':          { s: 'It suddenly dawned on me that I had forgotten my keys.', q: 'Cloze 常考: 突然意识到 = realise; 后搭 sb' },
+  'live up to':       { s: 'The film lived up to my expectations.', q: 'Cloze 常考: 达到/不辜负 (期望) = meet' },
+
+  // ==== 🔀 连接词/转折词 (Cloze 每年 3-5 题必考) ====
+  'however':          { s: 'The plan seemed good; however, it failed in the end.', q: 'Cloze 常考: 然而 (段中转折), 后接逗号+新句' },
+  'although':         { s: 'Although he was tired, he continued working.', q: 'Cloze 常考: 尽管 (从句开头), 主句不加 but!' },
+  'despite':          { s: 'Despite the rain, we went for a picnic.', q: 'Cloze 常考: 尽管, 后接名词或 -ing (不加从句!)' },
+  'nevertheless':     { s: 'It was raining; nevertheless, we set off.', q: 'Cloze 常考: 尽管如此 (正式), 语气比 however 强' },
+  'therefore':        { s: 'She studied hard; therefore, she passed.', q: 'Cloze 常考: 因此 (结果), 前后各是完整句' },
+  'consequently':     { s: 'He was late again; consequently, he was fired.', q: 'Cloze 常考: 因此 (正式), 常引出坏结果' },
+  'as a result':      { s: 'The road was flooded. As a result, buses were delayed.', q: 'Cloze 常考: 结果 (口语性), 后接完整句' },
+  'furthermore':      { s: 'The plan is expensive. Furthermore, it is risky.', q: 'Cloze/作文常考: 此外, 议论文加论点' },
+  'moreover':         { s: 'The book is interesting. Moreover, it is educational.', q: 'Cloze/作文常考: 而且 (正式), 同 furthermore' },
+  'in addition':      { s: 'She teaches Math. In addition, she coaches netball.', q: 'Cloze/作文常考: 除此之外; 也可 In addition to X, Y ...' },
+  'besides':          { s: 'Besides being kind, she is very smart.', q: 'Cloze 常考: 而且/除...之外, 后接名词或 -ing' },
+  'instead':          { s: 'The lift was broken, so we took the stairs instead.', q: 'Cloze 常考: 代替/反而 (副词, 通常句末)' },
+  'otherwise':        { s: 'Study hard; otherwise, you will fail.', q: 'Cloze 常考: 否则 = or else' },
+  'on the other hand':{ s: 'Cats are independent. On the other hand, dogs are loyal.', q: 'Cloze 常考: 另一方面 (对比), 前常有 On (the) one hand' },
+  'eventually':       { s: 'After many attempts, he eventually succeeded.', q: 'Cloze 常考: 最终 (经过时间), 强调过程' },
+  'meanwhile':        { s: 'I cooked dinner. Meanwhile, my sister set the table.', q: 'Cloze 常考: 与此同时 (记叙文时间转移)' },
+  'for instance':     { s: 'Many fruits are healthy. For instance, apples are rich in fibre.', q: 'Cloze/作文常考: 举例 = for example' },
+  'in fact':          { s: 'The exam was easy. In fact, I finished early.', q: 'Cloze 常考: 事实上 (加强肯定)' },
+  'on the contrary':  { s: 'I did not dislike him. On the contrary, I admired him.', q: 'Cloze 常考: 相反 (强对比, 反驳前句)' },
+  'whereas':          { s: 'She is quiet, whereas her sister is talkative.', q: 'Cloze 常考: 而 (对比连词, 连接两句)' },
+  'unless':           { s: 'Unless you hurry, you will miss the bus.', q: 'Cloze 常考: 除非 = if not; 后跟主句' },
+
+  // ==== 💭 情感/性格词 (Comp+作文 常考) ====
+  'anxious':          { s: 'She felt anxious before the exam.', q: 'Comp+作文常考: 焦虑 (紧张不安), 比 nervous 更持久' },
+  'reluctant':        { s: 'He was reluctant to admit his mistake.', q: 'Comp+作文常考: 不情愿的, 后接 to do' },
+  'determined':       { s: 'She was determined to win the race.', q: 'Comp+作文常考: 坚决的, 后接 to do' },
+  'grateful':         { s: 'I am grateful for your help.', q: 'Comp+作文常考: 感激的, 搭 for sth / to sb' },
+  'furious':          { s: 'Father was furious when he saw the broken window.', q: 'Comp+作文常考: 狂怒 (比 angry 强 10 倍), 搭 with sb' },
+  'horrified':        { s: 'She was horrified by the accident scene.', q: 'Comp+作文常考: 惊骇的 (强烈震惊+恐惧)' },
+  'stunned':          { s: 'The audience was stunned by the magic trick.', q: 'Comp+作文常考: 目瞪口呆的 (震惊到发愣)' },
+  'bewildered':       { s: 'The tourist looked bewildered in the huge city.', q: 'Comp+作文常考: 迷惑的, 描写困惑表情高分词' },
+  'elated':           { s: 'She was elated to hear the good news.', q: 'Comp+作文常考: 兴高采烈的 (超越 happy)' },
+  'ecstatic':         { s: 'The fans were ecstatic when the team won.', q: 'Comp+作文常考: 狂喜的 (极度快乐, 比 elated 更强)' },
+  'devastated':       { s: 'He was devastated by the loss of his dog.', q: 'Comp+作文常考: 心碎的, 描写巨大悲伤' },
+  'dejected':         { s: 'She looked dejected after failing the test.', q: 'Comp+作文常考: 沮丧的 (失望消沉)' },
+  'embarrassed':      { s: 'He felt embarrassed when he tripped on stage.', q: 'Comp+作文常考: 尴尬的; 常搭 in front of' },
+  'ashamed':          { s: 'She was ashamed of her rude behaviour.', q: 'Comp+作文常考: 羞愧的 (道德内疚), 搭 of' },
+  'envious':          { s: 'He was envious of his friend\'s new bicycle.', q: 'Comp+作文常考: 嫉妒的 (中性/微贬), 搭 of' },
+  'stubborn':         { s: 'The stubborn boy refused to listen.', q: 'Comp+作文常考: 顽固的 (性格描写)' },
+  'humble':           { s: 'Despite his fame, he remained humble.', q: 'Comp+作文常考: 谦逊的 (品格描写)' },
+  'courageous':       { s: 'The courageous firefighter saved the child.', q: 'Comp+作文常考: 勇敢的 (比 brave 正式)' },
+  'timid':            { s: 'The timid kitten hid under the sofa.', q: 'Comp+作文常考: 胆小的' },
+  'diligent':         { s: 'She is a diligent student who never misses class.', q: 'Comp+作文常考: 勤奋的 (作文描写主人公高分词)' },
+  'compassionate':    { s: 'The compassionate nurse comforted the patient.', q: 'Comp+作文常考: 富有同情心的' },
+  'remorseful':       { s: 'He was remorseful for hurting his friend.', q: 'Comp+作文常考: 懊悔的, 搭 for. 结局悔改高分词' },
+  'apprehensive':     { s: 'She felt apprehensive about the interview.', q: 'Comp+作文常考: 忧虑的 (对即将发生的事)' },
+
+  // ==== 🏃 动作/说话词 (Comp+作文 描写替换 said/walked) ====
+  'exclaimed':        { s: '"Look at that rainbow!" she exclaimed.', q: '作文常考: 替换 said 表兴奋惊叹' },
+  'murmured':         { s: '"I love you," he murmured softly.', q: '作文常考: 低语 (小声/亲密对话)' },
+  'stammered':        { s: '"I-I-I didn\'t mean to," he stammered.', q: '作文常考: 结结巴巴 (紧张/害怕)' },
+  'muttered':         { s: '"This is unfair," she muttered under her breath.', q: '作文常考: 嘟囔 (不满小声抱怨)' },
+  'whispered':        { s: 'She whispered the secret into my ear.', q: '作文常考: 耳语 (悄悄话)' },
+  'shrieked':         { s: 'The girl shrieked when she saw the spider.', q: '作文常考: 尖叫 (恐惧/惊吓)' },
+  'bellowed':         { s: '"Stop right there!" the sergeant bellowed.', q: '作文常考: 怒吼 (愤怒大声)' },
+  'dashed':           { s: 'He dashed across the road to catch the bus.', q: '作文常考: 冲/飞奔 (替换 ran)' },
+  'trudged':          { s: 'Tired and heavy-hearted, he trudged home.', q: '作文常考: 步履沉重 (疲惫/沮丧)' },
+  'strolled':         { s: 'They strolled along the beach at sunset.', q: '作文常考: 漫步 (悠闲)' },
+  'sprinted':         { s: 'She sprinted the last 50 metres to the finish line.', q: '作文常考: 冲刺 (短距离全速)' },
+  'stumbled':         { s: 'He stumbled over a rock and fell.', q: '作文常考: 绊倒/踉跄; 也可"结巴 (stumble over words)"' },
+  'glanced':          { s: 'She glanced at her watch nervously.', q: '作文常考: 瞥了一眼 (快速看)' },
+  'gazed':            { s: 'The child gazed at the stars in wonder.', q: '作文常考: 凝视 (专注沉浸)' },
+  'clutched':         { s: 'She clutched her mother\'s hand tightly.', q: '作文常考: 紧握 (害怕/珍惜)' },
+  'hesitated':        { s: 'He hesitated before answering the tough question.', q: '作文常考: 犹豫 (决定前停顿, 心理描写)' },
+  'persevered':       { s: 'Despite many failures, she persevered.', q: 'Comp+作文常考: 坚持不懈 (励志主题高分)' },
+  'flinched':         { s: 'She flinched at the sudden loud noise.', q: '作文常考: 畏缩 (突然惊吓)' },
+  'embraced':         { s: 'They embraced each other after the long separation.', q: '作文常考: 拥抱 (深情, 替 hugged)' },
+  'trembled':         { s: 'His hands trembled with fear.', q: '作文常考: 颤抖 (身体反应恐惧/寒冷)' },
+
+  // ==== 🎨 描写/环境词 ====
+  'scorching':        { s: 'The scorching sun beat down on the runners.', q: '作文常考: 炙热的 (比 hot 强 3 倍)' },
+  'freezing':         { s: 'The freezing wind cut through my jacket.', q: '作文常考: 冰冷的' },
+  'drenched':         { s: 'They were drenched by the sudden downpour.', q: '作文常考: 湿透 (雨/汗)' },
+  'deafening':        { s: 'The deafening cheers filled the stadium.', q: '作文常考: 震耳欲聋 (声音描写)' },
+  'eerie':            { s: 'The empty house had an eerie silence.', q: 'Comp+作文常考: 诡异的 (悬疑/恐怖氛围)' },
+  'ominous':          { s: 'Dark, ominous clouds gathered on the horizon.', q: 'Comp+作文常考: 不祥的 (前兆预警)' },
+  'radiant':          { s: 'She wore a radiant smile on her wedding day.', q: '作文常考: 容光焕发 (笑容/光芒)' },
+  'bustling':         { s: 'The bustling market was crowded with shoppers.', q: '作文常考: 熙熙攘攘 (人多热闹)' },
+  'serene':           { s: 'The lake was serene at dawn.', q: '作文常考: 宁静祥和 (风景描写)' },
+  'deserted':         { s: 'The deserted street felt spooky at night.', q: '作文常考: 荒无人烟 (对比 crowded)' },
+  'magnificent':      { s: 'The view from the mountaintop was magnificent.', q: '作文常考: 壮丽的 (景色/建筑)' },
+  'dilapidated':      { s: 'They lived in a dilapidated old shack.', q: 'Comp+作文常考: 破败的 (对比 pristine)' },
+  'pristine':         { s: 'The beach was pristine and untouched.', q: 'Comp+作文常考: 原始清洁的 (环境保护主题)' },
+  'stifling':         { s: 'The stifling heat made it hard to breathe.', q: '作文常考: 令人窒息的 (闷热)' },
+  'pungent':          { s: 'A pungent smell of garlic filled the kitchen.', q: '作文常考: 刺鼻的 (气味五感)' },
+
+  // ==== 📚 学术词 (Comp 阅读常考) ====
+  'contribute':       { s: 'Regular exercise contributes to good health.', q: 'Comp 常考: 贡献/促进. 搭 to sth' },
+  'significant':      { s: 'There has been a significant improvement in her grades.', q: 'Comp 常考: 显著的 (议论文加权)' },
+  'demonstrate':      { s: 'The study demonstrates the benefits of reading.', q: 'Comp 常考: 证明/展示 (说明文)' },
+  'benefit':          { s: 'Exercise brings many benefits to your health.', q: 'Comp 常考: 益处 (名/动均可); 搭 from' },
+  'consequence':      { s: 'Skipping breakfast can have serious consequences.', q: 'Comp 常考: 后果 (中性略偏负面)' },
+  'emphasize':        { s: 'The teacher emphasized the importance of practice.', q: 'Comp 常考: 强调; 美/英拼写 emphasise' },
+  'essential':        { s: 'Water is essential for survival.', q: 'Comp 常考: 至关重要的 = crucial, vital' },
+  'obvious':          { s: 'It was obvious that he was lying.', q: 'Comp 常考: 明显的 = clear, apparent' },
+  'remarkable':       { s: 'Her progress in Math has been remarkable.', q: 'Comp+作文常考: 卓越的 (褒义)' },
+  'apparently':       { s: 'Apparently, the concert has been cancelled.', q: 'Comp 常考: 显然地 / 据说 (语气标记)' },
+  'gradually':        { s: 'The temperature gradually rose during the day.', q: 'Comp 常考: 逐渐 (对比 suddenly)' },
+  'fortunately':      { s: 'Fortunately, no one was hurt in the accident.', q: 'Comp 常考: 幸运地 (段首常见)' },
+  'unfortunately':    { s: 'Unfortunately, the trip was cancelled.', q: 'Comp 常考: 不幸地 (段首常见)' },
+  'ultimately':       { s: 'Ultimately, hard work leads to success.', q: 'Comp 常考: 最终 (议论文结论)' },
+  'crucial':          { s: 'It is crucial to arrive on time for the exam.', q: 'Comp 常考: 关键的 = essential, vital' },
+  'inevitable':       { s: 'Change is inevitable in life.', q: 'Comp+作文常考: 不可避免的 (哲理式)' },
+  'substantial':      { s: 'A substantial amount of research supports this.', q: 'Comp 常考: 大量的 (说明文数据)' },
+
+  // ==== 🧩 Cloze 固定搭配 ====
+  'a wide range of':  { s: 'The shop offers a wide range of products.', q: 'Cloze 常考: 各种各样的 = various' },
+  'in the nick of time': { s: 'She arrived in the nick of time to catch the train.', q: 'Cloze 常考: 千钧一发 (关键时刻)' },
+  'out of the blue':  { s: 'The invitation came out of the blue.', q: 'Cloze 常考: 突如其来 = unexpectedly' },
+  'take for granted': { s: 'We often take our parents\' love for granted.', q: 'Cloze 常考: 视为理所当然 (核心价值观题)' },
+  'make the most of': { s: 'Make the most of your school holidays.', q: 'Cloze 常考: 充分利用' },
+  'without a doubt':  { s: 'She is, without a doubt, the best singer.', q: 'Cloze 常考: 毫无疑问 = undoubtedly' },
+  'on the verge of':  { s: 'He was on the verge of tears when he lost.', q: 'Cloze 常考: 濒临; 后接 -ing / 名词' },
+  'lend a hand':      { s: 'Please lend a hand with the groceries.', q: 'Cloze 常考: 帮忙 = help' },
+  'bear in mind':     { s: 'Bear in mind that the deadline is Friday.', q: 'Cloze 常考: 谨记 = remember' },
+
+  // ==== ✒️ 写作习语 (作文加分, 慎用) ====
+  'a blessing in disguise': { s: 'Losing that job was a blessing in disguise.', q: '作文加分: 因祸得福 (结局反转高分)' },
+  'burn the midnight oil':  { s: 'She burnt the midnight oil to finish her project.', q: '作文加分: 熬夜苦干 (勤奋主题)' },
+  'the last straw':         { s: 'His rude comment was the last straw.', q: '作文加分: 压垮骆驼的最后一根稻草 (愤怒爆发前)' },
+  'turn over a new leaf':   { s: 'After the incident, he turned over a new leaf.', q: '作文加分: 改过自新 (悔改主题结局)' },
+  'break the ice':          { s: 'She told a joke to break the ice.', q: '作文加分: 打破尴尬 (交友主题)' },
+  'go the extra mile':      { s: 'She always goes the extra mile to help others.', q: '作文加分: 额外付出 (助人主题)' },
+  'hit the nail on the head':{ s: 'You hit the nail on the head with that answer.', q: '作文加分: 一针见血 (议论文)' },
+  'add fuel to the fire':   { s: 'His remark only added fuel to the fire.', q: '作文加分: 火上浇油 (冲突升级)' },
+
+  // ==== 🔬 科学: 生命科学 ====
+  'photosynthesis':   { s: 'Plants use photosynthesis to make food from sunlight.', q: 'Science 必考: 光合作用. 涉及 chlorophyll, sunlight, CO2, water' },
+  'respiration':      { s: 'Living things need oxygen for respiration.', q: 'Science 必考: 呼吸作用 (glucose+O2→energy+CO2+water)' },
+  'transpiration':    { s: 'Transpiration cools plants by evaporating water from leaves.', q: 'Science 常考: 蒸腾作用 (通过 stomata)' },
+  'germination':      { s: 'Seeds need water, air and warmth for germination.', q: 'Science 必考: 发芽 3 条件 = water/air/warmth (不需光!)' },
+  'pollination':      { s: 'Bees help in the pollination of flowers.', q: 'Science 常考: 授粉 (bees/wind/water)' },
+  'chlorophyll':      { s: 'Chlorophyll makes leaves green and absorbs sunlight.', q: 'Science 必考: 叶绿素 — 绿色 + 吸光' },
+  'stomata':          { s: 'Gases enter and leave the leaf through stomata.', q: 'Science 必考: 气孔 (在 leaf underside, 交换气体)' },
+  'xylem':            { s: 'Water travels up the plant through the xylem.', q: 'Science 必考: 木质部 = water 上行' },
+  'phloem':           { s: 'Sugar made in leaves is transported by the phloem.', q: 'Science 必考: 韧皮部 = food 双向传输' },
+  'habitat':          { s: 'The rainforest is a habitat for many species.', q: 'Science 常考: 栖息地 (与 environment 区分)' },
+  'ecosystem':        { s: 'Coral reefs form a delicate ecosystem.', q: 'Science 常考: 生态系统 (biotic + abiotic)' },
+  'food chain':       { s: 'A food chain shows what eats what.', q: 'Science 必考: 食物链 (producer→primary consumer→...)' },
+  'producer':         { s: 'Green plants are producers in the food chain.', q: 'Science 必考: 生产者 = 能自造食物 (光合植物)' },
+  'consumer':         { s: 'Animals are consumers that eat plants or other animals.', q: 'Science 必考: 消费者 (primary/secondary/tertiary)' },
+  'decomposer':       { s: 'Fungi and bacteria are decomposers.', q: 'Science 必考: 分解者 (真菌/细菌, 不是虫子!)' },
+  'adaptation':       { s: 'The camel\'s hump is an adaptation to desert life.', q: 'Science 必考: 适应 (structural / behavioural)' },
+  'camouflage':       { s: 'The stick insect uses camouflage to avoid predators.', q: 'Science 常考: 伪装 (structural adaptation)' },
+
+  // ==== 🔬 科学: 物理科学 ====
+  'matter':           { s: 'Matter exists in three states: solid, liquid and gas.', q: 'Science 必考: 物质 3 态 + 状态变化' },
+  'mass':             { s: 'The mass of an object stays the same on the moon.', q: 'Science 必考: 质量 (kg), 不随位置变 (对比 weight)' },
+  'volume':           { s: 'The volume of a solid can be found by displacement.', q: 'Science 必考: 体积 (measuring cylinder / displacement)' },
+  'evaporation':      { s: 'Heat causes water evaporation on hot days.', q: 'Science 必考: 蒸发 (liquid→gas, 任何温度)' },
+  'condensation':     { s: 'Water vapour turns into condensation on cold glass.', q: 'Science 必考: 凝结 (gas→liquid, 遇冷)' },
+  'conduction':       { s: 'Heat travels through metal by conduction.', q: 'Science 必考: 传导 (solids, 粒子相邻传递)' },
+  'convection':       { s: 'Warm air rises through convection.', q: 'Science 必考: 对流 (liquids/gases, 粒子移动)' },
+  'radiation':        { s: 'The sun\'s heat reaches Earth by radiation.', q: 'Science 必考: 辐射 (不需介质, 真空可行)' },
+  'conductor':        { s: 'Copper is an excellent conductor of electricity.', q: 'Science 必考: 导体 (metal, water, human body)' },
+  'insulator':        { s: 'Rubber is an insulator, so it is safe for wires.', q: 'Science 必考: 绝缘体 (plastic/rubber/wood/glass)' },
+  'friction':         { s: 'Friction between the tyres and road stops the car.', q: 'Science 必考: 摩擦力 (contact force, 阻碍运动)' },
+  'gravity':          { s: 'Gravity pulls objects towards the centre of Earth.', q: 'Science 必考: 重力 (non-contact force)' },
+  'shadow':           { s: 'A shadow forms when light is blocked by an opaque object.', q: 'Science 必考: 影子 (opaque = 挡光)' },
+  'reflection':       { s: 'A mirror reflects light — this is reflection.', q: 'Science 必考: 反射 (mirror / smooth surface)' },
+  'transparent':      { s: 'Glass is transparent, letting all light pass through.', q: 'Science 必考: 透明 (对比 translucent / opaque)' },
+  'circuit':          { s: 'The bulb lights up when the circuit is complete.', q: 'Science 必考: 电路 (open / closed / series / parallel)' },
+
+  // ==== 🔬 科学: 实验/过程 ====
+  'hypothesis':       { s: 'The scientists formed a hypothesis before the experiment.', q: 'Science OE 必考: 假设 (可测试的猜想)' },
+  'variable':         { s: 'Temperature was the independent variable in the study.', q: 'Science OE 必考: 变量 (independent/dependent/controlled)' },
+  'fair test':        { s: 'To ensure a fair test, only one variable is changed.', q: 'Science OE 必考: 公平实验 — 只变 1 个 var' },
+  'apparatus':        { s: 'She set up the apparatus for the experiment.', q: 'Science 常考: 实验器材 (总称, 不加 s)' },
+  'dissolve':         { s: 'Sugar dissolves in hot water quickly.', q: 'Science 必考: 溶解 (solute + solvent → solution)' },
+  'solution':         { s: 'Salt water is a solution.', q: 'Science 必考: 溶液 (溶质完全溶解)' },
+  'water cycle':      { s: 'The water cycle includes evaporation and condensation.', q: 'Science 必考: 水循环 (E→C→P→collection)' },
+
+  // ==== ➗ 数学: 几何 ====
+  'perimeter':        { s: 'The perimeter of the square is 20 cm.', q: 'Math 常考: 周长 (add all sides)' },
+  'area':             { s: 'The area of the rectangle is 24 cm².', q: 'Math 常考: 面积 (l × b for rect); 单位 cm²' },
+  'volume':           { s: 'The volume of the cuboid is 60 cm³.', q: 'Math 常考: 体积 (l × b × h); 单位 cm³' },
+  'circumference':    { s: 'The circumference of a circle is π × diameter.', q: 'Math 常考: 圆周长 (π × d = 2πr)' },
+  'radius':           { s: 'The radius is half the diameter.', q: 'Math 常考: 半径 (中心到圆周)' },
+  'diameter':         { s: 'The diameter of the wheel is 60 cm.', q: 'Math 常考: 直径 (= 2 × radius)' },
+  'parallel':         { s: 'The two lines are parallel — they never meet.', q: 'Math 常考: 平行 (符号 //, 永不相交)' },
+  'perpendicular':    { s: 'The walls are perpendicular to the floor.', q: 'Math 常考: 垂直 (90°, 符号 ⊥)' },
+  'symmetry':         { s: 'A square has 4 lines of symmetry.', q: 'Math 常考: 对称 (line/rotational)' },
+
+  // ==== ➗ 数学: 数与运算 ====
+  'quotient':         { s: 'The quotient of 24 ÷ 6 is 4.', q: 'Math 常考: 商 (division 结果)' },
+  'remainder':        { s: '25 divided by 4 has a remainder of 1.', q: 'Math 常考: 余数 (记 R = ...)' },
+  'numerator':        { s: 'In 3/4, the numerator is 3.', q: 'Math 常考: 分子 (fraction 上部)' },
+  'denominator':      { s: 'In 3/4, the denominator is 4.', q: 'Math 常考: 分母 (fraction 下部)' },
+  'improper fraction':{ s: '5/4 is an improper fraction.', q: 'Math 常考: 假分数 (numerator ≥ denominator)' },
+  'decimal':          { s: '0.75 is a decimal number.', q: 'Math 常考: 小数 (点后位数)' },
+  'factor':           { s: 'The factors of 12 are 1, 2, 3, 4, 6, 12.', q: 'Math 常考: 因数 (整除该数的数)' },
+  'multiple':         { s: 'The first three multiples of 5 are 5, 10, 15.', q: 'Math 常考: 倍数 (该数 × 整数)' },
+  'ratio':            { s: 'The ratio of boys to girls is 2 : 3.', q: 'Math 常考: 比 (: 号连接, 可约分)' },
+  'proportion':       { s: 'The proportion of boys in the class is 40%.', q: 'Math 常考: 比例/占比' },
+  'percentage':       { s: 'She scored 85 percentage in Math.', q: 'Math 常考: 百分数 (per 100)' },
+  'discount':         { s: 'The shirt is at a 20% discount.', q: 'Math 常考: 折扣 (原价 × (1 - %))' },
+  'average':          { s: 'The average of 4, 6, 8 is 6.', q: 'Math 常考: 平均数 (total ÷ count)' },
+  'round off':        { s: 'Round off 8.6 to the nearest whole number.', q: 'Math 常考: 四舍五入'  }
+};
+
+function getVocabMeta(word) {
+  const key = (word || '').toLowerCase();
+  const meta = VOCAB_META[key] || VOCAB_META[word];
+  if (meta) return { sent: meta.s, qtype: meta.q };
+  // fallback: 从 FLASHCARD_DECKS 找 category
+  if (typeof FLASHCARD_DECKS !== 'undefined') {
+    const deck = FLASHCARD_DECKS.find(d => d.words && d.words.some(w => w.toLowerCase() === key));
+    const cat = deck ? deck.category : '';
+    return { sent: '', qtype: _DECK_QTYPE_FALLBACK[cat] || '' };
+  }
+  return { sent: '', qtype: '' };
+}
+
 const FLASHCARD_SRS_INTERVALS = [0, 1, 3, 7, 14, 30, 60];
 
 function _getFlashcardEntry(state, word) {
@@ -8386,6 +8651,9 @@ window.VOCAB_MEANINGS = VOCAB_MEANINGS;
 window.getVocabMeaning = getVocabMeaning;
 // v19.5: 闪卡系统
 window.FLASHCARD_DECKS = FLASHCARD_DECKS;
+// v19.40: 闪卡反面 例句 + 常考题型
+window.VOCAB_META = VOCAB_META;
+window.getVocabMeta = getVocabMeta;
 window.FLASHCARD_SRS_INTERVALS = FLASHCARD_SRS_INTERVALS;
 window.getFlashcardsDue = getFlashcardsDue;
 window.getAllDueFlashcards = getAllDueFlashcards;

@@ -2596,8 +2596,11 @@ function _renderFlashcardSession() {
   if (s.idx >= s.words.length) { _endFlashcardSession(); return; }
   const word = s.words[s.idx];
   const meaning = getVocabMeaning(word);
+  // v19.40: 反面加例句 + 常考题型 (VOCAB_META 主 + 类别 fallback)
+  const meta = window.getVocabMeta ? window.getVocabMeta(word) : { sent: '', qtype: '' };
   const hardEntry = (window.VOCAB_HARD || []).find(v => v.en === word);
-  const sentence = hardEntry ? hardEntry.sent : '';
+  const sentence = meta.sent || (hardEntry ? hardEntry.sent : '');
+  const qtype = meta.qtype || '';
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <button class="btn-sm" onclick="exitFlashcardSession()">← 返回</button>
@@ -2611,7 +2614,8 @@ function _renderFlashcardSession() {
         </div>
         <div class="fc-card-back">
           <div class="fc-card-meaning">${meaning}</div>
-          ${sentence ? `<div class="fc-card-sentence">${sentence}</div>` : ''}
+          ${sentence ? `<div class="fc-card-sentence">"${escapeHtml(sentence)}"</div>` : ''}
+          ${qtype ? `<div class="fc-card-qtype">🎯 ${escapeHtml(qtype)}</div>` : ''}
         </div>
       </div>
     </div>
@@ -10918,7 +10922,7 @@ function _renderCompOe() {
             var btn=document.getElementById('compRevealBtn'),t=30;
             var iv=setInterval(function(){t--;if(t<=0){clearInterval(iv);btn.disabled=false;btn.textContent='查看 Model Answer';}else{btn.textContent='⏳ 思考中... '+t+'s';}},1000);
           })();
-        </script>
+        <\/script>
       `}
       <button class="vocab-modal-close mg-close" onclick="closeCompOe()">×</button>
     </div>`;

@@ -411,8 +411,25 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.3[6789]/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+assert(/\?v=19\.(3[6789]|40)/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
   'v19.36+: cache buster ≥ 19.36');
+
+// ===== v19.40: 闪卡反面 例句 + 常考题型 =====
+assert(typeof W.VOCAB_META === 'object' && Object.keys(W.VOCAB_META).length >= 100,
+  `v19.40: VOCAB_META ≥ 100 词 (实际 ${W.VOCAB_META ? Object.keys(W.VOCAB_META).length : 0})`);
+assert(typeof W.getVocabMeta === 'function', 'v19.40: getVocabMeta 已导出');
+['come across', 'photosynthesis', 'furious'].forEach(w => {
+  const m = W.getVocabMeta(w);
+  assert(m && m.sent && m.qtype, `v19.40: "${w}" 有 sent + qtype`);
+});
+const _fbMeta = W.getVocabMeta('hibernation');
+assert(_fbMeta && _fbMeta.qtype && /Science/.test(_fbMeta.qtype),
+  'v19.40: 未列词 fallback 返回 Science category qtype');
+assert(/window\.getVocabMeta\s*\?\s*window\.getVocabMeta\(word\)/.test(appSrc),
+  'v19.40: _renderFlashcardSession 调 getVocabMeta');
+assert(/fc-card-qtype/.test(appSrc), 'v19.40: 闪卡 back render 加 .fc-card-qtype');
+assert(/\.fc-card-qtype\s*\{/.test(idxSrc), 'v19.40: CSS 加 .fc-card-qtype');
+assert(/height:280px/.test(idxSrc), 'v19.40: 闪卡 height 增到 280px');
 
 // ===== v19.39: 基于老师反馈重排 =====
 // page-summer 顶部加老师反馈卡
@@ -1058,7 +1075,7 @@ assert(/if \(page === 'summer'\)[\s\S]{0,80}renderSummerCalendar\(\)/.test(appSr
   'v19.27: tab summer 触发 renderSummerCalendar');
 assert(/id="summerCalendarContainer"/.test(idxSrc), 'v19.27: page-summer 有 #summerCalendarContainer');
 assert(!/5 周分主题进度/.test(idxSrc), 'v19.27: 老静态 section "5 周分主题进度" 已替换');
-assert(/\?v=19\.3[789]/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
+assert(/\?v=19\.(3[789]|40)/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
 
 // ===== v19.38: 周末 → 只周日 (装备/皮肤/mini-game lock) =====
 // isWeekdayToday() 含义扩到 Mon-Sat (周六不再是自由日)
