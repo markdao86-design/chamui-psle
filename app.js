@@ -2633,17 +2633,17 @@ function openWordCard(word, deckId){
   modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.65);padding:16px';
   modal.onclick = (e)=>{ if(e.target===modal) modal.remove(); };
   modal.innerHTML = `
-    <div style="background:linear-gradient(135deg,#064E3B,#065F46);border:2px solid #10B981;border-radius:14px;padding:24px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto">
-      <div style="font-size:34px;font-weight:700;color:#fff;text-align:center;margin-bottom:8px">${escapeHtml(word)}</div>
-      <div style="font-size:26px;font-weight:700;color:#D1FAE5;text-align:center;margin-bottom:14px">${escapeHtml(meaning)}</div>
-      ${enDef?`<div style="font-size:15px;color:#E0F2FE;line-height:1.5;padding:8px 12px;background:rgba(56,189,248,0.12);border-radius:8px;margin-bottom:8px">📖 英文解释: ${escapeHtml(enDef)}</div>`:''}
-      ${sentence?`<div style="font-size:15px;color:#A7F3D0;font-style:italic;line-height:1.55;padding:8px 12px;background:rgba(16,185,129,0.10);border-radius:8px;margin-bottom:8px">💬 例句: ${escapeHtml(sentence)}</div>`:''}
-      ${quiz?`<div style="font-size:15px;color:#FEF3C7;line-height:1.6;padding:10px 14px;background:rgba(251,191,36,0.14);border-left:4px solid #F59E0B;border-radius:6px;margin-bottom:16px">📝 ${escapeHtml(quiz)}</div>`:''}
-      <div style="display:flex;gap:12px">
-        <button onclick="_wordCardAnswer('${word.replace(/'/g,"\\'")}','${deckId||''}',false)" style="flex:1;padding:14px;background:#EF4444;border:none;border-radius:10px;color:#fff;font-size:16px;font-weight:700;cursor:pointer">❌ 不认识</button>
-        <button onclick="_wordCardAnswer('${word.replace(/'/g,"\\'")}','${deckId||''}',true)" style="flex:1;padding:14px;background:#10B981;border:none;border-radius:10px;color:#fff;font-size:16px;font-weight:700;cursor:pointer">✅ 认识</button>
+    <div style="background:linear-gradient(135deg,#064E3B,#065F46);border:2px solid #10B981;border-radius:20px;padding:40px;max-width:800px;width:100%;max-height:92vh;overflow-y:auto">
+      <div style="font-size:56px;font-weight:700;color:#fff;text-align:center;margin-bottom:16px">${escapeHtml(word)}</div>
+      <div style="font-size:42px;font-weight:700;color:#D1FAE5;text-align:center;margin-bottom:26px">${escapeHtml(meaning)}</div>
+      ${enDef?`<div style="font-size:22px;color:#E0F2FE;line-height:1.6;padding:14px 20px;background:rgba(56,189,248,0.12);border-radius:10px;margin-bottom:14px">📖 英文解释: ${escapeHtml(enDef)}</div>`:''}
+      ${sentence?`<div style="font-size:22px;color:#A7F3D0;font-style:italic;line-height:1.6;padding:14px 20px;background:rgba(16,185,129,0.10);border-radius:10px;margin-bottom:14px">💬 例句: ${escapeHtml(sentence)}</div>`:''}
+      ${quiz?`<div style="font-size:22px;color:#FEF3C7;line-height:1.7;padding:18px 22px;background:rgba(251,191,36,0.14);border-left:6px solid #F59E0B;border-radius:8px;margin-bottom:26px">📝 ${escapeHtml(quiz)}</div>`:''}
+      <div style="display:flex;gap:18px">
+        <button onclick="_wordCardAnswer('${word.replace(/'/g,"\\'")}','${deckId||''}',false)" style="flex:1;padding:22px;background:#EF4444;border:none;border-radius:12px;color:#fff;font-size:24px;font-weight:700;cursor:pointer">❌ 不认识</button>
+        <button onclick="_wordCardAnswer('${word.replace(/'/g,"\\'")}','${deckId||''}',true)" style="flex:1;padding:22px;background:#10B981;border:none;border-radius:12px;color:#fff;font-size:24px;font-weight:700;cursor:pointer">✅ 认识</button>
       </div>
-      <button onclick="document.getElementById('wordCardModal').remove()" style="width:100%;margin-top:10px;padding:10px;background:transparent;border:1px solid #475569;border-radius:8px;color:#94A3B8;font-size:14px;cursor:pointer">关闭</button>
+      <button onclick="document.getElementById('wordCardModal').remove()" style="width:100%;margin-top:14px;padding:16px;background:transparent;border:1px solid #475569;border-radius:10px;color:#94A3B8;font-size:16px;cursor:pointer">关闭</button>
     </div>`;
   document.body.appendChild(modal);
 }
