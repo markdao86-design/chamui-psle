@@ -2560,7 +2560,7 @@ function renderVocabPage() {
       ${FLASHCARD_DECKS.map(deck => {
         const mastered = deck.words.filter(w => state.flashcardSRS && state.flashcardSRS[w] && state.flashcardSRS[w].mastered).length;
         const deckDue = getFlashcardsDue(state, deck.id).length;
-        return `<div class="fc-deck-item" onclick="openDeckGrid('${deck.id}')">
+        return `<div class="fc-deck-item" onclick="startFlashcardSession('${deck.id}')">
           <div class="fc-deck-name">${deck.name}</div>
           <div class="fc-deck-progress">${mastered}/${deck.words.length} 掌握${deckDue > 0 ? ` · <span style="color:#F59E0B">${deckDue}词待复习</span>` : ''}</div>
         </div>`;
@@ -2588,75 +2588,6 @@ function startFlashcardSession(deckId) {
   _fcSession = { words, idx: 0, flipped: false, results: [] };
   _renderFlashcardSession();
 }
-
-// v19.47: 点 deck → 一页网格显示该 deck 所有单词卡片, 点单词卡 → 弹详情 (不再逐张练习)
-function _isWordLearned(word){
-  const e = (state.flashcardSRS||{})[word];
-  return !!(e && (e.mastered || (e.correctStreak||0) >= 1));
-}
-function openDeckGrid(deckId){
-  const deck = (FLASHCARD_DECKS||[]).find(d=>d.id===deckId);
-  const el = document.getElementById('vocabPageContent');
-  if (!deck || !el) return;
-  window.__deckGridId = deckId;
-  const learned = deck.words.filter(_isWordLearned).length;
-  const cards = deck.words.map(w => {
-    const zh = getVocabMeaning(w);
-    const done = _isWordLearned(w);
-    return `<div class="fc-word-card ${done?'learned':''}" onclick="openWordCard('${w.replace(/'/g,"\\'")}','${deckId}')">
-      <div class="fc-word-card-en">${escapeHtml(w)}</div>
-      <div class="fc-word-card-zh">${done?'✓ ':''}${escapeHtml(zh)}</div>
-    </div>`;
-  }).join('');
-  el.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <button class="btn-sm" onclick="renderVocabPage()">← 返回卡组</button>
-      <span style="font-size:16px;color:var(--color-text-light)">${learned}/${deck.words.length} 已学</span>
-    </div>
-    <div class="card" style="margin-bottom:8px">
-      <div style="font-size:16px;font-weight:700">${deck.name}</div>
-      <div style="font-size:14px;color:var(--color-text-light);margin-top:4px">点任意单词卡 → 看 中文 + 英文解释 + 例句 + 考题</div>
-    </div>
-    <div class="fc-word-grid">${cards}</div>`;
-}
-window.openDeckGrid = openDeckGrid;
-
-function openWordCard(word, deckId){
-  const meaning = getVocabMeaning(word);
-  const enDef = window.getVocabEn ? window.getVocabEn(word) : '';
-  const sentence = window.getVocabSent ? window.getVocabSent(word) : '';
-  const quiz = window.getVocabQuiz ? window.getVocabQuiz(word) : '';
-  let modal = document.getElementById('wordCardModal');
-  if (modal) modal.remove();
-  modal = document.createElement('div');
-  modal.id = 'wordCardModal';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.65);padding:16px';
-  modal.onclick = (e)=>{ if(e.target===modal) modal.remove(); };
-  modal.innerHTML = `
-    <div style="background:linear-gradient(135deg,#064E3B,#065F46);border:2px solid #10B981;border-radius:20px;padding:40px;max-width:800px;width:100%;max-height:92vh;overflow-y:auto">
-      <div style="font-size:56px;font-weight:700;color:#fff;text-align:center;margin-bottom:16px">${escapeHtml(word)}</div>
-      <div style="font-size:42px;font-weight:700;color:#D1FAE5;text-align:center;margin-bottom:26px">${escapeHtml(meaning)}</div>
-      ${enDef?`<div style="font-size:22px;color:#E0F2FE;line-height:1.6;padding:14px 20px;background:rgba(56,189,248,0.12);border-radius:10px;margin-bottom:14px">📖 英文解释: ${escapeHtml(enDef)}</div>`:''}
-      ${sentence?`<div style="font-size:22px;color:#A7F3D0;font-style:italic;line-height:1.6;padding:14px 20px;background:rgba(16,185,129,0.10);border-radius:10px;margin-bottom:14px">💬 例句: ${escapeHtml(sentence)}</div>`:''}
-      ${quiz?`<div style="font-size:22px;color:#FEF3C7;line-height:1.7;padding:18px 22px;background:rgba(251,191,36,0.14);border-left:6px solid #F59E0B;border-radius:8px;margin-bottom:26px">📝 ${escapeHtml(quiz)}</div>`:''}
-      <div style="display:flex;gap:18px">
-        <button onclick="_wordCardAnswer('${word.replace(/'/g,"\\'")}','${deckId||''}',false)" style="flex:1;padding:22px;background:#EF4444;border:none;border-radius:12px;color:#fff;font-size:24px;font-weight:700;cursor:pointer">❌ 不认识</button>
-        <button onclick="_wordCardAnswer('${word.replace(/'/g,"\\'")}','${deckId||''}',true)" style="flex:1;padding:22px;background:#10B981;border:none;border-radius:12px;color:#fff;font-size:24px;font-weight:700;cursor:pointer">✅ 认识</button>
-      </div>
-      <button onclick="document.getElementById('wordCardModal').remove()" style="width:100%;margin-top:14px;padding:16px;background:transparent;border:1px solid #475569;border-radius:10px;color:#94A3B8;font-size:16px;cursor:pointer">关闭</button>
-    </div>`;
-  document.body.appendChild(modal);
-}
-window.openWordCard = openWordCard;
-
-function _wordCardAnswer(word, deckId, known){
-  if (typeof reviewFlashcard === 'function') reviewFlashcard(state, word, known);
-  saveState(state);
-  const m = document.getElementById('wordCardModal');
-  if (m) m.remove();
-  if (deckId) openDeckGrid(deckId);
-}
-window._wordCardAnswer = _wordCardAnswer;
 
 function _renderFlashcardSession() {
   const el = document.getElementById('vocabPageContent');

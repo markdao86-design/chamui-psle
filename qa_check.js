@@ -457,19 +457,14 @@ assert(/fc-card-endef/.test(appSrc) && /fc-card-sentence/.test(appSrc) && /fc-ca
   'v19.43: render 有 endef+sentence+qtype 3 段');
 assert(/\.fc-card-endef\s*\{/.test(idxSrc) && /\.fc-card-sentence\s*\{/.test(idxSrc),
   'v19.43: CSS 有 endef + sentence');
-assert(/min-height:420px/.test(idxSrc), 'v19.47: 闪卡缩小 min-height 420px');
-assert(/max-width:460px/.test(idxSrc), 'v19.47: 闪卡缩小 max-width 460px');
-// v19.47: 闪卡区文字最小 14px
+assert(/min-height:560px/.test(idxSrc), 'v19.46: 闪卡放大 2 倍 min-height 560px');
+// v19.46: 闪卡文字最小 14px (反面各段 ≥14px, 卡片放大)
+assert(/max-width:640px/.test(idxSrc), 'v19.46: 闪卡宽度放大到 640px');
 (function(){
   const fcSection = idxSrc.slice(idxSrc.indexOf('.fc-card {'), idxSrc.indexOf('.game-hub-card'));
   const tooSmall = (fcSection.match(/font-size:\s*(\d+)px/g) || []).filter(m => parseInt(m.match(/\d+/)[0]) < 14);
-  assert(tooSmall.length === 0, `v19.47: 闪卡区无 <14px 文字 (违规 ${tooSmall.length}: ${tooSmall.slice(0,5).join(',')})`);
+  assert(tooSmall.length === 0, `v19.46: 闪卡区无 <14px 文字 (违规 ${tooSmall.length}: ${tooSmall.slice(0,5).join(',')})`);
 })();
-// v19.47: 网格视图 — 点 deck → 所有单词卡片网格 → 点卡看详情
-assert(/function openDeckGrid/.test(appSrc), 'v19.47: openDeckGrid 网格函数');
-assert(/function openWordCard/.test(appSrc), 'v19.47: openWordCard 详情 modal');
-assert(/onclick="openDeckGrid\(/.test(appSrc), 'v19.47: deck 点击 → openDeckGrid (不再逐张)');
-assert(/\.fc-word-grid\s*\{/.test(idxSrc) && /\.fc-word-card\s*\{/.test(idxSrc), 'v19.47: 单词网格 CSS');
 
 // ===== v19.39: 基于老师反馈重排 =====
 // page-summer 顶部加老师反馈卡

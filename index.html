@@ -2187,30 +2187,23 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .comp-step-btn:hover:not(:disabled) { background:#F0FDF4; border-color:#10B981; }
 .comp-step-btn.done { background:#D1FAE5; border-color:#059669; color:#065F46; cursor:default; }
 
-/* v19.5 · v19.47: 卡片适中(缩小) + 网格视图 (一页显示所有单词卡, 点击查看) */
-.fc-card { perspective:1000px; width:100%; max-width:460px; min-height:420px; margin:16px auto; cursor:pointer; }
-.fc-card-inner { position:relative; width:100%; min-height:420px; transition:transform .5s; transform-style:preserve-3d; border-radius:14px; }
+/* v19.5 · v19.43 · v19.46: 闪卡放大 2 倍, 文字放大, 最小 14px */
+.fc-card { perspective:1200px; width:100%; max-width:640px; min-height:560px; margin:20px auto; cursor:pointer; }
+.fc-card-inner { position:relative; width:100%; min-height:560px; transition:transform .5s; transform-style:preserve-3d; border-radius:16px; }
 .fc-card.flipped .fc-card-inner { transform:rotateY(180deg); }
-.fc-card-front, .fc-card-back { position:absolute; inset:0; backface-visibility:hidden; border-radius:14px; display:flex; flex-direction:column; padding:22px; }
-.fc-card-front { background:linear-gradient(135deg,#1E293B,#334155); border:2px solid #475569; color:#F8FAFC; align-items:center; justify-content:center; }
-.fc-card-back { background:linear-gradient(135deg,#064E3B,#065F46); border:2px solid #10B981; color:#D1FAE5; transform:rotateY(180deg); align-items:stretch; justify-content:flex-start; overflow-y:auto; }
-.fc-card-word { font-size:34px; font-weight:700; margin-bottom:10px; text-align:center; }
-.fc-card-hint { font-size:14px; color:#94A3B8; }
-.fc-card-meaning { font-size:26px; font-weight:700; margin:4px 0 10px; text-align:center; color:#FFFFFF; }
-.fc-card-endef { font-size:15px; color:#E0F2FE; line-height:1.5; padding:8px 12px; background:rgba(56,189,248,0.12); border-radius:8px; margin-bottom:8px; }
-.fc-card-sentence { font-size:15px; color:#A7F3D0; font-style:italic; line-height:1.55; padding:8px 12px; margin-bottom:8px; background:rgba(16,185,129,0.10); border-radius:8px; }
+.fc-card-front, .fc-card-back { position:absolute; inset:0; backface-visibility:hidden; border-radius:16px; display:flex; flex-direction:column; padding:28px; }
+.fc-card-front { background:linear-gradient(135deg,#1E293B,#334155); border:3px solid #475569; color:#F8FAFC; align-items:center; justify-content:center; }
+.fc-card-back { background:linear-gradient(135deg,#064E3B,#065F46); border:3px solid #10B981; color:#D1FAE5; transform:rotateY(180deg); align-items:stretch; justify-content:flex-start; overflow-y:auto; }
+.fc-card-word { font-size:44px; font-weight:700; margin-bottom:14px; text-align:center; }
+.fc-card-hint { font-size:15px; color:#94A3B8; }
+.fc-card-meaning { font-size:34px; font-weight:700; margin:6px 0 14px; text-align:center; color:#FFFFFF; }
+.fc-card-endef { font-size:18px; color:#E0F2FE; line-height:1.5; padding:10px 14px; background:rgba(56,189,248,0.12); border-radius:8px; margin-bottom:10px; }
+.fc-card-sentence { font-size:18px; color:#A7F3D0; font-style:italic; line-height:1.55; padding:10px 14px; margin-bottom:10px; background:rgba(16,185,129,0.10); border-radius:8px; }
 .fc-card-qtype {
-  font-size:15px; color:#FEF3C7; background:rgba(251,191,36,0.14);
-  border-left:4px solid #F59E0B; padding:10px 14px; margin-top:4px;
+  font-size:18px; color:#FEF3C7; background:rgba(251,191,36,0.14);
+  border-left:4px solid #F59E0B; padding:12px 16px; margin-top:4px;
   text-align:left; border-radius:6px; line-height:1.6;
 }
-.fc-word-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin-top:12px; }
-.fc-word-card { background:linear-gradient(135deg,#1E293B,#334155); border:2px solid #475569; border-radius:10px; padding:14px 10px; cursor:pointer; transition:all .15s; text-align:center; }
-.fc-word-card:hover { border-color:#60A5FA; transform:translateY(-2px); box-shadow:0 4px 10px rgba(96,165,250,0.25); }
-.fc-word-card.learned { border-color:#10B981; background:linear-gradient(135deg,#064E3B,#065F46); }
-.fc-word-card-en { font-size:17px; font-weight:700; color:#F8FAFC; word-break:break-word; }
-.fc-word-card-zh { font-size:14px; color:#94A3B8; margin-top:4px; }
-.fc-word-card.learned .fc-word-card-zh { color:#A7F3D0; }
 .fc-btns { display:flex; gap:16px; justify-content:center; margin-top:18px; }
 .fc-btn-know, .fc-btn-dont { padding:14px 36px; border-radius:10px; border:none; font-size:18px; font-weight:700; cursor:pointer; }
 .fc-btn-know { background:#10B981; color:#fff; }
@@ -5972,9 +5965,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.48"></script>
-<script src="data.js?v=19.48"></script>
-<script src="app.js?v=19.48"></script>
+<script src="character.js?v=19.49"></script>
+<script src="data.js?v=19.49"></script>
+<script src="app.js?v=19.49"></script>
 
 </body>
 </html>
