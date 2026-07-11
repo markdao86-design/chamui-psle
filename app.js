@@ -2603,7 +2603,7 @@ function _renderFlashcardSession() {
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <button class="btn-sm" onclick="exitFlashcardSession()">← 返回</button>
-      <span style="font-size:13px;color:var(--color-text-light)">${s.idx + 1} / ${s.words.length}</span>
+      <span style="font-size:16px;color:var(--color-text-light)">${s.idx + 1} / ${s.words.length}</span>
     </div>
     <div class="fc-card ${s.flipped ? 'flipped' : ''}" onclick="flipFlashcard()">
       <div class="fc-card-inner">

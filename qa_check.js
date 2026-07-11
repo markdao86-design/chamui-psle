@@ -411,7 +411,7 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.(3[6789]|4[0123])/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+assert(/\?v=19\.(3[6789]|4[0-9])/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
   'v19.36+: cache buster ≥ 19.36');
 
 // ===== v19.43: 闪卡反面 4 段 = 中文 + 英文解释(短语) + 例句 + 考题 =====
@@ -457,7 +457,14 @@ assert(/fc-card-endef/.test(appSrc) && /fc-card-sentence/.test(appSrc) && /fc-ca
   'v19.43: render 有 endef+sentence+qtype 3 段');
 assert(/\.fc-card-endef\s*\{/.test(idxSrc) && /\.fc-card-sentence\s*\{/.test(idxSrc),
   'v19.43: CSS 有 endef + sentence');
-assert(/height:360px/.test(idxSrc), 'v19.43: 闪卡 height 360px (4 段)');
+assert(/min-height:560px/.test(idxSrc), 'v19.46: 闪卡放大 2 倍 min-height 560px');
+// v19.46: 闪卡文字最小 14px (反面各段 ≥14px, 卡片放大)
+assert(/max-width:640px/.test(idxSrc), 'v19.46: 闪卡宽度放大到 640px');
+(function(){
+  const fcSection = idxSrc.slice(idxSrc.indexOf('.fc-card {'), idxSrc.indexOf('.game-hub-card'));
+  const tooSmall = (fcSection.match(/font-size:\s*(\d+)px/g) || []).filter(m => parseInt(m.match(/\d+/)[0]) < 14);
+  assert(tooSmall.length === 0, `v19.46: 闪卡区无 <14px 文字 (违规 ${tooSmall.length}: ${tooSmall.slice(0,5).join(',')})`);
+})();
 
 // ===== v19.39: 基于老师反馈重排 =====
 // page-summer 顶部加老师反馈卡
@@ -1103,7 +1110,7 @@ assert(/if \(page === 'summer'\)[\s\S]{0,80}renderSummerCalendar\(\)/.test(appSr
   'v19.27: tab summer 触发 renderSummerCalendar');
 assert(/id="summerCalendarContainer"/.test(idxSrc), 'v19.27: page-summer 有 #summerCalendarContainer');
 assert(!/5 周分主题进度/.test(idxSrc), 'v19.27: 老静态 section "5 周分主题进度" 已替换');
-assert(/\?v=19\.(3[789]|4[0123])/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
+assert(/\?v=19\.(3[789]|4[0-9])/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
 
 // ===== v19.38: 周末 → 只周日 (装备/皮肤/mini-game lock) =====
 // isWeekdayToday() 含义扩到 Mon-Sat (周六不再是自由日)
