@@ -983,7 +983,7 @@ assert(/'disrespect':\s*\{\s*syn:\s*'insult'/.test(dataSrcV14), "v19.16: dis- �
 assert(/'pull to safety':\s*\{\s*syn:\s*'rescue'/.test(dataSrcV14), "v19.16: 搭配 'pull to safety'");
 const synDictV16 = (dataSrcV14.match(/'[^']+':\s*\{\s*syn:/g) || []).length;
 assert(synDictV16 >= 370, `v19.16: 同义词字典 ≥ 370 词 (实际 ${synDictV16})`);
-const mathCountV16 = (dataSrcV14.match(/q:\s*'[^']+',\s*ans:/g) || []).length;
+const mathCountV16 = ((dataSrcV14.match(/q:\s*'[^']+',\s*ans:/g) || []).length + (dataSrcV14.match(/"q":"[^"]+","ans":/g) || []).length);
 assert(mathCountV16 >= 125, `v19.16: 数学题 ≥ 125 (实际 ${mathCountV16})`);
 // v19.15k 撤回 v19.15j subjectALManual 持久化, 改 in-memory _alWhatIf (data 类断言)
 assert(!/state\.subjectALManual && typeof state\.subjectALManual === 'object'/.test(dataSrcV14), 'v19.15k: computeTotalAL 已撤 manual 持久化分支');
@@ -1006,7 +1006,7 @@ assert(/EMULSIFIES?\s+fat|emulsify fat/.test(dataSrcV14), 'v19.14d: Liver bile �
 assert(/lighter\s*\/\s*not fully dark|影子 lighter/.test(dataSrcV14), 'v19.14d: Light translucent 影子加 lighter');
 assert(/'thin'.*'surface area'|villi.*'thin'/.test(dataSrcV14), 'v19.14d: OE #4 加 villi+thin wall keywords');
 assert(/Change 1:.*Change 2:|do NOT bracket heat/.test(dataSrcV14), 'v19.14d: OE #13 light/heat 独立');
-const mathCountV14d = (dataSrcV14.match(/q:\s*'[^']+',\s*ans:/g) || []).length;
+const mathCountV14d = ((dataSrcV14.match(/q:\s*'[^']+',\s*ans:/g) || []).length + (dataSrcV14.match(/"q":"[^"]+","ans":/g) || []).length);
 assert(mathCountV14d >= 90, `v19.14d: 数学题 ≥ 90 (实际 ${mathCountV14d}), 原 75 + 20`);
 
 // v19.14b 平日/周末科目隔离断言 (放到 dataSrcV14 declare 之后)

@@ -8507,12 +8507,12 @@ function submitMcqAnswer(idx) {
       return;
     }
   }
-  // 答对 1.2s / 答错非 Cloze 2.2s 后跳
+  // v19.70: 答对 1.2s / 答错非 Cloze 4.5s 后跳 (详解变长, 2.2s 读不完)
   setTimeout(() => {
     g.idx++;
     if (g.idx >= g.qs.length) _finishMcqGame();
     else _renderMcqGame();
-  }, isCorrect ? 1200 : 2200);
+  }, isCorrect ? 1200 : 4500);
 }
 
 // v19.14h: 保存 3 件事并进入下一题 (显式按钮替代倒计时)
@@ -8966,7 +8966,7 @@ function submitMathAnswer() {
       window.addToErrorBank(state, {
         gameKey: 'math', type: 'math',
         q: q.q, correctAns: q.ans, diff: q.diff || 4,
-        explain: '正确答案: ' + q.ans
+        explain: q.explain || ('正确答案: ' + q.ans)  // v19.70: 题库详解注入后带完整解题步骤
       });
     }
   }
