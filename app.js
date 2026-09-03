@@ -2607,7 +2607,7 @@ function _renderFlashcardSession() {
   const quiz = window.getVocabQuiz ? window.getVocabQuiz(word) : '';
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <button class="btn-sm" onclick="exitFlashcardSession()">← 返回</button>
+      <button onclick="exitFlashcardSession()" style="padding:10px 22px;background:#1E40AF;color:#FFFFFF;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">← 返回卡组</button>
       <span style="font-size:16px;color:var(--color-text-light)">${s.idx + 1} / ${s.words.length}</span>
     </div>
     <div class="fc-card ${s.flipped ? 'flipped' : ''}" onclick="flipFlashcard()">

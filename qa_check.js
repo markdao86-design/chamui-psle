@@ -411,7 +411,7 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19.(3[6789]|4[0-9]|5[0-9])/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+assert(/\?v=19.(3[6789]|[4-9][0-9])/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
   'v19.36+: cache buster ≥ 19.36');
 
 // ===== v19.43: 闪卡反面 4 段 = 中文 + 英文解释(短语) + 例句 + 考题 =====
@@ -638,9 +638,9 @@ assert(/艾宾浩斯曲线/.test(appSrc), 'v19.28: modal 加艾宾浩斯曲线�
 assert(/http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/.test(idxSrc), 'v19.26: index.html 加 no-cache meta');
 assert(/http-equiv="Pragma" content="no-cache"/.test(idxSrc), 'v19.26: index.html 加 Pragma no-cache');
 // v19.27: modal overlay 不透明 + inner 加 solid 底色
-assert(/background: rgba\(8, 12, 24, 0\.92\)/.test(idxSrc), 'v19.27: kt-modal overlay 改 92% 不透明');
+assert(/background: rgba\(15, 23, 42, 0\.45\)/.test(idxSrc), "v19.60: kt-modal 轻遮罩 (亮主题)");
 assert(/backdrop-filter: blur\(6px\)/.test(idxSrc), 'v19.27: kt-modal 加 backdrop blur');
-assert(/background-color: #14213A/.test(idxSrc), 'v19.27: kt-inner 加 solid 底色 #14213A (修 modal 文字与背景重叠)');
+assert(/background-color: #FFFFFF/.test(idxSrc), 'v19.60: kt-inner 白底 (亮主题)');
 // v19.25 Bug 1: 删 renderCheckinPage 的 renderThinkPuzzleCard 调用
 assert(/v19\.25: 删 renderThinkPuzzleCard 调用/.test(appSrc), 'v19.25 Bug1: renderCheckinPage 不再调 renderThinkPuzzleCard');
 // 防回归: 全局只有 1 处 renderThinkPuzzleCard call (在 renderDashboard 用 state.currentWeek), 不再有 (week) 调用
@@ -1110,7 +1110,7 @@ assert(/if \(page === 'summer'\)[\s\S]{0,80}renderSummerCalendar\(\)/.test(appSr
   'v19.27: tab summer 触发 renderSummerCalendar');
 assert(/id="summerCalendarContainer"/.test(idxSrc), 'v19.27: page-summer 有 #summerCalendarContainer');
 assert(!/5 周分主题进度/.test(idxSrc), 'v19.27: 老静态 section "5 周分主题进度" 已替换');
-assert(/\?v=19.(3[789]|4[0-9]|5[0-9])/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
+assert(/\?v=19.(3[789]|[4-9][0-9])/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
 
 // ===== v19.38: 周末 → 只周日 (装备/皮肤/mini-game lock) =====
 // isWeekdayToday() 含义扩到 Mon-Sat (周六不再是自由日)
