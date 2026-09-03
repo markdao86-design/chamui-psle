@@ -1,4 +1,4 @@
-# chamui-psle — Claude Code 必读 (项目最高优先 context)
+﻿# chamui-psle — Claude Code 必读 (项目最高优先 context)
 
 > 这个文件是 Claude Code 自动加载的项目背景。**任何账号 git clone 后第一件事就是读这里。** 然后再看 `HANDOFF.md` (详细) 和 `CHANGELOG.md` (改造历史)。
 
@@ -193,7 +193,7 @@ curl -s "https://chamui-psle.web.app/app.js?v=VERSION" | grep "关键文本"
 - **成就 60+ 个** (含周次里程碑 + Paper 2 突击)
 - **皮肤 6 套** / **宠物 12 阶 + 金龙幼崽**
 - **Mini-game 题库**: Cloze **206** / SST **100** / Grammar 195 / Math **95** (v19.14d +20 几何速率) / Editing 61 / SciMCQ 70 / Chinese 40 / Listen 51 / Vocab 61 / SciClassify 10 / Unit 45 / CompOE 20 篇
-- **知识树**: 35 节点 × 3 题 = 105 道 PSLE 风练习
+- **知识树**: 47 节点 × 3 题 = 141 道 PSLE 风练习
 - **73 周作文**: 73 个 prompt + v19.14e **3 层升级闭环** (Draft 1 / Draft 2 / Teacher)
 - **学科英语词汇 500** (数学 220 + 科学 280) v19.13 + **zh→en typing production** v19.14e
 - **Oral 题库 30 道** + **反向验证 textarea** (≥10 字 v19.14d)

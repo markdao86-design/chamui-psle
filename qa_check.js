@@ -1225,6 +1225,29 @@ assert(!/\[style\*="background:#F0F8FF"\]/.test(idxSrc), 'v19.55: v19.20 自动�
 assert(!/#E0E0E0/.test(appSrc) && !/#0F172A/.test(appSrc), 'v19.55: app.js 无暗主题残留色');
 assert(!/--color-bg: #0F172A/.test(idxSrc), 'v19.55: 暗主题变量已替换');
 
+// ===== v19.74: 知识树 3-6 年级全大纲扩容 (科学 19 + 英语 13) =====
+{
+  const KT = W.KNOWLEDGE_TREE, KP = W.KNOWLEDGE_PRACTICE;
+  const sci = KT && KT['🔬 科学'], eng = KT && KT['📖 英语'];
+  assert(sci && sci.length === 19, `v19.74: 科学树 19 节点 (MOE P3-P6 五大主题全覆盖, 实际 ${sci && sci.length})`);
+  assert(eng && eng.length === 13, `v19.74: 英语树 13 节点 (PSLE 四卷组件全覆盖, 实际 ${eng && eng.length})`);
+  ['sci_magnets', 'sci_matter', 'sci_digestive', 'sci_plant_transport', 'sci_respiratory', 'sci_electric', 'sci_ecosystem',
+   'eng_vocab_mcq', 'eng_visualtext', 'eng_compcloze', 'eng_synthesis', 'eng_sitwriting'].forEach(id => {
+    assert(sci.concat(eng).some(n => n.id === id), `v19.74: 新节点 ${id} 在树中`);
+  });
+  // 每个树节点必有 3 道练习题, 每题必有 explain (防死内容: 节点没题 = ⭐ 拿不到)
+  let allNodes = [];
+  Object.keys(KT || {}).forEach(s => { allNodes = allNodes.concat(KT[s]); });
+  const noQuiz = allNodes.filter(n => !KP[n.id] || KP[n.id].length !== 3);
+  assert(noQuiz.length === 0, `v19.74: 所有 ${allNodes.length} 节点都有 3 道练习题 (缺: ${noQuiz.map(n => n.id).join(',') || '无'})`);
+  const noExplain = allNodes.filter(n => (KP[n.id] || []).some(q => !q.explain));
+  assert(noExplain.length === 0, `v19.74: 知识树练习题全部有 explain (缺: ${noExplain.map(n => n.id).join(',') || '无'})`);
+  // 每个节点 desc 有内容 + 3 examples + pitfall (AL1 深度结构)
+  const thin = allNodes.filter(n => !n.desc || !n.examples || n.examples.length < 3 || !n.pitfall);
+  assert(thin.length === 0, `v19.74: 所有节点 desc+3examples+pitfall 齐全 (缺: ${thin.map(n => n.id).join(',') || '无'})`);
+  assert(!/AL 4-6/.test(JSON.stringify(sci) + JSON.stringify(eng)), 'v19.74: 科学/英语节点深度标准已对齐 AL1 (无 AL 4-6 残留)');
+}
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));

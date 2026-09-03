@@ -6214,7 +6214,7 @@ function openKnowledgeNodeDetail(subj, idx) {
       </div>` : ''}
       ${node.pitfall ? `
       <div class="ktnd-section ktnd-pitfall">
-        <div class="ktnd-label">⚠️ AL 4-6 易错陷阱</div>
+        <div class="ktnd-label">⚠️ 易错陷阱</div>
         <div class="ktnd-text">${escapeHtml(node.pitfall)}</div>
       </div>` : ''}
       <div class="ktnd-section ktnd-action">

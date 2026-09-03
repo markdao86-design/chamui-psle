@@ -3814,97 +3814,150 @@ const ALARM_SCHEDULE = {
   ]
 };
 
-// ============= v18.26+v18.41+v18.42: 知识树 (4 学科 × ~10 节点, 对标 PSLE AL 4-6) =============
-// 内容标准: 不写"是什么", 写"PSLE 怎么考 + 易错陷阱 + 答题模板 + AL 4-6 必拿分技巧"
+// ============= v18.26+v18.41+v18.42+v19.74: 知识树 (科学 19 = MOE P3-P6 全大纲 / 英语 13 = PSLE 四卷组件, 深度对标 AL1) =============
+// 内容标准: 不写"是什么", 写"PSLE 怎么考 + 易错陷阱 + 答题模板 + AL1 满分技巧"
 const KNOWLEDGE_TREE = {
   '🔬 科学': [
     { id: 'sci_diversity', name: 'Diversity 分类', weeks: [1, 2], icon: '🦋',
-      desc: 'PSLE 高频考: 给图分类 + 解释判断依据. AL 4-6 必须用 specific feature 答, 不能笼统说 "因为它是哺乳"。',
+      desc: 'P3 主题 Diversity: 给图分类 + 解释判断依据. AL1 标准: 必用 specific feature 答, 且六大动物类 + 植物/真菌/细菌全谱特征都能对比排除.',
       examples: ['鲸鱼陷阱: 看似鱼, 实哺乳 (胎生 + 哺乳 + 肺呼吸)', '蝙蝠陷阱: 看似鸟, 实哺乳 (体温恒定 + 体毛)', '答 OE 模板: "It is a XXX because it has YYY (1 specific feature)"'],
       pitfall: '只说"它是哺乳"不给分, 必给 1 个具体特征', game: 'scilab' },
     { id: 'sci_plant_lc', name: '植物生命周期', weeks: [3, 4], icon: '🌱',
-      desc: 'PSLE 必考实验: 萌发 3 条件 (水/空气/温度) — 控制变量法. AL 4-6 关键: 写 fair test 必标 IV/DV/CV.',
+      desc: 'P3-4 主题 Cycles: 萌发 3 条件 (水/空气/温度) — 控制变量法. AL1 标准: fair test 必标 IV/DV/CV, 结论必写 "当IV怎样变, DV怎样变" 的因果句.',
       examples: ['Pollination 媒介: 风媒 (花瓣小, 花粉轻多) vs 虫媒 (花瓣大艳, 花蜜诱)', 'Dispersal 4 种: 风/水/动物/弹射 — 看种子结构判断', '萌发实验: IV=水/空气/温度其中 1 个, DV=是否萌发, CV=其他全控'],
       pitfall: 'Germination ≠ photosynthesis, 萌发不需要光 (用储存的食物)', game: 'scilab' },
     { id: 'sci_material', name: '材料性质', weeks: [5, 6], icon: '🧪',
-      desc: 'PSLE 高频: 给场景选材料 + 解释为什么. AL 4-6 必给 2 个 properties + 关联 use.',
+      desc: 'P3 主题 Diversity: 给场景选材料 + 解释为什么. AL1 标准: 2 个 properties + "so that" 关联用途, 还要能反向答 "为什么不选 X".',
       examples: ['锅 handle = 塑料 (good insulator + 不烫手)', '电线芯 = 铜 (good conductor + flexible)', '答模板: "X is suitable because it is Y AND Z"'],
       pitfall: '只说"它是导体"不够, 必关联到具体用途 (so that...)', game: 'scilab' },
+    { id: 'sci_magnets', name: '磁铁 Magnets', weeks: [5, 6], icon: '🧲',
+      desc: 'P3 主题 Interactions: 两极相斥相吸 + 磁化方法 + 磁性材料. AL1 标准: 比较磁力强弱必设计 fair test (数相同回形针), 并答 "磁力随距离增大而减弱".',
+      examples: ['同极相斥, 异极相吸 — "like poles repel, unlike poles attract"', '磁化: stroke 法同一方向摩擦 20+ 次; 电磁铁通电即磁断电即失 (temporary magnet)', '只吸 iron/nickel — 铜/铝/金不被吸 (不是所有金属都被吸!)'],
+      pitfall: '磁力可穿透纸/塑料/玻璃等非磁性材料隔空吸, 但距离越远越弱', game: 'scilab' },
     { id: 'sci_forces', name: '力 Forces', weeks: [7, 9], icon: '⚙️',
-      desc: 'P6 必考: 力的 4 种效果 (move/stop/speed up/slow down/change direction/change shape). AL 4-6 关键: 多力并存时用箭头标方向 + 大小.',
+      desc: 'P6 主题 Interactions: 力的效果 (move/stop/speed up/slow down/change direction/change shape) + 摩擦/重力/弹力. AL1 标准: 多力并存标箭头方向+大小, 必判 "合力方向决定运动怎样变".',
       examples: ['Friction 利弊: 鞋底防滑 (好) vs 机器磨损 (坏 → 加润滑油)', 'Gravity vs Mass: 重 = mass × g, 月球上 mass 同, weight 1/6', '题: 球减速 → 摩擦力方向与运动相反'],
       pitfall: 'Mass (kg) 和 Weight (N) 别混, PSLE 只考 mass 不考重力数字', game: 'scilab' },
     { id: 'sci_light_heat', name: '光与热', weeks: [10, 12], icon: '💡',
-      desc: 'PSLE 必考实验: 影子大小变化 (光源距离 vs 物体距离). 热传 3 方式 + 颜色吸热实验.',
+      desc: 'P4 主题 Energy: 影子实验 (光源距离 vs 物体距离) + 热传递与颜色吸热. AL1 标准: 影子题答全链条 "光直线传播被不透光物挡住", 热题必用 gain/lose heat 术语 + 标热流方向 (热→冷).',
       examples: ['影子: 光源近, 影子大; 物体近屏幕, 影子小', '深色 vs 浅色吸热: 深色快, 浅色反射 (PSLE 真题常考夏天衣服)', '太阳能板黑色 = 吸热; 北极服白色 = 反射保暖矛盾? (反: 是为了防雪盲, 内层黑色保温)'],
       pitfall: '光直线传播, 不能"绕过"物体 → 影子永远在背光面', game: 'scilab' },
+    { id: 'sci_matter', name: '物质三态', weeks: [10, 12], icon: '🧊',
+      desc: 'P4 主题 Cycles: 固/液/气三态性质 + 状态变化与温度. AL1 标准: 必用 "definite / no definite shape & volume" 术语, 每个变化标吸热还是放热.',
+      examples: ['固: 定形定体积 · 液: 不定形定体积 · 气: 不定形不定体积 (充满容器)', 'Melting 0°C 吸热 · Freezing 0°C 放热 · Boiling 100°C · Condensation 放热', '气体可压缩, 固液几乎不可压缩 — 注射器实验'],
+      pitfall: 'Evaporation 任何温度都发生 (仅表面), boiling 只在 100°C (整体冒泡) — 都是液→气但条件不同', game: 'scilab' },
     { id: 'sci_cells', name: '细胞 Cells', weeks: [13, 15], icon: '🔬',
-      desc: 'PSLE 必识 6 个 organelles. AL 4-6 必会画图 + 标 function.',
+      desc: 'P5 主题 Systems: 必识 6 个 organelles. AL1 标准: 画图标名 + function 一一对应, 还要会答 "缺了某 organelle 细胞会怎样" 的推理题.',
       examples: ['植物特有: 细胞壁 (支撑) + 叶绿体 (光合) + 大液泡 (储水)', '动物特有: 中心体 (分裂)', '细胞膜 vs 细胞壁: 膜动植都有 (选择性通过, "看门人"); 壁只植物有 (刚性支撑, 让分子可通过但靠膜筛选)'],
       pitfall: '叶绿体 ≠ 叶绿素, 前者是 organelle, 后者是 pigment 分子', game: 'vocab' },
+    { id: 'sci_digestive', name: '消化系统', weeks: [13, 15], icon: '🍎',
+      desc: 'P4 主题 Systems: 消化道 7 站顺序 + 各器官功能. AL1 标准: 必答 "消化 = 把食物分解成可被吸收的小分子", 图题按顺序标名且功能一一对应.',
+      examples: ['顺序: 口→食道(gullet)→胃→小肠→大肠→直肠→肛门', '口: 咀嚼+唾液开始消化 · 胃: 搅拌+消化液 · 小肠: 完成消化+吸收养分 · 大肠: 吸收水分', '吸收的养分由血液运到全身细胞 — 跨章连循环系统 (PSLE 综合题高频)'],
+      pitfall: '食物不经过肝脏! 肝/胰只分泌消化液帮忙, 不在食物通道上 (图题高频陷阱)', game: 'scilab' },
     { id: 'sci_water', name: '水循环', weeks: [16, 18], icon: '💧',
-      desc: 'PSLE 必考: 给图标 4 步 + 解释能量来源 + 连接到环境 (干旱/洪水).',
+      desc: 'P5 主题 Cycles: 给图标 4 步 + 解释能量来源 + 连接环境 (干旱/洪水). AL1 标准: 每一步标 gain/lose heat, 能量来源必写太阳.',
       examples: ['Evaporation = 液→气 (温度高加快)', 'Condensation = 气→液 (温度低 → 镜面起雾)', 'Precipitation 含 rain/snow/hail/sleet (PSLE 不限于 rain)'],
       pitfall: 'Boiling 是 evaporation 的特殊情况 (达到 100°C), 都是液→气', game: 'vocab' },
+    { id: 'sci_plant_transport', name: '植物运输', weeks: [16, 18], icon: '🍃',
+      desc: 'P5 主题 Systems: 根茎叶功能 + 两条运输管. AL1 标准: 实验题 (染色水/环剥) 必答 "哪条管 + 运输什么 + 什么方向", 萎蔫题要连到 "失水多于吸水".',
+      examples: ['Xylem: 运水+矿物质, 根→叶单向上行 · Phloem: 运叶制造的食物(糖)到全株', '染色实验: 茎横切只有 xylem 染色 — 证明水走 xylem', '根=吸水+固定 · 茎=支撑+运输 · 叶=光合作用制造食物'],
+      pitfall: 'Phloem 运的是 food/sugar 不是 "energy" — OE 答 energy 不给分', game: 'scilab' },
     { id: 'sci_reproduction', name: '生殖', weeks: [19, 21], icon: '🌿',
-      desc: 'PSLE 必考完全 vs 不完全变态 + 花的 4 部分 + 受精过程.',
+      desc: 'P5 主题 Cycles: 完全 vs 不完全变态 + 花的结构 + 受精. AL1 标准: 人与开花植物生殖过程要能一一对应比较 (sperm↔pollen grain, egg↔ovule, 子宫↔ovary).',
       examples: ['完全变态 4 段: 卵→幼虫→蛹→成虫 (蝶/蛙/蜜蜂)', '不完全 3 段: 卵→若虫→成虫 (蝗/蟋蟀/蜻蜓 — 若虫像小成虫)', '花: stamen (♂ anther + filament) + pistil (♀ stigma + style + ovary)'],
       pitfall: 'Pollination ≠ Fertilization. Pollination = 花粉到 stigma, Fertilization = sperm 到 egg', game: 'scilab' },
+    { id: 'sci_respiratory', name: '呼吸与循环', weeks: [19, 21], icon: '🫀',
+      desc: 'P5 主题 Systems: 呼吸系统 (鼻→气管→肺) + 循环系统 (心/血管/血液). AL1 标准: 氧气全路径能背 + "运动后心跳呼吸加快" 必答 2 步因果链.',
+      examples: ['氧气路径: 鼻→气管→肺→血液→全身细胞 (细胞用氧+食物释放能量)', '心脏=泵 · 血液=运输(氧/养分/废物) · 血管=通道', '运动时: 肌肉需更多能量 → 需更多氧和养分 → 心跳呼吸加快加深 (2 步链才满分)'],
+      pitfall: 'Breathing (气体进出肺) ≠ respiration (细胞内释放能量) — 用词混了直接丢分', game: 'scilab' },
     { id: 'sci_energy', name: '能量 Energy', weeks: [22, 26], icon: '⚡',
-      desc: 'PSLE 高频: 画 energy flow chart + Energy conservation (不消失只转化). AL 4-6 必标每个箭头的能量类型.',
+      desc: 'P6 主题 Energy: energy flow chart + 守恒 (不消失只转化). AL1 标准: 每个箭头标能量类型, 光合作用要素必背 (光能+水+CO₂ → 葡萄糖+O₂, 在叶绿体).',
       examples: ['手电筒: 电能 → 光能 + 热能 (热是 waste)', '光合作用: 光能 → 化学能 (储在葡萄糖)', '食物链: 太阳→植物→草食→肉食 (10% 传递, 顶端 energy 最少)'],
       pitfall: '能量守恒 (总量不变) 但 "可用能" 递减 — 常以热能形式散失到环境, 不可逆。PSLE 答 "energy is converted, not destroyed"', game: 'scilab' },
+    { id: 'sci_electric', name: '电路', weeks: [22, 26], icon: '🔋',
+      desc: 'P5 主题 Systems: 闭合电路要件 + 串并联 + 导体绝缘体. AL1 标准: 电路图先查 "回路闭合没 + 电池方向对没", 串并联的亮度变化和开关控制范围要能推理.',
+      examples: ['电路通 = 闭合回路: 电池+导线+用电器连成圈, 串联断一处全断', '串联: 灯越多越暗, 一坏全灭 · 并联: 各自回路, 亮度不变, 一坏其余亮', '干路开关控全部, 支路开关只控本支路'],
+      pitfall: '两节电池必须同向串联 (+接-) 才亮; +对+ 不亮 — 图题先查电池方向', game: 'scilab' },
     { id: 'sci_adaptations', name: 'P6 适应', weeks: [27, 42], icon: '🦎',
-      desc: 'PSLE Paper 2 长题: 给环境推适应特征. AL 4-6 必分 structural / behavioral 两类.',
+      desc: 'P6 主题 Interactions: 给环境推适应特征. AL1 标准: 分 structural/behavioral 两类, 每个 adaptation 必连 "how it helps survival/reproduction" 一步到位.',
       examples: ['沙漠: 仙人掌刺 (减蒸发) + 深根 (找水) + 厚皮 (储水) — 3 个不同 features', 'Camel 驼峰储脂肪 (不是水 — PSLE 高频陷阱)', '北极熊: 白毛 (camouflage) + 厚脂肪 (insulation) + 大脚掌 (分散重量) — structural'],
       pitfall: '驼峰是脂肪, 不是水! (代谢脂肪产生水)', game: 'vocab' },
+    { id: 'sci_ecosystem', name: '生态与环境', weeks: [27, 42], icon: '🌏',
+      desc: 'P6 主题 Interactions: 食物链/网 + 种群变化推理 + 人类影响. AL1 标准: "X 减少 Y 怎样" 必答 2 步链条带方向; 环保题必连 "具体行为 → 具体后果".',
+      examples: ['食物链: 草→蚱蜢→青蛙→蛇 (箭头 = 能量流向, 指向吃的一方!)', '蛇减少 → 青蛙增 (天敌少) → 蚱蜢减 (被吃多) → 草增: 邻级反向, 隔级同向', '人类影响: 砍伐→栖息地消失→物种减少 · 全球变暖→冰融→海平面上升'],
+      pitfall: '食物链箭头指向"吃者" (能量去向) — grass→grasshopper, 画反全错', game: 'scilab' },
     { id: 'sci_revision', name: 'PSLE 复习', weeks: [43, 65], icon: '📚',
       desc: 'PSLE Paper 2 OE 题答题模板: 4 要素必齐 (Identify + Explain + Evidence + Conclude). 缺 1 项扣 1 分.',
       examples: ['模板: "I observe that X. This is because Y (concept). The evidence is Z (data). Therefore P."', 'Graph 题: 必标 axis + units + 比较 high/low + 给原因', '5 大主题串记: Cycles + Diversity + Systems + Energy + Interactions'],
       pitfall: 'OE 题"Yes/No"开头不给分, 必先 explain 再 conclude', game: 'scilab' },
     { id: 'sci_psle', name: 'PSLE 笔试', weeks: [66, 73], icon: '🎯', milestone: 'W73',
-      desc: 'PSLE 科学 2 张卷 75 min: Booklet A 28 题 MCQ + B 12-13 题 OE. AL 4-6 时间分配: A 30min / B 40min + 5min 检查.',
+      desc: 'PSLE 科学 2 张卷 75 min: Booklet A 28 题 MCQ + B 12-13 题 OE. AL1 时间分配: A 30min / B 40min + 5min 检查, MCQ 错误控制在 2 题内.',
       examples: ['Booklet A 简单题不超 1 min (跳过太久浪费)', 'Booklet B 长题先看分值 (4 分题写 4 个点)', 'OE 答题用 bullet point 清晰, 不要写大段散文'],
       pitfall: '前 28 道 MCQ 别花太久, B 卷 OE 才是拉分关键', game: 'scilab' }
   ],
   '📖 英语': [
     { id: 'eng_basics', name: '基础 Grammar', weeks: [1, 4], icon: '✏️',
-      desc: 'PSLE Grammar Cloze 12 题 + Editing 12 个空 (8 wrong + 4 unchanged). AL 4-6 必识陷阱: each/every/news 当单数 + 短语动词必背.',
+      desc: 'PSLE P2 Grammar MCQ 10 题. AL1 标准: 语法错误趋零 — 陷阱清单全背 (each/every/news 单数 + 短语动词 + 不规则动词表), 做完必回读检查主谓和时态.',
       examples: ['Each of the boys HAS (not have) a book — each + 单数', 'The news IS shocking (news 是不可数单数)', 'Neither John NOR Mary likes durian (nor 不是 or)', '"He dare not speak" 中 dare 当 modal 不加 s'],
       pitfall: 'PSLE 高频陷阱: each/every/either/neither + 单数动词, 别被复数主语误导',
       game: 'grammar' },
-    { id: 'eng_comp', name: 'Comprehension P5', weeks: [5, 10], icon: '📖',
-      desc: 'PSLE Comp 占 20+ 分. AL 4-6 关键: 一字一分 (3 分题答 3 个点) + 用原文关键词 + 推断题必引证据.',
+    { id: 'eng_comp', name: '阅读理解 OE', weeks: [5, 10], icon: '📖',
+      desc: 'PSLE P2 Comprehension OE 10 题 20 分. AL1 标准: 按分值数点 + 用原文关键词 + 推断题必引证据, 每题写完回读自查 "答完整没" (你 8 月丢 7 分的最大伤口).',
       examples: ['答案模板 (3 分): "First, ... Second, ... Third, ..."', '"The author suggests" → 找隐含含义, 不写原文表面', '词义题: 看上下文 (substitute test) — 把选项代入看通顺'],
       pitfall: 'OE 题 3 分 = 3 个独立 point, 不能换说法重复',
       game: 'editing' },
-    { id: 'eng_cloze', name: 'Grammar/Vocab Cloze', weeks: [11, 14], icon: '🧩',
-      desc: 'PSLE Grammar Cloze (15 空) + Vocab Cloze (15 空). AL 4-6 难点: phrasal verbs + collocations + 不易察觉的连接词.',
+    { id: 'eng_vocab_mcq', name: '词汇辨析', weeks: [5, 10], icon: '📚',
+      desc: 'PSLE P2 Vocabulary MCQ 5 题 + Vocab Cloze 5 空. AL1 标准: 近义词用 "搭配→语境褒贬→程度强弱" 三步排除, 每天 10 词连例句滚动背, 错词进错题本 (你的点名薄弱项).',
+      examples: ['三步排除: ①搭配对不对 (make a decision/do homework) ②语境褒贬 ③程度 (glanced 瞥 vs stared 盯)', '高频近义组: walk/stroll/trudge/march · said/exclaimed/muttered/whispered', '不认识也能做: 代入原句读三遍, 排除搭配违和的'],
+      pitfall: '词汇题错在 "都认识但选不出" — 差别藏在搭配和程度, 背单词必须连例句背',
+      game: 'vocab' },
+    { id: 'eng_cloze', name: 'Grammar Cloze', weeks: [11, 14], icon: '🧩',
+      desc: 'PSLE P2 Grammar Cloze 10 空 (纯语法功能词). AL1 难点: phrasal verbs + 介词搭配 + 不易察觉的连接词, 填完必回读整句验证.',
       examples: ['"He came ___ his old diary" → across (偶遇, 不是 to)', '"In SPITE of the rain, ..." (= despite, 不是 spite)', 'Collocation: "make a decision" / "do homework" / "take a break" — 死记不能创造'],
       pitfall: 'Cloze 高频 traps: phrasal verb 字面 vs 真意 (look up=查/look out=小心)',
       game: 'cloze' },
+    { id: 'eng_visualtext', name: '看图理解 Visual Text', weeks: [11, 14], icon: '🖼️',
+      desc: 'PSLE P2 Visual Text 8 题 (海报/广告/网页). AL1 标准: 先读题再扫图, 答案必须在图文里 "指得出", 限定词 (only/free/before X/members only) 逐个圈出.',
+      examples: ['三扫法: 标题→小字→图标; 题目问啥扫啥, 不通读', '限定词陷阱: "first 50 customers only" — 第 51 位就没有', '推断题: "海报的目的" = 劝你做什么 (to persuade/encourage...), 不是复述内容'],
+      pitfall: '细节全在小字和角落 (条款/日期/星号注释) — 掉分掉在 "没看到", 不是 "不会"',
+      game: 'cloze' },
+    { id: 'eng_compcloze', name: '完形填空 Comp Cloze', weeks: [13, 18], icon: '📝',
+      desc: 'PSLE P2 最难模块: Comprehension Cloze 15 空 × 1 分, 纯上下文推词. AL1 标准: 先通读全文抓主线, 每空找前后呼应词, "词性判断→语义筛选→回读验证" 三步走 (你的点名薄弱项之一).',
+      examples: ['呼应定位: 80% 空的答案在前后 2 句里有暗示 (同义/反义/指代)', '词性先行: 空前 the/a → 名词; to → 动词原形; be → v-ing/过去分词', '连接词空: 转折 however/but · 因果 so/because · 递进 also/moreover'],
+      pitfall: '想到啥填啥 = 大忌. 语法对但语义断的词不给分, 必回读整段验证',
+      game: 'cloze' },
     { id: 'eng_editing', name: 'Editing 改错', weeks: [15, 18], icon: '🔍',
-      desc: 'PSLE Editing 12 空: 8 错 + 4 不变. AL 4-6 必关: 不能漏改 + 不能错改 unchanged + 改正必准确.',
+      desc: 'PSLE P2 Editing 12 空: 8 拼写/语法错 + 4 unchanged. AL1 标准: 8 个错全改对 + 4 个 unchanged 全放过 = 满分; 先判词性再改, 改完回读.',
       examples: ['Subject-verb: "He don\'t like" → "doesn\'t"', 'Tense: "Yesterday I am hungry" → was', 'Article: "I had a apple" → an', '陷阱: 4 个 unchanged 千万别瞎改, 改了也扣分'],
       pitfall: '识别 unchanged 比改错更重要 — 改错的 unchanged 双扣分',
       game: 'editing' },
-    { id: 'eng_writing', name: '作文 Composition', weeks: [19, 26], icon: '✒️',
-      desc: 'PSLE Composition Paper 1 = 40 分. AL 4-6 公式: 开头 3 句定调 (sensory + dialogue + action) + 至少 5 个高级词 + 1 个 idiom + 引人深思结尾.',
+    { id: 'eng_synthesis', name: '句型转换 S&T', weeks: [15, 18], icon: '🔄',
+      desc: 'PSLE P2 Synthesis & Transformation 5 题 × 2 分. AL1 标准: 十大句式模板全背 (despite/unless/too...to/reported speech/passive/neither...nor), 改写后必查 "意思不变 + 语法全对", 半对只给 1 分.',
+      examples: ['Despite + n./v-ing: "Although he was tired" → "Despite being tired"', 'Reported speech 三变: 时态退一步 + 人称转换 + 时间地点词变 (now→then, here→there)', 'Unless = if...not: "If you do not study, you will fail" → "Unless you study, you will fail"'],
+      pitfall: '改完必读一遍: 意思变没变? 主语时态跟着调没? 抄词抄错也扣分',
+      game: 'grammar' },
+    { id: 'eng_writing', name: '记叙作文 Continuous', weeks: [19, 26], icon: '✒️',
+      desc: 'PSLE P1 Continuous Writing 40 分 (内容20+语言20). AL1 公式: 开头 3 句定调 (sensory + dialogue + action) + 至少 5 个高级词 + 1 个 idiom + 引人深思结尾, 写完 5 分钟查时态/主谓/拼写.',
       examples: ['开头模板: "The shrill bell pierced the silent classroom" (听觉 + 形容词)', '高级词: crestfallen / jubilant / dawned upon me / etched in memory', '结尾 reflection: "From that day on, I learnt that..."'],
-      pitfall: '跑题 0 分 — 至少 1 段必须有 theme keyword',
+      pitfall: '跑题 0 分 — 至少 1 段必须有 theme keyword, 三图任选也必须扣住 topic 词',
+      game: 'vocab' },
+    { id: 'eng_sitwriting', name: '情景写作 Situational', weeks: [19, 26], icon: '✉️',
+      desc: 'PSLE P1 Part 1 = 15 分 (内容6+语言9). AL1 标准: 题目给的内容点一个不漏 (写完逐点打勾), 格式 (email/信/报告) 和对象决定语气正式度 (你的点名薄弱项之一).',
+      examples: ['内容分 = 踩点给分: 每个 bullet 必须写到且写完整, 漏 1 点丢 1 分', '正式 email: Dear Mr Tan / I am writing to... / Yours sincerely · 给朋友: Hi Ben + 口语化', '题目问 who/when/where/what/why — 答案全在情景材料里找, 不能自己编'],
+      pitfall: '15 分里 6 分是 "写没写到", 和文笔无关 — 先保内容点齐, 再谈语言分',
       game: 'vocab' },
     { id: 'eng_listening', name: '听力 Listening', weeks: [27, 42], icon: '🎧', milestone: 'W42',
-      desc: 'PSLE Listening 20 题 = 14 分. AL 4-6 重点: 转折词后必抓答案 + 数字陷阱 (重音差) + 推断题需 2 句话综合.',
+      desc: 'PSLE P3 Listening 20 题 = 20 分. AL1 标准: 20 题全对是常态 — 转折词后必抓答案 + 数字陷阱 (重音差) + 推断题 2 句综合, 预读选项圈关键词.',
       examples: ['答案在 "but/however/although" 后 (90% 真题)', 'fifteen [fɪfˈtiːn] vs fifty [ˈfɪfti] — 重音第 1 还是第 2 音节', '日期: "the third of April" = 4/3, 不是 3/4'],
       pitfall: '听力陷阱: 第一次说的常被否定改成第二次说的, 听完整段再选',
       game: 'listen' },
     { id: 'eng_oral', name: '口试 Oral', weeks: [43, 65], icon: '🗣️', milestone: 'W68',
-      desc: 'PSLE Oral 30 分 = 朗读 (10) + 看图说话 (10) + 对话 (10). AL 4-6 关键: 流畅 > 完美 + 内容深度.',
+      desc: 'PSLE P4 Oral 30 分 = 朗读 + Stimulus-based Conversation. AL1 标准: 流畅 + 语调起伏 + 观点有深度, 对话答案按 "point + reason + example" 三层展开.',
       examples: ['朗读: 标点停顿 + 重音 + 语调', '看图说话: 不只描述 — 加 personal opinion + 假设', '对话: 用 connectors (first, moreover, however, in conclusion)'],
       pitfall: '卡顿 1 次 -1 分, 错词 -0.5. 宁用简单流畅, 别用复杂卡 5 秒',
       game: 'vocab' },
     { id: 'eng_psle', name: 'PSLE 笔试', weeks: [66, 73], icon: '🎯', milestone: 'W73',
-      desc: 'PSLE 英语 4 张卷 = 200 分. AL 4-6 = 75-89%. 时间分配: P1 (作文 1h10min: Sit Writing+Cont Writing) / P2 (1h50min Grammar+Cloze+Editing+Comp) / P3 (听力 35 min) / P4 (Oral). Editing 在 Paper 2, 不在 P1.',
+      desc: 'PSLE 英语 4 张卷 = 200 分. AL1 = 90%+ (180/200). 时间分配: P1 (作文 1h10min: Sit Writing+Cont Writing) / P2 (1h50min Grammar+Cloze+Editing+Comp) / P3 (听力 35 min) / P4 (Oral). Editing 在 Paper 2, 不在 P1.',
       examples: ['Paper 2 时间: 35 min synthesis + 35 min comp + 35 min cloze/editing', '作文 = 25-30 min 写 + 5 min 检查', '检查必看: 时态 + 主谓 + 拼写 + 标点'],
       pitfall: 'Paper 2 SST (Synthesis & Transformation) 是杀手, 一字一分必练',
       game: 'editing' }
@@ -4041,8 +4094,43 @@ const KNOWLEDGE_PRACTICE = {
   ],
   sci_psle: [
     { q: 'PSLE 科学考多长时间? 几道题?', opts: ['1h, 50 题', '1h15min, 40 题', '1h45min, 60 题', '2h, 30 题'], ans: 1, explain: 'PSLE Science: Booklet A (28 MCQ) + B (12-13 OE), 总 1h15min' },
-    { q: 'AL 4-6 时间分配 Booklet A:B 的建议?', opts: ['一半一半', 'A 30 min / B 40 min + 5 min 检查', 'A 40 min / B 30 min', 'A 50 min / B 20 min'], ans: 1, explain: 'B 卷 OE 是拉分关键, 要留时间; A 卷别花太久' },
+    { q: 'AL1 时间分配 Booklet A:B 的建议?', opts: ['一半一半', 'A 30 min / B 40 min + 5 min 检查', 'A 40 min / B 30 min', 'A 50 min / B 20 min'], ans: 1, explain: 'B 卷 OE 是拉分关键, 要留时间; A 卷别花太久' },
     { q: 'OE 题以"Yes/No"开头?', opts: ['可以, 直接给结论', '不可以, 必先 explain 再 conclude', '看题型', '只有 12 题可以'], ans: 1, explain: 'PSLE 评分: 直接 Yes/No 不给分, 必须先 explain (concept + evidence) 再 conclude' }
+  ],
+  sci_magnets: [
+    { q: '哪种材料不会被磁铁吸引?', opts: ['铁钉', '镍片', '铜线', '钢回形针'], ans: 2, explain: '磁铁只吸 iron/nickel (钢含铁也吸). 铜/铝/金/银都不吸 — "所有金属都被吸"是高频陷阱' },
+    { q: '用 stroke 法磁化铁钉, 正确做法?', opts: ['来回反复摩擦', '用同一极同方向摩擦 20+ 次', '两极交替摩擦', '用力敲打铁钉'], ans: 1, explain: 'stroke 法必须同一极+同方向摩擦; 来回擦会互相抵消. 敲打/加热反而会消磁' },
+    { q: '比较两块磁铁强弱, 最公平的实验?', opts: ['比大小', '数各能吸起多少枚相同回形针', '掂重量', '看颜色深浅'], ans: 1, explain: 'fair test: DV=吸起的相同回形针数量, 其他条件 (距离/回形针型号) 全部控制相同. 磁铁大小 ≠ 磁力强弱' }
+  ],
+  sci_matter: [
+    { q: '哪个描述气体正确?', opts: ['定形定体积', '不定形定体积', '不定形不定体积', '定形不定体积'], ans: 2, explain: '气体粒子自由运动充满整个容器 — 形状体积都随容器变. 液体: 不定形但定体积' },
+    { q: '水结成冰的过程叫? 吸热还是放热?', opts: ['Melting, 吸热', 'Freezing, 放热', 'Condensation, 放热', 'Evaporation, 吸热'], ans: 1, explain: 'Freezing = 液→固, 在 0°C 放热 (lose heat). Melting 是反向 (吸热). 每个状态变化必标热流方向' },
+    { q: '湿衣服不到 100°C 也会干, 因为?', opts: ['水沸腾了', '水蒸发了 (仅表面, 任何温度)', '水渗进衣服纤维', '水结冰升华了'], ans: 1, explain: 'Evaporation 在任何温度发生且只在表面; 温度高/风大/表面积大 → 蒸发更快. Boiling 才需要 100°C' }
+  ],
+  sci_digestive: [
+    { q: '食物经过消化道的正确顺序?', opts: ['口→胃→食道→小肠→大肠', '口→食道→胃→小肠→大肠', '口→食道→小肠→胃→大肠', '口→胃→小肠→食道→大肠'], ans: 1, explain: '口→食道(gullet)→胃→小肠→大肠→直肠→肛门. 肝/胰不在通道上, 只分泌消化液' },
+    { q: '大部分养分在哪里被吸收进血液?', opts: ['胃', '小肠', '大肠', '食道'], ans: 1, explain: '小肠 = 完成消化 + 吸收养分的主场; 大肠只吸收水分. 图题按功能一一对应' },
+    { q: '消化的目的是?', opts: ['把食物加热', '把食物分解成可被吸收的小分子', '储存食物', '直接产生能量'], ans: 1, explain: '消化 = 大分子→小分子以便进入血液运到全身. "产生能量"是细胞呼吸作用 (respiration), 别混' }
+  ],
+  sci_plant_transport: [
+    { q: '芹菜插进红色水, 茎里被染红的是?', opts: ['Phloem', 'Xylem', '表皮', '气孔'], ans: 1, explain: '水+矿物质走 xylem (根→叶单向上行). 染色实验横切只有 xylem 红 — 经典证据题' },
+    { q: '叶子制造的食物由什么运到根部?', opts: ['Xylem', 'Phloem', '水', '气孔'], ans: 1, explain: 'Phloem 运叶光合作用制造的糖到全株 (含根). 注意答 food/sugar, 答 energy 不给分' },
+    { q: '环剥树皮 (切断 phloem) 后树慢慢死, 因为?', opts: ['水上不去了', '食物运不到根, 根饿死后吸不了水', '阳光进不来', '树失去支撑'], ans: 1, explain: '2 步链: phloem 断 → 根得不到食物饿死 → 根死后吸不了水 → 全树死. xylem 在内层最初仍能送水' }
+  ],
+  sci_respiratory: [
+    { q: '吸入的氧气最终去了哪里?', opts: ['留在肺里', '溶入血液运到全身细胞', '变成二氧化碳呼出', '进入胃里'], ans: 1, explain: '氧气全路径: 鼻→气管→肺→血液→全身细胞. 细胞用氧+食物释放能量 (respiration)' },
+    { q: '运动后心跳加快, 因为?', opts: ['心脏累了', '肌肉需要更多氧和养分, 心脏加快泵血', '血液变多了', '肺变大了'], ans: 1, explain: '2 步因果链: 肌肉需更多能量 → 需更多氧+养分 → 心跳呼吸加快加深. 只答一步不满分' },
+    { q: '血液流经肺部时发生什么?', opts: ['放出氧气收走二氧化碳', '收进氧气放出二氧化碳', '只收氧气', '什么都不交换'], ans: 1, explain: '肺部气体交换: 血液收 O₂ 放 CO₂; 流到身体细胞时正好反过来. 方向别背反' }
+  ],
+  sci_electric: [
+    { q: '串联电路中一个灯泡坏了, 其他灯?', opts: ['更亮', '全部熄灭', '不变', '更暗'], ans: 1, explain: '串联只有一条回路, 断一处 = 整个回路断 = 全灭. 并联才各自独立' },
+    { q: '哪组全部是导体?', opts: ['铜、铁、铅笔芯(石墨)', '塑料、铜、橡皮', '木头、铁、玻璃', '铜、纸、铝'], ans: 0, explain: '金属 + 石墨 = 导体; 塑料/橡皮/木/玻璃/纸 = 绝缘体. 石墨是非金属导体 (高频考点)' },
+    { q: '并联电路再加一个灯泡, 原来的灯亮度?', opts: ['变暗', '不变 (各自独立回路)', '变亮', '开始闪烁'], ans: 1, explain: '并联每个灯有自己的回路直连电池, 互不影响; 串联加灯才会全体变暗' }
+  ],
+  sci_ecosystem: [
+    { q: '食物链 草→兔→鹰 中, 箭头表示?', opts: ['谁比谁大', '能量流动方向 (被吃→吃者)', '进化顺序', '奔跑速度'], ans: 1, explain: '箭头 = 能量去向, 永远指向吃的一方. grass→grasshopper 画反全错' },
+    { q: '若青蛙全部消失, 蚱蜢短期内会?', opts: ['减少', '增多 (天敌消失)', '不变', '立刻灭绝'], ans: 1, explain: '天敌消失 → 蚱蜢增多 → 草被吃更多而减少. 推种群变化: 邻级反向, 隔级同向, 必答链条' },
+    { q: '哪个是人类对环境的正面影响?', opts: ['围海造地', '设立自然保护区', '排放工业废水', '砍伐雨林建农场'], ans: 1, explain: '保护区保护栖息地 → 物种存活. 其余三个都是破坏栖息地 → 物种减少. 环保题必连 "行为→后果"' }
   ],
 
   // === ➗ 数学 ===
@@ -4121,7 +4209,7 @@ const KNOWLEDGE_PRACTICE = {
   eng_writing: [
     { q: '作文开头 3 句最佳策略?', opts: ['介绍人物', 'Sensory details + dialogue + action', '直接讲故事', '总结全文'], ans: 1, explain: 'Hook 读者: 听觉/视觉描写 + 对话 + 动作 → 评卷老师 6 分钟内决定分数' },
     { q: 'PSLE 作文跑题扣多少?', opts: ['扣 5 分', '扣 10 分', '直接 0 分', '不扣'], ans: 2, explain: '跑题 = 0 分; 全文必有 1 句扣 theme 关键词' },
-    { q: '高级词最少几个?', opts: ['0', '1', '5', '10'], ans: 2, explain: 'AL 4-6 关键: 至少 5 个高级词 (crestfallen / jubilant / dawned upon...)' }
+    { q: '高级词最少几个?', opts: ['0', '1', '5', '10'], ans: 2, explain: 'AL1 标准: 至少 5 个高级词 (crestfallen / jubilant / dawned upon...) 且必须用得准, 用错反扣' }
   ],
   eng_listening: [
     { q: '听到 "but" 后, 答案大概率在?', opts: ['前半句', '后半句', '完全无关', '需重听'], ans: 1, explain: 'but/however/although 后 90% 是答案; 前半句常是 distractor' },
@@ -4129,14 +4217,39 @@ const KNOWLEDGE_PRACTICE = {
     { q: '"the third of April" 是哪天?', opts: ['3/4', '4/3', '3 April', 'April 3'], ans: 1, explain: 'the third of April = April 3 = 4/3 (新加坡 day/month); 不是 3/4' }
   ],
   eng_oral: [
-    { q: 'PSLE Oral 总分?', opts: ['20', '30', '40', '50'], ans: 1, explain: 'Oral = 朗读 10 + 看图说话 10 + 对话 10 = 30 分' },
-    { q: '看图说话最佳深度?', opts: ['只描述', '描述 + 推断 + 联系生活', '只表达观点', '编故事'], ans: 1, explain: 'AL 4-6 关键: 不只看图说图, 加 personal opinion + 假设/经验' },
+    { q: 'PSLE Oral 总分?', opts: ['20', '30', '40', '50'], ans: 1, explain: 'Oral = Reading Aloud 朗读 10 + Stimulus-based Conversation 对话 20 = 30 分' },
+    { q: 'Stimulus-based Conversation 最佳深度?', opts: ['只描述图片', '观点 + 理由 + 例子/经验三层', '只表达观点', '编故事'], ans: 1, explain: 'AL1 标准: point + reason + example 三层展开, 联系自己的生活经验' },
     { q: '卡顿 1 次扣多少分?', opts: ['0.5 分', '1 分', '2 分', '不扣'], ans: 1, explain: '卡 1 次 -1, 错词 -0.5; 宁可用简单流畅, 别用复杂卡 5 秒' }
   ],
   eng_psle: [
-    { q: 'PSLE 英语总分?', opts: ['100', '150', '200', '300'], ans: 2, explain: 'P1 (作文 40) + P2 (95) + P3 (听 14) + P4 (Oral 30) ≈ 200 分' },
-    { q: 'AL 4-6 英语对应几分?', opts: ['60-74%', '75-89%', '90-100%', '50-59%'], ans: 1, explain: 'PSLE AL 4=85-89, AL 5=80-84, AL 6=75-79' },
+    { q: 'PSLE 英语总分?', opts: ['100', '150', '200', '300'], ans: 2, explain: 'P1 55 (情景写作 15 + 记叙作文 40) + P2 95 + P3 听力 20 + P4 Oral 30 = 200 分' },
+    { q: 'AL1 英语要多少分?', opts: ['75-79%', '80-84%', '85-89%', '90% 以上'], ans: 3, explain: 'AL1 = 90+, AL2 = 85-89, AL3 = 80-84, AL4 = 75-79. 冲 AL 目标每张卷都不能有短板' },
     { q: 'P2 SST (Synthesis & Transformation) 是?', opts: ['填空', '合并/改写句子', '阅读', '听力'], ans: 1, explain: 'SST = 合并 2 句 / 改主动被动 / 直接转间接, 一字一分' }
+  ],
+  eng_vocab_mcq: [
+    { q: 'The thief ___ a look at the guard before slipping away.', opts: ['stared', 'stole', 'watched', 'observed'], ans: 1, explain: 'steal a look/glance = 偷偷一瞥 (固定搭配). stare/watch/observe 都是长时间看, 和 "slipping away" 矛盾 — 搭配+语境双重排除' },
+    { q: '哪个词表示"拖着脚步吃力地走"?', opts: ['stroll', 'march', 'trudge', 'skip'], ans: 2, explain: 'trudge = 疲惫吃力地走; stroll = 悠闲散步; march = 齐步走; skip = 蹦跳. 近义动词按"状态+程度"区分' },
+    { q: 'He was ___ with joy when he won the championship.', opts: ['satisfied', 'overjoyed', 'content', 'pleased'], ans: 1, explain: '夺冠的强烈情绪配 overjoyed (欣喜若狂); 其余三个程度太弱. 程度匹配是词汇辨析核心' }
+  ],
+  eng_visualtext: [
+    { q: '海报写 "Free gift for the first 50 customers only", 第 60 位顾客?', opts: ['也有礼物', '没有礼物 (only first 50)', '付钱就有', '要抽奖'], ans: 1, explain: '限定词 only + first 50 圈死范围. Visual text 细节题全靠圈限定词 (only/free/before/members)' },
+    { q: 'Visual text 正确的第一步?', opts: ['通读所有文字', '先读题目, 再带着问题扫图', '先看图片好不好看', '背下海报内容'], ans: 1, explain: '先读题→扫标题→扫小字→扫图标. 题目问啥扫啥, 不通读 (省时且不漏)' },
+    { q: '广告角落小字 "*Terms and conditions apply" 意思是?', opts: ['完全免费无条件', '优惠有附加条件', '广告已作废', '只能网上购买'], ans: 1, explain: '星号注释 = 附加条件. 细节题掉分都掉在小字和角落 — 不是不会, 是没看到' }
+  ],
+  eng_compcloze: [
+    { q: '"Tom was exhausted. ___, he kept running." 填?', opts: ['Therefore', 'However', 'Because', 'And'], ans: 1, explain: '前后转折 (累坏了却继续跑) → However. 连接词空第一步判逻辑关系: 转折/因果/递进' },
+    { q: '"She picked up the ___ and dialled her mother\'s number." 填?', opts: ['book', 'phone', 'pen', 'bag'], ans: 1, explain: 'dialled (拨号) 是呼应词 → phone. 完形 80% 空的答案在前后 2 句里有暗示' },
+    { q: '完形填空正确流程是?', opts: ['看一空填一空', '先通读全文抓主线 → 逐空找呼应词 → 填完回读验证', '只看空格所在句', '先填简单的直接交'], ans: 1, explain: '三步走: 通读抓主线 / 找前后呼应 / 回读验证. 语法对但语义断的词不给分' }
+  ],
+  eng_synthesis: [
+    { q: '"He is so short that he cannot reach the shelf." → "He is too..."', opts: ['too short to reach the shelf', 'too short that he cannot reach', 'too short for reach', 'too short to not reach'], ans: 0, explain: 'so...that cannot → too...to. too 已含 "达不到" 的否定, to 后面不再加 not' },
+    { q: 'Mary said, "I am eating now." 转间接引语?', opts: ['Mary said she is eating now', 'Mary said she was eating then', 'Mary said I was eating now', 'Mary says she was eating'], ans: 1, explain: '三变一个不能漏: 时态退一步 (am→was) + 人称 (I→she) + 时间词 (now→then)' },
+    { q: 'Despite 后面接什么?', opts: ['完整句子 (主语+动词)', '名词或 v-ing', 'although', 'because'], ans: 1, explain: 'Despite / In spite of + n. 或 v-ing; Although + 完整句子. 两组互换是 SST 十大模板之一' }
+  ],
+  eng_sitwriting: [
+    { q: '情景写作拿到题最先做什么?', opts: ['直接开写', '圈出题目要求的全部内容点', '先想高级词', '先数字数'], ans: 1, explain: '内容 6 分 = 踩点给分, 漏 1 点丢 1 分. 先圈点, 写完逐点打勾复查' },
+    { q: '写给校长的正式 email, 结尾用?', opts: ['See ya!', 'Love,', 'Yours sincerely,', 'Bye bye!'], ans: 2, explain: '对象决定语气: 校长/老师 = 正式 (Dear Mr Tan... Yours sincerely); 朋友才用 Hi/口语' },
+    { q: '情景写作 15 分怎么拿满内容分?', opts: ['文笔华丽', '题目要求的每个点都写到且写完整', '写得越长越好', '多用难词'], ans: 1, explain: '内容 6 分和文笔无关, 只看 "写没写到". when/where/what/why 全在题目材料里找, 不能编' }
   ],
 
   // === 🇨🇳 华文 ===
