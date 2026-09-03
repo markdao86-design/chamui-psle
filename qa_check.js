@@ -1189,6 +1189,11 @@ assert(/_thinkSubjectToGameKey/.test(appSrc) && /_ebTipsHtml\(_thinkSubjectToGam
 assert(/找出这段里的错词并改正/.test(appSrc), 'v19.69: editing新错题入库带原段落');
 assert(!/e\.word \+ '→' \+ e\.fix/.test(appSrc), 'v19.69: e.fix undefined bug已修(字段是reason)');
 assert(/_ebUpgradeLegacyEditing\(item\)/.test(appSrc) && /window\._ebUpgradeLegacyEditing/.test(appSrc), 'v19.69: 旧格式editing错题运行时自动补全+接入');
+// v19.71: editing错题交互式找错
+assert(/eb-edit-word/.test(appSrc) && /ebToggleEditWord/.test(appSrc), 'v19.71: 段落词可点选');
+assert(/function ebSubmitEditing\(/.test(appSrc) && /window\.ebSubmitEditing/.test(appSrc), 'v19.71: 批改函数已定义+导出');
+assert(/hit === wrongSet\.size && extra === 0/.test(appSrc), 'v19.71: 全找对且无误选才算对');
+assert(/_qShort/.test(appSrc), 'v19.71: 交互模式题面用短指令不重复段落');
 // v19.54: 我的/暑假收纳进"⋯其他"灰色按钮
 assert(/id="moreTabBtn"/.test(idxSrc), 'v19.54: 其他按钮存在');
 assert(/id="moreMenu"/.test(idxSrc), 'v19.54: 收纳菜单存在');

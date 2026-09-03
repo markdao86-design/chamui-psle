@@ -6561,6 +6561,17 @@ function _renderErrorBankReview() {
                placeholder="答案" />
         <button class="btn btn-primary" style="margin-left:8px" onclick="submitErrorBankMath()">提交</button>
       </div>`;
+  } else if (item.type === 'editing' && _ebEditingPara(item)) {
+    // v19.71: editing 错题交互式找错 — 复刻游戏点词体验 (用户实报: 段落不能点没法找错)
+    const para = _ebEditingPara(item);
+    item._qShort = `🔍 Editing 找错: 这段里藏着 ${para.wrongWords.length} 处错词, 把它们全点出来`;
+    const words = para.text.split(' ');
+    answerArea = `
+      <div style="font-size:12px;color:#1E293B;margin:10px 0 4px">👇 点出你认为错的词 (可多选, 再点一次取消), 选完批改:</div>
+      <div id="ebEditWrap" style="text-align:left;line-height:2.4;margin-bottom:12px">${words.map(w =>
+        `<button class="eb-edit-word" data-w="${escapeAttr(w.replace(/[.,!?;:"']/g, ''))}" onclick="ebToggleEditWord(this)" style="border:1px solid #E2E8F0;background:#FFFFFF;color:#1E293B;border-radius:6px;padding:3px 7px;margin:2px 1px;font-size:14px;cursor:pointer">${escapeHtml(w)}</button>`
+      ).join(' ')}</div>
+      <div style="text-align:center"><button id="ebEditSubmit" onclick="ebSubmitEditing()" style="padding:10px 26px;background:#1E40AF;color:#FFF;border:none;border-radius:8px;font-weight:900;cursor:pointer">✅ 选好了, 批改</button></div>`;
   } else {
     // v19.65: editing 等无选项题型此前 answerArea 为空 → 题目做不了(用户实报bug)。改自评式: 先想→看答案→诚实自评
     answerArea = `
@@ -6600,7 +6611,7 @@ function _renderErrorBankReview() {
       <div style="${tagBg};font-size:11px;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:8px;font-weight:${isRealExam ? '900' : '400'}">${tagPrefix}${tag}${item.tag && isRealExam ? ' · ' + escapeHtml(item.tag) : ''}${item.subj ? ' · ' + escapeHtml(item.subj) : ''}</div>
       ${historyHtml}
       ${ruleHtml}
-      <div class="cn-q-text" style="margin-bottom:16px">${escapeHtml(item.q)}</div>
+      <div class="cn-q-text" style="margin-bottom:16px">${escapeHtml(item._qShort || item.q)}</div>
       ${answerArea}
       <div id="ebFeedback" style="min-height:24px;margin-top:12px;font-size:13px"></div>
     </div>`;
@@ -6666,6 +6677,54 @@ function ebRevealMcqAnswer() {
   playSound('ding');
 }
 window.ebRevealMcqAnswer = ebRevealMcqAnswer;
+// v19.71: editing 错题交互式找错 — 解析段落 + 点词 + 批改
+function _ebEditingPara(item) {
+  if (item._para) return item._para;
+  const m = (item.q || '').match(/"([^"]{20,})"/);
+  const text = m ? m[1] : null;
+  if (!text) return null;
+  const bank = window.EDITING_PARAGRAPHS || [];
+  const p = bank.find(p => p.text === text) || bank.find(p => text.indexOf(p.text.slice(0, 40)) >= 0);
+  let wrongWords;
+  if (p) wrongWords = (p.errors || []).filter(e => !/备用/.test(e.reason || '')).map(e => e.word);
+  else if (item.correctAns) wrongWords = String(item.correctAns).split(',').map(s => s.split('→')[0].trim()).filter(Boolean);
+  if (!wrongWords || !wrongWords.length) return null;
+  item._para = { text, wrongWords };
+  return item._para;
+}
+function ebToggleEditWord(btn) {
+  const on = btn.dataset.sel === '1';
+  btn.dataset.sel = on ? '' : '1';
+  btn.style.background = on ? '#FFFFFF' : '#1E40AF';
+  btn.style.color = on ? '#1E293B' : '#FFFFFF';
+}
+function ebSubmitEditing() {
+  const g = _errorBankState;
+  if (!g) return;
+  const item = g.items[g.idx];
+  const para = _ebEditingPara(item);
+  if (!para) return;
+  const wrongSet = new Set(para.wrongWords.map(w => w.toLowerCase()));
+  const btns = [...document.querySelectorAll('.eb-edit-word')];
+  const picked = new Set(btns.filter(b => b.dataset.sel === '1').map(b => (b.dataset.w || '').toLowerCase()));
+  let hit = 0, extra = 0;
+  picked.forEach(w => { if (wrongSet.has(w)) hit++; else extra++; });
+  const isCorrect = hit === wrongSet.size && extra === 0;
+  // 逐词着色: 真错词绿框(该选的), 误选的红
+  btns.forEach(b => {
+    b.disabled = true;
+    const w = (b.dataset.w || '').toLowerCase();
+    if (wrongSet.has(w)) { b.style.background = '#DCFCE7'; b.style.color = '#15803D'; b.style.borderColor = '#16A34A'; b.style.fontWeight = '900'; }
+    else if (picked.has(w)) { b.style.background = '#FEE2E2'; b.style.color = '#DC2626'; b.style.borderColor = '#DC2626'; }
+  });
+  const sb = document.getElementById('ebEditSubmit');
+  if (sb) sb.style.display = 'none';
+  showToast(isCorrect ? `🎯 ${hit}/${wrongSet.size} 全找对!` : `找对 ${hit}/${wrongSet.size}${extra ? ' · 误选 ' + extra : ''}`, isCorrect ? 'happy' : 'warn');
+  _ebApplyResult(isCorrect);
+}
+window._ebEditingPara = _ebEditingPara;
+window.ebToggleEditWord = ebToggleEditWord;
+window.ebSubmitEditing = ebSubmitEditing;
 // v19.69: 已入库的旧格式 editing 错题 (q='点错词: xxx', 解析含undefined) → 反查题库补回原段落+正确解析
 function _ebUpgradeLegacyEditing(item) {
   if (!item || item.gameKey !== 'editing') return;
