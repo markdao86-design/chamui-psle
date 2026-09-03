@@ -1142,6 +1142,11 @@ assert(/essay_a/.test(appSrc) && /essay_b/.test(appSrc), 'v19.51: 作文内容+�
 assert((appSrc.match(/SCHED_GRID/g) || []).length >= 3, 'v19.51: SCHED_GRID 被渲染使用');
 assert(/overflow-x:auto/.test(appSrc), 'v19.51: 打分表横向滚动容器(手机不撑破)');
 assert(/v19\.53: 家长停在课表页/.test(appSrc), 'v19.53: 远程更新即时刷新课表页(多设备查看)');
+// v19.59: 打分表全周7天 + 自学记录文本行
+assert(/const COLS = \[1, 2, 3, 4, 5, 6, 0\]/.test(appSrc), 'v19.59: 打分表含周四/周六列');
+assert(/key: 'note'/.test(appSrc) && /type: 'text'/.test(appSrc), 'v19.59: 自学记录文本行存在');
+assert(/field === 'note'/.test(appSrc), 'v19.59: note 存文本不转数字');
+assert(/row\.type === 'text'/.test(appSrc), 'v19.59: text 输入渲染分支');
 // v19.54: 我的/暑假收纳进"⋯其他"灰色按钮
 assert(/id="moreTabBtn"/.test(idxSrc), 'v19.54: 其他按钮存在');
 assert(/id="moreMenu"/.test(idxSrc), 'v19.54: 收纳菜单存在');

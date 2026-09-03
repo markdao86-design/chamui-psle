@@ -10801,6 +10801,8 @@ const SCHED_GRID = [
   { key: 'vt',      label: '睡前单词自测: 对_/共_',          target: '≥80%',  type: 'frac', days: [1, 2, 3, 5, 0] },
   { key: 'sleep',   label: '21:30准时收工',                 target: '勾',    type: 'chk',  days: [1, 2, 3, 5, 0] },
   { key: 'parent',  label: '家长已核对',                    target: '勾',    type: 'chk',  days: [1, 2, 3, 5, 0] },
+  { sec: '自学记录(周四/周六自由安排日重点填)' },
+  { key: 'note',    label: '今天自学了什么(手动填写)',       target: '自由填', type: 'text', days: [1, 2, 3, 4, 5, 6, 0] },
 ];
 function schedLocalDate(d) {
   d = d || new Date();
@@ -10815,6 +10817,7 @@ function saveDailyScore(dateKey, field, value) {
   const all = getSchedScores();
   all[dateKey] = all[dateKey] || {};
   if (value === '' || value == null) { delete all[dateKey][field]; }
+  else if (field === 'note') { all[dateKey][field] = String(value).slice(0, 200); }  // v19.59: 自学记录存文本
   else { all[dateKey][field] = Number(value); }
   saveState(state);
   renderSchedWeekSummary();
@@ -10920,7 +10923,7 @@ function renderSchedGrid() {
   const mon = _schedGridMonday();
   const scores = getSchedScores();
   const todayKey = schedLocalDate();
-  const COLS = [1, 2, 3, 5, 0]; // 学习日
+  const COLS = [1, 2, 3, 4, 5, 6, 0]; // v19.59: 全周7天 (周四/周六自由安排日可填自学记录)
   const dks = {}, heads = [];
   COLS.forEach(d => {
     const offset = d === 0 ? 6 : d - 1;
@@ -10937,7 +10940,9 @@ function renderSchedGrid() {
       const dk = dks[d];
       const sc = scores[dk] || {};
       let ctrl;
-      if (row.type === 'chk') {
+      if (row.type === 'text') {
+        ctrl = `<input type="text" maxlength="200" placeholder="如: 读书20页" value="${escapeHtml(String(sc[row.key] ?? ''))}" style="width:92px;padding:4px 5px;border-radius:5px;border:1px solid #CBD5E1;background:#F8FAFC;color:#1E293B;font-size:12px" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
+      } else if (row.type === 'chk') {
         ctrl = `<input type="checkbox" ${sc[row.key] ? 'checked' : ''} style="width:17px;height:17px" onchange="window.saveDailyScore('${dk}','${row.key}',this.checked?1:'')">`;
       } else if (row.type === 'frac' || row.type === 'pair') {
         ctrl = `<input type="number" min="0" inputmode="numeric" value="${sc[row.key + '_a'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_a',this.value)"><span style="color:#64748B;font-size:11px">/</span><input type="number" min="0" inputmode="numeric" value="${sc[row.key + '_b'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_b',this.value)">`;
