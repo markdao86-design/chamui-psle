@@ -11011,15 +11011,30 @@ window.computeSchedWeekSummary = computeSchedWeekSummary;
 window.SCHED_GRID = SCHED_GRID;
 
 // ============ 事件绑定 ============
-function bindEvents() {
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const page = btn.dataset.page;
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(`page-${page}`).classList.add('active');
-
+// v19.54: 统一切页函数 (nav按钮 + "其他"收纳菜单共用, 含全部渲染hook)
+const MORE_MENU_PAGES = ['character', 'summer', 'admin'];  // 收纳进"⋯其他"的页面
+function gotoPage(page) {
+  if (!page) return;  // "其他"按钮无 data-page, 防炸
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const btn = document.querySelector(`.tab-btn[data-page="${page}"]`);
+  if (btn && btn.style.display !== 'none') {
+    btn.classList.add('active');
+  } else if (MORE_MENU_PAGES.includes(page)) {
+    const mb = document.getElementById('moreTabBtn');
+    if (mb) mb.classList.add('active');
+  }
+  const pageEl = document.getElementById(`page-${page}`);
+  if (pageEl) pageEl.classList.add('active');
+  _runPageHook(page);
+}
+window.gotoPage = gotoPage;
+function toggleMoreMenu() {
+  const m = document.getElementById('moreMenu');
+  if (m) m.style.display = (m.style.display === 'none' || !m.style.display) ? 'block' : 'none';
+}
+window.toggleMoreMenu = toggleMoreMenu;
+function _runPageHook(page) {
       // v19.15d: 点 ✅ 打卡 tab 时强制跳到当周 + 今日 (防 _displayWeek 残留旧值)
       if (page === 'checkin') {
         if (window.computeCurrentWeekFromToday) {
@@ -11063,7 +11078,11 @@ function bindEvents() {
         saveState(state);
         _checkAndUnlockAch();
       }
-    });
+}
+
+function bindEvents() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => gotoPage(btn.dataset.page));
   });
 
   document.getElementById('prevWeekBtn').addEventListener('click', () => {

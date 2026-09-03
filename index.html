@@ -5208,14 +5208,26 @@ p { font-size: 14px; line-height: 1.6; }
   <button class="tab-btn" data-page="practice">📚 练习</button>
   <button class="tab-btn" data-page="vocab">📇 词汇</button>
   <button class="tab-btn" data-page="history">📊 能力</button>
-  <button class="tab-btn" data-page="character">👤 我的</button>
-  <button class="tab-btn" data-page="summer">📅 暑假</button>
+  <!-- v19.54: 我的/暑假 收纳进 "⋯其他" (按钮仍在, JS click 可达) -->
+  <button class="tab-btn" data-page="character" style="display:none">👤 我的</button>
+  <button class="tab-btn" data-page="summer" style="display:none">📅 暑假</button>
+  <button class="tab-btn" id="moreTabBtn" onclick="window.toggleMoreMenu()" style="opacity:0.55">⋯ 其他</button>
   <!-- 旧 3 个英语类 tab + 管理 tab 隐藏 (page 容器仍存在, JS 跳转可访问) -->
   <button class="tab-btn" data-page="knowledge" style="display:none">🌳 知识树</button>
   <button class="tab-btn" data-page="essay" style="display:none">📝 作文</button>
   <button class="tab-btn paper-bank-tab" data-page="paperbank" style="display:none">📚 题库</button>
   <button class="tab-btn" data-page="admin" style="display:none">⚙️ 管理</button>
 </nav>
+
+<!-- v19.54: "⋯其他" 收纳菜单 (我的/暑假/管理) -->
+<div id="moreMenu" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.55)" onclick="window.toggleMoreMenu()">
+  <div style="position:absolute;top:18%;left:50%;transform:translateX(-50%);background:#16223A;border:1px solid rgba(255,255,255,0.15);border-radius:14px;padding:14px 16px;min-width:230px;box-shadow:0 8px 32px rgba(0,0,0,0.5)" onclick="event.stopPropagation()">
+    <div style="font-size:12px;color:#94A3B8;margin-bottom:10px;font-weight:700">📦 收纳的页面</div>
+    <button onclick="window.gotoPage('character');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#E0E0E0;font-size:14px;font-weight:600">👤 我的 <span style="font-size:11px;color:#94A3B8;font-weight:400">角色·装备·兑换</span></button>
+    <button onclick="window.gotoPage('summer');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#E0E0E0;font-size:14px;font-weight:600">📅 暑假 <span style="font-size:11px;color:#94A3B8;font-weight:400">已结束·存档</span></button>
+    <button onclick="window.gotoPage('admin');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#E0E0E0;font-size:14px;font-weight:600">⚙️ 管理 <span style="font-size:11px;color:#94A3B8;font-weight:400">照片·设置</span></button>
+  </div>
+</div>
 
 <main class="main-container">
   <!-- 主页 -->
@@ -5969,9 +5981,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.53"></script>
-<script src="data.js?v=19.53"></script>
-<script src="app.js?v=19.53"></script>
+<script src="character.js?v=19.54"></script>
+<script src="data.js?v=19.54"></script>
+<script src="app.js?v=19.54"></script>
 
 </body>
 </html>

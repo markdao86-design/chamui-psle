@@ -1142,6 +1142,15 @@ assert(/essay_a/.test(appSrc) && /essay_b/.test(appSrc), 'v19.51: 作文内容+�
 assert((appSrc.match(/SCHED_GRID/g) || []).length >= 3, 'v19.51: SCHED_GRID 被渲染使用');
 assert(/overflow-x:auto/.test(appSrc), 'v19.51: 打分表横向滚动容器(手机不撑破)');
 assert(/v19\.53: 家长停在课表页/.test(appSrc), 'v19.53: 远程更新即时刷新课表页(多设备查看)');
+// v19.54: 我的/暑假收纳进"⋯其他"灰色按钮
+assert(/id="moreTabBtn"/.test(idxSrc), 'v19.54: 其他按钮存在');
+assert(/id="moreMenu"/.test(idxSrc), 'v19.54: 收纳菜单存在');
+assert(/data-page="character" style="display:none"/.test(idxSrc), 'v19.54: 我的tab已隐藏');
+assert(/data-page="summer" style="display:none"/.test(idxSrc), 'v19.54: 暑假tab已隐藏');
+assert(/function gotoPage\(/.test(appSrc) && /window\.gotoPage = gotoPage/.test(appSrc), 'v19.54: gotoPage统一切页+导出');
+assert(/if \(!page\) return;/.test(appSrc), 'v19.54: 无data-page按钮防炸');
+assert(/MORE_MENU_PAGES/.test(appSrc), 'v19.54: 隐藏页激活时其他按钮高亮');
+assert((idxSrc.match(/window\.gotoPage\('(character|summer|admin)'\)/g) || []).length === 3, 'v19.54: 菜单三项都接gotoPage');
 assert(/function renderSchedulePage\(/.test(appSrc), 'v19.50: renderSchedulePage 已定义');
 assert(/page === 'schedule'/.test(appSrc), 'v19.50: tab 切换 hook 已接入 (防死代码)');
 assert(/function computeSchedWeekSummary\(/.test(appSrc), 'v19.50: 周汇总函数已定义');
