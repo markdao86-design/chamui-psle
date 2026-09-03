@@ -943,3 +943,16 @@ GitHub Pages 1-2 分钟自动从 main 分支同步。
 **量化**: QA 593→602项; 浏览器端到端实测(真实DOM change事件→打分→汇总80%联动→周切换→数据清零), 测试全程拦截saveState未污染线上数据。
 
 🤖 协作开发: [Claude Code](https://claude.com/claude-code)
+
+## v19.55 (2026-09-03) 全站换肤: 暗色赛博 → 亮色主题(对齐BTC挖矿策略系统配色)
+
+**改造**:
+1. :root 全变量重写: 浅灰蓝底#F0F2F5/白卡#FFF/品蓝主色#2B5BD7/深灰文字#1F2937/浅边框#E5E9F2
+2. v19.20-21 "inline浅色hex自动转暗"机制整体移除(~3KB CSS), 浅色原生生效
+3. 全文件批量色彩映射 863 处 (index/app/data/character/qa): 亮灰文字→深灰、白透明容器→浅色实底、荧光accent→深色版、青→品蓝、暗底→白底
+4. body 去暗色radial渐变+漂浮装饰; character-card 暗渐变修复(无空格rgba变体补扫)
+5. CLAUDE.md 7.6 配色规则改写为亮色主题版(新UI必读); QA废除14条暗色机制断言+新增7条亮主题守护断言
+
+**验证**: QA 604全过; 浏览器逐页截图检查(主页/课表/打卡/练习/我的/能力/词汇/Cloze弹窗)全部浅色干净。
+
+🤖 协作开发: [Claude Code](https://claude.com/claude-code)

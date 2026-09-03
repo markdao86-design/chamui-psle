@@ -12,32 +12,32 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-/* ===== v19.3: 深色赛博主题 (专家建议: 10岁男孩偏好暗色+发光) ===== */
+/* ===== v19.55: 亮色主题 (对齐 BTC 挖矿策略系统配色: 浅灰蓝底/白卡/品蓝主色) ===== */
 :root {
-  --color-primary: #00D4FF;          /* 电光青 */
-  --color-primary-soft: rgba(0,212,255,0.12);
-  --color-secondary: #00FF88;        /* 荧光绿 */
-  --color-secondary-soft: rgba(0,255,136,0.10);
-  --color-accent: #FF6B35;           /* 熔岩橙 */
-  --color-accent-soft: rgba(255,107,53,0.10);
-  --color-purple: #38BDF8;           /* 柔和天蓝 */
-  --color-purple-soft: rgba(56,189,248,0.12);
-  --color-pink: #FF3366;             /* 玫红 */
-  --color-pink-soft: rgba(255,51,102,0.10);
-  --color-bg: #0F172A;               /* 深邃暗蓝 */
-  --color-bg-dark: #020617;
-  --color-card: rgba(15, 23, 42, 0.85); /* 毛玻璃卡 */
-  --color-card-soft: rgba(30, 41, 59, 0.7);
-  --color-text: #E2E8F0;             /* 亮灰文字 */
-  --color-text-light: #94A3B8;       /* 中灰 */
-  --color-text-dim: #64748B;         /* 暗灰 */
-  --color-border: rgba(255,255,255,0.08);
-  --color-border-soft: rgba(255,255,255,0.04);
-  --color-success: #00FF88;
-  --color-warn: #FFB800;
-  --color-danger: #FF3366;
-  --shadow-cute: 0 2px 8px rgba(0,0,0,0.3), 0 0 1px rgba(0,212,255,0.1);
-  --shadow-pop: 0 4px 20px rgba(0,0,0,0.4), 0 0 2px rgba(0,212,255,0.2);
+  --color-primary: #2B5BD7;          /* 品蓝 */
+  --color-primary-soft: rgba(43,91,215,0.10);
+  --color-secondary: #16A34A;        /* 正绿 */
+  --color-secondary-soft: rgba(22,163,74,0.10);
+  --color-accent: #EA580C;           /* 深橙 */
+  --color-accent-soft: rgba(234,88,12,0.10);
+  --color-purple: #2563EB;           /* 亮蓝 */
+  --color-purple-soft: rgba(37,99,235,0.10);
+  --color-pink: #DC2626;             /* 正红 */
+  --color-pink-soft: rgba(220,38,38,0.08);
+  --color-bg: #F0F2F5;               /* 浅灰蓝底 */
+  --color-bg-dark: #E8EBF0;
+  --color-card: #FFFFFF;             /* 白卡片 */
+  --color-card-soft: #F7F9FC;
+  --color-text: #1F2937;             /* 深灰主文字 */
+  --color-text-light: #6B7280;       /* 副文字灰 */
+  --color-text-dim: #909399;         /* 弱灰 */
+  --color-border: #E5E9F2;
+  --color-border-soft: #EEF1F6;
+  --color-success: #16A34A;
+  --color-warn: #E6A23C;
+  --color-danger: #DC2626;
+  --shadow-cute: 0 1px 4px rgba(31,41,55,0.06), 0 2px 10px rgba(31,41,55,0.05);
+  --shadow-pop: 0 4px 18px rgba(31,41,55,0.10);
   --radius-bubble: 14px;
   --radius-tight: 8px;
   --font-display: 'PingFang SC', 'Microsoft YaHei', 'SimHei', 'Heiti SC', sans-serif;
@@ -60,29 +60,10 @@ body { font-size: 16px; }
 body {
   font-family: var(--font-body);
   background: var(--color-bg);
-  background-image:
-    radial-gradient(circle at 10% 20%, rgba(0, 212, 255, 0.06) 0%, transparent 40%),
-    radial-gradient(circle at 90% 70%, rgba(168, 85, 247, 0.05) 0%, transparent 40%),
-    radial-gradient(circle at 50% 90%, rgba(0, 255, 136, 0.04) 0%, transparent 40%);
-  background-attachment: fixed;
   color: var(--color-text);
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
-}
-
-/* 漂浮装饰元素 */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-image:
-    radial-gradient(circle 2px at 20% 30%, rgba(255,107,107,0.2) 50%, transparent 51%),
-    radial-gradient(circle 3px at 80% 60%, rgba(78,205,196,0.2) 50%, transparent 51%),
-    radial-gradient(circle 2px at 40% 80%, rgba(255,182,217,0.3) 50%, transparent 51%);
-  background-size: 600px 600px, 800px 800px, 500px 500px;
-  pointer-events: none;
-  z-index: 0;
 }
 
 /* ===== 顶栏 ===== */
@@ -135,7 +116,7 @@ body::before {
 }
 
 .stat-pill.points { background: var(--color-accent); position: relative; }
-.stat-pill.crystals { background: rgba(168,85,247,0.15); color: #C084FC; border: 1px solid rgba(168,85,247,0.3); position: relative; }
+.stat-pill.crystals { background: rgba(124,58,237,0.15); color: #C084FC; border: 1px solid rgba(124,58,237,0.3); position: relative; }
 .stat-pill.points::after, .stat-pill.crystals::after, .stat-pill.level::after {
   content: attr(title);
   position: absolute;
@@ -157,8 +138,8 @@ body::before {
 .stat-pill.points:hover::after, .stat-pill.crystals:hover::after, .stat-pill.level:hover::after {
   opacity: 1;
 }
-.stat-pill.level { background: rgba(0,255,136,0.12); color: var(--color-success); border: 1px solid rgba(0,255,136,0.25); }
-.stat-pill.week { background: rgba(56,189,248,0.12); color: var(--color-purple); border: 1px solid rgba(56,189,248,0.25); }
+.stat-pill.level { background: rgba(22,163,74,0.12); color: var(--color-success); border: 1px solid rgba(22,163,74,0.25); }
+.stat-pill.week { background: rgba(37,99,235,0.12); color: var(--color-purple); border: 1px solid rgba(37,99,235,0.25); }
 
 /* ===== 标签导航 ===== */
 .tabs {
@@ -195,7 +176,7 @@ body::before {
 }
 
 .tab-btn.active {
-  background: rgba(0,212,255,0.15);
+  background: rgba(43,91,215,0.15);
   color: var(--color-primary);
   transform: translateY(2px);
   box-shadow: 0 1px 0 var(--color-text);
@@ -258,92 +239,7 @@ body::before {
   padding: 12px;
   transition: background 0.8s ease, box-shadow 0.8s ease;
 }
-/* v19.20: 全局 — 所有内嵌 inline 浅底 hex 自动转暗调透明渐变 (适配暗主题) */
-/* 蓝/青色调 */
-[style*="background:#F0F8FF"],
-[style*="background:#E1F5FE"],
-[style*="background:#E3F2FD"],
-[style*="background:#BBDEFB"] {
-  background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,212,255,0.02)) !important;
-  border: 1px solid rgba(0,212,255,0.25) !important;
-}
-/* 绿色调 */
-[style*="background:#E8F5E9"],
-[style*="background:#F1F8E9"],
-[style*="background:#C8E6C9"] {
-  background: linear-gradient(135deg, rgba(0,255,136,0.08), rgba(0,255,136,0.02)) !important;
-  border: 1px solid rgba(0,255,136,0.25) !important;
-}
-/* 黄/橙色调 */
-[style*="background:#FFF3E0"],
-[style*="background:#FFF8E0"],
-[style*="background:#FFF8E1"],
-[style*="background:#FFFCE6"],
-[style*="background:#FFE0B2"] {
-  background: linear-gradient(135deg, rgba(255,184,0,0.10), rgba(255,107,53,0.04)) !important;
-  border: 1px solid rgba(255,184,0,0.25) !important;
-}
-/* 红/粉色调 */
-[style*="background:#FFEBEE"],
-[style*="background:#FCE4EC"],
-[style*="background:#FFF5F0"],
-[style*="background:#F8BBD0"],
-[style*="background:#FFF0F0"] {
-  background: linear-gradient(135deg, rgba(255,51,102,0.08), rgba(255,51,102,0.02)) !important;
-  border: 1px solid rgba(255,51,102,0.25) !important;
-}
-/* 紫色调 */
-[style*="background:#F5F0FF"] {
-  background: linear-gradient(135deg, rgba(167,136,224,0.10), rgba(167,136,224,0.02)) !important;
-  border: 1px solid rgba(167,136,224,0.25) !important;
-}
-/* 中性灰白 (v19.25: 加 #ECEFF1 浅灰蓝) */
-[style*="background:#F5F5F5"],
-[style*="background:#FAFAFA"],
-[style*="background:#EEEEEE"],
-[style*="background:#EEE;"],
-[style*="background:#EEE "],
-[style*="background:#FFF;"],
-[style*="background:#FFF "],
-[style*="background:#FFFFFF"],
-[style*="background:#FFF8F0"],
-[style*="background:#ECEFF1"],
-[style*="background:white"],
-[style*="background: white"] {
-  background: rgba(255,255,255,0.04) !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-}
-/* linear-gradient 含浅红/粉色 (例 #FFE0E0,#FFF0F0 / #FFE0B2,#FFE0E0) — 转暗红透明渐变 */
-[style*="background:linear-gradient(135deg,#FFE0E0"],
-[style*="background:linear-gradient(135deg, #FFE0E0"],
-[style*="linear-gradient(135deg,#FFF0F0"],
-[style*="linear-gradient(135deg, #FFF0F0"] {
-  background: linear-gradient(135deg, rgba(255,107,107,0.10), rgba(255,107,107,0.03)) !important;
-  border: 1px solid rgba(255,107,107,0.25) !important;
-}
-/* 把超深字色 (#212121/#333/#000/#2D3047/#5D4037 类) 强转亮灰 (在被覆盖底色之后看得见) */
-[style*="color:#212121"],
-[style*="color:#2D3047"],
-[style*="color:#5D4037"],
-[style*="color:#5D4500"],
-[style*="color:#5D4045"],
-[style*="color:#33691E"],
-[style*="color:#1B5E20"],
-[style*="color:#0D47A1"],
-[style*="color:#01579B"],
-[style*="color:#880E4F"],
-[style*="color:#BF360C"],
-[style*="color:#C62828"]:not(.intentional-red),
-[style*="color:#455A64"],
-[style*="color:#1565C0"] {
-  color: #E0E0E0 !important;
-}
-/* 中灰字 #666/#555/#888/#999 提亮到中亮灰 */
-[style*="color:#666"],
-[style*="color:#555"],
-[style*="color:#777"]:not(button) {
-  color: #A0A0A0 !important;
-}
+/* v19.55: 亮色主题 — v19.20-21 自动转暗机制已整体移除, inline 浅色 hex 原生生效 */
 /* v19.19: 主页左右 2 栏布局 (iPad 横屏 ≥900px), 竖屏/手机 fallback 单栏 */
 .home-grid-2col {
   display: grid;
@@ -370,11 +266,11 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(0,212,255,0.04), rgba(0,255,136,0.03));
-  border: 1px dashed rgba(0,212,255,0.20);
+  background: linear-gradient(135deg, rgba(43,91,215,0.04), rgba(22,163,74,0.03));
+  border: 1px dashed rgba(43,91,215,0.20);
   border-radius: 10px;
   padding: 16px 20px;
-  color: #94A3B8;
+  color: #6B7280;
   font-size: 12px;
   font-style: italic;
   text-align: center;
@@ -385,7 +281,7 @@ body::before {
   /* 高度差 <30px 时整个隐藏, 不留 spacer 痕迹 */
   display: none;
 }
-.col-balance-filler b { color: #E0E0E0; font-weight: 700; font-style: normal; }
+.col-balance-filler b { color: #1F2937; font-weight: 700; font-style: normal; }
 /* v19.12: 主页极简化 — 主页隐藏角色/装备/双龙/皮肤/兑换/成就墙 (移到 "我的" tab) */
 #page-dashboard .hero-section,
 #page-dashboard #dragonProgressCard,
@@ -434,7 +330,7 @@ body::before {
 /* v18.12: 名师秘诀 — 改白底深字 + 顶部学科色 banner, 大幅提高对比度 */
 .master-tip-card {
   background:
-    radial-gradient(ellipse at 15% 15%, rgba(255,255,255,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 15%, #F5F7FA 0%, transparent 55%),
     linear-gradient(135deg, var(--color-accent-soft) 0%, var(--color-card) 70%);
   border: 1px solid rgba(255,159,69,0.2);
   border-radius: var(--radius-bubble);
@@ -498,9 +394,9 @@ body::before {
 /* v18.16: 蓝色系角色卡 — 暖蓝渐变 + 云朵 + 星点装饰 + 角色光晕 */
 .character-card {
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(0,212,255,0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(56,189,248,0.04) 0%, transparent 45%),
-    linear-gradient(140deg, rgba(15,23,42,0.9) 0%, rgba(30,41,59,0.8) 45%, var(--color-card) 100%);
+    radial-gradient(ellipse at 20% 20%, rgba(43,91,215,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(37,99,235,0.04) 0%, transparent 45%),
+    linear-gradient(140deg, rgba(255,255,255,0.9) 0%, rgba(247,249,252,0.8) 45%, var(--color-card) 100%);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-bubble);
   padding: 16px;
@@ -508,9 +404,9 @@ body::before {
   position: relative;
   overflow: hidden;
   box-shadow:
-    0 2px 8px rgba(0, 212, 255, 0.08),
+    0 2px 8px rgba(43,91,215, 0.08),
     0 12px 28px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255,255,255,0.04);
+    inset 0 1px 0 #F7F9FC;
 }
 
 .character-card::before {
@@ -556,7 +452,7 @@ body::before {
   transform: translate(-50%, -50%);
   width: 260px;
   height: 260px;
-  background: radial-gradient(circle, rgba(56,189,248,0.3) 0%, rgba(0,212,255,0.12) 35%, transparent 65%);
+  background: radial-gradient(circle, rgba(37,99,235,0.3) 0%, rgba(43,91,215,0.12) 35%, transparent 65%);
   pointer-events: none;
   z-index: 0;
   animation: char-glow 5s ease-in-out infinite;
@@ -569,7 +465,7 @@ body::before {
   transform: translateX(-50%);
   width: 180px;
   height: 24px;
-  background: radial-gradient(ellipse, rgba(56,189,248,0.2) 0%, transparent 70%);
+  background: radial-gradient(ellipse, rgba(37,99,235,0.2) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -578,7 +474,7 @@ body::before {
   width: 220px;
   height: 220px;
   animation: idle-bounce 3s ease-in-out infinite;
-  filter: drop-shadow(0 0 20px rgba(56,189,248,0.3)) drop-shadow(0 8px 16px rgba(0,0,0,0.3));
+  filter: drop-shadow(0 0 20px rgba(37,99,235,0.3)) drop-shadow(0 8px 16px rgba(0,0,0,0.3));
   margin-top: 80px;
 }
 
@@ -630,7 +526,7 @@ body::before {
 .big-score-block {
   flex: 1;
   background: linear-gradient(135deg, var(--color-card) 0%, var(--color-card-soft) 100%);
-  border: 1px solid rgba(0,212,255,0.15);
+  border: 1px solid rgba(43,91,215,0.15);
   border-top: 2px solid var(--color-primary);
   border-radius: var(--radius-bubble);
   padding: 10px 12px;
@@ -643,7 +539,7 @@ body::before {
 }
 @keyframes score-pulse {
   0%   { transform: scale(1); }
-  35%  { transform: scale(1.18); box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 16px 36px rgba(255,107,107,0.6); }
+  35%  { transform: scale(1.18); box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 16px 36px rgba(220,38,38,0.6); }
   100% { transform: scale(1); }
 }
 .big-score-num {
@@ -675,8 +571,8 @@ body::before {
 
 .beat-block {
   flex: 1;
-  background: rgba(0,212,255,0.06);
-  border: 1px solid rgba(0,212,255,0.15);
+  background: rgba(43,91,215,0.06);
+  border: 1px solid rgba(43,91,215,0.15);
   border-top: 2px solid var(--color-primary);
   border-radius: var(--radius-bubble);
   padding: 10px 12px;
@@ -739,13 +635,13 @@ body::before {
   gap: 10px;
   margin: 10px auto 4px;
   padding: 10px 20px;
-  background: rgba(0,212,255,0.1);
-  border: 1px solid rgba(0,212,255,0.3);
+  background: rgba(43,91,215,0.1);
+  border: 1px solid rgba(43,91,215,0.3);
   border-radius: 24px;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
 }
-.cta-checkin-compact:hover { transform: scale(1.03); box-shadow: 0 0 12px rgba(0,212,255,0.3); }
+.cta-checkin-compact:hover { transform: scale(1.03); box-shadow: 0 0 12px rgba(43,91,215,0.3); }
 .cta-checkin-compact:active { transform: scale(0.97); }
 .cta-mini-ring {
   width: 32px;
@@ -755,7 +651,7 @@ body::before {
 }
 .cta-mini-ring .cta-ring-bg {
   fill: none;
-  stroke: rgba(255,255,255,0.08);
+  stroke: #EEF1F6;
   stroke-width: 3;
 }
 .cta-mini-ring .cta-ring-fill {
@@ -804,7 +700,7 @@ body::before {
   align-items: center;
   gap: 8px;
   padding: 5px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid #F5F7FA;
 }
 .daily-slot-item:last-child { border-bottom: none; }
 .daily-slot-item.done { opacity: 0.5; text-decoration: line-through; }
@@ -818,14 +714,14 @@ body::before {
 .evo-btn {
   font-size: 10px;
   padding: 2px 6px;
-  border: 1px solid rgba(168,85,247,0.4);
+  border: 1px solid rgba(124,58,237,0.4);
   border-radius: 4px;
-  background: rgba(168,85,247,0.15);
+  background: rgba(124,58,237,0.15);
   color: #C084FC;
   cursor: pointer;
   margin-top: 4px;
 }
-.evo-btn:hover { background: rgba(168,85,247,0.3); }
+.evo-btn:hover { background: rgba(124,58,237,0.3); }
 .evo-tag {
   font-size: 9px;
   font-weight: 700;
@@ -931,7 +827,7 @@ body::before {
   font-size: 10px;
   font-weight: 700;
   color: #D32F2F;
-  background: rgba(255,51,102,0.1);
+  background: rgba(220,38,38,0.1);
   padding: 1px 5px;
   border-radius: 8px;
   white-space: nowrap;
@@ -1154,9 +1050,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   animation: char-glow 0.8s ease;
 }
 @keyframes char-glow {
-  0%   { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,107,107,0)); }
-  40%  { transform: scale(1.08); filter: drop-shadow(0 0 25px rgba(255,107,107,0.7)); }
-  100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,107,107,0)); }
+  0%   { transform: scale(1); filter: drop-shadow(0 0 0 rgba(220,38,38,0)); }
+  40%  { transform: scale(1.08); filter: drop-shadow(0 0 25px rgba(220,38,38,0.7)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(220,38,38,0)); }
 }
 
 /* ===== 撒花粒子 ===== */
@@ -1177,7 +1073,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 /* ===== 进度条 ===== */
 .progress-section {
-  background: linear-gradient(135deg, rgba(0,255,136,0.06) 0%, rgba(0,212,255,0.04) 100%);
+  background: linear-gradient(135deg, rgba(22,163,74,0.06) 0%, rgba(43,91,215,0.04) 100%);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-bubble);
   padding: 24px;
@@ -1290,7 +1186,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 /* 已穿戴 (active) — 蓝色高亮 + 柔和光晕 */
 .equipment-item.unlocked {
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(0,212,255,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 20%, rgba(43,91,215,0.08) 0%, transparent 55%),
     linear-gradient(135deg, var(--color-primary-soft) 0%, var(--color-card) 80%);
   border: 1px solid var(--color-primary);
   animation: equipment-pulse 2.4s ease-in-out infinite;
@@ -1372,7 +1268,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .skin-item.locked:hover { transform: none; box-shadow: none; border-color: var(--color-border); }
 .skin-item.active {
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(0,212,255,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 20%, rgba(43,91,215,0.08) 0%, transparent 55%),
     linear-gradient(135deg, var(--color-primary-soft) 0%, var(--color-card) 80%);
   border: 1px solid var(--color-primary);
   box-shadow: 0 2px 12px rgba(74,144,199,0.20);
@@ -1450,9 +1346,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 /* v19.15b: 未打卡高亮 + 已打卡灰掉, 视觉对比加强 */
 .checkin-item {
-  background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,212,255,0.02));
-  border: 1px solid rgba(0,212,255,0.45);
-  box-shadow: 0 0 12px rgba(0,212,255,0.10), inset 0 0 0 1px rgba(0,212,255,0.05);
+  background: linear-gradient(135deg, rgba(43,91,215,0.08), rgba(43,91,215,0.02));
+  border: 1px solid rgba(43,91,215,0.45);
+  box-shadow: 0 0 12px rgba(43,91,215,0.10), inset 0 0 0 1px rgba(43,91,215,0.05);
   border-radius: var(--radius-tight);
   padding: 14px 16px;
   display: flex;
@@ -1465,15 +1361,15 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 
 .checkin-item:hover {
-  box-shadow: 0 0 16px rgba(0,212,255,0.25), inset 0 0 0 1px rgba(0,212,255,0.10);
-  border-color: rgba(0,212,255,0.7);
+  box-shadow: 0 0 16px rgba(43,91,215,0.25), inset 0 0 0 1px rgba(43,91,215,0.10);
+  border-color: rgba(43,91,215,0.7);
   transform: translateY(-1px);
 }
 
 .checkin-item.checked {
   background: rgba(80,80,80,0.08);
   border: 1px solid rgba(120,120,120,0.18);
-  border-left: 3px solid rgba(255,184,0,0.4);
+  border-left: 3px solid rgba(230,162,60,0.4);
   box-shadow: none;
   color: var(--color-text-dim);
   text-decoration: line-through;
@@ -1493,7 +1389,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 
 .checkin-item.special.checked {
-  background: rgba(255,184,0,0.10);
+  background: rgba(230,162,60,0.10);
   border-left: 4px solid var(--color-warn);
 }
 
@@ -1644,8 +1540,8 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 var(--color-text); }
 .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--color-text); }
-.btn-primary { background: rgba(0,212,255,0.15); color: var(--color-primary); border: 1px solid rgba(0,212,255,0.3); }
-.btn-success { background: var(--color-primary); color: #0F172A; }
+.btn-primary { background: rgba(43,91,215,0.15); color: var(--color-primary); border: 1px solid rgba(43,91,215,0.3); }
+.btn-success { background: var(--color-primary); color: #FFFFFF; }
 .btn-warn { background: var(--color-warn); color: white; }
 .btn-danger { background: var(--color-danger); color: white; }
 .btn-secondary { background: var(--color-card-soft); color: var(--color-text); }
@@ -1729,7 +1625,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 
 .toast.success { background: var(--color-success); color: white; }
-.toast.sync { background: rgba(30, 41, 59, 0.92); border: 1px solid rgba(56,189,248,0.4); color: #94a3b8; font-size: 13px; }
+.toast.sync { background: rgba(255,255,255,0.97); border: 1px solid rgba(37,99,235,0.4); color: #6B7280; font-size: 13px; }
 .toast.warn { background: var(--color-warn); color: white; }
 .toast.danger { background: var(--color-danger); color: white; }
 .toast.crit { background: linear-gradient(135deg, #6366F1, #EC4899); color: white; font-weight: 700; box-shadow: 0 4px 20px rgba(99,102,241,0.5); animation: toastSlideIn 0.4s ease, critPulse 0.6s ease 0.4s; }
@@ -1789,13 +1685,13 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 .day-tab:hover { transform: translateY(-2px); background: var(--color-bg); }
 .day-tab.active {
-  background: rgba(0,212,255,0.15);
+  background: rgba(43,91,215,0.15);
   color: var(--color-primary);
   border-color: var(--color-primary);
   transform: translateY(-2px);
   box-shadow: 0 5px 0 rgba(0,0,0,0.15);
 }
-.day-tab.today { border-color: var(--color-primary); border-width: 3px; box-shadow: 0 0 12px rgba(0,212,255,0.3); }
+.day-tab.today { border-color: var(--color-primary); border-width: 3px; box-shadow: 0 0 12px rgba(43,91,215,0.3); }
 .day-tab-name { font-weight: 700; font-size: 13px; }
 .day-tab-date { font-size: 11px; opacity: 0.7; }
 .day-tab-count {
@@ -1834,7 +1730,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   width: 110px;
   height: 110px;
   border-radius: 50%;
-  background: conic-gradient(var(--ring-color) calc(var(--ring-pct) * 1%), rgba(30,41,59,0.6) 0);
+  background: conic-gradient(var(--ring-color) calc(var(--ring-pct) * 1%), rgba(247,249,252,0.6) 0);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1956,10 +1852,10 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 /* ===== v3 上头版反馈 ===== */
 .day-tab.complete {
-  background: linear-gradient(135deg, rgba(0,255,136,0.12) 0%, rgba(16,185,129,0.08) 100%);
+  background: linear-gradient(135deg, rgba(22,163,74,0.12) 0%, rgba(16,185,129,0.08) 100%);
   color: var(--color-success);
-  border: 2px solid rgba(0,255,136,0.5);
-  box-shadow: 0 0 8px rgba(0,255,136,0.15), 0 3px 0 rgba(0,0,0,0.08);
+  border: 2px solid rgba(22,163,74,0.5);
+  box-shadow: 0 0 8px rgba(22,163,74,0.15), 0 3px 0 rgba(0,0,0,0.08);
   position: relative;
 }
 .day-tab.complete::after {
@@ -1970,7 +1866,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   width: 18px;
   height: 18px;
   background: var(--color-success);
-  color: #0F172A;
+  color: #FFFFFF;
   font-size: 11px;
   font-weight: 900;
   border-radius: 50%;
@@ -1982,9 +1878,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .day-tab.complete .day-tab-date,
 .day-tab.complete .day-tab-count { color: var(--color-success); opacity: 1; font-weight: 700; }
 .day-tab.complete.active {
-  background: linear-gradient(135deg, rgba(0,255,136,0.2) 0%, rgba(16,185,129,0.12) 100%);
+  background: linear-gradient(135deg, rgba(22,163,74,0.2) 0%, rgba(16,185,129,0.12) 100%);
   border-color: var(--color-success);
-  box-shadow: 0 0 14px rgba(0,255,136,0.25), 0 5px 0 rgba(0,0,0,0.15);
+  box-shadow: 0 0 14px rgba(22,163,74,0.25), 0 5px 0 rgba(0,0,0,0.15);
 }
 
 .combo-banner {
@@ -2028,24 +1924,24 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   font-size: 14px;
   font-weight: 700;
   color: var(--color-primary);
-  background: rgba(0,212,255,0.06);
+  background: rgba(43,91,215,0.06);
   border: 2px dashed var(--color-primary);
   border-radius: var(--radius);
   cursor: pointer;
   transition: all 0.2s;
 }
-.tier-expand-btn:hover { transform: scale(1.02); box-shadow: 0 2px 8px rgba(0,212,255,0.3); }
+.tier-expand-btn:hover { transform: scale(1.02); box-shadow: 0 2px 8px rgba(43,91,215,0.3); }
 
 /* ===== v19.6: 本周加练池 ===== */
 .weekly-pool-card {
   margin: 14px 0 8px;
-  background: linear-gradient(135deg, rgba(168,85,247,0.06), rgba(56,189,248,0.04));
-  border: 1px solid rgba(168,85,247,0.2);
+  background: linear-gradient(135deg, rgba(124,58,237,0.06), rgba(37,99,235,0.04));
+  border: 1px solid rgba(124,58,237,0.2);
   border-radius: var(--radius);
   overflow: hidden;
 }
 .weekly-pool-card.pool-card-full {
-  background: linear-gradient(135deg, rgba(255,215,0,0.10), rgba(0,255,136,0.06));
+  background: linear-gradient(135deg, rgba(255,215,0,0.10), rgba(22,163,74,0.06));
   border-color: rgba(255,215,0,0.4);
   box-shadow: 0 0 0 1px rgba(255,215,0,0.2) inset;
 }
@@ -2062,15 +1958,15 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .pool-title { font-weight: 700; font-size: 14px; color: var(--color-text); }
 .pool-progress-num { font-size: 13px; color: #C084FC; font-weight: 600; }
 .pool-progress-bar { flex: 1; max-width: 140px; height: 6px; background: rgba(0,0,0,0.18); border-radius: 3px; overflow: hidden; }
-.pool-progress-fill { height: 100%; background: linear-gradient(90deg, #C084FC, #38BDF8); transition: width 0.3s; }
+.pool-progress-fill { height: 100%; background: linear-gradient(90deg, #C084FC, #2563EB); transition: width 0.3s; }
 .pool-toggle { font-size: 10px; color: var(--color-text-light); width: 12px; text-align: center; }
 .pool-rows { padding: 0 14px 12px; }
 .pool-row {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 0;
-  border-top: 1px solid rgba(255,255,255,0.05);
+  border-top: 1px solid #F5F7FA;
 }
-.pool-row:first-child { border-top: 1px solid rgba(168,85,247,0.15); }
+.pool-row:first-child { border-top: 1px solid rgba(124,58,237,0.15); }
 .pool-row-done { opacity: 0.55; }
 .pool-row-icon { font-size: 22px; flex-shrink: 0; width: 28px; text-align: center; }
 .pool-row-info { flex: 1; min-width: 0; }
@@ -2079,18 +1975,18 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .pool-row-hint { font-size: 11px; color: var(--color-text-light); margin-top: 2px; opacity: 0.85; }
 .pool-row-action { flex-shrink: 0; }
 .pool-add-btn {
-  background: linear-gradient(135deg, #C084FC, #38BDF8);
+  background: linear-gradient(135deg, #C084FC, #2563EB);
   color: #fff; border: none; padding: 6px 12px;
   border-radius: 6px; font-size: 12px; font-weight: 600;
   cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
 }
-.pool-add-btn:hover { transform: scale(1.05); box-shadow: 0 2px 8px rgba(168,85,247,0.4); }
+.pool-add-btn:hover { transform: scale(1.05); box-shadow: 0 2px 8px rgba(124,58,237,0.4); }
 .pool-done-tag { color: var(--color-success); font-size: 12px; font-weight: 600; }
 .pool-readonly-tag { color: var(--color-text-light); font-size: 11px; }
 .pool-tip {
   margin-top: 8px;
   padding: 6px 10px;
-  background: rgba(255,255,255,0.03);
+  background: #FAFBFD;
   border-radius: 6px;
   font-size: 11px;
   color: var(--color-text-light);
@@ -2101,19 +1997,19 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   margin-bottom: 8px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: rgba(255,255,255,0.04);
+  background: #F7F9FC;
   transition: all 0.2s;
 }
 .summer-day-today {
-  background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,184,0,0.04));
-  box-shadow: 0 0 0 2px rgba(255,184,0,0.55), 0 4px 12px rgba(255,184,0,0.15);
+  background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(230,162,60,0.04));
+  box-shadow: 0 0 0 2px rgba(230,162,60,0.55), 0 4px 12px rgba(230,162,60,0.15);
 }
 .summer-day-complete {
-  background: linear-gradient(135deg, rgba(0,255,136,0.10), rgba(0,255,136,0.02));
-  box-shadow: 0 0 0 1px rgba(0,255,136,0.30) inset;
+  background: linear-gradient(135deg, rgba(22,163,74,0.10), rgba(22,163,74,0.02));
+  box-shadow: 0 0 0 1px rgba(22,163,74,0.30) inset;
 }
 .summer-day-missed { opacity: 0.55; }
-.summer-day-rest { background: rgba(255,184,0,0.06); }
+.summer-day-rest { background: rgba(230,162,60,0.06); }
 .summer-day-header {
   display: flex;
   align-items: center;
@@ -2124,15 +2020,15 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 .summer-day-date { font-weight: 700; font-size: 14px; color: var(--color-text); }
 .summer-day-dow { color: var(--color-text-light); }
-.summer-day-week { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: rgba(255,255,255,0.05); }
+.summer-day-week { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: #F5F7FA; }
 .summer-day-title { color: var(--color-text-light); font-size: 11px; flex-basis: 100%; }
 .summer-day-prog { margin-left: auto; font-size: 12px; font-weight: 700; color: #C084FC; }
-.summer-day-full-badge { color: #FFB800; font-weight: 700; font-size: 12px; }
-.summer-day-today-badge { color: #FFB800; font-weight: 700; font-size: 12px; animation: pulse 2s infinite; }
+.summer-day-full-badge { color: #E6A23C; font-weight: 700; font-size: 12px; }
+.summer-day-today-badge { color: #E6A23C; font-weight: 700; font-size: 12px; animation: pulse 2s infinite; }
 .summer-day-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .summer-task-chip {
-  background: rgba(168,85,247,0.10);
-  border: 1px solid rgba(168,85,247,0.30);
+  background: rgba(124,58,237,0.10);
+  border: 1px solid rgba(124,58,237,0.30);
   color: var(--color-text);
   padding: 6px 10px;
   border-radius: 6px;
@@ -2146,22 +2042,22 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .summer-task-chip b { font-weight: 700; margin-right: 2px; opacity: 0.7; }
 .summer-task-chip:hover {
   transform: translateY(-1px);
-  background: rgba(168,85,247,0.20);
-  box-shadow: 0 2px 8px rgba(168,85,247,0.35);
+  background: rgba(124,58,237,0.20);
+  box-shadow: 0 2px 8px rgba(124,58,237,0.35);
 }
 .summer-task-done {
-  background: rgba(0,255,136,0.12) !important;
-  border-color: rgba(0,255,136,0.45) !important;
+  background: rgba(22,163,74,0.12) !important;
+  border-color: rgba(22,163,74,0.45) !important;
   color: var(--color-success) !important;
   text-decoration: line-through;
 }
 .summer-task-highlight {
-  background: rgba(255,184,0,0.18);
-  border-color: rgba(255,184,0,0.55);
+  background: rgba(230,162,60,0.18);
+  border-color: rgba(230,162,60,0.55);
   font-weight: 600;
 }
 .summer-rest-tag {
-  color: #FFB800;
+  color: #E6A23C;
   font-weight: 600;
   padding: 8px 12px;
   font-size: 13px;
@@ -2173,7 +2069,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .checkin-item.checked.tier-core,
 .checkin-item.checked.tier-extend,
 .checkin-item.checked.tier-bonus { border-left: 3px solid var(--color-warn); opacity: 0.55; }
-.checkin-item.task-large { padding: 16px 14px; background: linear-gradient(135deg, rgba(0,212,255,0.04), transparent); }
+.checkin-item.task-large { padding: 16px 14px; background: linear-gradient(135deg, rgba(43,91,215,0.04), transparent); }
 .checkin-item.task-small { padding: 10px 14px; font-size: 14px; }
 .pts-preview { color: var(--color-primary); font-weight: 700; font-size: 11px; }
 /* v19.2: crit flash */
@@ -2192,12 +2088,12 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .fc-card-inner { position:relative; width:100%; min-height:560px; transition:transform .5s; transform-style:preserve-3d; border-radius:16px; }
 .fc-card.flipped .fc-card-inner { transform:rotateY(180deg); }
 .fc-card-front, .fc-card-back { position:absolute; inset:0; backface-visibility:hidden; border-radius:16px; display:flex; flex-direction:column; padding:28px; }
-.fc-card-front { background:linear-gradient(135deg,#1E293B,#334155); border:3px solid #475569; color:#F8FAFC; align-items:center; justify-content:center; }
+.fc-card-front { background:linear-gradient(135deg,#FFFFFF,#E5E9F2); border:3px solid #D4DAE5; color:#1F2937; align-items:center; justify-content:center; }
 .fc-card-back { background:linear-gradient(135deg,#064E3B,#065F46); border:3px solid #10B981; color:#D1FAE5; transform:rotateY(180deg); align-items:stretch; justify-content:flex-start; overflow-y:auto; }
 .fc-card-word { font-size:44px; font-weight:700; margin-bottom:14px; text-align:center; }
-.fc-card-hint { font-size:15px; color:#94A3B8; }
+.fc-card-hint { font-size:15px; color:#6B7280; }
 .fc-card-meaning { font-size:34px; font-weight:700; margin:6px 0 14px; text-align:center; color:#FFFFFF; }
-.fc-card-endef { font-size:18px; color:#E0F2FE; line-height:1.5; padding:10px 14px; background:rgba(56,189,248,0.12); border-radius:8px; margin-bottom:10px; }
+.fc-card-endef { font-size:18px; color:#E0F2FE; line-height:1.5; padding:10px 14px; background:rgba(37,99,235,0.12); border-radius:8px; margin-bottom:10px; }
 .fc-card-sentence { font-size:18px; color:#A7F3D0; font-style:italic; line-height:1.55; padding:10px 14px; margin-bottom:10px; background:rgba(16,185,129,0.10); border-radius:8px; }
 .fc-card-qtype {
   font-size:18px; color:#FEF3C7; background:rgba(251,191,36,0.14);
@@ -2209,18 +2105,18 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .fc-btn-know { background:#10B981; color:#fff; }
 .fc-btn-dont { background:#EF4444; color:#fff; }
 .fc-deck-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
-.fc-deck-item { padding:12px; border-radius:8px; border:1px solid #334155; background:#1E293B; cursor:pointer; transition:all .2s; }
+.fc-deck-item { padding:12px; border-radius:8px; border:1px solid #E5E9F2; background:#FFFFFF; cursor:pointer; transition:all .2s; }
 .fc-deck-item:hover { border-color:#60A5FA; background:#1E3A5F; }
-.fc-deck-name { font-size:15px; font-weight:600; color:#F8FAFC; }
-.fc-deck-progress { font-size:14px; color:#94A3B8; margin-top:4px; }
+.fc-deck-name { font-size:15px; font-weight:600; color:#1F2937; }
+.fc-deck-progress { font-size:14px; color:#6B7280; margin-top:4px; }
 
 /* v19.3: 每日挑战卡片 */
 .game-hub-card {
   margin: 12px 0;
   padding: 16px 20px;
   border-radius: var(--radius-tight);
-  border: 1px solid rgba(255,184,0,0.3);
-  background: linear-gradient(135deg, rgba(255,184,0,0.08) 0%, rgba(255,107,53,0.04) 100%);
+  border: 1px solid rgba(230,162,60,0.3);
+  background: linear-gradient(135deg, rgba(230,162,60,0.08) 0%, rgba(234,88,12,0.04) 100%);
   text-align: center;
 }
 .game-hub-card.exhausted {
@@ -2232,7 +2128,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .game-hub-sub { font-size: 12px; color: var(--color-text-light); margin-bottom: 8px; }
 .game-hub-btn {
   background: var(--color-warn);
-  color: #0F172A;
+  color: #FFFFFF;
   font-weight: 700;
   padding: 8px 24px;
   border-radius: 999px;
@@ -2242,7 +2138,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   transition: transform 0.15s;
 }
 .game-hub-btn:hover { transform: scale(1.05); }
-.chapter-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(0,212,255,0.08); padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; color:var(--color-primary); border:1px solid rgba(0,212,255,0.2); }
+.chapter-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(43,91,215,0.08); padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; color:var(--color-primary); border:1px solid rgba(43,91,215,0.2); }
 
 .pts-breakdown {
   margin: 8px 0;
@@ -2293,9 +2189,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 /* slot 卡片 +N badge 风格 — 统一玻璃风格 */
 .checkin-item .checkin-points {
-  background: rgba(255,107,53,0.12);
+  background: rgba(234,88,12,0.12);
   color: var(--color-accent);
-  border: 1px solid rgba(255,107,53,0.25);
+  border: 1px solid rgba(234,88,12,0.25);
   border-radius: 999px;
   padding: 4px 12px;
   font-family: 'Fredoka', sans-serif;
@@ -2305,7 +2201,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   box-shadow: none;
 }
 .checkin-item.checked .checkin-points {
-  background: rgba(255,184,0,0.15);
+  background: rgba(230,162,60,0.15);
   color: var(--color-warn);
 }
 
@@ -2329,7 +2225,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 .photo-btn:hover { transform: scale(1.1); }
 .photo-btn.has-photo {
-  background: rgba(255,184,0,0.15);
+  background: rgba(230,162,60,0.15);
   border-color: var(--color-warn);
 }
 
@@ -2383,7 +2279,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   gap: 4px;
   padding: 18px 10px;
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(0,212,255,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 20%, rgba(43,91,215,0.06) 0%, transparent 55%),
     linear-gradient(135deg, var(--color-primary-soft) 0%, var(--color-card) 80%);
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-tight);
@@ -2418,8 +2314,8 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 /* v19.15b 软打卡逃生口 (fromGuard=true 时显示) */
 .photo-source-guard-banner {
-  background: linear-gradient(135deg, rgba(255,184,0,0.18), rgba(255,107,53,0.10));
-  border: 2px solid rgba(255,184,0,0.5);
+  background: linear-gradient(135deg, rgba(230,162,60,0.18), rgba(234,88,12,0.10));
+  border: 2px solid rgba(230,162,60,0.5);
   border-radius: var(--radius-tight);
   padding: 10px 12px;
   margin-bottom: 14px;
@@ -2437,7 +2333,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   margin-bottom: 12px;
   width: 100%;
   background: linear-gradient(135deg, rgba(120,120,120,0.10), rgba(60,60,60,0.05));
-  border: 1px dashed rgba(255,184,0,0.5);
+  border: 1px dashed rgba(230,162,60,0.5);
   border-radius: var(--radius-tight);
   cursor: pointer;
   font-family: inherit;
@@ -2445,8 +2341,8 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 .photo-source-soft-btn:hover {
   transform: translateY(-1px);
-  background: linear-gradient(135deg, rgba(255,184,0,0.10), rgba(255,107,53,0.06));
-  box-shadow: 0 3px 10px rgba(255,184,0,0.20);
+  background: linear-gradient(135deg, rgba(230,162,60,0.10), rgba(234,88,12,0.06));
+  box-shadow: 0 3px 10px rgba(230,162,60,0.20);
 }
 .photo-source-soft-btn .ps-icon { font-size: 28px; line-height: 1; }
 .photo-source-soft-btn .ps-label { font-size: 13px; font-weight: 900; color: var(--color-text); }
@@ -2512,7 +2408,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   font-size: 14px;
   font-weight: 700;
   color: var(--color-warn);
-  background: rgba(255,184,0,0.1);
+  background: rgba(230,162,60,0.1);
   border-top: 2px solid var(--color-warn);
 }
 .photo-verify-btn {
@@ -2676,12 +2572,12 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .checkin-item.key-slot {
   border-color: var(--color-warn);
   border-width: 4px;
-  background: linear-gradient(180deg, var(--color-card) 0%, rgba(255,107,53,0.06) 100%);
+  background: linear-gradient(180deg, var(--color-card) 0%, rgba(234,88,12,0.06) 100%);
 }
 .checkin-item.key-slot.checked {
   border-color: var(--color-warn);
   border-left: 4px solid var(--color-warn);
-  background: rgba(255,184,0,0.06);
+  background: rgba(230,162,60,0.06);
 }
 .key-chip {
   display: inline-block;
@@ -2722,7 +2618,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   color: var(--color-warn);
 }
 .key-pill.done {
-  background: rgba(255,184,0,0.15);
+  background: rgba(230,162,60,0.15);
   color: var(--color-warn);
   border-color: var(--color-warn);
 }
@@ -2751,9 +2647,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 .score-btn:hover { transform: scale(1.08); }
 .score-btn.has-score {
-  background: rgba(56,189,248,0.12);
+  background: rgba(37,99,235,0.12);
   color: var(--color-purple);
-  border: 1px solid rgba(56,189,248,0.25);
+  border: 1px solid rgba(37,99,235,0.25);
   box-shadow: none;
 }
 
@@ -2799,7 +2695,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   flex-direction: column;
   gap: 2px;
 }
-.lis-item.lis-live { background: linear-gradient(135deg, rgba(255,51,102,0.06) 0%, rgba(0,255,136,0.06) 100%); border-width: 3px; }
+.lis-item.lis-live { background: linear-gradient(135deg, rgba(220,38,38,0.06) 0%, rgba(22,163,74,0.06) 100%); border-width: 3px; }
 .lis-item.lis-youtube { background: rgba(255,183,0,0.06); border-width: 3px; }
 
 /* v18.43: PSLE 能力分析 (历史页主卡) */
@@ -3025,7 +2921,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   gap: 12px;
   padding: 14px 18px;
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(0,212,255,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 20%, rgba(43,91,215,0.06) 0%, transparent 55%),
     linear-gradient(135deg, var(--color-primary-soft) 0%, var(--color-card) 80%);
   border: 1px solid var(--color-primary);
   border-left: 4px solid var(--color-primary);
@@ -3076,16 +2972,16 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .alarm-popup .alarm-close-big:hover { background: #3a7ab0; }
 /* 类型主色: rest=暖橙 / back=海蓝 / start=薄荷 / sleep=柔紫 */
 .alarm-popup.alarm-rest {
-  background: radial-gradient(ellipse at 20% 20%, rgba(255,107,53,0.06) 0%, transparent 55%), linear-gradient(135deg, var(--color-accent-soft) 0%, var(--color-card) 80%);
+  background: radial-gradient(ellipse at 20% 20%, rgba(234,88,12,0.06) 0%, transparent 55%), linear-gradient(135deg, var(--color-accent-soft) 0%, var(--color-card) 80%);
   border-color: var(--color-accent);
 }
 .alarm-popup.alarm-back { /* default primary */ }
 .alarm-popup.alarm-start, .alarm-popup.alarm-switch {
-  background: radial-gradient(ellipse at 20% 20%, rgba(0,255,136,0.06) 0%, transparent 55%), linear-gradient(135deg, var(--color-secondary-soft) 0%, var(--color-card) 80%);
+  background: radial-gradient(ellipse at 20% 20%, rgba(22,163,74,0.06) 0%, transparent 55%), linear-gradient(135deg, var(--color-secondary-soft) 0%, var(--color-card) 80%);
   border-color: var(--color-secondary);
 }
 .alarm-popup.alarm-sleep {
-  background: radial-gradient(ellipse at 20% 20%, rgba(168,85,247,0.06) 0%, transparent 55%), linear-gradient(135deg, var(--color-purple-soft) 0%, var(--color-card) 80%);
+  background: radial-gradient(ellipse at 20% 20%, rgba(124,58,237,0.06) 0%, transparent 55%), linear-gradient(135deg, var(--color-purple-soft) 0%, var(--color-card) 80%);
   border-color: var(--color-purple);
 }
 
@@ -3112,9 +3008,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .kt-inner {
   background-color: #14213A;
   background-image:
-    radial-gradient(ellipse at 15% 15%, rgba(0,255,136,0.06) 0%, transparent 55%),
-    linear-gradient(135deg, rgba(0,212,255,0.05) 0%, rgba(20,33,58,0) 70%);
-  border: 1px solid rgba(0,255,136,0.20);
+    radial-gradient(ellipse at 15% 15%, rgba(22,163,74,0.06) 0%, transparent 55%),
+    linear-gradient(135deg, rgba(43,91,215,0.05) 0%, rgba(20,33,58,0) 70%);
+  border: 1px solid rgba(22,163,74,0.20);
   border-radius: var(--radius-bubble);
   padding: 20px;
   max-width: 1000px;
@@ -3190,7 +3086,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .kt-node-locked.kt-dot { background: var(--color-text-dim); border-color: var(--color-text-dim); opacity: 1; filter: none; }
 .kt-node-learning {
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(255,107,53,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 20%, rgba(234,88,12,0.08) 0%, transparent 55%),
     linear-gradient(135deg, var(--color-accent-soft) 0%, var(--color-card) 80%);
   border: 1px solid var(--color-accent);
   animation: kt-pulse 2s ease-in-out infinite;
@@ -3198,7 +3094,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .kt-node-learning.kt-dot { background: var(--color-accent); border-color: var(--color-accent); animation: none; }
 .kt-node-mastered {
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(0,255,136,0.1) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 20%, rgba(22,163,74,0.1) 0%, transparent 55%),
     linear-gradient(135deg, var(--color-secondary-soft) 0%, var(--color-secondary) 100%);
   border: 1px solid var(--color-secondary);
   color: white;
@@ -3324,9 +3220,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 /* v18.21: 听力 4 步精听法规则卡 */
 .listen-rules-card {
   background:
-    radial-gradient(ellipse at 15% 15%, rgba(0,212,255,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 15%, rgba(43,91,215,0.05) 0%, transparent 55%),
     linear-gradient(135deg, var(--color-primary-soft) 0%, var(--color-card) 80%);
-  border: 1px solid rgba(0,212,255,0.15);
+  border: 1px solid rgba(43,91,215,0.15);
   border-left: 3px solid var(--color-primary);
   border-radius: var(--radius-tight);
   padding: 12px 16px;
@@ -3354,7 +3250,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   font-weight: 900;
 }
 .listen-rules-card .lr-tip {
-  background: rgba(0,212,255,0.06);
+  background: rgba(43,91,215,0.06);
   border: 1px dashed var(--color-primary);
   border-radius: 6px;
   padding: 6px 10px;
@@ -3559,7 +3455,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .vocab-modal-title { display: block; font-weight: 700; font-size: 16px; color: var(--color-text); }
 .vocab-modal-meta  { display: block; font-size: 11px; color: var(--color-text-light); margin-top: 4px; }
 .vocab-modal-close {
-  background: rgba(255,255,255,0.10);
+  background: #E5E9F2;
   border: 2px solid var(--color-text);
   color: var(--color-text);  /* v19.15f: × 字符显式亮色, 防暗背景看不见 */
   border-radius: 50%;
@@ -3925,7 +3821,7 @@ p { font-size: 14px; line-height: 1.6; }
 .ls-bar {
   width: 100%;
   max-width: 36px;
-  background: linear-gradient(180deg, #4ECDC4 0%, #A788E0 100%);
+  background: linear-gradient(180deg, #0D9488 0%, #A788E0 100%);
   border-radius: 4px 4px 0 0;
   border: 1.5px solid var(--color-text);
   border-bottom: none;
@@ -4303,12 +4199,12 @@ p { font-size: 14px; line-height: 1.6; }
 .pet-current-svg { width: 100px; height: 100px; margin: 0 auto 6px; }
 .pet-current-svg svg { width: 100%; height: 100%; }
 .pet-desc { font-size: 13px; text-align: center; color: var(--color-text-light); margin: 8px 0; }
-.pet-next { background: rgba(0,212,255,0.08); padding: 8px; border-radius: 8px; font-size: 13px; text-align: center; margin: 8px 0; color: var(--color-text); border: 1px solid rgba(0,212,255,0.2); }
+.pet-next { background: rgba(43,91,215,0.08); padding: 8px; border-radius: 8px; font-size: 13px; text-align: center; margin: 8px 0; color: var(--color-text); border: 1px solid rgba(43,91,215,0.2); }
 .pet-rename { text-align: center; margin: 10px 0; }
 .pet-forms-list { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .pet-form-item { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-card-soft); color: var(--color-text); }
 .pet-form-item.locked { opacity: 0.4; filter: grayscale(0.6); }
-.pet-form-item.current { background: rgba(255,184,0,0.1) !important; border-color: var(--color-warn); border-width: 2px; }
+.pet-form-item.current { background: rgba(230,162,60,0.1) !important; border-color: var(--color-warn); border-width: 2px; }
 .pet-form-svg { width: 50px; height: 50px; flex-shrink: 0; }
 .pet-form-svg svg { width: 100%; height: 100%; display: block; }
 .pet-form-meta { font-size: 13px; font-weight: 700; color: var(--color-text); }
@@ -4316,9 +4212,9 @@ p { font-size: 14px; line-height: 1.6; }
 /* ===== v18 Phase 5.1: 🏆 成就墙 ===== */
 .achievement-wall-card {
   background:
-    radial-gradient(ellipse at 15% 15%, rgba(255,51,102,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 15%, rgba(220,38,38,0.05) 0%, transparent 55%),
     linear-gradient(135deg, var(--color-pink-soft) 0%, var(--color-card) 70%);
-  border: 1px solid rgba(255,51,102,0.15);
+  border: 1px solid rgba(220,38,38,0.15);
   border-left: 3px solid var(--color-pink);
   box-shadow: 0 2px 8px rgba(232,180,194,0.10);
 }
@@ -4332,11 +4228,11 @@ p { font-size: 14px; line-height: 1.6; }
 .ach-item.unlocked { background: var(--color-primary-soft); border-color: var(--color-primary); }
 /* v19.3: 装备稀有度发光框 */
 .eq-rarity-common { border: 2px solid #64748B; }
-.eq-rarity-rare { border: 2px solid #00D4FF; box-shadow: 0 0 6px rgba(0,212,255,0.3); }
-.eq-rarity-epic { border: 2px solid #A855F7; box-shadow: 0 0 10px rgba(168,85,247,0.4); animation: epicGlow 2s infinite alternate; }
+.eq-rarity-rare { border: 2px solid #2B5BD7; box-shadow: 0 0 6px rgba(43,91,215,0.3); }
+.eq-rarity-epic { border: 2px solid #A855F7; box-shadow: 0 0 10px rgba(124,58,237,0.4); animation: epicGlow 2s infinite alternate; }
 .eq-rarity-legendary { border: 2px solid #FFD700; box-shadow: 0 0 14px rgba(255,215,0,0.5); animation: legendGlow 3s infinite alternate; }
-.eq-rarity-mythic { border: 2px solid transparent; background-clip: padding-box; box-shadow: 0 0 18px rgba(255,51,102,0.4); animation: mythicBorder 4s linear infinite; background-image: linear-gradient(var(--color-card),var(--color-card)), linear-gradient(45deg,#FF3366,#A855F7,#00D4FF,#FFD700); background-origin: border-box; }
-@keyframes epicGlow { from{box-shadow:0 0 6px rgba(168,85,247,0.3)} to{box-shadow:0 0 14px rgba(168,85,247,0.6)} }
+.eq-rarity-mythic { border: 2px solid transparent; background-clip: padding-box; box-shadow: 0 0 18px rgba(220,38,38,0.4); animation: mythicBorder 4s linear infinite; background-image: linear-gradient(var(--color-card),var(--color-card)), linear-gradient(45deg,#DC2626,#A855F7,#2B5BD7,#FFD700); background-origin: border-box; }
+@keyframes epicGlow { from{box-shadow:0 0 6px rgba(124,58,237,0.3)} to{box-shadow:0 0 14px rgba(124,58,237,0.6)} }
 @keyframes legendGlow { from{box-shadow:0 0 8px rgba(255,215,0,0.4)} to{box-shadow:0 0 20px rgba(255,215,0,0.7)} }
 @keyframes mythicBorder { to{filter:hue-rotate(360deg)} }
 /* v19.3: 段位框 */
@@ -4344,8 +4240,8 @@ p { font-size: 14px; line-height: 1.6; }
 .rank-bronze { border:2px solid #CD7F32; }
 .rank-silver { border:2px solid #C0C0C0; box-shadow:0 0 4px rgba(192,192,192,0.4); }
 .rank-gold { border:2px solid #FFD700; box-shadow:0 0 8px rgba(255,215,0,0.4); animation:legendGlow 3s infinite alternate; }
-.rank-diamond { border:2px solid #00D4FF; box-shadow:0 0 12px rgba(0,212,255,0.5); animation:epicGlow 2s infinite alternate; }
-.rank-legend { border:2px solid transparent; background-image:linear-gradient(var(--color-card),var(--color-card)),linear-gradient(45deg,#FF3366,#A855F7,#00D4FF,#00FF88); background-origin:border-box; background-clip:padding-box,border-box; box-shadow:0 0 16px rgba(168,85,247,0.5); }
+.rank-diamond { border:2px solid #2B5BD7; box-shadow:0 0 12px rgba(43,91,215,0.5); animation:epicGlow 2s infinite alternate; }
+.rank-legend { border:2px solid transparent; background-image:linear-gradient(var(--color-card),var(--color-card)),linear-gradient(45deg,#DC2626,#A855F7,#2B5BD7,#16A34A); background-origin:border-box; background-clip:padding-box,border-box; box-shadow:0 0 16px rgba(124,58,237,0.5); }
 .ach-icon { font-size: 28px; }
 .ach-name { font-size: 12px; font-weight: 700; margin-top: 2px; }
 .ach-cat { font-size: 10px; color: var(--color-text-light); }
@@ -4364,20 +4260,20 @@ p { font-size: 14px; line-height: 1.6; }
 .dd-frags { font-size: 28px; font-weight: 900; color: var(--color-warn); margin: 6px 0; }
 .dd-progress { font-size: 13px; color: var(--color-text); margin: 6px 0; padding: 6px; background: rgba(255,183,0,0.08); border-radius: 6px; }
 .dd-streak { font-size: 14px; margin: 8px 0; }
-.dd-newbox { font-size: 14px; color: var(--color-success, #4ECDC4); font-weight: 700; }
+.dd-newbox { font-size: 14px; color: var(--color-success, #0D9488); font-weight: 700; }
 .dd-bonus { font-size: 13px; padding: 8px; background: linear-gradient(135deg, #FFE066 0%, #FF9F45 100%); border-radius: 8px; margin: 8px 0; font-weight: 700; }
 
 /* ===== v18 Phase 5.3: 🔁 复习卡 ===== */
 .review-card {
   background:
-    radial-gradient(ellipse at 15% 15%, rgba(0,255,136,0.04) 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 15%, rgba(22,163,74,0.04) 0%, transparent 55%),
     linear-gradient(135deg, var(--color-secondary-soft) 0%, var(--color-card) 70%);
-  border: 1px solid rgba(0,255,136,0.15);
+  border: 1px solid rgba(22,163,74,0.15);
   border-left: 3px solid var(--color-secondary);
   box-shadow: 0 2px 8px rgba(111,184,160,0.10);
 }
 .rev-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.rev-tag { font-size: 14px; font-weight: 900; color: #4ECDC4; }
+.rev-tag { font-size: 14px; font-weight: 900; color: #0D9488; }
 .rev-question { font-size: 16px; font-weight: 700; line-height: 1.4; margin: 8px 0; }
 .rev-prompt { font-size: 13px; color: var(--color-text-light); margin-bottom: 8px; }
 .rev-options { display: flex; gap: 8px; }
@@ -4413,9 +4309,9 @@ p { font-size: 14px; line-height: 1.6; }
 /* ===== v18 Phase 5.4: mini-game hub + games ===== */
 .mini-game-hub-card {
   background:
-    radial-gradient(ellipse at 15% 15%, rgba(168,85,247,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 15%, rgba(124,58,237,0.06) 0%, transparent 55%),
     linear-gradient(135deg, var(--color-purple-soft) 0%, var(--color-card) 70%);
-  border: 1px solid rgba(168,85,247,0.15);
+  border: 1px solid rgba(124,58,237,0.15);
   border-left: 3px solid var(--color-purple);
   box-shadow: 0 2px 8px rgba(155,143,201,0.10);
 }
@@ -4439,7 +4335,7 @@ p { font-size: 14px; line-height: 1.6; }
 .mcq-opts.sst-opts .mcq-opt { font-size: 12px; text-align: left; padding: 10px 12px; }
 /* v19.4: Comprehension OE */
 .comp-oe-inner { max-height: 85vh; overflow-y: auto; }
-.comp-passage { font-size: 13px; line-height: 1.7; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; margin-bottom: 12px; max-height: 200px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); }
+.comp-passage { font-size: 13px; line-height: 1.7; background: #F5F7FA; padding: 12px; border-radius: 10px; margin-bottom: 12px; max-height: 200px; overflow-y: auto; border: 1px solid #E5E9F2; }
 .comp-q-box { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.3); border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
 .comp-type { font-size: 11px; color: #fbbf24; margin-bottom: 4px; }
 .comp-q { font-size: 14px; font-weight: 600; }
@@ -4450,7 +4346,7 @@ p { font-size: 14px; line-height: 1.6; }
 .comp-model-label { font-size: 11px; color: #22c55e; font-weight: 700; margin-bottom: 4px; }
 .comp-model-text { font-size: 13px; line-height: 1.6; }
 .comp-self-score { margin-top: 10px; text-align: center; font-size: 12px; }
-.comp-self-score button { margin: 0 4px; padding: 6px 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: #fff; border-radius: 8px; cursor: pointer; }
+.comp-self-score button { margin: 0 4px; padding: 6px 12px; border: 1px solid #D4DAE5; background: #F5F7FA; color: #fff; border-radius: 8px; cursor: pointer; }
 .comp-self-score button:hover { background: rgba(251,191,36,0.2); }
 .comp-result { text-align: center; padding: 20px 0; }
 .comp-result-score { font-size: 24px; font-weight: 700; color: #fbbf24; }
@@ -4502,16 +4398,16 @@ p { font-size: 14px; line-height: 1.6; }
 .sci-chip:disabled { cursor: default; }
 .sci-result { font-size: 12px; font-weight: 700; color: var(--color-text); }
 .mgh-game { background:
-  radial-gradient(ellipse at 20% 20%, rgba(0,212,255,0.06) 0%, transparent 55%),
+  radial-gradient(ellipse at 20% 20%, rgba(43,91,215,0.06) 0%, transparent 55%),
   linear-gradient(135deg, var(--color-primary-soft) 0%, var(--color-card) 80%);
-  border: 1px solid rgba(0,212,255,0.2); border-radius: 14px; padding: 18px 12px; cursor: pointer; font-family: inherit; font-size: 14px; line-height: 1.5; color: var(--color-text);
+  border: 1px solid rgba(43,91,215,0.2); border-radius: 14px; padding: 18px 12px; cursor: pointer; font-family: inherit; font-size: 14px; line-height: 1.5; color: var(--color-text);
   transition: transform 0.18s, box-shadow 0.18s;
 }
 .mgh-game:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(74,144,199,0.20); border-color: var(--color-primary); }
 /* v18.24: 防沉迷规则提示 + 各 game 状态 */
 .mgh-rules {
   background: var(--color-accent-soft);
-  border: 1px solid rgba(255,107,53,0.2);
+  border: 1px solid rgba(234,88,12,0.2);
   border-left: 3px solid var(--color-accent);
   border-radius: var(--radius-tight);
   padding: 8px 12px;
@@ -4524,7 +4420,7 @@ p { font-size: 14px; line-height: 1.6; }
 .mgh-status {
   margin-top: 6px;
   padding: 4px 8px;
-  background: rgba(0,212,255,0.06);
+  background: rgba(43,91,215,0.06);
   border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
@@ -4544,7 +4440,7 @@ p { font-size: 14px; line-height: 1.6; }
 .mg-result-icon { font-size: 60px; text-align: center; }
 .mg-result-title { font-size: 22px; font-weight: 900; text-align: center; margin: 8px 0; }
 .mg-result-stats { font-size: 14px; text-align: center; color: var(--color-text-light); }
-.mg-result-reward { font-size: 18px; font-weight: 900; color: var(--color-success, #4ECDC4); text-align: center; margin: 12px 0; }
+.mg-result-reward { font-size: 18px; font-weight: 900; color: var(--color-success, #0D9488); text-align: center; margin: 12px 0; }
 
 /* Editing 找错 */
 .eg-instr { background: rgba(255,183,0,0.08); padding: 8px 12px; border-radius: 8px; font-size: 12px; margin-bottom: 12px; }
@@ -4566,14 +4462,14 @@ p { font-size: 14px; line-height: 1.6; }
 .lg-result-icon { font-size: 60px; text-align: center; }
 .lg-result-title { font-size: 24px; font-weight: 900; text-align: center; margin: 8px 0; }
 .lg-result-text { background: rgba(255,183,0,0.08); padding: 10px; border-radius: 8px; font-size: 13px; margin: 12px 0; line-height: 1.6; }
-.lg-result-reward { font-size: 18px; font-weight: 900; color: var(--color-success, #4ECDC4); text-align: center; margin: 12px 0; }
+.lg-result-reward { font-size: 18px; font-weight: 900; color: var(--color-success, #0D9488); text-align: center; margin: 12px 0; }
 
 /* ===== v17.7 Phase 3: 每日特别任务卡 ===== */
 .daily-quest-card {
   background:
-    radial-gradient(ellipse at 15% 15%, rgba(255,107,53,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 15%, rgba(234,88,12,0.05) 0%, transparent 55%),
     linear-gradient(135deg, var(--color-accent-soft) 0%, var(--color-card) 70%);
-  border: 1px solid rgba(255,107,53,0.15);
+  border: 1px solid rgba(234,88,12,0.15);
   border-left: 3px solid var(--color-accent);
   box-shadow: 0 2px 8px rgba(232,184,110,0.10);
 }
@@ -4582,7 +4478,7 @@ p { font-size: 14px; line-height: 1.6; }
 .dq-info { flex: 1; min-width: 0; }
 .dq-title { font-size: 15px; font-weight: 900; color: var(--color-text); }
 .dq-desc { font-size: 12px; color: var(--color-text); margin-top: 2px; }
-.dq-done { font-size: 14px; font-weight: 900; color: var(--color-success, #4ECDC4); }
+.dq-done { font-size: 14px; font-weight: 900; color: var(--color-success, #0D9488); }
 .dq-claim-btn { padding: 6px 12px !important; font-size: 13px !important; }
 .dq-progress-bar {
   position: relative;
@@ -4593,7 +4489,7 @@ p { font-size: 14px; line-height: 1.6; }
   overflow: hidden;
 }
 .dq-progress-fill {
-  background: linear-gradient(90deg, #6BCB77 0%, #4ECDC4 100%);
+  background: linear-gradient(90deg, #6BCB77 0%, #0D9488 100%);
   height: 100%;
   transition: width 0.3s;
 }
@@ -4612,7 +4508,7 @@ p { font-size: 14px; line-height: 1.6; }
   border-radius: 8px;
   text-align: center;
   font-weight: 700;
-  color: var(--color-success, #4ECDC4);
+  color: var(--color-success, #0D9488);
   margin-top: 6px;
 }
 
@@ -4669,10 +4565,10 @@ p { font-size: 14px; line-height: 1.6; }
 .mb-result-title { font-size: 20px; font-weight: 900; color: var(--color-text); margin-bottom: 12px; }
 .mb-result-body { font-size: 14px; color: var(--color-text); line-height: 1.6; margin-bottom: 16px; }
 .mb-wow-fact {
-  background: linear-gradient(135deg, rgba(255,51,102,0.06) 0%, rgba(0,255,136,0.06) 100%);
+  background: linear-gradient(135deg, rgba(220,38,38,0.06) 0%, rgba(22,163,74,0.06) 100%);
   padding: 12px 14px;
   border-radius: 12px;
-  border: 2px dashed rgba(168,85,247,0.3);
+  border: 2px dashed rgba(124,58,237,0.3);
   text-align: left;
 }
 .mb-wow-hook { font-size: 16px; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }
@@ -4686,7 +4582,7 @@ p { font-size: 14px; line-height: 1.6; }
   margin: 12px 0;
   text-align: left;
 }
-.mb-rules-full { background: linear-gradient(135deg, rgba(255,183,0,0.08) 0%, rgba(255,51,102,0.06) 100%); }
+.mb-rules-full { background: linear-gradient(135deg, rgba(255,183,0,0.08) 0%, rgba(220,38,38,0.06) 100%); }
 .mb-rules-title { font-size: 14px; font-weight: 900; color: var(--color-text); margin-bottom: 6px; text-align: center; }
 .mb-rules-list { margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.7; color: var(--color-text); }
 .mb-rules-list li { margin-bottom: 2px; }
@@ -4727,8 +4623,8 @@ p { font-size: 14px; line-height: 1.6; }
 
 /* ===== v17.5 Phase 2: 反直觉思考题卡 ===== */
 .think-puzzle-card {
-  background: linear-gradient(135deg, rgba(0,255,136,0.06) 0%, rgba(255,51,102,0.06) 100%);
-  border-left: 8px solid #4ECDC4;
+  background: linear-gradient(135deg, rgba(22,163,74,0.06) 0%, rgba(220,38,38,0.06) 100%);
+  border-left: 8px solid #0D9488;
   border-width: 4px;
   padding: 16px 18px;
 }
@@ -4748,11 +4644,11 @@ p { font-size: 14px; line-height: 1.6; }
 .think-tag {
   font-size: 14px;
   font-weight: 900;
-  color: #4ECDC4;
+  color: #0D9488;
   background: var(--color-card);
   padding: 4px 10px;
   border-radius: 10px;
-  border: 2px solid #4ECDC4;
+  border: 2px solid #0D9488;
 }
 .think-subject { font-size: 12px; color: var(--color-text-light); }
 .think-question {
@@ -4791,9 +4687,9 @@ p { font-size: 14px; line-height: 1.6; }
   font-size: 14px;
   margin-bottom: 10px;
 }
-.think-points { float: right; font-weight: 900; color: var(--color-success, #4ECDC4); }
+.think-points { float: right; font-weight: 900; color: var(--color-success, #0D9488); }
 .think-explanation {
-  background: rgba(0,212,255,0.06);
+  background: rgba(43,91,215,0.06);
   padding: 12px 14px;
   border-radius: 10px;
   border-left: 4px solid var(--color-primary);
@@ -4806,9 +4702,9 @@ p { font-size: 14px; line-height: 1.6; }
 /* v18.17: 卡片主题化 — 柔和渐变底 + 主题色边框/阴影 */
 .wow-card-big {
   background:
-    radial-gradient(ellipse at 15% 15%, rgba(168,85,247,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 15%, rgba(124,58,237,0.06) 0%, transparent 55%),
     linear-gradient(135deg, var(--color-purple-soft) 0%, var(--color-card) 70%);
-  border: 1px solid rgba(168,85,247,0.15);
+  border: 1px solid rgba(124,58,237,0.15);
   border-left: 3px solid var(--color-purple);
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
@@ -4936,8 +4832,8 @@ p { font-size: 14px; line-height: 1.6; }
   color: var(--color-text);
 }
 .tip-q-opt:hover { border-color: #6FB8A0; color: #6FB8A0; }
-.tip-q-opt.tq-correct { background: rgba(0,255,136,0.12); border-color: #52C788; color: #52C788; font-weight: 700; cursor: default; }
-.tip-q-opt.tq-wrong { background: rgba(255,51,102,0.1); border-color: #EF5350; color: #EF5350; cursor: default; }
+.tip-q-opt.tq-correct { background: rgba(22,163,74,0.12); border-color: #52C788; color: #52C788; font-weight: 700; cursor: default; }
+.tip-q-opt.tq-wrong { background: rgba(220,38,38,0.1); border-color: #DC2626; color: #DC2626; cursor: default; }
 .tip-q-opt.tq-dimmed { opacity: 0.4; cursor: default; }
 .tip-q-exp {
   margin-top: 4px;
@@ -4949,7 +4845,7 @@ p { font-size: 14px; line-height: 1.6; }
 
 /* v17.3: Streak 规则卡 (替代原 progress 在 hero-right) */
 .streak-rules-card {
-  background: linear-gradient(135deg, rgba(255,51,102,0.06) 0%, rgba(255,183,0,0.06) 100%);
+  background: linear-gradient(135deg, rgba(220,38,38,0.06) 0%, rgba(255,183,0,0.06) 100%);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-bubble);
   padding: 14px 16px;
@@ -4981,14 +4877,14 @@ p { font-size: 14px; line-height: 1.6; }
 
 /* ===== v16: 6 条铁律 mini-card ===== */
 .iron-rule-card {
-  background: linear-gradient(135deg, rgba(255,183,0,0.06) 0%, rgba(255,51,102,0.06) 100%);
+  background: linear-gradient(135deg, rgba(255,183,0,0.06) 0%, rgba(220,38,38,0.06) 100%);
   border-left: 6px solid var(--color-primary);
 }
 .iron-rule-card #irTitle::before { content: '⚖️ '; }
 
 /* ===== v16: 周日复盘 section ===== */
 .sunday-review-section {
-  background: linear-gradient(135deg, rgba(255,51,102,0.06) 0%, rgba(0,255,136,0.06) 100%);
+  background: linear-gradient(135deg, rgba(220,38,38,0.06) 0%, rgba(22,163,74,0.06) 100%);
   padding: 12px;
   border-radius: 10px;
   border: 2px dashed var(--color-primary);
@@ -5167,9 +5063,9 @@ p { font-size: 14px; line-height: 1.6; }
   50% { opacity: 0.6; }
 }
 .sync-synced {
-  background: rgba(255,184,0,0.15);
+  background: rgba(230,162,60,0.15);
   color: var(--color-warn);
-  border-color: rgba(255,184,0,0.3);
+  border-color: rgba(230,162,60,0.3);
 }
 .sync-error {
   background: var(--color-danger);
@@ -5221,11 +5117,11 @@ p { font-size: 14px; line-height: 1.6; }
 
 <!-- v19.54: "⋯其他" 收纳菜单 (我的/暑假/管理) -->
 <div id="moreMenu" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.55)" onclick="window.toggleMoreMenu()">
-  <div style="position:absolute;top:18%;left:50%;transform:translateX(-50%);background:#16223A;border:1px solid rgba(255,255,255,0.15);border-radius:14px;padding:14px 16px;min-width:230px;box-shadow:0 8px 32px rgba(0,0,0,0.5)" onclick="event.stopPropagation()">
-    <div style="font-size:12px;color:#94A3B8;margin-bottom:10px;font-weight:700">📦 收纳的页面</div>
-    <button onclick="window.gotoPage('character');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#E0E0E0;font-size:14px;font-weight:600">👤 我的 <span style="font-size:11px;color:#94A3B8;font-weight:400">角色·装备·兑换</span></button>
-    <button onclick="window.gotoPage('summer');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#E0E0E0;font-size:14px;font-weight:600">📅 暑假 <span style="font-size:11px;color:#94A3B8;font-weight:400">已结束·存档</span></button>
-    <button onclick="window.gotoPage('admin');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#E0E0E0;font-size:14px;font-weight:600">⚙️ 管理 <span style="font-size:11px;color:#94A3B8;font-weight:400">照片·设置</span></button>
+  <div style="position:absolute;top:18%;left:50%;transform:translateX(-50%);background:#FFFFFF;border:1px solid #DCE1EA;border-radius:14px;padding:14px 16px;min-width:230px;box-shadow:0 8px 32px rgba(0,0,0,0.5)" onclick="event.stopPropagation()">
+    <div style="font-size:12px;color:#6B7280;margin-bottom:10px;font-weight:700">📦 收纳的页面</div>
+    <button onclick="window.gotoPage('character');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid #E5E7EB;background:#F5F7FA;color:#1F2937;font-size:14px;font-weight:600">👤 我的 <span style="font-size:11px;color:#6B7280;font-weight:400">角色·装备·兑换</span></button>
+    <button onclick="window.gotoPage('summer');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid #E5E7EB;background:#F5F7FA;color:#1F2937;font-size:14px;font-weight:600">📅 暑假 <span style="font-size:11px;color:#6B7280;font-weight:400">已结束·存档</span></button>
+    <button onclick="window.gotoPage('admin');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid #E5E7EB;background:#F5F7FA;color:#1F2937;font-size:14px;font-weight:600">⚙️ 管理 <span style="font-size:11px;color:#6B7280;font-weight:400">照片·设置</span></button>
   </div>
 </div>
 
@@ -5235,7 +5131,7 @@ p { font-size: 14px; line-height: 1.6; }
     <!-- v19.19: 主页改左右两栏布局 — hero 顶部全宽, 主区 2 栏 (左行动 / 右信息教学) -->
     <!-- 兼容旧 render: admissionForecastCard / learningPortraitCard hidden placeholder -->
     <div id="admissionForecastCard" style="display:none"></div>
-    <div class="card" id="learningPortraitCard" style="border-left:4px solid #4ECDC4;display:none"></div>
+    <div class="card" id="learningPortraitCard" style="border-left:4px solid #0D9488;display:none"></div>
 
     <div class="hero-section">
       <div class="character-card">
@@ -5308,8 +5204,8 @@ p { font-size: 14px; line-height: 1.6; }
     <div class="home-grid-2col">
       <!-- 左栏: 今日必做 行动驱动 (v19.22: gradReviewCard 移到右栏减拥挤) -->
       <div class="home-col-left">
-        <div style="font-size:12px;font-weight:900;color:#FF6B6B;letter-spacing:1px;margin-bottom:6px">⚡ 今日必做</div>
-        <div class="card" id="todayThreeCard" style="border-left:4px solid #FF6B6B"></div>
+        <div style="font-size:12px;font-weight:900;color:#E64C4C;letter-spacing:1px;margin-bottom:6px">⚡ 今日必做</div>
+        <div class="card" id="todayThreeCard" style="border-left:4px solid #E64C4C"></div>
         <div class="card" id="paper2SprintCard"></div>
         <div class="card" id="errorBankCard"></div>
         <!-- v19.35: 自动对齐 filler — 长栏时被挤为 0 不留痕 -->
@@ -5317,10 +5213,10 @@ p { font-size: 14px; line-height: 1.6; }
       </div>
       <!-- 右栏: 教学 + 信息 + 复盘 (v19.23: 目标校下移到第 3, 教学卡上提) -->
       <div class="home-col-right">
-        <div style="font-size:12px;font-weight:900;color:#4FC3F7;letter-spacing:1px;margin-bottom:6px">🎓 教学 + 信息 + 复盘</div>
+        <div style="font-size:12px;font-weight:900;color:#2563EB;letter-spacing:1px;margin-bottom:6px">🎓 教学 + 信息 + 复盘</div>
         <div class="card think-puzzle-card" id="thinkPuzzleCard" style="display:none"></div>
         <div class="card" id="weekMasterTipCard"></div>
-        <div class="card" id="targetSchoolMini" style="border-left:1px solid #E0E0E0"></div>
+        <div class="card" id="targetSchoolMini" style="border-left:1px solid #1F2937"></div>
         <div id="gradReviewCard"></div>
         <!-- v19.35: 自动对齐 filler — 短栏时撑空到与长栏等高 -->
         <div class="col-balance-filler" id="rightColFiller"></div>
@@ -5507,32 +5403,32 @@ p { font-size: 14px; line-height: 1.6; }
   <!-- v19.14i: 📚 练习 hub 页 (合并知识树/题库/词汇/作文 4 个旧 tab 入口) -->
   <div class="page" id="page-practice">
     <div class="kt-page-wrap" style="padding:16px">
-      <div style="font-size:18px;font-weight:900;color:#4FC3F7;margin-bottom:6px">📚 练习中心</div>
-      <div style="font-size:13px;color:#94A3B8;margin-bottom:16px">选一项开始练 · 全部在二级页, 不打扰主页"今日 3 件事"</div>
+      <div style="font-size:18px;font-weight:900;color:#2563EB;margin-bottom:6px">📚 练习中心</div>
+      <div style="font-size:13px;color:#6B7280;margin-bottom:16px">选一项开始练 · 全部在二级页, 不打扰主页"今日 3 件事"</div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
-        <button class="practice-hub-btn" data-accent="green" onclick="document.querySelector('[data-page=knowledge]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(0,255,136,0.10),rgba(0,255,136,0.02));border:1px solid rgba(0,255,136,0.45);box-shadow:0 0 12px rgba(0,255,136,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
+        <button class="practice-hub-btn" data-accent="green" onclick="document.querySelector('[data-page=knowledge]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(22,163,74,0.10),rgba(22,163,74,0.02));border:1px solid rgba(22,163,74,0.45);box-shadow:0 0 12px rgba(22,163,74,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
           <div style="font-size:28px">🌳</div>
-          <div style="font-size:15px;font-weight:900;color:#66FFB0;margin-top:6px">知识树</div>
+          <div style="font-size:15px;font-weight:900;color:#16A34A;margin-top:6px">知识树</div>
           <div style="font-size:11px;color:#A5D6A7;margin-top:3px">35 节点 · 105 道 PSLE 风练习</div>
         </button>
-        <button class="practice-hub-btn" data-accent="orange" onclick="document.querySelector('[data-page=paperbank]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(255,184,0,0.10),rgba(255,107,53,0.04));border:1px solid rgba(255,184,0,0.45);box-shadow:0 0 12px rgba(255,184,0,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
+        <button class="practice-hub-btn" data-accent="orange" onclick="document.querySelector('[data-page=paperbank]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(230,162,60,0.10),rgba(234,88,12,0.04));border:1px solid rgba(230,162,60,0.45);box-shadow:0 0 12px rgba(230,162,60,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
           <div style="font-size:28px">📚</div>
-          <div style="font-size:15px;font-weight:900;color:#FFB74D;margin-top:6px">题库</div>
+          <div style="font-size:15px;font-weight:900;color:#D97706;margin-top:6px">题库</div>
           <div style="font-size:11px;color:#FFD180;margin-top:3px">PSLE 真题 + Cloze + SST</div>
         </button>
-        <button class="practice-hub-btn" data-accent="cyan" onclick="document.querySelector('[data-page=vocab]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(0,212,255,0.10),rgba(0,212,255,0.02));border:1px solid rgba(0,212,255,0.45);box-shadow:0 0 12px rgba(0,212,255,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
+        <button class="practice-hub-btn" data-accent="cyan" onclick="document.querySelector('[data-page=vocab]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(43,91,215,0.10),rgba(43,91,215,0.02));border:1px solid rgba(43,91,215,0.45);box-shadow:0 0 12px rgba(43,91,215,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
           <div style="font-size:28px">📇</div>
-          <div style="font-size:15px;font-weight:900;color:#4FC3F7;margin-top:6px">词汇</div>
+          <div style="font-size:15px;font-weight:900;color:#2563EB;margin-top:6px">词汇</div>
           <div style="font-size:11px;color:#90CAF9;margin-top:3px">学科英语 500 词 + 闪卡</div>
         </button>
-        <button class="practice-hub-btn" data-accent="pink" onclick="document.querySelector('[data-page=essay]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(255,51,102,0.10),rgba(255,51,102,0.02));border:1px solid rgba(255,51,102,0.45);box-shadow:0 0 12px rgba(255,51,102,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
+        <button class="practice-hub-btn" data-accent="pink" onclick="document.querySelector('[data-page=essay]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(220,38,38,0.10),rgba(220,38,38,0.02));border:1px solid rgba(220,38,38,0.45);box-shadow:0 0 12px rgba(220,38,38,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
           <div style="font-size:28px">📝</div>
-          <div style="font-size:15px;font-weight:900;color:#FF8A9C;margin-top:6px">作文</div>
+          <div style="font-size:15px;font-weight:900;color:#DB2777;margin-top:6px">作文</div>
           <div style="font-size:11px;color:#F8BBD0;margin-top:3px">73 周 prompt + 升级闭环</div>
         </button>
       </div>
       <!-- v19.24: gameHubCard 从主页迁到练习中心 (主页 hero 不再插入) -->
-      <div style="margin-top:14px;font-size:12px;font-weight:900;color:#FFB74D;letter-spacing:1px">⚔️ 每日挑战 + 所有 mini-game</div>
+      <div style="margin-top:14px;font-size:12px;font-weight:900;color:#D97706;letter-spacing:1px">⚔️ 每日挑战 + 所有 mini-game</div>
       <div id="gameHubCard" style="margin-top:6px"></div>
     </div>
   </div>
@@ -5591,7 +5487,7 @@ p { font-size: 14px; line-height: 1.6; }
   <!-- 暑假课表页 (v19.6+: 2026 暑期英语强化 31 天) -->
   <div class="page" id="page-summer">
     <!-- v19.39: 老师反馈卡 - 精准弱点暴露 -->
-    <div class="card" style="margin-bottom:12px;background:linear-gradient(135deg,rgba(255,107,53,0.10),rgba(255,184,0,0.04));border-left:4px solid #FF6B35">
+    <div class="card" style="margin-bottom:12px;background:linear-gradient(135deg,rgba(234,88,12,0.10),rgba(230,162,60,0.04));border-left:4px solid #EA580C">
       <div class="card-title">📞 英文老师 5-29 反馈 (基于此重排课表)</div>
       <div style="font-size:12px;line-height:1.8;margin-top:8px;color:var(--color-text)">
         ✅ <b>Oral</b>: T1 表现尚可 (T3 才有真测) — 加强 picture-related<br>
@@ -5613,7 +5509,7 @@ p { font-size: 14px; line-height: 1.6; }
     <div class="card" style="margin-bottom:12px">
       <div class="card-title">1️⃣ 整体节奏</div>
       <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px">
-        <thead><tr style="background:rgba(168,85,247,0.10)"><th style="text-align:left;padding:6px">周</th><th style="text-align:left;padding:6px">日期</th><th style="text-align:left;padding:6px">焦点</th></tr></thead>
+        <thead><tr style="background:rgba(124,58,237,0.10)"><th style="text-align:left;padding:6px">周</th><th style="text-align:left;padding:6px">日期</th><th style="text-align:left;padding:6px">焦点</th></tr></thead>
         <tbody>
           <tr><td style="padding:6px"><b>W0 启动</b></td><td style="padding:6px">5-29 ~ 5-31 (3 天)</td><td style="padding:6px">诊断 + 测 B 册 OE 起点 4/15</td></tr>
           <tr><td style="padding:6px"><b>W1 OE 攻坚</b></td><td style="padding:6px">6-1 ~ 6-7</td><td style="padding:6px"><b>每天 2 篇 Comp OE</b> + Composition V1+V2</td></tr>
@@ -5627,26 +5523,26 @@ p { font-size: 14px; line-height: 1.6; }
     <div class="card" style="margin-bottom:12px">
       <div class="card-title">2️⃣ 每日时间表 (8AM 起床 → 9PM 睡觉)</div>
       <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px">
-        <thead><tr style="background:rgba(168,85,247,0.10)"><th style="text-align:left;padding:6px">时间</th><th style="text-align:left;padding:6px">时长</th><th style="text-align:left;padding:6px">内容</th></tr></thead>
+        <thead><tr style="background:rgba(124,58,237,0.10)"><th style="text-align:left;padding:6px">时间</th><th style="text-align:left;padding:6px">时长</th><th style="text-align:left;padding:6px">内容</th></tr></thead>
         <tbody>
           <tr><td style="padding:6px">08:00-08:30</td><td style="padding:6px">30min</td><td style="padding:6px">起床 + 早餐</td></tr>
-          <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>08:30-09:30 A</b></td><td style="padding:6px">60min</td><td style="padding:6px">📚 Comp OE 阅读 + 8-10 题</td></tr>
-          <tr style="background:rgba(255,184,0,0.10)"><td style="padding:6px"><b>09:30-10:00</b></td><td style="padding:6px">30min</td><td style="padding:6px">🤸 跳绳 (运动)</td></tr>
-          <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>10:00-11:00 B</b></td><td style="padding:6px">60min</td><td style="padding:6px">📇 Vocab 闪卡 30min + Cloze 30min</td></tr>
-          <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>11:00-11:20</b></td><td style="padding:6px">20min</td><td style="padding:6px">📓 错题本艾宾浩斯 due</td></tr>
+          <tr style="background:rgba(22,163,74,0.06)"><td style="padding:6px"><b>08:30-09:30 A</b></td><td style="padding:6px">60min</td><td style="padding:6px">📚 Comp OE 阅读 + 8-10 题</td></tr>
+          <tr style="background:rgba(230,162,60,0.10)"><td style="padding:6px"><b>09:30-10:00</b></td><td style="padding:6px">30min</td><td style="padding:6px">🤸 跳绳 (运动)</td></tr>
+          <tr style="background:rgba(22,163,74,0.06)"><td style="padding:6px"><b>10:00-11:00 B</b></td><td style="padding:6px">60min</td><td style="padding:6px">📇 Vocab 闪卡 30min + Cloze 30min</td></tr>
+          <tr style="background:rgba(22,163,74,0.06)"><td style="padding:6px"><b>11:00-11:20</b></td><td style="padding:6px">20min</td><td style="padding:6px">📓 错题本艾宾浩斯 due</td></tr>
           <tr><td style="padding:6px">11:20-12:30</td><td style="padding:6px">70min</td><td style="padding:6px">自由 / 英文小书</td></tr>
           <tr><td style="padding:6px">12:30-13:30</td><td style="padding:6px">60min</td><td style="padding:6px">午餐</td></tr>
           <tr><td style="padding:6px">13:30-14:30</td><td style="padding:6px">60min</td><td style="padding:6px">午休 / 自由</td></tr>
-          <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>14:30-15:30 C</b></td><td style="padding:6px">60min</td><td style="padding:6px">📝 Composition / SST 隔天轮换</td></tr>
-          <tr style="background:rgba(255,107,53,0.10)"><td style="padding:6px"><b>15:30-18:30</b></td><td style="padding:6px">3h</td><td style="padding:6px">📖 <b>美玲课</b> (外课 · 英语强化)</td></tr>
+          <tr style="background:rgba(22,163,74,0.06)"><td style="padding:6px"><b>14:30-15:30 C</b></td><td style="padding:6px">60min</td><td style="padding:6px">📝 Composition / SST 隔天轮换</td></tr>
+          <tr style="background:rgba(234,88,12,0.10)"><td style="padding:6px"><b>15:30-18:30</b></td><td style="padding:6px">3h</td><td style="padding:6px">📖 <b>美玲课</b> (外课 · 英语强化)</td></tr>
           <tr><td style="padding:6px">18:30-19:30</td><td style="padding:6px">60min</td><td style="padding:6px">晚餐 + 家庭时间</td></tr>
-          <tr style="background:rgba(0,255,136,0.06)"><td style="padding:6px"><b>19:30-20:00 D</b></td><td style="padding:6px">30min</td><td style="padding:6px">🗣️ Oral SBC / Listen MCQ / RA</td></tr>
+          <tr style="background:rgba(22,163,74,0.06)"><td style="padding:6px"><b>19:30-20:00 D</b></td><td style="padding:6px">30min</td><td style="padding:6px">🗣️ Oral SBC / Listen MCQ / RA</td></tr>
           <tr><td style="padding:6px">20:00-20:45</td><td style="padding:6px">45min</td><td style="padding:6px">洗澡 + 睡前阅读</td></tr>
           <tr><td style="padding:6px">20:45-21:00</td><td style="padding:6px">15min</td><td style="padding:6px">关灯前 chat</td></tr>
-          <tr style="background:rgba(255,184,0,0.10)"><td style="padding:6px"><b>21:00 🌙</b></td><td style="padding:6px">—</td><td style="padding:6px"><b>睡觉</b></td></tr>
+          <tr style="background:rgba(230,162,60,0.10)"><td style="padding:6px"><b>21:00 🌙</b></td><td style="padding:6px">—</td><td style="padding:6px"><b>睡觉</b></td></tr>
         </tbody>
       </table>
-      <div style="font-size:12px;color:var(--color-text-light);margin-top:8px;padding:8px;background:rgba(0,255,136,0.06);border-radius:6px">
+      <div style="font-size:12px;color:var(--color-text-light);margin-top:8px;padding:8px;background:rgba(22,163,74,0.06);border-radius:6px">
         💡 <b>结构化学习总计</b>: A 60 + B 60 + 错题 20 + C 60 + D 30 = <b>3h50min app 训练</b> + 美玲课 3h + 跳绳 30min = 全天约 <b>6h50min</b>
       </div>
     </div>
@@ -5660,13 +5556,13 @@ p { font-size: 14px; line-height: 1.6; }
         <p><b>周四 — 听说日</b>: A Comp OE · B Vocab+Editing · C SST 3 · D Listen MCQ+RA · 他科 数学 unit</p>
         <p><b>周五 — Paper 2 模拟测</b>: A Comp OE · B Cloze · C Comp V2 final · D Oral SBC · 🎯 <b>Paper 2 模拟卷 28min</b> · 他科 科学</p>
         <p><b>周六 — Paper 1 模拟 + 周复盘</b>: A Comp OE · B Cloze · 🎯 <b>Paper 1 模拟 60min</b> · D Oral · 复盘 10min · 他科 华文</p>
-        <p style="background:rgba(255,184,0,0.10);padding:8px;border-radius:6px"><b>周日 — 全休 🌴</b>: 完全不学 / 不打卡 / 出去玩 / 1 集英语动画当娱乐</p>
+        <p style="background:rgba(230,162,60,0.10);padding:8px;border-radius:6px"><b>周日 — 全休 🌴</b>: 完全不学 / 不打卡 / 出去玩 / 1 集英语动画当娱乐</p>
       </div>
     </div>
 
     <div class="card" style="margin-bottom:12px">
       <div class="card-title">4️⃣ 31 天互动日历 (点任务直接跳, 自动打勾)</div>
-      <div style="font-size:11px;color:var(--color-text-light);margin:6px 0 10px;padding:6px 10px;background:rgba(255,184,0,0.10);border-radius:6px">
+      <div style="font-size:11px;color:var(--color-text-light);margin:6px 0 10px;padding:6px 10px;background:rgba(230,162,60,0.10);border-radius:6px">
         💡 今日金色边框自动滚动到顶 · 点 chip 跳 app 功能 + 自动 ✓ · 再点 ✓ 取消 · 全天做完 → 🌟 全勤撒花
       </div>
       <div id="summerCalendarContainer">
@@ -5677,7 +5573,7 @@ p { font-size: 14px; line-height: 1.6; }
     <div class="card" style="margin-bottom:12px">
       <div class="card-title">5️⃣ 量化指标 (家长监督看板)</div>
       <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px">
-        <thead><tr style="background:rgba(168,85,247,0.10)"><th style="text-align:left;padding:6px">维度</th><th style="text-align:center;padding:6px">W0 起点</th><th style="text-align:center;padding:6px">W4 目标</th></tr></thead>
+        <thead><tr style="background:rgba(124,58,237,0.10)"><th style="text-align:left;padding:6px">维度</th><th style="text-align:center;padding:6px">W0 起点</th><th style="text-align:center;padding:6px">W4 目标</th></tr></thead>
         <tbody>
           <tr><td style="padding:6px">Comp OE 正确率</td><td style="text-align:center;padding:6px">~60%</td><td style="text-align:center;padding:6px;color:var(--color-success)"><b>75%+</b></td></tr>
           <tr><td style="padding:6px">Vocab Cloze 正确率</td><td style="text-align:center;padding:6px">~55%</td><td style="text-align:center;padding:6px;color:var(--color-success)"><b>75%+</b></td></tr>
@@ -5694,22 +5590,22 @@ p { font-size: 14px; line-height: 1.6; }
     <div class="card" style="margin-bottom:12px">
       <div class="card-title">6️⃣ App 训练入口对照</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-top:8px">
-        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Comp OE 阅读 + 定位法<br><b style="color:#38BDF8">📚 题库 → Comp OE</b></div>
-        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Vocab 闪卡 (艾宾浩斯)<br><b style="color:#38BDF8">📇 词汇 tab</b></div>
-        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Vocab Cloze 50 PSLE<br><b style="color:#38BDF8">主页 Paper 2 突击卡</b></div>
-        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Cloze 同义词 MCQ<br><b style="color:#38BDF8">练习 → Cloze</b></div>
-        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Composition<br><b style="color:#38BDF8">📝 作文 tab</b></div>
-        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">作文模板 15 + 50 高级词<br><b style="color:#38BDF8">📝 作文 → 模板库</b></div>
-        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">SST 15 题<br><b style="color:#38BDF8">练习 → SST</b></div>
-        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Listening MCQ 20 题<br><b style="color:#38BDF8">练习 → Listen MCQ</b></div>
-        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Oral SBC 80 题<br><b style="color:#38BDF8">主页 → Oral SBC</b></div>
-        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Oral RA 10 段 TTS<br><b style="color:#38BDF8">主页 → Reading Aloud</b></div>
-        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">Editing 找错<br><b style="color:#38BDF8">练习 → Editing</b></div>
-        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">错题本艾宾浩斯<br><b style="color:#38BDF8">训练中心 → 错题本</b></div>
-        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">数学维持<br><b style="color:#38BDF8">练习 → 数学/unit</b></div>
-        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">科学维持<br><b style="color:#38BDF8">练习 → SciMCQ/SciOE</b></div>
-        <div style="padding:6px 8px;background:rgba(0,212,255,0.06);border-radius:5px">华文维持<br><b style="color:#38BDF8">练习 → 华文 MCQ/阅读</b></div>
-        <div style="padding:6px 8px;background:rgba(255,184,0,0.10);border-radius:5px">🎯 Paper 2 模拟卷 28min<br><b style="color:#FFB800">主页 → Paper 2 模拟卷</b></div>
+        <div style="padding:6px 8px;background:rgba(43,91,215,0.06);border-radius:5px">Comp OE 阅读 + 定位法<br><b style="color:#2563EB">📚 题库 → Comp OE</b></div>
+        <div style="padding:6px 8px;background:rgba(43,91,215,0.06);border-radius:5px">Vocab 闪卡 (艾宾浩斯)<br><b style="color:#2563EB">📇 词汇 tab</b></div>
+        <div style="padding:6px 8px;background:rgba(43,91,215,0.06);border-radius:5px">Vocab Cloze 50 PSLE<br><b style="color:#2563EB">主页 Paper 2 突击卡</b></div>
+        <div style="padding:6px 8px;background:rgba(43,91,215,0.06);border-radius:5px">Cloze 同义词 MCQ<br><b style="color:#2563EB">练习 → Cloze</b></div>
+        <div style="padding:6px 8px;background:rgba(43,91,215,0.06);border-radius:5px">Composition<br><b style="color:#2563EB">📝 作文 tab</b></div>
+        <div style="padding:6px 8px;background:rgba(43,91,215,0.06);border-radius:5px">作文模板 15 + 50 高级词<br><b style="color:#2563EB">📝 作文 → 模板库</b></div>
+        <div style="padding:6px 8px;background:rgba(43,91,215,0.06);border-radius:5px">SST 15 题<br><b style="color:#2563EB">练习 → SST</b></div>
+        <div style="padding:6px 8px;background:rgba(43,91,215,0.06);border-radius:5px">Listening MCQ 20 题<br><b style="color:#2563EB">练习 → Listen MCQ</b></div>
+        <div style="padding:6px 8px;background:rgba(43,91,215,0.06);border-radius:5px">Oral SBC 80 题<br><b style="color:#2563EB">主页 → Oral SBC</b></div>
+        <div style="padding:6px 8px;background:rgba(43,91,215,0.06);border-radius:5px">Oral RA 10 段 TTS<br><b style="color:#2563EB">主页 → Reading Aloud</b></div>
+        <div style="padding:6px 8px;background:rgba(43,91,215,0.06);border-radius:5px">Editing 找错<br><b style="color:#2563EB">练习 → Editing</b></div>
+        <div style="padding:6px 8px;background:rgba(43,91,215,0.06);border-radius:5px">错题本艾宾浩斯<br><b style="color:#2563EB">训练中心 → 错题本</b></div>
+        <div style="padding:6px 8px;background:rgba(43,91,215,0.06);border-radius:5px">数学维持<br><b style="color:#2563EB">练习 → 数学/unit</b></div>
+        <div style="padding:6px 8px;background:rgba(43,91,215,0.06);border-radius:5px">科学维持<br><b style="color:#2563EB">练习 → SciMCQ/SciOE</b></div>
+        <div style="padding:6px 8px;background:rgba(43,91,215,0.06);border-radius:5px">华文维持<br><b style="color:#2563EB">练习 → 华文 MCQ/阅读</b></div>
+        <div style="padding:6px 8px;background:rgba(230,162,60,0.10);border-radius:5px">🎯 Paper 2 模拟卷 28min<br><b style="color:#E6A23C">主页 → Paper 2 模拟卷</b></div>
       </div>
     </div>
 
@@ -5771,7 +5667,7 @@ p { font-size: 14px; line-height: 1.6; }
           </div>
         </div>
 
-        <div class="admin-action" style="border-color: #4ECDC4; background: rgba(0,255,136,0.06);">
+        <div class="admin-action" style="border-color: #0D9488; background: rgba(22,163,74,0.06);">
           <h4>🏊 游泳运动</h4>
           <p>1 次游泳运动(≥30 min)+5 分,有助专注力</p>
           <div class="admin-buttons">
@@ -5795,7 +5691,7 @@ p { font-size: 14px; line-height: 1.6; }
           </div>
         </div>
 
-        <div class="admin-action" style="border-color: #4ECDC4; background: rgba(0,255,136,0.06);">
+        <div class="admin-action" style="border-color: #0D9488; background: rgba(22,163,74,0.06);">
           <h4>📋 每周学校测验达标</h4>
           <p>学校单元测验 / 周测达标(≥80%)+5 分;优秀(≥90%)+10 分</p>
           <div class="admin-buttons">
@@ -5981,9 +5877,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.54"></script>
-<script src="data.js?v=19.54"></script>
-<script src="app.js?v=19.54"></script>
+<script src="character.js?v=19.55"></script>
+<script src="data.js?v=19.55"></script>
+<script src="app.js?v=19.55"></script>
 
 </body>
 </html>

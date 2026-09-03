@@ -248,81 +248,30 @@ await window.restoreFromSnapshot('2026-05-22T12:30:59.169Z')  // 返回快照 (�
 
 ---
 
-## 7.6. 🎨 暗主题配色规则 (v19.20-v19.21 永久沿用, 新 UI 必读)
+## 7.6. 🎨 亮色主题配色规则 (v19.55 起, 对齐 BTC 挖矿策略系统风格, 新 UI 必读)
 
-**铁律: 暗主题 (`--color-bg: #0F172A`) 下不能有亮浅色背景, 否则视觉断层。**
+**铁律: 亮色主题 (--color-bg: #F0F2F5 浅灰蓝底 + 白卡片), 不要再写任何暗色底/亮色字。**
+v19.20-21 的自动转暗机制已整体移除, inline 浅色 hex 原生生效。
 
-### A. 容器背景 (按色系)
+### 调色板 (CSS 变量已定义, 优先用 var)
 
-| 色调 | 浅版 hex (旧/不要用) | 暗版 (用这个) |
-|---|---|---|
-| 青/蓝 | `#F0F8FF / #E1F5FE / #E3F2FD / #BBDEFB` | `linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,212,255,0.02))` + `border: 1px solid rgba(0,212,255,0.25)` |
-| 绿 | `#E8F5E9 / #F1F8E9 / #C8E6C9` | `linear-gradient(135deg, rgba(0,255,136,0.08), rgba(0,255,136,0.02))` + `border: 1px solid rgba(0,255,136,0.25)` |
-| 黄/橙 | `#FFF3E0 / #FFF8E0 / #FFFCE6 / #FFE0B2` | `linear-gradient(135deg, rgba(255,184,0,0.10), rgba(255,107,53,0.04))` + `border: 1px solid rgba(255,184,0,0.25)` |
-| 红/粉 | `#FFEBEE / #FCE4EC / #FFF0F0 / #FFE0E0` | `linear-gradient(135deg, rgba(255,107,107,0.10), rgba(255,107,107,0.03))` + `border: 1px solid rgba(255,107,107,0.25)` |
-| 紫 | `#F5F0FF` | `linear-gradient(135deg, rgba(167,136,224,0.10), rgba(167,136,224,0.02))` + `border: 1px solid rgba(167,136,224,0.25)` |
-| 中性灰白 | `#FFF / #EEE / #FAFAFA / #F5F5F5 / white` | `rgba(255,255,255,0.04)` + `border: 1px solid rgba(255,255,255,0.10)` |
-
-### B. 文字色 (深→亮替换)
-
-| 旧深色 (不可见在暗背景) | 新亮色 |
+| 用途 | 值 |
 |---|---|
-| `#212121 / #2D3047 / #000` (纯黑) | `#E0E0E0` (亮灰主文字) |
-| `#5D4037 / #5D4500 / #5D4045` (深棕) | `#E0E0E0` 或对应 accent 亮版 |
-| `#33691E / #1B5E20` (深绿) | `#66FFB0` (荧光绿) |
-| `#0D47A1 / #01579B` (深蓝) | `#4FC3F7` (亮青) |
-| `#880E4F / #C2185B` (深粉) | `#FF8A9C` (亮粉) |
-| `#BF360C / #E65100` (深橙) | `#FFB74D` (亮橙) |
-| `#C62828` (深红 — 警示场景保留) | `#EF5350` (亮红) |
-| `#666 / #555 / #888` (中灰) | `#A0A0A0` (中亮灰副文) |
-| `#999` (浅灰) | `#94A3B8` (CSS var-color-text-light) |
+| 页面底 | #F0F2F5 (--color-bg) |
+| 卡片 | #FFFFFF (--color-card) / 次级容器 #F7F9FC~#F5F7FA |
+| 主色(品蓝) | #2B5BD7 (--color-primary), 亮蓝 #2563EB |
+| 主文字 | #1F2937 (--color-text) |
+| 副文字 | #6B7280 (--color-text-light) / 弱灰 #909399 |
+| 边框 | #E5E9F2 (--color-border) / 分隔 #EEF1F6 |
+| 强调 | 绿 #16A34A · 橙 #D97706/#EA580C · 警告黄 #E6A23C · 红 #DC2626/#E64C4C · 紫 #7C3AED · 粉 #DB2777 |
+| 彩色容器底 | rgba(43,91,215,0.06~0.10) 蓝 / rgba(22,163,74,0.08) 绿 / rgba(230,162,60,0.10) 黄 等 + 同色 0.25 边框 |
 
-### C. 进度条/分隔背景
-
-| 用途 | 用 |
-|---|---|
-| 进度条底 | `rgba(255,255,255,0.08)` (不要用 `#EEE`) |
-| 进度条填充 | `linear-gradient(90deg, #FFB74D, #66FFB0)` (橙→绿渐变, 不要 #FFA500/#4ECDC4 暗版) |
-| 卡内分隔块 | `rgba(255,255,255,0.04)` + `border: 1px solid rgba(255,255,255,0.10)` |
-
-### D. 行动按钮 (强 accent 保留)
-
-按钮 cta 色保留鲜艳 (孩子要看见):
-- 红/紧急: `background: #FF6B6B / linear-gradient(135deg,#FF6B6B,#FF4444)` + `color:#FFF`
-- 绿/成功: `background: #66BB6A` + `color:#FFF`
-- 青/主操作: `background: rgba(0,212,255,0.15)` + `color: var(--color-primary)`
-- 黄/警告: `background: var(--color-warn)` + `color:#FFF`
-
-### E. 全局 CSS 自动适配机制 (index.html v19.20+)
-
-为防止"再加新卡又忘写", index.html 顶部 `<style>` 块加了**全局 attr 选择器**自动转换:
-```css
-[style*="background:#F0F8FF"], [style*="background:#FFF3E0"], ... {
-  background: linear-gradient(...rgba...) !important;
-}
-[style*="color:#212121"], [style*="color:#2D3047"], ... {
-  color: #E0E0E0 !important;
-}
-```
-
-**所以你 inline 写 `style="background:#FFF3E0"` 会被自动转**。但下列情况不会自动转, **必须手写暗版**:
-- `linear-gradient(...)` 含浅色 hex (除非 hex 落在 v19.21 补的 4 个特定模式里)
-- `#FFF / #EEE / white` 必须显式 (v19.21 已补)
-- `rgba(...)` 已是透明 (不需要转)
-- 新增 CSS class (例 `.my-new-card` 在 index.html 里) — 必须直接写 rgba 暗调
-
-### F. 新 UI 自检 checklist
-
-写新卡前 check:
-1. [ ] 容器背景: 用 `rgba(...,0.04-0.10)` 透明 / 或 `linear-gradient` 含 rgba — 不用 `#FFF/#EEE/#FAFAFA`
-2. [ ] 边框: `border: 1px solid rgba(255,255,255,0.10)` (中性) 或 `rgba(ACCENT,0.25)` (主题色)
-3. [ ] 主文字: `color: #E0E0E0` (或 var(--color-text))
-4. [ ] 副文字: `color: #A0A0A0` (或 var(--color-text-light))
-5. [ ] 强调字: 用 accent 亮版 (`#66FFB0/#4FC3F7/#FFB74D/#FF8A9C/#B39DDB`), 不用 `#1B5E20/#0D47A1/#5D4037` 类深版
-6. [ ] 按钮 cta: 保留鲜艳 (`#FF6B6B/#66BB6A` 等), 配 `color:#FFF`
-7. [ ] 进度条底: `rgba(255,255,255,0.08)`, 不用 `#EEE`
-
----
+### 新 UI 自检 checklist
+1. [ ] 容器: 白/#F7F9FC 或彩色 rgba 浅底 — 不写 rgba(255,255,255,0.0x) 暗式透明, 不写深色 hex 底
+2. [ ] 文字: #1F2937 主 / #6B7280 副 — 不写 #E0E0E0/#A0A0A0 类亮灰
+3. [ ] 强调字用上表深色版 (#2563EB/#16A34A/#D97706) — 不写 #4FC3F7/#66FFB0/#FFB74D 类荧光亮版
+4. [ ] 按钮 CTA 保留鲜艳实底 + 白字
+5. [ ] 遮罩层 rgba(0,0,0,0.5) 可继续用
 
 ## 8. 当前未做 TODO (按优先级)
 
