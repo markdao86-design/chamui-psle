@@ -411,7 +411,7 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19\.(3[6789]|4[0-9])/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+assert(/\?v=19.(3[6789]|4[0-9]|5[0-9])/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
   'v19.36+: cache buster ≥ 19.36');
 
 // ===== v19.43: 闪卡反面 4 段 = 中文 + 英文解释(短语) + 例句 + 考题 =====
@@ -1110,7 +1110,7 @@ assert(/if \(page === 'summer'\)[\s\S]{0,80}renderSummerCalendar\(\)/.test(appSr
   'v19.27: tab summer 触发 renderSummerCalendar');
 assert(/id="summerCalendarContainer"/.test(idxSrc), 'v19.27: page-summer 有 #summerCalendarContainer');
 assert(!/5 周分主题进度/.test(idxSrc), 'v19.27: 老静态 section "5 周分主题进度" 已替换');
-assert(/\?v=19\.(3[789]|4[0-9])/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
+assert(/\?v=19.(3[789]|4[0-9]|5[0-9])/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
 
 // ===== v19.38: 周末 → 只周日 (装备/皮肤/mini-game lock) =====
 // isWeekdayToday() 含义扩到 Mon-Sat (周六不再是自由日)
@@ -1125,6 +1125,22 @@ assert(/lockBanner\.style\.display = locked \? 'block' : 'none'/.test(appSrc),
 // 老 "周末才开放" 文案改成 "周日才开放"
 assert(!/周末才开放/.test(appSrc), 'v19.38: 老"周末才开放"文案已改成"周日才开放"');
 assert(/周日才开放/.test(appSrc), 'v19.38: app.js 含"周日才开放"新文案');
+
+// ===== v19.50: 每日课表 + 打分卡 + 周汇总 (手册v18.6) =====
+assert(/data-page="schedule"/.test(idxSrc), 'v19.50: nav 含课表 tab 按钮');
+assert(/id="page-schedule"/.test(idxSrc), 'v19.50: page-schedule 容器存在');
+assert(/const SCHED_DAYS = \{/.test(appSrc), 'v19.50: SCHED_DAYS 课表数据存在');
+assert(/const SCHED_FIELDS = \{/.test(appSrc), 'v19.50: SCHED_FIELDS 打分字段存在');
+assert(/function renderSchedulePage\(/.test(appSrc), 'v19.50: renderSchedulePage 已定义');
+assert(/page === 'schedule'/.test(appSrc), 'v19.50: tab 切换 hook 已接入 (防死代码)');
+assert(/function computeSchedWeekSummary\(/.test(appSrc), 'v19.50: 周汇总函数已定义');
+assert(/renderSchedWeekSummary\(\)/.test(appSrc), 'v19.50: 周汇总被调用');
+assert(/renderSchedMonthTrend\(\)/.test(appSrc), 'v19.50: 月趋势被调用');
+assert(/window\.saveDailyScore = saveDailyScore/.test(appSrc), 'v19.50: saveDailyScore window 导出');
+assert(/saveState\(state\);\s*renderSchedWeekSummary/.test(appSrc), 'v19.50: 打分即存 state + 刷新汇总');
+assert(/Conquer Comprehension/.test(appSrc), 'v19.50: 课表含实书名(阅读OE)');
+assert(/21:00–21:30/.test(appSrc) && /睡前单词/.test(appSrc), 'v19.50: 睡前单词档在课表中');
+assert(/scheduleScores/.test(appSrc), 'v19.50: 打分数据挂 state.scheduleScores (随 Firebase 同步)');
 
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');

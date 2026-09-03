@@ -5209,6 +5209,7 @@ p { font-size: 14px; line-height: 1.6; }
   <button class="tab-btn" data-page="history">📊 能力</button>
   <button class="tab-btn" data-page="character">👤 我的</button>
   <button class="tab-btn" data-page="summer">📅 暑假</button>
+  <button class="tab-btn" data-page="schedule">📆 课表</button>
   <!-- 旧 3 个英语类 tab + 管理 tab 隐藏 (page 容器仍存在, JS 跳转可访问) -->
   <button class="tab-btn" data-page="knowledge" style="display:none">🌳 知识树</button>
   <button class="tab-btn" data-page="essay" style="display:none">📝 作文</button>
@@ -5571,6 +5572,9 @@ p { font-size: 14px; line-height: 1.6; }
       <div style="font-size:10px;color:#888;margin-top:8px;text-align:center">v19.14i 主页极简后, 旧内容入口保留在这里 (不删, 一键访问)</div>
     </details>
   </div>
+
+  <!-- v19.50: 每日课表 + 打分卡页 (手册v18.6, JS 渲染) -->
+  <div class="page" id="page-schedule"></div>
 
   <!-- 暑假课表页 (v19.6+: 2026 暑期英语强化 31 天) -->
   <div class="page" id="page-summer">
@@ -5965,9 +5969,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.49"></script>
-<script src="data.js?v=19.49"></script>
-<script src="app.js?v=19.49"></script>
+<script src="character.js?v=19.50"></script>
+<script src="data.js?v=19.50"></script>
+<script src="app.js?v=19.50"></script>
 
 </body>
 </html>
