@@ -1,0 +1,1433 @@
+{
+  "updateTime": "2026-09-03T14:12:07.039282Z",
+  "state": {
+    "dailyQuests": {
+      "2026-09-03": {
+        "claimedAt": null,
+        "progress": 0,
+        "target": 3,
+        "questId": "slot-3",
+        "completed": false
+      }
+    },
+    "cloudPhotos": {},
+    "_paper2RealLoaded": true,
+    "version": 2,
+    "pet": {
+      "spawnedAt": 1788444019320,
+      "happiness": 100,
+      "lastFedDate": null,
+      "formIdx": 3,
+      "name": "球球",
+      "feedCount": 0
+    },
+    "paper2Sprint": {
+      "recent": {
+        "sst": [],
+        "cloze": []
+      },
+      "target": {
+        "cloze": 100,
+        "sst": 50
+      },
+      "progress": {
+        "cloze": 0,
+        "sst": 0
+      },
+      "startWeek": 1,
+      "correct": {
+        "cloze": 0,
+        "sst": 0
+      }
+    },
+    "subjectALEstimates": {
+      "science": 2,
+      "chinese": 1,
+      "lastUpdate": null,
+      "math": 1,
+      "english": 6
+    },
+    "mysteryBoxes": {
+      "totalSlotsAtLastEarn": 0,
+      "available": 0,
+      "history": [
+        {
+          "tier": "wow",
+          "points": 7,
+          "wow": "⚠️ \"Look at\" vs \"Look after\" 意思天差地别",
+          "equipId": null,
+          "ts": 1788444491329
+        }
+      ],
+      "opened": 1,
+      "_wkEarned": {
+        "_wk18": 7
+      }
+    },
+    "vocabPerfectRuns": 0,
+    "weekly": {},
+    "scores": {},
+    "dailyDraws": {
+      "consecutive": 1,
+      "lastDrawDate": "2026-09-03",
+      "fragments": 1
+    },
+    "marathonStreak": 0,
+    "monthlyMockHistory": [],
+    "scheduleScores": {},
+    "knowledgeExplored": {
+      "sci_forces": {
+        "date": "2026-09-03"
+      },
+      "sci_diversity": {
+        "date": "2026-09-03"
+      },
+      "sci_plant_lc": {
+        "date": "2026-09-03"
+      },
+      "math_algebra": {
+        "date": "2026-09-03"
+      },
+      "sci_cells": {
+        "date": "2026-09-03"
+      },
+      "math_fraction_adv": {
+        "date": "2026-09-03"
+      },
+      "sci_material": {
+        "date": "2026-09-03"
+      },
+      "sci_water": {
+        "date": "2026-09-03"
+      },
+      "sci_light_heat": {
+        "date": "2026-09-03"
+      },
+      "eng_basics": {
+        "date": "2026-09-03"
+      }
+    },
+    "alarmShownToday": {
+      "date": "2026-09-03",
+      "shown": []
+    },
+    "challengeProgress": {},
+    "thinkPuzzleAnswers": {
+      "1": {
+        "answer": "B",
+        "correct": true,
+        "ts": 1788444654473
+      },
+      "2": {
+        "answer": "B",
+        "correct": true,
+        "ts": 1788444726839
+      },
+      "3": {
+        "answer": "C",
+        "correct": true,
+        "ts": 1788444713807
+      },
+      "4": {
+        "answer": "B",
+        "correct": true,
+        "ts": 1788444721419
+      },
+      "5": {
+        "answer": "B",
+        "correct": true,
+        "ts": 1788444661561
+      },
+      "6": {
+        "answer": "A",
+        "correct": false,
+        "ts": 1788444649212
+      },
+      "7": {
+        "answer": "B",
+        "correct": true,
+        "ts": 1788444663578
+      },
+      "8": {
+        "answer": "B",
+        "correct": true,
+        "ts": 1788444640774
+      },
+      "10": {
+        "answer": "B",
+        "correct": true,
+        "ts": 1788444723063
+      },
+      "11": {
+        "answer": "A",
+        "correct": false,
+        "ts": 1788444668381
+      },
+      "12": {
+        "answer": "A",
+        "correct": true,
+        "ts": 1788444657266
+      },
+      "13": {
+        "answer": "C",
+        "correct": true,
+        "ts": 1788444716892
+      },
+      "16": {
+        "answer": "B",
+        "correct": false,
+        "ts": 1788444683931
+      },
+      "17": {
+        "answer": "B",
+        "correct": true,
+        "ts": 1788444634107
+      },
+      "20": {
+        "answer": "B",
+        "correct": true,
+        "ts": 1788444719518
+      },
+      "21": {
+        "answer": "B",
+        "correct": true,
+        "ts": 1788444637213
+      },
+      "23": {
+        "answer": "A",
+        "correct": false,
+        "ts": 1788444645868
+      },
+      "25": {
+        "answer": "B",
+        "correct": true,
+        "ts": 1788444680529
+      }
+    },
+    "mathGameRuns": 0,
+    "compTracking": {},
+    "soundEnabled": true,
+    "activePetType": "hamster",
+    "gameStats": {
+      "unit": {
+        "recent": [],
+        "difficulty": 4
+      },
+      "listen": {
+        "recent": [],
+        "difficulty": 4
+      },
+      "scilab": {
+        "recent": [],
+        "cumTotal": 30,
+        "difficulty": 4,
+        "cumCorrect": 23,
+        "cumRuns": 10
+      },
+      "grammar": {
+        "difficulty": 4,
+        "cumRuns": 5,
+        "recent": [],
+        "cumCorrect": 13,
+        "cumTotal": 15
+      },
+      "vocab": {
+        "recent": [],
+        "difficulty": 4
+      },
+      "cloze": {
+        "recent": [],
+        "difficulty": 4
+      },
+      "math": {
+        "difficulty": 4,
+        "recent": []
+      },
+      "editing": {
+        "recent": [
+          {
+            "date": "2026-09-03",
+            "correct": 5,
+            "total": 5,
+            "accuracy": 1
+          }
+        ],
+        "difficulty": 4,
+        "cumCorrect": 5,
+        "cumTotal": 5,
+        "cumRuns": 1
+      }
+    },
+    "adminPassword": null,
+    "dragonsUnlocked": {
+      "silver": null,
+      "gold": null
+    },
+    "adminPageOpens": 0,
+    "currentWeek": 18,
+    "editingGameRuns": 1,
+    "summerDone": {},
+    "milestones": {
+      "W65": false,
+      "W14": false,
+      "W52": false,
+      "W26": false,
+      "W72": false,
+      "W68": false,
+      "W20": false,
+      "W73": false,
+      "W42": false
+    },
+    "equipmentDisabled": [],
+    "wowGuessedToday": {},
+    "rareBoxesCount": 0,
+    "dailyStreak": {
+      "days": 0,
+      "brokenAt": null,
+      "bestEver": 0,
+      "freezeTokens": 0,
+      "lastDate": null
+    },
+    "tipQsAnswered": {},
+    "_lastGameDate": "Thu Sep 03 2026",
+    "spacedRepetition": {
+      "reviews": {
+        "wow:eng_0": {
+          "correctStreak": 0,
+          "intervalDays": 3,
+          "firstSeen": 1788098419331,
+          "lastReviewed": 1788098419331
+        },
+        "wow:eng_1": {
+          "firstSeen": 1788098419331,
+          "lastReviewed": 1788098419331,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:5": {
+          "lastReviewed": 1788098419331,
+          "firstSeen": 1788098419331,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "wow:eng_2": {
+          "intervalDays": 3,
+          "firstSeen": 1788098419331,
+          "correctStreak": 0,
+          "lastReviewed": 1788098419331
+        },
+        "think:17": {
+          "firstSeen": 1788444634107,
+          "lastReviewed": 1788444634107,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:21": {
+          "firstSeen": 1788444637214,
+          "lastReviewed": 1788444637214,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:8": {
+          "firstSeen": 1788444640774,
+          "lastReviewed": 1788444640774,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:23": {
+          "firstSeen": 1788444645868,
+          "lastReviewed": 1788444645868,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:6": {
+          "firstSeen": 1788444649212,
+          "lastReviewed": 1788444649212,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:1": {
+          "firstSeen": 1788444654473,
+          "lastReviewed": 1788444654473,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:12": {
+          "firstSeen": 1788444657267,
+          "lastReviewed": 1788444657267,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:7": {
+          "firstSeen": 1788444663578,
+          "lastReviewed": 1788444663578,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:11": {
+          "firstSeen": 1788444668381,
+          "lastReviewed": 1788444668381,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:25": {
+          "firstSeen": 1788444680529,
+          "lastReviewed": 1788444680529,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:16": {
+          "firstSeen": 1788444683931,
+          "lastReviewed": 1788444683931,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:3": {
+          "firstSeen": 1788444713807,
+          "lastReviewed": 1788444713807,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:13": {
+          "firstSeen": 1788444716892,
+          "lastReviewed": 1788444716892,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:20": {
+          "firstSeen": 1788444719518,
+          "lastReviewed": 1788444719518,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:4": {
+          "firstSeen": 1788444721419,
+          "lastReviewed": 1788444721419,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:10": {
+          "firstSeen": 1788444723063,
+          "lastReviewed": 1788444723063,
+          "intervalDays": 3,
+          "correctStreak": 0
+        },
+        "think:2": {
+          "firstSeen": 1788444726839,
+          "lastReviewed": 1788444726839,
+          "intervalDays": 3,
+          "correctStreak": 0
+        }
+      }
+    },
+    "sadUntil": null,
+    "wowSeenCount": 0,
+    "totalPoints": 832,
+    "achievements": {
+      "unlockedAt": {
+        "wk_15": 1788444021529,
+        "month_4": 1788444021529,
+        "month_2": 1788444021529,
+        "wk_5": 1788444021529,
+        "mid_kt_stars30": 1788444434470,
+        "month_3": 1788444021529,
+        "month_1": 1788444021529,
+        "wk_10": 1788444021529,
+        "think_correct_3": 1788444640776,
+        "think_5": 1788444649214
+      },
+      "unlocked": [
+        "wk_5",
+        "wk_10",
+        "wk_15",
+        "month_1",
+        "month_2",
+        "month_3",
+        "month_4",
+        "mid_kt_stars30",
+        "think_correct_3",
+        "think_5"
+      ]
+    },
+    "exchanges": [],
+    "logs": [
+      {
+        "points": 5,
+        "week": 18,
+        "timestamp": 1788444021462,
+        "reason": "每日登录奖励"
+      },
+      {
+        "week": 18,
+        "reason": "🌳 知识树探索: 水循环",
+        "timestamp": 1788444052625,
+        "points": 2
+      },
+      {
+        "points": 65,
+        "timestamp": 1788444073371,
+        "week": 18,
+        "reason": "📝 知识练习: sci_water 3/3 (3⭐)"
+      },
+      {
+        "points": 2,
+        "reason": "🌳 知识树探索: 细胞 Cells",
+        "week": 18,
+        "timestamp": 1788444079679
+      },
+      {
+        "week": 18,
+        "reason": "📝 知识练习: sci_cells 0/3 (0⭐)",
+        "points": 8,
+        "timestamp": 1788444090791
+      },
+      {
+        "reason": "📝 知识练习: sci_cells 3/3 (3⭐)",
+        "week": 18,
+        "timestamp": 1788444109774,
+        "points": 57
+      },
+      {
+        "points": 2,
+        "timestamp": 1788444113723,
+        "week": 18,
+        "reason": "🌳 知识树探索: 光与热"
+      },
+      {
+        "timestamp": 1788444126500,
+        "reason": "📝 知识练习: sci_light_heat 3/3 (3⭐)",
+        "week": 18,
+        "points": 65
+      },
+      {
+        "reason": "🌳 知识树探索: 力 Forces",
+        "timestamp": 1788444129731,
+        "points": 2,
+        "week": 18
+      },
+      {
+        "points": 23,
+        "week": 18,
+        "reason": "📝 知识练习: sci_forces 2/3 (1⭐)",
+        "timestamp": 1788444142401
+      },
+      {
+        "timestamp": 1788444149196,
+        "reason": "📝 知识练习: sci_forces 3/3 (3⭐)",
+        "week": 18,
+        "points": 42
+      },
+      {
+        "reason": "🌳 知识树探索: 材料性质",
+        "week": 18,
+        "timestamp": 1788444152326,
+        "points": 2
+      },
+      {
+        "week": 18,
+        "points": 65,
+        "reason": "📝 知识练习: sci_material 3/3 (3⭐)",
+        "timestamp": 1788444172317
+      },
+      {
+        "points": 2,
+        "week": 18,
+        "reason": "🌳 知识树探索: 植物生命周期",
+        "timestamp": 1788444175503
+      },
+      {
+        "points": 65,
+        "week": 18,
+        "reason": "📝 知识练习: sci_plant_lc 3/3 (3⭐)",
+        "timestamp": 1788444189385
+      },
+      {
+        "timestamp": 1788444191862,
+        "week": 18,
+        "points": 2,
+        "reason": "🌳 知识树探索: Diversity 分类"
+      },
+      {
+        "points": 65,
+        "timestamp": 1788444224730,
+        "week": 18,
+        "reason": "📝 知识练习: sci_diversity 3/3 (3⭐)"
+      },
+      {
+        "timestamp": 1788444228236,
+        "points": 2,
+        "reason": "🌳 知识树探索: 基础 Grammar",
+        "week": 18
+      },
+      {
+        "week": 18,
+        "reason": "📝 知识练习: eng_basics 2/3 (1⭐)",
+        "points": 23,
+        "timestamp": 1788444241707
+      },
+      {
+        "points": 42,
+        "week": 18,
+        "timestamp": 1788444255239,
+        "reason": "📝 知识练习: eng_basics 3/3 (3⭐)"
+      },
+      {
+        "week": 18,
+        "points": 2,
+        "timestamp": 1788444258513,
+        "reason": "🌳 知识树探索: 代数方程"
+      },
+      {
+        "points": 65,
+        "week": 18,
+        "timestamp": 1788444271773,
+        "reason": "📝 知识练习: math_algebra 3/3 (3⭐)"
+      },
+      {
+        "week": 18,
+        "reason": "🌳 知识树探索: 分数余数陷阱",
+        "points": 2,
+        "timestamp": 1788444275472
+      },
+      {
+        "week": 18,
+        "reason": "📝 知识练习: math_fraction_adv 2/3 (1⭐)",
+        "timestamp": 1788444306752,
+        "points": 23
+      },
+      {
+        "timestamp": 1788444314465,
+        "points": 42,
+        "reason": "📝 知识练习: math_fraction_adv 3/3 (3⭐)",
+        "week": 18
+      },
+      {
+        "reason": "🎮 Editing 找错全对 (第 1 次)",
+        "points": 6,
+        "week": 18,
+        "timestamp": 1788444483213
+      },
+      {
+        "reason": "🎁 开宝箱 (惊喜!)",
+        "points": 7,
+        "week": 18,
+        "timestamp": 1788444491329
+      },
+      {
+        "reason": "💪 错题巩固 (streak 1/3) +1",
+        "points": 1,
+        "type": "leitner_consol",
+        "week": 18,
+        "timestamp": 1788444548059
+      },
+      {
+        "reason": "💪 错题巩固 (streak 1/3) +1",
+        "points": 1,
+        "type": "leitner_consol",
+        "week": 18,
+        "timestamp": 1788444557269
+      },
+      {
+        "reason": "💪 错题巩固 (streak 1/3) +1",
+        "points": 1,
+        "type": "leitner_consol",
+        "week": 18,
+        "timestamp": 1788444561663
+      },
+      {
+        "reason": "💪 错题巩固 (streak 2/3) +1",
+        "points": 1,
+        "type": "leitner_consol",
+        "week": 18,
+        "timestamp": 1788444562771
+      },
+      {
+        "reason": "🤔 思考题 W17 答对",
+        "points": 10,
+        "week": 17,
+        "timestamp": 1788444634107
+      },
+      {
+        "reason": "🤔 思考题 W21 答对",
+        "points": 10,
+        "week": 21,
+        "timestamp": 1788444637213
+      },
+      {
+        "reason": "🤔 思考题 W8 答对",
+        "points": 10,
+        "week": 8,
+        "timestamp": 1788444640774
+      },
+      {
+        "reason": "🤔 思考题 W1 答对",
+        "points": 10,
+        "week": 1,
+        "timestamp": 1788444654473
+      },
+      {
+        "reason": "🤔 思考题 W12 答对",
+        "points": 10,
+        "week": 12,
+        "timestamp": 1788444657266
+      },
+      {
+        "reason": "🤔 思考题 W5 答对",
+        "points": 10,
+        "week": 5,
+        "timestamp": 1788444661561
+      },
+      {
+        "reason": "🤔 思考题 W7 答对",
+        "points": 10,
+        "week": 7,
+        "timestamp": 1788444663578
+      },
+      {
+        "reason": "🤔 思考题 W25 答对",
+        "points": 10,
+        "week": 25,
+        "timestamp": 1788444680529
+      },
+      {
+        "reason": "🤔 思考题 W3 答对",
+        "points": 10,
+        "week": 3,
+        "timestamp": 1788444713807
+      },
+      {
+        "reason": "🤔 思考题 W13 答对",
+        "points": 10,
+        "week": 13,
+        "timestamp": 1788444716892
+      },
+      {
+        "reason": "🤔 思考题 W20 答对",
+        "points": 10,
+        "week": 20,
+        "timestamp": 1788444719518
+      },
+      {
+        "reason": "🤔 思考题 W4 答对",
+        "points": 10,
+        "week": 4,
+        "timestamp": 1788444721419
+      },
+      {
+        "reason": "🤔 思考题 W10 答对",
+        "points": 10,
+        "week": 10,
+        "timestamp": 1788444723063
+      },
+      {
+        "reason": "🤔 思考题 W2 答对",
+        "points": 10,
+        "week": 2,
+        "timestamp": 1788444726839
+      }
+    ],
+    "psleDone": false,
+    "weeklyPool": {},
+    "daily": {},
+    "gradReviewQueue": [],
+    "wrongAnswers": [
+      {
+        "q": "Ali and I used to live in the same village. ___ through the village was a river.",
+        "qField": "q",
+        "retries": 0,
+        "type": "mcq",
+        "addedDate": "2026-09-03",
+        "ans": 0,
+        "tag": "C16",
+        "opts": [
+          "Flowing",
+          "Across",
+          "Other",
+          "Wide"
+        ],
+        "source": "paper2-real",
+        "gameKey": "cloze",
+        "explain": "Flowing through = 流经 (现在分词作定语); Across 是介词不能单独作主语. 真考 16 题, 你写 Across 错.",
+        "addedWeek": 18,
+        "id": "cloze|Ali and I used to live in the same village. ___ through the village was a river.|C16:1788444021464_0",
+        "_fp": "cloze|Ali and I used to live in the same village. ___ through the village was a river.|C16"
+      },
+      {
+        "qField": "q",
+        "gameKey": "cloze",
+        "explain": "the other side = 另一边 (两个中的另一个, 确指); another 不能跟 the. 真考 17 题, 你写 another 错.",
+        "addedDate": "2026-09-03",
+        "opts": [
+          "other",
+          "another",
+          "others",
+          "wide"
+        ],
+        "_fp": "cloze|Ali's house was on one side of the river and mine was on the ___ side.|C17",
+        "type": "mcq",
+        "retries": 0,
+        "addedWeek": 18,
+        "id": "cloze|Ali's house was on one side of the river and mine was on the ___ side.|C17:1788444021464_1",
+        "q": "Ali's house was on one side of the river and mine was on the ___ side.",
+        "source": "paper2-real",
+        "tag": "C17",
+        "ans": 0
+      },
+      {
+        "addedDate": "2026-09-03",
+        "q": "Across the river was a sturdy bridge ___ enough for two lorries to pass through.",
+        "type": "mcq",
+        "gameKey": "cloze",
+        "source": "paper2-real",
+        "explain": "wide + enough = 足够宽 (形容词描述桥的宽度可让车通过); which 是关系代词不能用. 真考 18 题, 你写 which 错.",
+        "id": "cloze|Across the river was a sturdy bridge ___ enough for two lorries to pass through.|C18:1788444021464_2",
+        "qField": "q",
+        "tag": "C18",
+        "ans": 0,
+        "retries": 0,
+        "addedWeek": 18,
+        "_fp": "cloze|Across the river was a sturdy bridge ___ enough for two lorries to pass through.|C18",
+        "opts": [
+          "wide",
+          "which",
+          "long",
+          "big"
+        ]
+      },
+      {
+        "qField": "q",
+        "addedDate": "2026-09-03",
+        "type": "mcq",
+        "retries": 0,
+        "ans": 0,
+        "gameKey": "cloze",
+        "opts": [
+          "watched",
+          "saw",
+          "looked",
+          "noticed"
+        ],
+        "tag": "C20",
+        "explain": "watched = 持续看 (ripples form 是过程); saw 是看见一瞬. 真考 20 题, 你写 saw 错.",
+        "id": "cloze|As I ___ the ripples form on the water, Ali crept up from behind.|C20:1788444021464_3",
+        "q": "As I ___ the ripples form on the water, Ali crept up from behind.",
+        "source": "paper2-real",
+        "addedWeek": 18,
+        "_fp": "cloze|As I ___ the ripples form on the water, Ali crept up from behind.|C20"
+      },
+      {
+        "source": "paper2-real",
+        "type": "mcq",
+        "gameKey": "cloze",
+        "id": "cloze|The current was ___ strong that I struggled to swim back to the bank.|C23:1788444021465_4",
+        "addedWeek": 18,
+        "explain": "so + adj + that = 如此...以致 (结果状语); too + adj + to + 动 (不能跟 that). 真考 23 题, 你写 too 错.",
+        "q": "The current was ___ strong that I struggled to swim back to the bank.",
+        "retries": 0,
+        "tag": "C23",
+        "addedDate": "2026-09-03",
+        "ans": 0,
+        "qField": "q",
+        "_fp": "cloze|The current was ___ strong that I struggled to swim back to the bank.|C23",
+        "opts": [
+          "so",
+          "too",
+          "very",
+          "really"
+        ]
+      },
+      {
+        "retries": 0,
+        "id": "cloze|___ I saw him, I would tell myself that I would have my revenge one day.|C25:1788444021465_5",
+        "opts": [
+          "Whenever",
+          "When",
+          "While",
+          "As"
+        ],
+        "_fp": "cloze|___ I saw him, I would tell myself that I would have my revenge one day.|C25",
+        "addedDate": "2026-09-03",
+        "tag": "C25",
+        "ans": 0,
+        "qField": "q",
+        "q": "___ I saw him, I would tell myself that I would have my revenge one day.",
+        "source": "paper2-real",
+        "type": "mcq",
+        "explain": "Whenever = 每当 (习惯性, 每次都这样); When = 一次. 上下文是 \"每次见到他\", 用 Whenever. 真考 25 题, 你写 When 错.",
+        "addedWeek": 18,
+        "gameKey": "cloze"
+      },
+      {
+        "explain": "反身代词: I 告诉 自己 → myself (主语和宾语同一人). 真考 26 题, 你写 him 错.",
+        "gameKey": "cloze",
+        "qField": "q",
+        "opts": [
+          "myself",
+          "him",
+          "me",
+          "mine"
+        ],
+        "addedDate": "2026-09-03",
+        "tag": "C26",
+        "ans": 0,
+        "q": "No one knew it but whenever I saw him, I would tell ___ that I would have my revenge.",
+        "addedWeek": 18,
+        "type": "mcq",
+        "id": "cloze|No one knew it but whenever I saw him, I would tell ___ that I would have my revenge.|C26:1788444021465_6",
+        "source": "paper2-real",
+        "retries": 0,
+        "_fp": "cloze|No one knew it but whenever I saw him, I would tell ___ that I would have my revenge.|C26"
+      },
+      {
+        "addedWeek": 18,
+        "type": "mcq",
+        "explain": "drowning = ��在溺水 (was + V-ing 过去进行); sanked 不是英文词. 真考 29 题, 你写 Sanked 错.",
+        "qField": "q",
+        "gameKey": "cloze",
+        "retries": 0,
+        "id": "cloze|Ali could not swim and was ___ before my eyes.|C29:1788444021465_7",
+        "_fp": "cloze|Ali could not swim and was ___ before my eyes.|C29",
+        "opts": [
+          "drowning",
+          "sinking",
+          "sanked",
+          "sank"
+        ],
+        "source": "paper2-real",
+        "ans": 0,
+        "tag": "C29",
+        "addedDate": "2026-09-03",
+        "q": "Ali could not swim and was ___ before my eyes."
+      },
+      {
+        "source": "paper2-real",
+        "addedDate": "2026-09-03",
+        "_fp": "cloze|Abdul plunged into the river and pulled Ali to ___.|C30",
+        "ans": 0,
+        "retries": 0,
+        "tag": "C30",
+        "opts": [
+          "safety",
+          "ground",
+          "land",
+          "shore"
+        ],
+        "q": "Abdul plunged into the river and pulled Ali to ___.",
+        "type": "mcq",
+        "id": "cloze|Abdul plunged into the river and pulled Ali to ___.|C30:1788444021465_8",
+        "gameKey": "cloze",
+        "explain": "pull/bring sb to safety = 救出脱险 (固定搭配, safety 抽象名词); pull to ground 不对. 真考 30 题, 你写 ground 错.",
+        "addedWeek": 18,
+        "qField": "q"
+      },
+      {
+        "source": "paper2-real",
+        "retries": 0,
+        "q": "Mrs Tan was not at the birthday party last night. The twins were not there too.",
+        "addedDate": "2026-09-03",
+        "type": "mcq",
+        "addedWeek": 18,
+        "opts": [
+          "Neither Mrs Tan nor the twins were at the birthday party last night.",
+          "Neither Mrs Tan nor the twee twins were at the birthday party last night.",
+          "Neither Mrs Tan nor the twins was at the birthday party last night.",
+          "Neither Mrs Tan or the twins were at the birthday party last night."
+        ],
+        "ans": 0,
+        "tag": "D31-spelling",
+        "qField": "q",
+        "_fp": "sst|Mrs Tan was not at the birthday party last night. The twins were not there too.|D31-spelling",
+        "rule": "Combine using \"Neither...nor\".",
+        "gameKey": "sst",
+        "explain": "twins (拼写正确, 你写 \"twee\" 是 typo); were 主谓一致看 nor 后名词 (twins 复数 → were); neither + nor 配对 (不是 or). 真考 31 题, 你写 twee 拼错.",
+        "id": "sst|Mrs Tan was not at the birthday party last night. The twins were not there too.|D31-spelling:1788444021465_9"
+      },
+      {
+        "addedWeek": 18,
+        "ans": 0,
+        "tag": "D33-connector",
+        "type": "mcq",
+        "gameKey": "sst",
+        "source": "paper2-real",
+        "_fp": "sst|\"Take the train to Lavender station before changing to the bus,\" Sam instructed his sister.|D33-connector",
+        "explain": "指令性 indirect speech: instructed + sb + to + 动. station 不能丢; before + V-ing (changing 不是 change). 真考 33 题, 你漏了 station 和 connector.",
+        "id": "sst|\"Take the train to Lavender station before changing to the bus,\" Sam instructed his sister.|D33-connector:1788444021465_10",
+        "qField": "q",
+        "q": "\"Take the train to Lavender station before changing to the bus,\" Sam instructed his sister.",
+        "rule": "Rewrite in indirect speech starting with \"Sam instructed\".",
+        "retries": 0,
+        "addedDate": "2026-09-03",
+        "opts": [
+          "Sam instructed his sister to take the train to Lavender station before changing to the bus.",
+          "Sam instructed his sister to take the train to Lavender before $ changing to the bus.",
+          "Sam instructed his sister that to take the train to Lavender station before changing to the bus.",
+          "Sam instructed his sister to take the train to Lavender station before change to the bus."
+        ]
+      },
+      {
+        "tag": "D34-whose",
+        "ans": 0,
+        "retries": 0,
+        "addedWeek": 18,
+        "source": "paper2-real",
+        "_fp": "sst|John's wallet was stolen. John is a teacher.|D34-whose",
+        "type": "mcq",
+        "qField": "q",
+        "q": "John's wallet was stolen. John is a teacher.",
+        "addedDate": "2026-09-03",
+        "opts": [
+          "John, whose wallet was stolen, is a teacher.",
+          "The teacher John, whose wallet has been stolen was John.",
+          "John whose wallet was stolen is a teacher.",
+          "John, who his wallet was stolen, is a teacher."
+        ],
+        "gameKey": "sst",
+        "explain": "whose = 所有格关系代词 (= his wallet). 非限定从句两边要逗号 (John, whose..., is). 真考 34 题, 你��错: 把 \"The teacher\" 放前面 + 末尾再加 \"was John\" 是冗余, 完全搞反了句子结构. 这是 10 分大题!",
+        "rule": "Combine using \"whose\".",
+        "id": "sst|John's wallet was stolen. John is a teacher.|D34-whose:1788444021465_11"
+      },
+      {
+        "explain": "bushes (复数, 不是 bushed); slithering (现在分词修饰 snake); After + V-ing (动名词). 真考 35 题, 你把 bushes 拼成 bushed 错.",
+        "gameKey": "sst",
+        "type": "mcq",
+        "q": "The farmer saw a snake slithering behind the bushes. He yelled out loudly.",
+        "addedDate": "2026-09-03",
+        "source": "paper2-real",
+        "_fp": "sst|The farmer saw a snake slithering behind the bushes. He yelled out loudly.|D35-spelling",
+        "rule": "Combine starting with \"After seeing\".",
+        "addedWeek": 18,
+        "qField": "q",
+        "id": "sst|The farmer saw a snake slithering behind the bushes. He yelled out loudly.|D35-spelling:1788444021465_12",
+        "retries": 0,
+        "opts": [
+          "After seeing a snake slithering behind the bushes, the farmer yelled out loudly.",
+          "After seeing a snake slithering behind the bushed, the farmer yelled out loudly.",
+          "After seeing a snake slither behind the bushes, the farmer yelled out loudly.",
+          "After see a snake slithering behind the bushes, the farmer yelled out loudly."
+        ],
+        "tag": "D35-spelling",
+        "ans": 0
+      },
+      {
+        "tag": "B7",
+        "q": "The eyebrow is an important facial feature. ___ completing our look, our eyebrows have three other major functions.",
+        "ans": 0,
+        "opts": [
+          "Besides",
+          "When",
+          "Because",
+          "About"
+        ],
+        "id": "cloze|The eyebrow is an important facial feature. ___ completing our look, our eyebrows have three other major functions.|B7:1788444021465_13",
+        "addedWeek": 18,
+        "retries": 0,
+        "qField": "q",
+        "_fp": "cloze|The eyebrow is an important facial feature. ___ completing our look, our eyebrows have three other major functions.|B7",
+        "explain": "Besides + V-ing = 除了 (introducing additional functions); B11 of original = Besides 字母 (E). 真考 7 题字母填错.",
+        "source": "paper2-real",
+        "gameKey": "cloze",
+        "type": "mcq",
+        "addedDate": "2026-09-03"
+      },
+      {
+        "source": "paper2-real",
+        "id": "cloze|When a person raises an eyebrow, it means he is unsure ___ something.|B11:1788444021465_14",
+        "opts": [
+          "about",
+          "with",
+          "in",
+          "for"
+        ],
+        "addedWeek": 18,
+        "retries": 0,
+        "q": "When a person raises an eyebrow, it means he is unsure ___ something.",
+        "addedDate": "2026-09-03",
+        "_fp": "cloze|When a person raises an eyebrow, it means he is unsure ___ something.|B11",
+        "gameKey": "cloze",
+        "explain": "unsure about + sth = 不确定 (固定搭配); unsure with 错. 真考 11 题选错字母.",
+        "qField": "q",
+        "type": "mcq",
+        "ans": 0,
+        "tag": "B11"
+      },
+      {
+        "opts": [
+          "Why",
+          "How",
+          "This",
+          "When"
+        ],
+        "id": "cloze|___ in cartoons, a simple line above eyes is enough to portray emotions.|B12:1788444021465_15",
+        "tag": "B12",
+        "addedDate": "2026-09-03",
+        "ans": 0,
+        "q": "___ in cartoons, a simple line above eyes is enough to portray emotions.",
+        "gameKey": "cloze",
+        "source": "paper2-real",
+        "explain": "这里 Why = 这就是为什么 (引出原因, 前句解释了 eyebrow 重要性); How 不通顺. 真考 12 题选错.",
+        "_fp": "cloze|___ in cartoons, a simple line above eyes is enough to portray emotions.|B12",
+        "qField": "q",
+        "retries": 0,
+        "addedWeek": 18,
+        "type": "mcq"
+      },
+      {
+        "opts": [
+          "with",
+          "by",
+          "from",
+          "in"
+        ],
+        "qField": "q",
+        "tag": "B15",
+        "ans": 0,
+        "addedDate": "2026-09-03",
+        "q": "People are more likely to identify other people ___ their eyebrows as compared to other facial features.",
+        "_fp": "cloze|People are more likely to identify other people ___ their eyebrows as compared to other facial features.|B15",
+        "retries": 0,
+        "addedWeek": 18,
+        "id": "cloze|People are more likely to identify other people ___ their eyebrows as compared to other facial features.|B15:1788444021465_16",
+        "gameKey": "cloze",
+        "explain": "identify sb with sth = 通过某物认出某人 (固定); identify by 也偶尔用但 with 更准. 真考 15 题选错.",
+        "source": "paper2-real",
+        "type": "mcq"
+      },
+      {
+        "addedWeek": 18,
+        "retries": 1,
+        "correctAns": "叶绿体",
+        "opts": [
+          "细胞核",
+          "线粒体",
+          "叶绿体",
+          "细胞膜"
+        ],
+        "id": "knowledge|哪个 organelle 只在植物细胞有?|sci_cells:1788444090790",
+        "nodeId": "sci_cells",
+        "q": "哪个 organelle 只在植物细胞有?",
+        "correctStreak": 0,
+        "ans": 2,
+        "type": "mcq",
+        "explain": "叶绿体 (光合作用) 只在植物; 动物细胞没有",
+        "addedDate": "2026-09-03",
+        "gameKey": "knowledge",
+        "subj": "🔬 科学",
+        "_fp": "knowledge|哪个 organelle 只在植物细胞有?|sci_cells"
+      },
+      {
+        "correctAns": "提供支撑结构",
+        "correctStreak": 0,
+        "ans": 1,
+        "type": "mcq",
+        "q": "细胞壁的功能?",
+        "id": "knowledge|细胞壁的功能?|sci_cells:1788444090791",
+        "retries": 1,
+        "nodeId": "sci_cells",
+        "subj": "���� 科学",
+        "addedWeek": 18,
+        "_fp": "knowledge|细胞壁的功能?|sci_cells",
+        "addedDate": "2026-09-03",
+        "gameKey": "knowledge",
+        "opts": [
+          "控制进出",
+          "提供支撑结构",
+          "光合作用",
+          "储存能量"
+        ],
+        "explain": "细胞壁 = 植物特有, 提供刚性支撑 (动物靠骨骼)"
+      },
+      {
+        "gameKey": "knowledge",
+        "correctAns": "膜动植都有, 壁只植物",
+        "_fp": "knowledge|细胞膜 vs 细胞壁的区别?|sci_cells",
+        "type": "mcq",
+        "explain": "膜 = 动植物都有 + 选择性通过 (看门人); 壁 = 只植物 + 提供刚性支撑 (分子可通过)",
+        "correctStreak": 0,
+        "nodeId": "sci_cells",
+        "addedDate": "2026-09-03",
+        "ans": 2,
+        "subj": "🔬 科学",
+        "addedWeek": 18,
+        "q": "细胞膜 vs 细胞壁的区别?",
+        "id": "knowledge|细胞膜 vs 细胞壁的区别?|sci_cells:1788444090791",
+        "retries": 1,
+        "opts": [
+          "完全一样",
+          "膜只动物, 壁只植物",
+          "膜动植都有, 壁只植物",
+          "膜不允许物质通过"
+        ]
+      },
+      {
+        "type": "mcq",
+        "nodeId": "sci_forces",
+        "id": "knowledge|mass 和 weight 的区别?|sci_forces:1788444142401",
+        "correctStreak": 0,
+        "correctAns": "mass 不变, weight 因重力改变",
+        "addedDate": "2026-09-03",
+        "retries": 0,
+        "subj": "🔬 科学",
+        "addedWeek": 18,
+        "q": "mass 和 weight 的区别?",
+        "gameKey": "knowledge",
+        "explain": "Mass(kg) 物质多少, 不变; Weight(N) = mass × g, 月球上变小",
+        "_fp": "knowledge|mass 和 weight 的区别?|sci_forces",
+        "ans": 1,
+        "opts": [
+          "完全一样",
+          "mass 不变, weight 因重力改变",
+          "mass 是 force",
+          "mass 单位 N, weight kg"
+        ]
+      },
+      {
+        "explain": "news 不可数 + 单数. 同类: information / advice / furniture",
+        "addedWeek": 18,
+        "correctStreak": 0,
+        "gameKey": "knowledge",
+        "id": "knowledge|The news ___ shocking. 选?|eng_basics:1788444241707",
+        "subj": "📖 英语",
+        "type": "mcq",
+        "nodeId": "eng_basics",
+        "_fp": "knowledge|The news ___ shocking. 选?|eng_basics",
+        "opts": [
+          "have",
+          "were",
+          "is",
+          "are"
+        ],
+        "correctAns": "is",
+        "addedDate": "2026-09-03",
+        "ans": 2,
+        "retries": 0,
+        "q": "The news ___ shocking. 选?"
+      },
+      {
+        "retries": 0,
+        "opts": [
+          "估算",
+          "心算",
+          "画 bar model 标清剩余",
+          "直接乘分数"
+        ],
+        "id": "knowledge|fraction of remainder 题最安全的解法?|math_fraction_adv:1788444306752",
+        "_fp": "knowledge|fraction of remainder 题最安全的解法?|math_fraction_adv",
+        "ans": 2,
+        "correctAns": "画 bar model 标清剩余",
+        "correctStreak": 0,
+        "addedWeek": 18,
+        "q": "fraction of remainder 题最安全的解法?",
+        "subj": "➗ 数学",
+        "addedDate": "2026-09-03",
+        "nodeId": "math_fraction_adv",
+        "type": "mcq",
+        "explain": "必画 bar: 标出\"已花\"和\"剩余\"两部分, 以\"剩余\"为100%再算下一步",
+        "gameKey": "knowledge"
+      },
+      {
+        "gameKey": "editing",
+        "type": "editing",
+        "q": "点错词: insperation",
+        "correctAns": "jog, like, friend, a insperation, eighty",
+        "explain": "本段错词: jog→undefined, like→undefined, friend→undefined, a insperation→undefined, eighty→undefined",
+        "_fp": "editing|点错词: insperation|",
+        "id": "editing|点错词: insperation|:1788444457966",
+        "addedDate": "2026-09-03",
+        "addedWeek": 18,
+        "retries": 0,
+        "correctStreak": 1,
+        "nextReview": 1788530957269
+      },
+      {
+        "gameKey": "editing",
+        "type": "editing",
+        "q": "点错词: to",
+        "correctAns": "jog, like, friend, a insperation, eighty",
+        "explain": "本段错词: jog→undefined, like→undefined, friend→undefined, a insperation→undefined, eighty→undefined",
+        "_fp": "editing|点错词: to|",
+        "id": "editing|点错词: to|:1788444463724",
+        "addedDate": "2026-09-03",
+        "addedWeek": 18,
+        "retries": 0,
+        "correctStreak": 0
+      },
+      {
+        "gameKey": "editing",
+        "type": "editing",
+        "q": "点错词: years",
+        "correctAns": "jog, like, friend, a insperation, eighty",
+        "explain": "本段错词: jog→undefined, like→undefined, friend→undefined, a insperation→undefined, eighty→undefined",
+        "_fp": "editing|点错词: years|",
+        "id": "editing|点错词: years|:1788444475126",
+        "addedDate": "2026-09-03",
+        "addedWeek": 18,
+        "retries": 0,
+        "correctStreak": 1,
+        "nextReview": 1788530948059
+      },
+      {
+        "gameKey": "editing",
+        "type": "editing",
+        "q": "点错词: very",
+        "correctAns": "jog, like, friend, a insperation, eighty",
+        "explain": "本段错词: jog→undefined, like→undefined, friend→undefined, a insperation→undefined, eighty→undefined",
+        "_fp": "editing|点错词: very|",
+        "id": "editing|点错词: very|:1788444479417",
+        "addedDate": "2026-09-03",
+        "addedWeek": 18,
+        "retries": 0,
+        "correctStreak": 2,
+        "nextReview": 1788703762771
+      },
+      {
+        "gameKey": "editing",
+        "type": "editing",
+        "q": "点错词: every",
+        "correctAns": "jog, like, friend, a insperation, eighty",
+        "explain": "本段错词: jog→undefined, like→undefined, friend→undefined, a insperation→undefined, eighty→undefined",
+        "_fp": "editing|点错词: every|",
+        "id": "editing|点错词: every|:1788444481108",
+        "addedDate": "2026-09-03",
+        "addedWeek": 18,
+        "retries": 0,
+        "correctStreak": 0
+      },
+      {
+        "gameKey": "editing",
+        "type": "editing",
+        "q": "点错词: My",
+        "correctAns": "jog, like, friend, a insperation, eighty",
+        "explain": "本段错词: jog→undefined, like→undefined, friend→undefined, a insperation→undefined, eighty→undefined",
+        "_fp": "editing|点错词: My|",
+        "id": "editing|点错词: My|:1788444482145",
+        "addedDate": "2026-09-03",
+        "addedWeek": 18,
+        "retries": 0,
+        "correctStreak": 0
+      },
+      {
+        "gameKey": "editing",
+        "type": "editing",
+        "q": "点错词: grandfather",
+        "correctAns": "jog, like, friend, a insperation, eighty",
+        "explain": "本段错词: jog→undefined, like→undefined, friend→undefined, a insperation→undefined, eighty→undefined",
+        "_fp": "editing|点错词: grandfather|",
+        "id": "editing|点错词: grandfather|:1788444482484",
+        "addedDate": "2026-09-03",
+        "addedWeek": 18,
+        "retries": 0,
+        "correctStreak": 0
+      },
+      {
+        "gameKey": "editing",
+        "type": "editing",
+        "q": "点错词: is",
+        "correctAns": "jog, like, friend, a insperation, eighty",
+        "explain": "本段错词: jog→undefined, like→undefined, friend→undefined, a insperation→undefined, eighty→undefined",
+        "_fp": "editing|点错词: is|",
+        "id": "editing|点错词: is|:1788444482859",
+        "addedDate": "2026-09-03",
+        "addedWeek": 18,
+        "retries": 0,
+        "correctStreak": 0
+      }
+    ],
+    "streakBonusCount": 0,
+    "questionBankProgress": {},
+    "_rollback_20260513": true,
+    "listeningUsage": {},
+    "gameDailyCount": {
+      "counts": {
+        "editing": 1,
+        "vocab": 0,
+        "sst": 0,
+        "grammar": 0,
+        "unit": 0,
+        "scimcq": 0,
+        "listen": 0,
+        "comp_oe": 0,
+        "math": 0,
+        "chinese": 0,
+        "scilab": 0,
+        "cloze": 0
+      },
+      "date": "2026-09-03"
+    },
+    "listenGameRuns": 0,
+    "ftueDay": 1,
+    "craftCrystals": 130,
+    "mockExams": [],
+    "totalGameRuns": 1,
+    "vocabGameRuns": 0,
+    "flashcardSRS": {},
+    "alarmsEnabled": true,
+    "knowledgeStars": {
+      "sci_cells": {
+        "bestScore": 3,
+        "stars": 3,
+        "attempts": 3,
+        "lastDate": "2026-09-03"
+      },
+      "math_fraction_adv": {
+        "stars": 3,
+        "bestScore": 3,
+        "lastDate": "2026-09-03",
+        "attempts": 2
+      },
+      "math_algebra": {
+        "bestScore": 3,
+        "stars": 3,
+        "attempts": 1,
+        "lastDate": "2026-09-03"
+      },
+      "eng_basics": {
+        "stars": 3,
+        "bestScore": 3,
+        "lastDate": "2026-09-03",
+        "attempts": 2
+      },
+      "sci_plant_lc": {
+        "bestScore": 3,
+        "lastDate": "2026-09-03",
+        "attempts": 1,
+        "stars": 3
+      },
+      "sci_water": {
+        "lastDate": "2026-09-03",
+        "attempts": 1,
+        "bestScore": 3,
+        "stars": 3
+      },
+      "sci_material": {
+        "attempts": 1,
+        "lastDate": "2026-09-03",
+        "stars": 3,
+        "bestScore": 3
+      },
+      "sci_forces": {
+        "stars": 3,
+        "attempts": 2,
+        "lastDate": "2026-09-03",
+        "bestScore": 3
+      },
+      "sci_light_heat": {
+        "stars": 3,
+        "bestScore": 3,
+        "attempts": 1,
+        "lastDate": "2026-09-03"
+      },
+      "sci_diversity": {
+        "stars": 3,
+        "lastDate": "2026-09-03",
+        "attempts": 1,
+        "bestScore": 3
+      }
+    },
+    "photoHashes": {},
+    "monthlyTestPass": 0,
+    "lastLoginDate": "2026-09-03",
+    "paper2ALHistory": [],
+    "lifetimeEarned": 832,
+    "activeSkin": "default"
+  }
+}

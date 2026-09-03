@@ -1185,6 +1185,10 @@ assert(/已推回云端自动纠正/.test(dataSrc), 'v19.68: 本地更全时自�
 assert(/rtouch < ltouch && rp < lp/.test(dataSrc), 'v19.68: onSnapshot拒收旧时间戳数据');
 // v19.68: 思考题带详解+考点技巧
 assert(/_thinkSubjectToGameKey/.test(appSrc) && /_ebTipsHtml\(_thinkSubjectToGameKey/.test(appSrc), 'v19.68: 思考题解析带PSLE考点技巧卡');
+// v19.69: editing错题题面修复(iPad实报"题不对")
+assert(/找出这段里的错词并改正/.test(appSrc), 'v19.69: editing新错题入库带原段落');
+assert(!/e\.word \+ '→' \+ e\.fix/.test(appSrc), 'v19.69: e.fix undefined bug已修(字段是reason)');
+assert(/_ebUpgradeLegacyEditing\(item\)/.test(appSrc) && /window\._ebUpgradeLegacyEditing/.test(appSrc), 'v19.69: 旧格式editing错题运行时自动补全+接入');
 // v19.54: 我的/暑假收纳进"⋯其他"灰色按钮
 assert(/id="moreTabBtn"/.test(idxSrc), 'v19.54: 其他按钮存在');
 assert(/id="moreMenu"/.test(idxSrc), 'v19.54: 收纳菜单存在');

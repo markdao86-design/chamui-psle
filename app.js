@@ -6540,6 +6540,7 @@ function _renderErrorBankReview() {
   if (!modal) return;
   if (g.idx >= g.items.length) { _finishErrorBankReview(); return; }
   const item = g.items[g.idx];
+  _ebUpgradeLegacyEditing(item);  // v19.69: 旧格式editing错题(点错词:xxx+undefined解析)运行时自动补全
   const GAME_LABEL = {
     knowledge: '🌳 知识树', math: '🔢 数学', grammar: '✏️ Grammar', cloze: '🧩 Cloze',
     editing: '🔍 Editing', vocab: '📚 词汇', listen: '🎧 听力', scilab: '🔬 科学'
@@ -6665,6 +6666,22 @@ function ebRevealMcqAnswer() {
   playSound('ding');
 }
 window.ebRevealMcqAnswer = ebRevealMcqAnswer;
+// v19.69: 已入库的旧格式 editing 错题 (q='点错词: xxx', 解析含undefined) → 反查题库补回原段落+正确解析
+function _ebUpgradeLegacyEditing(item) {
+  if (!item || item.gameKey !== 'editing') return;
+  const needQ = /^点错词: /.test(item.q || '');
+  const needEx = /undefined/.test(item.explain || '');
+  if (!needQ && !needEx) return;
+  const word = needQ ? item.q.slice('点错词: '.length).trim() : '';
+  const paras = window.EDITING_PARAGRAPHS || [];
+  const para = paras.find(p => (word && p.text.includes(word)) || (item.correctAns && p.errors.some(e => (item.correctAns || '').includes(e.word))));
+  if (!para) { if (needEx) item.explain = (item.explain || '').replace(/→undefined/g, ''); return; }
+  const realErrors = (para.errors || []).filter(e => !/备用/.test(e.reason || ''));
+  if (needQ) item.q = '找出这段里的错词并改正 — "' + para.text + '"' + (word ? ' (你当时误点了: ' + word + ')' : '');
+  item.correctAns = realErrors.map(e => e.word + '→' + ((e.reason || '').split('→')[1] || e.reason)).join(', ');
+  item.explain = '逐个错词: ' + realErrors.map(e => e.word + ' (' + (e.reason || '') + ')').join('; ');
+}
+window._ebUpgradeLegacyEditing = _ebUpgradeLegacyEditing;
 // v19.67: 看答案后一步到位进下一题 (记未掌握: retries+1, streak清零)
 function _ebPeekNext() {
   const g = _errorBankState;
@@ -9079,11 +9096,13 @@ function clickEditingWord(word) {
     g.wrong++;
     playSound('sad');
     if (window.addToErrorBank) {
+      // v19.69: 入库带原段落(复习才有语境); 修 e.fix→undefined bug (字段实为 reason)
+      const realErrors = (g.para.errors || []).filter(e => !/备用/.test(e.reason || ''));
       window.addToErrorBank(state, {
         gameKey: 'editing', type: 'editing',
-        q: '点错词: ' + word,
-        correctAns: g.para.errors.map(e => e.word).join(', '),
-        explain: '本段错词: ' + g.para.errors.map(e => e.word + '→' + e.fix).join(', ')
+        q: '找出这段里的错词并改正 — "' + g.para.text + '" (你当时误点了: ' + word + ')',
+        correctAns: realErrors.map(e => e.word + '→' + ((e.reason || '').split('→')[1] || e.reason)).join(', '),
+        explain: '逐个错词: ' + realErrors.map(e => e.word + ' (' + (e.reason || '') + ')').join('; ')
       });
     }
   }
