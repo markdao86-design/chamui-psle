@@ -5334,7 +5334,14 @@ p { font-size: 14px; line-height: 1.6; }
 
   <!-- 历史页 — v18.43 重定位为 PSLE 能力分析 (不是 app 积分) -->
   <div class="page" id="page-history">
+    <!-- v19.62: PSLE模块能力评估 (基于课表每日打分, 维度=周计分卡) -->
+    <div class="card" id="schedAbilityCard" style="margin-bottom:12px"></div>
+    <!-- v19.62: 备考时间线 (手册v18.6 四阶段, 动态高亮当前) -->
+    <div class="card" id="roadmapCard" style="margin-bottom:12px"></div>
     <!-- v18.43: PSLE 能力分析 (顶部主卡, 取代旧打卡分析) -->
+    <details style="margin-top:12px" ontoggle="if(this.open&&window.drawChart){setTimeout(drawChart,100)}">
+      <summary style="cursor:pointer;padding:10px 14px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;font-size:14px;font-weight:700;color:#1E40AF">📂 更多分析 (雷达图 · 成绩追踪 · 积分曲线 · 时间线)</summary>
+      <div style="margin-top:10px">
     <div class="card" id="psleAbilityCard">
       <div class="card-title">🎯 PSLE 实战能力分析</div>
       <div class="card-subtitle" style="font-size:12px;color:var(--color-text-light);margin-bottom:8px">本 app 主目的: 帮你考到 PSLE AL 4-6 (顶级 5-15%) · 这里看你当前能力距离目标多远</div>
@@ -5384,9 +5391,9 @@ p { font-size: 14px; line-height: 1.6; }
     <div class="card">
       <div class="card-title">🎁 兑换记录</div>
       <div class="exchange-tip">
-        <div style="font-weight:700;margin-bottom:4px">💱 兑换汇率:1 积分 = SGD 0.25</div>
+        <div style="font-weight:700;margin-bottom:4px">💱 兑换汇率:1 积分 = SGD 0.05</div>
         <div style="font-size:12px;line-height:1.7;color:var(--color-text-light)">
-          🏆 终极大奖封顶 SGD 1500(= 6000 积分,刚好对齐 🐉 神龙伙伴)<br>
+          🏆 终极大奖封顶 SGD 1500(= 30000 积分,对齐 🐉 金龙伙伴)<br>
           ✅ 可买:LEGO / 机器人 / 玩具 / 文具 / 书 / 衣服<br>
           ❌ 不可买:游戏类一切(Switch / Roblox / 手游充值)
         </div>
@@ -5396,7 +5403,7 @@ p { font-size: 14px; line-height: 1.6; }
       </div>
       <button class="btn btn-primary" onclick="addExchange()" style="margin-top: 12px;">＋ 记录新兑换</button>
     </div>
-  </div>
+  </div></details></div>
 
   <!-- v19.14i: 📚 练习 hub 页 (合并知识树/题库/词汇/作文 4 个旧 tab 入口) -->
   <div class="page" id="page-practice">
@@ -5875,9 +5882,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.61"></script>
-<script src="data.js?v=19.61"></script>
-<script src="app.js?v=19.61"></script>
+<script src="character.js?v=19.62"></script>
+<script src="data.js?v=19.62"></script>
+<script src="app.js?v=19.62"></script>
 
 </body>
 </html>

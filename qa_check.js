@@ -1147,6 +1147,17 @@ assert(/const COLS = \[1, 2, 3, 4, 5, 6, 0\]/.test(appSrc), 'v19.59: 打分表�
 assert(/key: 'note'/.test(appSrc) && /type: 'text'/.test(appSrc), 'v19.59: 自学记录文本行存在');
 assert(/field === 'note'/.test(appSrc), 'v19.59: note 存文本不转数字');
 assert(/row\.type === 'text'/.test(appSrc), 'v19.59: text 输入渲染分支');
+// v19.62: 能力页按计分卡维度评估
+assert(/id="schedAbilityCard"/.test(idxSrc), 'v19.62: 能力评估卡容器在能力页首屏');
+assert(/function renderSchedAbilityCard\(/.test(appSrc), 'v19.62: renderSchedAbilityCard 已定义');
+assert(/renderSchedAbilityCard\(\);/.test(appSrc), 'v19.62: 能力页hook已接入(防死代码)');
+assert(/待积累/.test(appSrc), 'v19.62: 能力评估空态文案');
+assert(/本周先补/.test(appSrc), 'v19.62: 能力评估结论先行(弱项导向)');
+assert(/id="roadmapCard"/.test(idxSrc), 'v19.62: 备考时间线卡容器');
+assert(/ROADMAP_PHASES/.test(appSrc) && /renderRoadmapCard\(\);/.test(appSrc), 'v19.62: 时间线渲染+hook接入');
+assert(/距 PSLE 笔试还剩约/.test(appSrc), 'v19.62: 笔试倒计时');
+assert(/ontoggle="if\(this\.open&&window\.drawChart\)/.test(idxSrc), 'v19.62: 旧分析卡收折叠+展开重画chart');
+assert(/1 积分 = SGD 0\.05/.test(idxSrc) && !/SGD 0\.25/.test(idxSrc), 'v19.62: 兑换汇率文案修正0.25→0.05 (老bug)');
 // v19.54: 我的/暑假收纳进"⋯其他"灰色按钮
 assert(/id="moreTabBtn"/.test(idxSrc), 'v19.54: 其他按钮存在');
 assert(/id="moreMenu"/.test(idxSrc), 'v19.54: 收纳菜单存在');

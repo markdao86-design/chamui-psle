@@ -11015,6 +11015,89 @@ window.saveDailyScore = saveDailyScore;
 window.computeSchedWeekSummary = computeSchedWeekSummary;
 window.SCHED_GRID = SCHED_GRID;
 
+// ============ v19.62: 能力页·PSLE模块能力评估 (维度=周计分卡, 数据=近4周每日打分) ============
+function renderSchedAbilityCard() {
+  const el = document.getElementById('schedAbilityCard');
+  if (!el) return;
+  const thisMon = schedMonday(new Date());
+  const weekly = [];
+  for (let i = 3; i >= 0; i--) {
+    const mon = new Date(thisMon.getTime()); mon.setDate(mon.getDate() - i * 7);
+    weekly.push(computeSchedWeekSummary(mon));
+  }
+  const nMods = weekly[0].rows.length;
+  const agg = [];
+  for (let m = 0; m < nMods; m++) {
+    const label = weekly[0].rows[m][0], target = weekly[0].rows[m][2];
+    let passN = 0, dataN = 0, latestVal = '—';
+    weekly.forEach(w => {
+      const p = w.rows[m][3];
+      if (p !== null) { dataN++; if (p) passN++; latestVal = w.rows[m][1]; }
+    });
+    let verdict, color, bg;
+    if (dataN === 0) { verdict = '待积累'; color = '#1E293B'; bg = '#F1F5F9'; }
+    else if (passN / dataN >= 0.75) { verdict = '💪 强'; color = '#15803D'; bg = '#DCFCE7'; }
+    else if (passN / dataN >= 0.5) { verdict = '📈 中'; color = '#92400E'; bg = '#FEF3C7'; }
+    else { verdict = '⚠️ 弱'; color = '#DC2626'; bg = '#FEE2E2'; }
+    agg.push({ label, target, latestVal, passN, dataN, verdict, color, bg });
+  }
+  const strongList = agg.filter(a => a.verdict.includes('强'));
+  const actionList = agg.filter(a => a.verdict.includes('弱') || a.verdict.includes('中'));
+  const nodata = agg.filter(a => a.verdict === '待积累').length;
+  const weakTop = agg.filter(a => a.verdict.includes('弱')).slice(0, 3).map(a => a.label.replace(/\s*\([^)]*\)/, ''));
+  // 1. 结论先行 (大字一句话)
+  let headline;
+  if (nodata === agg.length) headline = `<div style="font-size:17px;font-weight:900;color:#1E293B;margin:8px 0">⏳ 还没有打分数据</div><div style="font-size:13px;color:#1E293B">去 📆 <b>课表页</b>每天填数字, 这里自动评估能力</div>`;
+  else if (weakTop.length > 0) headline = `<div style="font-size:17px;font-weight:900;color:#DC2626;margin:8px 0">🎯 本周先补: ${weakTop.map(escapeHtml).join('、')}</div>`;
+  else if (actionList.length > 0) headline = `<div style="font-size:17px;font-weight:900;color:#92400E;margin:8px 0">📈 接近达标, 差一口气: ${actionList.slice(0, 3).map(a => escapeHtml(a.label.replace(/\s*\([^)]*\)/, ''))).join('、')}</div>`;
+  else headline = `<div style="font-size:17px;font-weight:900;color:#15803D;margin:8px 0">✅ 各模块都在线, 保持!</div>`;
+  // 2. 只列要行动的项 (弱+中)
+  const rowsHtml = actionList.map(a => `<tr style="border-bottom:1px solid #F1F5F9">
+    <td style="padding:7px 4px;font-size:13px;font-weight:700;color:#1E293B">${escapeHtml(a.label)}</td>
+    <td style="padding:7px 4px;font-size:13px;font-weight:700;color:#1E40AF;text-align:center">${escapeHtml(String(a.latestVal))}<span style="font-size:10px;color:#475569;font-weight:400"> /目标${escapeHtml(a.target)}</span></td>
+    <td style="padding:7px 4px;text-align:center"><span style="display:inline-block;padding:3px 10px;border-radius:10px;background:${a.bg};color:${a.color};font-size:12px;font-weight:700">${a.verdict}</span></td></tr>`).join('');
+  const tableHtml = actionList.length === 0 ? '' : `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#F1F5F9">
+    <th style="padding:5px 4px;font-size:11px;color:#1E293B;text-align:left">要补的模块</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">最近成绩</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">判定</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
+  // 3. 已稳的合并一行 + 待积累一行
+  const footBits = [];
+  if (strongList.length) footBits.push(`✅ <b>已稳(${strongList.length})</b>: ${strongList.map(a => escapeHtml(a.label.replace(/\s*\([^)]*\)/, ''))).join(' · ')}`);
+  if (nodata > 0 && nodata < agg.length) footBits.push(`⏳ 待积累 ${nodata} 项(打分后自动出现)`);
+  el.innerHTML = `
+    <div class="card-title">📋 能力评估 <span style="font-size:11px;color:#475569;font-weight:400">按课表计分卡 · 近4周打分</span></div>
+    ${headline}
+    ${tableHtml}
+    ${footBits.length ? `<div style="font-size:12px;color:#1E293B;margin-top:10px;line-height:1.7">${footBits.join('<br>')}</div>` : ''}`;
+}
+window.renderSchedAbilityCard = renderSchedAbilityCard;
+
+// v19.62: 备考时间线 (手册v18.6 四阶段 + 关键节点, 当前阶段高亮)
+const ROADMAP_PHASES = [
+  { name: '① 错因收复 + 科学拉通', from: '2026-09-02', to: '2026-12-31', detail: '英语五薄弱板块每日专项 · 科学18章拉通(概念→诊断→回炉) · 华文踩点 · P5册年内清完' },
+  { name: '② 强化提升', from: '2027-01-01', to: '2027-04-30', detail: 'P6册无缝接续 · 科学一轮总测+二轮清零 · 整卷升频每周1–2套 · 口试起步' },
+  { name: '③ 真题密集', from: '2027-05-01', to: '2027-07-31', detail: '年份分池刷真题 · 错题级二刷 · 7.31封题(之后零新题)' },
+  { name: '④ 口试冲刺', from: '2027-08-01', to: '2027-08-31', detail: '口试约8.11–12 · 每天15分口语 + 听力隔日1套' },
+  { name: '⑤ 决战笔试', from: '2027-09-01', to: '2027-10-01', detail: '听力9.15 · 笔试9.24–30 · 只做错题三刷+全真模考, 21:30睡眠线死守' },
+];
+function renderRoadmapCard() {
+  const el = document.getElementById('roadmapCard');
+  if (!el) return;
+  const today = schedLocalDate();
+  const exam = new Date(2027, 8, 24);
+  const weeksLeft = Math.max(0, Math.ceil((exam - new Date()) / (7 * 86400 * 1000)));
+  const rows = ROADMAP_PHASES.map(ph => {
+    const cur = today >= ph.from && today <= ph.to;
+    return `<div style="display:flex;gap:10px;padding:9px 10px;margin-top:6px;border-radius:8px;background:${cur ? 'rgba(30,64,175,0.06)' : '#FFFFFF'};border:1px solid ${cur ? '#1E40AF' : '#E2E8F0'};border-left:4px solid ${cur ? '#1E40AF' : '#CBD5E1'}">
+      <div style="min-width:150px"><div style="font-size:13px;font-weight:700;color:${cur ? '#1E40AF' : '#1E293B'}">${ph.name}${cur ? ' ◀ 现在' : ''}</div>
+      <div style="font-size:11px;color:#475569">${ph.from.slice(0, 7).replace('-', '.')} – ${ph.to.slice(0, 7).replace('-', '.')}</div></div>
+      <div style="flex:1;font-size:12px;color:#1E293B;line-height:1.6">${ph.detail}</div></div>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="card-title">📅 备考时间线 <span style="font-size:11px;color:#475569;font-weight:400">手册v18.6 · 2026.9.2 → 2027.9 笔试</span></div>
+    <div style="font-size:14px;font-weight:900;color:#1E40AF;margin:8px 0">⏳ 距 PSLE 笔试还剩约 ${weeksLeft} 周</div>
+    ${rows}`;
+}
+window.renderRoadmapCard = renderRoadmapCard;
+
 // ============ 事件绑定 ============
 // v19.54: 统一切页函数 (nav按钮 + "其他"收纳菜单共用, 含全部渲染hook)
 const MORE_MENU_PAGES = ['checkin', 'character', 'summer', 'admin'];  // v19.61: 收纳进"⋯其他"的页面(+打卡)
@@ -11051,6 +11134,8 @@ function _runPageHook(page) {
         renderCheckinPage();
       }
       if (page === 'history') {
+        renderSchedAbilityCard();  // v19.62: 课表打分维度的能力评估(首屏)
+        renderRoadmapCard();       // v19.62: 手册v18.6备考时间线
         setTimeout(drawChart, 100);
       }
       if (page === 'knowledge') {
