@@ -547,15 +547,15 @@ function renderPaper2SprintCard() {
   const card = document.getElementById('paper2SprintCard');
   if (!card || !window.getPaper2SprintStatus) return;
   const s = window.getPaper2SprintStatus(state);
-  const accColor = (a) => a === null ? '#64748B' : a >= 75 ? '#16A34A' : a >= 60 ? '#B45309' : '#DC2626';
+  const accColor = (a) => a === null ? '#1E293B' : a >= 75 ? '#16A34A' : a >= 60 ? '#B45309' : '#DC2626';
   const accLabel = (a) => a === null ? '未练' : a + '%';
   const dailyTargetCloze = 10, dailyTargetSST = 5;
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <div style="font-size:14px;font-weight:900;color:#DB2777">🎯 Paper 2 弱点突击</div>
-      <div style="margin-left:auto;font-size:11px;color:#64748B">实考 AL6 → 目标 AL 4</div>
+      <div style="margin-left:auto;font-size:11px;color:#1E293B">实考 AL6 → 目标 AL 4</div>
     </div>
-    <div style="font-size:11px;color:#64748B;margin-bottom:8px;line-height:1.5">
+    <div style="font-size:11px;color:#1E293B;margin-bottom:8px;line-height:1.5">
       Cloze (25 分) + Synthesis (8 分) = Paper 2 33 分关键 · 建议每天 ${dailyTargetCloze} Cloze + ${dailyTargetSST} SST
     </div>
     <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:8px;margin-bottom:6px">
@@ -566,7 +566,7 @@ function renderPaper2SprintCard() {
       <div style="background:#F1F5F9;border-radius:4px;height:8px;overflow:hidden;margin-bottom:4px">
         <div style="background:linear-gradient(90deg,#B45309,#16A34A);height:100%;width:${s.cloze.pct}%;transition:width 0.4s"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#64748B">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#1E293B">
         <span>${s.cloze.done} / ${s.cloze.target} 题</span>
         <button onclick="openClozeGame()" style="padding:4px 12px;background:#1E40AF;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">立即练 →</button>
       </div>
@@ -579,7 +579,7 @@ function renderPaper2SprintCard() {
       <div style="background:#F1F5F9;border-radius:4px;height:8px;overflow:hidden;margin-bottom:4px">
         <div style="background:linear-gradient(90deg,#B45309,#16A34A);height:100%;width:${s.sst.pct}%;transition:width 0.4s"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#64748B">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#1E293B">
         <span>${s.sst.done} / ${s.sst.target} 题</span>
         <button onclick="openSstGame()" style="padding:4px 12px;background:#1E40AF;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">立即练 →</button>
       </div>
@@ -588,9 +588,9 @@ function renderPaper2SprintCard() {
       <button onclick="openPaper2MockGame()" style="padding:8px 20px;background:linear-gradient(135deg,#1E40AF,#DC2626);color:#FFF;border:none;border-radius:6px;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 2px 8px rgba(220,38,38,0.30)">
         🎯 Paper 2 模拟卷 (28 min · 15 Cloze + 8 SST)
       </button>
-      <div style="font-size:10px;color:#64748B;margin-top:4px">完整真考节奏 + 自动算预测 AL</div>
+      <div style="font-size:10px;color:#1E293B;margin-top:4px">完整真考节奏 + 自动算预测 AL</div>
     </div>
-    <div style="font-size:10px;color:#64748B;margin-top:6px;text-align:center;font-style:italic">
+    <div style="font-size:10px;color:#1E293B;margin-top:6px;text-align:center;font-style:italic">
       💡 每天保持节奏, 突击周后 Cloze 正确率应稳定 ≥70%, SST ≥65%
     </div>
   `;
@@ -617,7 +617,7 @@ function renderCharacterPage() {
           总分: <b id="charPage_pts">0</b> · 击败 <b id="charPage_beat">0</b>% P5 学生
         </div>
         <!-- v19.14c: 平日 lock 提示横幅 -->
-        <div id="charPage_lockBanner" style="display:none;margin-top:10px;padding:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;color:#64748B;text-align:center;line-height:1.5">
+        <div id="charPage_lockBanner" style="display:none;margin-top:10px;padding:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;color:#1E293B;text-align:center;line-height:1.5">
           📅 <b>装备 + 皮肤切换已锁 (Mon-Sat)</b><br>
           <span style="font-size:11px;color:#888">周日才开放 → 换装备 + 看动画</span>
         </div>
@@ -774,7 +774,7 @@ function renderAdmissionForecastCard() {
       const range = ci.upper - ci.lower;
       // 信任度 ★4+ 且区间宽 ≤ 10% 隐藏区间, 只显示中心 (避免噪音)
       if (!(conf.stars >= 4 && range <= 10)) {
-        ciHtml = ` <span style="color:#64748B;font-size:10px">[${ci.lower}-${ci.upper}%]</span>`;
+        ciHtml = ` <span style="color:#1E293B;font-size:10px">[${ci.lower}-${ci.upper}%]</span>`;
       }
     }
     return `
@@ -800,12 +800,12 @@ function renderAdmissionForecastCard() {
     <!-- v19.34: P0-1 综合 AL 显示澄清 / v19.35: 加置信度 ★ + AL ± N + 月考进度 -->
     <div style="background:#F0F8FF;border-radius:6px;padding:8px;margin-bottom:8px;font-size:12px">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span>综合 AL: <b style="font-size:16px;color:#1E40AF">${total_AL}</b>${conf.stars < 5 ? `<span style="color:#64748B;font-size:11px"> ± ${conf.alWidth}</span>` : ''}<span style="font-size:10px;color:#888">/32</span> = 英${bySubject.english_AL}+数${bySubject.math_AL}+科${bySubject.science_AL}+华${bySubject.chinese_AL}</span>
+        <span>综合 AL: <b style="font-size:16px;color:#1E40AF">${total_AL}</b>${conf.stars < 5 ? `<span style="color:#1E293B;font-size:11px"> ± ${conf.alWidth}</span>` : ''}<span style="font-size:10px;color:#888">/32</span> = 英${bySubject.english_AL}+数${bySubject.math_AL}+科${bySubject.science_AL}+华${bySubject.chinese_AL}</span>
         <span>击败 <b>${sgRank_pct === 5 ? '95+' : (100-sgRank_pct)}%</b> P6</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:11px">
         <span style="color:${conf.stars >= 4 ? '#2E7D32' : conf.stars >= 3 ? '#F57C00' : '#C62828'};font-weight:700" title="${escapeHtml(conf.reason || '')}">信任度 ${starStr}</span>
-        <span style="color:#64748B;font-size:10px">数据稀薄, 预测仅供参考</span>
+        <span style="color:#1E293B;font-size:10px">数据稀薄, 预测仅供参考</span>
       </div>
       <div style="font-size:10px;color:#666;margin-top:3px">📐 <b>MOE 标准</b>: 4 科 AL 等权加总 (范围 4-32, 越小越好). 立化/华侨/莱佛士 COP 6. <a href="javascript:void(0)" onclick="showALExplain()" style="color:#1565C0;text-decoration:underline">完整说明</a></div>
     </div>
@@ -828,7 +828,7 @@ function renderAdmissionForecastCard() {
       ${byTier.mid.map(renderSchool).join('')}
     </div>` : ''}
 
-    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:8px;font-size:12px;color:#64748B;text-align:center">
+    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:8px;font-size:12px;color:#1E293B;text-align:center">
       ${leverageMsg}
     </div>
     <button onclick="openPaper2MockGame()" style="width:100%;margin-top:8px;padding:10px;background:#1E40AF;color:#FFF;border:none;border-radius:6px;font-weight:900;cursor:pointer;font-size:13px">
@@ -859,7 +859,7 @@ function renderTodayThreeCard() {
       <div style="font-size:24px;width:32px;text-align:center">${done ? '✅' : icon}</div>
       <div style="flex:1">
         <div style="font-size:15px;font-weight:700;color:${done ? '#9E9E9E' : '#1E293B'};${done ? 'text-decoration:line-through;' : ''}">${label}</div>
-        <div style="font-size:12px;color:${done ? '#777' : '#64748B'};margin-top:2px">${sub}</div>
+        <div style="font-size:12px;color:${done ? '#777' : '#1E293B'};margin-top:2px">${sub}</div>
       </div>
       <div style="color:${done ? '#777' : color};font-size:20px">›</div>
     </div>
@@ -982,11 +982,11 @@ function renderTargetSchoolMini() {
     <div style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg, rgba(30,64,175,0.08), rgba(30,64,175,0.02));border:1px solid rgba(30,64,175,0.30);box-shadow:0 0 10px rgba(30,64,175,0.08);border-radius:8px;padding:12px">
       <div style="text-align:center;flex:0 0 90px">
         <div style="font-size:28px;color:${probColorBright};font-weight:900;line-height:1">${main.probability}%</div>
-        <div style="font-size:11px;color:#64748B;margin-top:2px">${isWhatIf ? '💭 模拟概率' : '录取概率'}</div>
-        ${isWhatIf ? `<div style="font-size:10px;color:#64748B;margin-top:4px;text-decoration:line-through">真实 ${realMainProb}%</div>` : ''}
+        <div style="font-size:11px;color:#1E293B;margin-top:2px">${isWhatIf ? '💭 模拟概率' : '录取概率'}</div>
+        ${isWhatIf ? `<div style="font-size:10px;color:#1E293B;margin-top:4px;text-decoration:line-through">真实 ${realMainProb}%</div>` : ''}
       </div>
       <div style="flex:1;font-size:12px;color:#1E293B;line-height:1.6">
-        <div>${isWhatIf ? '💭 模拟综合 AL' : '当前综合 AL'}: <b style="color:#C05621;font-size:14px">${total_AL}</b> ${isWhatIf ? `<span style="font-size:10px;color:#64748B">(真实 <s>${realTotalAL}</s>)</span>` : '<span style="font-size:10px;color:#888">(自动算)</span>'}</div>
+        <div>${isWhatIf ? '💭 模拟综合 AL' : '当前综合 AL'}: <b style="color:#C05621;font-size:14px">${total_AL}</b> ${isWhatIf ? `<span style="font-size:10px;color:#1E293B">(真实 <s>${realTotalAL}</s>)</span>` : '<span style="font-size:10px;color:#888">(自动算)</span>'}</div>
         <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center">
           ${_renderALEditor('english', '英', bySubject.english_AL)}
           ${_renderALEditor('math', '数', bySubject.math_AL)}
@@ -995,7 +995,7 @@ function renderTargetSchoolMini() {
           ${isWhatIf ? `<button onclick="clearAlWhatIf()" style="font-size:11px;padding:6px 10px;background:rgba(230,162,60,0.12);border:1px solid rgba(230,162,60,0.40);border-radius:4px;color:#B45309;cursor:pointer;font-weight:700">↻ 清除模拟</button>` : ''}
         </div>
         <div style="margin-top:6px">${main.name} COP: <b style="color:#B45309">${main.cop}</b></div>
-        ${!isWhatIf ? `<div style="margin-top:4px;font-size:10px;color:#64748B;font-style:italic">💡 按 +/- 模拟"如果 AL 提到 N, 录取率会变多少%" (不动真实 AL)</div>` : ''}
+        ${!isWhatIf ? `<div style="margin-top:4px;font-size:10px;color:#1E293B;font-style:italic">💡 按 +/- 模拟"如果 AL 提到 N, 录取率会变多少%" (不动真实 AL)</div>` : ''}
         ${lift > 0 ? `<div style="margin-top:4px;padding:6px;background:linear-gradient(135deg, rgba(230,162,60,0.12), rgba(192,86,33,0.06));border:1px solid rgba(230,162,60,0.30);border-radius:4px"><b style="color:#B45309">💡 英语 AL${bySubject.english_AL} → AL3</b> = 录取 <b style="color:#B45309">${main.probability}% → ${mainImproved.probability}%</b> (+${lift}%)</div>` : ''}
       </div>
     </div>
@@ -1016,7 +1016,7 @@ function _getEffectiveForecast() {
 function _renderALEditor(key, label, val) {
   return `
     <span style="display:inline-flex;align-items:center;gap:4px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:3px 6px">
-      <span style="color:#64748B;font-size:12px;font-weight:700">${label}</span>
+      <span style="color:#1E293B;font-size:12px;font-weight:700">${label}</span>
       <button onclick="bumpWhatIfAL('${key}',-1)" style="min-width:32px;min-height:32px;border:1px solid rgba(255,255,255,0.25);background:#F1F5F9;color:#1E40AF;border-radius:4px;cursor:pointer;font-weight:900;font-size:16px;line-height:1;padding:0">−</button>
       <b style="color:#C05621;font-size:15px;min-width:18px;text-align:center;display:inline-block">${val}</b>
       <button onclick="bumpWhatIfAL('${key}',+1)" style="min-width:32px;min-height:32px;border:1px solid rgba(255,255,255,0.25);background:#F1F5F9;color:#1E40AF;border-radius:4px;cursor:pointer;font-weight:900;font-size:16px;line-height:1;padding:0">+</button>
@@ -1080,7 +1080,7 @@ function openAllSchoolsModal() {
     return `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#F8FAFC;border:1px solid #F1F5F9;border-radius:6px;margin-bottom:6px;font-size:13px">
       <div style="flex:1">
-        <div style="color:#1E293B;font-weight:700">${s.emoji} ${s.name} <span style="color:#64748B;font-size:11px;font-weight:400">(COP ${s.cop})</span></div>
+        <div style="color:#1E293B;font-weight:700">${s.emoji} ${s.name} <span style="color:#1E293B;font-size:11px;font-weight:400">(COP ${s.cop})</span></div>
         ${lift > 0 ? `<div style="color:#B45309;font-size:10px;margin-top:2px">英语 → AL3 可提到 ${improved.probability}% (+${lift}%)</div>` : ''}
       </div>
       <span style="color:${probColor(s.probability)};font-weight:900;font-size:15px;margin-left:8px">${probIcon(s.probability)} ${s.probability}%</span>
@@ -1099,7 +1099,7 @@ function openAllSchoolsModal() {
       <div class="kt-header">
         <div style="flex:1">
           <div class="kt-title" style="color:#1E40AF">🏫 全部 ${schools.length} 校 ${isWhatIf ? '💭 模拟概率' : '录取概率'}</div>
-          <div class="kt-progress">${isWhatIf ? '💭 模拟综合 AL' : '综合 AL'} <b style="color:#C05621">${total_AL}</b> ${isWhatIf ? `<span style="font-size:10px;color:#64748B">(真实 <s>${realTotalAL}</s>)</span>` : '<span style="font-size:10px;color:#888">(自动算)</span>'}</div>
+          <div class="kt-progress">${isWhatIf ? '💭 模拟综合 AL' : '综合 AL'} <b style="color:#C05621">${total_AL}</b> ${isWhatIf ? `<span style="font-size:10px;color:#1E293B">(真实 <s>${realTotalAL}</s>)</span>` : '<span style="font-size:10px;color:#888">(自动算)</span>'}</div>
           <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
             ${_renderALEditor('english', '英', bySubject.english_AL)}
             ${_renderALEditor('math', '数', bySubject.math_AL)}
@@ -1107,7 +1107,7 @@ function openAllSchoolsModal() {
             ${_renderALEditor('chinese', '华', bySubject.chinese_AL)}
             ${isWhatIf ? `<button onclick="clearAlWhatIf()" style="font-size:11px;padding:6px 10px;background:rgba(230,162,60,0.12);border:1px solid rgba(230,162,60,0.40);border-radius:4px;color:#B45309;cursor:pointer;font-weight:700">↻ 清除模拟</button>` : ''}
           </div>
-          ${!isWhatIf ? `<div style="margin-top:6px;font-size:10px;color:#64748B;font-style:italic">💡 按 +/- 模拟 "如果 AL 提到 N, 8 校录取率会变多少%"</div>` : ''}
+          ${!isWhatIf ? `<div style="margin-top:6px;font-size:10px;color:#1E293B;font-style:italic">💡 按 +/- 模拟 "如果 AL 提到 N, 8 校录取率会变多少%"</div>` : ''}
         </div>
         <button class="vocab-modal-close" onclick="closeAllSchoolsModal()">×</button>
       </div>
@@ -1189,7 +1189,7 @@ function openOralPracticeModal(seed) {
         <div style="font-size:11px;color:#0277BD;font-weight:700;margin-bottom:4px">📂 ${q.topic} · ${q.cat}</div>
         <div style="font-size:14px;color:#01579B;font-weight:600;line-height:1.5">${escapeHtml(q.q)}</div>
       </div>
-      <div style="background:#F8FAFC;border-radius:6px;padding:8px;margin-bottom:10px;font-size:11px;color:#64748B">
+      <div style="background:#F8FAFC;border-radius:6px;padding:8px;margin-bottom:10px;font-size:11px;color:#1E293B">
         💡 ${escapeHtml(q.hint)}
       </div>
       <div style="background:#F5F5F5;border-radius:6px;padding:10px;margin-bottom:10px;font-size:11px;color:#555">
@@ -1267,7 +1267,7 @@ function openOralRAModal(level) {
       <div style="background:rgba(230,162,60,0.08);border-left:3px solid #B45309;border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#B45309;line-height:1.6">
         <b>💡 朗读重点 (intonation/pronunciation):</b><br>${escapeHtml(p.focus)}
       </div>
-      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px;margin-bottom:12px;font-size:12px;color:#64748B;line-height:1.7">
+      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px;margin-bottom:12px;font-size:12px;color:#1E293B;line-height:1.7">
         <b style="color:#1E293B">📋 练习流程</b>:<br>
         1. 点 🔊 听示范 1-2 遍, 注意语调起伏<br>
         2. 跟读 1 遍, 模仿节奏<br>
@@ -1356,11 +1356,11 @@ function openSituationalWritingModal(type) {
       </div>
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
         <div style="flex:1;min-width:180px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px">
-          <div style="font-size:10px;color:#64748B;font-weight:700">👤 收件人/听众</div>
+          <div style="font-size:10px;color:#1E293B;font-weight:700">👤 收件人/听众</div>
           <div style="font-size:13px;color:#1E293B;margin-top:2px">${escapeHtml(s.reader)}</div>
         </div>
         <div style="flex:1;min-width:180px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px">
-          <div style="font-size:10px;color:#64748B;font-weight:700">🎯 目的 + 语气</div>
+          <div style="font-size:10px;color:#1E293B;font-weight:700">🎯 目的 + 语气</div>
           <div style="font-size:13px;color:#1E293B;margin-top:2px">${escapeHtml(s.purpose)} · ${escapeHtml(s.tone)}</div>
         </div>
       </div>
@@ -1372,7 +1372,7 @@ function openSituationalWritingModal(type) {
         <div style="font-size:12px;font-weight:900;color:#16A34A;margin-bottom:4px">💡 开头示例 (可仿写)</div>
         <div style="font-size:13px;color:#1E293B;font-style:italic;line-height:1.6">"${escapeHtml(s.opening)}"</div>
       </div>
-      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:#64748B;line-height:1.7">
+      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:#1E293B;line-height:1.7">
         <b style="color:#1E293B">📋 写作流程 (10-15 min)</b>:<br>
         1. 读情境 → 想 receiver + tone → 列 3 点 outline<br>
         2. 用提供的开头, 1 段写 1 点, 不要混<br>
@@ -1450,7 +1450,7 @@ function _renderLmQuestion() {
           <button onclick="playLmAudio()" id="lmPlayBtn" style="flex:1;padding:14px;background:linear-gradient(135deg,#26A69A,#00897B);color:#FFF;border:none;border-radius:8px;font-weight:900;cursor:pointer;font-size:15px">▶ 播放录音 (可重听 2 次, 总 3 遍)</button>
           <button onclick="stopLmAudio()" style="padding:14px 16px;background:#E2E8F0;color:#1E293B;border:1px solid #CBD5E1;border-radius:8px;cursor:pointer">⏹</button>
         </div>
-        <div id="lmPlayInfo" style="font-size:11px;color:#64748B;margin-top:6px;text-align:center">PSLE 真考: 每题听 2 遍, 建议先听 1 遍记大意, 再听 1 遍核对答案</div>
+        <div id="lmPlayInfo" style="font-size:11px;color:#1E293B;margin-top:6px;text-align:center">PSLE 真考: 每题听 2 遍, 建议先听 1 遍记大意, 再听 1 遍核对答案</div>
       </div>
       <div style="background:#F8FAFC;border-radius:8px;padding:12px;margin-bottom:10px">
         <div style="font-size:14px;font-weight:900;color:#1E293B">❓ ${escapeHtml(item.q)}</div>
@@ -1516,7 +1516,7 @@ function submitLmAnswer(optIdx) {
         explain: item.explain, source: 'listen_mcq', subj: item.type, audioText: item.audio
       });
     }
-    if (fb) fb.innerHTML = `<div style="background:rgba(239,83,80,0.10);border:1px solid rgba(239,83,80,0.30);border-radius:6px;padding:10px;color:#C05621"><b>❌ 答错</b> · 正确: ${String.fromCharCode(65+item.ans)} · ${escapeHtml(item.explain || '')}<br><span style="font-size:11px;color:#64748B">📜 原文: "${escapeHtml(item.audio)}"</span></div>`;
+    if (fb) fb.innerHTML = `<div style="background:rgba(239,83,80,0.10);border:1px solid rgba(239,83,80,0.30);border-radius:6px;padding:10px;color:#C05621"><b>❌ 答错</b> · 正确: ${String.fromCharCode(65+item.ans)} · ${escapeHtml(item.explain || '')}<br><span style="font-size:11px;color:#1E293B">📜 原文: "${escapeHtml(item.audio)}"</span></div>`;
     playSound && playSound('wrong');
   }
   saveState(state);
@@ -1538,8 +1538,8 @@ function _finishLmGame() {
       <div class="kt-inner" style="max-width:480px;text-align:center">
         <div style="font-size:48px;margin:20px 0">${acc >= 80 ? '🏆' : acc >= 60 ? '👍' : '💪'}</div>
         <div style="font-size:22px;font-weight:900;color:#1E293B">Listening 完成!</div>
-        <div style="font-size:14px;color:#64748B;margin:10px 0">${g.correct}/${g.items.length} 正确 · ${acc}% · +${g.correct * 2}${bonus ? ' +' + bonus + ' (准确率奖)' : ''} 分</div>
-        <div style="font-size:11px;color:#64748B;margin-bottom:16px">错题已入错题本, 可在"📓 待复习清单"中选 🎧 Listening MCQ 专项练</div>
+        <div style="font-size:14px;color:#1E293B;margin:10px 0">${g.correct}/${g.items.length} 正确 · ${acc}% · +${g.correct * 2}${bonus ? ' +' + bonus + ' (准确率奖)' : ''} 分</div>
+        <div style="font-size:11px;color:#1E293B;margin-bottom:16px">错题已入错题本, 可在"📓 待复习清单"中选 🎧 Listening MCQ 专项练</div>
         <button onclick="closeLmGame()" style="padding:12px 24px;background:linear-gradient(135deg,#0D9488,#26A69A);color:#FFF;border:none;border-radius:8px;font-weight:900;cursor:pointer">关闭</button>
       </div>`;
   }
@@ -1626,7 +1626,7 @@ function showALExplain() {
           <tr style="border-bottom:1px solid #E2E8F0"><td style="padding:4px"><b>★★★★☆</b></td><td>≥6 月考 + 近 2 次稳定</td><td>AL ± 2</td></tr>
           <tr><td style="padding:4px"><b>★★★★★</b></td><td>PSLE 真考完成</td><td>AL ± 0</td></tr>
         </table>
-        <div style="margin-top:8px;font-size:12px;color:#64748B"><b>升级机制</b>: 后续会加月度 4 科完整模考模块, 累积数据自动升 ★. 当前 ★ 1-2 时, 综合 AL 预测仅作参考, 别拿这个数下重大决定.</div>
+        <div style="margin-top:8px;font-size:12px;color:#1E293B"><b>升级机制</b>: 后续会加月度 4 科完整模考模块, 累积数据自动升 ★. 当前 ★ 1-2 时, 综合 AL 预测仅作参考, 别拿这个数下重大决定.</div>
       </div>
       <button onclick="closeALExplain()" style="width:100%;padding:12px;background:linear-gradient(135deg,#0D9488,#26A69A);color:#FFF;border:none;border-radius:8px;font-weight:900;cursor:pointer;font-size:14px">明白了</button>
     </div>`;
@@ -1664,7 +1664,7 @@ function _checkEnglishModeHook(gameKey, isCorrect) {
   const acceptBtn = `<button onclick="setEnglishMode('${sug.suggest}'); this.parentElement.parentElement.remove()" style="margin-left:8px;padding:4px 10px;background:#1E40AF;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">切到 ${sug.suggest}</button>`;
   const t = document.createElement('div');
   t.style.cssText = 'position:fixed;top:80px;right:20px;z-index:10001;background:rgba(20,33,58,0.95);border:1px solid rgba(30,64,175,0.40);border-radius:8px;padding:12px;max-width:320px;font-size:13px;color:#1E293B;box-shadow:0 4px 16px rgba(0,0,0,0.4)';
-  t.innerHTML = `<div style="display:flex;align-items:flex-start;justify-content:space-between"><div>💡 ${escapeHtml(sug.reason)}${acceptBtn}</div><button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;color:#64748B;cursor:pointer;font-size:18px;line-height:1;margin-left:8px">×</button></div>`;
+  t.innerHTML = `<div style="display:flex;align-items:flex-start;justify-content:space-between"><div>💡 ${escapeHtml(sug.reason)}${acceptBtn}</div><button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;color:#1E293B;cursor:pointer;font-size:18px;line-height:1;margin-left:8px">×</button></div>`;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 8000);
 }
@@ -2294,28 +2294,28 @@ function renderLearningPortraitCard() {
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <div style="font-size:14px;font-weight:900;color:#1E293B">📊 本周学习画像</div>
-      <div style="margin-left:auto;font-size:11px;color:#64748B">W${week} · 实力数据 (不是积分)</div>
+      <div style="margin-left:auto;font-size:11px;color:#1E293B">W${week} · 实力数据 (不是积分)</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
       <div style="background:linear-gradient(135deg, rgba(30,64,175,0.10), rgba(30,64,175,0.02));border-left:3px solid #1E40AF;padding:6px 10px;border-radius:4px">
-        <div style="font-size:10px;color:#64748B">📅 打卡天数</div>
+        <div style="font-size:10px;color:#1E293B">📅 打卡天数</div>
         <div style="font-size:16px;font-weight:900;color:#1E40AF">${daysChecked}/7 天</div>
       </div>
       <div style="background:linear-gradient(135deg, rgba(255,138,101,0.10), rgba(255,138,101,0.02));border-left:3px solid #FF8A65;padding:6px 10px;border-radius:4px">
-        <div style="font-size:10px;color:#64748B">🎮 Mini-game 次数</div>
+        <div style="font-size:10px;color:#1E293B">🎮 Mini-game 次数</div>
         <div style="font-size:16px;font-weight:900;color:#C05621">${gameRuns} 次</div>
       </div>
       <div style="background:linear-gradient(135deg, rgba(230,162,60,0.10), rgba(230,162,60,0.02));border-left:3px solid #B45309;padding:6px 10px;border-radius:4px">
-        <div style="font-size:10px;color:#64748B">⭐ 知识树掌握</div>
+        <div style="font-size:10px;color:#1E293B">⭐ 知识树掌握</div>
         <div style="font-size:16px;font-weight:900;color:#B45309">${totalStars}/105 ⭐</div>
       </div>
       <div style="background:linear-gradient(135deg, rgba(124,58,237,0.10), rgba(124,58,237,0.02));border-left:3px solid #7C3AED;padding:6px 10px;border-radius:4px">
-        <div style="font-size:10px;color:#64748B">📓 错题待清</div>
+        <div style="font-size:10px;color:#1E293B">📓 错题待清</div>
         <div style="font-size:16px;font-weight:900;color:#7C3AED">${wrongs.length} 题</div>
       </div>
     </div>
     <div style="background:#F8FAFC;border:1px solid #F1F5F9;border-radius:4px;padding:8px 10px;font-size:11px;line-height:1.8;color:#1E293B">
-      <div style="font-weight:700;margin-bottom:4px;color:#1E40AF">🎯 各科当前难度 <span style="font-weight:400;font-size:10px;color:#64748B">(Lv 1-6, 起步 Lv 4, 最近 3 次 ≥80% 升级, 最近 2 次 ≤40% 降级)</span></div>
+      <div style="font-weight:700;margin-bottom:4px;color:#1E40AF">🎯 各科当前难度 <span style="font-weight:400;font-size:10px;color:#1E293B">(Lv 1-6, 起步 Lv 4, 最近 3 次 ≥80% 升级, 最近 2 次 ≤40% 降级)</span></div>
       ${diffs.map(d => `<span style="display:inline-block;margin-right:10px;font-weight:700;color:${d.diff >= 5 ? '#16A34A' : d.diff >= 4 ? '#B45309' : '#DC2626'}">${d.label} Lv ${d.diff}</span>`).join('')}
     </div>
     ${p2 && (p2.cloze.done > 0 || p2.sst.done > 0) ? `
@@ -2324,7 +2324,7 @@ function renderLearningPortraitCard() {
       <div style="color:#1E293B">Cloze ${p2.cloze.done}/${p2.cloze.target} 题 ${p2.cloze.recentAcc !== null ? `· 近 5 次 ${p2.cloze.recentAcc}%` : ''}</div>
       <div style="color:#1E293B">SST ${p2.sst.done}/${p2.sst.target} 题 ${p2.sst.recentAcc !== null ? `· 近 5 次 ${p2.sst.recentAcc}%` : ''}</div>
     </div>` : ''}
-    <div style="text-align:center;font-size:10px;color:#64748B;margin-top:6px;font-style:italic">
+    <div style="text-align:center;font-size:10px;color:#1E293B;margin-top:6px;font-style:italic">
       💡 真正的进步看这里, 不在积分和装备
     </div>
   `;
@@ -2373,19 +2373,19 @@ function renderErrorBankCard() {
       <div style="font-size:15px;font-weight:900;color:#16A34A">📓 错题本 · 已收集 ${wrongs.length} 题 🌱</div>
       <div style="background:#DC2626;color:#FFF;font-size:13px;font-weight:900;padding:2px 10px;border-radius:14px;min-width:28px;text-align:center;box-shadow:0 0 8px rgba(239,83,80,0.4)">${wrongs.length}</div>
     </div>
-    <div style="font-size:11px;color:#64748B;margin-bottom:8px">
+    <div style="font-size:11px;color:#1E293B;margin-bottom:8px">
       ${collectedItems.length} 题已答对 1+ 次 · ${masteredItems.length} 题接近毕业 · 连续 3 次答对 +3 自动毕业 (14 天后回测)
     </div>
     <!-- v19.22: 按 game 分类 chips, 一眼看错题分布 -->
     <div style="background:#F8FAFC;border:1px solid #F1F5F9;border-radius:6px;padding:8px;margin-bottom:8px">
-      <div style="font-size:10px;color:#64748B;margin-bottom:4px">📊 按科目分布:</div>
+      <div style="font-size:10px;color:#1E293B;margin-bottom:4px">📊 按科目分布:</div>
       ${breakdown}
     </div>
     <!-- v19.22: 显眼大按钮 (整张卡也可点) -->
     <button onclick="event.stopPropagation(); openErrorBank()" style="width:100%;padding:12px;background:linear-gradient(135deg,#66BB6A,#43A047);color:#FFF;border:none;border-radius:6px;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 2px 8px rgba(102,187,106,0.30)">
       🎯 立即开始复习 ${realExam > 0 ? `(真考 ${realExam} 题优先)` : `(${wrongs.length} 题)`} →
     </button>
-    <div style="font-size:10px;color:#64748B;margin-top:6px;text-align:center;font-style:italic">
+    <div style="font-size:10px;color:#1E293B;margin-top:6px;text-align:center;font-style:italic">
       💡 答错会显示正确答案 + 解析, 可点"下一题"再走
     </div>
   `;
@@ -2454,7 +2454,7 @@ function renderWeakChallengeCard() {
     <div style="height:4px;background:#eee;border-radius:2px;overflow:hidden">
       <div style="height:100%;width:${Math.min(100, done/required*100)}%;background:#1E40AF;transition:width .3s"></div>
     </div>
-    ${completed ? `<div style="font-size:11px;color:#059669;margin-top:6px">✅ 弱科挑战已完成! +${challenge.bonus} 分已发放</div>` : `<div style="font-size:11px;color:#64748B;margin-top:6px">可玩: ${challenge.games.join(' / ')}</div>`}
+    ${completed ? `<div style="font-size:11px;color:#059669;margin-top:6px">✅ 弱科挑战已完成! +${challenge.bonus} 分已发放</div>` : `<div style="font-size:11px;color:#1E293B;margin-top:6px">可玩: ${challenge.games.join(' / ')}</div>`}
   `;
   el.style.display = '';
 }
@@ -2486,7 +2486,7 @@ function renderFocusAreasCard() {
     </div>
     ${areas.map(a => `
       <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f0f0f0">
-        <span style="font-size:10px;padding:1px 5px;border-radius:3px;background:${priorityColor[a.priority] || '#64748B'}22;color:${priorityColor[a.priority] || '#64748B'};font-weight:600">${a.priority === 'high' ? '紧急' : '关注'}</span>
+        <span style="font-size:10px;padding:1px 5px;border-radius:3px;background:${priorityColor[a.priority] || '#1E293B'}22;color:${priorityColor[a.priority] || '#1E293B'};font-weight:600">${a.priority === 'high' ? '紧急' : '关注'}</span>
         <span style="font-size:13px;font-weight:500">${a.subject}</span>
         <span style="font-size:11px;color:var(--color-text-light);margin-left:auto">${a.detail}</span>
       </div>
@@ -3338,7 +3338,7 @@ function renderWeekMasterTipCard() {
   el.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <div style="font-size:15px;font-weight:900;color:#B45309">🌟 本周名师秘籍</div>
-      <div style="margin-left:auto;font-size:11px;color:#64748B">W${week} · PSLE 答题模板</div>
+      <div style="margin-left:auto;font-size:11px;color:#1E293B">W${week} · PSLE 答题模板</div>
     </div>
     <div style="font-size:13px;color:#1E40AF;font-weight:700;margin-bottom:6px">${escapeHtml(tip.subject)} — ${escapeHtml(tip.title)}</div>
     <div style="font-size:12px;color:#1E293B;line-height:1.7;background:rgba(230,162,60,0.06);border:1px solid rgba(230,162,60,0.20);border-radius:6px;padding:10px">${escapeHtml(tip.content)}</div>
@@ -6114,7 +6114,7 @@ function _buildKnowledgeTreeInnerHtml(forPage) {
         </div>
         ${forPage ? '' : '<button class="vocab-modal-close" onclick="closeKnowledgeTreeModal()">×</button>'}
       </div>
-      <div class="kt-tip-banner" style="background:linear-gradient(135deg,#3D2A00,#7A5C00);color:#FFE066;border:2px solid #FFD700;font-weight:700">🐉 <b style="color:#FFF">金龙进度: ${totalStars}/105 ⭐</b> · 还差 ${Math.max(0, 105 - totalStars)} ⭐ + ${Math.max(0, 10000 - (state.totalPoints||0)).toLocaleString()} 分 → 解锁传说级金龙伙伴 <span style="color:#B8860B;font-weight:900">(SGD 1500)</span></div>
+      <div class="kt-tip-banner" style="background:#FFFBEB;color:#92400E;border:1px solid #FDE68A;font-weight:700">🐉 <b style="color:#1E293B">金龙进度: ${totalStars}/105 ⭐</b> · 还差 ${Math.max(0, 105 - totalStars)} ⭐ + ${Math.max(0, 10000 - (state.totalPoints||0)).toLocaleString()} 分 → 解锁传说级金龙伙伴 <span style="color:#B45309;font-weight:900">(SGD 1500)</span></div>
       <div class="kt-tip-banner">💡 <b>点任意节点</b> 看讲解 + 例子 + 一键去练习对应 mini-game · 学完一个 +2 分 + ⭐ 标记</div>
       <div class="kt-legend">
         <span class="kt-legend-item"><span class="kt-dot kt-node-mastered"></span> 已掌握</span>
@@ -6433,7 +6433,7 @@ function openErrorBank() {
     const dueColor = due > 0 ? '#FF8A65' : '#16A34A';
     return `<button onclick="startErrorBankReview('${k}','due')" style="background:#F8FAFC;border:1px solid rgba(30,64,175,0.30);border-radius:8px;padding:10px 14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:96px;transition:all 0.15s" onmouseover="this.style.background='rgba(30,64,175,0.10)'" onmouseout="this.style.background='#F8FAFC'">
       <span style="font-size:14px;font-weight:700;color:#1E293B">${GAME_LABEL[k] || k}</span>
-      <span style="font-size:11px;color:#64748B">共 <b style="color:#1E293B">${v}</b> 题</span>
+      <span style="font-size:11px;color:#1E293B">共 <b style="color:#1E293B">${v}</b> 题</span>
       <span style="font-size:11px;color:${dueColor};font-weight:900">${due > 0 ? '🔥 今日 ' + due + ' 题待练' : '✓ 已巩固'}</span>
     </button>`;
   }).join('');
@@ -6456,7 +6456,7 @@ function openErrorBank() {
           </div>
         `).join('')}
       </div>
-      <div style="font-size:10px;color:#64748B;margin-top:6px">💡 同主题词集中练 (手册 v14 方法): travel 错多 → 下周 5 题 travel 主题</div>
+      <div style="font-size:10px;color:#1E293B;margin-top:6px">💡 同主题词集中练 (手册 v14 方法): travel 错多 → 下周 5 题 travel 主题</div>
     </div>
   ` : '';
   modal.innerHTML = `
@@ -6473,7 +6473,7 @@ function openErrorBank() {
         💡 错题反复练 = 真正消灭弱点。<b style="color:#B45309">艾宾浩斯曲线</b>: 答对后<b>不立即重练</b>, 第 1→3→7 天间隔回测, 连对 3 次毕业 (再隔 14 天回测一次)。
       </div>
       <!-- v19.28: 按学科分类训练 (chip 按钮) -->
-      <div style="font-size:12px;color:#64748B;margin-bottom:6px;font-weight:700">📂 按类型选练 (点 chip 只练此类):</div>
+      <div style="font-size:12px;color:#1E293B;margin-bottom:6px;font-weight:700">📂 按类型选练 (点 chip 只练此类):</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">${breakdown}</div>
       ${topicHtml}
       <div class="kp-actions" style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
@@ -6559,8 +6559,8 @@ function _renderErrorBankReview() {
   const streak = item.correctStreak || 0;
   const lastDate = item.addedDate || item.lastCorrectDate || '';
   const historyHtml = `
-    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;color:#64748B;line-height:1.7">
-      <div style="color:#64748B;font-weight:700;margin-bottom:2px">📋 改错记录</div>
+    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;color:#1E293B;line-height:1.7">
+      <div style="color:#1E293B;font-weight:700;margin-bottom:2px">📋 改错记录</div>
       ${retries > 0 ? `<span style="color:#DC2626">❌ 已错过 ${retries} 次</span>` : '<span>🆕 首次复习</span>'}
       · <span style="color:#16A34A">✅ 连对 ${streak}/3</span>
       ${lastDate ? ` · 入库 ${escapeHtml(lastDate)}` : ''}
@@ -6782,7 +6782,7 @@ function renderGradReviewCard() {
       <div style="font-size:20px">📅</div>
       <div style="flex:1;font-size:12px;line-height:1.5">
         <div style="color:#1E293B;font-weight:700">毕业题间隔复习</div>
-        <div style="color:#64748B;font-size:11px">累计 ${totalQ} 题毕业 · ${dueCount > 0 ? `<b style="color:#16A34A">${dueCount} 题</b>该 14 天后复测了` : '暂无到期复测'}</div>
+        <div style="color:#1E293B;font-size:11px">累计 ${totalQ} 题毕业 · ${dueCount > 0 ? `<b style="color:#16A34A">${dueCount} 题</b>该 14 天后复测了` : '暂无到期复测'}</div>
       </div>
       ${dueCount > 0 ? `<div style="color:#16A34A;font-size:18px">›</div>` : ''}
     </div>
@@ -6890,7 +6890,7 @@ function _finishGradReview() {
       <div style="padding:20px 0">
         <div style="font-size:48px">🏆</div>
         <div style="font-size:16px;font-weight:900;margin-top:10px;color:#1E293B">本轮 ${g.correct} / ${g.items.length} 永久毕业</div>
-        <div style="color:#64748B;font-size:12px;margin-top:8px">答错的已重入错题本, 下次再练</div>
+        <div style="color:#1E293B;font-size:12px;margin-top:8px">答错的已重入错题本, 下次再练</div>
       </div>
       <button class="btn btn-primary" onclick="closeGradReview()">完成</button>
     </div>`;
@@ -7002,7 +7002,7 @@ async function openCompositionModal(week) {
         </div>
 
         <div style="background:#FFF;border-radius:6px;padding:8px;margin-top:6px">
-          <div style="font-size:12px;font-weight:700;color:#64748B;margin-bottom:4px">📋 模板词自查 (用了几个?)</div>
+          <div style="font-size:12px;font-weight:700;color:#1E293B;margin-bottom:4px">📋 模板词自查 (用了几个?)</div>
           <div style="line-height:1.8">${wordCheckboxes}</div>
           <div style="font-size:11px;color:${hitTier === 'full' ? '#2E7D32' : hitTier === 'half' ? '#FFA000' : '#1E40AF'};margin-top:4px;font-weight:700">
             命中: ${hitCount}/${templateWords.length} (${Math.round(hitRatio*100)}%) ·
@@ -7281,7 +7281,7 @@ async function _buildEssayInnerHtml(forPage) {
   const tplLibHtml = `
     <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px;margin-bottom:14px">
       <div style="font-size:15px;font-weight:900;color:#1E40AF;margin-bottom:6px">📝 作文模板库 (手册 v14: 套用 → 拿 30+ 分关键)</div>
-      <div style="font-size:11px;color:#64748B;margin-bottom:10px;line-height:1.4">
+      <div style="font-size:11px;color:#1E293B;margin-bottom:10px;line-height:1.4">
         每周作文从这 15 个模板里选 1 开 + 1 转 + 1 结 套用, 配 3-5 个高级词。背熟比临场想强。
       </div>
       <details open>
@@ -7954,7 +7954,7 @@ function openMiniGameHub() {
     : normalClick;
   // v19.32: English mode chip (scaffold 弱生模式, Expert 6 P1)
   const eMode = state.englishMode || 'normal';
-  const modeChip = (m, label, color) => `<button onclick="setEnglishMode('${m}')" style="padding:6px 12px;background:${eMode === m ? color : '#F8FAFC'};color:${eMode === m ? '#FFF' : '#64748B'};border:1px solid ${eMode === m ? color : '#CBD5E1'};border-radius:6px;font-size:12px;font-weight:${eMode === m ? '900' : '600'};cursor:pointer;transition:all 0.15s">${label}</button>`;
+  const modeChip = (m, label, color) => `<button onclick="setEnglishMode('${m}')" style="padding:6px 12px;background:${eMode === m ? color : '#F8FAFC'};color:${eMode === m ? '#FFF' : '#1E293B'};border:1px solid ${eMode === m ? color : '#CBD5E1'};border-radius:6px;font-size:12px;font-weight:${eMode === m ? '900' : '600'};cursor:pointer;transition:all 0.15s">${label}</button>`;
   modal.innerHTML = `
     <div class="mgh-inner">
       <div class="mgh-header">
@@ -7968,7 +7968,7 @@ function openMiniGameHub() {
           ${modeChip('normal', '⚖️ normal · 自适应', '#1E40AF')}
           ${modeChip('strong', '🔥 strong · 高难 (Lv ≥ 4)', '#FF8A65')}
         </div>
-        <div style="font-size:10px;color:#64748B;margin-top:4px">💡 ${eMode === 'weak' ? '弱生模式: 优先刷 Lv 1-2 基础题, 信心比难题重要' : eMode === 'strong' ? '强生模式: 直接刷 Lv 4-5 高难, 不浪费时间在简单题' : '自适应: 答对升级, 答错降级, 自动找你的节奏'}</div>
+        <div style="font-size:10px;color:#1E293B;margin-top:4px">💡 ${eMode === 'weak' ? '弱生模式: 优先刷 Lv 1-2 基础题, 信心比难题重要' : eMode === 'strong' ? '强生模式: 直接刷 Lv 4-5 高难, 不浪费时间在简单题' : '自适应: 答对升级, 答错降级, 自动找你的节奏'}</div>
       </div>
       <div class="mgh-rules">📋 每 game 第 1 次满奖, 之后可继续练但不计分 · 想练多少练多少!</div>
       <div class="mgh-grid">
@@ -10417,7 +10417,7 @@ function renderAdminPage() {
       <div style="background: var(--color-card); border: 1px solid #CBD5E1; border-radius: 8px; padding: 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; color: #FFFFFF;">
         <div>
           <b style="color:#FFFFFF;">${escapeHtml(log.reason)}</b><br>
-          <span style="font-size: 11px; color: #64748B;">W${log.week} · ${date}</span>
+          <span style="font-size: 11px; color: #1E293B;">W${log.week} · ${date}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-family: ZCOOL KuaiLe, cursive; font-size: 22px; color: ${isAdd ? 'var(--color-success)' : 'var(--color-danger)'};">${isAdd ? '+' : ''}${log.points}</span>
@@ -10882,32 +10882,32 @@ function renderSchedulePage() {
   const day = SCHED_DAYS[viewDow];
   // 1) 课表卡
   const chips = [1, 2, 3, 4, 5, 6, 0].map(d =>
-    `<button onclick="window._schedSetDay(${d})" style="padding:5px 10px;border-radius:14px;border:1px solid ${d === viewDow ? 'rgba(30,64,175,0.6)' : '#CBD5E1'};background:${d === viewDow ? 'rgba(30,64,175,0.15)' : '#F8FAFC'};color:${d === viewDow ? '#1E40AF' : '#64748B'};font-size:12px;font-weight:${d === todayDow ? '700' : '400'}">${SCHED_DAYS[d].label}${d === todayDow ? '·今' : ''}</button>`
+    `<button onclick="window._schedSetDay(${d})" style="padding:5px 10px;border-radius:14px;border:1px solid ${d === viewDow ? 'rgba(30,64,175,0.6)' : '#CBD5E1'};background:${d === viewDow ? 'rgba(30,64,175,0.15)' : '#F8FAFC'};color:${d === viewDow ? '#1E40AF' : '#1E293B'};font-size:12px;font-weight:${d === todayDow ? '700' : '400'}">${SCHED_DAYS[d].label}${d === todayDow ? '·今' : ''}</button>`
   ).join('');
   const blocksHtml = day.blocks.map(b => {
     const isStudy = b[3] === 's';
     return `<div style="display:flex;gap:10px;padding:7px 10px;margin-top:6px;border-radius:8px;background:${isStudy ? 'rgba(30,64,175,0.06)' : '#F8FAFC'};border-left:3px solid ${isStudy ? '#1E40AF' : '#E2E8F0'}">
-      <div style="min-width:86px;font-size:12px;color:${isStudy ? '#1E40AF' : '#64748B'};font-weight:600">${b[0]}</div>
-      <div style="flex:1"><div style="font-size:13px;font-weight:${isStudy ? '700' : '400'};color:${isStudy ? '#1E293B' : '#64748B'}">${escapeHtml(b[1])}</div>
-      ${b[2] ? `<div style="font-size:11.5px;color:#64748B;line-height:1.5;margin-top:2px">${escapeHtml(b[2])}</div>` : ''}</div></div>`;
+      <div style="min-width:86px;font-size:12px;color:${isStudy ? '#1E40AF' : '#1E293B'};font-weight:600">${b[0]}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:${isStudy ? '700' : '400'};color:${isStudy ? '#1E293B' : '#1E293B'}">${escapeHtml(b[1])}</div>
+      ${b[2] ? `<div style="font-size:11.5px;color:#1E293B;line-height:1.5;margin-top:2px">${escapeHtml(b[2])}</div>` : ''}</div></div>`;
   }).join('');
   el.innerHTML = `
     <div class="card" style="margin-bottom:12px">
-      <div class="card-title">📆 每日课表 <span style="font-size:11px;color:#64748B;font-weight:400">手册v18.6 · 单块≤45分 · 21:30收工</span></div>
+      <div class="card-title">📆 每日课表 <span style="font-size:11px;color:#1E293B;font-weight:400">手册v18.6 · 单块≤45分 · 21:30收工</span></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 4px">${chips}</div>
       <div style="font-size:12px;color:#B45309;margin-top:6px">${day.start ? '⏰ ' + day.start + ' 到家即正式开始(作业课间已清)' : '🏖️ 全天无任务'}</div>
       ${blocksHtml}
     </div>
     <div class="card" style="margin-bottom:12px">
-      <div class="card-title">✏️ 周打分表 <span style="font-size:11px;color:#64748B;font-weight:400">只填数字 · 做完当场填 · 任意格可补填修正</span></div>
+      <div class="card-title">✏️ 周打分表 <span style="font-size:11px;color:#1E293B;font-weight:400">只填数字 · 做完当场填 · 任意格可补填修正</span></div>
       <div id="schedGridWrap"></div>
     </div>
     <div class="card" style="margin-bottom:12px">
-      <div class="card-title">📊 周计分卡 <span style="font-size:11px;color:#64748B;font-weight:400">按PSLE考试模块 · 自动从打分表汇总</span></div>
+      <div class="card-title">📊 周计分卡 <span style="font-size:11px;color:#1E293B;font-weight:400">按PSLE考试模块 · 自动从打分表汇总</span></div>
       <div id="schedWeekSummary"></div>
     </div>
     <div class="card" style="margin-bottom:12px">
-      <div class="card-title">📈 月度跟踪 <span style="font-size:11px;color:#64748B;font-weight:400">最近8周关键指标</span></div>
+      <div class="card-title">📈 月度跟踪 <span style="font-size:11px;color:#1E293B;font-weight:400">最近8周关键指标</span></div>
       <div id="schedMonthTrend"></div>
     </div>`;
   renderSchedGrid();
@@ -10929,7 +10929,7 @@ function renderSchedGrid() {
     const offset = d === 0 ? 6 : d - 1;
     const dd = new Date(mon.getTime()); dd.setDate(dd.getDate() + offset);
     dks[d] = schedLocalDate(dd);
-    heads.push(`<th style="padding:5px 2px;font-size:11px;color:${dks[d] === todayKey ? '#1E40AF' : '#64748B'};font-weight:${dks[d] === todayKey ? '700' : '400'};text-align:center;min-width:58px">${SCHED_DAYS[d].label}<br>${dd.getMonth() + 1}/${dd.getDate()}${dks[d] === todayKey ? '·今' : ''}</th>`);
+    heads.push(`<th style="padding:5px 2px;font-size:11px;color:${dks[d] === todayKey ? '#1E40AF' : '#1E293B'};font-weight:${dks[d] === todayKey ? '700' : '400'};text-align:center;min-width:58px">${SCHED_DAYS[d].label}<br>${dd.getMonth() + 1}/${dd.getDate()}${dks[d] === todayKey ? '·今' : ''}</th>`);
   });
   const inpS = 'width:26px;padding:3px 1px;border-radius:5px;border:1px solid #CBD5E1;background:#F1F5F9;color:#1E293B;font-size:13px;text-align:center';
   const inpW = 'width:40px;padding:3px 2px;border-radius:5px;border:1px solid #CBD5E1;background:#F1F5F9;color:#1E293B;font-size:13px;text-align:center';
@@ -10945,26 +10945,26 @@ function renderSchedGrid() {
       } else if (row.type === 'chk') {
         ctrl = `<input type="checkbox" ${sc[row.key] ? 'checked' : ''} style="width:17px;height:17px" onchange="window.saveDailyScore('${dk}','${row.key}',this.checked?1:'')">`;
       } else if (row.type === 'frac' || row.type === 'pair') {
-        ctrl = `<input type="number" min="0" inputmode="numeric" value="${sc[row.key + '_a'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_a',this.value)"><span style="color:#64748B;font-size:11px">/</span><input type="number" min="0" inputmode="numeric" value="${sc[row.key + '_b'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_b',this.value)">`;
+        ctrl = `<input type="number" min="0" inputmode="numeric" value="${sc[row.key + '_a'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_a',this.value)"><span style="color:#1E293B;font-size:11px">/</span><input type="number" min="0" inputmode="numeric" value="${sc[row.key + '_b'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_b',this.value)">`;
       } else {
         ctrl = `<input type="number" min="0" inputmode="numeric" value="${sc[row.key] ?? ''}" style="${inpW}" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
       }
       return `<td style="padding:4px 2px;text-align:center;white-space:nowrap">${ctrl}</td>`;
     }).join('');
     return `<tr style="border-bottom:1px solid #F1F5F9">
-      <td style="padding:5px 4px;font-size:12px;color:#1E293B;min-width:128px">${escapeHtml(row.label)}<br><span style="font-size:10px;color:#64748B">目标 ${escapeHtml(row.target)}</span></td>${cells}</tr>`;
+      <td style="padding:5px 4px;font-size:12px;color:#1E293B;min-width:128px">${escapeHtml(row.label)}<br><span style="font-size:10px;color:#1E293B">目标 ${escapeHtml(row.target)}</span></td>${cells}</tr>`;
   }).join('');
   const weekLabel = `${mon.getMonth() + 1}/${mon.getDate()} 那一周`;
   wrap.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 6px">
-      <button onclick="window._schedShiftWeek(-1)" style="padding:4px 12px;border-radius:8px;border:1px solid #CBD5E1;background:#F1F5F9;color:#64748B;font-size:12px">‹ 上周</button>
+      <button onclick="window._schedShiftWeek(-1)" style="padding:4px 12px;border-radius:8px;border:1px solid #CBD5E1;background:#F1F5F9;color:#1E293B;font-size:12px">‹ 上周</button>
       <div style="font-size:13px;font-weight:700;color:${_schedWeekOffset === 0 ? '#1E40AF' : '#B45309'}">${_schedWeekOffset === 0 ? '本周 · ' : ''}${weekLabel}</div>
-      <button onclick="window._schedShiftWeek(1)" ${_schedWeekOffset >= 0 ? 'disabled style="opacity:0.3;padding:4px 12px;border-radius:8px;border:1px solid #E2E8F0;background:none;color:#4A5568;font-size:12px"' : 'style="padding:4px 12px;border-radius:8px;border:1px solid #CBD5E1;background:#F1F5F9;color:#64748B;font-size:12px"'}>下周 ›</button>
+      <button onclick="window._schedShiftWeek(1)" ${_schedWeekOffset >= 0 ? 'disabled style="opacity:0.3;padding:4px 12px;border-radius:8px;border:1px solid #E2E8F0;background:none;color:#4A5568;font-size:12px"' : 'style="padding:4px 12px;border-radius:8px;border:1px solid #CBD5E1;background:#F1F5F9;color:#1E293B;font-size:12px"'}>下周 ›</button>
     </div>
     <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
-      <thead><tr style="background:#F1F5F9"><th style="padding:5px 4px;font-size:11px;color:#64748B;text-align:left">检查项</th>${heads.join('')}</tr></thead>
+      <thead><tr style="background:#F1F5F9"><th style="padding:5px 4px;font-size:11px;color:#1E293B;text-align:left">检查项</th>${heads.join('')}</tr></thead>
       <tbody>${bodyRows}</tbody></table></div>
-    <div style="font-size:11px;color:#64748B;margin-top:6px">连续3天某项低于目标 → 不等周五, 当晚按手册响应规则调整</div>`;
+    <div style="font-size:11px;color:#1E293B;margin-top:6px">连续3天某项低于目标 → 不等周五, 当晚按手册响应规则调整</div>`;
 }
 function renderSchedWeekSummary() {
   const el = document.getElementById('schedWeekSummary');
@@ -10972,16 +10972,16 @@ function renderSchedWeekSummary() {
   const { rows, passN, gradedN } = computeSchedWeekSummary(_schedGridMonday());
   const rowsHtml = rows.map(r => {
     const [mod, val, target, pass] = r;
-    const badge = pass === null ? '<span style="color:#64748B">待填</span>' : pass ? '<span style="color:#16A34A">✓ 达标</span>' : '<span style="color:#DC2626;font-weight:700">✗</span>';
+    const badge = pass === null ? '<span style="color:#1E293B">待填</span>' : pass ? '<span style="color:#16A34A">✓ 达标</span>' : '<span style="color:#DC2626;font-weight:700">✗</span>';
     return `<tr style="border-bottom:1px solid #F1F5F9">
       <td style="padding:6px 4px;font-size:12px;color:#1E293B">${escapeHtml(mod)}</td>
       <td style="padding:6px 4px;font-size:13px;font-weight:700;color:${pass === false ? '#DC2626' : '#1E40AF'};text-align:center">${escapeHtml(String(val))}</td>
-      <td style="padding:6px 4px;font-size:11px;color:#64748B;text-align:center">${escapeHtml(target)}</td>
+      <td style="padding:6px 4px;font-size:11px;color:#1E293B;text-align:center">${escapeHtml(target)}</td>
       <td style="padding:6px 4px;font-size:12px;text-align:center">${badge}</td></tr>`;
   }).join('');
   el.innerHTML = `<div style="font-size:12px;color:${passN === gradedN && gradedN > 0 ? '#16A34A' : '#B45309'};margin:6px 0">${_schedWeekOffset === 0 ? '本周' : '该周'}已评 ${gradedN} 项 · 达标 ${passN} 项${gradedN > 0 && passN === gradedN ? ' — 全达标! 下周五二刷免掉 🎁' : ''}</div>
   <table style="width:100%;border-collapse:collapse"><thead><tr style="background:#F1F5F9">
-  <th style="padding:5px 4px;font-size:11px;color:#64748B;text-align:left">PSLE模块</th><th style="padding:5px 4px;font-size:11px;color:#64748B">本周</th><th style="padding:5px 4px;font-size:11px;color:#64748B">达标线</th><th style="padding:5px 4px;font-size:11px;color:#64748B">状态</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+  <th style="padding:5px 4px;font-size:11px;color:#1E293B;text-align:left">PSLE模块</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">本周</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">达标线</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">状态</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
 }
 function renderSchedMonthTrend() {
   const el = document.getElementById('schedMonthTrend');
@@ -11003,10 +11003,10 @@ function renderSchedMonthTrend() {
       <td style="padding:5px 4px;font-size:12px;text-align:center;color:#16A34A">${pick(9)}</td>
       <td style="padding:5px 4px;font-size:12px;text-align:center;color:#1E293B">${s.passN}/${s.gradedN}</td></tr>`);
   }
-  el.innerHTML = weeks.length === 0 ? '<div style="font-size:12px;color:#64748B;padding:6px 0">开始打分后, 这里按周累积成绩趋势</div>'
+  el.innerHTML = weeks.length === 0 ? '<div style="font-size:12px;color:#1E293B;padding:6px 0">开始打分后, 这里按周累积成绩趋势</div>'
     : `<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#F1F5F9">
-    <th style="padding:5px 4px;font-size:11px;color:#64748B;text-align:left">周</th><th style="padding:5px 4px;font-size:11px;color:#64748B">阅读OE</th><th style="padding:5px 4px;font-size:11px;color:#64748B">Editing</th><th style="padding:5px 4px;font-size:11px;color:#64748B">完形</th><th style="padding:5px 4px;font-size:11px;color:#64748B">科诊断</th><th style="padding:5px 4px;font-size:11px;color:#64748B">华漏点</th><th style="padding:5px 4px;font-size:11px;color:#64748B">达标</th></tr></thead><tbody>${weeks.join('')}</tbody></table>
-    <div style="font-size:11px;color:#64748B;margin-top:6px">连续2个月同一指标不降 = 方法有问题, 调方法不加时长</div>`;
+    <th style="padding:5px 4px;font-size:11px;color:#1E293B;text-align:left">周</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">阅读OE</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">Editing</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">完形</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">科诊断</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">华漏点</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">达标</th></tr></thead><tbody>${weeks.join('')}</tbody></table>
+    <div style="font-size:11px;color:#1E293B;margin-top:6px">连续2个月同一指标不降 = 方法有问题, 调方法不加时长</div>`;
 }
 window.renderSchedulePage = renderSchedulePage;
 window._schedSetDay = _schedSetDay;
@@ -11017,7 +11017,7 @@ window.SCHED_GRID = SCHED_GRID;
 
 // ============ 事件绑定 ============
 // v19.54: 统一切页函数 (nav按钮 + "其他"收纳菜单共用, 含全部渲染hook)
-const MORE_MENU_PAGES = ['character', 'summer', 'admin'];  // 收纳进"⋯其他"的页面
+const MORE_MENU_PAGES = ['checkin', 'character', 'summer', 'admin'];  // v19.61: 收纳进"⋯其他"的页面(+打卡)
 function gotoPage(page) {
   if (!page) return;  // "其他"按钮无 data-page, 防炸
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));

@@ -1155,7 +1155,9 @@ assert(/data-page="summer" style="display:none"/.test(idxSrc), 'v19.54: 暑假ta
 assert(/function gotoPage\(/.test(appSrc) && /window\.gotoPage = gotoPage/.test(appSrc), 'v19.54: gotoPage统一切页+导出');
 assert(/if \(!page\) return;/.test(appSrc), 'v19.54: 无data-page按钮防炸');
 assert(/MORE_MENU_PAGES/.test(appSrc), 'v19.54: 隐藏页激活时其他按钮高亮');
-assert((idxSrc.match(/window\.gotoPage\('(character|summer|admin)'\)/g) || []).length === 3, 'v19.54: 菜单三项都接gotoPage');
+assert((idxSrc.match(/window\.gotoPage\('(checkin|character|summer|admin)'\)/g) || []).length === 4, 'v19.61: 菜单四项都接gotoPage(含打卡)');
+assert(/data-page="checkin" style="display:none"/.test(idxSrc), 'v19.61: 打卡tab已隐藏');
+assert(/'checkin', 'character', 'summer', 'admin'/.test(appSrc), 'v19.61: checkin在MORE_MENU_PAGES');
 assert(/function renderSchedulePage\(/.test(appSrc), 'v19.50: renderSchedulePage 已定义');
 assert(/page === 'schedule'/.test(appSrc), 'v19.50: tab 切换 hook 已接入 (防死代码)');
 assert(/function computeSchedWeekSummary\(/.test(appSrc), 'v19.50: 周汇总函数已定义');

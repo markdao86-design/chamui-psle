@@ -1557,8 +1557,8 @@ const CHAMUI = {
       <g transform="translate(148,146)">
         <circle r="9" fill="#F59E0B" stroke="#8090A0" stroke-width="1.5"/>
         <circle r="6.5" fill="#FEF3C7"/>
-        <line x1="0" y1="-5" x2="0" y2="5" stroke="#64748B" stroke-width="0.8"/>
-        <line x1="-5" y1="0" x2="5" y2="0" stroke="#64748B" stroke-width="0.8"/>
+        <line x1="0" y1="-5" x2="0" y2="5" stroke="#1E293B" stroke-width="0.8"/>
+        <line x1="-5" y1="0" x2="5" y2="0" stroke="#1E293B" stroke-width="0.8"/>
         <polygon points="0,-5 -1.5,0 1.5,0" fill="#DC2626"/>
         <polygon points="0,5 -1.5,0 1.5,0" fill="#475569"/>
         <circle r="1.5" fill="#2D3047"/>
