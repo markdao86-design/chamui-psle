@@ -649,7 +649,7 @@ const tpCalls = (appSrc.match(/\brenderThinkPuzzleCard\(/g) || []).length;
 assert(tpCalls === 2, `v19.25 Bug1: renderThinkPuzzleCard 调用收敛 (定义 + 主页 1 处 = 2, 实际 ${tpCalls})`);
 // v19.25 Bug 2: openErrorBank modal 暗调 (v19.28: 注释标签升级保留 rgba 暗调样式)
 assert(/background:linear-gradient\(135deg, rgba\(230,162,60,0\.10\), rgba\(192,86,33,0\.04\)\);border:1px dashed rgba\(230,162,60,0\.40\)/.test(appSrc), 'v19.25 Bug2: 顶部提示暗调样式保留');
-assert(/border:1px solid rgba\(43,91,215,0\.30\);border-radius:6px;padding:6px 10px;font-size:12px;color:#1F2937/.test(appSrc), 'v19.25 Bug2: chip 暗调样式');
+assert(/border:1px solid rgba\(30,64,175,0\.30\);border-radius:6px;padding:6px 10px;font-size:12px;color:#1E293B/.test(appSrc), 'v19.25 Bug2: chip 暗调样式');
 // v19.25 全局 CSS 补 hex
 // [v19.55 亮色主题: 暗色机制断言废除] assert(/\[style\*="background:#ECEFF1"\]/.test(idxSrc), 'v19.25: 全局补 #ECEFF1 适配');
 // [v19.55 亮色主题: 暗色机制断言废除] assert(/\[style\*="color:#455A64"\]/.test(idxSrc), 'v19.25: 全局补 #455A64 字色提亮');
@@ -691,7 +691,7 @@ assert(/<!-- 右栏:[\s\S]{0,800}id="gradReviewCard"/.test(idxSrc), 'v19.22+23: 
 assert(/color:#DB2777">🎯 Paper 2 弱点突击/.test(appSrc), 'v19.21: Paper 2 标题用亮粉 #DB2777');
 // [v19.55 亮色主题: 暗色机制断言废除] assert(/rgba\(255,255,255,0\.04\);border:1px solid rgba\(255,255,255,0\.10\)[\s\S]{0,500}Cloze 单空填/.test(appSrc), 'v19.21: Cloze 块用透明背景');
 assert(/linear-gradient\(90deg,#B45309,#16A34A\)/.test(appSrc), 'v19.21: 进度条改亮版橙→绿渐变');
-// [v19.55 亮色主题: 暗色机制断言废除] assert(/#EEF1F6;border-radius:4px;height:8px/.test(appSrc), 'v19.21: 进度条底用透明白');
+// [v19.55 亮色主题: 暗色机制断言废除] assert(/#F1F5F9;border-radius:4px;height:8px/.test(appSrc), 'v19.21: 进度条底用透明白');
 // v19.21 全局补 #FFF/#EEE/linear-gradient
 // [v19.55 亮色主题: 暗色机制断言废除] assert(/\[style\*="background:#FFF;"\]/.test(idxSrc), 'v19.21: 全局补 #FFF; 适配');
 // [v19.55 亮色主题: 暗色机制断言废除] assert(/\[style\*="background:#EEE;"\]/.test(idxSrc), 'v19.21: 全局补 #EEE; 适配');
@@ -701,8 +701,8 @@ assert(/linear-gradient\(90deg,#B45309,#16A34A\)/.test(appSrc), 'v19.21: 进度�
 // [v19.55 亮色主题: 暗色机制断言废除] assert(/\[style\*="background:#E8F5E9"\][\s\S]{0,200}rgba\(0,255,136/.test(idxSrc), 'v19.20: 绿色调浅底转暗绿渐变');
 // [v19.55 亮色主题: 暗色机制断言废除] assert(/\[style\*="background:#FFF3E0"\][\s\S]{0,300}rgba\(255,184,0/.test(idxSrc), 'v19.20: 橙色调浅底转暗橙渐变');
 // [v19.55 亮色主题: 暗色机制断言废除] assert(/\[style\*="background:#FFEBEE"\][\s\S]{0,300}rgba\(255,51,102/.test(idxSrc), 'v19.20: 红色调浅底转暗红渐变');
-// [v19.55 亮色主题: 暗色机制断言废除] assert(/\[style\*="color:#212121"\][\s\S]{0,600}color:\s*#1F2937/.test(idxSrc), 'v19.20: 深字转亮灰');
-// [v19.55 亮色主题: 暗色机制断言废除] assert(/\[style\*="color:#666"\][\s\S]{0,200}color:\s*#6B7280/.test(idxSrc), 'v19.20: 中灰字提亮');
+// [v19.55 亮色主题: 暗色机制断言废除] assert(/\[style\*="color:#212121"\][\s\S]{0,600}color:\s*#1E293B/.test(idxSrc), 'v19.20: 深字转亮灰');
+// [v19.55 亮色主题: 暗色机制断言废除] assert(/\[style\*="color:#666"\][\s\S]{0,200}color:\s*#64748B/.test(idxSrc), 'v19.20: 中灰字提亮');
 // v19.19: 左右 2 栏布局
 assert(/class="home-grid-2col"/.test(idxSrc), 'v19.19: home-grid-2col 容器');
 assert(/class="home-col-left"/.test(idxSrc), 'v19.19: home-col-left');
@@ -724,7 +724,7 @@ assert(/id="thinkPuzzleCardOld"/.test(idxSrc), 'v19.18: 打卡页 thinkPuzzleCar
 assert(/renderWeekMasterTipCard\(\)/.test(appSrc), 'v19.18: renderWeekMasterTipCard 被调用');
 assert(/renderThinkPuzzleCard\(state\.currentWeek\)/.test(appSrc), 'v19.18: renderThinkPuzzleCard 被主页调用');
 // 错题本卡红 badge
-assert(/background:#D9534F;color:#FFF[\s\S]{0,150}border-radius:14px/.test(appSrc), 'v19.18: 错题本红 badge 强提醒');
+assert(/background:#DC2626;color:#FFF[\s\S]{0,150}border-radius:14px/.test(appSrc), 'v19.18: 错题本红 badge 强提醒');
 // renderWeekMasterTipCard 函数
 assert(/function renderWeekMasterTipCard/.test(appSrc), 'v19.18: renderWeekMasterTipCard 函数');
 assert(/window\.WEEK_MASTER_TIPS\[week - 1\]/.test(appSrc), 'v19.18: 取 WEEK_MASTER_TIPS[week-1]');
@@ -758,7 +758,7 @@ assert(/function clearAlWhatIf/.test(appSrc), 'v19.15k: clearAlWhatIf 函数');
 assert(/function _getEffectiveForecast/.test(appSrc), 'v19.15k: _getEffectiveForecast 取真实+whatIf');
 // 按钮触控 32×32 达 WCAG (旧 18×18 已撤)
 assert(/min-width:32px;min-height:32px/.test(appSrc), 'v19.15k: AL 按钮 32px 达 WCAG');
-assert(!/width:18px;height:18px;border:1px solid rgba\(255,255,255,0\.20\);background:rgba\(255,255,255,0\.05\);color:#2563EB;border-radius:3px;cursor:pointer;font-weight:900;font-size:12px;line-height:1;padding:0">−/.test(appSrc), 'v19.15k: 旧 18x18 AL 按钮已删');
+assert(!/width:18px;height:18px;border:1px solid rgba\(255,255,255,0\.20\);background:rgba\(255,255,255,0\.05\);color:#1E40AF;border-radius:3px;cursor:pointer;font-weight:900;font-size:12px;line-height:1;padding:0">−/.test(appSrc), 'v19.15k: 旧 18x18 AL 按钮已删');
 // "模拟" 标识替换 "已手动"
 assert(/💭 模拟/.test(appSrc), 'v19.15k: 显示 💭 模拟 标识');
 assert(/真实 <s>\$\{realTotalAL\}<\/s>/.test(appSrc), 'v19.15k: 显示真实 AL 对比 (删除线)');
@@ -813,10 +813,10 @@ const newBrightClose = (appSrc.match(/border:2px solid var\(--color-text\);color
 assert(newBrightClose >= 5, `v19.15f: ≥5 处 × button 升级到亮色圆形 (实际 ${newBrightClose})`);
 // v19.15e: 主页配色统一到暗调+青色发光 (匹配 .checkin-item)
 assert(/暗调 \+ 青色发光风格, 匹配打卡页 \.checkin-item/.test(appSrc), 'v19.15e: renderTodayThreeCard 注释说明改暗调');
-// v19.15k 重构 renderTargetSchoolMini 后该注释撤. 暗调样式仍在 (rgba(43,91,215,...) 渐变)
-assert(/background:linear-gradient\(135deg, rgba\(43,91,215,0\.08\)/.test(appSrc), 'v19.15e+k: renderTargetSchoolMini 仍暗调 (青色渐变)');
+// v19.15k 重构 renderTargetSchoolMini 后该注释撤. 暗调样式仍在 (rgba(30,64,175,...) 渐变)
+assert(/background:linear-gradient\(135deg, rgba\(30,64,175,0\.08\)/.test(appSrc), 'v19.15e+k: renderTargetSchoolMini 仍暗调 (青色渐变)');
 // 验证关键暗色 token 出现
-assert(/color:#2563EB/.test(appSrc), 'v19.15e: 目标校标题色 #2563EB (亮青)');
+assert(/color:#1E40AF/.test(appSrc), 'v19.15e: 目标校标题色 #1E40AF (亮青)');
 assert(/probColorBright/.test(appSrc), 'v19.15e: 录取概率色加亮版本 probColorBright');
 // 防回归: 不能再有 #FFF (纯白) item bg + #1565C0 (暗蓝标题) 残留
 assert(!/background:\$\{done \? '#E8F5E9' : '#FFF'\}/.test(appSrc), 'v19.15e: 旧白底 item 已撤');
@@ -847,7 +847,7 @@ assert(/photo-source-guard-banner/.test(appSrc) && /photo-source-guard-banner/.t
 assert(/pickPhotoForSlot\(week, day, slot, true\)/.test(appSrc), 'v19.15b: toggleDailyCheck 用 fromGuard=true');
 assert(/软打卡升级|slot_soft_promote/.test(appSrc), 'v19.15b: 照片上传后软打卡补差');
 assert(/opacity:\s*0\.38/.test(idxSrc), 'v19.15b CSS: 已打卡 opacity 0.38 灰掉');
-assert(/border:\s*1px solid rgba\(43,91,215,0\.45\)/.test(idxSrc), 'v19.15b CSS: 未打卡 border 高亮');
+assert(/border:\s*1px solid rgba\(30,64,175,0\.45\)/.test(idxSrc), 'v19.15b CSS: 未打卡 border 高亮');
 // v19.14m: 装备穿戴 bug fix — renderAll 加 renderCharacterPage 刷新
 assert(/charPageActive\.classList\.contains\('active'\)[\s\S]{0,100}renderCharacterPage\(\)/.test(appSrc), 'v19.14m: renderAll 加我的 tab active 时 renderCharacterPage');
 
@@ -1163,10 +1163,10 @@ assert(/21:00–21:30/.test(appSrc) && /睡前单词/.test(appSrc), 'v19.50: 睡
 assert(/scheduleScores/.test(appSrc), 'v19.50: 打分数据挂 state.scheduleScores (随 Firebase 同步)');
 
 // ===== v19.55: 亮色主题 (对齐挖矿系统配色) =====
-assert(/--color-bg: #F0F2F5/.test(idxSrc), 'v19.55: 页面底色浅灰蓝');
+assert(/--color-bg: #F1F5F9/.test(idxSrc), 'v19.55: 页面底色浅灰蓝');
 assert(/--color-card: #FFFFFF/.test(idxSrc), 'v19.55: 卡片白底');
-assert(/--color-primary: #2B5BD7/.test(idxSrc), 'v19.55: 主色品蓝');
-assert(/--color-text: #1F2937/.test(idxSrc), 'v19.55: 主文字深灰');
+assert(/--color-primary: #1E40AF/.test(idxSrc), 'v19.55: 主色品蓝');
+assert(/--color-text: #1E293B/.test(idxSrc), 'v19.55: 主文字深灰');
 assert(!/\[style\*="background:#F0F8FF"\]/.test(idxSrc), 'v19.55: v19.20 自动转暗机制已移除');
 assert(!/#E0E0E0/.test(appSrc) && !/#0F172A/.test(appSrc), 'v19.55: app.js 无暗主题残留色');
 assert(!/--color-bg: #0F172A/.test(idxSrc), 'v19.55: 暗主题变量已替换');

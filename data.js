@@ -1199,8 +1199,8 @@ function _hamsterFace(furColor) {
       <line x1="14" y1="13" x2="21" y2="15" stroke="#3D1F0A" stroke-width="1.5" stroke-linecap="round"/>
       <line x1="34" y1="13" x2="27" y2="15" stroke="#3D1F0A" stroke-width="1.5" stroke-linecap="round"/>
       <path d="M20 26 Q24 28 28 26" fill="none" stroke="#8B5E3C" stroke-width="0.9" stroke-linecap="round"/>
-      <circle cx="13" cy="22" r="3.5" fill="#2B5BD7" opacity="0.35"/>
-      <circle cx="35" cy="22" r="3.5" fill="#2B5BD7" opacity="0.35"/>
+      <circle cx="13" cy="22" r="3.5" fill="#1E40AF" opacity="0.35"/>
+      <circle cx="35" cy="22" r="3.5" fill="#1E40AF" opacity="0.35"/>
     </g>
     <g class="ham-face-proud">
       <path d="M14 19 Q18 14 22 19" fill="none" stroke="#3D1F0A" stroke-width="2.2" stroke-linecap="round"/>
@@ -1347,7 +1347,7 @@ const PET_FORMS = [
     </svg>` },
 
   { idx: 11, name: '仓鼠王者', minStreak: 200,
-    bg: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #2B5BD7 100%)',
+    bg: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #1E40AF 100%)',
     desc: 'PSLE 终极守护神兽 — 戴上王冠披上紫袍',
     svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
       <circle cx="24" cy="24" r="22" fill="none" stroke="#FFD700" stroke-width="1.2" opacity="0.55">
@@ -1611,11 +1611,11 @@ const GUNDAM_PET = {
   svg: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
     <!-- 左翼 -->
     <path d="M24 20 L1 5 L4 14 L9 18 L7 28 L2 32 L24 26Z" fill="#CC2200" opacity="0.9"/>
-    <path d="M24 20 L3 8 L6 15 L11 18Z" fill="#D9534F" opacity="0.7"/>
+    <path d="M24 20 L3 8 L6 15 L11 18Z" fill="#DC2626" opacity="0.7"/>
     <path d="M24 20 L2 6 L2.5 11 L8 15" fill="none" stroke="#111" stroke-width="1.5" opacity="0.6"/>
     <!-- 右翼 (镜像) -->
     <path d="M24 20 L47 5 L44 14 L39 18 L41 28 L46 32 L24 26Z" fill="#CC2200" opacity="0.9"/>
-    <path d="M24 20 L45 8 L42 15 L37 18Z" fill="#D9534F" opacity="0.7"/>
+    <path d="M24 20 L45 8 L42 15 L37 18Z" fill="#DC2626" opacity="0.7"/>
     <path d="M24 20 L46 6 L45.5 11 L40 15" fill="none" stroke="#111" stroke-width="1.5" opacity="0.6"/>
     <!-- 翼光粒子 -->
     <circle cx="4" cy="8" r="1.2" fill="#FF6666"><animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite"/></circle>
