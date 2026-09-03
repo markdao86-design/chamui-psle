@@ -1130,7 +1130,17 @@ assert(/周日才开放/.test(appSrc), 'v19.38: app.js 含"周日才开放"新�
 assert(/data-page="schedule"/.test(idxSrc), 'v19.50: nav 含课表 tab 按钮');
 assert(/id="page-schedule"/.test(idxSrc), 'v19.50: page-schedule 容器存在');
 assert(/const SCHED_DAYS = \{/.test(appSrc), 'v19.50: SCHED_DAYS 课表数据存在');
-assert(/const SCHED_FIELDS = \{/.test(appSrc), 'v19.50: SCHED_FIELDS 打分字段存在');
+assert(/const SCHED_GRID = \[/.test(appSrc), 'v19.51: SCHED_GRID 周打分矩阵存在');
+// v19.51: 完整周打分表 (行×5学习日网格, 任意格可填, 周切换)
+assert(/function renderSchedGrid\(/.test(appSrc), 'v19.51: renderSchedGrid 已定义');
+assert(/renderSchedGrid\(\)/.test(appSrc), 'v19.51: renderSchedGrid 被调用');
+assert(/_schedShiftWeek/.test(appSrc) && /window\._schedShiftWeek = _schedShiftWeek/.test(appSrc), 'v19.51: 周切换已接入+导出');
+assert(/'家长已核对'/.test(appSrc), 'v19.51: 家长核对行存在');
+assert(/21:30准时收工/.test(appSrc), 'v19.51: 收工勾选行存在');
+assert(/math_b/.test(appSrc), 'v19.51: 数学pair(错/粗心)计入汇总');
+assert(/essay_a/.test(appSrc) && /essay_b/.test(appSrc), 'v19.51: 作文内容+语言两栏');
+assert((appSrc.match(/SCHED_GRID/g) || []).length >= 3, 'v19.51: SCHED_GRID 被渲染使用');
+assert(/overflow-x:auto/.test(appSrc), 'v19.51: 打分表横向滚动容器(手机不撑破)');
 assert(/function renderSchedulePage\(/.test(appSrc), 'v19.50: renderSchedulePage 已定义');
 assert(/page === 'schedule'/.test(appSrc), 'v19.50: tab 切换 hook 已接入 (防死代码)');
 assert(/function computeSchedWeekSummary\(/.test(appSrc), 'v19.50: 周汇总函数已定义');

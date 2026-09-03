@@ -10698,7 +10698,7 @@ function resetData() {
   showToast('🗑️ 数据已重置', 'warn');
 }
 
-// ============ v19.50: 每日课表 + 按日打分卡 + 周汇总/月跟踪 (手册v18.6) ============
+// ============ v19.50-51: 每日课表 + 完整周打分表 + PSLE计分卡 + 月跟踪 (手册v18.6) ============
 // 课表数据: 手册v18.6全天时刻表 (2026.9起, 周四/周六全天无任务)
 const SCHED_DAYS = {
   1: { label: '周一', start: '16:00', blocks: [
@@ -10767,86 +10767,111 @@ const SCHED_DAYS = {
     ['20:15–20:35', '周复盘', '孩子按PSLE模块念计分卡·定下周动作', 's'],
   ]},
 };
-// 打分字段: 按星期 (type: num=填数 frac=对/总 chk=完成勾)
-const SCHED_FIELDS = {
-  1: [['m_ed', 'Editing错题(2篇)', 'num', '≤1'], ['m_gr', 'Grammar错题(12题)', 'num', '≤2'], ['m_oe', '阅读OE答完整(题)', 'frac', '≥75%'], ['m_scioe', '科学OE术语对(道)', 'frac', '2/2'], ['m_card', '表述卡(张)', 'num', '≥2'], ['m_vt', '睡前单词自测(词)', 'frac', '≥80%']],
-  2: [['t_cloze', 'Cloze得分(空)', 'frac', '≥70%'], ['t_vw', 'Vocabulary错题(25题)', 'num', '≤5'], ['t_listen', '听说完成(样, 满3)', 'num', '3'], ['t_cn', '华文阅读漏点', 'num', '≤2'], ['t_wkt', '词汇周清测(词)', 'frac', '≥80%'], ['t_vt', '睡前单词自测(词)', 'frac', '≥80%']],
-  3: [['w_ed', 'Editing错题(2篇)', 'num', '≤1'], ['w_gr', 'Grammar错题(12题)', 'num', '≤2'], ['w_oe', '阅读OE答完整(题)', 'frac', '≥75%'], ['w_syn', '句型转换错题(1单元)', 'num', '≤2'], ['w_sci', '科学诊断对(15题)', 'frac', '≥12'], ['w_vt', '睡前单词自测(词)', 'frac', '≥80%']],
-  5: [['f_cloze', 'Cloze得分(空)', 'frac', '≥70%'], ['f_vw', 'Vocabulary错题(25题)', 'num', '≤5'], ['f_syn', '句型转换错题(1单元)', 'num', '≤2'], ['f_mc', '数学粗心(数学轮换周)', 'num', '≤2'], ['f_redo', '错题二刷完成', 'chk', '✓'], ['f_vt', '睡前单词自测(词)', 'frac', '≥80%']],
-  0: [['s_essay', '作文得分(/40)', 'frac', '≥上篇'], ['s_paper', '整卷得分(分/满分)', 'frac', '记录'], ['s_oral', '口语流利度(1-5星)', 'num', '≥3'], ['s_review', '周复盘完成', 'chk', '✓']],
-};
+// v19.51: 周打分表矩阵 (对齐手册附录B每日成绩单)
+// type: num=1个数 / frac=对_/共_ / pair=两个独立数 / chk=勾
+// days: 该行哪些天有格 (1一 2二 3三 5五 0日)
+const SCHED_GRID = [
+  { sec: '英语' },
+  { key: 'ed',      label: 'Editing 2篇: 错_题',            target: '≤1/天', type: 'num',  days: [1, 3] },
+  { key: 'gr',      label: 'Grammar 12题: 错_题',           target: '≤2/天', type: 'num',  days: [1, 3] },
+  { key: 'oe',      label: '阅读OE: 答完整_/共_题',          target: '≥75%',  type: 'frac', days: [1, 3] },
+  { key: 'cloze',   label: 'Cloze: 对_/共_空',              target: '≥70%',  type: 'frac', days: [2, 5] },
+  { key: 'vw',      label: 'Vocabulary 25题: 错_题',        target: '≤5',    type: 'num',  days: [2, 5] },
+  { key: 'syn',     label: '句型转换 1单元: 错_题',          target: '≤3',    type: 'num',  days: [3, 5] },
+  { key: 'listen',  label: '听说: 完成朗读/会话/听力_样',    target: '3样',   type: 'num',  days: [2] },
+  { key: 'wkt',     label: '词汇周清测: 对_/共_',            target: '≥80%',  type: 'frac', days: [2] },
+  { sec: '科学' },
+  { key: 'sci_talk',label: '概念: 讲给家长30秒, 讲清?',      target: '勾',    type: 'chk',  days: [1] },
+  { key: 'sci_oe',  label: '开放题2道: 术语全对_/2',         target: '2/2',   type: 'frac', days: [1] },
+  { key: 'sci_mcq', label: '诊断15题: 对_/15',              target: '≥12',   type: 'frac', days: [3] },
+  { key: 'sci_fix', label: '回炉(轮换周): 清掉_章',          target: '≥1',    type: 'num',  days: [5] },
+  { sec: '华文 / 数学 / 周日' },
+  { key: 'cn',      label: '华文阅读1篇: 漏_点',            target: '0点',   type: 'num',  days: [2] },
+  { key: 'math',    label: '数学半卷(轮换周): 错_/粗心_',    target: '粗心0', type: 'pair', days: [5] },
+  { key: 'paper',   label: '周日整卷: 得分_/满分_',          target: '记录',  type: 'frac', days: [0] },
+  { key: 'essay',   label: '作文(单周): 内容_/20+语言_/20',  target: '≥上篇', type: 'pair', days: [0] },
+  { key: 'oral',    label: '口语2场(英/华): 家长打_星(1-5)', target: '≥3星',  type: 'num',  days: [0] },
+  { sec: '每天必查' },
+  { key: 'review',  label: '错题登记/复盘/二刷: 完成',       target: '勾',    type: 'chk',  days: [1, 2, 3, 5, 0] },
+  { key: 'vt',      label: '睡前单词自测: 对_/共_',          target: '≥80%',  type: 'frac', days: [1, 2, 3, 5, 0] },
+  { key: 'sleep',   label: '21:30准时收工',                 target: '勾',    type: 'chk',  days: [1, 2, 3, 5, 0] },
+  { key: 'parent',  label: '家长已核对',                    target: '勾',    type: 'chk',  days: [1, 2, 3, 5, 0] },
+];
 function schedLocalDate(d) {
   d = d || new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
-function schedMonday(d) { // 本周周一的日期对象
+function schedMonday(d) { // 所在周的周一 Date
   d = new Date(d.getTime()); const dow = d.getDay();
-  d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1)); return d;
+  d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1)); d.setHours(12, 0, 0, 0); return d;
 }
 function getSchedScores() { state.scheduleScores = state.scheduleScores || {}; return state.scheduleScores; }
 function saveDailyScore(dateKey, field, value) {
   const all = getSchedScores();
   all[dateKey] = all[dateKey] || {};
-  all[dateKey][field] = value === '' ? undefined : Number(value);
+  if (value === '' || value == null) { delete all[dateKey][field]; }
+  else { all[dateKey][field] = Number(value); }
   saveState(state);
   renderSchedWeekSummary();
 }
-// 取某天某字段
-function _sv(scores, dk, f) { return (scores[dk] || {})[f]; }
-// 周汇总: 从周一起7天的打分算PSLE模块计分卡
+function _sv(scores, dk, f) { const v = (scores[dk] || {})[f]; return (v == null ? null : v); }
+// 周汇总: PSLE模块计分卡 (从周打分矩阵自动算)
 function computeSchedWeekSummary(mondayDate) {
   const scores = getSchedScores();
-  const dk = []; // 周一..周日 7个dateKey
-  for (let i = 0; i < 7; i++) { const d = new Date(mondayDate.getTime()); d.setDate(d.getDate() + i); dk.push(schedLocalDate(d)); }
-  const [MO, TU, WE, , FR, , SU] = [dk[0], dk[1], dk[2], dk[3], dk[4], dk[5], dk[6]];
-  const g = (day, f) => _sv(scores, day, f);
-  const g2 = (day, f) => [g(day, f + '_a'), g(day, f + '_b')]; // frac: _a=对 _b=总
+  const dk = {};
+  for (let i = 0; i < 7; i++) { const d = new Date(mondayDate.getTime()); d.setDate(d.getDate() + i); dk[[1, 2, 3, 4, 5, 6, 0][i]] = schedLocalDate(d); }
+  const g = (day, f) => _sv(scores, dk[day], f);
   const pct = (pairs) => {
     let ok = 0, tot = 0;
     pairs.forEach(([a, b]) => { if (a != null && b) { ok += a; tot += b; } });
     return tot ? Math.round(ok / tot * 100) : null;
   };
   const sum = (vals) => { const xs = vals.filter(v => v != null); return xs.length ? xs.reduce((a, b) => a + b, 0) : null; };
-  const oePct = pct([g2(MO, 'm_oe'), g2(WE, 'w_oe')]);
-  const clozePct = pct([g2(TU, 't_cloze'), g2(FR, 'f_cloze')]);
-  const vtPct = pct([g2(MO, 'm_vt'), g2(TU, 't_vt'), g2(WE, 'w_vt'), g2(FR, 'f_vt')]);
-  const wktPct = pct([g2(TU, 't_wkt')]);
-  const edW = sum([g(MO, 'm_ed'), g(WE, 'w_ed')]);
-  const grW = sum([g(MO, 'm_gr'), g(WE, 'w_gr')]);
-  const synW = sum([g(WE, 'w_syn'), g(FR, 'f_syn')]);
-  const sciMcq = g(WE, 'w_sci_a');
-  const sciOe = g(MO, 'm_scioe_a');
-  const cnMiss = g(TU, 't_cn');
-  const mathC = g(FR, 'f_mc');
-  const listen = g(TU, 't_listen');
-  const oralStar = g(SU, 's_oral');
-  const essay = sum([g(SU, 's_essay_a')]);
+  const f2 = (day, key) => [g(day, key + '_a'), g(day, key + '_b')];
+  const oePct = pct([f2(1, 'oe'), f2(3, 'oe')]);
+  const clozePct = pct([f2(2, 'cloze'), f2(5, 'cloze')]);
+  const vtPct = pct([f2(1, 'vt'), f2(2, 'vt'), f2(3, 'vt'), f2(5, 'vt'), f2(0, 'vt')]);
+  const wktPct = pct([f2(2, 'wkt')]);
+  const edW = sum([g(1, 'ed'), g(3, 'ed')]);
+  const grW = sum([g(1, 'gr'), g(3, 'gr')]);
+  const vwW = sum([g(2, 'vw'), g(5, 'vw')]);
+  const synW = sum([g(3, 'syn'), g(5, 'syn')]);
+  const sciMcq = g(3, 'sci_mcq_a');
+  const sciOe = g(1, 'sci_oe_a');
+  const cnMiss = g(2, 'cn');
+  const mathC = g(5, 'math_b'); // pair: a=错 b=粗心
+  const listen = g(2, 'listen');
+  const oralStar = g(0, 'oral');
+  const essayA = g(0, 'essay_a'), essayB = g(0, 'essay_b');
+  const essay = (essayA == null && essayB == null) ? null : (essayA || 0) + (essayB || 0);
+  const paperA = g(0, 'paper_a'), paperB = g(0, 'paper_b');
   const rows = [ // [PSLE模块, 本周值, 达标线, pass(null=没数据)]
     ['英P2·阅读OE (20分)', oePct == null ? '—' : oePct + '%', '≥75%', oePct == null ? null : oePct >= 75],
     ['英P2·Editing (12分)', edW == null ? '—' : '错' + edW, '≤3', edW == null ? null : edW <= 3],
-    ['英P2·Grammar/词汇MCQ', grW == null ? '—' : '错' + grW, '≤4', grW == null ? null : grW <= 4],
+    ['英P2·Grammar+词汇MCQ', (grW == null ? '—' : '错' + grW) + '/' + (vwW == null ? '—' : '错' + vwW), '≤4/≤10', (grW == null && vwW == null) ? null : ((grW == null || grW <= 4) && (vwW == null || vwW <= 10))],
     ['英P2·完形 (15分)', clozePct == null ? '—' : clozePct + '%', '≥70%', clozePct == null ? null : clozePct >= 70],
     ['英P2·句型转换 (10分)', synW == null ? '—' : '错' + synW, '≤4', synW == null ? null : synW <= 4],
     ['英P1·作文 (55分)', essay == null ? '—' : essay + '/40', '≥上篇', essay == null ? null : true],
-    ['英P3/P4·听说口语', (listen == null ? '—' : listen + '/3样') + '·' + (oralStar == null ? '—' : oralStar + '星'), '3样·≥3星', (listen == null && oralStar == null) ? null : (listen >= 3 && oralStar >= 3)],
+    ['英P3/P4·听说口语', (listen == null ? '—' : listen + '/3样') + '·' + (oralStar == null ? '—' : oralStar + '星'), '3样·≥3星', (listen == null && oralStar == null) ? null : ((listen || 0) >= 3 && (oralStar || 0) >= 3)],
     ['科BktA·选择 (56分)', sciMcq == null ? '—' : '对' + sciMcq + '/15', '≥12', sciMcq == null ? null : sciMcq >= 12],
     ['科BktB·开放题 (44分)', sciOe == null ? '—' : sciOe + '/2', '2/2', sciOe == null ? null : sciOe >= 2],
     ['华P2·阅读漏点', cnMiss == null ? '—' : '漏' + cnMiss, '≤2', cnMiss == null ? null : cnMiss <= 2],
     ['数·粗心新增', mathC == null ? '—' : mathC + '题', '≤2', mathC == null ? null : mathC <= 2],
-    ['词汇底盘 (清测/睡前)', (wktPct == null ? '—' : wktPct + '%') + '/' + (vtPct == null ? '—' : vtPct + '%'), '≥80%', (wktPct == null && vtPct == null) ? null : ((wktPct == null || wktPct >= 80) && (vtPct == null || vtPct >= 80)),
-    ],
+    ['词汇底盘 (清测/睡前)', (wktPct == null ? '—' : wktPct + '%') + '/' + (vtPct == null ? '—' : vtPct + '%'), '≥80%', (wktPct == null && vtPct == null) ? null : ((wktPct == null || wktPct >= 80) && (vtPct == null || vtPct >= 80))],
+    ['周日整卷', paperA == null ? '—' : paperA + '/' + (paperB || '?'), '记录', paperA == null ? null : true],
   ];
   const graded = rows.filter(r => r[3] !== null);
   return { rows, passN: graded.filter(r => r[3]).length, gradedN: graded.length };
 }
-let _schedViewDay = null; // 课表查看的星期 (null=今天)
+let _schedViewDay = null;      // 课表卡查看的星期 (null=今天)
+let _schedWeekOffset = 0;      // 打分表查看的周 (0=本周, -1=上周...)
+function _schedGridMonday() { const m = schedMonday(new Date()); m.setDate(m.getDate() + _schedWeekOffset * 7); return m; }
 function renderSchedulePage() {
   const el = document.getElementById('page-schedule');
   if (!el) return;
   const todayDow = new Date().getDay();
   const viewDow = _schedViewDay == null ? todayDow : _schedViewDay;
   const day = SCHED_DAYS[viewDow];
-  const todayKey = schedLocalDate();
   // 1) 课表卡
   const chips = [1, 2, 3, 4, 5, 6, 0].map(d =>
     `<button onclick="window._schedSetDay(${d})" style="padding:5px 10px;border-radius:14px;border:1px solid ${d === viewDow ? 'rgba(0,212,255,0.6)' : 'rgba(255,255,255,0.15)'};background:${d === viewDow ? 'rgba(0,212,255,0.15)' : 'rgba(255,255,255,0.04)'};color:${d === viewDow ? '#4FC3F7' : '#A0A0A0'};font-size:12px;font-weight:${d === todayDow ? '700' : '400'}">${SCHED_DAYS[d].label}${d === todayDow ? '·今' : ''}</button>`
@@ -10858,26 +10883,6 @@ function renderSchedulePage() {
       <div style="flex:1"><div style="font-size:13px;font-weight:${isStudy ? '700' : '400'};color:${isStudy ? '#E0E0E0' : '#A0A0A0'}">${escapeHtml(b[1])}</div>
       ${b[2] ? `<div style="font-size:11.5px;color:#94A3B8;line-height:1.5;margin-top:2px">${escapeHtml(b[2])}</div>` : ''}</div></div>`;
   }).join('');
-  // 2) 今日打分卡 (只对今天可填)
-  const fields = SCHED_FIELDS[todayDow] || [];
-  const scores = getSchedScores()[todayKey] || {};
-  const scoreHtml = fields.length === 0
-    ? `<div style="font-size:13px;color:#A0A0A0;padding:8px 0">今天没有安排, 好好玩 🎉</div>`
-    : fields.map(f => {
-      const [key, label, type, target] = f;
-      const inpStyle = 'width:52px;padding:5px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);color:#E0E0E0;font-size:14px;text-align:center';
-      let ctrl;
-      if (type === 'frac') {
-        ctrl = `<input type="number" min="0" inputmode="numeric" value="${scores[key + '_a'] ?? ''}" style="${inpStyle}" onchange="window.saveDailyScore('${todayKey}','${key}_a',this.value)"> / <input type="number" min="0" inputmode="numeric" value="${scores[key + '_b'] ?? ''}" style="${inpStyle}" onchange="window.saveDailyScore('${todayKey}','${key}_b',this.value)">`;
-      } else if (type === 'chk') {
-        ctrl = `<input type="checkbox" ${scores[key] ? 'checked' : ''} style="width:20px;height:20px" onchange="window.saveDailyScore('${todayKey}','${key}',this.checked?1:0)">`;
-      } else {
-        ctrl = `<input type="number" min="0" inputmode="numeric" value="${scores[key] ?? ''}" style="${inpStyle}" onchange="window.saveDailyScore('${todayKey}','${key}',this.value)">`;
-      }
-      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
-        <div style="flex:1"><span style="font-size:13px;color:#E0E0E0;font-weight:600">${escapeHtml(label)}</span> <span style="font-size:11px;color:#94A3B8">目标${escapeHtml(target)}</span></div>
-        <div style="white-space:nowrap">${ctrl}</div></div>`;
-    }).join('');
   el.innerHTML = `
     <div class="card" style="margin-bottom:12px">
       <div class="card-title">📆 每日课表 <span style="font-size:11px;color:#94A3B8;font-weight:400">手册v18.6 · 单块≤45分 · 21:30收工</span></div>
@@ -10886,25 +10891,75 @@ function renderSchedulePage() {
       ${blocksHtml}
     </div>
     <div class="card" style="margin-bottom:12px">
-      <div class="card-title">✏️ 今日打分卡 <span style="font-size:11px;color:#94A3B8;font-weight:400">${todayKey} ${SCHED_DAYS[todayDow].label} · 做完当场填, 家长晚上核对</span></div>
-      ${scoreHtml}
+      <div class="card-title">✏️ 周打分表 <span style="font-size:11px;color:#94A3B8;font-weight:400">只填数字 · 做完当场填 · 任意格可补填修正</span></div>
+      <div id="schedGridWrap"></div>
     </div>
     <div class="card" style="margin-bottom:12px">
-      <div class="card-title">📊 本周计分卡 <span style="font-size:11px;color:#94A3B8;font-weight:400">按PSLE考试模块 · 自动从每日打分汇总</span></div>
+      <div class="card-title">📊 周计分卡 <span style="font-size:11px;color:#94A3B8;font-weight:400">按PSLE考试模块 · 自动从打分表汇总</span></div>
       <div id="schedWeekSummary"></div>
     </div>
     <div class="card" style="margin-bottom:12px">
       <div class="card-title">📈 月度跟踪 <span style="font-size:11px;color:#94A3B8;font-weight:400">最近8周关键指标</span></div>
       <div id="schedMonthTrend"></div>
     </div>`;
+  renderSchedGrid();
   renderSchedWeekSummary();
   renderSchedMonthTrend();
 }
 function _schedSetDay(d) { _schedViewDay = d; renderSchedulePage(); }
+function _schedShiftWeek(n) { _schedWeekOffset += n; if (_schedWeekOffset > 0) _schedWeekOffset = 0; renderSchedGrid(); renderSchedWeekSummary(); }
+// 完整周打分网格 (行=检查项, 列=一/二/三/五/日)
+function renderSchedGrid() {
+  const wrap = document.getElementById('schedGridWrap');
+  if (!wrap) return;
+  const mon = _schedGridMonday();
+  const scores = getSchedScores();
+  const todayKey = schedLocalDate();
+  const COLS = [1, 2, 3, 5, 0]; // 学习日
+  const dks = {}, heads = [];
+  COLS.forEach(d => {
+    const offset = d === 0 ? 6 : d - 1;
+    const dd = new Date(mon.getTime()); dd.setDate(dd.getDate() + offset);
+    dks[d] = schedLocalDate(dd);
+    heads.push(`<th style="padding:5px 2px;font-size:11px;color:${dks[d] === todayKey ? '#4FC3F7' : '#A0A0A0'};font-weight:${dks[d] === todayKey ? '700' : '400'};text-align:center;min-width:58px">${SCHED_DAYS[d].label}<br>${dd.getMonth() + 1}/${dd.getDate()}${dks[d] === todayKey ? '·今' : ''}</th>`);
+  });
+  const inpS = 'width:26px;padding:3px 1px;border-radius:5px;border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.07);color:#E0E0E0;font-size:13px;text-align:center';
+  const inpW = 'width:40px;padding:3px 2px;border-radius:5px;border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.07);color:#E0E0E0;font-size:13px;text-align:center';
+  const bodyRows = SCHED_GRID.map(row => {
+    if (row.sec) return `<tr><td colspan="${COLS.length + 1}" style="padding:6px 4px;font-size:12px;font-weight:700;color:#FFB74D;background:rgba(255,184,0,0.07)">${escapeHtml(row.sec)}</td></tr>`;
+    const cells = COLS.map(d => {
+      if (!row.days.includes(d)) return `<td style="padding:4px 2px;text-align:center;color:#4A5568;font-size:12px">—</td>`;
+      const dk = dks[d];
+      const sc = scores[dk] || {};
+      let ctrl;
+      if (row.type === 'chk') {
+        ctrl = `<input type="checkbox" ${sc[row.key] ? 'checked' : ''} style="width:17px;height:17px" onchange="window.saveDailyScore('${dk}','${row.key}',this.checked?1:'')">`;
+      } else if (row.type === 'frac' || row.type === 'pair') {
+        ctrl = `<input type="number" min="0" inputmode="numeric" value="${sc[row.key + '_a'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_a',this.value)"><span style="color:#94A3B8;font-size:11px">/</span><input type="number" min="0" inputmode="numeric" value="${sc[row.key + '_b'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_b',this.value)">`;
+      } else {
+        ctrl = `<input type="number" min="0" inputmode="numeric" value="${sc[row.key] ?? ''}" style="${inpW}" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
+      }
+      return `<td style="padding:4px 2px;text-align:center;white-space:nowrap">${ctrl}</td>`;
+    }).join('');
+    return `<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
+      <td style="padding:5px 4px;font-size:12px;color:#E0E0E0;min-width:128px">${escapeHtml(row.label)}<br><span style="font-size:10px;color:#94A3B8">目标 ${escapeHtml(row.target)}</span></td>${cells}</tr>`;
+  }).join('');
+  const weekLabel = `${mon.getMonth() + 1}/${mon.getDate()} 那一周`;
+  wrap.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 6px">
+      <button onclick="window._schedShiftWeek(-1)" style="padding:4px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:#A0A0A0;font-size:12px">‹ 上周</button>
+      <div style="font-size:13px;font-weight:700;color:${_schedWeekOffset === 0 ? '#4FC3F7' : '#FFB74D'}">${_schedWeekOffset === 0 ? '本周 · ' : ''}${weekLabel}</div>
+      <button onclick="window._schedShiftWeek(1)" ${_schedWeekOffset >= 0 ? 'disabled style="opacity:0.3;padding:4px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:none;color:#4A5568;font-size:12px"' : 'style="padding:4px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:#A0A0A0;font-size:12px"'}>下周 ›</button>
+    </div>
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:rgba(255,255,255,0.05)"><th style="padding:5px 4px;font-size:11px;color:#A0A0A0;text-align:left">检查项</th>${heads.join('')}</tr></thead>
+      <tbody>${bodyRows}</tbody></table></div>
+    <div style="font-size:11px;color:#94A3B8;margin-top:6px">连续3天某项低于目标 → 不等周五, 当晚按手册响应规则调整</div>`;
+}
 function renderSchedWeekSummary() {
   const el = document.getElementById('schedWeekSummary');
   if (!el) return;
-  const { rows, passN, gradedN } = computeSchedWeekSummary(schedMonday(new Date()));
+  const { rows, passN, gradedN } = computeSchedWeekSummary(_schedGridMonday());
   const rowsHtml = rows.map(r => {
     const [mod, val, target, pass] = r;
     const badge = pass === null ? '<span style="color:#94A3B8">待填</span>' : pass ? '<span style="color:#66FFB0">✓ 达标</span>' : '<span style="color:#EF5350;font-weight:700">✗</span>';
@@ -10914,7 +10969,7 @@ function renderSchedWeekSummary() {
       <td style="padding:6px 4px;font-size:11px;color:#94A3B8;text-align:center">${escapeHtml(target)}</td>
       <td style="padding:6px 4px;font-size:12px;text-align:center">${badge}</td></tr>`;
   }).join('');
-  el.innerHTML = `<div style="font-size:12px;color:${passN === gradedN && gradedN > 0 ? '#66FFB0' : '#FFB74D'};margin:6px 0">本周已评 ${gradedN} 项 · 达标 ${passN} 项${gradedN > 0 && passN === gradedN ? ' — 全达标! 下周五二刷免掉 🎁' : ''}</div>
+  el.innerHTML = `<div style="font-size:12px;color:${passN === gradedN && gradedN > 0 ? '#66FFB0' : '#FFB74D'};margin:6px 0">${_schedWeekOffset === 0 ? '本周' : '该周'}已评 ${gradedN} 项 · 达标 ${passN} 项${gradedN > 0 && passN === gradedN ? ' — 全达标! 下周五二刷免掉 🎁' : ''}</div>
   <table style="width:100%;border-collapse:collapse"><thead><tr style="background:rgba(255,255,255,0.05)">
   <th style="padding:5px 4px;font-size:11px;color:#A0A0A0;text-align:left">PSLE模块</th><th style="padding:5px 4px;font-size:11px;color:#A0A0A0">本周</th><th style="padding:5px 4px;font-size:11px;color:#A0A0A0">达标线</th><th style="padding:5px 4px;font-size:11px;color:#A0A0A0">状态</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
 }
@@ -10926,7 +10981,7 @@ function renderSchedMonthTrend() {
   for (let i = 7; i >= 0; i--) {
     const mon = new Date(thisMon.getTime()); mon.setDate(mon.getDate() - i * 7);
     const s = computeSchedWeekSummary(mon);
-    if (s.gradedN === 0 && i !== 0) continue; // 无数据的历史周跳过
+    if (s.gradedN === 0 && i !== 0) continue;
     const md = (mon.getMonth() + 1) + '/' + mon.getDate();
     const pick = (idx) => s.rows[idx][1];
     weeks.push(`<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
@@ -10945,8 +11000,10 @@ function renderSchedMonthTrend() {
 }
 window.renderSchedulePage = renderSchedulePage;
 window._schedSetDay = _schedSetDay;
+window._schedShiftWeek = _schedShiftWeek;
 window.saveDailyScore = saveDailyScore;
 window.computeSchedWeekSummary = computeSchedWeekSummary;
+window.SCHED_GRID = SCHED_GRID;
 
 // ============ 事件绑定 ============
 function bindEvents() {
