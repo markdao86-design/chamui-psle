@@ -228,3 +228,25 @@ curl -s "https://chamui-psle.web.app/index.html" | grep "?v=19.14X"
 ---
 
 **任何疑问看 CLAUDE.md → CHANGELOG.md → 本文件 → HANDOFF.md, 这 4 个文件覆盖 99% 上下文。**
+
+---
+
+## 📌 2026-09-03 session 快照 (v19.75) — 换机必读
+
+**当前版本**: v19.75 (index.html ?v=19.75) · QA 668项 · 线上 https://chamui-psle.web.app
+
+**本日大事**: 见 CHANGELOG "v19.61-v19.75" 条目. 核心: 课表tab / 亮色主题 / 同步根修(v19.68) / 知识树47节点 / 科学每节点10题分层.
+
+**换机快速上手**:
+1. git clone https://github.com/markdao86-design/chamui-psle.git
+2. 读 CLAUDE.md (Claude Code 自动加载) → CHANGELOG.md 最后一条 → 本文件末尾
+3. 依赖: node (qa_check.js 零外部依赖) + python3 (build.py) + npx firebase-tools (deploy 前先 npx firebase login 一次)
+4. 部署铁律: node qa_check.js → python build.py → index.html 底部 cache buster +0.01 → git commit/push → npx firebase deploy --only hosting → curl 线上验证
+5. 本地预览随便起静态服务器; **测试前必清 localStorage 或先 window.saveState=()=>{} 拦截** — v19.68 数据分叉事故的教训
+
+**数据现状**: Firestore chamui/main 已合并为 4806分+iPad完整学习线; 两台设备各硬刷新一次后全局统一. 云端快照备份在 chamui_snapshots 集合.
+
+**未完成 TODO**:
+1. 英语知识树13节点仍每节点3题 (科学已10题) — 若用户要求扩英语, 照 v19.75 模式 (易错/应用/拉分标签 + QA配比断言)
+2. 详解残余未覆盖: COMP_OE_PASSAGES 20篇 / VOCAB_HARD / UNIT_CONVERSIONS / 部分 listen 题 / MATH_QUESTIONS.push 的2题
+3. tools/gen_psle_manual_v18.js = 备考总手册 v18.6 生成脚本 (Word成品在用户桌面); 手册改版必同步 app.js 的 SCHED_DAYS/SCHED_GRID
