@@ -3142,9 +3142,22 @@ function renderThinkPuzzleCard(week) {
         你选了 <b>${answer.answer}</b> · 正确答案 <b>${puzzle.correct}</b>
         <span class="think-points">${answer.correct ? '+10 分' : '+0 分'}</span>
       </div>
-      <div class="think-explanation">${escapeHtml(puzzle.explanation)}</div>
+      <div class="think-explanation">💡 <b>详解</b>: ${escapeHtml(puzzle.explanation)}</div>
+      ${_ebTipsHtml(_thinkSubjectToGameKey(puzzle.subject))}
     `;
   }
+}
+// v19.68: 思考题科目 → 考点技巧库映射 (用户要求思考题也带PSLE考点+答题技巧)
+function _thinkSubjectToGameKey(subject) {
+  const s = String(subject || '');
+  if (/科学|Science|Light|Heat|Energy|Plant|实验/i.test(s)) return 'scimcq';
+  if (/听力|Listening/i.test(s)) return 'listen';
+  if (/数学|Math/i.test(s)) return 'math';
+  if (/华文|Chinese/i.test(s)) return 'chinese';
+  if (/Cloze|完形/i.test(s)) return 'cloze';
+  if (/Editing|改错/i.test(s)) return 'editing';
+  if (/Grammar|语法/i.test(s)) return 'grammar';
+  return 'knowledge';
 }
 
 function submitThinkAnswer(weekN, userAnswer) {
@@ -6537,7 +6550,8 @@ function _renderErrorBankReview() {
     const opts = (item.opts || []).map((o, oi) =>
       `<button class="mcq-opt" onclick="submitErrorBankAnswer(${oi})">${String.fromCharCode(65+oi)}. ${escapeHtml(o)}</button>`
     ).join('');
-    answerArea = `<div class="mcq-opts">${opts}</div>`;
+    answerArea = `<div class="mcq-opts">${opts}</div>
+      <div style="text-align:center;margin-top:8px"><button id="ebPeekBtn" onclick="ebRevealMcqAnswer()" style="background:none;border:none;color:#1E40AF;font-size:12px;text-decoration:underline;cursor:pointer">🔍 做不出来? 直接看答案 + 考点详解</button></div>`;
   } else if (item.type === 'math') {
     answerArea = `
       <div style="text-align:center;margin:16px 0">
@@ -6602,6 +6616,67 @@ function submitErrorBankAnswer(optIdx) {
 }
 // v19.65: 自评式提交 (editing 等无选项题型) — 复用同一套 Leitner 结果处理
 function submitErrorBankSelf(isCorrect) { _ebApplyResult(!!isCorrect); }
+// v19.67: 按题型的 PSLE 考点+考试技巧库 (看答案/答错时附带, 内容源自手册v18.6)
+const EB_TYPE_TIPS = {
+  editing:  { spot: 'Editing 12空12分: 拼写+语法错误识别', tips: ['四大高频错因: <b>动词-ed/-s漏 · 拼写 · 介词 · 主谓一致</b>', '先读懂整句意思再找错, 别逐词扫', '陷阱题爱藏在长句中间的小词上'] },
+  grammar:  { spot: 'Grammar MCQ 10题: 时态/介词/代词/连词', tips: ['先找<b>时间信号词</b>(yesterday/already/every day)定时态', '排除法: 先删掉明显错的两个选项', '错的语法点当天搞懂 — 同一个点PSLE会反复考'] },
+  cloze:    { spot: 'Comprehension Cloze 15空15分: 语境+固定搭配', tips: ['<b>先通读全文抓主旨</b>再动笔填', '答案依据一定在上下文 — 找搭配词和线索词', '填完回读整句, 不通顺就重想'] },
+  sst:      { spot: 'Synthesis 5题10分: 句型转换', tips: ['五大公式: <b>although-despite / so-such...that / unless / neither-nor / 定语从句</b>', '改写后意思必须和原句完全一样', '检查动词形式和标点再落笔'] },
+  vocab:    { spot: '词汇辨析: 近义词+搭配', tips: ['近义词<b>成对记</b>(borrow借入/lend借出)', '看英文搭配, 不靠中文翻译选', '超纲词见一个收一个, 入收集本滚动背'] },
+  subject_vocab: { spot: '学科英语词汇 (数学/科学术语)', tips: ['术语拼写错= 0分, <b>动手写</b>不只眼熟', '和中文概念配对记'] },
+  math:     { spot: '数学应用题: heuristics 模型法', tips: ['<b>画 model 不列方程</b> (PSLE 不给方程分)', '圈数字圈单位, 读完条件再动笔', '算完必验算 — 粗心是数学唯一的敌人'] },
+  scimcq:   { spot: '科学 Booklet A: 28题56分选择题', tips: ['先排除明显错的选项', '题干关键词对应课本概念, 不凭感觉', '错的章节记上<b>薄弱清单</b>周四回炉'] },
+  scilab:   { spot: '科学实验题: 三变量', tips: ['<b>改变变量/测量变量/控制变量</b>分清写对', '结论必须由数据推出, 不背套话'] },
+  sci_oe:   { spot: '科学 Booklet B 开放题: 踩点给分', tips: ['万能句式: <b>Because... / When...so... / If...then...</b>', '必用课本标准术语, 关键词拼写要对', '按分值数点: 2分题写2点'] },
+  knowledge:{ spot: '概念理解 (知识树)', tips: ['讲给家长听30秒 — <b>讲不清 = 没学明白</b>', '概念连着例子记, 不背孤立定义'] },
+  chinese:  { spot: '华文阅读理解二: 踩点给分', tips: ['<b>按分值数点作答</b>: 2分写2点3分写3点', '答案从原文找依据再改写, 不凭印象'] },
+  listen:   { spot: '英语听力 20题20分', tips: ['<b>转折词后是重点</b>: but/however 后竖起耳朵', '先读题目预判要听什么信息'] },
+  listen_mcq: { spot: '英语听力 20题20分', tips: ['<b>转折词后是重点</b>: but/however 后竖起耳朵', '先读题目预判要听什么信息'] },
+};
+function _ebTipsHtml(gameKey) {
+  const t = EB_TYPE_TIPS[gameKey] || { spot: '开放题通用', tips: ['回原文/课本找依据, <b>完整句作答</b>', '按分值数点, 写完回读自查'] };
+  return `<div style="background:#EFF6FF;border:1px solid #93C5FD;border-radius:8px;padding:10px 12px;margin-top:10px;text-align:left">
+    <div style="font-size:12px;font-weight:900;color:#1E40AF;margin-bottom:4px">🎯 PSLE 考点: ${t.spot}</div>
+    ${t.tips.map((x, i) => `<div style="font-size:12px;color:#1E293B;line-height:1.7">${i + 1}. ${x}</div>`).join('')}
+  </div>`;
+}
+// v19.67: MCQ 也可"做不出来直接看答案" — 算未掌握(retries+1), 防看答案刷毕业
+function ebRevealMcqAnswer() {
+  const g = _errorBankState;
+  if (!g) return;
+  const item = g.items[g.idx];
+  const fb = document.getElementById('ebFeedback');
+  if (!fb) return;
+  document.querySelectorAll('.mcq-opt').forEach((b, i) => {
+    b.disabled = true;
+    if (i === item.ans) { b.style.background = '#DCFCE7'; b.style.borderColor = '#16A34A'; b.style.fontWeight = '900'; }
+  });
+  const revealBtn = document.getElementById('ebPeekBtn');
+  if (revealBtn) revealBtn.style.display = 'none';
+  const correctText = item.opts ? String.fromCharCode(65 + item.ans) + '. ' + (item.opts[item.ans] || '') : String(item.ans ?? item.correctAns ?? '');
+  fb.innerHTML = `
+    <div style="background:#EFF6FF;border:1px solid #93C5FD;border-radius:6px;padding:12px">
+      <div style="color:#1E40AF;font-weight:900;margin-bottom:6px">📖 正确答案: <span style="color:#16A34A">${escapeHtml(correctText)}</span></div>
+      ${item.explain ? `<div style="color:#1E293B;font-size:12px;line-height:1.7">💡 <b>为什么</b>: ${escapeHtml(item.explain)}</div>` : ''}
+      ${_ebTipsHtml(item.gameKey)}
+      <div style="color:#B45309;font-size:11px;margin:8px 0">看了答案没关系 — 记住考点, 这题留在错题本下次再战</div>
+      <button onclick="_ebPeekNext()" style="width:100%;padding:10px;background:#1E40AF;color:#FFF;border:none;border-radius:4px;font-size:13px;font-weight:900;cursor:pointer">记住了, 下一题 →</button>
+    </div>`;
+  playSound('ding');
+}
+window.ebRevealMcqAnswer = ebRevealMcqAnswer;
+// v19.67: 看答案后一步到位进下一题 (记未掌握: retries+1, streak清零)
+function _ebPeekNext() {
+  const g = _errorBankState;
+  if (!g) return;
+  const item = g.items[g.idx];
+  const w = (state.wrongAnswers || []).find(x => x.id === item.id);
+  if (w) { w.retries = (w.retries || 0) + 1; w.correctStreak = 0; }
+  saveState(state);
+  g.idx++;
+  _renderErrorBankReview();
+}
+window._ebPeekNext = _ebPeekNext;
 function ebRevealAnswer() {
   const g = _errorBankState;
   if (!g) return;
@@ -6612,6 +6687,7 @@ function ebRevealAnswer() {
     <div style="background:#EFF6FF;border:1px solid #93C5FD;border-radius:8px;padding:12px;text-align:left;margin-bottom:10px">
       <div style="font-size:13px;color:#1E40AF;font-weight:900">📖 正确答案: ${escapeHtml(String(item.correctAns ?? item.ans ?? ''))}</div>
       ${item.explain ? `<div style="font-size:12px;color:#1E293B;line-height:1.7;margin-top:6px">💡 ${escapeHtml(item.explain)}</div>` : ''}
+      ${_ebTipsHtml(item.gameKey)}
     </div>
     <div style="font-size:12px;color:#1E293B;margin-bottom:8px">刚才想的对吗? <b>诚实自评</b> — 骗勾只会骗掉自己的分</div>
     <button onclick="submitErrorBankSelf(true)" style="padding:10px 24px;margin-right:10px;background:#16A34A;color:#FFF;border:none;border-radius:8px;font-weight:900;cursor:pointer">✅ 我答对了</button>
@@ -6728,7 +6804,8 @@ function _handleErrorBankResult(isCorrect, item, next) {
         <div style="background:rgba(239,83,80,0.10);border:1px solid rgba(239,83,80,0.30);border-radius:6px;padding:12px">
           <div style="color:#DC2626;font-weight:900;margin-bottom:6px">❌ 错了 · 正确答案: <span style="color:#16A34A">${escapeHtml(String(correctText))}</span></div>
           ${item.explain ? `<div style="color:#1E293B;font-size:12px;line-height:1.7;margin-bottom:8px">💡 <b>为什么</b>: ${escapeHtml(item.explain)}</div>` : ''}
-          <div style="color:#B45309;font-size:11px;margin-bottom:8px">⚠️ 仍留在错题本, 下次再练 · 已重做 ${(item.retries || 0) + 1} 次</div>
+          ${_ebTipsHtml(item.gameKey)}
+          <div style="color:#B45309;font-size:11px;margin:8px 0">⚠️ 仍留在错题本, 下次再练 · 已重做 ${(item.retries || 0) + 1} 次</div>
           <button onclick="_ebNextManual()" style="width:100%;padding:10px;background:#1E40AF;color:#FFF;border:none;border-radius:4px;font-size:13px;font-weight:900;cursor:pointer">下一题 →</button>
         </div>`;
       playSound('sad');

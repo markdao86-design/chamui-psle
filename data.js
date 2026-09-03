@@ -9158,6 +9158,12 @@ function _isSyncDataSafeToAccept(remoteData) {
     const rp = remoteData.totalPoints || 0;
     const llogs = (localState.logs || []).length;
     const rlogs = (remoteData.logs || []).length;
+    // v19.68: 远端时间戳比本地旧 → 旧设备写的, 拒收
+    const ltouch = localState._lastTouch || 0, rtouch = remoteData._lastTouch || 0;
+    if (ltouch && rtouch && rtouch < ltouch && rp < lp) {
+      console.warn(`[v19.68 sync 安全网] 远端 _lastTouch 更旧且分更低, 拒绝同步`);
+      return false;
+    }
     // 远端总分比本地低 ≥500 分 → 极可能是旧设备覆盖
     if (lp - rp >= 500) {
       console.warn(`[v19.10 sync 安全网] 远端 pts ${rp} 比本地 ${lp} 少 ${lp-rp}, 拒绝同步`);
@@ -9207,17 +9213,24 @@ async function loadStateAsync() {
       if (snap.exists) {
         const cloudData = snap.data();
         const local = loadState();
-        // v19.3: 服务端强制版本 — 如果 Firebase 有更新的 _serverVersion, 以 Firebase 为准
-        const cloudVer = cloudData._serverVersion || 0;
-        const localVer = local._serverVersion || 0;
-        const useCloud = cloudVer > localVer;
+        // v19.68: 修同步根因 (2026-09-03 真实事故: 旧缓存设备把 772 分推上云覆盖 4806 分)
+        // 旧逻辑 _serverVersion 从不递增 → 永远用本地, 旧设备一开就污染云端。
+        // 新逻辑: _lastTouch 新者胜; 都没有时间戳(历史数据) → totalPoints 高者胜(分数近似单调增), 再平比 logs 长度
+        const ct = cloudData._lastTouch || 0, lt = local._lastTouch || 0;
+        let useCloud;
+        if (ct !== lt) useCloud = ct > lt;
+        else if ((cloudData.totalPoints || 0) !== (local.totalPoints || 0)) useCloud = (cloudData.totalPoints || 0) > (local.totalPoints || 0);
+        else useCloud = ((cloudData.logs || []).length >= (local.logs || []).length);
         const base = useCloud ? cloudData : local;
         const merged = Object.assign(getDefaultState(), base);
-        if (useCloud) merged._serverVersion = cloudVer;
         if (!merged.daily) merged.daily = {};
         if (!merged.scores) merged.scores = {};
         merged.version = 2;
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch (e) {}
+        // v19.68: 本地比云端新/全 → 立即把正确数据推回云端(自动痊愈), 不等下次操作
+        if (!useCloud && ((local.totalPoints || 0) > (cloudData.totalPoints || 0) + 100)) {
+          try { saveState(merged); console.warn('[v19.68 sync] 本地数据更全, 已推回云端自动纠正'); } catch (e) {}
+        }
         setFbStatus('synced');
         return merged;
       } else {
@@ -9271,6 +9284,7 @@ function isEmptyDefaultState(s) {
 // 默认情况下,空默认值 state 拒绝写 Firestore(防止意外覆盖云端历史)
 function saveState(state, options) {
   options = options || {};
+  state._lastTouch = Date.now();  // v19.68: 同步用时间戳 — 多设备取最新
   if (state.logs && state.logs.length > 1000) {
     state.logs = state.logs.slice(-1000);
   }

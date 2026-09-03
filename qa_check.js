@@ -1172,6 +1172,19 @@ assert(/item\.ans \?\? item\.correctAns/.test(appSrc), 'v19.65: 答错反馈兜�
 assert(/label: 'Editing 2篇: 对_\/共_题'/.test(appSrc), 'v19.66: Editing行改对/总格式');
 assert(/const wrongOf = /.test(appSrc) && /wrongOf\(1, 'ed'\)/.test(appSrc), 'v19.66: 错数从对/总推导');
 assert(!/label: '[^']*: 错_题'/.test(appSrc), 'v19.66: 无残留单格错题行');
+// v19.67: 答案详解+PSLE考点技巧
+assert(/const EB_TYPE_TIPS = \{/.test(appSrc) && /_ebTipsHtml\(item\.gameKey\)/.test(appSrc), 'v19.67: 题型考点技巧库+渲染接入');
+assert(/id="ebPeekBtn"/.test(appSrc) && /ebRevealMcqAnswer/.test(appSrc), 'v19.67: MCQ可直接看答案');
+assert(/window\._ebPeekNext = _ebPeekNext/.test(appSrc), 'v19.67: 看答案后一步进下一题');
+assert((appSrc.match(/_ebTipsHtml\(/g) || []).length >= 4, 'v19.67: 考点卡在看答案/答错反馈处都接入');
+assert(/editing:\s*\{ spot:/.test(appSrc) && /sst:\s*\{ spot:/.test(appSrc) && /sci_oe:\s*\{ spot:/.test(appSrc), 'v19.67: 主要题型考点覆盖');
+// v19.68: 同步根因修复 (772分覆盖4806分真实事故)
+assert(/_lastTouch = Date\.now\(\)/.test(dataSrc), 'v19.68: saveState盖时间戳');
+assert(/ct > lt/.test(dataSrc) && /totalPoints \|\| 0\) >/.test(dataSrc), 'v19.68: 同步取新/取分高者');
+assert(/已推回云端自动纠正/.test(dataSrc), 'v19.68: 本地更全时自动推回痊愈');
+assert(/rtouch < ltouch && rp < lp/.test(dataSrc), 'v19.68: onSnapshot拒收旧时间戳数据');
+// v19.68: 思考题带详解+考点技巧
+assert(/_thinkSubjectToGameKey/.test(appSrc) && /_ebTipsHtml\(_thinkSubjectToGameKey/.test(appSrc), 'v19.68: 思考题解析带PSLE考点技巧卡');
 // v19.54: 我的/暑假收纳进"⋯其他"灰色按钮
 assert(/id="moreTabBtn"/.test(idxSrc), 'v19.54: 其他按钮存在');
 assert(/id="moreMenu"/.test(idxSrc), 'v19.54: 收纳菜单存在');
