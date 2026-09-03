@@ -648,7 +648,7 @@ const tpCalls = (appSrc.match(/\brenderThinkPuzzleCard\(/g) || []).length;
 // 期望: 1 处 function 定义 + 1 处 dashboard 调用 = 2 个匹配 (definition + call)
 assert(tpCalls === 2, `v19.25 Bug1: renderThinkPuzzleCard 调用收敛 (定义 + 主页 1 处 = 2, 实际 ${tpCalls})`);
 // v19.25 Bug 2: openErrorBank modal 暗调 (v19.28: 注释标签升级保留 rgba 暗调样式)
-assert(/background:linear-gradient\(135deg, rgba\(230,162,60,0\.10\), rgba\(234,88,12,0\.04\)\);border:1px dashed rgba\(230,162,60,0\.40\)/.test(appSrc), 'v19.25 Bug2: 顶部提示暗调样式保留');
+assert(/background:linear-gradient\(135deg, rgba\(230,162,60,0\.10\), rgba\(192,86,33,0\.04\)\);border:1px dashed rgba\(230,162,60,0\.40\)/.test(appSrc), 'v19.25 Bug2: 顶部提示暗调样式保留');
 assert(/border:1px solid rgba\(43,91,215,0\.30\);border-radius:6px;padding:6px 10px;font-size:12px;color:#1F2937/.test(appSrc), 'v19.25 Bug2: chip 暗调样式');
 // v19.25 全局 CSS 补 hex
 // [v19.55 亮色主题: 暗色机制断言废除] assert(/\[style\*="background:#ECEFF1"\]/.test(idxSrc), 'v19.25: 全局补 #ECEFF1 适配');
@@ -690,7 +690,7 @@ assert(/<!-- 右栏:[\s\S]{0,800}id="gradReviewCard"/.test(idxSrc), 'v19.22+23: 
 // v19.21: Paper 2 弱点卡改暗调
 assert(/color:#DB2777">🎯 Paper 2 弱点突击/.test(appSrc), 'v19.21: Paper 2 标题用亮粉 #DB2777');
 // [v19.55 亮色主题: 暗色机制断言废除] assert(/rgba\(255,255,255,0\.04\);border:1px solid rgba\(255,255,255,0\.10\)[\s\S]{0,500}Cloze 单空填/.test(appSrc), 'v19.21: Cloze 块用透明背景');
-assert(/linear-gradient\(90deg,#D97706,#16A34A\)/.test(appSrc), 'v19.21: 进度条改亮版橙→绿渐变');
+assert(/linear-gradient\(90deg,#B45309,#16A34A\)/.test(appSrc), 'v19.21: 进度条改亮版橙→绿渐变');
 // [v19.55 亮色主题: 暗色机制断言废除] assert(/#EEF1F6;border-radius:4px;height:8px/.test(appSrc), 'v19.21: 进度条底用透明白');
 // v19.21 全局补 #FFF/#EEE/linear-gradient
 // [v19.55 亮色主题: 暗色机制断言废除] assert(/\[style\*="background:#FFF;"\]/.test(idxSrc), 'v19.21: 全局补 #FFF; 适配');
@@ -724,7 +724,7 @@ assert(/id="thinkPuzzleCardOld"/.test(idxSrc), 'v19.18: 打卡页 thinkPuzzleCar
 assert(/renderWeekMasterTipCard\(\)/.test(appSrc), 'v19.18: renderWeekMasterTipCard 被调用');
 assert(/renderThinkPuzzleCard\(state\.currentWeek\)/.test(appSrc), 'v19.18: renderThinkPuzzleCard 被主页调用');
 // 错题本卡红 badge
-assert(/background:#DC2626;color:#FFF[\s\S]{0,150}border-radius:14px/.test(appSrc), 'v19.18: 错题本红 badge 强提醒');
+assert(/background:#D9534F;color:#FFF[\s\S]{0,150}border-radius:14px/.test(appSrc), 'v19.18: 错题本红 badge 强提醒');
 // renderWeekMasterTipCard 函数
 assert(/function renderWeekMasterTipCard/.test(appSrc), 'v19.18: renderWeekMasterTipCard 函数');
 assert(/window\.WEEK_MASTER_TIPS\[week - 1\]/.test(appSrc), 'v19.18: 取 WEEK_MASTER_TIPS[week-1]');

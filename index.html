@@ -18,12 +18,12 @@
   --color-primary-soft: rgba(43,91,215,0.10);
   --color-secondary: #16A34A;        /* 正绿 */
   --color-secondary-soft: rgba(22,163,74,0.10);
-  --color-accent: #EA580C;           /* 深橙 */
-  --color-accent-soft: rgba(234,88,12,0.10);
+  --color-accent: #C05621;           /* 深橙 */
+  --color-accent-soft: rgba(192,86,33,0.10);
   --color-purple: #2563EB;           /* 亮蓝 */
   --color-purple-soft: rgba(37,99,235,0.10);
-  --color-pink: #DC2626;             /* 正红 */
-  --color-pink-soft: rgba(220,38,38,0.08);
+  --color-pink: #D9534F;             /* 正红 */
+  --color-pink-soft: rgba(217,83,79,0.08);
   --color-bg: #F0F2F5;               /* 浅灰蓝底 */
   --color-bg-dark: #E8EBF0;
   --color-card: #FFFFFF;             /* 白卡片 */
@@ -35,7 +35,7 @@
   --color-border-soft: #EEF1F6;
   --color-success: #16A34A;
   --color-warn: #E6A23C;
-  --color-danger: #DC2626;
+  --color-danger: #D9534F;
   --shadow-cute: 0 1px 4px rgba(31,41,55,0.06), 0 2px 10px rgba(31,41,55,0.05);
   --shadow-pop: 0 4px 18px rgba(31,41,55,0.10);
   --radius-bubble: 14px;
@@ -103,20 +103,21 @@ body {
 }
 
 .stat-pill {
-  background: var(--color-accent);
-  border: 3px solid var(--color-text);
+  background: #FFFFFF;
+  border: 1px solid #E5E9F2;
+  color: #1F2937;
   padding: 6px 14px;
-  border-radius: 20px;
-  font-weight: 700;
+  border-radius: 18px;
+  font-weight: 600;
   font-size: 14px;
-  box-shadow: 0 3px 0 var(--color-text);
+  box-shadow: none;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.stat-pill.points { background: var(--color-accent); position: relative; }
-.stat-pill.crystals { background: rgba(124,58,237,0.15); color: #C084FC; border: 1px solid rgba(124,58,237,0.3); position: relative; }
+.stat-pill.points { background: #FFFFFF; color: #1F2937; position: relative; }
+.stat-pill.crystals { background: #FFFFFF; color: #7C3AED; border: 1px solid #E5E9F2; position: relative; }
 .stat-pill.points::after, .stat-pill.crystals::after, .stat-pill.level::after {
   content: attr(title);
   position: absolute;
@@ -138,8 +139,8 @@ body {
 .stat-pill.points:hover::after, .stat-pill.crystals:hover::after, .stat-pill.level:hover::after {
   opacity: 1;
 }
-.stat-pill.level { background: rgba(22,163,74,0.12); color: var(--color-success); border: 1px solid rgba(22,163,74,0.25); }
-.stat-pill.week { background: rgba(37,99,235,0.12); color: var(--color-purple); border: 1px solid rgba(37,99,235,0.25); }
+.stat-pill.level { background: #FFFFFF; color: #16A34A; border: 1px solid #E5E9F2; }
+.stat-pill.week { background: #FFFFFF; color: #2B5BD7; border: 1px solid #E5E9F2; }
 
 /* ===== 标签导航 ===== */
 .tabs {
@@ -157,29 +158,29 @@ body {
 
 .tab-btn {
   font-family: var(--font-body);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 15px;
-  padding: 10px 20px;
-  border: 3px solid var(--color-text);
-  background: var(--color-card);
-  color: var(--color-text);
-  border-radius: 16px;
+  padding: 9px 18px;
+  border: 1px solid #E5E9F2;
+  background: #FFFFFF;
+  color: #6B7280;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
   white-space: nowrap;
-  box-shadow: 0 3px 0 var(--color-text);
+  box-shadow: none;
 }
 
 .tab-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 0 var(--color-text);
+  border-color: #C9D4E8;
+  color: #1F2937;
 }
 
 .tab-btn.active {
-  background: rgba(43,91,215,0.15);
-  color: var(--color-primary);
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 var(--color-text);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #FFFFFF;
+  font-weight: 700;
 }
 
 /* ===== 主容器 ===== */
@@ -539,7 +540,7 @@ body {
 }
 @keyframes score-pulse {
   0%   { transform: scale(1); }
-  35%  { transform: scale(1.18); box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 16px 36px rgba(220,38,38,0.6); }
+  35%  { transform: scale(1.18); box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 16px 36px rgba(217,83,79,0.6); }
   100% { transform: scale(1); }
 }
 .big-score-num {
@@ -565,7 +566,7 @@ body {
 .crystal-score-line {
   font-size: 13px;
   font-weight: 600;
-  color: #C084FC;
+  color: #7C3AED;
   margin-top: 4px;
 }
 
@@ -717,7 +718,7 @@ body {
   border: 1px solid rgba(124,58,237,0.4);
   border-radius: 4px;
   background: rgba(124,58,237,0.15);
-  color: #C084FC;
+  color: #7C3AED;
   cursor: pointer;
   margin-top: 4px;
 }
@@ -725,7 +726,7 @@ body {
 .evo-tag {
   font-size: 9px;
   font-weight: 700;
-  color: #C084FC;
+  color: #7C3AED;
   position: relative;
   top: -4px;
 }
@@ -827,7 +828,7 @@ body {
   font-size: 10px;
   font-weight: 700;
   color: #D32F2F;
-  background: rgba(220,38,38,0.1);
+  background: rgba(217,83,79,0.1);
   padding: 1px 5px;
   border-radius: 8px;
   white-space: nowrap;
@@ -1050,9 +1051,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   animation: char-glow 0.8s ease;
 }
 @keyframes char-glow {
-  0%   { transform: scale(1); filter: drop-shadow(0 0 0 rgba(220,38,38,0)); }
-  40%  { transform: scale(1.08); filter: drop-shadow(0 0 25px rgba(220,38,38,0.7)); }
-  100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(220,38,38,0)); }
+  0%   { transform: scale(1); filter: drop-shadow(0 0 0 rgba(217,83,79,0)); }
+  40%  { transform: scale(1.08); filter: drop-shadow(0 0 25px rgba(217,83,79,0.7)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(217,83,79,0)); }
 }
 
 /* ===== 撒花粒子 ===== */
@@ -1956,7 +1957,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .pool-header-right { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: flex-end; }
 .pool-icon { font-size: 18px; }
 .pool-title { font-weight: 700; font-size: 14px; color: var(--color-text); }
-.pool-progress-num { font-size: 13px; color: #C084FC; font-weight: 600; }
+.pool-progress-num { font-size: 13px; color: #7C3AED; font-weight: 600; }
 .pool-progress-bar { flex: 1; max-width: 140px; height: 6px; background: rgba(0,0,0,0.18); border-radius: 3px; overflow: hidden; }
 .pool-progress-fill { height: 100%; background: linear-gradient(90deg, #C084FC, #2563EB); transition: width 0.3s; }
 .pool-toggle { font-size: 10px; color: var(--color-text-light); width: 12px; text-align: center; }
@@ -2022,7 +2023,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .summer-day-dow { color: var(--color-text-light); }
 .summer-day-week { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: #F5F7FA; }
 .summer-day-title { color: var(--color-text-light); font-size: 11px; flex-basis: 100%; }
-.summer-day-prog { margin-left: auto; font-size: 12px; font-weight: 700; color: #C084FC; }
+.summer-day-prog { margin-left: auto; font-size: 12px; font-weight: 700; color: #7C3AED; }
 .summer-day-full-badge { color: #E6A23C; font-weight: 700; font-size: 12px; }
 .summer-day-today-badge { color: #E6A23C; font-weight: 700; font-size: 12px; animation: pulse 2s infinite; }
 .summer-day-chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -2076,7 +2077,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 @keyframes critFlash { 0%{opacity:1;transform:scale(1)} 50%{opacity:0.8;transform:scale(1.1)} 100%{opacity:0;transform:scale(2)} }
 .crit-flash { position:fixed; top:0; left:0; width:100vw; height:100vh; background:radial-gradient(circle,rgba(255,215,0,0.4),transparent 70%); pointer-events:none; z-index:9999; animation:critFlash 0.6s ease-out forwards; }
 /* v19.2: power badge */
-.power-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(255,215,0,0.12); padding:3px 10px; border-radius:20px; font-size:12px; font-weight:800; color:#FFD700; border:1px solid rgba(255,215,0,0.3); }
+.power-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(255,215,0,0.12); padding:3px 10px; border-radius:20px; font-size:12px; font-weight:800; color:#B8860B; border:1px solid rgba(255,215,0,0.3); }
 
 /* v19.5: 作文追踪按钮 */
 .comp-step-btn { flex:1; padding:8px 4px; border:1px solid #ddd; border-radius:6px; background:#fff; cursor:pointer; font-size:12px; transition:all .2s; }
@@ -2094,7 +2095,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .fc-card-hint { font-size:15px; color:#6B7280; }
 .fc-card-meaning { font-size:34px; font-weight:700; margin:6px 0 14px; text-align:center; color:#FFFFFF; }
 .fc-card-endef { font-size:18px; color:#E0F2FE; line-height:1.5; padding:10px 14px; background:rgba(37,99,235,0.12); border-radius:8px; margin-bottom:10px; }
-.fc-card-sentence { font-size:18px; color:#A7F3D0; font-style:italic; line-height:1.55; padding:10px 14px; margin-bottom:10px; background:rgba(16,185,129,0.10); border-radius:8px; }
+.fc-card-sentence { font-size:18px; color:#15803D; font-style:italic; line-height:1.55; padding:10px 14px; margin-bottom:10px; background:rgba(16,185,129,0.10); border-radius:8px; }
 .fc-card-qtype {
   font-size:18px; color:#FEF3C7; background:rgba(251,191,36,0.14);
   border-left:4px solid #F59E0B; padding:12px 16px; margin-top:4px;
@@ -2116,7 +2117,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   padding: 16px 20px;
   border-radius: var(--radius-tight);
   border: 1px solid rgba(230,162,60,0.3);
-  background: linear-gradient(135deg, rgba(230,162,60,0.08) 0%, rgba(234,88,12,0.04) 100%);
+  background: linear-gradient(135deg, rgba(230,162,60,0.08) 0%, rgba(192,86,33,0.04) 100%);
   text-align: center;
 }
 .game-hub-card.exhausted {
@@ -2189,9 +2190,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 /* slot 卡片 +N badge 风格 — 统一玻璃风格 */
 .checkin-item .checkin-points {
-  background: rgba(234,88,12,0.12);
+  background: rgba(192,86,33,0.12);
   color: var(--color-accent);
-  border: 1px solid rgba(234,88,12,0.25);
+  border: 1px solid rgba(192,86,33,0.25);
   border-radius: 999px;
   padding: 4px 12px;
   font-family: 'Fredoka', sans-serif;
@@ -2314,7 +2315,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 /* v19.15b 软打卡逃生口 (fromGuard=true 时显示) */
 .photo-source-guard-banner {
-  background: linear-gradient(135deg, rgba(230,162,60,0.18), rgba(234,88,12,0.10));
+  background: linear-gradient(135deg, rgba(230,162,60,0.18), rgba(192,86,33,0.10));
   border: 2px solid rgba(230,162,60,0.5);
   border-radius: var(--radius-tight);
   padding: 10px 12px;
@@ -2341,7 +2342,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 .photo-source-soft-btn:hover {
   transform: translateY(-1px);
-  background: linear-gradient(135deg, rgba(230,162,60,0.10), rgba(234,88,12,0.06));
+  background: linear-gradient(135deg, rgba(230,162,60,0.10), rgba(192,86,33,0.06));
   box-shadow: 0 3px 10px rgba(230,162,60,0.20);
 }
 .photo-source-soft-btn .ps-icon { font-size: 28px; line-height: 1; }
@@ -2572,7 +2573,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .checkin-item.key-slot {
   border-color: var(--color-warn);
   border-width: 4px;
-  background: linear-gradient(180deg, var(--color-card) 0%, rgba(234,88,12,0.06) 100%);
+  background: linear-gradient(180deg, var(--color-card) 0%, rgba(192,86,33,0.06) 100%);
 }
 .checkin-item.key-slot.checked {
   border-color: var(--color-warn);
@@ -2695,7 +2696,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   flex-direction: column;
   gap: 2px;
 }
-.lis-item.lis-live { background: linear-gradient(135deg, rgba(220,38,38,0.06) 0%, rgba(22,163,74,0.06) 100%); border-width: 3px; }
+.lis-item.lis-live { background: linear-gradient(135deg, rgba(217,83,79,0.06) 0%, rgba(22,163,74,0.06) 100%); border-width: 3px; }
 .lis-item.lis-youtube { background: rgba(255,183,0,0.06); border-width: 3px; }
 
 /* v18.43: PSLE 能力分析 (历史页主卡) */
@@ -2972,7 +2973,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .alarm-popup .alarm-close-big:hover { background: #3a7ab0; }
 /* 类型主色: rest=暖橙 / back=海蓝 / start=薄荷 / sleep=柔紫 */
 .alarm-popup.alarm-rest {
-  background: radial-gradient(ellipse at 20% 20%, rgba(234,88,12,0.06) 0%, transparent 55%), linear-gradient(135deg, var(--color-accent-soft) 0%, var(--color-card) 80%);
+  background: radial-gradient(ellipse at 20% 20%, rgba(192,86,33,0.06) 0%, transparent 55%), linear-gradient(135deg, var(--color-accent-soft) 0%, var(--color-card) 80%);
   border-color: var(--color-accent);
 }
 .alarm-popup.alarm-back { /* default primary */ }
@@ -3086,7 +3087,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .kt-node-locked.kt-dot { background: var(--color-text-dim); border-color: var(--color-text-dim); opacity: 1; filter: none; }
 .kt-node-learning {
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(234,88,12,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 20%, rgba(192,86,33,0.08) 0%, transparent 55%),
     linear-gradient(135deg, var(--color-accent-soft) 0%, var(--color-card) 80%);
   border: 1px solid var(--color-accent);
   animation: kt-pulse 2s ease-in-out infinite;
@@ -3193,9 +3194,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 /* v18.45: 知识树 ⭐ 系统 */
 .kt-row-stars { font-size: 11px; font-weight: 700; color: var(--color-accent); margin-left: 8px; }
-.kt-node-stars-1 { color: #FFA500; font-size: 14px; }
-.kt-node-stars-2 { color: #FFA500; font-size: 13px; letter-spacing: -2px; }
-.kt-node-stars-3 { color: #FFD700; font-size: 12px; letter-spacing: -3px; }
+.kt-node-stars-1 { color: #B45309; font-size: 14px; }
+.kt-node-stars-2 { color: #B45309; font-size: 13px; letter-spacing: -2px; }
+.kt-node-stars-3 { color: #B8860B; font-size: 12px; letter-spacing: -3px; }
 .kt-node.kt-stars-1 { box-shadow: 0 0 0 2px #FFE066; }
 .kt-node.kt-stars-2 { box-shadow: 0 0 0 2px #FFA500; }
 .kt-node.kt-stars-3 { box-shadow: 0 0 0 3px #FFD700; }
@@ -4172,7 +4173,7 @@ p { font-size: 14px; line-height: 1.6; }
 .pet-widget.pet-king {
   box-shadow: 0 0 18px 5px rgba(255, 215, 0, 0.75), 0 3px 0 var(--color-text);
   animation: pet-king-glow 2s ease-in-out infinite;
-  border-color: #FFD700;
+  border-color: #B8860B;
 }
 @keyframes pet-king-glow {
   0%, 100% { box-shadow: 0 0 18px 5px rgba(255, 215, 0, 0.75), 0 3px 0 var(--color-text); }
@@ -4212,9 +4213,9 @@ p { font-size: 14px; line-height: 1.6; }
 /* ===== v18 Phase 5.1: 🏆 成就墙 ===== */
 .achievement-wall-card {
   background:
-    radial-gradient(ellipse at 15% 15%, rgba(220,38,38,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 15%, rgba(217,83,79,0.05) 0%, transparent 55%),
     linear-gradient(135deg, var(--color-pink-soft) 0%, var(--color-card) 70%);
-  border: 1px solid rgba(220,38,38,0.15);
+  border: 1px solid rgba(217,83,79,0.15);
   border-left: 3px solid var(--color-pink);
   box-shadow: 0 2px 8px rgba(232,180,194,0.10);
 }
@@ -4231,7 +4232,7 @@ p { font-size: 14px; line-height: 1.6; }
 .eq-rarity-rare { border: 2px solid #2B5BD7; box-shadow: 0 0 6px rgba(43,91,215,0.3); }
 .eq-rarity-epic { border: 2px solid #A855F7; box-shadow: 0 0 10px rgba(124,58,237,0.4); animation: epicGlow 2s infinite alternate; }
 .eq-rarity-legendary { border: 2px solid #FFD700; box-shadow: 0 0 14px rgba(255,215,0,0.5); animation: legendGlow 3s infinite alternate; }
-.eq-rarity-mythic { border: 2px solid transparent; background-clip: padding-box; box-shadow: 0 0 18px rgba(220,38,38,0.4); animation: mythicBorder 4s linear infinite; background-image: linear-gradient(var(--color-card),var(--color-card)), linear-gradient(45deg,#DC2626,#A855F7,#2B5BD7,#FFD700); background-origin: border-box; }
+.eq-rarity-mythic { border: 2px solid transparent; background-clip: padding-box; box-shadow: 0 0 18px rgba(217,83,79,0.4); animation: mythicBorder 4s linear infinite; background-image: linear-gradient(var(--color-card),var(--color-card)), linear-gradient(45deg,#D9534F,#A855F7,#2B5BD7,#FFD700); background-origin: border-box; }
 @keyframes epicGlow { from{box-shadow:0 0 6px rgba(124,58,237,0.3)} to{box-shadow:0 0 14px rgba(124,58,237,0.6)} }
 @keyframes legendGlow { from{box-shadow:0 0 8px rgba(255,215,0,0.4)} to{box-shadow:0 0 20px rgba(255,215,0,0.7)} }
 @keyframes mythicBorder { to{filter:hue-rotate(360deg)} }
@@ -4241,7 +4242,7 @@ p { font-size: 14px; line-height: 1.6; }
 .rank-silver { border:2px solid #C0C0C0; box-shadow:0 0 4px rgba(192,192,192,0.4); }
 .rank-gold { border:2px solid #FFD700; box-shadow:0 0 8px rgba(255,215,0,0.4); animation:legendGlow 3s infinite alternate; }
 .rank-diamond { border:2px solid #2B5BD7; box-shadow:0 0 12px rgba(43,91,215,0.5); animation:epicGlow 2s infinite alternate; }
-.rank-legend { border:2px solid transparent; background-image:linear-gradient(var(--color-card),var(--color-card)),linear-gradient(45deg,#DC2626,#A855F7,#2B5BD7,#16A34A); background-origin:border-box; background-clip:padding-box,border-box; box-shadow:0 0 16px rgba(124,58,237,0.5); }
+.rank-legend { border:2px solid transparent; background-image:linear-gradient(var(--color-card),var(--color-card)),linear-gradient(45deg,#D9534F,#A855F7,#2B5BD7,#16A34A); background-origin:border-box; background-clip:padding-box,border-box; box-shadow:0 0 16px rgba(124,58,237,0.5); }
 .ach-icon { font-size: 28px; }
 .ach-name { font-size: 12px; font-weight: 700; margin-top: 2px; }
 .ach-cat { font-size: 10px; color: var(--color-text-light); }
@@ -4407,7 +4408,7 @@ p { font-size: 14px; line-height: 1.6; }
 /* v18.24: 防沉迷规则提示 + 各 game 状态 */
 .mgh-rules {
   background: var(--color-accent-soft);
-  border: 1px solid rgba(234,88,12,0.2);
+  border: 1px solid rgba(192,86,33,0.2);
   border-left: 3px solid var(--color-accent);
   border-radius: var(--radius-tight);
   padding: 8px 12px;
@@ -4467,9 +4468,9 @@ p { font-size: 14px; line-height: 1.6; }
 /* ===== v17.7 Phase 3: 每日特别任务卡 ===== */
 .daily-quest-card {
   background:
-    radial-gradient(ellipse at 15% 15%, rgba(234,88,12,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 15%, rgba(192,86,33,0.05) 0%, transparent 55%),
     linear-gradient(135deg, var(--color-accent-soft) 0%, var(--color-card) 70%);
-  border: 1px solid rgba(234,88,12,0.15);
+  border: 1px solid rgba(192,86,33,0.15);
   border-left: 3px solid var(--color-accent);
   box-shadow: 0 2px 8px rgba(232,184,110,0.10);
 }
@@ -4565,7 +4566,7 @@ p { font-size: 14px; line-height: 1.6; }
 .mb-result-title { font-size: 20px; font-weight: 900; color: var(--color-text); margin-bottom: 12px; }
 .mb-result-body { font-size: 14px; color: var(--color-text); line-height: 1.6; margin-bottom: 16px; }
 .mb-wow-fact {
-  background: linear-gradient(135deg, rgba(220,38,38,0.06) 0%, rgba(22,163,74,0.06) 100%);
+  background: linear-gradient(135deg, rgba(217,83,79,0.06) 0%, rgba(22,163,74,0.06) 100%);
   padding: 12px 14px;
   border-radius: 12px;
   border: 2px dashed rgba(124,58,237,0.3);
@@ -4582,7 +4583,7 @@ p { font-size: 14px; line-height: 1.6; }
   margin: 12px 0;
   text-align: left;
 }
-.mb-rules-full { background: linear-gradient(135deg, rgba(255,183,0,0.08) 0%, rgba(220,38,38,0.06) 100%); }
+.mb-rules-full { background: linear-gradient(135deg, rgba(255,183,0,0.08) 0%, rgba(217,83,79,0.06) 100%); }
 .mb-rules-title { font-size: 14px; font-weight: 900; color: var(--color-text); margin-bottom: 6px; text-align: center; }
 .mb-rules-list { margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.7; color: var(--color-text); }
 .mb-rules-list li { margin-bottom: 2px; }
@@ -4623,7 +4624,7 @@ p { font-size: 14px; line-height: 1.6; }
 
 /* ===== v17.5 Phase 2: 反直觉思考题卡 ===== */
 .think-puzzle-card {
-  background: linear-gradient(135deg, rgba(22,163,74,0.06) 0%, rgba(220,38,38,0.06) 100%);
+  background: linear-gradient(135deg, rgba(22,163,74,0.06) 0%, rgba(217,83,79,0.06) 100%);
   border-left: 8px solid #0D9488;
   border-width: 4px;
   padding: 16px 18px;
@@ -4734,7 +4735,7 @@ p { font-size: 14px; line-height: 1.6; }
 .wow-card-big .wow-tag {
   font-size: 14px;
   font-weight: 700;
-  color: #A788E0;
+  color: #7C3AED;
   background: var(--color-card);
   padding: 5px 12px;
   border-radius: 12px;
@@ -4833,7 +4834,7 @@ p { font-size: 14px; line-height: 1.6; }
 }
 .tip-q-opt:hover { border-color: #6FB8A0; color: #6FB8A0; }
 .tip-q-opt.tq-correct { background: rgba(22,163,74,0.12); border-color: #52C788; color: #52C788; font-weight: 700; cursor: default; }
-.tip-q-opt.tq-wrong { background: rgba(220,38,38,0.1); border-color: #DC2626; color: #DC2626; cursor: default; }
+.tip-q-opt.tq-wrong { background: rgba(217,83,79,0.1); border-color: #D9534F; color: #D9534F; cursor: default; }
 .tip-q-opt.tq-dimmed { opacity: 0.4; cursor: default; }
 .tip-q-exp {
   margin-top: 4px;
@@ -4845,7 +4846,7 @@ p { font-size: 14px; line-height: 1.6; }
 
 /* v17.3: Streak 规则卡 (替代原 progress 在 hero-right) */
 .streak-rules-card {
-  background: linear-gradient(135deg, rgba(220,38,38,0.06) 0%, rgba(255,183,0,0.06) 100%);
+  background: linear-gradient(135deg, rgba(217,83,79,0.06) 0%, rgba(255,183,0,0.06) 100%);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-bubble);
   padding: 14px 16px;
@@ -4877,14 +4878,14 @@ p { font-size: 14px; line-height: 1.6; }
 
 /* ===== v16: 6 条铁律 mini-card ===== */
 .iron-rule-card {
-  background: linear-gradient(135deg, rgba(255,183,0,0.06) 0%, rgba(220,38,38,0.06) 100%);
+  background: linear-gradient(135deg, rgba(255,183,0,0.06) 0%, rgba(217,83,79,0.06) 100%);
   border-left: 6px solid var(--color-primary);
 }
 .iron-rule-card #irTitle::before { content: '⚖️ '; }
 
 /* ===== v16: 周日复盘 section ===== */
 .sunday-review-section {
-  background: linear-gradient(135deg, rgba(220,38,38,0.06) 0%, rgba(22,163,74,0.06) 100%);
+  background: linear-gradient(135deg, rgba(217,83,79,0.06) 0%, rgba(22,163,74,0.06) 100%);
   padding: 12px;
   border-radius: 10px;
   border: 2px dashed var(--color-primary);
@@ -5033,9 +5034,9 @@ p { font-size: 14px; line-height: 1.6; }
 
 /* v18.48: 宝箱 pill (顶部 stat-pill 风格, 跟 ⭐ 分数同列) */
 .stat-pill.mystery-pill {
-  background: linear-gradient(135deg, var(--color-accent-soft), var(--color-accent));
-  color: var(--color-text);
-  border-color: var(--color-accent);
+  background: #FFFFFF;
+  color: #B45309;
+  border-color: #E5E9F2;
   cursor: pointer;
   font-weight: 700;
   transition: transform 0.15s, box-shadow 0.15s;
@@ -5048,14 +5049,14 @@ p { font-size: 14px; line-height: 1.6; }
   padding: 4px 10px;
 }
 .sync-local {
-  background: var(--color-card-soft);
-  color: var(--color-text);
-  border-color: var(--color-text-light);
+  background: #FFFFFF;
+  color: #6B7280;
+  border-color: #E5E9F2;
 }
 .sync-syncing {
-  background: var(--color-accent);
-  color: var(--color-text);
-  border-color: var(--color-text);
+  background: #FFFFFF;
+  color: #2B5BD7;
+  border-color: #E5E9F2;
   animation: sync-pulse 1.2s ease infinite;
 }
 @keyframes sync-pulse {
@@ -5063,14 +5064,14 @@ p { font-size: 14px; line-height: 1.6; }
   50% { opacity: 0.6; }
 }
 .sync-synced {
-  background: rgba(230,162,60,0.15);
-  color: var(--color-warn);
-  border-color: rgba(230,162,60,0.3);
+  background: #FFFFFF;
+  color: #16A34A;
+  border-color: #E5E9F2;
 }
 .sync-error {
-  background: var(--color-danger);
-  color: white;
-  border-color: var(--color-text);
+  background: #FFFFFF;
+  color: #D9534F;
+  border-color: #F0C9C6;
 }
 </style>
 </head>
@@ -5204,8 +5205,8 @@ p { font-size: 14px; line-height: 1.6; }
     <div class="home-grid-2col">
       <!-- 左栏: 今日必做 行动驱动 (v19.22: gradReviewCard 移到右栏减拥挤) -->
       <div class="home-col-left">
-        <div style="font-size:12px;font-weight:900;color:#E64C4C;letter-spacing:1px;margin-bottom:6px">⚡ 今日必做</div>
-        <div class="card" id="todayThreeCard" style="border-left:4px solid #E64C4C"></div>
+        <div style="font-size:12px;font-weight:900;color:#2B5BD7;letter-spacing:1px;margin-bottom:6px">⚡ 今日必做</div>
+        <div class="card" id="todayThreeCard" style="border-left:4px solid #2B5BD7"></div>
         <div class="card" id="paper2SprintCard"></div>
         <div class="card" id="errorBankCard"></div>
         <!-- v19.35: 自动对齐 filler — 长栏时被挤为 0 不留痕 -->
@@ -5409,26 +5410,26 @@ p { font-size: 14px; line-height: 1.6; }
         <button class="practice-hub-btn" data-accent="green" onclick="document.querySelector('[data-page=knowledge]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(22,163,74,0.10),rgba(22,163,74,0.02));border:1px solid rgba(22,163,74,0.45);box-shadow:0 0 12px rgba(22,163,74,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
           <div style="font-size:28px">🌳</div>
           <div style="font-size:15px;font-weight:900;color:#16A34A;margin-top:6px">知识树</div>
-          <div style="font-size:11px;color:#A5D6A7;margin-top:3px">35 节点 · 105 道 PSLE 风练习</div>
+          <div style="font-size:11px;color:#15803D;margin-top:3px">35 节点 · 105 道 PSLE 风练习</div>
         </button>
-        <button class="practice-hub-btn" data-accent="orange" onclick="document.querySelector('[data-page=paperbank]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(230,162,60,0.10),rgba(234,88,12,0.04));border:1px solid rgba(230,162,60,0.45);box-shadow:0 0 12px rgba(230,162,60,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
+        <button class="practice-hub-btn" data-accent="orange" onclick="document.querySelector('[data-page=paperbank]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(230,162,60,0.10),rgba(192,86,33,0.04));border:1px solid rgba(230,162,60,0.45);box-shadow:0 0 12px rgba(230,162,60,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
           <div style="font-size:28px">📚</div>
-          <div style="font-size:15px;font-weight:900;color:#D97706;margin-top:6px">题库</div>
-          <div style="font-size:11px;color:#FFD180;margin-top:3px">PSLE 真题 + Cloze + SST</div>
+          <div style="font-size:15px;font-weight:900;color:#B45309;margin-top:6px">题库</div>
+          <div style="font-size:11px;color:#B45309;margin-top:3px">PSLE 真题 + Cloze + SST</div>
         </button>
         <button class="practice-hub-btn" data-accent="cyan" onclick="document.querySelector('[data-page=vocab]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(43,91,215,0.10),rgba(43,91,215,0.02));border:1px solid rgba(43,91,215,0.45);box-shadow:0 0 12px rgba(43,91,215,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
           <div style="font-size:28px">📇</div>
           <div style="font-size:15px;font-weight:900;color:#2563EB;margin-top:6px">词汇</div>
-          <div style="font-size:11px;color:#90CAF9;margin-top:3px">学科英语 500 词 + 闪卡</div>
+          <div style="font-size:11px;color:#2563EB;margin-top:3px">学科英语 500 词 + 闪卡</div>
         </button>
-        <button class="practice-hub-btn" data-accent="pink" onclick="document.querySelector('[data-page=essay]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(220,38,38,0.10),rgba(220,38,38,0.02));border:1px solid rgba(220,38,38,0.45);box-shadow:0 0 12px rgba(220,38,38,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
+        <button class="practice-hub-btn" data-accent="pink" onclick="document.querySelector('[data-page=essay]').click()" style="padding:18px 12px;background:linear-gradient(135deg,rgba(217,83,79,0.10),rgba(217,83,79,0.02));border:1px solid rgba(217,83,79,0.45);box-shadow:0 0 12px rgba(217,83,79,0.10);border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
           <div style="font-size:28px">📝</div>
           <div style="font-size:15px;font-weight:900;color:#DB2777;margin-top:6px">作文</div>
-          <div style="font-size:11px;color:#F8BBD0;margin-top:3px">73 周 prompt + 升级闭环</div>
+          <div style="font-size:11px;color:#DB2777;margin-top:3px">73 周 prompt + 升级闭环</div>
         </button>
       </div>
       <!-- v19.24: gameHubCard 从主页迁到练习中心 (主页 hero 不再插入) -->
-      <div style="margin-top:14px;font-size:12px;font-weight:900;color:#D97706;letter-spacing:1px">⚔️ 每日挑战 + 所有 mini-game</div>
+      <div style="margin-top:14px;font-size:12px;font-weight:900;color:#B45309;letter-spacing:1px">⚔️ 每日挑战 + 所有 mini-game</div>
       <div id="gameHubCard" style="margin-top:6px"></div>
     </div>
   </div>
@@ -5487,7 +5488,7 @@ p { font-size: 14px; line-height: 1.6; }
   <!-- 暑假课表页 (v19.6+: 2026 暑期英语强化 31 天) -->
   <div class="page" id="page-summer">
     <!-- v19.39: 老师反馈卡 - 精准弱点暴露 -->
-    <div class="card" style="margin-bottom:12px;background:linear-gradient(135deg,rgba(234,88,12,0.10),rgba(230,162,60,0.04));border-left:4px solid #EA580C">
+    <div class="card" style="margin-bottom:12px;background:linear-gradient(135deg,rgba(192,86,33,0.10),rgba(230,162,60,0.04));border-left:4px solid #C05621">
       <div class="card-title">📞 英文老师 5-29 反馈 (基于此重排课表)</div>
       <div style="font-size:12px;line-height:1.8;margin-top:8px;color:var(--color-text)">
         ✅ <b>Oral</b>: T1 表现尚可 (T3 才有真测) — 加强 picture-related<br>
@@ -5534,7 +5535,7 @@ p { font-size: 14px; line-height: 1.6; }
           <tr><td style="padding:6px">12:30-13:30</td><td style="padding:6px">60min</td><td style="padding:6px">午餐</td></tr>
           <tr><td style="padding:6px">13:30-14:30</td><td style="padding:6px">60min</td><td style="padding:6px">午休 / 自由</td></tr>
           <tr style="background:rgba(22,163,74,0.06)"><td style="padding:6px"><b>14:30-15:30 C</b></td><td style="padding:6px">60min</td><td style="padding:6px">📝 Composition / SST 隔天轮换</td></tr>
-          <tr style="background:rgba(234,88,12,0.10)"><td style="padding:6px"><b>15:30-18:30</b></td><td style="padding:6px">3h</td><td style="padding:6px">📖 <b>美玲课</b> (外课 · 英语强化)</td></tr>
+          <tr style="background:rgba(192,86,33,0.10)"><td style="padding:6px"><b>15:30-18:30</b></td><td style="padding:6px">3h</td><td style="padding:6px">📖 <b>美玲课</b> (外课 · 英语强化)</td></tr>
           <tr><td style="padding:6px">18:30-19:30</td><td style="padding:6px">60min</td><td style="padding:6px">晚餐 + 家庭时间</td></tr>
           <tr style="background:rgba(22,163,74,0.06)"><td style="padding:6px"><b>19:30-20:00 D</b></td><td style="padding:6px">30min</td><td style="padding:6px">🗣️ Oral SBC / Listen MCQ / RA</td></tr>
           <tr><td style="padding:6px">20:00-20:45</td><td style="padding:6px">45min</td><td style="padding:6px">洗澡 + 睡前阅读</td></tr>
@@ -5659,7 +5660,7 @@ p { font-size: 14px; line-height: 1.6; }
           </div>
         </div>
 
-        <div class="admin-action" style="border-color: #A788E0;">
+        <div class="admin-action" style="border-color: #7C3AED;">
           <h4>🌟 良好作息(整体)</h4>
           <p>当天:按时起床/睡觉 + 完成所有作息任务</p>
           <div class="admin-buttons">
@@ -5845,7 +5846,7 @@ p { font-size: 14px; line-height: 1.6; }
 
 <!-- v17.6: Streak 规则 modal (点 streak 块时显示) -->
 <div id="streakRulesModal" class="mb-result-modal" onclick="if(event.target===this) closeStreakRulesModal()">
-  <div class="mb-result-inner" style="max-width:420px;border-color:#FF9F45">
+  <div class="mb-result-inner" style="max-width:420px;border-color:#B45309">
     <div class="mb-result-icon">🔥</div>
     <div class="mb-result-title">连续打卡规则</div>
     <div class="mb-result-body" style="text-align:left;line-height:1.9">
@@ -5877,9 +5878,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.55"></script>
-<script src="data.js?v=19.55"></script>
-<script src="app.js?v=19.55"></script>
+<script src="character.js?v=19.56"></script>
+<script src="data.js?v=19.56"></script>
+<script src="app.js?v=19.56"></script>
 
 </body>
 </html>
