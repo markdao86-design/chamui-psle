@@ -6546,6 +6546,13 @@ function _renderErrorBankReview() {
                placeholder="答案" />
         <button class="btn btn-primary" style="margin-left:8px" onclick="submitErrorBankMath()">提交</button>
       </div>`;
+  } else {
+    // v19.65: editing 等无选项题型此前 answerArea 为空 → 题目做不了(用户实报bug)。改自评式: 先想→看答案→诚实自评
+    answerArea = `
+      <div id="ebSelfArea" style="text-align:center;margin:16px 0">
+        <div style="font-size:12px;color:#1E293B;margin-bottom:10px">先在心里想好答案, 再点开对照</div>
+        <button class="btn btn-primary" style="background:#1E40AF;color:#FFF;border:none" onclick="ebRevealAnswer()">🤔 想好了, 看答案</button>
+      </div>`;
   }
   // v19.9: 真考错题红色高亮 / v19.24: 改暗调适配
   const isRealExam = item.source === 'paper2-real';
@@ -6591,7 +6598,29 @@ function submitErrorBankAnswer(optIdx) {
   const g = _errorBankState;
   if (!g) return;
   const item = g.items[g.idx];
-  const isCorrect = optIdx === item.ans;
+  _ebApplyResult(optIdx === item.ans);
+}
+// v19.65: 自评式提交 (editing 等无选项题型) — 复用同一套 Leitner 结果处理
+function submitErrorBankSelf(isCorrect) { _ebApplyResult(!!isCorrect); }
+function ebRevealAnswer() {
+  const g = _errorBankState;
+  if (!g) return;
+  const item = g.items[g.idx];
+  const area = document.getElementById('ebSelfArea');
+  if (!area) return;
+  area.innerHTML = `
+    <div style="background:#EFF6FF;border:1px solid #93C5FD;border-radius:8px;padding:12px;text-align:left;margin-bottom:10px">
+      <div style="font-size:13px;color:#1E40AF;font-weight:900">📖 正确答案: ${escapeHtml(String(item.correctAns ?? item.ans ?? ''))}</div>
+      ${item.explain ? `<div style="font-size:12px;color:#1E293B;line-height:1.7;margin-top:6px">💡 ${escapeHtml(item.explain)}</div>` : ''}
+    </div>
+    <div style="font-size:12px;color:#1E293B;margin-bottom:8px">刚才想的对吗? <b>诚实自评</b> — 骗勾只会骗掉自己的分</div>
+    <button onclick="submitErrorBankSelf(true)" style="padding:10px 24px;margin-right:10px;background:#16A34A;color:#FFF;border:none;border-radius:8px;font-weight:900;cursor:pointer">✅ 我答对了</button>
+    <button onclick="submitErrorBankSelf(false)" style="padding:10px 24px;background:#DC2626;color:#FFF;border:none;border-radius:8px;font-weight:900;cursor:pointer">❌ 没答对</button>`;
+}
+function _ebApplyResult(isCorrect) {
+  const g = _errorBankState;
+  if (!g) return;
+  const item = g.items[g.idx];
   _handleErrorBankResult(isCorrect, item, () => {
     if (isCorrect) {
       g.correct++; petExpress('pet-excited', 800);
@@ -6693,7 +6722,7 @@ function _handleErrorBankResult(isCorrect, item, next) {
     } else {
       const correctText = item.type === 'mcq' && item.opts
         ? String.fromCharCode(65 + item.ans) + '. ' + (item.opts[item.ans] || '')
-        : item.ans;
+        : (item.ans ?? item.correctAns ?? '见上方答案');  // v19.65: editing类存correctAns字段, 原来显示undefined
       // v19.22: 答错后不自动跳, 加"下一题 →"按钮, 让孩子充分读 explain
       fb.innerHTML = `
         <div style="background:rgba(239,83,80,0.10);border:1px solid rgba(239,83,80,0.30);border-radius:6px;padding:12px">
@@ -6762,6 +6791,8 @@ window.openErrorBank = openErrorBank;
 window.closeErrorBank = closeErrorBank;
 window.startErrorBankReview = startErrorBankReview;
 window.submitErrorBankAnswer = submitErrorBankAnswer;
+window.submitErrorBankSelf = submitErrorBankSelf;   // v19.65
+window.ebRevealAnswer = ebRevealAnswer;             // v19.65
 window.submitErrorBankMath = submitErrorBankMath;
 
 // v19.17: 毕业题间隔复习 (14 天后回测一次, 数学专家累计 3 次 P0)

@@ -1162,6 +1162,12 @@ assert(/1 积分 = SGD 0\.05/.test(idxSrc) && !/SGD 0\.25/.test(idxSrc), 'v19.62
 assert(/id="thinkPuzzleCard"(?! style="display:none")/.test(idxSrc), 'v19.63: 思考题卡不再被 display:none 隐藏');
 assert(/delta < 30 \|\| delta > 300/.test(appSrc), 'v19.63: filler 差距过大时隐藏(不硬撑空框)');
 assert(/当周无题不再返回 null/.test(dataSrc) && /seed % list\.length/.test(dataSrc), 'v19.63: 思考题当周无题时每日轮换fallback');
+// v19.65: editing错题做不了 bug 修复
+assert(/id="ebSelfArea"/.test(appSrc), 'v19.65: 无选项题型有自评作答区(不再空白)');
+assert(/function ebRevealAnswer\(/.test(appSrc) && /window\.ebRevealAnswer = ebRevealAnswer/.test(appSrc), 'v19.65: 看答案函数已定义+导出');
+assert(/function submitErrorBankSelf\(/.test(appSrc) && /window\.submitErrorBankSelf = submitErrorBankSelf/.test(appSrc), 'v19.65: 自评提交已定义+导出');
+assert(/_ebApplyResult\(optIdx === item\.ans\)/.test(appSrc), 'v19.65: mcq提交复用共享结果处理');
+assert(/item\.ans \?\? item\.correctAns/.test(appSrc), 'v19.65: 答错反馈兜底correctAns(修undefined)');
 // v19.54: 我的/暑假收纳进"⋯其他"灰色按钮
 assert(/id="moreTabBtn"/.test(idxSrc), 'v19.54: 其他按钮存在');
 assert(/id="moreMenu"/.test(idxSrc), 'v19.54: 收纳菜单存在');
