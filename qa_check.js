@@ -1168,6 +1168,10 @@ assert(/function ebRevealAnswer\(/.test(appSrc) && /window\.ebRevealAnswer = ebR
 assert(/function submitErrorBankSelf\(/.test(appSrc) && /window\.submitErrorBankSelf = submitErrorBankSelf/.test(appSrc), 'v19.65: 自评提交已定义+导出');
 assert(/_ebApplyResult\(optIdx === item\.ans\)/.test(appSrc), 'v19.65: mcq提交复用共享结果处理');
 assert(/item\.ans \?\? item\.correctAns/.test(appSrc), 'v19.65: 答错反馈兜底correctAns(修undefined)');
+// v19.66: 做题类统一 对/总 两格填写
+assert(/label: 'Editing 2篇: 对_\/共_题'/.test(appSrc), 'v19.66: Editing行改对/总格式');
+assert(/const wrongOf = /.test(appSrc) && /wrongOf\(1, 'ed'\)/.test(appSrc), 'v19.66: 错数从对/总推导');
+assert(!/label: '[^']*: 错_题'/.test(appSrc), 'v19.66: 无残留单格错题行');
 // v19.54: 我的/暑假收纳进"⋯其他"灰色按钮
 assert(/id="moreTabBtn"/.test(idxSrc), 'v19.54: 其他按钮存在');
 assert(/id="moreMenu"/.test(idxSrc), 'v19.54: 收纳菜单存在');

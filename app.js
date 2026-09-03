@@ -10808,12 +10808,12 @@ const SCHED_DAYS = {
 // days: 该行哪些天有格 (1一 2二 3三 5五 0日)
 const SCHED_GRID = [
   { sec: '英语' },
-  { key: 'ed',      label: 'Editing 2篇: 错_题',            target: '≤1/天', type: 'num',  days: [1, 3] },
-  { key: 'gr',      label: 'Grammar 12题: 错_题',           target: '≤2/天', type: 'num',  days: [1, 3] },
+  { key: 'ed',      label: 'Editing 2篇: 对_/共_题',        target: '错≤1/天', type: 'frac', days: [1, 3] },
+  { key: 'gr',      label: 'Grammar 12题: 对_/共_题',       target: '错≤2/天', type: 'frac', days: [1, 3] },
   { key: 'oe',      label: '阅读OE: 答完整_/共_题',          target: '≥75%',  type: 'frac', days: [1, 3] },
   { key: 'cloze',   label: 'Cloze: 对_/共_空',              target: '≥70%',  type: 'frac', days: [2, 5] },
-  { key: 'vw',      label: 'Vocabulary 25题: 错_题',        target: '≤5',    type: 'num',  days: [2, 5] },
-  { key: 'syn',     label: '句型转换 1单元: 错_题',          target: '≤3',    type: 'num',  days: [3, 5] },
+  { key: 'vw',      label: 'Vocabulary: 对_/共_题',         target: '错≤5/周', type: 'frac', days: [2, 5] },
+  { key: 'syn',     label: '句型转换: 对_/共_题',            target: '错≤3/周', type: 'frac', days: [3, 5] },
   { key: 'listen',  label: '听说: 完成朗读/会话/听力_样',    target: '3样',   type: 'num',  days: [2] },
   { key: 'wkt',     label: '词汇周清测: 对_/共_',            target: '≥80%',  type: 'frac', days: [2] },
   { sec: '科学' },
@@ -10822,7 +10822,7 @@ const SCHED_GRID = [
   { key: 'sci_mcq', label: '诊断15题: 对_/15',              target: '≥12',   type: 'frac', days: [3] },
   { key: 'sci_fix', label: '回炉(轮换周): 清掉_章',          target: '≥1',    type: 'num',  days: [5] },
   { sec: '华文 / 数学 / 周日' },
-  { key: 'cn',      label: '华文阅读1篇: 漏_点',            target: '0点',   type: 'num',  days: [2] },
+  { key: 'cn',      label: '华文阅读大题: 踩中_/共_点',      target: '漏≤2',  type: 'frac', days: [2] },
   { key: 'math',    label: '数学半卷(轮换周): 错_/粗心_',    target: '粗心0', type: 'pair', days: [5] },
   { key: 'paper',   label: '周日整卷: 得分_/满分_',          target: '记录',  type: 'frac', days: [0] },
   { key: 'essay',   label: '作文(单周): 内容_/20+语言_/20',  target: '≥上篇', type: 'pair', days: [0] },
@@ -10871,13 +10871,15 @@ function computeSchedWeekSummary(mondayDate) {
   const clozePct = pct([f2(2, 'cloze'), f2(5, 'cloze')]);
   const vtPct = pct([f2(1, 'vt'), f2(2, 'vt'), f2(3, 'vt'), f2(5, 'vt'), f2(0, 'vt')]);
   const wktPct = pct([f2(2, 'wkt')]);
-  const edW = sum([g(1, 'ed'), g(3, 'ed')]);
-  const grW = sum([g(1, 'gr'), g(3, 'gr')]);
-  const vwW = sum([g(2, 'vw'), g(5, 'vw')]);
-  const synW = sum([g(3, 'syn'), g(5, 'syn')]);
+  // v19.66: 做题类统一"对_/共_"两格填写, 错数=共-对 (用户要求统一表述)
+  const wrongOf = (day, key) => { const a = g(day, key + '_a'), b = g(day, key + '_b'); return (a == null || b == null) ? null : Math.max(0, b - a); };
+  const edW = sum([wrongOf(1, 'ed'), wrongOf(3, 'ed')]);
+  const grW = sum([wrongOf(1, 'gr'), wrongOf(3, 'gr')]);
+  const vwW = sum([wrongOf(2, 'vw'), wrongOf(5, 'vw')]);
+  const synW = sum([wrongOf(3, 'syn'), wrongOf(5, 'syn')]);
   const sciMcq = g(3, 'sci_mcq_a');
   const sciOe = g(1, 'sci_oe_a');
-  const cnMiss = g(2, 'cn');
+  const cnMiss = wrongOf(2, 'cn');
   const mathC = g(5, 'math_b'); // pair: a=错 b=粗心
   const listen = g(2, 'listen');
   const oralStar = g(0, 'oral');
