@@ -5212,7 +5212,8 @@ p { font-size: 14px; line-height: 1.6; }
       <!-- 右栏: 教学 + 信息 + 复盘 (v19.23: 目标校下移到第 3, 教学卡上提) -->
       <div class="home-col-right">
         <div style="font-size:12px;font-weight:900;color:#1E40AF;letter-spacing:1px;margin-bottom:6px">🎓 教学 + 信息 + 复盘</div>
-        <div class="card think-puzzle-card" id="thinkPuzzleCard" style="display:none"></div>
+        <!-- v19.63: 每日揭秘思考题恢复显示 (曾被误 hide, render 一直在空转) -->
+        <div class="card think-puzzle-card" id="thinkPuzzleCard"></div>
         <div class="card" id="weekMasterTipCard"></div>
         <div class="card" id="targetSchoolMini" style="border-left:1px solid #1E293B"></div>
         <div id="gradReviewCard"></div>
@@ -5882,9 +5883,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.62"></script>
-<script src="data.js?v=19.62"></script>
-<script src="app.js?v=19.62"></script>
+<script src="character.js?v=19.63"></script>
+<script src="data.js?v=19.63"></script>
+<script src="app.js?v=19.63"></script>
 
 </body>
 </html>

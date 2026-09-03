@@ -207,8 +207,8 @@ function balanceHomeColumns() {
     const lh = _sumChildrenHeights(left);
     const rh = _sumChildrenHeights(right);
     const delta = Math.abs(lh - rh);
-    if (delta < 30) {
-      // 内容已经接近等高, 两 filler 都不显示
+    if (delta < 30 || delta > 300) {
+      // v19.63: 接近等高不需要 filler; 差距过大一句话也补不了, 硬撑成巨大空框更难看 — 都隐藏
       return;
     }
     // 短栏 filler 显示文案 + flex-grow 撑空到与长栏等高
@@ -552,7 +552,7 @@ function renderPaper2SprintCard() {
   const dailyTargetCloze = 10, dailyTargetSST = 5;
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <div style="font-size:14px;font-weight:900;color:#DB2777">🎯 Paper 2 弱点突击</div>
+      <div style="font-size:14px;font-weight:900;color:#1E40AF">🎯 Paper 2 弱点突击</div>
       <div style="margin-left:auto;font-size:11px;color:#1E293B">实考 AL6 → 目标 AL 4</div>
     </div>
     <div style="font-size:11px;color:#1E293B;margin-bottom:8px;line-height:1.5">
@@ -584,8 +584,8 @@ function renderPaper2SprintCard() {
         <button onclick="openSstGame()" style="padding:4px 12px;background:#1E40AF;color:#FFF;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">立即练 →</button>
       </div>
     </div>
-    <div style="margin-top:8px;padding:10px;background:linear-gradient(135deg, rgba(220,38,38,0.10), rgba(220,38,38,0.03));border:1px solid rgba(220,38,38,0.25);border-radius:6px;text-align:center">
-      <button onclick="openPaper2MockGame()" style="padding:8px 20px;background:linear-gradient(135deg,#1E40AF,#DC2626);color:#FFF;border:none;border-radius:6px;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 2px 8px rgba(220,38,38,0.30)">
+    <div style="margin-top:8px;padding:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;text-align:center">
+      <button onclick="openPaper2MockGame()" style="padding:8px 20px;background:#1E40AF;color:#FFF;border:none;border-radius:6px;font-weight:900;font-size:13px;cursor:pointer">
         🎯 Paper 2 模拟卷 (28 min · 15 Cloze + 8 SST)
       </button>
       <div style="font-size:10px;color:#1E293B;margin-top:4px">完整真考节奏 + 自动算预测 AL</div>
@@ -2382,7 +2382,7 @@ function renderErrorBankCard() {
       ${breakdown}
     </div>
     <!-- v19.22: 显眼大按钮 (整张卡也可点) -->
-    <button onclick="event.stopPropagation(); openErrorBank()" style="width:100%;padding:12px;background:linear-gradient(135deg,#66BB6A,#43A047);color:#FFF;border:none;border-radius:6px;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 2px 8px rgba(102,187,106,0.30)">
+    <button onclick="event.stopPropagation(); openErrorBank()" style="width:100%;padding:12px;background:#1E40AF;color:#FFF;border:none;border-radius:6px;font-size:14px;font-weight:900;cursor:pointer">
       🎯 立即开始复习 ${realExam > 0 ? `(真考 ${realExam} 题优先)` : `(${wrongs.length} 题)`} →
     </button>
     <div style="font-size:10px;color:#1E293B;margin-top:6px;text-align:center;font-style:italic">

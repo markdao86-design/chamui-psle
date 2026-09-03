@@ -688,7 +688,7 @@ assert(oldEbDualTimer === 0, `v19.22: 旧 1200/2200 双 setTimeout 已撤 (实�
 // v19.22 + 23: gradReviewCard 在右栏 (v19.23 后注释改成 "教学 + 信息 + 复盘")
 assert(/<!-- 右栏:[\s\S]{0,800}id="gradReviewCard"/.test(idxSrc), 'v19.22+23: gradReviewCard 在右栏');
 // v19.21: Paper 2 弱点卡改暗调
-assert(/color:#DB2777">🎯 Paper 2 弱点突击/.test(appSrc), 'v19.21: Paper 2 标题用亮粉 #DB2777');
+assert(/weight:900;color:#1E40AF">🎯 Paper 2 弱点突击/.test(appSrc), "v19.63: Paper 2 标题品蓝(亮主题收敛)");
 // [v19.55 亮色主题: 暗色机制断言废除] assert(/rgba\(255,255,255,0\.04\);border:1px solid rgba\(255,255,255,0\.10\)[\s\S]{0,500}Cloze 单空填/.test(appSrc), 'v19.21: Cloze 块用透明背景');
 assert(/linear-gradient\(90deg,#B45309,#16A34A\)/.test(appSrc), 'v19.21: 进度条改亮版橙→绿渐变');
 // [v19.55 亮色主题: 暗色机制断言废除] assert(/#F1F5F9;border-radius:4px;height:8px/.test(appSrc), 'v19.21: 进度条底用透明白');
@@ -1158,6 +1158,10 @@ assert(/ROADMAP_PHASES/.test(appSrc) && /renderRoadmapCard\(\);/.test(appSrc), '
 assert(/距 PSLE 笔试还剩约/.test(appSrc), 'v19.62: 笔试倒计时');
 assert(/ontoggle="if\(this\.open&&window\.drawChart\)/.test(idxSrc), 'v19.62: 旧分析卡收折叠+展开重画chart');
 assert(/1 积分 = SGD 0\.05/.test(idxSrc) && !/SGD 0\.25/.test(idxSrc), 'v19.62: 兑换汇率文案修正0.25→0.05 (老bug)');
+// v19.63: 思考题卡恢复 + filler 大差距隐藏
+assert(/id="thinkPuzzleCard"(?! style="display:none")/.test(idxSrc), 'v19.63: 思考题卡不再被 display:none 隐藏');
+assert(/delta < 30 \|\| delta > 300/.test(appSrc), 'v19.63: filler 差距过大时隐藏(不硬撑空框)');
+assert(/当周无题不再返回 null/.test(dataSrc) && /seed % list\.length/.test(dataSrc), 'v19.63: 思考题当周无题时每日轮换fallback');
 // v19.54: 我的/暑假收纳进"⋯其他"灰色按钮
 assert(/id="moreTabBtn"/.test(idxSrc), 'v19.54: 其他按钮存在');
 assert(/id="moreMenu"/.test(idxSrc), 'v19.54: 收纳菜单存在');

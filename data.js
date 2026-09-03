@@ -5297,11 +5297,20 @@ const THINK_PUZZLES = [
   }
 ];
 
-// 取本周思考题(无则 null) + 是否已答
+// 取本周思考题 + 是否已答
+// v19.63: 当周无题不再返回 null (曾导致 W18 起揭秘卡消失) — 每日轮换: 优先未答的题, 全答完按日期轮着温故
 function getThinkPuzzleForWeek(state, weekN) {
-  const puzzle = THINK_PUZZLES.find(p => p.week === weekN);
+  let puzzle = THINK_PUZZLES.find(p => p.week === weekN);
+  if (!puzzle) {
+    const answered = state.thinkPuzzleAnswers || {};
+    const pool = THINK_PUZZLES.filter(p => !answered[p.week]);
+    const list = pool.length ? pool : THINK_PUZZLES;
+    const d = new Date();
+    const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+    puzzle = list[seed % list.length];
+  }
   if (!puzzle) return null;
-  const answer = (state.thinkPuzzleAnswers && state.thinkPuzzleAnswers[weekN]) || null;
+  const answer = (state.thinkPuzzleAnswers && state.thinkPuzzleAnswers[puzzle.week]) || null;
   return { puzzle, answer };
 }
 
