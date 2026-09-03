@@ -128,6 +128,11 @@ async function init() {
       recalcTotalPoints(remoteState);
       state = remoteState;
       renderAll();
+      // v19.53: 家长停在课表页时, 孩子远程填分即时刷新打分表+计分卡
+      const schedPage = document.getElementById('page-schedule');
+      if (schedPage && schedPage.classList.contains('active') && typeof renderSchedulePage === 'function') {
+        renderSchedulePage();
+      }
       showToast('☁️ 已收到远程更新', 'sync');
     });
   }
