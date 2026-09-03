@@ -1235,11 +1235,20 @@ assert(!/--color-bg: #0F172A/.test(idxSrc), 'v19.55: 暗主题变量已替换');
    'eng_vocab_mcq', 'eng_visualtext', 'eng_compcloze', 'eng_synthesis', 'eng_sitwriting'].forEach(id => {
     assert(sci.concat(eng).some(n => n.id === id), `v19.74: 新节点 ${id} 在树中`);
   });
-  // 每个树节点必有 3 道练习题, 每题必有 explain (防死内容: 节点没题 = ⭐ 拿不到)
+  // v19.75: 科学节点扩到 10 题 (3基础+3易错+2应用+2拉分), 其他学科 3 题起步
   let allNodes = [];
   Object.keys(KT || {}).forEach(s => { allNodes = allNodes.concat(KT[s]); });
-  const noQuiz = allNodes.filter(n => !KP[n.id] || KP[n.id].length !== 3);
-  assert(noQuiz.length === 0, `v19.74: 所有 ${allNodes.length} 节点都有 3 道练习题 (缺: ${noQuiz.map(n => n.id).join(',') || '无'})`);
+  const sciIds = new Set(sci.map(n => n.id));
+  const badSci = sci.filter(n => !KP[n.id] || KP[n.id].length !== 10);
+  assert(badSci.length === 0, `v19.75: 科学 19 节点每个 10 题 (不齐: ${badSci.map(n => n.id + '=' + ((KP[n.id] || []).length)).join(',') || '无'})`);
+  const badTags = sci.filter(n => {
+    const tags = (KP[n.id] || []).map(q => q.tag);
+    const cnt = t => tags.filter(x => x === t).length;
+    return cnt('易错') < 3 || cnt('应用') < 2 || cnt('拉分') < 2;
+  });
+  assert(badTags.length === 0, `v19.75: 每个科学节点 ≥3易错+2应用+2拉分 (不齐: ${badTags.map(n => n.id).join(',') || '无'})`);
+  const noQuiz = allNodes.filter(n => !sciIds.has(n.id)).filter(n => !KP[n.id] || KP[n.id].length !== 3);
+  assert(noQuiz.length === 0, `v19.74: 非科学节点各 3 道练习题 (缺: ${noQuiz.map(n => n.id).join(',') || '无'})`);
   const noExplain = allNodes.filter(n => (KP[n.id] || []).some(q => !q.explain));
   assert(noExplain.length === 0, `v19.74: 知识树练习题全部有 explain (缺: ${noExplain.map(n => n.id).join(',') || '无'})`);
   // 每个节点 desc 有内容 + 3 examples + pitfall (AL1 深度结构)

@@ -6218,8 +6218,8 @@ function openKnowledgeNodeDetail(subj, idx) {
         <div class="ktnd-text">${escapeHtml(node.pitfall)}</div>
       </div>` : ''}
       <div class="ktnd-section ktnd-action">
-        ${window.getNodePractice && window.getNodePractice(node.id) ? `<button class="btn btn-primary ktnd-go ktnd-practice" onclick="openKnowledgePractice('${node.id}', '${escapeHtml(subj)}', ${idx})">📝 PSLE 风格练习 ${_starsHtml(node.id)}</button>` : ''}
-        ${g ? `<button class="btn btn-secondary ktnd-go" onclick="closeKnowledgeNodeDetail(); ${g.open};">🎮 玩 mini-game: ${g.name}</button>` : ''}
+        ${(() => { const pq = window.getNodePractice && window.getNodePractice(node.id); return pq && pq.length ? `<button class="btn btn-primary ktnd-go ktnd-practice" onclick="openKnowledgePractice('${node.id}', '${escapeHtml(subj)}', ${idx})">📝 定星练习 ${pq.length} 题 ${_starsHtml(node.id)}</button>` : ''; })()}
+        ${g ? `<button class="btn btn-secondary ktnd-go" onclick="closeKnowledgeNodeDetail(); ${g.open};">🎮 加练熟练度: ${g.name}</button>` : ''}
         <button class="btn btn-secondary" onclick="closeKnowledgeNodeDetail()">关闭</button>
       </div>
     </div>`;
@@ -6271,6 +6271,12 @@ function _renderKnowledgePractice() {
   const total = g.qs.length;
   const score = g.submitted ? g.answers.reduce((s, a, i) => s + (a === g.qs[i].ans ? 1 : 0), 0) : 0;
   const allAnswered = g.answers.every(a => a !== null);
+  const KP_TAG_STYLE = {
+    '基础': 'background:rgba(30,64,175,0.08);color:#1E40AF;border:1px solid rgba(30,64,175,0.25)',
+    '易错': 'background:rgba(220,38,38,0.08);color:#DC2626;border:1px solid rgba(220,38,38,0.25)',
+    '应用': 'background:rgba(22,163,74,0.08);color:#16A34A;border:1px solid rgba(22,163,74,0.25)',
+    '拉分': 'background:rgba(124,58,237,0.08);color:#7C3AED;border:1px solid rgba(124,58,237,0.25)'
+  };
   const qsHtml = g.qs.map((q, i) => {
     const userAns = g.answers[i];
     const opts = q.opts.map((o, oi) => {
@@ -6284,9 +6290,10 @@ function _renderKnowledgePractice() {
     const explainHtml = g.submitted
       ? `<div class="cn-q-explain">${userAns === q.ans ? '✅ 正确' : '❌ 应是 ' + String.fromCharCode(65+q.ans)} · ${escapeHtml(q.explain || '')}</div>`
       : '';
+    const tagChip = q.tag ? `<span style="display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-right:6px;${KP_TAG_STYLE[q.tag] || KP_TAG_STYLE['基础']}">${q.tag}</span>` : '';
     return `
       <div class="cn-question">
-        <div class="cn-q-text">${i+1}. ${escapeHtml(q.q)}</div>
+        <div class="cn-q-text">${i+1}. ${tagChip}${escapeHtml(q.q)}</div>
         <div class="mcq-opts">${opts}</div>
         ${explainHtml}
       </div>`;
@@ -6300,7 +6307,7 @@ function _renderKnowledgePractice() {
         </div>
         <button class="vocab-modal-close" onclick="closeKnowledgePractice()">×</button>
       </div>
-      <div class="kp-tip">💡 不限次数 — 反复练习巩固. ⭐ 升级: 60% = 1 ⭐ / 80% = 2 ⭐ / 100% = 3 ⭐ (取最高记录)</div>
+      <div class="kp-tip">💡 不限次数 · 题带标签: <b style="color:#DC2626">易错</b>=常考陷阱 / <b style="color:#16A34A">应用</b>=新情境 / <b style="color:#7C3AED">拉分</b>=超纲难题 · ⭐ 60%=1 / 80%=2 / 100%=3 (取最高)</div>
       <div class="cn-questions">${qsHtml}</div>
       ${g.submitted
         ? `<div class="cn-result">
