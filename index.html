@@ -3084,25 +3084,18 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 .kt-node-locked.kt-dot { background: var(--color-text-dim); border-color: var(--color-text-dim); opacity: 1; filter: none; }
 .kt-node-learning {
-  background:
-    radial-gradient(ellipse at 20% 20%, rgba(192,86,33,0.08) 0%, transparent 55%),
-    linear-gradient(135deg, var(--color-accent-soft) 0%, var(--color-card) 80%);
+  background: rgba(192,86,33,0.08);
   border: 1px solid var(--color-accent);
-  animation: kt-pulse 2s ease-in-out infinite;
 }
-.kt-node-learning.kt-dot { background: var(--color-accent); border-color: var(--color-accent); animation: none; }
+.kt-node-learning.kt-dot { background: var(--color-accent); border-color: var(--color-accent); }
 .kt-node-mastered {
-  background: #DCFCE7;
-  border: 1px solid #4ADE80;
-  color: #15803D;
+  background: rgba(22,163,74,0.08);
+  border: 1px solid rgba(22,163,74,0.35);
+  color: #16A34A;
 }
 .kt-node-mastered .kt-node-name,
-.kt-node-mastered .kt-node-week { color: #15803D; }
+.kt-node-mastered .kt-node-week { color: #16A34A; }
 .kt-node-mastered.kt-dot { background: var(--color-secondary); border-color: var(--color-secondary); }
-@keyframes kt-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 184, 110, 0.45); }
-  50% { box-shadow: 0 0 0 6px rgba(232, 184, 110, 0); }
-}
 .kt-connector {
   width: 14px; height: 2px;
   background: var(--color-border);
@@ -3110,7 +3103,7 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 }
 /* v18.41: 节点可点 + 探索 ⭐ + tip banner */
 .kt-clickable { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; position: relative; }
-.kt-clickable:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(74,144,199,0.20); }
+.kt-clickable:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(30,64,175,0.15); }
 .kt-clickable.kt-explored { box-shadow: 0 0 0 2px var(--color-accent); }
 .kt-node-star {
   position: absolute;
@@ -3192,10 +3185,10 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .kt-row-stars { font-size: 11px; font-weight: 700; color: var(--color-accent); margin-left: 8px; }
 .kt-node-stars-1 { color: #B45309; font-size: 14px; }
 .kt-node-stars-2 { color: #B45309; font-size: 13px; letter-spacing: -2px; }
-.kt-node-stars-3 { color: #B8860B; font-size: 12px; letter-spacing: -3px; }
-.kt-node.kt-stars-1 { box-shadow: 0 0 0 2px #FFE066; }
-.kt-node.kt-stars-2 { box-shadow: 0 0 0 2px #FFA500; }
-.kt-node.kt-stars-3 { box-shadow: 0 0 0 3px #FFD700; }
+.kt-node-stars-3 { color: #B45309; font-size: 12px; letter-spacing: -3px; }
+.kt-node.kt-stars-1 { box-shadow: 0 0 0 2px rgba(230,162,60,0.45); }
+.kt-node.kt-stars-2 { box-shadow: 0 0 0 2px #E6A23C; }
+.kt-node.kt-stars-3 { box-shadow: 0 0 0 2px #B45309; }
 .ktnd-practice {
   background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-warn) 100%) !important;
   border: none !important;
@@ -5884,9 +5877,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.71"></script>
-<script src="data.js?v=19.71"></script>
-<script src="app.js?v=19.71"></script>
+<script src="character.js?v=19.72"></script>
+<script src="data.js?v=19.72"></script>
+<script src="app.js?v=19.72"></script>
 
 </body>
 </html>

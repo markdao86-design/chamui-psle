@@ -6127,7 +6127,7 @@ function _buildKnowledgeTreeInnerHtml(forPage) {
         </div>
         ${forPage ? '' : '<button class="vocab-modal-close" onclick="closeKnowledgeTreeModal()">×</button>'}
       </div>
-      <div class="kt-tip-banner" style="background:#FFFBEB;color:#92400E;border:1px solid #FDE68A;font-weight:700">🐉 <b style="color:#1E293B">金龙进度: ${totalStars}/105 ⭐</b> · 还差 ${Math.max(0, 105 - totalStars)} ⭐ + ${Math.max(0, 10000 - (state.totalPoints||0)).toLocaleString()} 分 → 解锁传说级金龙伙伴 <span style="color:#B45309;font-weight:900">(SGD 1500)</span></div>
+      <div class="kt-tip-banner">🐉 <b style="color:#1E293B">金龙进度: ${totalStars}/105 ⭐</b> · 还差 ${Math.max(0, 105 - totalStars)} ⭐ + ${Math.max(0, 10000 - (state.totalPoints||0)).toLocaleString()} 分 → 解锁传说级金龙伙伴 <span style="color:#B45309;font-weight:900">(SGD 1500)</span></div>
       <div class="kt-tip-banner">💡 <b>点任意节点</b> 看讲解 + 例子 + 一键去练习对应 mini-game · 学完一个 +2 分 + ⭐ 标记</div>
       <div class="kt-legend">
         <span class="kt-legend-item"><span class="kt-dot kt-node-mastered"></span> 已掌握</span>
