@@ -3009,6 +3009,24 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .kt-inner, .vocab-modal-inner, .vocab-modal-body, .mg-inner, .report-modal-card, .comp-oe-inner {
   -webkit-overflow-scrolling: touch;
 }
+/* v19.78: 手指按在选项上也要能上下滑 (选项铺满屏时几乎没有空白可下手) */
+.mcq-opt, .cn-question, .mcq-opts { touch-action: pan-y; }
+/* v19.78: 10 题练习选项瘦身 —— 原 padding12/字14 一屏放不下两题, 逼着一直滑 */
+.kt-inner .cn-question { padding: 9px 10px; }
+.kt-inner .cn-q-text { margin-bottom: 6px; }
+.kt-inner .mcq-opts { gap: 6px; }
+.kt-inner .mcq-opt { padding: 8px 10px; font-size: 13px; font-weight: 600; }
+/* v19.78: 提交按钮吸底 —— 不必滑到最下面才够得着。bottom:-20px 吃掉 kt-inner 的 padding,
+   下方 20px 白色投影补住缝隙, 否则题目会从按钮底下透出来 */
+.kt-inner .cn-submit {
+  position: sticky; bottom: -20px; z-index: 3;
+  margin-top: 12px; width: 100%; opacity: 1 !important;
+  box-shadow: 0 20px 0 0 #FFFFFF, 0 -10px 14px rgba(255,255,255,0.92);
+}
+.kt-inner .cn-submit:disabled {
+  background: #EEF2F7 !important; color: #64748B !important;
+  border: 1px solid #E2E8F0 !important; cursor: not-allowed;
+}
 /* v18.49: page 形态 — 知识树/作文 直接嵌在 page 里, 不浮层 */
 .kt-page-wrap .kt-inner {
   position: static; max-height: none; max-width: none; width: auto;
@@ -5887,9 +5905,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.77"></script>
-<script src="data.js?v=19.77"></script>
-<script src="app.js?v=19.77"></script>
+<script src="character.js?v=19.78"></script>
+<script src="data.js?v=19.78"></script>
+<script src="app.js?v=19.78"></script>
 
 </body>
 </html>

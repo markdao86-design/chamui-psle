@@ -6323,8 +6323,24 @@ function _renderKnowledgePractice() {
 }
 function selectKnowledgePracticeAnswer(qIdx, optIdx) {
   if (!_kpracticeState || _kpracticeState.submitted) return;
-  _kpracticeState.answers[qIdx] = optIdx;
-  _renderKnowledgePractice();
+  // v19.78: 手指在选项上拖动 = 想滚动, 不是想选答案 (修"滑动把选的答案滑掉")
+  if (_mcqDragged) { _mcqDragged = false; return; }
+  const g = _kpracticeState;
+  g.answers[qIdx] = optIdx;
+  // v19.78: 只改这一题的按钮 + 提交条, 不再 innerHTML 重建整个弹层。
+  // 重建 = 10 题 DOM 全扔全建 + 滚动条归零, 是"滑动卡顿/跳回顶部"的总根源。
+  const modal = document.getElementById('kpracticeModal');
+  if (!modal) { _renderKnowledgePractice(); return; }
+  const qEl = modal.querySelectorAll('.cn-question')[qIdx];
+  if (!qEl) { _renderKnowledgePractice(); return; }
+  qEl.querySelectorAll('.mcq-opt').forEach((b, i) => b.classList.toggle('mcq-selected', i === optIdx));
+  const answered = g.answers.filter(a => a !== null).length, total = g.qs.length;
+  const btn = modal.querySelector('.cn-submit');
+  if (btn) {
+    const all = answered === total;
+    btn.disabled = !all;
+    btn.textContent = all ? '✅ 提交答案' : `请先答完 (${answered}/${total})`;
+  }
 }
 function submitKnowledgePractice() {
   const g = _kpracticeState;
@@ -11604,7 +11620,8 @@ window.closeCompOe = closeCompOe;
 // v19.77 三件事: 静态选择器判开关(零 getComputedStyle) + html/body 双锁 + touchmove 兜底 + 重建后还原滚动位置。
 const MSL_OVERLAY_SEL = '.kt-modal, .vocab-modal, .streak-broken-modal, .vg-modal, .mb-result-modal, .photo-modal, .photo-source-modal, .report-modal';
 const MSL_OPEN_SEL = MSL_OVERLAY_SEL.split(', ').map(s => s + '.show').join(', ');
-let _mslScrollY = 0, _mslLocked = false, _mslTouchEl = null, _mslTouchY = 0;
+let _mslScrollY = 0, _mslLocked = false;
+let _mcqTouchY = null, _mcqDragged = false;   // v19.78: 选项上滑动 ≠ 点击
 
 function _mslAnyModalOpen() { return !!document.querySelector(MSL_OPEN_SEL); }
 
@@ -11629,19 +11646,6 @@ function _mslUnlock() {
 }
 function syncModalScrollLock() {
   if (_mslAnyModalOpen()) _mslLock(); else _mslUnlock();
-}
-
-// 找触点所在的可滚动祖先(限 modal 内部), 没有则返回 null
-function _mslScrollableAncestor(node) {
-  let el = node && node.nodeType === 3 ? node.parentElement : node;
-  while (el && el !== document.body) {
-    if (el.scrollHeight > el.clientHeight + 1) {
-      const ov = getComputedStyle(el).overflowY;
-      if (ov === 'auto' || ov === 'scroll') return el;
-    }
-    el = el.parentElement;
-  }
-  return null;
 }
 
 // 记录弹层内滚动位置(scroll 事件不冒泡, 用捕获), 存在常驻的 overlay 上, 供重建后还原
@@ -11683,20 +11687,19 @@ function initModalScrollLock() {
   mo.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
   document.addEventListener('scroll', _mslTrackScroll, true);
 
-  // iOS 兜底: 锁定期间, 触点不在可滚动区 或 已滚到边界还继续推 → 吃掉手势, 背景绝不跟滚
+  // v19.78: 删掉 v19.77 的 touchmove 兜底 —— 它是 { passive:false } 且每帧读 scrollTop/scrollHeight,
+  // 强制布局 + 关掉 iOS 滚动快速路径 = 手指按在选项上就滑不动。背景锁由 html/body 双锁 + overscroll-behavior 负责, 已够。
+  // 滑动误触防护: 手指在选项上拖动超阈值 → 判定为滚动, 不算选择 (两个监听都 passive, 不影响滚动性能)
   document.addEventListener('touchstart', (e) => {
-    if (!_mslLocked || !e.touches[0]) return;
-    _mslTouchEl = _mslScrollableAncestor(e.target);
-    _mslTouchY = e.touches[0].clientY;
+    if (e.target && e.target.closest && e.target.closest('.mcq-opt')) {
+      _mcqTouchY = e.touches[0] ? e.touches[0].clientY : null;
+      _mcqDragged = false;
+    } else { _mcqTouchY = null; }
   }, { passive: true });
   document.addEventListener('touchmove', (e) => {
-    if (!_mslLocked || e.touches.length > 1) return;
-    const el = _mslTouchEl;
-    if (!el) { if (e.cancelable) e.preventDefault(); return; }
-    const dy = e.touches[0].clientY - _mslTouchY;
-    const atTop = el.scrollTop <= 0, atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
-    if ((atTop && dy > 0) || (atBottom && dy < 0)) { if (e.cancelable) e.preventDefault(); }
-  }, { passive: false });
+    if (_mcqTouchY === null || !e.touches[0]) return;
+    if (Math.abs(e.touches[0].clientY - _mcqTouchY) > 8) _mcqDragged = true;
+  }, { passive: true });
 
   syncModalScrollLock();
 }

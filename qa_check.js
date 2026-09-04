@@ -1270,7 +1270,14 @@ assert(!/--color-bg: #0F172A/.test(idxSrc), 'v19.55: 暗主题变量已替换');
   assert(/function _mslRestoreScroll\(/.test(appSrc) && /if \(rebuilt\) _mslRestoreScroll\(rebuilt\);/.test(appSrc), 'v19.77: 弹层重建后同步还原内层滚动位置(答题不跳顶)且被调用');
   assert(!/_mslRaf/.test(appSrc), 'v19.77: 还原不依赖 rAF (后台标签/低电量不触发会让还原永久失效)');
   assert(/_mslTrackScroll/.test(appSrc) && /addEventListener\('scroll', _mslTrackScroll, true\)/.test(appSrc), 'v19.77: 捕获阶段记录弹层内滚动位置');
-  assert(/passive: false/.test(appSrc) && /e\.preventDefault\(\); return;/.test(appSrc), 'v19.77: touchmove 兜底 (passive:false 可 preventDefault)');
+  // v19.78: 滚动流畅性 —— 反向断言, 防止再引入非 passive touchmove
+  assert(!/passive: false/.test(appSrc), 'v19.78: 无 {passive:false} touchmove (会关掉 iOS 滚动快速路径 → 按在选项上滑不动)');
+  assert(!/_mslScrollableAncestor/.test(appSrc), 'v19.78: 已删每帧强制布局的可滚动祖先查找');
+  assert(/_mcqDragged/.test(appSrc) && /if \(_mcqDragged\) \{ _mcqDragged = false; return; \}/.test(appSrc), 'v19.78: 选项上拖动判定为滚动, 不算选择');
+  assert(!/_kpracticeState\.answers\[qIdx\] = optIdx;\s*\n\s*_renderKnowledgePractice\(\);/.test(appSrc), 'v19.78: 答题不再整体重建弹层');
+  assert(/qEl\.querySelectorAll\('\.mcq-opt'\)\.forEach/.test(appSrc), 'v19.78: 答题改为局部更新按钮态');
+  assert(/touch-action: pan-y/.test(idxSrc), 'v19.78: 选项区允许纵向拖动滚动');
+  assert(/\.kt-inner \.cn-submit/.test(idxSrc) && /position: sticky/.test(idxSrc), 'v19.78: 提交按钮吸底');
   assert(/-webkit-overflow-scrolling: touch/.test(idxSrc), 'v19.77: 弹层内滚动区有动量滚动');
 }
 
