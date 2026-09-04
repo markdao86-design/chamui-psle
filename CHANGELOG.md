@@ -5,6 +5,21 @@
 
 ---
 
+## v19.76 (2026-09-04) — modal 滚动穿透修复 (iPad 实拍反馈)
+
+### 痛点
+- 用户 iPad 实拍: 知识树 PSLE 风练习弹层 (物质三态) 开着时, 手指在弹层上滑, **背景页跟着一起滚** — iOS Safari 经典 scroll chaining, 40+ 处 modal 全中招。
+
+### 修复 (零改动覆盖全部 modal)
+1. **app.js `initModalScrollLock`**: MutationObserver 监听全文档 class 变化, 任何 `.show` 且 computed position:fixed 的浮层出现 → body `position:fixed; top:-scrollY` 钉死并记住位置; 全部关闭 → 解锁并 `scrollTo` 弹回原位。不改 40+ 处开关调用点。
+2. **index.html CSS**: 8 个浮层家族 + 内滚动容器加 `overscroll-behavior: contain`, 弹层内滚到边不再把滚动链传给背景 (双保险)。
+3. **QA +5 断言** (673 项全过): 函数定义/启动被调用(防死代码)/window 导出/锁+恢复逻辑/CSS 存在。
+
+### 验证
+- localhost:8766 实测全周期: 开弹层 body fixed top:-400px → 关弹层解锁 scrollY 恢复 400 ✓; 成就弹层常驻时保持锁定(正确行为) ✓。
+
+---
+
 ## v19.15 (2026-05-23) — 第 5 次评审 P0 三件套: Leitner 封顶 + Cloze 字典扩 + 周末自选
 
 ### 痛点 (第 5 次 6 专家独立评审, 累计平均 6.88/10 vs 自评 7.58, 偏差 -0.7)

@@ -11597,3 +11597,46 @@ window.openCompOeGame = openCompOeGame;
 window.compOeReveal = compOeReveal;
 window.compOeScore = compOeScore;
 window.closeCompOe = closeCompOe;
+
+// ===== v19.76: modal 滚动穿透修复 (iOS Safari 弹层开着时背景页跟着滚) =====
+// 原理: 任何全屏浮层 (.show 且 position:fixed) 打开时, body 用 position:fixed 钉死并记住滚动位置;
+// 全部关闭时恢复原位。MutationObserver 监听 class 变化, 40+ 处 modal 开关零改动全覆盖。
+let _mslScrollY = 0, _mslLocked = false;
+function _mslAnyModalOpen() {
+  const shown = document.querySelectorAll('.show');
+  for (const el of shown) {
+    if (getComputedStyle(el).position === 'fixed') return true;
+  }
+  return false;
+}
+function _mslLock() {
+  if (_mslLocked) return;
+  _mslScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+  const b = document.body;
+  b.style.position = 'fixed';
+  b.style.top = (-_mslScrollY) + 'px';
+  b.style.left = '0'; b.style.right = '0'; b.style.width = '100%';
+  _mslLocked = true;
+}
+function _mslUnlock() {
+  if (!_mslLocked) return;
+  const b = document.body;
+  b.style.position = ''; b.style.top = ''; b.style.left = ''; b.style.right = ''; b.style.width = '';
+  window.scrollTo(0, _mslScrollY);
+  _mslLocked = false;
+}
+function syncModalScrollLock() {
+  if (_mslAnyModalOpen()) _mslLock(); else _mslUnlock();
+}
+function initModalScrollLock() {
+  const mo = new MutationObserver(syncModalScrollLock);
+  mo.observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ['class'] });
+  syncModalScrollLock();
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initModalScrollLock);
+} else {
+  initModalScrollLock();
+}
+window.initModalScrollLock = initModalScrollLock;
+window.syncModalScrollLock = syncModalScrollLock;

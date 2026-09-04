@@ -2999,6 +2999,12 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   padding: 20px;
 }
 .kt-modal.show { display: flex; }
+/* v19.76: modal 滚动穿透修复 — 浮层及其内滚动区到边不再把滚动传给背景页 (配合 app.js body 锁) */
+.kt-modal, .vocab-modal, .streak-broken-modal, .vg-modal, .mb-result-modal,
+.photo-modal, .photo-source-modal, .report-modal,
+.kt-inner, .vocab-modal-inner, .vocab-modal-body, .mg-inner, .report-modal-card {
+  overscroll-behavior: contain;
+}
 /* v18.49: page 形态 — 知识树/作文 直接嵌在 page 里, 不浮层 */
 .kt-page-wrap .kt-inner {
   position: static; max-height: none; max-width: none; width: auto;
@@ -5877,9 +5883,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.75"></script>
-<script src="data.js?v=19.75"></script>
-<script src="app.js?v=19.75"></script>
+<script src="character.js?v=19.76"></script>
+<script src="data.js?v=19.76"></script>
+<script src="app.js?v=19.76"></script>
 
 </body>
 </html>

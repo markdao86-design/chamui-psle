@@ -1257,6 +1257,15 @@ assert(!/--color-bg: #0F172A/.test(idxSrc), 'v19.55: 暗主题变量已替换');
   assert(!/AL 4-6/.test(JSON.stringify(sci) + JSON.stringify(eng)), 'v19.74: 科学/英语节点深度标准已对齐 AL1 (无 AL 4-6 残留)');
 }
 
+// ===== v19.76: modal 滚动穿透修复 =====
+{
+  assert(/function initModalScrollLock\(/.test(appSrc), 'v19.76: initModalScrollLock 已定义');
+  assert(/initModalScrollLock\(\);|DOMContentLoaded.*initModalScrollLock/.test(appSrc), 'v19.76: initModalScrollLock 启动时被调用 (非死代码)');
+  assert(/window\.syncModalScrollLock\s*=/.test(appSrc), 'v19.76: syncModalScrollLock 已导出 window');
+  assert(/b\.style\.position = 'fixed'/.test(appSrc) && /window\.scrollTo\(0, _mslScrollY\)/.test(appSrc), 'v19.76: body 锁定用 position:fixed 且解锁恢复滚动位置');
+  assert(/overscroll-behavior: contain/.test(idxSrc), 'v19.76: index.html 浮层含 overscroll-behavior: contain');
+}
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
