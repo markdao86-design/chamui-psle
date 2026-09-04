@@ -11598,39 +11598,106 @@ window.compOeReveal = compOeReveal;
 window.compOeScore = compOeScore;
 window.closeCompOe = closeCompOe;
 
-// ===== v19.76: modal 滚动穿透修复 (iOS Safari 弹层开着时背景页跟着滚) =====
-// 原理: 任何全屏浮层 (.show 且 position:fixed) 打开时, body 用 position:fixed 钉死并记住滚动位置;
-// 全部关闭时恢复原位。MutationObserver 监听 class 变化, 40+ 处 modal 开关零改动全覆盖。
-let _mslScrollY = 0, _mslLocked = false;
-function _mslAnyModalOpen() {
-  const shown = document.querySelectorAll('.show');
-  for (const el of shown) {
-    if (getComputedStyle(el).position === 'fixed') return true;
-  }
-  return false;
-}
+// ===== v19.77: modal 滚动三修 (背景跟滚 + 弹层滑动卡 + 答题后跳回顶部) =====
+// v19.76 只锁 body 且用 getComputedStyle 全量扫描, 有两个坑: ①开销大, 每次 class 变动都强制回流 → 卡;
+// ②答题时 modal.innerHTML 整体重建, 内层滚动条归零 → 手感像"滑不动/乱跳"。
+// v19.77 三件事: 静态选择器判开关(零 getComputedStyle) + html/body 双锁 + touchmove 兜底 + 重建后还原滚动位置。
+const MSL_OVERLAY_SEL = '.kt-modal, .vocab-modal, .streak-broken-modal, .vg-modal, .mb-result-modal, .photo-modal, .photo-source-modal, .report-modal';
+const MSL_OPEN_SEL = MSL_OVERLAY_SEL.split(', ').map(s => s + '.show').join(', ');
+let _mslScrollY = 0, _mslLocked = false, _mslTouchEl = null, _mslTouchY = 0;
+
+function _mslAnyModalOpen() { return !!document.querySelector(MSL_OPEN_SEL); }
+
 function _mslLock() {
   if (_mslLocked) return;
   _mslScrollY = window.scrollY || document.documentElement.scrollTop || 0;
-  const b = document.body;
+  const b = document.body, h = document.documentElement;
   b.style.position = 'fixed';
   b.style.top = (-_mslScrollY) + 'px';
   b.style.left = '0'; b.style.right = '0'; b.style.width = '100%';
+  b.style.overflow = 'hidden';
+  h.style.overflow = 'hidden';
   _mslLocked = true;
 }
 function _mslUnlock() {
   if (!_mslLocked) return;
-  const b = document.body;
-  b.style.position = ''; b.style.top = ''; b.style.left = ''; b.style.right = ''; b.style.width = '';
+  const b = document.body, h = document.documentElement;
+  b.style.position = ''; b.style.top = ''; b.style.left = ''; b.style.right = ''; b.style.width = ''; b.style.overflow = '';
+  h.style.overflow = '';
   window.scrollTo(0, _mslScrollY);
   _mslLocked = false;
 }
 function syncModalScrollLock() {
   if (_mslAnyModalOpen()) _mslLock(); else _mslUnlock();
 }
+
+// 找触点所在的可滚动祖先(限 modal 内部), 没有则返回 null
+function _mslScrollableAncestor(node) {
+  let el = node && node.nodeType === 3 ? node.parentElement : node;
+  while (el && el !== document.body) {
+    if (el.scrollHeight > el.clientHeight + 1) {
+      const ov = getComputedStyle(el).overflowY;
+      if (ov === 'auto' || ov === 'scroll') return el;
+    }
+    el = el.parentElement;
+  }
+  return null;
+}
+
+// 记录弹层内滚动位置(scroll 事件不冒泡, 用捕获), 存在常驻的 overlay 上, 供重建后还原
+function _mslTrackScroll(e) {
+  const t = e.target;
+  if (!t || t.nodeType !== 1 || !t.closest) return;
+  const ov = t.closest(MSL_OVERLAY_SEL);
+  if (ov) ov._mslInnerTop = t.scrollTop;
+}
+// 弹层 innerHTML 重建后, 把内层滚动位置还原(答题不再跳回顶部)
+function _mslRestoreScroll(ov) {
+  const top = ov._mslInnerTop || 0;
+  if (!top) return;
+  const inner = ov.querySelector('.kt-inner, .vocab-modal-inner, .mg-inner, .vocab-modal-body, .report-modal-card');
+  if (inner && inner.scrollHeight > inner.clientHeight) inner.scrollTop = top;
+}
+
 function initModalScrollLock() {
-  const mo = new MutationObserver(syncModalScrollLock);
-  mo.observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ['class'] });
+  const mo = new MutationObserver((records) => {
+    let needSync = false, rebuilt = null;
+    for (const r of records) {
+      const t = r.target;
+      if (t.nodeType !== 1) continue;
+      if (r.type === 'attributes') {
+        if (t.matches && t.matches(MSL_OVERLAY_SEL)) {
+          needSync = true;
+          if (!t.classList.contains('show')) t._mslInnerTop = 0; // 关闭即清零, 下次开是新的
+        }
+      } else if (r.type === 'childList' && r.addedNodes.length) {
+        const ov = t.closest && t.closest(MSL_OPEN_SEL);
+        if (ov) rebuilt = ov;
+      }
+    }
+    if (needSync) syncModalScrollLock();
+    // 同步还原: observer 回调时新 DOM 已就位, 读 scrollHeight 会强制布局, 拿得到真实高度。
+    // 不用 requestAnimationFrame —— 后台标签/低电量模式下 rAF 可能不触发, 会让还原永久失效。
+    if (rebuilt) _mslRestoreScroll(rebuilt);
+  });
+  mo.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+  document.addEventListener('scroll', _mslTrackScroll, true);
+
+  // iOS 兜底: 锁定期间, 触点不在可滚动区 或 已滚到边界还继续推 → 吃掉手势, 背景绝不跟滚
+  document.addEventListener('touchstart', (e) => {
+    if (!_mslLocked || !e.touches[0]) return;
+    _mslTouchEl = _mslScrollableAncestor(e.target);
+    _mslTouchY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (!_mslLocked || e.touches.length > 1) return;
+    const el = _mslTouchEl;
+    if (!el) { if (e.cancelable) e.preventDefault(); return; }
+    const dy = e.touches[0].clientY - _mslTouchY;
+    const atTop = el.scrollTop <= 0, atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+    if ((atTop && dy > 0) || (atBottom && dy < 0)) { if (e.cancelable) e.preventDefault(); }
+  }, { passive: false });
+
   syncModalScrollLock();
 }
 if (document.readyState === 'loading') {

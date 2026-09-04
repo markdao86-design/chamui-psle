@@ -5,6 +5,27 @@
 
 ---
 
+## v19.77 (2026-09-04) — modal 滚动三修 (v19.76 上线后用户反馈"弹层滑动卡, 底层还跟着跑")
+
+### 真正的病根 (v19.76 没抓到)
+1. **答题即跳顶**: `_renderKnowledgePractice` 每选一个选项就 `modal.innerHTML = ...` 整体重建, `.kt-inner` 滚动条归零 → 孩子滑到第 5 题一点选项就弹回第 1 题, 手感就是"滑动卡/乱跳"。
+2. **v19.76 的锁自己制造卡顿**: 每次任意 class 变动都 `querySelectorAll('.show')` + `getComputedStyle` 强制回流。
+3. **锁不够狠**: 只锁 body, 没锁 html, 没有 touchmove 兜底 (iOS 老版本 overscroll-behavior 不认)。
+
+### 修复
+1. **滚动位置保持**: 捕获阶段 `scroll` 监听记录弹层内 scrollTop (存在常驻 overlay 上), childList 重建后**同步**还原 — 不用 rAF (实测后台/预览环境 rAF 不触发, 会让还原永久卡死)。关闭即清零, 重开从顶部。
+2. **锁改静态选择器**: `MSL_OPEN_SEL` 一次 querySelector 判开关, 零 getComputedStyle; observer 只对 8 个 overlay 家族的 class 变动做事。
+3. **html+body 双锁 + touchmove 兜底**: 触点不在可滚动区 → preventDefault; 在滚动区但已到边界还推 → preventDefault。`passive:false`。
+4. **CSS**: 内滚动区加 `-webkit-overflow-scrolling: touch` 动量。
+5. **QA +7** (680 全过), 含"不依赖 rAF" 反向断言。
+
+### 验证 (localhost:8766, 768×1024 平板视口)
+- 背景滚到 400 → 开练习层: body fixed top:-400px, html overflow hidden ✓
+- 内层滚到 900 → 连答 2 题: 位置保持 900/900 (v19.76 是 0) ✓
+- 关闭: 解锁 + scrollY 恢复 400 ✓ · 重开: 从 0 开始 ✓ · 遮罩区 touchmove 被 preventDefault ✓
+
+---
+
 ## v19.76 (2026-09-04) — modal 滚动穿透修复 (iPad 实拍反馈)
 
 ### 痛点

@@ -1264,6 +1264,14 @@ assert(!/--color-bg: #0F172A/.test(idxSrc), 'v19.55: 暗主题变量已替换');
   assert(/window\.syncModalScrollLock\s*=/.test(appSrc), 'v19.76: syncModalScrollLock 已导出 window');
   assert(/b\.style\.position = 'fixed'/.test(appSrc) && /window\.scrollTo\(0, _mslScrollY\)/.test(appSrc), 'v19.76: body 锁定用 position:fixed 且解锁恢复滚动位置');
   assert(/overscroll-behavior: contain/.test(idxSrc), 'v19.76: index.html 浮层含 overscroll-behavior: contain');
+  // v19.77 三修
+  assert(/MSL_OPEN_SEL/.test(appSrc) && !/querySelectorAll\('\.show'\)/.test(appSrc), 'v19.77: 用静态选择器判开关, 不再 getComputedStyle 全量扫描(修卡顿)');
+  assert(/h\.style\.overflow = 'hidden'/.test(appSrc), 'v19.77: html+body 双锁');
+  assert(/function _mslRestoreScroll\(/.test(appSrc) && /if \(rebuilt\) _mslRestoreScroll\(rebuilt\);/.test(appSrc), 'v19.77: 弹层重建后同步还原内层滚动位置(答题不跳顶)且被调用');
+  assert(!/_mslRaf/.test(appSrc), 'v19.77: 还原不依赖 rAF (后台标签/低电量不触发会让还原永久失效)');
+  assert(/_mslTrackScroll/.test(appSrc) && /addEventListener\('scroll', _mslTrackScroll, true\)/.test(appSrc), 'v19.77: 捕获阶段记录弹层内滚动位置');
+  assert(/passive: false/.test(appSrc) && /e\.preventDefault\(\); return;/.test(appSrc), 'v19.77: touchmove 兜底 (passive:false 可 preventDefault)');
+  assert(/-webkit-overflow-scrolling: touch/.test(idxSrc), 'v19.77: 弹层内滚动区有动量滚动');
 }
 
 // ===== Output =====
