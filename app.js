@@ -1734,7 +1734,7 @@ function openSubjectVocabGame() {
     const sameCat = distractorsPool.filter(p => p.cat === w.cat);
     const dst = (sameCat.length >= 3 ? sameCat : distractorsPool);
     const shuffled = dst.slice().sort(() => Math.random() - 0.5).slice(0, 3);
-    const opts = [w.zh, ...shuffled.map(d => d.zh)].sort(() => Math.random() - 0.5);
+    const opts = _fyShuffle([w.zh, ...shuffled.map(d => d.zh)]);
     return { w, opts, correctIdx: opts.indexOf(w.zh) };
   });
   _svGame = { questions, qIdx: 0, correct: 0, picks: [] };
@@ -6353,7 +6353,7 @@ function openKnowledgePractice(nodeId, subj, idx) {
   // 洗牌每题 opts (修 cloze 全 A bug 一样的逻辑)
   const shuffled = qs.map(q => {
     const correctOpt = q.opts[q.ans];
-    const opts = [...q.opts].sort(() => Math.random() - 0.5);
+    const opts = _fyShuffle(q.opts);
     return Object.assign({}, q, { opts, ans: opts.indexOf(correctOpt) });
   });
   _kpracticeState = { nodeId, subj, idx, qs: shuffled, answers: new Array(shuffled.length).fill(null), submitted: false };
@@ -8483,7 +8483,7 @@ function openPaper2MockGame() {
   // Shuffle opts each q
   const allQs = [...clozeQs, ...sstQs].map(q => {
     const correctOpt = q.opts[q.ans];
-    const shuffled = [...q.opts].sort(() => Math.random() - 0.5);
+    const shuffled = _fyShuffle(q.opts);
     return Object.assign({}, q, { opts: shuffled, ans: shuffled.indexOf(correctOpt) });
   });
   if (allQs.length < 5) { showToast('题库不足, 请先刷一些 Cloze + SST', 'sad'); return; }
@@ -8570,7 +8570,7 @@ function _openMcqGame(key, title, qField, chapter) {
   }
   const qs = rawQs.map(q => {
     const correctOpt = q.opts[q.ans];
-    const shuffled = [...q.opts].sort(() => Math.random() - 0.5);
+    const shuffled = _fyShuffle(q.opts);
     const newAns = shuffled.indexOf(correctOpt);
     return Object.assign({}, q, { opts: shuffled, ans: newAns, _orig: q });
   });
@@ -9696,6 +9696,20 @@ function deleteScore(week, day, slot) {
 }
 
 // HTML 转义工具
+// v19.83: 真随机洗牌 (Fisher-Yates)。
+// 原来各处用 [...arr].sort(() => Math.random() - 0.5) — 这是有名的伪洗牌, 四元素时分布明显不均:
+// 实测答案原在A位时, 洗后留A 28.1% / 到D 仅 18.8%。叠加题库本身的位置偏差(SST 100%答案在A、
+// 科学知识树 86%在B), 孩子靠位置就能猜出相当一部分答案。
+function _fyShuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+window._fyShuffle = _fyShuffle;
+
 function escapeHtml(s) {
   if (s == null) return '';
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

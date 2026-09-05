@@ -1352,6 +1352,26 @@ assert(/s\.difficulty < _gameMaxCap\(gameKey\)/.test(dataSrcV80), 'v19.82: 升�
 assert(typeof W._gameMaxCap === 'function' && W._gameMaxCap('editing') <= 5 && W._gameMaxCap('math') >= 5,
   `v19.82: 封顶按题库算 (editing=${W._gameMaxCap && W._gameMaxCap('editing')}, math=${W._gameMaxCap && W._gameMaxCap('math')})`);
 
+// ===== v19.83: 选项防猜 (长度线索 + 真随机洗牌) =====
+{
+  const KT2 = W.KNOWLEDGE_TREE, KP2 = W.KNOWLEDGE_PRACTICE;
+  const sciKey = Object.keys(KT2).find(k => k.indexOf('科学') >= 0);
+  const sci2 = KT2[sciKey] || [];
+  let tot = 0, longest = 0, ratio = 0;
+  sci2.forEach(n => (KP2[n.id] || []).forEach(q => {
+    const L = q.opts.map(o => String(o).length), m = Math.max(...L);
+    tot++;
+    if (L[q.ans] === m && L.filter(x => x === m).length === 1) longest++;
+    const oth = L.filter((_, i) => i !== q.ans);
+    ratio += L[q.ans] / (oth.reduce((a, b) => a + b, 0) / 3);
+  }));
+  assert(tot > 0 && longest / tot < 0.45, `v19.83: 科学题"答案=唯一最长选项" <45% (实际 ${Math.round(longest / tot * 100)}%, 修复前 81% — 闭眼选最长能拿93分)`);
+  assert(tot > 0 && ratio / tot < 1.35, `v19.83: 科学题答案/干扰项长度比 <1.35 (实际 ${(ratio / tot).toFixed(2)}, 修复前 2.98)`);
+}
+assert(/function _fyShuffle\(arr\)/.test(appSrc), 'v19.83: Fisher-Yates 洗牌已定义');
+assert(!/\[\.\.\.q\.opts\]\.sort\(\(\) => Math\.random\(\) - 0\.5\)/.test(appSrc), 'v19.83: 选项洗牌不再用伪洗牌 (四元素时答案留A位28.1%/到D仅18.8%)');
+assert((appSrc.match(/_fyShuffle\(/g) || []).length >= 5, 'v19.83: _fyShuffle 已接入各处选项洗牌 (防死代码)');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
