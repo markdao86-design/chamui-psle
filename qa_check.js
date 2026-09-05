@@ -1505,6 +1505,58 @@ assert(/mg-q-long/.test(idxSrc) && /mg-q-xlong/.test(appSrc), 'v19.88: 长题干
 assert(/window\._resetMasteredHit\(/.test(appSrc), 'v19.91: 答错清零已接入 mcq 游戏 (防死代码)');
 assert(!/\[\.\.\.q\.opts\]\.sort\(\(\) => Math\.random\(\) - 0\.5\)/.test(dataSrcV80), 'v19.91: 变体生成也换成真随机洗牌');
 
+// ===== v19.92: 阅读理解问答扩充 + Editing引擎修复 + 考试格式事实纠错 =====
+{
+  const P = W.COMP_OE_PASSAGES || [];
+  const long = P.filter(p => (p.wordCount || 0) >= 350).length;
+  assert(long >= 10, `v19.92: 有 ≥10 篇 PSLE 真实篇幅(350-450词)阅读 (实际 ${long}; 原来20篇全是100-220词, 只有真考一半, 跨段找线索的题产不出来)`);
+  const m3 = P.reduce((a, p) => a + (p.questions || []).filter(q => (q.marks || 0) >= 3).length, 0);
+  assert(m3 >= 20, `v19.92: 有 ≥20 道 3分题 (实际 ${m3}; 原来 0 道 — 而"3分=3个独立point"正是孩子丢分的地方)`);
+  const badModel = P.filter(p => (p.questions || []).some(q => ((String(q.model || '').match(/\(1m\)/g) || []).length) > (q.marks || 0)));
+  assert(badModel.length === 0, `v19.92: model 里的 (1m) 采分点数不超过 marks (异常 ${badModel.length} 篇)`);
+}
+{
+  // Editing 死锁: errors 首词重复时, 按"词"去重的 Set 永远凑不满 → 孩子卡死通不了关
+  const EP = W.EDITING_PARAGRAPHS || [];
+  const keyOf = w => String(w).split(' ')[0].replace(/[.,!?;:]$/, '');
+  const dead = EP.filter(p => new Set(p.errors.map(e => keyOf(e.word))).size < p.errors.length).length;
+  assert(dead === 3, `v19.92: 已知 ${dead} 段错词首词重复 — 引擎改按位置下标记录后不再死锁 (下面断言保证)`);
+  assert(/const _egErrIdx = para\.errors\.map/.test(appSrc), 'v19.92: Editing 按"词的位置下标"建索引 (修死锁+修25处歧义点击)');
+  assert(/clickEditingWord\(idx\)/.test(appSrc) && !/errWords/.test(appSrc), 'v19.92: 点击判定改用下标, 旧的按词匹配已清');
+  assert(!/recordGameRun\(state, 'editing', 5, 5\)/.test(appSrc), 'v19.92: Editing 难度按真实表现记 (原来恒传5/5=每局100%, 难度只升不降)');
+}
+{
+  // 考试格式: 正确答案原来被当成干扰项
+  const KP2 = W.KNOWLEDGE_PRACTICE;
+  const sci0 = (KP2.sci_psle || [])[0];
+  assert(sci0 && /1 小时 45 分/.test(sci0.opts[sci0.ans]), 'v19.92: 科学卷时长改为 1h45min (原写 1h15min, 而正确的 1h45 被列为错误选项)');
+  const m0 = (KP2.math_psle_paper1 || [])[0];
+  assert(m0 && /1 小时/.test(m0.opts[m0.ans]), 'v19.92: 数学 Paper1 时长修正 (原写 50min, 正确答案被当干扰项)');
+  const gst = (W.MATH_QUESTIONS || []).find(q => /GST 9%/.test(String(q.q)));
+  assert(gst && Math.abs(gst.ans - 272.5) < 0.001, `v19.92: GST 题答案 272.5 不是 273 (判分容差0.005, 原来孩子算对反被判错)`);
+  assert(!(W.SCIENCE_MCQ || []).some(q => (q.opts || []).some(o => /Both A and B/i.test(o))), 'v19.92: 删掉自指选项"Both A and B" (洗牌后A/B指向别的选项, 认真读题反而排除掉正确答案)');
+}
+assert(/white-space: pre-wrap/.test(idxSrc), 'v19.92: 阅读原文保留段落 (跨段整合题靠段落结构训练)');
+assert(/点开回看原文/.test(appSrc), 'v19.92: 每题都能回看原文 (原来只第1题显示, 后5题等于逼他背文章)');
+
+// ===== v19.93: 解析不再用 A/B/C/D 指代选项 (渲染时每次洗牌, 位置引用天生 3/4 概率指错) =====
+{
+  const KT4 = W.KNOWLEDGE_TREE, KP4 = W.KNOWLEDGE_PRACTICE;
+  // 只算"字母 + 描述选项的字"这种真引用; 排除 25°C / A管 / Booklet A 这类题目内容
+  const re = /(?:^|[^A-Za-z°])([ABCD])\s*(?:项|选项|的)?\s*[是把写答只等太全没有角度两]/;
+  const bad = [];
+  Object.keys(KT4).forEach(s => KT4[s].forEach(n => (KP4[n.id] || []).forEach((q, i) => {
+    if (re.test(String(q.explain || ''))) bad.push(n.id + '#' + i);
+  })));
+  assert(bad.length === 0, `v19.93: 知识树解析无"点名选项字母"的写法 (残留 ${bad.length}${bad.length ? ': ' + bad.slice(0, 4).join(',') : ''}) — 渲染时 _fyShuffle 每次重洗选项, 任何位置引用都会把孩子选对的说成错的`);
+  // 改写后的解析必须引用选项原文(用「」括起来)
+  const quoted = [];
+  ['ch_comp_oe', 'ch_comp_mcq', 'ch_composition', 'ch_listening', 'eng_writing', 'eng_oral'].forEach(id => {
+    (KP4[id] || []).forEach((q, i) => { if (/「[^」]+」/.test(String(q.explain || ''))) quoted.push(id + '#' + i); });
+  });
+  assert(quoted.length >= 25, `v19.93: 重写后的解析改成引用选项原文「…」(实际 ${quoted.length} 条)`);
+}
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));

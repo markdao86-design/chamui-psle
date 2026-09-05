@@ -4357,7 +4357,12 @@ p { font-size: 14px; line-height: 1.6; }
 .mcq-opts.sst-opts .mcq-opt { font-size: 12px; text-align: left; padding: 10px 12px; }
 /* v19.4: Comprehension OE */
 .comp-oe-inner { max-height: 85vh; overflow-y: auto; }
-.comp-passage { font-size: 13px; line-height: 1.7; background: #F1F5F9; padding: 12px; border-radius: 10px; margin-bottom: 12px; max-height: 200px; overflow-y: auto; border: 1px solid #E2E8F0; }
+/* v19.92: 原来没有 white-space 声明, 新增的 PSLE 真实篇幅短文用 
+
+ 分的段落会塌成一坨,
+   而"跨段整合题"(答案分散在两段)正是靠段落结构训练的; max-height 200px 装 400 词也太挤 */
+.comp-passage { font-size: 13px; line-height: 1.75; white-space: pre-wrap; background: #F1F5F9; padding: 12px 14px; border-radius: 10px; margin-bottom: 12px; max-height: 46vh; overflow-y: auto; border: 1px solid #E2E8F0; }
+.comp-passage-wrap { margin-bottom: 10px; }
 .comp-q-box { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.3); border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
 .comp-type { font-size: 11px; color: #fbbf24; margin-bottom: 4px; }
 .comp-q { font-size: 14px; font-weight: 600; }
@@ -5923,9 +5928,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.91"></script>
-<script src="data.js?v=19.91"></script>
-<script src="app.js?v=19.91"></script>
+<script src="character.js?v=19.92"></script>
+<script src="data.js?v=19.92"></script>
+<script src="app.js?v=19.92"></script>
 
 </body>
 </html>

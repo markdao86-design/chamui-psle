@@ -9303,7 +9303,17 @@ function openEditingGame() {
   const diff = window.getDifficulty ? window.getDifficulty(state, 'editing') : 1;
   const para = window.getEditingByDiff ? window.getEditingByDiff(diff)
              : (window.getDailyEditingParagraph ? window.getDailyEditingParagraph() : window.EDITING_PARAGRAPHS[0]);
-  _editingGameState = { para, found: new Set(), wrong: 0, startedAt: Date.now(), diff };
+  // v19.92: found 改成记"词的位置下标"而不是"词本身"。原来两个坑:
+  //   ①错词首词重复的段落(实测3段, 如错词是 a/have/are/speaks/a) → Set 去重后永远凑不满5个 → 孩子卡死通不了关
+  //   ②同一个词在正文出现多次时(实测25处), 点到语法正确的那个也算"找到了" → 在教错东西
+  const _egWords = para.text.split(/\s+/).map(w => w.replace(/[.,!?;:]$/, ''));
+  const _egUsed = new Set();
+  const _egErrIdx = para.errors.map(e => {
+    const k = String(e.word || '').split(' ')[0].replace(/[.,!?;:]$/, '');
+    for (let i = 0; i < _egWords.length; i++) { if (_egWords[i] === k && !_egUsed.has(i)) { _egUsed.add(i); return i; } }
+    return -1;
+  }).filter(i => i >= 0);
+  _editingGameState = { para, errIdx: _egErrIdx, total: _egErrIdx.length || 5, found: new Set(), wrong: 0, startedAt: Date.now(), diff };
   _renderEditingGame();
 }
 function _renderEditingGame() {
@@ -9312,39 +9322,37 @@ function _renderEditingGame() {
   const g = _editingGameState;
   // 把段落渲染为可点击的词
   const words = g.para.text.split(/\s+/);
-  const errWords = g.para.errors.map(e => e.word.split(' ')[0]);  // 简化:用第一个词识别
+  const need = g.total || 5;
   const wordHtml = words.map((w, i) => {
-    const stripped = w.replace(/[.,!?]$/, '');
-    const isErr = errWords.includes(stripped);
-    const isFound = g.found.has(stripped);
-    return `<span class="eg-word ${isFound ? 'eg-found' : ''}" onclick="clickEditingWord('${stripped.replace(/'/g, "\\'")}')">${w}</span>`;
+    const isFound = g.found.has(i);
+    return `<span class="eg-word ${isFound ? 'eg-found' : ''}" onclick="clickEditingWord(${i})">${w}</span>`;
   }).join(' ');
   modal.innerHTML = `
     <div class="eg-inner">
       <div class="eg-header">
-        <span class="eg-title">✏️ Editing 找错 · ${g.found.size}/5 · ❌ ${g.wrong}</span>
+        <span class="eg-title">✏️ Editing 找错 · ${g.found.size}/${need} · ❌ ${g.wrong}</span>
         <button class="vocab-modal-close" onclick="closeEditingGame()">×</button>
       </div>
-      <div class="eg-instr">📋 段落里有 5 个错(主谓/时态/拼写/介词/冠词). 点击错词标红.</div>
+      <div class="eg-instr">📋 段落里有 ${need} 个错(主谓/时态/拼写/介词/冠词). 点击错词标红.</div>
       <div class="eg-text">${wordHtml}</div>
-      ${g.found.size >= 5 ? `<div class="eg-victory">🎉 全找到! +10 分 + 1 宝箱<br><button class="btn btn-primary" onclick="closeEditingGame()">太棒了!</button></div>` : ''}
+      ${g.found.size >= need ? `<div class="eg-victory">🎉 全找到! +10 分 + 1 宝箱<br><button class="btn btn-primary" onclick="closeEditingGame()">太棒了!</button></div>` : ''}
     </div>
   `;
   modal.classList.add('show');
 }
-function clickEditingWord(word) {
+function clickEditingWord(idx) {
   const g = _editingGameState;
   if (!g) return;
-  // v18.3: errors[].word 可能是单词或短语, 取首词作为可点击 key
-  const errWords = g.para.errors.map(e => (e.word || '').split(' ')[0]);
-  if (g.found.has(word)) return;
-  if (errWords.includes(word)) {
-    g.found.add(word);
+  const need = g.total || 5;
+  if (g.found.has(idx)) return;
+  if ((g.errIdx || []).includes(idx)) {
+    g.found.add(idx);
     playSound('ding');
-    if (g.found.size >= 5) {
-      // v18.25: 记录难度
+    if (g.found.size >= need) {
+      // v19.92: 按真实表现记难度。原来写死 recordGameRun(state,'editing',5,5) = 每局都判 100%,
+      // 于是 Editing 难度只升不降、误点多少次都不影响 —— 这个模块的难度信号全是噪音。
       let diffResult = null;
-      if (window.recordGameRun) diffResult = window.recordGameRun(state, 'editing', 5, 5);
+      if (window.recordGameRun) diffResult = window.recordGameRun(state, 'editing', need, need + g.wrong);
       // 全对 v18.24 递减
       const playNum = _bumpDailyGameCount('editing');
       const mult = _getGameMultiplier(playNum);
@@ -11938,7 +11946,10 @@ function _renderCompOe() {
   modal.innerHTML = `
     <div class="mg-inner comp-oe-inner">
       <div class="mg-stats">📖 Comprehension OE · ${p.title} · Q${g.qIdx+1}/${totalQ}</div>
-      ${g.qIdx === 0 ? `<div class="comp-passage">${escapeHtml(p.passage)}</div>` : ''}
+      <details class="comp-passage-wrap" ${g.qIdx === 0 ? 'open' : ''}>
+        <summary style="font-size:12px;font-weight:700;color:#1E40AF;cursor:pointer;padding:4px 0">📄 ${escapeHtml(p.title)} — ${g.qIdx === 0 ? '先读全文' : '点开回看原文'}</summary>
+        <div class="comp-passage">${escapeHtml(p.passage)}</div>
+      </details>
       ${locationMethodHtml}
       <div class="comp-q-box">
         <div class="comp-type">${typeLabel} · ${q.marks} mark${q.marks > 1 ? 's' : ''}</div>
@@ -11949,9 +11960,8 @@ function _renderCompOe() {
           <div class="comp-model-label">✅ Model Answer:</div>
           <div class="comp-model-text">${escapeHtml(q.model)}</div>
           <div class="comp-self-score">你答对了多少?
-            <button onclick="compOeScore(0)">❌ 0分</button>
-            <button onclick="compOeScore(1)">⚠️ 1分</button>
-            ${q.marks >= 2 ? '<button onclick="compOeScore(2)">✅ 2分</button>' : ''}
+${Array.from({length: (q.marks || 2) + 1}, (_, s) =>
+              `<button onclick="compOeScore(${s})">${s === 0 ? '❌' : s === (q.marks || 2) ? '✅' : '⚠️'} ${s}分</button>`).join('')}
           </div>
         </div>` : `
         <div class="comp-think">💡 先在脑中组织答案 (30 秒后可查看)</div>
