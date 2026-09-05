@@ -1489,6 +1489,22 @@ assert(/mg-q-long/.test(idxSrc) && /mg-q-xlong/.test(appSrc), 'v19.88: 长题干
   assert(!G3.some(q => /Were it not for/.test(String(q.q))), 'v19.90: 删掉倒装虚拟语气题 (中学内容, 且原句时态混搭不干净)');
 }
 
+// ===== v19.91: 掌握判定 答对1次 → 连对2次 =====
+{
+  const pool = W.GRAMMAR_QUESTIONS, st = {};
+  const q = pool[0];
+  W._markMastered('grammar', pool, q); W._saveMastered(st);
+  assert(!(st.masteredQs.grammar || []).includes(0), 'v19.91: 答对1次不算掌握 (原来一次就永久移出题池, 顶格档一局刷空后只能发"换选项顺序的变体")');
+  W._markMastered('grammar', pool, q); W._saveMastered(st);
+  assert((st.masteredQs.grammar || []).includes(0), 'v19.91: 连对2次才算掌握');
+  const q2 = pool[1];
+  W._markMastered('grammar', pool, q2); W._resetMasteredHit('grammar', pool, q2);
+  W._markMastered('grammar', pool, q2); W._saveMastered(st);
+  assert(!(st.masteredQs.grammar || []).includes(1), 'v19.91: 中间答错要重新连对 (掌握必须连续, 不是累计)');
+}
+assert(/window\._resetMasteredHit\(/.test(appSrc), 'v19.91: 答错清零已接入 mcq 游戏 (防死代码)');
+assert(!/\[\.\.\.q\.opts\]\.sort\(\(\) => Math\.random\(\) - 0\.5\)/.test(dataSrcV80), 'v19.91: 变体生成也换成真随机洗牌');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));

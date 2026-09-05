@@ -2581,14 +2581,28 @@ window.checkEnglishModeAdjust = checkEnglishModeAdjust;
 const _usedQIndex = {};
 let _masteredQs = {};  // { poolKey: Set<qIndex> } — 从 state.masteredQs 加载
 function _loadMastered(state) {
-  if (!state || !state.masteredQs) return;
-  Object.entries(state.masteredQs).forEach(([k, arr]) => {
-    _masteredQs[k] = new Set(arr);
-  });
+  if (!state) return;
+  if (state.masteredQs) Object.entries(state.masteredQs).forEach(([k, arr]) => { _masteredQs[k] = new Set(arr); });
+  if (state.masteredHits) _masteredHits = JSON.parse(JSON.stringify(state.masteredHits));
 }
+// v19.91: 原来"答对一次就永久移出题池" —— 对冲 AL1 太松:
+// 顶格档(Lv6)只有 8-15 道题, 一局好状态就把整档刷空, 之后 _sampleByDiff 只能发
+// "换了选项顺序的变体", 那是在练认脸不是练会。改成**连对 2 次**才算掌握。
+let _masteredHits = {};   // { poolKey: { qIndex: 连对次数 } }
 function _markMastered(poolKey, pool, q) {
   if (!_masteredQs[poolKey]) _masteredQs[poolKey] = new Set();
-  _masteredQs[poolKey].add(pool.indexOf(q));
+  if (!_masteredHits[poolKey]) _masteredHits[poolKey] = {};
+  const idx = pool.indexOf(q);
+  if (idx < 0) return;
+  const hits = (_masteredHits[poolKey][idx] || 0) + 1;
+  _masteredHits[poolKey][idx] = hits;
+  if (hits >= 2) _masteredQs[poolKey].add(idx);
+}
+// 答错则清零连对计数 (掌握必须是连续的, 不是累计的)
+function _resetMasteredHit(poolKey, pool, q) {
+  if (!_masteredHits[poolKey]) return;
+  const idx = pool.indexOf(q);
+  if (idx >= 0) delete _masteredHits[poolKey][idx];
 }
 function _saveMastered(state) {
   if (!state) return;
@@ -2596,9 +2610,11 @@ function _saveMastered(state) {
   Object.entries(_masteredQs).forEach(([k, s]) => {
     state.masteredQs[k] = [...s];
   });
+  state.masteredHits = JSON.parse(JSON.stringify(_masteredHits));  // v19.91: 连对计数也要存
 }
 window._loadMastered = _loadMastered;
 window._markMastered = _markMastered;
+window._resetMasteredHit = _resetMasteredHit;
 window._saveMastered = _saveMastered;
 
 function _sampleByDiff(pool, diff, n) {
@@ -2620,7 +2636,7 @@ function _sampleByDiff(pool, diff, n) {
     const variantBase = wrongPool.length >= n ? wrongPool : pool;
     effectivePool = variantBase.map(q => {
       if (!q.opts) return q;
-      const newOpts = [...q.opts].sort(() => Math.random() - 0.5);
+      const newOpts = (function (a) { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; })(q.opts);
       const newAns = newOpts.indexOf(q.opts[q.ans]);
       return Object.assign({}, q, { opts: newOpts, ans: newAns, _variant: true });
     });

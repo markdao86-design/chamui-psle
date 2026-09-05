@@ -8693,13 +8693,21 @@ function submitMcqAnswer(idx) {
   const isCorrect = idx === q.ans;
   if (isCorrect) {
     g.correct++; playSound('ding'); petExpress('pet-excited', 800);
-    // v19.0: 答对的题标记为 mastered (不再出)
+    // v19.0: 答对的题标记为 mastered (不再出) — v19.91 改成连对 2 次才算掌握
     const poolMap = { grammar: window.GRAMMAR_QUESTIONS, cloze: window.CLOZE_QUESTIONS, scimcq: window.SCIENCE_MCQ, chinese: window.CHINESE_MCQ, sst: window.SST_QUESTIONS };
     if (poolMap[g.key] && window._markMastered) {
       window._markMastered(g.key, poolMap[g.key], q._orig || q);
       window._saveMastered(state);
     }
-  } else { g.wrong++; playSound('sad'); }
+  } else {
+    g.wrong++; playSound('sad');
+    // v19.91: 答错清零该题的连对计数 — 掌握必须是连续两次, 不是累计两次
+    const poolMap2 = { grammar: window.GRAMMAR_QUESTIONS, cloze: window.CLOZE_QUESTIONS, scimcq: window.SCIENCE_MCQ, chinese: window.CHINESE_MCQ, sst: window.SST_QUESTIONS };
+    if (poolMap2[g.key] && window._resetMasteredHit) {
+      window._resetMasteredHit(g.key, poolMap2[g.key], q._orig || q);
+      window._saveMastered(state);
+    }
+  }
   // v19.32: 英语 scaffold 升降级检查 (grammar/cloze/sst/editing 命中)
   if (window._checkEnglishModeHook) window._checkEnglishModeHook(g.key, isCorrect);
   // v18.59: 错题入错题本 + v19.14e: Cloze 加 topic 自动归类 (travel/school/nature/emotion 等)
