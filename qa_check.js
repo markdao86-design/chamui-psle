@@ -800,7 +800,8 @@ assert(renderALCount >= 2, `v19.15j: _renderALEditor 接入 ≥2 处 (主页 + m
 // v19.15k 撤回 v19.15j "✏️ 已手动" 改 "💭 模拟" (上面已断言 💭 模拟)
 // v19.15i: 8 校 modal
 assert(/function openAllSchoolsModal\(\)/.test(appSrc), 'v19.15i: openAllSchoolsModal 函数');
-assert(/onclick="openAllSchoolsModal\(\)"/.test(appSrc), 'v19.15i: 查看全部 8 校 按钮触发 openAllSchoolsModal');
+assert(/onclick="openAllSchoolsModal\(\)"/.test(appSrc), 'v19.15i: 查看全部校 按钮触发 openAllSchoolsModal');
+assert((W.PSLE_TARGET_SCHOOLS || []).some(s => s.cop <= 5), 'v19.81: 目标校补了 COP4-5 顶部梯队 (四科全AL1 时仍有可争取的标的)');
 assert(/全部 \$\{schools\.length\} 校 \$\{isWhatIf \? '💭 模拟概率' : '录取概率'\}/.test(appSrc), 'v19.15i+k: 8 校 modal 标题 (含 whatIf 分支)');
 // v19.15i: 装备/皮肤防沉迷封顶
 assert(/function _checkAvatarActionCap/.test(appSrc), 'v19.15i: _checkAvatarActionCap helper');
@@ -1021,7 +1022,8 @@ assert(/chapterId:\s*'p4_plant_transport'/.test(dataSrcV14), 'v19.14f: SCIENCE_C
 assert(/keywords:\s*\[[^\]]*'xylem'/.test(dataSrcV14), 'v19.14f: Plant Transport 章节 keywords');
 
 // v19.14d data 类断言 (在 dataSrcV14 之后)
-assert(/WEEKDAY_LOCKED_GAMES\s*=\s*\['chinese',\s*'unit'\]/.test(dataSrcV14), 'v19.14d: 数学从 hard lock 移除');
+// v19.81: 华文也移出 hard lock (已从 AL1 掉到 AL2, 目标又是四科全 AL1, 一周只有周日能练不够)
+assert(/WEEKDAY_LOCKED_GAMES\s*=\s*\['unit'\]/.test(dataSrcV14), 'v19.14d/v19.81: 数学+华文都不在 hard lock 里');
 assert(/WEEKDAY_SOFT_CAP_GAMES/.test(dataSrcV14), 'v19.14d: 数学加 soft cap');
 assert(/from LEAVES to STORAGE ORGANS|translocation/.test(dataSrcV14), 'v19.14d: Phloem 修正不写双向');
 assert(/EMULSIFIES?\s+fat|emulsify fat/.test(dataSrcV14), 'v19.14d: Liver bile 改 emulsify');
@@ -1257,26 +1259,40 @@ assert(!/--color-bg: #0F172A/.test(idxSrc), 'v19.55: 暗主题变量已替换');
    'eng_vocab_mcq', 'eng_visualtext', 'eng_compcloze', 'eng_synthesis', 'eng_sitwriting'].forEach(id => {
     assert(sci.concat(eng).some(n => n.id === id), `v19.74: 新节点 ${id} 在树中`);
   });
-  // v19.75: 科学节点扩到 10 题 (3基础+3易错+2应用+2拉分), 其他学科 3 题起步
+  // v19.81: 四科全部扩到 10 题/节点 (基础+易错+应用+拉分分层), 对齐"四科全 AL1"目标
+  const math = KT && KT['➗ 数学'], chi = KT && KT['🇨🇳 华文'];
+  assert(math && math.length === 19, `v19.81: 数学树 19 节点 (MOE P3-P6 全大纲, 实际 ${math && math.length})`);
+  assert(chi && chi.length === 12, `v19.81: 华文树 12 节点 (普通华文四卷全覆盖, 实际 ${chi && chi.length})`);
+  ['math_whole_numbers', 'math_fraction_basic', 'math_decimals', 'math_area_perimeter', 'math_average',
+   'math_charts', 'math_circle', 'math_nets', 'math_patterns',
+   'ch_chars', 'ch_vocab_use', 'ch_sentence', 'ch_comp_mcq', 'ch_comp_oe', 'ch_situational', 'ch_listening'].forEach(id => {
+    assert(math.concat(chi).some(n => n.id === id), `v19.81: 新节点 ${id} 在树中`);
+  });
   let allNodes = [];
   Object.keys(KT || {}).forEach(s => { allNodes = allNodes.concat(KT[s]); });
-  const sciIds = new Set(sci.map(n => n.id));
-  const badSci = sci.filter(n => !KP[n.id] || KP[n.id].length !== 10);
-  assert(badSci.length === 0, `v19.75: 科学 19 节点每个 10 题 (不齐: ${badSci.map(n => n.id + '=' + ((KP[n.id] || []).length)).join(',') || '无'})`);
-  const badTags = sci.filter(n => {
+  const badQty = allNodes.filter(n => !KP[n.id] || KP[n.id].length !== 10);
+  assert(badQty.length === 0, `v19.81: 全部 ${allNodes.length} 节点每个 10 题 (不齐: ${badQty.map(n => n.id + '=' + ((KP[n.id] || []).length)).join(',') || '无'})`);
+  const badTags = allNodes.filter(n => {
     const tags = (KP[n.id] || []).map(q => q.tag);
     const cnt = t => tags.filter(x => x === t).length;
     return cnt('易错') < 3 || cnt('应用') < 2 || cnt('拉分') < 2;
   });
-  assert(badTags.length === 0, `v19.75: 每个科学节点 ≥3易错+2应用+2拉分 (不齐: ${badTags.map(n => n.id).join(',') || '无'})`);
-  const noQuiz = allNodes.filter(n => !sciIds.has(n.id)).filter(n => !KP[n.id] || KP[n.id].length !== 3);
-  assert(noQuiz.length === 0, `v19.74: 非科学节点各 3 道练习题 (缺: ${noQuiz.map(n => n.id).join(',') || '无'})`);
+  assert(badTags.length === 0, `v19.81: 每个节点 ≥3易错+2应用+2拉分 (不齐: ${badTags.map(n => n.id).join(',') || '无'})`);
+  // 华文必须是普通华文口径 — 高华(HCL)是另一科, 孩子不考
+  assert(!/高华|HCL/.test(JSON.stringify(chi)), 'v19.81: 华文树无高华/HCL 残留 (孩子读普通华文)');
+  assert(chi.some(n => /四卷/.test(n.desc || '')), 'v19.81: 华文树标明四卷结构 (含听力+口试, 不是只有2卷)');
   const noExplain = allNodes.filter(n => (KP[n.id] || []).some(q => !q.explain));
   assert(noExplain.length === 0, `v19.74: 知识树练习题全部有 explain (缺: ${noExplain.map(n => n.id).join(',') || '无'})`);
   // 每个节点 desc 有内容 + 3 examples + pitfall (AL1 深度结构)
   const thin = allNodes.filter(n => !n.desc || !n.examples || n.examples.length < 3 || !n.pitfall);
   assert(thin.length === 0, `v19.74: 所有节点 desc+3examples+pitfall 齐全 (缺: ${thin.map(n => n.id).join(',') || '无'})`);
-  assert(!/AL 4-6/.test(JSON.stringify(sci) + JSON.stringify(eng)), 'v19.74: 科学/英语节点深度标准已对齐 AL1 (无 AL 4-6 残留)');
+  assert(!/AL 4-6/.test(JSON.stringify(KT)), 'v19.81: 四科节点深度标准全部对齐 AL1 (无 AL 4-6 残留)');
+  // v19.81: 修死结 — 这三处不修, "综合 AL4 = 四科全 AL1" 在代码里永远算不出来
+  assert(/const map = \{ 6: 1, 5: 1, 4: 2, 3: 4, 2: 6, 1: 7 \}/.test(dataSrcV80), 'v19.81: _gameDiffToAL 补 diff=6 档 (原来打到最高难度反被判 AL6)');
+  assert(/estPaper2Score >= 32 \? 'AL 1'/.test(appSrc), 'v19.81: Paper2 模考补 AL1 档 (原来满分也只判 AL 2-3, 英语被封顶)');
+  assert(/const val = parseFloat\(input\.value\);/.test(appSrc) && !/const val = parseInt\(input\.value\)/.test(appSrc), 'v19.81: 数学游戏改 parseFloat (原 parseInt 让 11 道小数答案题永远判错)');
+  assert(/last3\.every\(r => r\.accuracy >= 0\.9\)/.test(dataSrcV80), 'v19.81: 难度升级线 80%→90% (AL1 的定义就是 90 分)');
+  assert(/const WEEKDAY_LOCKED_GAMES = \['unit'\]/.test(dataSrcV80), 'v19.81: 华文解锁平日 (已从 AL1 掉到 AL2, 一周练一天不够)');
 }
 
 // ===== v19.76: modal 滚动穿透修复 =====

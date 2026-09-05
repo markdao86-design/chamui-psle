@@ -236,7 +236,7 @@ function _getFillerContent(side) {
     `🎯 当前错题 <b>${errorBankCount}</b> 题 · 错题反复练 = 真正消灭弱点`,
     `🌱 中国 → 新加坡 P5 · 17 月长跑 · 跑得稳比跑得快重要`,
     `📊 月考 ${monthlyCount}/6 · 多 1 次月考 = 信任度 +★`,
-    `🎓 英语 AL6 → AL3 = 跨入立化/华侨 COP 6 顶级范围`,
+    `🎓 英语 AL6 → AL1 = 综合 AL4 的最后一块拼图`,
     `⏰ 每天 30 分钟 · 17 月 = 约 ${Math.floor(17 * 30 * 30 / 60)} 小时 · 时间花在刀刃上`
   ];
   // 简单基于日期 + side 选 (每天看不同的, 左右也不同)
@@ -553,7 +553,7 @@ function renderPaper2SprintCard() {
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <div style="font-size:14px;font-weight:900;color:#1E40AF">🎯 Paper 2 弱点突击</div>
-      <div style="margin-left:auto;font-size:11px;color:#1E293B">实考 AL6 → 目标 AL 4</div>
+      <div style="margin-left:auto;font-size:11px;color:#1E293B">实考 AL6 → 目标 AL1</div>
     </div>
     <div style="font-size:11px;color:#1E293B;margin-bottom:8px;line-height:1.5">
       Cloze (25 分) + Synthesis (8 分) = Paper 2 33 分关键 · 建议每天 ${dailyTargetCloze} Cloze + ${dailyTargetSST} SST
@@ -934,7 +934,7 @@ function renderTodayThreeCard() {
       item('🔬', chapter ? '本周科学 1 节' : '科学练习', sciSub, sciDone, chapter && chapter.diagram ? `openConceptDiagram('${chapter.diagram}'); setTimeout(openScienceOEGame, 100)` : 'openSciMcqGame()', '#2E7D32')
     ].join('');
     tipHtml = `<div style="margin-top:8px;padding:8px;background:linear-gradient(135deg, rgba(230,162,60,0.10), rgba(192,86,33,0.05));border:1px solid rgba(230,162,60,0.30);border-radius:6px;font-size:11px;color:#B45309;line-height:1.5;text-align:center">
-      📅 <b>数学 / 华文 周日才开放</b> — Mon-Sat 全力攻英语 (AL6 → AL2 是综合 AL 4-5 最大杠杆)
+      📅 <b>英语优先</b> — 英语 AL6 → AL1 缺口最大; 华文已掉到 AL2, 科学 AL3, 都要补 (目标: 四科全 AL1)
     </div>`;
   } else {
     // v19.15 P0-3: 周末改"自选推荐"模式 — 从"必做 3 件"→"挑 1-2 件就好, 休息也算赢"
@@ -995,7 +995,7 @@ function renderTargetSchoolMini() {
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <div style="font-size:15px;font-weight:900;color:#1E40AF">🏫 目标校 · ${main.name}</div>
-      <button onclick="openAllSchoolsModal()" style="margin-left:auto;background:none;border:none;color:#1E40AF;font-size:12px;cursor:pointer;text-decoration:underline">查看全部 8 校 →</button>
+      <button onclick="openAllSchoolsModal()" style="margin-left:auto;background:none;border:none;color:#1E40AF;font-size:12px;cursor:pointer;text-decoration:underline">查看全部 ${(window.PSLE_TARGET_SCHOOLS || []).length} 校 →</button>
     </div>
     <div style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg, rgba(30,64,175,0.08), rgba(30,64,175,0.02));border:1px solid rgba(30,64,175,0.30);box-shadow:0 0 10px rgba(30,64,175,0.08);border-radius:8px;padding:12px">
       <div style="text-align:center;flex:0 0 90px">
@@ -1630,7 +1630,7 @@ function showALExplain() {
       <div style="background:rgba(230,162,60,0.08);border-left:3px solid #B45309;border-radius:6px;padding:12px;margin-bottom:12px;color:#B45309;font-size:13px;line-height:1.7">
         <div style="font-weight:900;margin-bottom:4px">👧 你家孩子当前状态</div>
         综合 AL = <b style="color:#C05621">${cur}</b>/32 = 英${bs.english_AL}+数${bs.math_AL}+科${bs.science_AL}+华${bs.chinese_AL}<br>
-        目标 AL 4-6 → 对应名校 COP 6-8 范围<br>
+        目标 综合 AL4 (四科全 AL1) → 立化/华侨 COP6 仍有 2 分余量<br>
         <b>关键杠杆</b>: 英语从 AL${bs.english_AL} 提到 AL3 → 综合 -${Math.max(0, bs.english_AL - 3)} → 跨入顶级 COP 6
       </div>
       <!-- v19.35: 第 5 节 — 为什么 ± N? 怎么涨信任度? -->
@@ -6028,7 +6028,7 @@ function _checkGameDailyLock(gameKey) {
   if (window.WEEKDAY_LOCKED_GAMES && window.WEEKDAY_LOCKED_GAMES.includes(gameKey)) {
     if (window.isWeekdayToday && window.isWeekdayToday()) {
       const gameLabel = { math: '数学速算', chinese: '华文 MCQ', unit: '单位换算' }[gameKey] || gameKey;
-      showToast(`🔒 ${gameLabel} 周日才开放 — Mon-Sat 全力攻英语 AL6 → AL2`, 'warn');
+      showToast(`🔒 ${gameLabel} 周日才开放 — 平日优先攻英语 (AL6 → AL1 缺口最大)`, 'warn');
       return false;
     }
   }
@@ -6045,7 +6045,7 @@ function _checkGameDailyLock(gameKey) {
       const cur = window.getTodayClozeSstCount ? window.getTodayClozeSstCount(state) : 0;
       showToast(`🔒 ${gameKey} 今日已玩 ${playedBefore} 次. 完成 5 题 Cloze 或 SST 解锁 (现 ${cur}/5)`, 'warn');
       // 弹打开 Paper 2 突击的对话框
-      if (confirm(`💪 强项已玩 ${playedBefore} 次, 现在花 2 min 做 5 题 Cloze 解锁继续?\n\n(英语 AL6 → AL2 是综合 AL 4-5 的最大杠杆)`)) {
+      if (confirm(`💪 强项已玩 ${playedBefore} 次, 现在花 2 min 做 5 题 Cloze 解锁继续?\n\n(英语 AL6 → AL1 是综合 AL4 的最大杠杆)`)) {
         if (window.openClozeGame) window.openClozeGame();
       }
       return false;
@@ -6945,11 +6945,11 @@ function _ebApplyResult(isCorrect) {
 function submitErrorBankMath() {
   const input = document.getElementById('ebMathInput');
   if (!input || input.value === '') return;
-  const val = parseInt(input.value);
+  const val = parseFloat(input.value);  // v19.81: 同 mgInput, 小数答案不能用 parseInt
   const g = _errorBankState;
   if (!g) return;
   const item = g.items[g.idx];
-  const isCorrect = val === item.ans;
+  const isCorrect = Math.abs(val - item.ans) < 0.005;
   _handleErrorBankResult(isCorrect, item, () => {
     if (isCorrect) {
       g.correct++;
@@ -8891,7 +8891,9 @@ function _finishMcqGame() {
     const clozePct = clozeQs.length ? clozeCorrect / clozeQs.length : 0;
     const sstPct = sstQs.length ? sstCorrect / sstQs.length : 0;
     const estPaper2Score = Math.round(clozePct * 25 + sstPct * 10);  // 35 满分
-    const estAL = estPaper2Score >= 31 ? 'AL 2-3' : estPaper2Score >= 27 ? 'AL 4' : estPaper2Score >= 22 ? 'AL 5' : estPaper2Score >= 17 ? 'AL 6' : 'AL 7+';
+    // v19.81: 补 AL1 档 — 原来 >=31 就封顶 'AL 2-3', 满分也判不出 AL1, 且 parseInt('AL 2-3')=2
+    // 会把英语在综合AL预测里结构性封死在 AL2, 导致"综合 AL4 = 四科全 AL1"永远不可能出现
+    const estAL = estPaper2Score >= 32 ? 'AL 1' : estPaper2Score >= 30 ? 'AL 2' : estPaper2Score >= 28 ? 'AL 3' : estPaper2Score >= 27 ? 'AL 4' : estPaper2Score >= 22 ? 'AL 5' : estPaper2Score >= 17 ? 'AL 6' : 'AL 7+';
     if (window.bumpPaper2Sprint) {
       window.bumpPaper2Sprint(state, 'cloze', clozeCorrect, clozeQs.length);
       window.bumpPaper2Sprint(state, 'sst', sstCorrect, sstQs.length);
@@ -8914,7 +8916,7 @@ function _finishMcqGame() {
           </div>
         </div>
         <div class="mg-result-reward">+${reward} 分 · 实战训练奖励</div>
-        <div style="font-size:11px;color:#666;margin:8px 0">💡 真考目标 ${accuracy >= 75 ? '已达 AL 4!继续保持' : 'AL 4 需要 ≥75% (现 ' + accuracy + '%), 再来一卷'}</div>
+        <div style="font-size:11px;color:#666;margin:8px 0">💡 真考目标 ${accuracy >= 90 ? '已达 AL1 水平! 保持零失误' : 'AL1 需要 ≥90% (现 ' + accuracy + '%), 再来一卷'}</div>
         <button class="btn btn-primary" onclick="closeMcqGame()">知道了!</button>
       </div>`;
     if (window._mockTimer) { clearInterval(window._mockTimer); window._mockTimer = null; }
@@ -9119,7 +9121,7 @@ function _renderMathGame() {
       ${paperBadge}
       <div class="mg-stats" id="mgStats">⏱️ ${g.timeLeft}s · ✅ ${g.correct} · ❌ ${g.wrong} · ${g.idx + 1}/10</div>
       <div class="mg-q" id="mgQ">${q.q} = ?</div>
-      <input type="text" inputmode="numeric" pattern="-?[0-9]*" id="mgInput" value="" class="mg-input" onkeydown="if(event.key==='Enter') submitMathAnswer()" placeholder="点这里输入答案">
+      <input type="text" inputmode="decimal" pattern="-?[0-9.]*" id="mgInput" value="" class="mg-input" onkeydown="if(event.key==='Enter') submitMathAnswer()" placeholder="点这里输入答案">
       <button class="btn btn-primary mg-submit" onclick="submitMathAnswer()">提交 (Enter)</button>
       <button class="vocab-modal-close mg-close" onclick="closeMathGame()">×</button>
     </div>
@@ -9142,9 +9144,10 @@ function submitMathAnswer() {
   if (!g) return;
   const input = document.getElementById('mgInput');
   if (!input || input.value === '') return;
-  const val = parseInt(input.value);
+  // v19.81: 原来用 parseInt, 答案是小数的题(2.5 / 4.8 / 83.44 等 11 道)永远判错, 还会拖低自适应难度
+  const val = parseFloat(input.value);
   const q = g.qs[g.idx];
-  if (val === q.ans) { g.correct++; playSound('ding'); petExpress('pet-excited', 800); }
+  if (Math.abs(val - q.ans) < 0.005) { g.correct++; playSound('ding'); petExpress('pet-excited', 800); }
   else {
     g.wrong++; playSound('sad');
     showToast(`❌ 应是 ${q.ans}`, 'sad');  // v18.33: 错答显示正确答案
@@ -10130,7 +10133,7 @@ function _renderImprovementPlan(state) {
   // 优先级 3: 维持优势
   const strongSubjs = Object.keys(bySubj).filter(s => bySubj[s].accuracy >= 80);
   if (strongSubjs.length > 0) {
-    items.push({ icon: '🟢', title: `维持: ${strongSubjs.join(' / ')} — 已达 AL4 目标区`,
+    items.push({ icon: '🟢', title: `维持: ${strongSubjs.join(' / ')} — 已在 AL1 轨道上`,
       body: '每周 2 局保持手感即可，把时间投入弱项。' });
   }
   // 知识树提示

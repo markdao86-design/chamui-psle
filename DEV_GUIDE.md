@@ -8,7 +8,7 @@
 
 ## 1. 项目概述
 
-**PSLE 4-6 分陪练 App** — 帮助新加坡 P5/P6 学生考取 PSLE AL 4-6 (顶 5-15%)。
+**PSLE 备考陪练 App** — 目标: 四科全部 AL1 (综合 AL4)。口径以 CLAUDE.md 第 1 节为准, 不要写 "AL 4-6"。
 
 - 纯前端单页应用 (HTML + CSS + JS), 无框架
 - 数据持久化: localStorage + Firebase Firestore
