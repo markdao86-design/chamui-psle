@@ -6478,7 +6478,7 @@ function _renderKnowledgePractice() {
         </div>
         <button class="vocab-modal-close" onclick="closeKnowledgePractice()">×</button>
       </div>
-      <div class="kp-tip">💡 不限次数 · 题带标签: <b style="color:#DC2626">易错</b>=常考陷阱 / <b style="color:#16A34A">应用</b>=新情境 / <b style="color:#7C3AED">拉分</b>=超纲难题 · ⭐ 60%=1 / 80%=2 / 100%=3 (取最高)</div>
+      <div class="kp-tip">💡 不限次数 · 题带标签: <b style="color:#DC2626">易错</b>=常考陷阱 / <b style="color:#16A34A">应用</b>=新情境 / <b style="color:#7C3AED">拉分</b>=纲内高阶 · ⭐ 60%=1 / 80%=2 / 100%=3 (取最高)</div>
       <div class="cn-questions">${qsHtml}</div>
       ${g.submitted
         ? `<div class="cn-result">

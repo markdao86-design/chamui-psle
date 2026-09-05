@@ -1653,6 +1653,20 @@ assert(/点开回看原文/.test(appSrc), 'v19.92: 每题都能回看原文 (原
   assert(after < before, `v19.97: 顶格档被掌握完后封顶自动下退 (${before} → ${after})`);
 }
 
+// ===== v19.98: 标签一致性 + "拉分"定义纠正 =====
+{
+  const KT6 = W.KNOWLEDGE_TREE, KP6 = W.KNOWLEDGE_PRACTICE;
+  let noTag = 0, noBase = 0;
+  Object.keys(KT6).forEach(s => KT6[s].forEach(n => {
+    const qs = KP6[n.id] || [];
+    if (!qs.some(q => q.tag === '基础')) noBase++;
+    qs.forEach(q => { if (!q.tag) noTag++; });
+  }));
+  assert(noTag === 0, `v19.98: 630 道题全部有标签 (原来 140 道无标签, 渲染时同一界面有的有标签有的没有; 残留 ${noTag})`);
+  assert(noBase === 0, `v19.98: 每个节点都有"基础"档 (原来 46 个节点的前3题从不显示标签; 残留 ${noBase})`);
+}
+assert(/拉分<\/b>=纲内高阶/.test(appSrc), 'v19.98: "拉分"定义从"超纲难题"改成"纲内高阶" — AL1 靠的是纲内高阶不是超纲, 原定义会让孩子觉得拉分题做不出也没关系, 正好抵消这一档的作用');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
