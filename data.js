@@ -984,7 +984,7 @@ const WEEKLY_WOW_FACTS = [
   { week:10, hook:'🌑 月亮上的影子可以保留几亿年', body:'地球上的影子风一吹就变, 但月球没大气没风 — 阿波罗 11 号宇航员 1969 年踩的脚印, 今天还在! P4 Light & Shadow 难章: 影子需要 光源 + 不透明物 + 屏 — 月球都满足。' },
   { week:11, hook:'🌅 为什么夕阳红, 中午太阳白?', body:'阳光经过大气层会"散射" — 蓝光散得多, 红光散得少。中午太阳直射穿过的大气薄, 各种光都到; 夕阳斜射穿过厚大气, 只剩红光能穿透。 PSLE Light 高频难题。' },
   { week:12, hook:'🥶 冬天的铁门比木门"冷", 其实温度一样', body:'金属导热快 — 你手指的热被铁门快速抢走, 大脑感觉"凉"。木门导热慢, 你手的热散不出去, 感觉"温"。P4 Heat 难章: 温度 vs 热感是两回事! PSLE 高频反直觉题。' },
-  { week:13, hook:'💨 100°C 蒸汽烫伤比 100°C 水严重 100 倍', body:'蒸汽变回水时释放大量"汽化潜热"(2260 J/g) — 100°C 蒸汽接触皮肤先凝结再降温, 比 100°C 水多放 6 倍热。这就是 P4 Heat 章节区分 "热的形式" vs "温度"的关键。' },
+  { week:13, hook:'💨 同样 100°C, 蒸汽烫伤比开水严重得多', body:'蒸汽碰到皮肤要先凝结成水、再降温, 比同温度的水多放出好几倍的热, 所以伤得更重。温度一样 ≠ 放出的热一样 — 这是 P4 Heat 章"温度 vs 热量"的关键区分。' },
   { week:14, hook:'🧲 磁铁切两半, 不是一个 N + 一个 S, 而是两个完整磁铁', body:'磁铁里每个原子都是小磁铁, 切开只是把大集合切成两个小集合 — 每块仍然有 N 和 S 极。 P4 Magnets + W14 综合: PSLE 必考"为什么磁铁不能分解为单极"。' },
 
   // ===== Phase 2 P5 (W15-W26) =====
@@ -2573,6 +2573,39 @@ const VOCAB_HARD = [
 function _gameMinFloor(gameKey) {
   return 4;
 }
+// v19.82: 按题库真实覆盖动态封顶难度。
+// 原来所有 game 都能升到 Lv6, 但 _sampleByDiff 在该档题不够时会静默回落到"全池随机",
+// 结果孩子看到"Editing Lv6"、实际做的是 P4 题 — 既骗人又练不到东西。
+// 规则: 取"至少还有 8 道题"的最高档 (一局 10 题, 允许少量跨档补齐)。
+const _GAME_BANK_FOR_CAP = {
+  math: () => typeof MATH_QUESTIONS !== 'undefined' && MATH_QUESTIONS,
+  grammar: () => typeof GRAMMAR_QUESTIONS !== 'undefined' && GRAMMAR_QUESTIONS,
+  cloze: () => typeof CLOZE_QUESTIONS !== 'undefined' && CLOZE_QUESTIONS,
+  sst: () => typeof SST_QUESTIONS !== 'undefined' && SST_QUESTIONS,
+  editing: () => typeof EDITING_PARAGRAPHS !== 'undefined' && EDITING_PARAGRAPHS,
+  listen: () => typeof LISTEN_DICTATIONS !== 'undefined' && LISTEN_DICTATIONS,
+  scimcq: () => typeof SCIENCE_MCQ !== 'undefined' && SCIENCE_MCQ,
+  chinese: () => typeof CHINESE_MCQ !== 'undefined' && CHINESE_MCQ,
+  unit: () => typeof UNIT_CONVERSIONS !== 'undefined' && UNIT_CONVERSIONS
+};
+const _gameMaxCapCache = {};
+function _gameMaxCap(gameKey) {
+  if (_gameMaxCapCache[gameKey] != null) return _gameMaxCapCache[gameKey];
+  let cap = 6;
+  try {
+    const getter = _GAME_BANK_FOR_CAP[gameKey];
+    const bank = getter && getter();
+    if (Array.isArray(bank) && bank.length) {
+      const counts = {};
+      bank.forEach(q => { const d = q.diff || q.difficulty || 0; counts[d] = (counts[d] || 0) + 1; });
+      const usable = Object.keys(counts).map(Number).filter(d => counts[d] >= 8);
+      cap = usable.length ? Math.max(...usable) : _gameMinFloor(gameKey);
+      cap = Math.max(cap, _gameMinFloor(gameKey));
+    }
+  } catch (e) { cap = 6; }
+  _gameMaxCapCache[gameKey] = cap;
+  return cap;
+}
 function recordGameRun(state, gameKey, correct, total) {
   const minFloor = _gameMinFloor(gameKey);
   if (!state.gameStats) state.gameStats = { vocab:{difficulty:4,recent:[]}, math:{difficulty:4,recent:[]}, editing:{difficulty:4,recent:[]}, listen:{difficulty:4,recent:[]}, cloze:{difficulty:4,recent:[]} };
@@ -2595,7 +2628,7 @@ function recordGameRun(state, gameKey, correct, total) {
   const last2 = s.recent.slice(-2);
   // v19.81: 升级线 80% → 90% — AL1 的定义就是 90 分, 练习的通过线必须等于考试线。
   // 原来 80% 就跳档, 孩子在每一档都只练到 AL3/AL4 水平就被推走, 永远没机会在任何一档打磨到 90+
-  if (s.difficulty < 6 && last3.length === 3 && last3.every(r => r.accuracy >= 0.9)) {
+  if (s.difficulty < _gameMaxCap(gameKey) && last3.length === 3 && last3.every(r => r.accuracy >= 0.9)) {
     s.difficulty++;
     levelChanged = 'up';
     s.recent = [];
@@ -3850,7 +3883,7 @@ const KNOWLEDGE_TREE = {
       pitfall: 'Evaporation 任何温度都发生 (仅表面), boiling 只在 100°C (整体冒泡) — 都是液→气但条件不同', game: 'scilab' },
     { id: 'sci_cells', name: '细胞 Cells', weeks: [13, 15], icon: '🔬',
       desc: 'P5 主题 Systems: 必识 6 个 organelles. AL1 标准: 画图标名 + function 一一对应, 还要会答 "缺了某 organelle 细胞会怎样" 的推理题.',
-      examples: ['植物特有: 细胞壁 (支撑) + 叶绿体 (光合) + 大液泡 (储水)', '动物特有: 中心体 (分裂)', '细胞膜 vs 细胞壁: 膜动植都有 (选择性通过, "看门人"); 壁只植物有 (刚性支撑, 让分子可通过但靠膜筛选)'],
+      examples: ['植物特有: 细胞壁 (支撑) + 叶绿体 (光合) + 大液泡 (储水)', '动物细胞: 没有细胞壁和叶绿体, 形状不规则; 液泡小而少', '细胞膜 vs 细胞壁: 膜动植都有 (选择性通过, "看门人"); 壁只植物有 (刚性支撑, 让分子可通过但靠膜筛选)'],
       pitfall: '叶绿体 ≠ 叶绿素, 前者是 organelle, 后者是 pigment 分子', game: 'vocab' },
     { id: 'sci_digestive', name: '消化系统', weeks: [13, 15], icon: '🍎',
       desc: 'P4 主题 Systems: 消化道 7 站顺序 + 各器官功能. AL1 标准: 必答 "消化 = 把食物分解成可被吸收的小分子", 图题按顺序标名且功能一一对应.',
@@ -3865,7 +3898,7 @@ const KNOWLEDGE_TREE = {
       examples: ['Xylem: 运水+矿物质, 根→叶单向上行 · Phloem: 运叶制造的食物(糖)到全株', '染色实验: 茎横切只有 xylem 染色 — 证明水走 xylem', '根=吸水+固定 · 茎=支撑+运输 · 叶=光合作用制造食物'],
       pitfall: 'Phloem 运的是 food/sugar 不是 "energy" — OE 答 energy 不给分', game: 'scilab' },
     { id: 'sci_reproduction', name: '生殖', weeks: [19, 21], icon: '🌿',
-      desc: 'P5 主题 Cycles: 完全 vs 不完全变态 + 花的结构 + 受精. AL1 标准: 人与开花植物生殖过程要能一一对应比较 (sperm↔pollen grain, egg↔ovule, 子宫↔ovary).',
+      desc: 'P5 主题 Cycles: 完全 vs 不完全变态 + 花的结构 + 受精. AL1 标准: 人与开花植物生殖过程要能一一对应比较 (精子↔花粉里的雄性细胞, 卵子↔胚珠里的卵细胞, 子宫↔子房).',
       examples: ['完全变态 4 段: 卵→幼虫→蛹→成虫 (蝶/蛙/蜜蜂)', '不完全 3 段: 卵→若虫→成虫 (蝗/蟋蟀/蜻蜓 — 若虫像小成虫)', '花: stamen (♂ anther + filament) + pistil (♀ stigma + style + ovary)'],
       pitfall: 'Pollination ≠ Fertilization. Pollination = 花粉到 stigma, Fertilization = sperm 到 egg', game: 'scilab' },
     { id: 'sci_respiratory', name: '呼吸与循环', weeks: [19, 21], icon: '🫀',
@@ -4385,23 +4418,23 @@ const THINK_PUZZLES = [
   {
     week: 5, subject: '🔬 P4 Plant Transport ⭐',
     question: '把一棵小树苗的所有叶子都摘光, 树根继续吸水, 树会发生什么?',
-    options: ['A. 树长得更快(节省叶子的能耗)', 'B. 树停止吸水, 几天后枯死', 'C. 树继续生长但变形', 'D. 树马上倒下'],
+    options: ['A. 树长得更快, 因为省下了养叶子的能量', 'B. 蒸腾停止, 水几乎上不去, 且无法光合造食物', 'C. 树照常生长, 叶子对树没什么用', 'D. 树会在当天之内倒下'],
     correct: 'B',
-    explanation: '叶子是"吸水的发动机"!没有叶子蒸腾, 就没有 suction 把水从根抬到顶 — 树根能吸水但水送不上去, xylem 干涸, 几天就死。这证明 xylem 的水流靠叶子蒸腾驱动, 不是根"压"上去的。'
+    explanation: '叶子是水流的"发动机": 蒸腾产生的拉力把水从根经 xylem 抬到顶。摘光叶子后这个拉力消失, 水几乎送不上去, 同时也没法光合作用造食物 — 树是慢慢耗尽储备而衰亡, 不是几天就死 (落叶树每年落光叶子照样活)。'
   },
   {
     week: 6, subject: '🔬 P4 Plant Transport ⭐',
-    question: '阳光强度增加 1 倍, 植物的蒸腾速度大约会增加多少?',
-    options: ['A. 不变(蒸腾不靠阳光)', 'B. 增加约 1 倍', 'C. 增加约 5 倍', 'D. 反而减少'],
+    question: '同一棵树, 中午的蒸腾速度和清晨比, 会怎样? 为什么?',
+    options: ['A. 一样快, 蒸腾和阳光没有关系', 'B. 中午更慢, 因为叶子会闭紧气孔休息', 'C. 中午更快: 温度高、气孔开得大、空气流动强', 'D. 中午更慢, 因为水都被根锁住了'],
     correct: 'C',
-    explanation: '不是 1 倍! 阳光让叶面温度升, 气孔开更大, 蒸腾速度大约增 5 倍。所以同样一棵树, 中午跟早晨的蒸腾速度差很多。这是 PSLE OE 题"为什么夏天树需要更多水"的原理。'
+    explanation: '中午温度高、光照强、常伴风 → 气孔开得大、水分蒸发快, 蒸腾明显加快 (PSLE 不考具体倍数, 只考"哪些条件让蒸腾变快": 温度高/风大/湿度低/光照强)。这就是"为什么夏天树需要更多水"的原理。'
   },
   {
     week: 7, subject: '🔬 P4 Digestive ⭐⭐',
     question: '为什么小肠绒毛(villi)长得密密麻麻?',
     options: ['A. 让小肠看起来更大', 'B. 增加表面积加速吸收营养', 'C. 防止细菌入侵', 'D. 帮助食物移动'],
     correct: 'B',
-    explanation: '小肠 6 米长, 加上绒毛 + 微绒毛, 表面积可达 250 m²(一个网球场!)。表面积越大 = 吸收越快越完全。这是 PSLE 高频题"小肠为什么这么长", 答案核心是"surface area for absorption"。'
+    explanation: '小肠又长又布满绒毛和微绒毛, 表面积因此成倍增大。表面积越大 = 吸收越快越完全。这是 PSLE 高频题"小肠为什么这么长", 答案核心是"surface area for absorption"。'
   },
   {
     week: 8, subject: '🔬 P4 Digestive ⭐⭐',
@@ -4412,10 +4445,10 @@ const THINK_PUZZLES = [
   },
   {
     week: 10, subject: '🔬 P4 Light & Shadow ⭐',
-    question: '同一只手电筒, 离墙更近, 影子会:',
+    question: '手电筒照着一个物体在墙上投影。把手电筒移得离物体更近(物体和墙不动), 影子会:',
     options: ['A. 变小变清晰', 'B. 变大变模糊', 'C. 大小不变', 'D. 完全消失'],
     correct: 'B',
-    explanation: '光源越近, 物体相对光源越大, 挡的光越多 → 影子变大。同时光从多角度射来, 边缘模糊。 PSLE 高频反直觉: 直觉以为"近 = 小", 其实"近 = 大"。这跟太阳投影相反原理一样。'
+    explanation: '光源离物体越近, 光线发散的角度越大, 被物体挡住的光就越多 → 影子变大。同时光从多角度射来, 边缘模糊。 PSLE 高频反直觉: 直觉以为"近 = 小", 其实"近 = 大"。这跟太阳投影相反原理一样。'
   },
   {
     week: 11, subject: '🔬 P4 Light & Shadow ⭐',
@@ -4429,7 +4462,7 @@ const THINK_PUZZLES = [
     question: '两块同样大小的方块, 金属一块木头一块, 都在 100°C 烤箱 1 小时取出。你光手摸 — 哪块烫?',
     options: ['A. 金属烫', 'B. 木头烫', 'C. 一样烫(温度相同)', 'D. 都不烫'],
     correct: 'A',
-    explanation: '虽然温度一样, 但金属导热快 — 把你手指的热抢走得快, 大脑感觉"凉/烫"剧烈; 木头导热慢, 你的手感觉相对温和。 PSLE 经典反直觉题: 温度 vs 热感是两回事!'
+    explanation: '温度一样, 但金属是热的良导体 — 它把热又快又多地送进你的手, 所以更烫; 木头导热慢, 传进手的热少得多, 摸起来温和。(注意热流方向: 100°C 的方块比手热, 热是从方块流向手。冬天摸铁门觉得凉则相反 — 那时是手的热流向铁门。) PSLE 经典反直觉题: 温度 vs 热感是两回事!'
   },
   {
     week: 13, subject: '🔬 P4 Heat ⭐⭐',
@@ -4462,16 +4495,16 @@ const THINK_PUZZLES = [
   {
     week: 21, subject: '⚡ P5 Series & Parallel ⭐',
     question: '为什么家里的电灯/电视/电冰箱必须用并联, 不能串联?',
-    options: ['A. 并联便宜', 'B. 1 个设备坏不影响其他, 且每个都有完整电压', 'C. 串联会爆炸', 'D. 并联省电'],
+    options: ['A. 并联用的电线比串联便宜很多', 'B. 一个设备坏了其他照常亮, 且每个都能独立开关', 'C. 串联接法会让电器立刻烧掉', 'D. 并联接法本身就比串联更省电'],
     correct: 'B',
-    explanation: '并联两大优势: ① 1 个设备坏其他正常 ② 每个设备都拿到完整 220V (串联会被分压)。 设备需要的电压不同 — 并联让每个独立工作。 PSLE Paper 2 高频应用题。'
+    explanation: '并联两大优势: ① 一个设备坏了, 其他仍在自己的回路里正常工作 ② 每个设备可以被自己的开关单独控制。串联则是一坏全灭、一关全关。 PSLE Paper 2 高频应用题。'
   },
   {
     week: 23, subject: '⚡ 综合 — Energy & Electricity',
     question: '一个 100W 的灯泡 vs 10W 的 LED 灯, 同等照明亮度, LED 多省了多少能源?',
     options: ['A. 节省 50%', 'B. 节省 90% (浪费的热量大幅减少)', 'C. 节省 100%', 'D. LED 反而更耗电'],
     correct: 'B',
-    explanation: 'LED 把 90% 电变光, 10% 变热; 白炽灯只 5% 变光, 95% 变热!所以同样亮度 LED 用电仅 1/10。 PSLE Energy 高频"useful vs wasted energy"题。'
+    explanation: '同样亮度下 LED 只用 10W, 白炽灯要 100W — 用电只有 1/10, 即省下约 90% 的电。白炽灯的电大部分变成了没用的热 (waste heat), LED 变成热的比例小得多。 PSLE Energy 高频"useful vs wasted energy"题。'
   },
   {
     week: 25, subject: '🎯 P5 整体串讲',
@@ -9140,6 +9173,7 @@ window.getDailyMathQuestions = getDailyMathQuestions;
 window.getDailyEditingParagraph = getDailyEditingParagraph;
 window.getDailyListenDictation = getDailyListenDictation;
 // v18.25: 难度自适应
+window._gameMaxCap = _gameMaxCap;
 window.recordGameRun = recordGameRun;
 window.getDifficulty = getDifficulty;
 window.getMathQuestionsByDiff = getMathQuestionsByDiff;

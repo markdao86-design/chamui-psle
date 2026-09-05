@@ -1331,6 +1331,27 @@ assert(/9\/14 恢复常规|9\/14\(周一\)恢复常规/.test(appSrc), 'v19.79: �
 assert(!/Science Yearly/.test(appSrc.match(/const HOLIDAY_SCHED[\s\S]*?window\.HOLIDAY_SCHED/)[0]), 'v19.79: 假期课表无 Science Yearly (未购, 用选择题册替代)');
 assert(/\.kt-inner \.cn-questions \{ padding-right: 38px; \}/.test(idxSrc), 'v19.79: 练习弹层右侧 38px 滑动走廊');
 
+// ===== v19.82: 科学事实修正 (4-agent 审计查出, 这些是给孩子学的内容, 错了很糟) =====
+{
+  const TP = W.THINK_PUZZLES || [];
+  const all = JSON.stringify(TP) + dataSrcV80;
+  assert(!/把你手指的热抢走得快, 大脑感觉"凉\/烫"剧烈/.test(all), 'v19.82: W12热感题热流方向已修 (100°C方块是热流进手, 原文写反了 — 热流方向是Heat章核心采分点)');
+  assert(!/LED 把 90% 电变光/.test(all), 'v19.82: 删掉编造的"LED 90%变光" (真实光效约30-50%)');
+  assert(!/蒸腾速度大约增 5 倍/.test(all) && !/增加约 5 倍/.test(all), 'v19.82: 删掉编造的"蒸腾增5倍" (蒸腾对光强是饱和响应, PSLE不考定量倍数)');
+  assert(!/表面积可达 250 m²/.test(all), 'v19.82: 删掉过时的小肠250m² (近年测定约30-40m², 且PSLE不考数字)');
+  assert(!/每个设备都拿到完整 220V/.test(all), 'v19.82: 删掉220V (新加坡是230V, 且电压不在PSLE大纲内)');
+  assert(!/树停止吸水, 几天后枯死/.test(all), 'v19.82: 修"摘光叶子几天枯死" (根压仍能送水, 落叶树每年落光叶也不死)');
+  assert(!/动物特有: 中心体/.test(dataSrcV80), 'v19.82: 删中心体 (中学内容, PSLE P5细胞只考6个)');
+  assert(!/sperm↔pollen grain/.test(dataSrcV80), 'v19.82: 生殖对照表修正 (原把配子和装配子的结构混为一谈, 和本节点练习题自相矛盾)');
+  assert(!/严重 100 倍/.test(dataSrcV80), 'v19.82: 蒸汽烫伤倍数口径统一 (原hook写100倍, 正文写6倍, 自相矛盾)');
+}
+
+// ===== v19.82: 难度按题库真实覆盖动态封顶 (防"Lv6其实在发P4题") =====
+assert(/function _gameMaxCap\(gameKey\)/.test(dataSrcV80), 'v19.82: _gameMaxCap 已定义');
+assert(/s\.difficulty < _gameMaxCap\(gameKey\)/.test(dataSrcV80), 'v19.82: 升级判断用动态封顶 (原硬编码 <6, 题库不够时会静默回落随机发简单题)');
+assert(typeof W._gameMaxCap === 'function' && W._gameMaxCap('editing') <= 5 && W._gameMaxCap('math') >= 5,
+  `v19.82: 封顶按题库算 (editing=${W._gameMaxCap && W._gameMaxCap('editing')}, math=${W._gameMaxCap && W._gameMaxCap('math')})`);
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
