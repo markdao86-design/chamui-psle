@@ -8631,16 +8631,26 @@ function _openMcqGame(key, title, qField, chapter) {
     } else {
       // v19.17: 本章 <5 时, 按当前章节难度取同难度题 (从全库) + ±1 难度补足, 不再全库随机
       // 科学专家累计 4 次评审 P0 — 第 5 周植物运输不应抽到 P6 电学
-      const chapterDiff = chapter.difficulty || 4;
+      // v19.99: 两个 bug 让这里会发出"0 题的空游戏":
+      //  ① 综合章节的 difficulty 是字符串"混合", Math.abs(4 - "混合") = NaN, NaN<=1 恒 false → 补题池全空
+      //  ② 题库字段是 diff 不是 difficulty, 原来读 q.difficulty 永远拿默认值
+      const rawChDiff = chapter.difficulty;
+      const chapterDiff = (typeof rawChDiff === 'number' && isFinite(rawChDiff)) ? rawChDiff : diff;
       const supplementPool = window.SCIENCE_MCQ.filter(q => {
         if (filtered.includes(q)) return false;
-        const qDiff = q.difficulty || 4;
+        const qDiff = q.diff || q.difficulty || 4;
         return Math.abs(qDiff - chapterDiff) <= 1;
       }).sort(() => Math.random() - 0.5);
       const need = Math.max(0, 10 - filtered.length);
-      const supplement = supplementPool.slice(0, need);
-      rawQs = [...filtered, ...supplement];
-      setTimeout(() => showToast(`📚 ${chapter.title} 仅 ${filtered.length} 题, 补 ${supplement.length} 题同难度 (Lv ${chapterDiff}±1)`, 'warn'), 100);
+      let supplement = supplementPool.slice(0, need);
+      // 兜底: 同难度也凑不够就用按难度采样的那批(rawQs), 绝不发空局
+      if (filtered.length + supplement.length < 5) {
+        rawQs = fn(diff, 10);
+        setTimeout(() => showToast(`📚 ${chapter.title} · 按当前难度 Lv${diff} 综合出题`, 'success'), 100);
+      } else {
+        rawQs = [...filtered, ...supplement];
+        setTimeout(() => showToast(`📚 ${chapter.title} 本章 ${filtered.length} 题 + 补 ${supplement.length} 题 (Lv ${chapterDiff}±1)`, 'warn'), 100);
+      }
     }
   }
   const qs = rawQs.map(q => {

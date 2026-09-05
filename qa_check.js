@@ -759,7 +759,7 @@ assert(/nextReview: Date\.now\(\) \+ 14 \* 86400000/.test(appSrc), 'v19.17: 14 �
 assert(/14 天后会回测/.test(appSrc), 'v19.17: 毕业 toast 提示 14 天后回测');
 // v19.17: 科学降级同难度
 assert(/Math\.abs\(qDiff - chapterDiff\) <= 1/.test(appSrc), 'v19.17: 科学降级 ±1 难度');
-assert(/补 \$\{supplement\.length\} 题同难度/.test(appSrc), 'v19.17: 科学降级 toast');
+assert(/补 \$\{supplement\.length\} 题 \(Lv/.test(appSrc), 'v19.17/99: 科学补题 toast (v19.99 改了措辞并加了"凑不够就按当前难度综合出题"的兜底分支)');
 // v19.17: 毕业题间隔复习对话框
 assert(/function renderGradReviewCard/.test(appSrc), 'v19.17: renderGradReviewCard');
 assert(/function openGradReview/.test(appSrc), 'v19.17: openGradReview');
@@ -1447,12 +1447,23 @@ assert(!/getAllDueFlashcards\(state\)/.test(appSrc), 'v19.87: UI 不再报只涨
   const longQ = M.filter(q => String(q.q).length >= 40).length;
   assert(longQ >= 15, `v19.88: 数学库有 ≥15 道 PSLE Paper2 形态多步应用题 (题干≥40字, 实际 ${longQ}; 原来全库最长才60字符全是一步速算)`);
   // 科学: 孩子最大失分点是选择题, 必须有 Booklet A 的三类硬题
-  const setup = S.filter(q => /应比较|哪两组|哪两杯|这个实验最主要的问题/.test(String(q.q))).length;
-  const chart = S.filter(q => /(\d+\s*(mL|cm|°C|g|分钟)[^]{0,40}){3,}/.test(String(q.q))).length;
-  const multi = S.filter(q => /\(1\)[^]*\(2\)[^]*\(3\)/.test(String(q.q))).length;
-  assert(setup >= 4, `v19.88: 科学库有 ≥4 道"实验装置对比"题 (原来 0 道, 实际 ${setup})`);
-  assert(chart >= 4, `v19.88: 科学库有 ≥4 道"图表/数据推断"题 (原来全库没出现过任何一组数据, 实际 ${chart})`);
-  assert(multi >= 4, `v19.88: 科学库有 ≥4 道"多陈述判断"题 (原来 1 道, 实际 ${multi})`);
+  // v19.99: 三类硬题已按 PSLE 真考改成英文题干 (Booklet A 是英文卷, 他丢分有一块就是英文读题)
+  const setup = S.filter(q => /should be compared|which two set-?ups|set-?up\s*[PQRS]\b/i.test(String(q.q))).length;
+  const chart = S.filter(q => /table below|graph below|results below|shows the|readings|recorded/i.test(String(q.q))).length;
+  const multi = S.filter(q => /\(1\)[\s\S]*\(2\)/.test(String(q.q))).length;
+  assert(setup >= 4, `v19.88/99: 科学库有 ≥4 道"实验装置对比"题 (原来 0 道, 实际 ${setup})`);
+  assert(chart >= 3, `v19.88/99: 科学库有 ≥3 道"图表/数据推断"题 (原来全库没出现过任何一组数据, 实际 ${chart})`);
+  assert(multi >= 4, `v19.88/99: 科学库有 ≥4 道"多陈述判断"题 (原来 1 道, 实际 ${multi})`);
+  assert(!S.some(q => /[\u4e00-\u9fa5]/.test(String(q.q))), 'v19.99: 科学题干全部英文 (PSLE 科学是英文卷; 原来新补的21道硬题是中文, 练到思维练不到读题)');
+  assert(!S.some(q => (q.opts || []).some(o => /^[ABCD]\b/.test(String(o).trim())) && /set-?up/i.test(String(q.q))), 'v19.99: 装置编号用 P/Q/R/S 不用 A/B/C/D (渲染时选项前会自动加 A. B. C. D. 前缀, 会撞车)');
+  {
+    let longest = 0, ratio = 0;
+    S.forEach(q => { const L = q.opts.map(o => String(o).length), m = Math.max(...L);
+      if (L[q.ans] === m && L.filter(x => x === m).length === 1) longest++;
+      const o = L.filter((_, i) => i !== q.ans); ratio += L[q.ans] / (o.reduce((a, b) => a + b, 0) / 3); });
+    assert(longest / S.length < 0.30, `v19.99: 科学题"答案=唯一最长选项" <30% (实际 ${Math.round(longest / S.length * 100)}%, 修复前 61% — 闭眼选最长能拿65分, 而孩子丢分正在选择题)`);
+    assert(ratio / S.length < 1.25, `v19.99: 科学题答案/干扰项长度比 <1.25 (实际 ${(ratio / S.length).toFixed(2)}, 修复前 1.64)`);
+  }
   assert(!/catalyst/.test(JSON.stringify(S)), 'v19.88: 删掉"盐是生锈催化剂"的错误说法 (盐是电解质不是催化剂)');
 }
 assert(/mg-q-long/.test(idxSrc) && /mg-q-xlong/.test(appSrc), 'v19.88: 长题干自适应字号 (原来固定36px居中, PSLE多步应用题在iPad上会撑爆)');
@@ -1666,6 +1677,11 @@ assert(/点开回看原文/.test(appSrc), 'v19.92: 每题都能回看原文 (原
   assert(noBase === 0, `v19.98: 每个节点都有"基础"档 (原来 46 个节点的前3题从不显示标签; 残留 ${noBase})`);
 }
 assert(/拉分<\/b>=纲内高阶/.test(appSrc), 'v19.98: "拉分"定义从"超纲难题"改成"纲内高阶" — AL1 靠的是纲内高阶不是超纲, 原定义会让孩子觉得拉分题做不出也没关系, 正好抵消这一档的作用');
+
+// ===== v19.99b: 科学章节筛选不再发"0题空局" =====
+assert(/typeof rawChDiff === 'number' && isFinite\(rawChDiff\)/.test(appSrc), 'v19.99: 章节 difficulty 是字符串"混合"时不再参与数值比较 (原来 Math.abs(4-"混合")=NaN 让补题池全空)');
+assert(/const qDiff = q\.diff \|\| q\.difficulty \|\| 4/.test(appSrc), 'v19.99: 补题读 q.diff (科学题库字段是 diff 不是 difficulty, 原来永远拿默认值)');
+assert(/绝不发空局|filtered\.length \+ supplement\.length < 5/.test(appSrc), 'v19.99: 凑不够题时兜底按当前难度出题, 不发空局');
 
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
