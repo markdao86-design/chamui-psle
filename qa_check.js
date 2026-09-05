@@ -1590,6 +1590,56 @@ assert(/点开回看原文/.test(appSrc), 'v19.92: 每题都能回看原文 (原
   assert(still.length === 0, `v19.94: 已换掉 4 个本身合法的干扰项(倒装/省略让步从句/复数版比较) — 孩子选了会被冤枉判错 (残留 ${still.length})`);
 }
 
+// ===== v19.96: 结构性体检 — 原来的 QA 只查"有没有"不查"对不对", 这轮所有硬伤它一个都没拦住 =====
+{
+  const allBanks = {
+    GRAMMAR_QUESTIONS: W.GRAMMAR_QUESTIONS, CLOZE_QUESTIONS: W.CLOZE_QUESTIONS, SST_QUESTIONS: W.SST_QUESTIONS,
+    MATH_QUESTIONS: W.MATH_QUESTIONS, SCIENCE_MCQ: W.SCIENCE_MCQ, CHINESE_MCQ: W.CHINESE_MCQ
+  };
+  // ① 选项结构合法: 恰4项、无重复、ans 越界
+  const structBad = [];
+  Object.entries(allBanks).forEach(([n, b]) => (b || []).forEach((q, i) => {
+    if (!q.opts) return;                       // 数学是填空题, 无 opts
+    if (q.opts.length !== 4) structBad.push(n + '#' + i + '(选项' + q.opts.length + '个)');
+    else if (new Set(q.opts.map(String)).size !== 4) structBad.push(n + '#' + i + '(选项重复)');
+    else if (typeof q.ans !== 'number' || q.ans < 0 || q.ans > 3) structBad.push(n + '#' + i + '(ans越界)');
+  }));
+  assert(structBad.length === 0, `v19.96: 所有选择题恰4个不重复选项且 ans 合法 (异常 ${structBad.length}${structBad.length ? ': ' + structBad.slice(0, 3).join(',') : ''})`);
+
+  // ② "只差标点/空格就相同"的双答案 (限定性vs非限定性那类)
+  const norm = s => String(s).replace(/[,，.。\s]/g, '').toLowerCase();
+  const dbl = [];
+  Object.entries(allBanks).forEach(([n, b]) => (b || []).forEach((q, i) => {
+    if (!q.opts || typeof q.ans !== 'number') return;
+    const a = norm(q.opts[q.ans]);
+    // 逗号"成对"才算真的两种合法写法; 逗号不成对(如只有左逗号)本身就是错句, 是合法干扰项
+    const balanced = s => { const c2 = (String(s).match(/[,，]/g) || []).length; return c2 === 0 || c2 === 2; };
+    q.opts.forEach((o, k) => { if (k !== q.ans && norm(o) === a && balanced(o) && balanced(q.opts[q.ans])) dbl.push(n + '#' + i); });
+  }));
+  assert(dbl.length === 0, `v19.96: 无"只差一对成对逗号所以两个都对"的题 (实际 ${dbl.length}${dbl.length ? ': ' + dbl.slice(0, 4).join(',') : ''})`);
+
+  // ③ 解析里的「」引用必须真的存在于该题选项 (防"僵尸解析"点评已被换掉的选项)
+  // 只查"含英文字母"的引用 —— 那才是在引英文选项原文;
+  // 纯中文的「」多半是释义(如 must 的意思「必须先做完作业才能玩」), 不是选项指代
+  let ghost = 0, quoted = 0;
+  const ghostList = [];
+  Object.entries(allBanks).forEach(([n, b]) => (b || []).forEach((q, i) => {
+    if (!q.opts) return;
+    [...String(q.explain || '').matchAll(/「([^」]{4,})」/g)].forEach(m => {
+      const t = m[1].replace(/[…\.]+$/, '').trim();
+      if (!/[A-Za-z]{3}/.test(t)) return;      // 纯中文释义, 跳过
+      quoted++;
+      if (!q.opts.some(o => String(o).includes(t) || t.includes(String(o).slice(0, 20)))) { ghost++; ghostList.push(n + '#' + i); }
+    });
+  }));
+  assert(quoted > 100 && ghost / quoted < 0.05, `v19.96: 解析引用的英文选项原文都真实存在 (${quoted} 处引用, 对不上 ${ghost} 处${ghost ? ': ' + ghostList.slice(0, 3).join(',') : ''}) — 防"僵尸解析"点评已被换掉的选项`);
+
+  // ④ 数学答案格式: 钱数不能被擅自取整成假答案
+  const badMoney = (W.MATH_QUESTIONS || []).filter(q => /\$|GST|折|价/.test(String(q.q)) && typeof q.ans === 'number'
+    && /≈|约等于/.test(String(q.explain || '')));
+  assert(badMoney.length === 0, `v19.96: 钱数题的答案不是四舍五入来的 (异常 ${badMoney.length}) — 判分容差 0.005, 存了取整值会把算对的孩子判错`);
+}
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
