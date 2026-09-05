@@ -6675,6 +6675,14 @@ function _renderErrorBankReview() {
   const tag = GAME_LABEL[item.gameKey] || item.gameKey;
   let answerArea = '';
   if (item.type === 'mcq') {
+    // v19.84: 错题本每次复习都重新洗牌选项 — 否则同一道题反复复习会变成
+    // "记住答案在第几个", 而不是记住知识点 (错题本的意义正好在于反复复习)
+    if (Array.isArray(item.opts) && item.opts.length > 1 && typeof item.ans === 'number') {
+      const correctText = item.opts[item.ans];
+      const reshuffled = _fyShuffle(item.opts);
+      const newAns = reshuffled.indexOf(correctText);
+      if (newAns >= 0) { item.opts = reshuffled; item.ans = newAns; }
+    }
     const opts = (item.opts || []).map((o, oi) =>
       `<button class="mcq-opt" onclick="submitErrorBankAnswer(${oi})">${String.fromCharCode(65+oi)}. ${escapeHtml(o)}</button>`
     ).join('');

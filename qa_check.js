@@ -1372,6 +1372,15 @@ assert(/function _fyShuffle\(arr\)/.test(appSrc), 'v19.83: Fisher-Yates 洗牌�
 assert(!/\[\.\.\.q\.opts\]\.sort\(\(\) => Math\.random\(\) - 0\.5\)/.test(appSrc), 'v19.83: 选项洗牌不再用伪洗牌 (四元素时答案留A位28.1%/到D仅18.8%)');
 assert((appSrc.match(/_fyShuffle\(/g) || []).length >= 5, 'v19.83: _fyShuffle 已接入各处选项洗牌 (防死代码)');
 
+// ===== v19.84: 华文题库去高华化 (自适应难度会把孩子一路推到最高档, 而 computeTotalAL 又拿它反推华文AL) =====
+{
+  const CM = W.CHINESE_MCQ || [];
+  const bad = CM.filter(q => /论语|文言|之南海|巾帼|须眉|温故而知新|三人行|己所不欲|学而不思|春风又绿/.test(q.q + (q.explain || q.exp || '')));
+  assert(bad.length === 0, `v19.84: 华文题库无文言文/高华内容 (孩子读普通华文; 残留 ${bad.length} 题${bad.length ? ': ' + bad[0].q.slice(0, 18) : ''})`);
+  const d6 = CM.filter(q => (q.diff || q.difficulty) === 6);
+  assert(d6.length >= 8, `v19.84: 华文最高难度档仍有 ≥8 题撑一局 (实际 ${d6.length})`);
+}
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
