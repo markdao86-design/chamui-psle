@@ -9195,7 +9195,7 @@ function _renderMathGame() {
     <div class="mg-inner">
       ${paperBadge}
       <div class="mg-stats" id="mgStats">⏱️ ${g.timeLeft}s · ✅ ${g.correct} · ❌ ${g.wrong} · ${g.idx + 1}/10</div>
-      <div class="mg-q" id="mgQ">${q.q} = ?</div>
+      <div class="mg-q${q.q.length > 60 ? ' mg-q-xlong' : q.q.length > 30 ? ' mg-q-long' : ''}" id="mgQ">${q.q}${q.q.length > 30 ? '' : ' = ?'}</div>
       <input type="text" inputmode="decimal" pattern="-?[0-9.]*" id="mgInput" value="" class="mg-input" onkeydown="if(event.key==='Enter') submitMathAnswer()" placeholder="点这里输入答案">
       <button class="btn btn-primary mg-submit" onclick="submitMathAnswer()">提交 (Enter)</button>
       <button class="vocab-modal-close mg-close" onclick="closeMathGame()">×</button>

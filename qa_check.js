@@ -1435,6 +1435,28 @@ assert(/今天这一组全认识了/.test(appSrc), 'v19.87: 收工页写明"今�
 assert(/fc-btn-vague/.test(appSrc) && /fc-btn-vague/.test(idxSrc), 'v19.87: 三档自评按钮(不认识/有点印象/认识)已接入+有样式');
 assert(!/getAllDueFlashcards\(state\)/.test(appSrc), 'v19.87: UI 不再报只涨不落的到期总数');
 
+// ===== v19.88: 题库对齐 AL1 — 清超纲奥数 + 补 PSLE 真形态题 =====
+{
+  const M = W.MATH_QUESTIONS || [], S = W.SCIENCE_MCQ || [];
+  const off = M.filter(q => /sqrt|√|环形跑道|水池.*管.*满|每人分\s*\d+\s*余|1\+2\+3\+/.test(String(q.q)));
+  assert(off.length === 0, `v19.88: 数学库无超纲奥数 (平方根/工程问题/数论余数/数列求和/环形跑道; 残留 ${off.length})`);
+  const hack = M.filter(q => /取整|\?\s*\/\s*\d/.test(String(q.q)));
+  assert(hack.length === 0, `v19.88: 数学库无"答案编码hack" (原来有题要求把2.4h输成24, 是在教考场上会害死人的答题格式; 残留 ${hack.length})`);
+  const neg = M.filter(q => typeof q.ans === 'number' && q.ans < 0);
+  assert(neg.length === 0, `v19.88: 数学库无负数答案 (小学不考负数; 残留 ${neg.length})`);
+  const longQ = M.filter(q => String(q.q).length >= 40).length;
+  assert(longQ >= 15, `v19.88: 数学库有 ≥15 道 PSLE Paper2 形态多步应用题 (题干≥40字, 实际 ${longQ}; 原来全库最长才60字符全是一步速算)`);
+  // 科学: 孩子最大失分点是选择题, 必须有 Booklet A 的三类硬题
+  const setup = S.filter(q => /应比较|哪两组|哪两杯|这个实验最主要的问题/.test(String(q.q))).length;
+  const chart = S.filter(q => /(\d+\s*(mL|cm|°C|g|分钟)[^]{0,40}){3,}/.test(String(q.q))).length;
+  const multi = S.filter(q => /\(1\)[^]*\(2\)[^]*\(3\)/.test(String(q.q))).length;
+  assert(setup >= 4, `v19.88: 科学库有 ≥4 道"实验装置对比"题 (原来 0 道, 实际 ${setup})`);
+  assert(chart >= 4, `v19.88: 科学库有 ≥4 道"图表/数据推断"题 (原来全库没出现过任何一组数据, 实际 ${chart})`);
+  assert(multi >= 4, `v19.88: 科学库有 ≥4 道"多陈述判断"题 (原来 1 道, 实际 ${multi})`);
+  assert(!/catalyst/.test(JSON.stringify(S)), 'v19.88: 删掉"盐是生锈催化剂"的错误说法 (盐是电解质不是催化剂)');
+}
+assert(/mg-q-long/.test(idxSrc) && /mg-q-xlong/.test(appSrc), 'v19.88: 长题干自适应字号 (原来固定36px居中, PSLE多步应用题在iPad上会撑爆)');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));

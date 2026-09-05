@@ -4456,6 +4456,10 @@ p { font-size: 14px; line-height: 1.6; }
 /* 数学速算 */
 .mg-stats { font-size: 13px; color: var(--color-text-light); text-align: center; margin-bottom: 12px; }
 .mg-q { font-size: 36px; font-weight: 900; text-align: center; margin: 16px 0; color: var(--color-primary); }
+/* v19.88: 长题干自适应 — 原来固定 36px 居中是为 "24×25-15×16" 这种算式设计的,
+   PSLE Paper 2 风格的多步应用题(40-100字)在 iPad 上会撑爆屏幕 */
+.mg-q.mg-q-long { font-size: 19px; font-weight: 700; text-align: left; line-height: 1.65; color: var(--color-text); }
+.mg-q.mg-q-xlong { font-size: 17px; font-weight: 700; text-align: left; line-height: 1.7; color: var(--color-text); }
 .mg-input { width: 100%; padding: 12px; font-size: 24px; text-align: center; border: 1px solid #CBD5E1; border-radius: 10px; box-sizing: border-box; }
 .mg-submit { width: 100%; margin-top: 12px; padding: 12px !important; font-size: 16px !important; }
 .mg-close { position: absolute; top: 16px; right: 16px; }
@@ -5919,9 +5923,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.87"></script>
-<script src="data.js?v=19.87"></script>
-<script src="app.js?v=19.87"></script>
+<script src="character.js?v=19.88"></script>
+<script src="data.js?v=19.88"></script>
+<script src="app.js?v=19.88"></script>
 
 </body>
 </html>
