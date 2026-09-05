@@ -1381,6 +1381,28 @@ assert((appSrc.match(/_fyShuffle\(/g) || []).length >= 5, 'v19.83: _fyShuffle �
   assert(d6.length >= 8, `v19.84: 华文最高难度档仍有 ≥8 题撑一局 (实际 ${d6.length})`);
 }
 
+// ===== v19.85: 华文选项防猜 + Editing 补高难度段落 + 引擎不再往下劝退 =====
+{
+  const KT3 = W.KNOWLEDGE_TREE, KP3 = W.KNOWLEDGE_PRACTICE;
+  const chKey = Object.keys(KT3).find(k => k.indexOf('华文') >= 0);
+  let tot = 0, longest = 0;
+  (KT3[chKey] || []).forEach(n => (KP3[n.id] || []).forEach(q => {
+    const L = q.opts.map(o => String(o).length), m = Math.max(...L);
+    tot++;
+    if (L[q.ans] === m && L.filter(x => x === m).length === 1) longest++;
+  }));
+  assert(tot > 0 && longest / tot < 0.45, `v19.85: 华文题"答案=唯一最长选项" <45% (实际 ${Math.round(longest / tot * 100)}%, 修复前 58%)`);
+}
+{
+  const EP = W.EDITING_PARAGRAPHS || [];
+  const hard = EP.filter(p => (p.diff || 0) >= 5).length;
+  assert(hard >= 12, `v19.85: Editing 补了高难度段落 (diff≥5 共 ${hard} 段, 原来是 0 — 孩子起步就是 Lv4, 等于没有进阶空间, 而 Editing 是他丢5分的弱项)`);
+  assert(W._gameMaxCap && W._gameMaxCap('editing') >= 5, 'v19.85: Editing 封顶已抬到 Lv5+ (原来封顶=起步档 Lv4)');
+}
+assert(/d = Math\.min\(d, 3\);/.test(dataSrcV80), 'v19.85: 英语 weak 模式不再压到 Lv2 (Lv2是P3-P4难度, 长期停那练不出AL1)');
+assert(/state\.englishStreak\.wrong >= 6/.test(dataSrcV80), 'v19.85: 连错劝退门槛 4→6 题 (冲AL1期间不该一遇挫折就往下劝)');
+assert(/acc\[s\]\.accuracy < 90/.test(dataSrcV80), 'v19.85: 弱科告警线 70%→90% (AL1=90分, 原来75-88%这个真正该救的区间完全不报警)');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
