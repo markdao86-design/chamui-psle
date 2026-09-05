@@ -1557,6 +1557,30 @@ assert(/点开回看原文/.test(appSrc), 'v19.92: 每题都能回看原文 (原
   assert(quoted.length >= 25, `v19.93: 重写后的解析改成引用选项原文「…」(实际 ${quoted.length} 条)`);
 }
 
+// ===== v19.93b: mini-game 题库解析也去位置引用 + 清超纲/双答案 =====
+{
+  const banks = { SST_QUESTIONS: W.SST_QUESTIONS, GRAMMAR_QUESTIONS: W.GRAMMAR_QUESTIONS, CLOZE_QUESTIONS: W.CLOZE_QUESTIONS, CHINESE_MCQ: W.CHINESE_MCQ };
+  // 只抓"序号引用"和"字母+描述词"这种真指代; 排除 John/PSLE/100°C 这类内容里的大写字母
+  const re2 = /第[一二三四1234]项|(?:^|[^A-Za-z])([ABCD])\s*(?:项|选项)?\s*[是把写答选错对少漏用]/;
+  const bad = [];
+  Object.entries(banks).forEach(([n, b]) => (b || []).forEach((q, i) => {
+    if (re2.test(String(q.explain || q.exp || ''))) bad.push(n + '#' + i);
+  }));
+  assert(bad.length === 0, `v19.93b: 题库解析无位置引用 (残留 ${bad.length}${bad.length ? ': ' + bad.slice(0, 3).join(',') : ''})`);
+  const quoted = (W.SST_QUESTIONS || []).filter(q => /「[^」]+」/.test(String(q.explain || ''))).length;
+  assert(quoted >= 100, `v19.93b: SST 解析改成引用选项原文 (实际 ${quoted} 条 — 原来 59/124 用"第X项", 期望75%的对局会把孩子选对的说成错的)`);
+}
+{
+  const M2 = W.MATH_QUESTIONS || [], S4 = W.SCIENCE_MCQ || [], KP5 = W.KNOWLEDGE_PRACTICE;
+  const off = M2.filter(q => /三角形三边 5,\s*12,\s*13|正八边形|甲\s*\d+\s*天\s*乙|÷\s*7\s*余|梯形/.test(String(q.q)));
+  assert(off.length === 0, `v19.93b: 数学库无勾股/正多边形/工程问题/数论余数/梯形 (全是中学或奥数内容; 残留 ${off.length})`);
+  const offS = S4.filter(q => /lever|mechanical advantage|in parallel, the total current/i.test(String(q.q)));
+  assert(offS.length === 0, `v19.93b: 科学库无杠杆/并联电流定量 (中学内容; 残留 ${offS.length})`);
+  const treeOff = ['math_area_perimeter', 'math_vol_3d'].flatMap(n => (KP5[n] || []).filter(q => /梯形|平行四边形|圆柱/.test(String(q.q))));
+  assert(treeOff.length === 0, `v19.93b: 知识树无梯形/平行四边形/圆柱面积体积题 (残留 ${treeOff.length})`);
+  assert(!(W.CLOZE_QUESTIONS || []).some(q => /After he ___ his homework/.test(String(q.sentence || ''))), 'v19.93b: 换掉 after+过去完成时那道双答案题 (finished 和 had finished 都成立)');
+}
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
