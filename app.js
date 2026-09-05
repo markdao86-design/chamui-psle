@@ -2375,7 +2375,7 @@ function renderErrorBankCard() {
   const GAME_LABEL = {
     knowledge: '🌳 知识树', math: '🔢 数学', grammar: '✏️ 语法', cloze: '🧩 Cloze',
     sst: '🔄 SST', editing: '🔍 改错', vocab: '📚 词汇', listen: '🎧 听力',
-    scilab: '🔬 科学', scimcq: '🔬 科学', sci_oe: '🔬 科学 OE', chinese: '🇨🇳 华文'
+    scilab: '🔬 科学', scimcq: '🔬 科学', sci_oe: '🔬 科学 OE', chinese: '🇨🇳 华文', cn_oe: '📝 华文问答'
   };
   const byGame = {};
   wrongs.forEach(w => {
@@ -6361,7 +6361,8 @@ function openKnowledgeNodeDetail(subj, idx) {
     listen:  { name: '🎧 听写练习', open: 'openListenGame()' },
     scilab:  { name: '🔬 科学快分类', open: 'openSciClassifyGame()' },
     sst:     { name: '🔄 SST 句型转换', open: 'openSstGame()' },
-    comp_oe: { name: '📖 阅读理解 OE', open: 'openCompOeGame()' }
+    comp_oe: { name: '📖 阅读理解 OE', open: 'openCompOeGame()' },
+    cn_oe:   { name: '📝 华文阅读·问答', open: 'openChineseOeGame()' }
   };
   const g = GAME_INFO[node.game];
   const examplesHtml = (node.examples || []).map(e => `<li>${escapeHtml(e)}</li>`).join('');
@@ -6624,7 +6625,7 @@ function openErrorBank() {
   const byGame = window.errorBankByGame ? window.errorBankByGame(state) : {};
   const GAME_LABEL = {
     knowledge: '🌳 知识树', math: '🔢 数学', grammar: '✏️ Grammar', cloze: '🧩 Cloze',
-    editing: '🔍 Editing', vocab: '📚 词汇', listen: '🎧 听力', scilab: '🔬 科学',
+    editing: '🔍 Editing', vocab: '📚 词汇', listen: '🎧 听力', scilab: '🔬 科学', cn_oe: '📝 华文问答',
     sci_oe: '🧪 科学 OE', subject_vocab: '📚 学科词汇', chinese: '🇨🇳 华文', sst: '🔄 SST', scimcq: '🧬 科学 MCQ',
     listen_mcq: '🎧 听力 MCQ'  // v19.31
   };
@@ -6737,7 +6738,7 @@ function _renderErrorBankReview() {
   _ebUpgradeLegacyEditing(item);  // v19.69: 旧格式editing错题(点错词:xxx+undefined解析)运行时自动补全
   const GAME_LABEL = {
     knowledge: '🌳 知识树', math: '🔢 数学', grammar: '✏️ Grammar', cloze: '🧩 Cloze',
-    editing: '🔍 Editing', vocab: '📚 词汇', listen: '🎧 听力', scilab: '🔬 科学'
+    editing: '🔍 Editing', vocab: '📚 词汇', listen: '🎧 听力', scilab: '🔬 科学', cn_oe: '📝 华文问答'
   };
   const tag = GAME_LABEL[item.gameKey] || item.gameKey;
   let answerArea = '';
@@ -6846,6 +6847,7 @@ const EB_TYPE_TIPS = {
   chinese:  { spot: '华文阅读理解二: 踩点给分', tips: ['<b>按分值数点作答</b>: 2分写2点3分写3点', '答案从原文找依据再改写, 不凭印象'] },
   listen:   { spot: '英语听力 20题20分', tips: ['<b>转折词后是重点</b>: but/however 后竖起耳朵', '先读题目预判要听什么信息'] },
   comp_oe:  { spot: '阅读理解问答 10题20分', tips: ['<b>按分值数点</b>: 3 分 = 3 个不同的点, 换说法重复不算', '推断题 = 原文证据 + 一句自己的解释', '写完回读自查: <b>答完整没</b> (8 月丢 7 分的病根)'] },
+  cn_oe:    { spot: '华文阅读理解二 开放题: 踩点给分', tips: ['<b>几分就写几个点</b>: 2分题写2句, 每句一个不同的意思', '抄原文一句只算一个点 — 要说清"这句代表什么"', '写完数一遍句子: <b>点数够不够</b> (8 月丢 7 分全在这)'] },
   listen_mcq: { spot: '英语听力 20题20分', tips: ['<b>转折词后是重点</b>: but/however 后竖起耳朵', '先读题目预判要听什么信息'] },
 };
 function _ebTipsHtml(gameKey) {
@@ -8398,6 +8400,9 @@ function openMiniGameHub() {
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openCompOeGame()">
           📖<br><b>阅读理解 OE</b><br><small>读文+自评</small>${status('comp_oe')}
+        </button>
+        <button class="mgh-game" onclick="closeMiniGameHub(); openChineseOeGame()" style="border:2px solid rgba(220,38,38,0.40)">
+          📝<br><b>华文阅读·问答</b><br><small>动笔写+逐点对</small><div class="mgh-status" style="color:#DC2626">🎯 治漏点</div>
         </button>
         <!-- v19.30: 英语 P1 Section A + P4 RA 新增 (Expert 1+6 P1) -->
         <button class="mgh-game" onclick="closeMiniGameHub(); openOralRAModal()" style="border:2px solid rgba(30,64,175,0.40)">
@@ -11914,6 +11919,149 @@ window.clearAdminAuth = clearAdminAuth;
 window.isAdminAuthed = isAdminAuthed;
 
 // ============ v19.4: Comprehension OE 训练 ============
+// ============= v20.0: 华文阅读问答·动笔版 =============
+// 为什么单做一套而不是复用英语版: 孩子华文丢的 7 分全是"2分题只写1个点", 病在**产出**不在识别。
+// 英语版是"想30秒→看范文→自评0/1/2", 全程一个字不写; 知识树的 ch_comp_oe 更是选择题。
+// 这套强制他先在框里写完整答案, 再把范文的采分点一条条摊开问"这个点你写到了吗" —— 逐点核对
+// 本身就是在训练"数点数"这个动作, 而不是笼统给自己打个分。
+let _cnOeState = null;
+function openChineseOeGame() {
+  const passages = window.CHINESE_OE_PASSAGES;
+  if (!passages || !passages.length) { showToast('暂无华文阅读材料', 'warn'); return; }
+  const diff = window.getDifficulty ? window.getDifficulty(state, 'cn_oe') : 4;
+  const pool = passages.filter(p => Math.abs((p.diff || 4) - diff) <= 1);
+  const list = pool.length ? pool : passages;
+  const chosen = list[Math.floor(Math.random() * list.length)];
+  _cnOeState = { passage: chosen, qIdx: 0, answers: [], scores: [], revealed: [] };
+  _renderCnOe();
+}
+// 把 model 里的 1…(1分) 2…(1分) 拆成一条条采分点
+function _cnOePoints(model) {
+  const body = String(model || '').split(/陷阱[:：]/)[0];
+  const parts = body.split(/(?=[①②③④⑤])/).map(s => s.trim()).filter(s => /^[①②③④⑤]/.test(s));
+  return parts.length ? parts : [body.trim()];
+}
+function _cnOeTrap(model) {
+  const m = String(model || '').split(/陷阱[:：]/);
+  return m.length > 1 ? m[1].trim() : '';
+}
+function _renderCnOe() {
+  const g = _cnOeState;
+  if (!g) return;
+  let modal = document.getElementById('cnOeModal');
+  if (!modal) { modal = document.createElement('div'); modal.id = 'cnOeModal'; modal.className = 'vocab-modal'; document.body.appendChild(modal); }
+  const p = g.passage, q = p.questions[g.qIdx], total = p.questions.length;
+  const revealed = g.revealed[g.qIdx];
+  const written = String(g.answers[g.qIdx] || '');
+  const points = _cnOePoints(q.model);
+  const trap = _cnOeTrap(q.model);
+  const checked = g.scores[g.qIdx] != null ? g.scores[g.qIdx] : 0;
+  const typeLabel = q.type === 'literal' ? '📖 找答案' : q.type === 'inferential' ? '🧠 要推断' : '💭 谈看法';
+  const pointsHtml = points.map(function (pt, k) {
+    return '<label style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;margin-bottom:6px;border-radius:8px;background:rgba(30,64,175,0.05);border:1px solid rgba(30,64,175,0.20);cursor:pointer">'
+      + '<input type="checkbox" data-pt="' + k + '" ' + (k < checked ? 'checked' : '') + ' onchange="cnOeTogglePoint()" style="width:18px;height:18px;margin-top:2px;flex:none">'
+      + '<span style="font-size:13px;line-height:1.65;color:#1E293B">' + escapeHtml(pt) + '</span></label>';
+  }).join('');
+  const trapHtml = trap ? '<div style="font-size:12px;color:#B45309;background:rgba(230,162,60,0.08);border:1px solid rgba(230,162,60,0.30);border-radius:8px;padding:8px 10px;margin:8px 0;line-height:1.6">⚠️ <b>陷阱</b>: ' + escapeHtml(trap) + '</div>' : '';
+  const revealedHtml = '<div class="comp-model">'
+    + '<div class="comp-model-label">📋 你写的:</div>'
+    + '<div style="font-size:13px;line-height:1.7;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:10px;white-space:pre-wrap">' + (escapeHtml(written) || '(没写)') + '</div>'
+    + '<div class="comp-model-label">✅ 参考答案 — 一条条对, 写到的打勾:</div>'
+    + pointsHtml + trapHtml
+    + '<div style="text-align:center;margin-top:10px"><button class="btn btn-primary" onclick="cnOeNext()">下一题 (我写到 <b id="cnOeCount">' + checked + '</b>/' + q.marks + ' 个点)</button></div>'
+    + '</div>';
+  const writeHtml = '<textarea id="cnOeInput" placeholder="在这里写完整答案 — ' + q.marks + ' 分就写 ' + q.marks + ' 个点, 每个点单独一句" style="width:100%;min-height:110px;box-sizing:border-box;padding:10px;font-size:14px;line-height:1.7;border:1px solid #CBD5E1;border-radius:8px;font-family:inherit" oninput="cnOeCountInput()">' + escapeHtml(written) + '</textarea>'
+    + '<div style="font-size:11px;color:#64748B;margin:6px 0">✍️ 你写了 <b id="cnOeMyPts">0</b> 句 · 这题要 ' + q.marks + ' 个点 — 写完再看答案, 不然练不到"提笔写全"</div>'
+    + '<button class="comp-reveal-btn" id="cnOeRevealBtn" onclick="cnOeReveal()">写好了, 对答案</button>';
+  modal.innerHTML = '<div class="mg-inner comp-oe-inner">'
+    + '<div class="mg-stats">📝 华文阅读·问答 · ' + escapeHtml(p.title) + ' · 第 ' + (g.qIdx + 1) + '/' + total + ' 题</div>'
+    + '<details class="comp-passage-wrap" ' + (g.qIdx === 0 ? 'open' : '') + '>'
+    + '<summary style="font-size:12px;font-weight:700;color:#1E40AF;cursor:pointer;padding:4px 0">📄 ' + escapeHtml(p.title) + ' — ' + (g.qIdx === 0 ? '先读全文' : '点开回看原文') + '</summary>'
+    + '<div class="comp-passage">' + escapeHtml(p.passage) + '</div></details>'
+    + '<div class="comp-q-box"><div class="comp-type">' + typeLabel + ' · <b style="color:#DC2626">' + q.marks + ' 分 → 要写 ' + q.marks + ' 个点</b></div>'
+    + '<div class="comp-q">' + escapeHtml(q.q) + '</div></div>'
+    + (revealed ? revealedHtml : writeHtml)
+    + '<button class="vocab-modal-close" onclick="closeCnOe()">×</button></div>';
+  modal.classList.add('show');
+  if (!revealed) setTimeout(function () { const t = document.getElementById('cnOeInput'); if (t) { t.focus(); cnOeCountInput(); } }, 50);
+}
+function cnOeCountInput() {
+  const t = document.getElementById('cnOeInput'), el = document.getElementById('cnOeMyPts');
+  if (!t || !el) return;
+  const n = t.value.split(/[。;；\n①②③④⑤]/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length >= 4; }).length;
+  el.textContent = n;
+}
+function cnOeReveal() {
+  const g = _cnOeState; if (!g) return;
+  const t = document.getElementById('cnOeInput');
+  const v = t ? t.value.trim() : '';
+  if (v.length < 6) { showToast('先把答案写下来再看参考 — 想到什么写什么, 写了才练得到', 'warn'); return; }
+  g.answers[g.qIdx] = v;
+  g.revealed[g.qIdx] = true;
+  if (g.scores[g.qIdx] == null) g.scores[g.qIdx] = 0;
+  _renderCnOe();
+}
+function cnOeTogglePoint() {
+  const g = _cnOeState; if (!g) return;
+  const boxes = Array.prototype.slice.call(document.querySelectorAll('#cnOeModal input[type=checkbox][data-pt]'));
+  const n = boxes.filter(function (b) { return b.checked; }).length;
+  g.scores[g.qIdx] = n;
+  const c = document.getElementById('cnOeCount');
+  if (c) c.textContent = n;
+}
+function cnOeNext() {
+  const g = _cnOeState; if (!g) return;
+  g.qIdx++;
+  if (g.qIdx >= g.passage.questions.length) _finishCnOe(); else _renderCnOe();
+}
+function _finishCnOe() {
+  const g = _cnOeState;
+  const got = g.scores.reduce(function (a, b) { return a + (b || 0); }, 0);
+  const max = g.passage.questions.reduce(function (a, q) { return a + (q.marks || 0); }, 0);
+  const pct = max ? Math.round(got / max * 100) : 0;
+  const pts = Math.round(pct / 10);
+  state.totalPoints = (state.totalPoints || 0) + pts;
+  if (window.recordGameRun) window.recordGameRun(state, 'cn_oe', got, max);
+  const missed = g.passage.questions.map(function (q, i) { return { i: i, need: q.marks, got: g.scores[i] || 0 }; }).filter(function (x) { return x.got < x.need; });
+  // 点数没写够的题进错题本 — 这正是 8 月丢的 7 分, 不入库等于练完就忘
+  if (window.addToErrorBank) {
+    missed.forEach(function (x) {
+      const q = g.passage.questions[x.i];
+      window.addToErrorBank(state, {
+        gameKey: 'cn_oe', type: 'oe', q: q.q,
+        correctAns: q.model,
+        explain: '这题 ' + x.need + ' 分要写 ' + x.need + ' 个点, 上次只写到 ' + x.got + ' 个。原文: 《' + g.passage.title + '》',
+        source: 'cn_oe', subj: '华文阅读问答'
+      });
+    });
+  }
+  saveState(state);
+  const modal = document.getElementById('cnOeModal');
+  const missHtml = missed.length
+    ? '<div style="font-size:13px;line-height:1.8;background:rgba(230,162,60,0.08);border:1px solid rgba(230,162,60,0.30);border-radius:8px;padding:10px 12px;margin:10px 0;color:#B45309"><b>这几题点数没写够</b> (你 8 月丢的 7 分就是这么丢的):<br>'
+      + missed.map(function (x) { return '第 ' + (x.i + 1) + ' 题 — 要 ' + x.need + ' 个点, 你写到 ' + x.got + ' 个'; }).join('<br>')
+      + '<div style="margin-top:6px;color:#1E293B">下次动笔前先看分值: <b>几分就写几句</b>, 每句一个不同的点。</div></div>'
+    : '<div style="font-size:13px;color:#16A34A;text-align:center;margin:10px 0">🌟 每题的点都写够了 — 这就是 AL1 的答题方式, 保持住</div>';
+  if (modal) modal.innerHTML = '<div class="mg-inner comp-oe-inner">'
+    + '<div class="mg-stats">📝 华文阅读·问答 · 完成!</div>'
+    + '<div class="comp-result"><div class="comp-result-score">' + got + '/' + max + ' 分 · ' + pct + '%</div>'
+    + '<div class="comp-result-pts">+' + pts + ' 积分</div></div>'
+    + missHtml
+    + '<button class="game-hub-btn" onclick="closeCnOe()">关闭</button></div>';
+  renderAll();
+}
+function closeCnOe() {
+  const m = document.getElementById('cnOeModal');
+  if (m) m.classList.remove('show');
+  _cnOeState = null;
+}
+window.openChineseOeGame = openChineseOeGame;
+window.cnOeReveal = cnOeReveal;
+window.cnOeTogglePoint = cnOeTogglePoint;
+window.cnOeNext = cnOeNext;
+window.cnOeCountInput = cnOeCountInput;
+window.closeCnOe = closeCnOe;
+
 let _compOeState = null;
 function openCompOeGame() {
   const passages = window.COMP_OE_PASSAGES;

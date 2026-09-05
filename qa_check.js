@@ -411,8 +411,10 @@ assert(!/解锁隐藏关卡/.test(appSrc),
   'v19.6: 解锁隐藏关卡按钮已删除');
 // 验证 cache buster
 const idxSrc = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-assert(/\?v=19.(3[6789]|[4-9][0-9])/.test(idxSrc) && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
-  'v19.36+: cache buster ≥ 19.36');
+// v20.0: 原来写死 /\?v=19\.(3[6-9]|[4-9]\d)/, 版本进到 20.0 时整条断言反而变红 —— 改成读数字比大小
+const _cbVer = parseFloat((idxSrc.match(/\?v=(\d+(?:\.\d+)?)/) || [])[1] || '0');
+assert(_cbVer >= 19.36 && !/\?v=19\.14[a-z][^0-9]/.test(idxSrc),
+  `v19.36+: cache buster ≥ 19.36 (当前 ${_cbVer})`);
 
 // ===== v19.43: 闪卡反面 4 段 = 中文 + 英文解释(短语) + 例句 + 考题 =====
 assert(typeof W.VOCAB_QUIZ === 'object' && Object.keys(W.VOCAB_QUIZ).length >= 440,
@@ -1134,7 +1136,7 @@ assert(/if \(page === 'summer'\)[\s\S]{0,80}renderSummerCalendar\(\)/.test(appSr
   'v19.27: tab summer 触发 renderSummerCalendar');
 assert(/id="summerCalendarContainer"/.test(idxSrc), 'v19.27: page-summer 有 #summerCalendarContainer');
 assert(!/5 周分主题进度/.test(idxSrc), 'v19.27: 老静态 section "5 周分主题进度" 已替换');
-assert(/\?v=19.(3[789]|[4-9][0-9])/.test(idxSrc), 'v19.27+: cache buster ≥ 19.37');
+assert(parseFloat((idxSrc.match(/\?v=(\d+(?:\.\d+)?)/) || [])[1] || '0') >= 19.37, 'v19.27+: cache buster ≥ 19.37');
 
 // ===== v19.38: 周末 → 只周日 (装备/皮肤/mini-game lock) =====
 // isWeekdayToday() 含义扩到 Mon-Sat (周六不再是自由日)
@@ -1682,6 +1684,57 @@ assert(/拉分<\/b>=纲内高阶/.test(appSrc), 'v19.98: "拉分"定义从"超�
 assert(/typeof rawChDiff === 'number' && isFinite\(rawChDiff\)/.test(appSrc), 'v19.99: 章节 difficulty 是字符串"混合"时不再参与数值比较 (原来 Math.abs(4-"混合")=NaN 让补题池全空)');
 assert(/const qDiff = q\.diff \|\| q\.difficulty \|\| 4/.test(appSrc), 'v19.99: 补题读 q.diff (科学题库字段是 diff 不是 difficulty, 原来永远拿默认值)');
 assert(/绝不发空局|filtered\.length \+ supplement\.length < 5/.test(appSrc), 'v19.99: 凑不够题时兜底按当前难度出题, 不发空局');
+
+// ===== v20.0: 华文阅读问答·动笔版 (孩子华文丢的 7 分全是"2分题只写1个点") =====
+{
+  const CN = W.CHINESE_OE_PASSAGES || [];
+  assert(CN.length >= 12, `v20.0: 华文阅读问答 ≥12 篇 (实际 ${CN.length}; 原来华文只有选择题, 孩子一个字都不用写, 练不到"产出")`);
+  const qTotal = CN.reduce((a, p) => a + (p.questions || []).length, 0);
+  assert(qTotal >= 60, `v20.0: 华文问答 ≥60 题 (实际 ${qTotal})`);
+  // 每篇必须够 PSLE 篇幅, 太短就出不了跨段整合题
+  const shortP = CN.filter(p => String(p.passage || '').replace(/\s/g, '').length < 400);
+  assert(shortP.length === 0, `v20.0: 每篇 ≥400 字 (PSLE 普华阅读二篇幅; 过短 ${shortP.length} 篇: ${shortP.map(p => p.id).join(',')})`);
+  // 核心: model 必须按 (1分) 拆成可勾选的采分点, 否则"逐点核对"这个训练动作根本跑不起来
+  const noPts = [];
+  CN.forEach(p => (p.questions || []).forEach((q, i) => {
+    const body = String(q.model || '').split(/陷阱[:：]/)[0];
+    const pts = body.split(/(?=[①②③④⑤])/).filter(x => /^[①②③④⑤]/.test(x.trim()));
+    if (pts.length !== (q.marks || 0)) noPts.push(p.id + '#' + (i + 1) + '(' + pts.length + '点/' + q.marks + '分)');
+  }));
+  assert(noPts.length === 0, `v20.0: 每题采分点数 = 分值 (点数对不上, 孩子勾满也拿不到该题满分: ${noPts.slice(0, 6).join(' ')})`);
+  const m3 = CN.reduce((a, p) => a + (p.questions || []).filter(q => (q.marks || 0) >= 3).length, 0);
+  assert(m3 >= 8, `v20.0: ≥8 道 3分题 (实际 ${m3}; 分值越高越容易只写一个点)`);
+  const noTrap = CN.filter(p => !(p.questions || []).some(q => /陷阱[:：]/.test(String(q.model || ''))));
+  assert(noTrap.length === 0, `v20.0: 每篇至少一题写明陷阱 (缺 ${noTrap.length} 篇; 陷阱那条正是"抄原文算一个点"的提醒)`);
+  // 不能混进高华文言文 — 孩子读普通华文
+  const wenyan = CN.filter(p => /子曰|之乎者也|矣哉/.test(String(p.passage || '')));
+  assert(wenyan.length === 0, `v20.0: 没有文言文 (孩子读普通华文不是高华; 违规 ${wenyan.length} 篇)`);
+}
+// 死代码警钟: 机器写了必须真接进 UI
+assert(/window\.openChineseOeGame/.test(appSrc), 'v20.0: 华文问答游戏已导出');
+assert(/openChineseOeGame\(\)/.test(appSrc), 'v20.0: 华文问答已接入 mini-game hub (不接入=白写)');
+assert(/if \(v\.length < 6\)/.test(appSrc), 'v20.0: 不写够字不给看参考答案 (英语版可以"想一下就看范文", 全程不动笔, 治不了漏点)');
+assert(/cnOeTogglePoint/.test(appSrc) && /data-pt=/.test(appSrc), 'v20.0: 参考答案按采分点逐条打勾 (逐点核对本身就是在训练"数点数")');
+assert(/gameKey: 'cn_oe', type: 'oe'/.test(appSrc), 'v20.0: 点数没写够的题自动进错题本');
+assert(/cn_oe:\s+\{ spot: '华文阅读理解二/.test(appSrc), 'v20.0: 错题本有华文问答的 PSLE 考点提示');
+
+// v20.0: 华文 AL 不再只看选择题难度档 (校考 AL2 vs app 报 AL1 的差就出在这)
+{
+  const st = { gameStats: { chinese: { difficulty: 6, recent: [] }, cn_oe: { difficulty: 4, recent: [], cumRuns: 3, cumCorrect: 12, cumTotal: 24 } } };
+  const r = W.computeTotalAL(st);
+  assert(r.bySubject.chinese_AL >= 6, `v20.0: 阅读问答只拿到 50% 踩点时华文 AL 被拉到 AL6 (实际 ${r.bySubject.chinese_AL}); 原来选择题满档就报 AL1, 和真实卷面差一整档`);
+  const st2 = { gameStats: { chinese: { difficulty: 6, recent: [] }, cn_oe: { difficulty: 5, recent: [], cumRuns: 3, cumCorrect: 23, cumTotal: 24 } } };
+  assert(W.computeTotalAL(st2).bySubject.chinese_AL === 1, 'v20.0: 踩点率 96% 时华文才算 AL1');
+  const st3 = { gameStats: { chinese: { difficulty: 6, recent: [] } } };
+  assert(W.computeTotalAL(st3).bySubject.chinese_AL === 1, 'v20.0: 还没练过华文问答的孩子不被误判 (样本 <2 局不参与)');
+}
+
+// app.js 里有 3 份 GAME_LABEL 副本, 只改一份会让错题本标题显示原始 key (v20.0 实测踩到)
+{
+  const copies = (appSrc.match(/const GAME_LABEL = \{/g) || []).length;
+  const withCn = (appSrc.match(/const GAME_LABEL = \{[^}]*cn_oe/g) || []).length;
+  assert(withCn === copies, `v20.0: GAME_LABEL 共 ${copies} 份副本, 认识 cn_oe 的有 ${withCn} 份 — 必须相等, 漏的那份会把错题标题渲染成原始 key "cn_oe"`);
+}
 
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
