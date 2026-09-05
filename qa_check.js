@@ -1457,6 +1457,19 @@ assert(!/getAllDueFlashcards\(state\)/.test(appSrc), 'v19.87: UI 不再报只涨
 }
 assert(/mg-q-long/.test(idxSrc) && /mg-q-xlong/.test(appSrc), 'v19.88: 长题干自适应字号 (原来固定36px居中, PSLE多步应用题在iPad上会撑爆)');
 
+// ===== v19.89: 英语题库补 AL1 难度 + 清死库存 =====
+{
+  const G = W.GRAMMAR_QUESTIONS || [], C = W.CLOZE_QUESTIONS || [], S2 = W.SST_QUESTIONS || [];
+  [['GRAMMAR', G], ['CLOZE', C], ['SST', S2]].forEach(([n, bank]) => {
+    const dead = bank.filter(q => (q.diff || 4) <= 2).length;
+    assert(dead === 0, `v19.89: ${n} 无 d1-d2 死库存 (minFloor=4 时这些题永远抽不到, 白占位置; 残留 ${dead})`);
+    const hard = bank.filter(q => (q.diff || 0) >= 5).length;
+    assert(hard >= 40, `v19.89: ${n} 有 ≥40 道 d5/d6 拉分题 (实际 ${hard}) — 冲 AL1 不能只在 d4 打转`);
+  });
+  assert(W._gameMaxCap('grammar') === 6 && W._gameMaxCap('cloze') === 6 && W._gameMaxCap('sst') === 6,
+    `v19.89: 三个英语库都能升到 Lv6 (原来 grammar/cloze/sst 只到 Lv5, 顶格档题不够会静默发简单题)`);
+}
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
