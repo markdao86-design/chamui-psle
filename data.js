@@ -2464,20 +2464,23 @@ const _GAME_BANK_FOR_CAP = {
 };
 const _gameMaxCapCache = {};
 function _gameMaxCap(gameKey) {
-  if (_gameMaxCapCache[gameKey] != null) return _gameMaxCapCache[gameKey];
+  // v19.97: 原来算一次就永久缓存, 而且按"全库"算 —— 不扣已掌握的题。
+  // 结果: 顶格档被 _markMastered 掏空后, cap 还显示 6, 于是 _sampleByDiff 的全池兜底
+  // 开始塞 d3/d4 的题, 孩子看到"Lv6"实际做的是 P4 题(复核实测第12局起就这样)。
+  // 现在按"还没掌握的题"实时算, 掌握得越多封顶会自己往下退, 显示的难度就是真的。
   let cap = 6;
   try {
     const getter = _GAME_BANK_FOR_CAP[gameKey];
     const bank = getter && getter();
     if (Array.isArray(bank) && bank.length) {
+      const mastered = _masteredQs[gameKey] || new Set();
       const counts = {};
-      bank.forEach(q => { const d = q.diff || q.difficulty || 0; counts[d] = (counts[d] || 0) + 1; });
-      const usable = Object.keys(counts).map(Number).filter(d => counts[d] >= 8);
+      bank.forEach((q, i) => { if (mastered.has(i)) return; const d = q.diff || q.difficulty || 0; counts[d] = (counts[d] || 0) + 1; });
+      const usable = Object.keys(counts).map(Number).filter(d => counts[d] >= 7);   // 一局 Lv 档实发 7 道同档
       cap = usable.length ? Math.max(...usable) : _gameMinFloor(gameKey);
       cap = Math.max(cap, _gameMinFloor(gameKey));
     }
   } catch (e) { cap = 6; }
-  _gameMaxCapCache[gameKey] = cap;
   return cap;
 }
 function recordGameRun(state, gameKey, correct, total) {
@@ -2675,10 +2678,17 @@ function _sampleByDiff(pool, diff, n) {
     const sn = shuffle(staleNear);
     for (let i = 0; out.length < n && i < sn.length; i++) out.push(sn[i]);
   }
-  // 再不够从全池补
+  // 再不够从全池补 —— v19.97: 但不许跌破 diff-1, 否则"Lv6"会静默发 P4 题。
+  // 这是 v19.82 想堵的洞, 当时只改了 cap, 兜底这一层原样漏着。
   if (out.length < n) {
-    const rest = shuffle(pool.filter(p => !out.includes(p)));
+    const floor = Math.max(1, diff - 1);
+    const rest = shuffle(pool.filter(p => !out.includes(p) && (p.diff || p.difficulty || 0) >= floor));
     for (let i = 0; out.length < n && i < rest.length; i++) out.push(rest[i]);
+  }
+  // 实在凑不齐(该档题被刷光)才允许全池, 宁可重复也不降级
+  if (out.length < n) {
+    const any = shuffle(pool.filter(p => !out.includes(p) && (p.diff || p.difficulty || 0) >= Math.max(1, diff - 1)));
+    for (let i = 0; out.length < n && i < any.length; i++) out.push(any[i]);
   }
 
   const result = out.slice(0, n);

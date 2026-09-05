@@ -1640,6 +1640,19 @@ assert(/点开回看原文/.test(appSrc), 'v19.92: 每题都能回看原文 (原
   assert(badMoney.length === 0, `v19.96: 钱数题的答案不是四舍五入来的 (异常 ${badMoney.length}) — 判分容差 0.005, 存了取整值会把算对的孩子判错`);
 }
 
+// ===== v19.97: 封顶按"未掌握的题"实时算 + 采样兜底不跌破难度 =====
+{
+  assert(!/_gameMaxCapCache\[gameKey\] != null/.test(dataSrcV80), 'v19.97: _gameMaxCap 不再永久缓存 (原来算一次就定死, 题池被掏空后仍显示 Lv6)');
+  assert(/const mastered = _masteredQs\[gameKey\]/.test(dataSrcV80), 'v19.97: 封顶按"还没掌握的题"算 — 掌握得越多封顶自己往下退, 显示的难度就是真的');
+  assert(/const floor = Math\.max\(1, diff - 1\)/.test(dataSrcV80), 'v19.97: 采样兜底加了难度下限 (原来最后一层从全池随机补, "Lv6"会静默发 P4 题 — 这正是 v19.82 想堵却漏掉的那层)');
+  // 实测: 把某档全部掌握后封顶应自动下退
+  const M3 = W.MATH_QUESTIONS;
+  const before = W._gameMaxCap('math');
+  M3.forEach(q => { if ((q.diff || 0) === 6) { W._markMastered('math', M3, q); W._markMastered('math', M3, q); } });
+  const after = W._gameMaxCap('math');
+  assert(after < before, `v19.97: 顶格档被掌握完后封顶自动下退 (${before} → ${after})`);
+}
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
