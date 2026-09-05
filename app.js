@@ -3118,16 +3118,34 @@ function _trackQuest(questId, amount) {
 }
 
 // ============ v17.5 Phase 2: 反直觉思考题 (打卡页顶部) ============
+// v19.80: 可点"下一道"连刷, 每日上限 5 道 (答题数按 thinkPuzzleAnswers 的 ts 统计, 不加 state 字段)
+const THINK_DAILY_CAP = 5;
+let _thinkShowWeek = null; // 本 session 里"下一道"切到的题 (null=默认按周取)
+function _thinkAnsweredTodayCount() {
+  const todayStr = new Date().toDateString();
+  return Object.values(state.thinkPuzzleAnswers || {}).filter(a => a && a.ts && new Date(a.ts).toDateString() === todayStr).length;
+}
 function renderThinkPuzzleCard(week) {
   const card = document.getElementById('thinkPuzzleCard');
   if (!card) return;
-  const data = window.getThinkPuzzleForWeek ? window.getThinkPuzzleForWeek(state, week) : null;
+  let data = (_thinkShowWeek != null && window.getThinkPuzzleByWeek) ? window.getThinkPuzzleByWeek(state, _thinkShowWeek) : null;
+  if (!data) data = window.getThinkPuzzleForWeek ? window.getThinkPuzzleForWeek(state, week) : null;
   if (!data) {
     card.style.display = 'none';
     return;
   }
   card.style.display = '';
   const { puzzle, answer } = data;
+  const answeredToday = _thinkAnsweredTodayCount();
+  const nextP = window.getNextThinkPuzzle ? window.getNextThinkPuzzle(state, puzzle.week) : null;
+  let nextHtml = '';
+  if (answeredToday >= THINK_DAILY_CAP) {
+    nextHtml = `<div style="margin-top:8px;padding:8px;border-radius:8px;background:#F8FAFC;border:1px solid #E2E8F0;font-size:12px;color:#1E293B;text-align:center">🌙 今日思考题已练满 ${THINK_DAILY_CAP} 道 — 明天继续, 消化比刷量重要</div>`;
+  } else if (nextP) {
+    nextHtml = `<button onclick="thinkNextPuzzle()" style="margin-top:8px;width:100%;padding:10px;background:#1E40AF;color:#FFF;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">➡️ 下一道 (今日 ${answeredToday}/${THINK_DAILY_CAP})</button>`;
+  } else {
+    nextHtml = `<div style="margin-top:8px;font-size:12px;color:#16A34A;text-align:center;font-weight:700">🎉 思考题题库全部答完!</div>`;
+  }
   if (!answer) {
     // 还没答 — 显示题 + 4 个按钮
     card.classList.add('think-unanswered');
@@ -3144,10 +3162,10 @@ function renderThinkPuzzleCard(week) {
           return `<button class="think-opt-btn" onclick="submitThinkAnswer(${puzzle.week}, '${letter}')">${escapeHtml(opt)}</button>`;
         }).join('')}
       </div>
-      <div class="think-tip">🧠 能力才是目标 — 答对 +10 分, 答错 +0 分但要认真读解析</div>
+      <div class="think-tip">🧠 能力才是目标 — 答对 +10 分, 答错 +0 分但要认真读解析 · 今日 ${answeredToday}/${THINK_DAILY_CAP} 道</div>
     `;
   } else {
-    // 已答 — 显示结果 + 解释
+    // 已答 — 显示结果 + 解释 + 下一道
     card.classList.remove('think-unanswered');
     card.classList.add('think-answered');
     card.innerHTML = `
@@ -3162,9 +3180,21 @@ function renderThinkPuzzleCard(week) {
       </div>
       <div class="think-explanation">💡 <b>详解</b>: ${escapeHtml(puzzle.explanation)}</div>
       ${_ebTipsHtml(_thinkSubjectToGameKey(puzzle.subject))}
+      ${nextHtml}
     `;
   }
 }
+// v19.80: 下一道思考题 (受每日上限约束)
+function thinkNextPuzzle() {
+  if (_thinkAnsweredTodayCount() >= THINK_DAILY_CAP) { showToast(`今日已满 ${THINK_DAILY_CAP} 道, 明天继续 🌙`, 'warn'); return; }
+  const next = window.getNextThinkPuzzle ? window.getNextThinkPuzzle(state, _thinkShowWeek) : null;
+  if (!next) { showToast('思考题全部答完啦 🎉', 'happy'); return; }
+  _thinkShowWeek = next.week;
+  renderThinkPuzzleCard(state.currentWeek);
+  const card = document.getElementById('thinkPuzzleCard');
+  if (card && card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+window.thinkNextPuzzle = thinkNextPuzzle;
 // v19.68: 思考题科目 → 考点技巧库映射 (用户要求思考题也带PSLE考点+答题技巧)
 function _thinkSubjectToGameKey(subject) {
   const s = String(subject || '');
@@ -3175,12 +3205,18 @@ function _thinkSubjectToGameKey(subject) {
   if (/Cloze|完形/i.test(s)) return 'cloze';
   if (/Editing|改错/i.test(s)) return 'editing';
   if (/Grammar|语法/i.test(s)) return 'grammar';
+  // v19.80: 英语薄弱模块思考题 → 对应考点库
+  if (/阅读|Comprehension/i.test(s)) return 'comp_oe';
+  if (/词汇|Vocab/i.test(s)) return 'vocab';
+  if (/句型|Synthesis|SST/i.test(s)) return 'sst';
   return 'knowledge';
 }
 
 function submitThinkAnswer(weekN, userAnswer) {
   const result = window.submitThinkPuzzleAnswer(state, weekN, userAnswer);
   if (!result) return;
+  // v19.80: 锁住刚答的这道 — 否则当周无题时 rotation 会立刻换成下一道未答题, 解析一闪就没
+  _thinkShowWeek = weekN;
   recalcTotalPoints(state);
   // v17.7 quest: 答 1 道 think
   _trackQuest('think-1', 1);
@@ -3358,22 +3394,72 @@ function renderIronRule() {
   if (bodyEl) bodyEl.textContent = r.body;
 }
 
-// v19.18: 本周名师秘籍卡 (主页学习入口区) — 直接取 WEEK_MASTER_TIPS[week-1] (周本主题, 不轮换)
+// v19.80: 本周名师秘籍卡 → 知识树每日练卡 (用户 2026-09-04: 换成知识树的知识点题, 每天多练一些)
+// 推荐规则: 在学节点优先 → 星少优先 → 科学/英语优先; 高优先前 8 个里按日期轮换取 3 个
+function getDailyTreePicks(n) {
+  n = n || 3;
+  if (!window.getKnowledgeTreeStatus) return [];
+  const tree = window.getKnowledgeTreeStatus(state);
+  const starsMap = state.knowledgeStars || {};
+  const subjOrder = { '🔬 科学': 0, '📖 英语': 1, '➗ 数学': 2, '🇨🇳 华文': 3 };
+  const pool = [];
+  Object.keys(tree).forEach(subj => {
+    tree[subj].forEach((node, idx) => {
+      if (node.status === 'locked') return;
+      const st = (starsMap[node.id] && starsMap[node.id].stars) || 0;
+      if (st >= 3) return;
+      pool.push({ subj, idx, node, stars: st, rank: (node.status === 'learning' ? 0 : 10) + st * 3 + (subjOrder[subj] ?? 4) });
+    });
+  });
+  pool.sort((a, b) => a.rank - b.rank);
+  const top = pool.slice(0, Math.max(8, n * 2));
+  if (top.length <= n) return top;
+  const seed = Math.floor(Date.now() / 86400000);
+  const start = (seed * n) % top.length;
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(top[(start + i) % top.length]);
+  return out;
+}
+window.getDailyTreePicks = getDailyTreePicks;
 function renderWeekMasterTipCard() {
   const el = document.getElementById('weekMasterTipCard');
-  if (!el || !window.WEEK_MASTER_TIPS) return;
-  const week = state.currentWeek || 1;
-  const tip = window.WEEK_MASTER_TIPS[week - 1];
-  if (!tip) { el.innerHTML = ''; return; }
-  el.style.borderLeft = '4px solid #B45309';
+  if (!el) return;
+  const picks = getDailyTreePicks(3);
+  const starsMap = state.knowledgeStars || {};
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const practicedToday = Object.values(starsMap).filter(r => r && r.lastDate === todayIso).length;
+  const totalStars = Object.values(starsMap).reduce((s, v) => s + ((v && v.stars) || 0), 0);
+  el.style.borderLeft = '4px solid #1E40AF';
+  if (!picks.length) {
+    el.innerHTML = `<div style="font-size:15px;font-weight:900;color:#1E40AF">🌳 知识树每日练</div>
+      <div style="font-size:13px;color:#1E293B;margin-top:8px">解锁的节点全部满 3⭐ 了! 🎉 去知识树看看后面的章节吧</div>
+      <button onclick="openKnowledgeTreeModal()" style="margin-top:8px;width:100%;padding:9px;background:#1E40AF;color:#FFF;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px">🌳 打开知识树</button>`;
+    return;
+  }
+  const rows = picks.map(p => {
+    const rec = starsMap[p.node.id];
+    const doneToday = rec && rec.lastDate === todayIso;
+    const starTxt = '⭐'.repeat(p.stars) + '☆'.repeat(3 - p.stars);
+    const subjName = p.subj.replace(/^\S+\s*/, '');
+    return `<div onclick="openKnowledgePractice('${p.node.id}', '${escapeHtml(p.subj)}', ${p.idx})" style="display:flex;align-items:center;gap:8px;padding:9px 10px;margin-top:6px;border-radius:8px;cursor:pointer;background:${doneToday ? '#F8FAFC' : 'rgba(30,64,175,0.06)'};border:1px solid ${doneToday ? '#E2E8F0' : 'rgba(30,64,175,0.30)'}">
+      <span style="font-size:19px">${p.node.icon}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:#1E293B">${escapeHtml(p.node.name)} <span style="font-size:11px;font-weight:400;color:#64748B">· ${escapeHtml(subjName)}${p.node.status === 'learning' ? ' · 本周在学' : ''}</span></div>
+        <div style="font-size:11px;color:#B45309;margin-top:1px">${starTxt}</div>
+      </div>
+      <span style="font-size:12px;font-weight:700;color:${doneToday ? '#16A34A' : '#1E40AF'}">${doneToday ? '✅ 今日已练' : '去练 ›'}</span>
+    </div>`;
+  }).join('');
   el.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <div style="font-size:15px;font-weight:900;color:#B45309">🌟 本周名师秘籍</div>
-      <div style="margin-left:auto;font-size:11px;color:#1E293B">W${week} · PSLE 答题模板</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="font-size:15px;font-weight:900;color:#1E40AF">🌳 知识树每日练</div>
+      <div style="margin-left:auto;font-size:11px;color:#1E293B">⭐ ${totalStars}/141 · 今日已练 ${practicedToday} 节点</div>
     </div>
-    <div style="font-size:13px;color:#1E40AF;font-weight:700;margin-bottom:6px">${escapeHtml(tip.subject)} — ${escapeHtml(tip.title)}</div>
-    <div style="font-size:12px;color:#1E293B;line-height:1.7;background:rgba(230,162,60,0.06);border:1px solid rgba(230,162,60,0.20);border-radius:6px;padding:10px">${escapeHtml(tip.content)}</div>
-    <div style="margin-top:6px;font-size:10px;color:#888;font-style:italic;text-align:right">💡 PSLE 真考必背关键词 · 73 周专项轮换</div>
+    ${rows}
+    <div style="display:flex;align-items:center;margin-top:7px">
+      <div style="font-size:10.5px;color:#888">全对 = 3⭐ · 不限次数取最高 · 🐉 金龙要 105⭐</div>
+      <button onclick="openKnowledgeTreeModal()" style="margin-left:auto;padding:5px 12px;background:#FFFFFF;color:#1E40AF;border:1px solid rgba(30,64,175,0.4);border-radius:6px;font-weight:700;cursor:pointer;font-size:12px">还想练? 看全部 47 节点 ›</button>
+    </div>
   `;
 }
 window.renderWeekMasterTipCard = renderWeekMasterTipCard;
@@ -6684,6 +6770,7 @@ const EB_TYPE_TIPS = {
   knowledge:{ spot: '概念理解 (知识树)', tips: ['讲给家长听30秒 — <b>讲不清 = 没学明白</b>', '概念连着例子记, 不背孤立定义'] },
   chinese:  { spot: '华文阅读理解二: 踩点给分', tips: ['<b>按分值数点作答</b>: 2分写2点3分写3点', '答案从原文找依据再改写, 不凭印象'] },
   listen:   { spot: '英语听力 20题20分', tips: ['<b>转折词后是重点</b>: but/however 后竖起耳朵', '先读题目预判要听什么信息'] },
+  comp_oe:  { spot: '阅读理解问答 10题20分', tips: ['<b>按分值数点</b>: 3 分 = 3 个不同的点, 换说法重复不算', '推断题 = 原文证据 + 一句自己的解释', '写完回读自查: <b>答完整没</b> (8 月丢 7 分的病根)'] },
   listen_mcq: { spot: '英语听力 20题20分', tips: ['<b>转折词后是重点</b>: but/however 后竖起耳朵', '先读题目预判要听什么信息'] },
 };
 function _ebTipsHtml(gameKey) {
@@ -11540,6 +11627,15 @@ function toggleMoreMenu() {
   if (m) m.style.display = (m.style.display === 'none' || !m.style.display) ? 'block' : 'none';
 }
 window.toggleMoreMenu = toggleMoreMenu;
+// v19.80: 目标校弹层 (从主页右栏收进 ⋯其他 菜单)
+function toggleTargetSchoolModal() {
+  const m = document.getElementById('targetSchoolModal');
+  if (!m) return;
+  const opening = (m.style.display === 'none' || !m.style.display);
+  if (opening && typeof renderTargetSchoolMini === 'function') renderTargetSchoolMini();
+  m.style.display = opening ? 'block' : 'none';
+}
+window.toggleTargetSchoolModal = toggleTargetSchoolModal;
 function _runPageHook(page) {
       // v19.15d: 点 ✅ 打卡 tab 时强制跳到当周 + 今日 (防 _displayWeek 残留旧值)
       if (page === 'checkin') {

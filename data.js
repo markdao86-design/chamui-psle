@@ -4787,6 +4787,68 @@ const THINK_PUZZLES = [
 
 // 取本周思考题 + 是否已答
 // v19.63: 当周无题不再返回 null (曾导致 W18 起揭秘卡消失) — 每日轮换: 优先未答的题, 全答完按日期轮着温故
+// v19.80: 英语薄弱模块思考题 (用户: 思考题不局限于科学, 英语常错模块也要出现) — week 27-40 为空闲键
+// 覆盖: 完形×2 / Editing×2 / 阅读OE×2 / 词汇辨析×2 / 句型转换×2 / 语法×1 / 情景写作×2 / 听力×1
+const THINK_PUZZLES_ENGLISH = [
+  { week: 27, subject: '📖 完形填空 Cloze',
+    question: '"Tom was exhausted. ___, he finished the race." 空格填什么?',
+    options: ['A. Therefore', 'B. However', 'C. Because', 'D. So'], correct: 'B',
+    explanation: '前句"累坏了", 后句"却跑完了" — 前后是转折, 只能填 However。完形连接词空的第一步永远是判逻辑关系: 转折 / 因果 / 递进。Therefore 和 So 是因果, 填进去意思就反了。PSLE 完形 15 空里连接词空每年 2-3 个, 是最稳的分。' },
+  { week: 28, subject: '📖 完形填空 Cloze',
+    question: '"She opened the ___ and took out a coat." 不认识生词也能填对, 靠什么?',
+    options: ['A. 猜一个动词', 'B. 空前是 the → 一定是名词, 再看线索词 coat → wardrobe', 'C. 随便填个形容词', 'D. 跳过不填'], correct: 'B',
+    explanation: '两步走: ① 词性先行 — the 后面只能是名词; ② 找呼应词 — 后半句 took out a coat 暗示是放衣服的地方。完形 80% 的空在前后 2 句里有暗示词。语法对但语义断的词不给分, 填完必回读整句。' },
+  { week: 29, subject: '📖 Editing 改错',
+    question: '"Each of the students have a laptop." 这句错在哪?',
+    options: ['A. students → student', 'B. have → has', 'C. a → an', 'D. 没有错 (unchanged)'], correct: 'B',
+    explanation: 'Each of the students 整体当 each 看 — 单数! 动词要用 has。这是 PSLE 最高频陷阱: 主语后面跟了个复数名词 (students) 就被带偏。同类: each / every / either / neither / news / information 全部单数。' },
+  { week: 30, subject: '📖 Editing 改错',
+    question: '"The weather was so beautifull that we went out." Editing 里这个空该怎么处理?',
+    options: ['A. 语法没错, 写 unchanged', 'B. beautifull 拼错, 改 beautiful', 'C. 改成 beautifully', 'D. 把 so 改成 very'], correct: 'B',
+    explanation: 'Editing 12 空分两种: 拼写错 + 语法错。这个空语法完全对, 但 beautifull 多了一个 l。做 Editing 第一步先判"这空考拼写还是语法", 再动手。改错的 unchanged 和漏改的错都扣分, 所以每个空都要有明确判断。' },
+  { week: 31, subject: '📖 阅读理解 Comprehension',
+    question: '3 分题 "Give three reasons why...", 你写了同一个理由换三种说法。得几分?',
+    options: ['A. 3 分, 写了三句', 'B. 2 分', 'C. 1 分, 只算一个点', 'D. 0 分'], correct: 'C',
+    explanation: '按分值给分 = 按"独立采分点"给分, 换说法重复只算 1 个点。你 8 月阅读理解问答丢 7 分, 大头就是"没答完整"。铁律: 3 分题 = 三个不同的 First... Second... Third..., 写完回读数一数点。' },
+  { week: 32, subject: '📖 阅读理解 Comprehension',
+    question: '题目: "How do you know Tom was nervous?" 原文是 "Tom\'s hands trembled as he waited." 满分答法是?',
+    options: ['A. 直接抄 "Tom\'s hands trembled"', 'B. 抄证据 + 说明: "His hands trembled, which shows he was nervous"', 'C. 写 "Because he was scared"', 'D. 写 "The author said so"'], correct: 'B',
+    explanation: '推断题 = 证据 + 推断两步缺一不可: 只抄原文没解释 (A) 通常只给一半, 只写结论没证据 (C) 不给分。"How do you know" 这种题型 PSLE 每年必出 1-2 道, 用原文关键词 + 自己一句解释, 2 分稳拿。' },
+  { week: 33, subject: '📖 词汇辨析 Vocabulary',
+    question: '"He ___ at the painting for an hour." 选哪个?',
+    options: ['A. glanced', 'B. gazed', 'C. glimpsed', 'D. peeped'], correct: 'B',
+    explanation: '四个词都是"看", 差别在时间长短: glance / glimpse 是一瞥 (瞬间), peep 是偷看, 只有 gaze 是长时间凝视 — 和 for an hour 呼应。词汇辨析的第一把尺子是"程度/时长", 第二把是"搭配", 第三把是"褒贬"。' },
+  { week: 34, subject: '📖 词汇辨析 Vocabulary',
+    question: '"The news of the accident left her ___." 哪个词程度最贴切?',
+    options: ['A. sad', 'B. upset', 'C. devastated', 'D. unhappy'], correct: 'C',
+    explanation: '"事故的消息"是重大打击, 要配最强的 devastated (悲痛欲绝)。sad / unhappy / upset 都对但程度太轻 — PSLE 词汇题四个选项经常"都认识、都沾边", 差别就在程度匹配。背单词时把近义词按"轻→重"排一排。' },
+  { week: 35, subject: '📖 句型转换 Synthesis',
+    question: '"Although it rained, we went out." 改写成 Despite 开头, 正确的是?',
+    options: ['A. Despite it rained, we went out.', 'B. Despite the rain, we went out.', 'C. Despite of the rain, we went out.', 'D. Despite it was raining, we went out.'], correct: 'B',
+    explanation: 'Despite / In spite of 后面只能接名词或 v-ing, 不能接完整句子 — 所以 rained 要变成 the rain (或 the fact that it rained)。C 多了 of (那是 in spite OF 的用法)。这是 S&T 十大模板第一名, 每年必考。' },
+  { week: 36, subject: '📖 句型转换 Synthesis',
+    question: '"If you don\'t hurry, you will miss the bus." 改写成 Unless 开头, 正确的是?',
+    options: ['A. Unless you don\'t hurry, you will miss the bus.', 'B. Unless you hurry, you will miss the bus.', 'C. Unless you hurry, you won\'t miss the bus.', 'D. Unless you hurry, you will catch the bus.'], correct: 'B',
+    explanation: 'Unless = if...not, 它自己已经带了否定, 后面动词要变回肯定 (hurry 不是 don\'t hurry), 主句保持原样。A 双重否定意思反了, C 和 D 改了主句意思。S&T 改完必读一遍: 意思和原句一模一样吗?' },
+  { week: 37, subject: '📖 Grammar 语法',
+    question: '"Neither the teacher nor the students ___ ready." 选?',
+    options: ['A. is', 'B. are', 'C. was', 'D. be'], correct: 'B',
+    explanation: 'neither...nor 用"就近原则": 动词跟离它最近的主语 — students 是复数 → are。反过来 "Neither the students nor the teacher is ready" 就用 is。这个规则 PSLE Grammar MCQ 和 Editing 都爱考, 是能一次性搞懂的固定分。' },
+  { week: 38, subject: '📖 情景写作 Situational Writing',
+    question: '写一封 email 给校长申请参加比赛, 开头称呼用哪个?',
+    options: ['A. Hey Mr Tan!', 'B. Dear Mr Tan,', 'C. Hi there,', 'D. To whom it may concern,'], correct: 'B',
+    explanation: '对象决定语气: 校长 = 正式, 知道名字就用 Dear Mr Tan, 结尾 Yours sincerely。D 是完全不知道收信人时才用。情景写作 15 分里 9 分语言分, 语气不匹配会整体扣; 给朋友才能 Hi Ben。' },
+  { week: 39, subject: '📖 情景写作 Situational Writing',
+    question: '情景写作要求写 6 个内容点。你文笔很好但漏了 2 点, 内容分 (满分 6) 最多得?',
+    options: ['A. 6 分, 文笔好可以补', 'B. 5 分', 'C. 4 分, 漏一点丢一分', 'D. 2 分'], correct: 'C',
+    explanation: '内容分 = 踩点给分, 和文笔完全无关: 6 点写到 4 点就是 4 分, 再华丽也补不回来。所以写之前先圈出题目要求的所有内容点, 写完逐点打勾。这是你点名的薄弱项, 也是最容易靠纪律拿满的分。' },
+  { week: 40, subject: '📖 听力 Listening',
+    question: '听到: "I wanted to buy the blue one, but in the end I chose the red one." 问: 她买了什么颜色?',
+    options: ['A. Blue', 'B. Red', 'C. 两个都买了', 'D. 没买'], correct: 'B',
+    explanation: '前半句是干扰 (想买蓝的), but 后面才是真答案 (红的)。PSLE 听力 90% 的题答案在 but / however / actually / in the end 后面, 听到转折词立刻竖耳朵。第一次说的经常被第二次推翻, 听完整段再选。' },
+];
+THINK_PUZZLES.push(...THINK_PUZZLES_ENGLISH);
+
 function getThinkPuzzleForWeek(state, weekN) {
   let puzzle = THINK_PUZZLES.find(p => p.week === weekN);
   if (!puzzle) {
@@ -4800,6 +4862,27 @@ function getThinkPuzzleForWeek(state, weekN) {
   if (!puzzle) return null;
   const answer = (state.thinkPuzzleAnswers && state.thinkPuzzleAnswers[puzzle.week]) || null;
   return { puzzle, answer };
+}
+
+// v19.80: 按 week 取指定思考题 (供"下一道"连刷)
+function getThinkPuzzleByWeek(state, weekN) {
+  const puzzle = THINK_PUZZLES.find(p => p.week === weekN);
+  if (!puzzle) return null;
+  return { puzzle, answer: (state.thinkPuzzleAnswers && state.thinkPuzzleAnswers[weekN]) || null };
+}
+// v19.80: 取下一道未答的思考题 (排除当前显示那道), 无剩余返回 null
+function getNextThinkPuzzle(state, notWeek) {
+  const answered = state.thinkPuzzleAnswers || {};
+  const pool = THINK_PUZZLES.filter(p => !answered[p.week] && p.week !== notWeek);
+  if (!pool.length) return null;
+  // 科学 / 英语交替: 优先取和当前题不同科目的 (英语题 subject 以 📖 开头)
+  const isEng = p => /^📖/.test(p.subject || '');
+  const cur = THINK_PUZZLES.find(p => p.week === notWeek);
+  const alt = cur ? pool.filter(p => isEng(p) !== isEng(cur)) : pool;
+  const list = alt.length ? alt : pool;
+  const d = new Date();
+  const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  return list[(seed + Object.keys(answered).length) % list.length];
 }
 
 // 提交答案 — 返回 { correct: bool, points: int }
@@ -9298,6 +9381,8 @@ window.awardMysteryBoxesIfDue = awardMysteryBoxesIfDue;
 window.openMysteryBoxOnce = openMysteryBoxOnce;
 window.THINK_PUZZLES = THINK_PUZZLES;
 window.getThinkPuzzleForWeek = getThinkPuzzleForWeek;
+window.getThinkPuzzleByWeek = getThinkPuzzleByWeek;
+window.getNextThinkPuzzle = getNextThinkPuzzle;
 window.submitThinkPuzzleAnswer = submitThinkPuzzleAnswer;
 // v17.6
 window.ENGLISH_MASTER_TIPS = ENGLISH_MASTER_TIPS;

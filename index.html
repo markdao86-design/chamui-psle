@@ -5143,7 +5143,16 @@ p { font-size: 14px; line-height: 1.6; }
     <button onclick="window.gotoPage('checkin');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid #E2E8F0;background:#F1F5F9;color:#1E293B;font-size:14px;font-weight:600">✅ 打卡 <span style="font-size:11px;color:#1E293B;font-weight:400">73 周任务清单</span></button>
     <button onclick="window.gotoPage('character');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid #E2E8F0;background:#F1F5F9;color:#1E293B;font-size:14px;font-weight:600">👤 我的 <span style="font-size:11px;color:#1E293B;font-weight:400">角色·装备·兑换</span></button>
     <button onclick="window.gotoPage('summer');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid #E2E8F0;background:#F1F5F9;color:#1E293B;font-size:14px;font-weight:600">📅 暑假 <span style="font-size:11px;color:#1E293B;font-weight:400">已结束·存档</span></button>
+    <button onclick="window.toggleTargetSchoolModal();window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid #E2E8F0;background:#F1F5F9;color:#1E293B;font-size:14px;font-weight:600">🎯 目标校 <span style="font-size:11px;color:#1E293B;font-weight:400">录取概率</span></button>
     <button onclick="window.gotoPage('admin');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid #E2E8F0;background:#F1F5F9;color:#1E293B;font-size:14px;font-weight:600">⚙️ 管理 <span style="font-size:11px;color:#1E293B;font-weight:400">照片·设置</span></button>
+  </div>
+</div>
+
+<!-- v19.80: 目标校弹层 — 卡内容仍由 renderTargetSchoolMini 渲染进 #targetSchoolMini -->
+<div id="targetSchoolModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.55)" onclick="window.toggleTargetSchoolModal()">
+  <div style="position:absolute;top:8%;left:50%;transform:translateX(-50%);width:min(500px,92vw);max-height:82vh;overflow-y:auto;background:#FFFFFF;border:1px solid #CBD5E1;border-radius:14px;padding:16px;box-shadow:0 8px 32px rgba(0,0,0,0.5)" onclick="event.stopPropagation()">
+    <div id="targetSchoolMini"></div>
+    <button onclick="window.toggleTargetSchoolModal()" style="width:100%;margin-top:10px;padding:9px;background:#F1F5F9;border:1px solid #E2E8F0;border-radius:8px;color:#1E293B;font-weight:700;cursor:pointer;font-size:13px">关闭</button>
   </div>
 </div>
 
@@ -5227,9 +5236,10 @@ p { font-size: 14px; line-height: 1.6; }
       <!-- 左栏: 今日必做 行动驱动 (v19.22: gradReviewCard 移到右栏减拥挤) -->
       <div class="home-col-left">
         <div style="font-size:12px;font-weight:900;color:#1E40AF;letter-spacing:1px;margin-bottom:6px">⚡ 今日必做</div>
+        <!-- v19.80: 错题本提到今日3件事前面 (用户点名) -->
+        <div class="card" id="errorBankCard"></div>
         <div class="card" id="todayThreeCard" style="border-left:4px solid #1E40AF"></div>
         <div class="card" id="paper2SprintCard"></div>
-        <div class="card" id="errorBankCard"></div>
         <!-- v19.35: 自动对齐 filler — 长栏时被挤为 0 不留痕 -->
         <div class="col-balance-filler" id="leftColFiller"></div>
       </div>
@@ -5239,7 +5249,7 @@ p { font-size: 14px; line-height: 1.6; }
         <!-- v19.63: 每日揭秘思考题恢复显示 (曾被误 hide, render 一直在空转) -->
         <div class="card think-puzzle-card" id="thinkPuzzleCard"></div>
         <div class="card" id="weekMasterTipCard"></div>
-        <div class="card" id="targetSchoolMini" style="border-left:1px solid #1E293B"></div>
+        <!-- v19.80: targetSchoolMini 收进 ⋯其他 菜单弹层 (用户点名), 卡在 targetSchoolModal 里 -->
         <div id="gradReviewCard"></div>
         <!-- v19.35: 自动对齐 filler — 短栏时撑空到与长栏等高 -->
         <div class="col-balance-filler" id="rightColFiller"></div>
@@ -5907,9 +5917,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.79"></script>
-<script src="data.js?v=19.79"></script>
-<script src="app.js?v=19.79"></script>
+<script src="character.js?v=19.80"></script>
+<script src="data.js?v=19.80"></script>
+<script src="app.js?v=19.80"></script>
 
 </body>
 </html>

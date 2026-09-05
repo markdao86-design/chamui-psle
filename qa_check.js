@@ -645,8 +645,8 @@ assert(/background-color: #FFFFFF/.test(idxSrc), 'v19.60: kt-inner 白底 (亮�
 assert(/v19\.25: 删 renderThinkPuzzleCard 调用/.test(appSrc), 'v19.25 Bug1: renderCheckinPage 不再调 renderThinkPuzzleCard');
 // 防回归: 全局只有 1 处 renderThinkPuzzleCard call (在 renderDashboard 用 state.currentWeek), 不再有 (week) 调用
 const tpCalls = (appSrc.match(/\brenderThinkPuzzleCard\(/g) || []).length;
-// 期望: 1 处 function 定义 + 1 处 dashboard 调用 = 2 个匹配 (definition + call)
-assert(tpCalls === 2, `v19.25 Bug1: renderThinkPuzzleCard 调用收敛 (定义 + 主页 1 处 = 2, 实际 ${tpCalls})`);
+// 期望: 1 处 function 定义 + 1 处 dashboard 调用 + v19.80 下一道 1 处 = 3 个匹配
+assert(tpCalls === 3, `v19.25 Bug1/v19.80: renderThinkPuzzleCard 调用收敛 (定义 + 主页 + 下一道 = 3, 实际 ${tpCalls})`);
 // v19.25 Bug 2: openErrorBank modal 暗调 (v19.28: 注释标签升级保留 rgba 暗调样式)
 assert(/background:linear-gradient\(135deg, rgba\(230,162,60,0\.10\), rgba\(192,86,33,0\.04\)\);border:1px dashed rgba\(230,162,60,0\.40\)/.test(appSrc), 'v19.25 Bug2: 顶部提示暗调样式保留');
 assert(/border:1px solid rgba\(30,64,175,0\.30\);border-radius:6px;padding:6px 10px;font-size:12px;color:#1E293B/.test(appSrc), 'v19.25 Bug2: chip 暗调样式');
@@ -668,9 +668,8 @@ assert(/week: 1, subject: '🔬 P3 Diversity'/.test(_v24data), 'v19.24: W1 P3 Di
 assert(/week: 2, subject: '🔬 P3 Plant Life Cycle'/.test(_v24data), 'v19.24: W2 P3 Plant Life Cycle');
 assert(/week: 3, subject: '🔬 P3 Animal Life Cycle'/.test(_v24data), 'v19.24: W3 P3 Animal Life Cycle');
 assert(/week: 4, subject: '🔬 P3 Plant Parts'/.test(_v24data), 'v19.24: W4 P3 Plant Parts');
-// v19.23: 右栏顺序 思考题 → 名师秘籍 → 目标校 → 毕业题
-// v19.23: 右栏 4 卡顺序 思考→名师→目标校→毕业
-assert(/id="thinkPuzzleCard"[\s\S]{0,300}id="weekMasterTipCard"[\s\S]{0,300}id="targetSchoolMini"[\s\S]{0,300}id="gradReviewCard"/.test(idxSrc), 'v19.23: 右栏顺序 思考→名师→目标校→毕业');
+// v19.23→v19.80: 右栏顺序 思考题 → 知识树每日练(原名师秘籍容器) → 毕业题 (目标校已收进 ⋯其他 弹层)
+assert(/id="thinkPuzzleCard"[\s\S]{0,300}id="weekMasterTipCard"[\s\S]{0,300}id="gradReviewCard"/.test(idxSrc), 'v19.80: 右栏顺序 思考→每日练→毕业');
 assert(/🎓 教学 \+ 信息 \+ 复盘/.test(idxSrc), 'v19.23: 右栏标题改"教学 + 信息 + 复盘"');
 // v19.22: 错题本卡 改进
 assert(/v19\.22: 错题本卡 \(整张可点 \+ game\/topic 分类 \+ 显眼大按钮\)/.test(appSrc), 'v19.22: 错题本卡注释');
@@ -727,7 +726,30 @@ assert(/renderThinkPuzzleCard\(state\.currentWeek\)/.test(appSrc), 'v19.18: rend
 assert(/background:#DC2626;color:#FFF[\s\S]{0,150}border-radius:14px/.test(appSrc), 'v19.18: 错题本红 badge 强提醒');
 // renderWeekMasterTipCard 函数
 assert(/function renderWeekMasterTipCard/.test(appSrc), 'v19.18: renderWeekMasterTipCard 函数');
-assert(/window\.WEEK_MASTER_TIPS\[week - 1\]/.test(appSrc), 'v19.18: 取 WEEK_MASTER_TIPS[week-1]');
+// v19.80: 名师秘籍卡已换成知识树每日练 (WEEK_MASTER_TIPS 数据保留未接 UI)
+assert(/function getDailyTreePicks\(/.test(appSrc) && /window\.getDailyTreePicks = getDailyTreePicks/.test(appSrc), 'v19.80: getDailyTreePicks 定义+导出');
+assert(/const picks = getDailyTreePicks\(3\);/.test(appSrc), 'v19.80: 每日练卡调用 getDailyTreePicks (防死代码)');
+assert(/🌳 知识树每日练/.test(appSrc) && /openKnowledgePractice\('\$\{p\.node\.id\}'/.test(appSrc), 'v19.80: 每日练卡一键进定星练习');
+assert(!/window\.WEEK_MASTER_TIPS\[week - 1\]/.test(appSrc), 'v19.80: 主页不再渲染名师秘籍');
+// v19.80: 思考题下一道 + 每日上限
+assert(/const THINK_DAILY_CAP = 5;/.test(appSrc), 'v19.80: 思考题每日上限 5');
+assert(/function thinkNextPuzzle\(/.test(appSrc) && /window\.thinkNextPuzzle = thinkNextPuzzle/.test(appSrc) && /onclick="thinkNextPuzzle\(\)"/.test(appSrc), 'v19.80: 下一道按钮接线');
+assert(/_thinkAnsweredTodayCount\(\) >= THINK_DAILY_CAP/.test(appSrc), 'v19.80: 下一道受上限约束');
+const dataSrcV80 = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
+assert(/function getNextThinkPuzzle\(/.test(dataSrcV80) && /window\.getNextThinkPuzzle = getNextThinkPuzzle/.test(dataSrcV80) && /function getThinkPuzzleByWeek\(/.test(dataSrcV80), 'v19.80: 思考题取题 helper 定义+导出');
+assert(typeof W.getNextThinkPuzzle === 'function' && W.getNextThinkPuzzle({ thinkPuzzleAnswers: {} }, null) !== null, 'v19.80: getNextThinkPuzzle 空答案时能取到题');
+// v19.80: 布局 — 错题本在今日3件事前, 目标校进 ⋯其他 弹层
+assert(idxSrc.indexOf('id="errorBankCard"') < idxSrc.indexOf('id="todayThreeCard"'), 'v19.80: 错题本卡在今日 3 件事前面');
+assert(/id="targetSchoolModal"/.test(idxSrc) && /window\.toggleTargetSchoolModal\(\);window\.toggleMoreMenu\(\)/.test(idxSrc), 'v19.80: 目标校收进 ⋯其他 菜单弹层');
+assert((idxSrc.match(/id="targetSchoolMini"/g) || []).length === 1, 'v19.80: targetSchoolMini 只在弹层里出现一次');
+assert(/function toggleTargetSchoolModal\(/.test(appSrc) && /window\.toggleTargetSchoolModal = toggleTargetSchoolModal/.test(appSrc), 'v19.80: 目标校弹层开关定义+导出');
+// v19.80: 英语薄弱模块思考题 + 科学/英语交替
+assert((dataSrcV80.match(/subject: '📖 /g) || []).length >= 14, 'v19.80: 英语思考题 ≥14 道 (完形/改错/阅读/词汇/句型/语法/情景写作/听力)');
+assert(/THINK_PUZZLES\.push\(\.\.\.THINK_PUZZLES_ENGLISH\)/.test(dataSrcV80), 'v19.80: 英语思考题已并入主题库 (防死数据)');
+assert(/isEng\(p\) !== isEng\(cur\)/.test(dataSrcV80), 'v19.80: 下一道科学/英语交替');
+assert(W.THINK_PUZZLES ? new Set(W.THINK_PUZZLES.map(p => p.week)).size === W.THINK_PUZZLES.length : true, 'v19.80: 思考题 week 键无重复');
+assert(/comp_oe:\s*\{ spot: '阅读理解问答/.test(appSrc) && /return 'comp_oe'/.test(appSrc), 'v19.80: 阅读理解思考题接考点库 comp_oe');
+assert(/if \(!result\) return;\s*\/\/ v19\.80[^\n]*\n\s*_thinkShowWeek = weekN;/.test(appSrc), 'v19.80: 答题后锁住当前思考题 (防 rotation 把解析冲掉)');
 // v19.17: 补做日上限
 assert(/今日补打已达.*\$\{cap\} 项上限/.test(appSrc), 'v19.17: 补做日上限拦截 toast');
 assert(/window\.DAILY_CARRY_CAP \|\| 3/.test(appSrc), 'v19.17: 读 DAILY_CARRY_CAP 常量');
