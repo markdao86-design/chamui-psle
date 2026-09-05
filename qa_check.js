@@ -1403,6 +1403,38 @@ assert(/d = Math\.min\(d, 3\);/.test(dataSrcV80), 'v19.85: 英语 weak 模式不
 assert(/state\.englishStreak\.wrong >= 6/.test(dataSrcV80), 'v19.85: 连错劝退门槛 4→6 题 (冲AL1期间不该一遇挫折就往下劝)');
 assert(/acc\[s\]\.accuracy < 90/.test(dataSrcV80), 'v19.85: 弱科告警线 70%→90% (AL1=90分, 原来75-88%这个真正该救的区间完全不报警)');
 
+// ===== v19.87: 词汇闪卡改成"每天一组, 全认识才收工" =====
+{
+  const st = { flashcardSRS: {}, totalPoints: 0, logs: [] };
+  const g = W.getDailyFlashcardGroup(st);
+  assert(g.words.length === W.FC_GROUP_SIZE, `v19.87: 每天编一组 ${W.FC_GROUP_SIZE} 个词 (实际 ${g.words.length})`);
+  const w0 = g.words[0];
+  const r1 = W.answerDailyFlashcard(st, w0, 'dont');
+  assert(st.fcDailyGroup.queue[st.fcDailyGroup.queue.length - 1] === w0, 'v19.87: 点不认识 → 该词排到本组队尾, 待会儿还回来');
+  assert(r1.remaining === g.words.length, 'v19.87: 不认识不出队, 剩余数不变');
+  const before = JSON.stringify(st.flashcardSRS[w0]);
+  const r2 = W.answerDailyFlashcard(st, w0, 'know');
+  assert(r2.isFirst === false && r2.pts === 0, 'v19.87: 同一天补考不重复加分');
+  assert(JSON.stringify(st.flashcardSRS[w0]) === before, 'v19.87: 曲线只认当天第一次自评 — 补考三遍不会跳三关');
+  assert(r2.remaining === g.words.length - 1, 'v19.87: 点认识才出队');
+  // 全部点认识 → done
+  let guard = 0;
+  while (st.fcDailyGroup.queue.length && guard++ < 200) W.answerDailyFlashcard(st, st.fcDailyGroup.queue[0], 'know');
+  assert(st.fcDailyGroup.done === true, 'v19.87: 全部点到认识才收工');
+  // 老赖保底: 造 30 个新词 + 15 个没记住的, 看新组里没记住的占比
+  const st2 = { flashcardSRS: {}, totalPoints: 0, logs: [] };
+  const allWords = [];
+  (W.FLASHCARD_DECKS || []).forEach(d => d.words.forEach(x => allWords.push(x)));
+  allWords.slice(0, 15).forEach(x => { st2.flashcardSRS[x] = { interval: 0, correctStreak: 0, lastReviewed: '2020-01-01', nextReview: '2020-01-02', mastered: false }; });
+  const grp2 = W.buildDailyFlashcardGroup(st2);
+  const lapsedIn = grp2.filter(x => st2.flashcardSRS[x]).length;
+  assert(lapsedIn >= Math.floor(W.FC_GROUP_SIZE / 3), `v19.87: 之前没记住的词有 1/3 保底名额 (实际进组 ${lapsedIn}/${W.FC_GROUP_SIZE}) — 否则查词多的日子老赖永远进不来`);
+}
+assert(/getDailyGroupRemaining/.test(appSrc), 'v19.87: 首页/词汇页改报"这一组还剩几个"');
+assert(/今天这一组全认识了/.test(appSrc), 'v19.87: 收工页写明"今天这一组全认识了"');
+assert(/fc-btn-vague/.test(appSrc) && /fc-btn-vague/.test(idxSrc), 'v19.87: 三档自评按钮(不认识/有点印象/认识)已接入+有样式');
+assert(!/getAllDueFlashcards\(state\)/.test(appSrc), 'v19.87: UI 不再报只涨不落的到期总数');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));

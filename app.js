@@ -2555,8 +2555,8 @@ function renderVocabPage() {
   if (!el) return;
   if (_fcSession) { _renderFlashcardSession(); return; }
   const stats = getFlashcardStats(state);
-  const due = getAllDueFlashcards(state);
-  const dueCount = Math.min(due.length, 20);
+  // v19.87: 改报"今天这一组还剩几个" — 原来报 getAllDueFlashcards 的到期总数, 那个数只涨不落越积越吓人
+  const grp = window.getDailyGroupRemaining ? window.getDailyGroupRemaining(state) : { remaining: 0, total: 0, done: false, retakeCount: 0 };
   const pct = stats.total > 0 ? Math.round(stats.mastered / stats.total * 100) : 0;
   el.innerHTML = `
     <h2 style="margin:0 0 8px;font-size:18px">📇 PSLE 词汇闪卡</h2>
@@ -2567,17 +2567,17 @@ function renderVocabPage() {
       </div>
       <span style="font-size:12px;font-weight:600;color:#10B981">${pct}%</span>
     </div>
-    ${dueCount > 0 ? `
+    ${grp.remaining > 0 ? `
       <div class="card" style="margin-bottom:12px;border-left:3px solid #F59E0B">
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div>
-            <div style="font-weight:600;font-size:14px">🔥 今日待复习: ${dueCount} 词</div>
-            <div style="font-size:11px;color:var(--color-text-light)">含 ${due.filter(d=>d.isNew).length} 个新词</div>
+            <div style="font-weight:600;font-size:14px">📦 今天这一组: 还剩 ${grp.remaining} / ${grp.total} 个</div>
+            <div style="font-size:11px;color:var(--color-text-light)">每个词都点到「认识」才算过关${grp.retakeCount > 0 ? ` · 🔁 ${grp.retakeCount} 个在补考` : ''}</div>
           </div>
-          <button class="btn-primary" onclick="startFlashcardSession(null)">开始复习</button>
+          <button class="btn-primary" onclick="startFlashcardSession(null)">${grp.retakeCount > 0 ? '继续过' : '开始'}</button>
         </div>
       </div>
-    ` : `<div class="card" style="margin-bottom:12px;border-left:3px solid #10B981"><div style="font-weight:600;color:#10B981">✅ 今日复习已完成!</div></div>`}
+    ` : `<div class="card" style="margin-bottom:12px;border-left:3px solid #10B981"><div style="font-weight:600;color:#10B981">✅ 今天这一组全认识了!</div><div style="font-size:11px;color:var(--color-text-light);margin-top:2px">明天会重新编一组, 今天点过不认识的会排进去</div></div>`}
     <div style="font-size:14px;font-weight:600;margin-bottom:8px">卡组选择:</div>
     <div class="fc-deck-grid">
       ${FLASHCARD_DECKS.map(deck => {
@@ -2601,14 +2601,19 @@ function renderVocabPage() {
 }
 
 function startFlashcardSession(deckId) {
-  let words;
-  if (deckId) {
-    words = getFlashcardsDue(state, deckId).slice(0, 15);
-  } else {
-    words = getAllDueFlashcards(state).slice(0, 20).map(d => d.word);
+  // v19.87: 默认走"今天这一组"(队列制, 全部点到认识才收工); 点具体卡组时仍是自由练习模式
+  if (!deckId) {
+    const g = window.getDailyFlashcardGroup(state);
+    if (!g.words.length) { showToast('今天没有要过的词了 🎉', 'happy'); return; }
+    if (!g.queue.length) { showToast('今天这一组已经全认识了 ✅', 'happy'); renderVocabPage(); return; }
+    _fcSession = { mode: 'daily', flipped: false };
+    saveState(state);
+    _renderFlashcardSession();
+    return;
   }
+  const words = getFlashcardsDue(state, deckId).slice(0, 15);
   if (words.length === 0) { showToast('该卡组暂无待复习词', 'info'); return; }
-  _fcSession = { words, idx: 0, flipped: false, results: [] };
+  _fcSession = { mode: 'deck', words, idx: 0, flipped: false, results: [] };
   _renderFlashcardSession();
 }
 
@@ -2616,8 +2621,23 @@ function _renderFlashcardSession() {
   const el = document.getElementById('vocabPageContent');
   if (!el || !_fcSession) return;
   const s = _fcSession;
-  if (s.idx >= s.words.length) { _endFlashcardSession(); return; }
-  const word = s.words[s.idx];
+  let word, headerRight, progressPct, retakeBadge = '';
+  if (s.mode === 'daily') {
+    const g = window.getDailyFlashcardGroup(state);
+    if (!g.queue.length) { _endFlashcardSession(); return; }
+    word = g.queue[0];
+    const passed = g.words.length - g.queue.length;
+    headerRight = `还剩 ${g.queue.length} / ${g.words.length}`;
+    progressPct = Math.round(passed / g.words.length * 100);
+    if (word in g.firstPass && !g.firstPass[word]) {
+      retakeBadge = `<div style="text-align:center;margin-bottom:8px"><span style="background:rgba(230,162,60,0.12);color:#B45309;border:1px solid rgba(230,162,60,0.35);border-radius:12px;padding:3px 12px;font-size:12px;font-weight:700">🔁 补考 · 刚才没记住</span></div>`;
+    }
+  } else {
+    if (s.idx >= s.words.length) { _endFlashcardSession(); return; }
+    word = s.words[s.idx];
+    headerRight = `${s.idx + 1} / ${s.words.length}`;
+    progressPct = Math.round((s.idx / s.words.length) * 100);
+  }
   const meaning = getVocabMeaning(word);
   // v19.43: 反面 = 中文 + 英文解释(短语) + 例句 + 考题 (科学/数学答案已逐条核准)
   const enDef = window.getVocabEn ? window.getVocabEn(word) : '';
@@ -2626,8 +2646,9 @@ function _renderFlashcardSession() {
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <button onclick="exitFlashcardSession()" style="padding:10px 22px;background:#1E40AF;color:#FFFFFF;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">← 返回卡组</button>
-      <span style="font-size:16px;color:var(--color-text-light)">${s.idx + 1} / ${s.words.length}</span>
+      <span style="font-size:16px;color:var(--color-text-light)">${headerRight}</span>
     </div>
+    ${retakeBadge}
     <div class="fc-card ${s.flipped ? 'flipped' : ''}" onclick="flipFlashcard()">
       <div class="fc-card-inner">
         <div class="fc-card-front">
@@ -2643,11 +2664,13 @@ function _renderFlashcardSession() {
       </div>
     </div>
     <div class="fc-btns">
-      <button class="fc-btn-dont" onclick="answerFlashcard(false)">❌ 不认识</button>
-      <button class="fc-btn-know" onclick="answerFlashcard(true)">✅ 认识</button>
+      <button class="fc-btn-dont" onclick="answerFlashcard('dont')">❌ 不认识</button>
+      <button class="fc-btn-vague" onclick="answerFlashcard('vague')">🤔 有点印象</button>
+      <button class="fc-btn-know" onclick="answerFlashcard('know')">✅ 认识</button>
     </div>
+    ${s.mode === 'daily' ? `<div style="text-align:center;font-size:11px;color:#64748B;margin-top:6px">不认识 / 有点印象 → 这个词排到本组队尾, 待会儿还回来找你</div>` : ''}
     <div style="height:6px;background:#E2E8F0;border-radius:3px;margin-top:16px;overflow:hidden">
-      <div style="height:100%;width:${Math.round((s.idx / s.words.length) * 100)}%;background:#93C5FD;transition:width .3s"></div>
+      <div style="height:100%;width:${progressPct}%;background:#93C5FD;transition:width .3s"></div>
     </div>
   `;
 }
@@ -2658,13 +2681,34 @@ function flipFlashcard() {
   _renderFlashcardSession();
 }
 
-function answerFlashcard(correct) {
+// v19.87: level = 'know' | 'vague' | 'dont' (旧调用传 true/false 也兼容)
+function answerFlashcard(level) {
   if (!_fcSession) return;
-  const word = _fcSession.words[_fcSession.idx];
-  const result = reviewFlashcard(state, word, correct);
-  _fcSession.results.push({ word, correct, pts: result.pts });
-  _fcSession.idx++;
-  _fcSession.flipped = false;
+  if (level === true) level = 'know';
+  if (level === false) level = 'dont';
+  const s = _fcSession;
+  if (s.mode === 'daily') {
+    const g = window.getDailyFlashcardGroup(state);
+    const word = g.queue[0];
+    if (!word) { _endFlashcardSession(); return; }
+    const r = window.answerDailyFlashcard(state, word, level);
+    s.flipped = false;
+    saveState(state);
+    if (level === 'know') {
+      if (r.retake) showToast(`✅ 这次记住了 (补考不重复加分)`, 'happy');
+      else if (r.pts > 0) showToast(`✅ +${r.pts} 分`, 'happy');
+    } else {
+      showToast(level === 'vague' ? '🤔 排到队尾, 待会儿再来一次' : '❌ 排到队尾, 待会儿再来一次', 'warn');
+    }
+    _renderFlashcardSession();
+    return;
+  }
+  // 自由卡组模式: 保持原行为
+  const word = s.words[s.idx];
+  const result = reviewFlashcard(state, word, level === 'know');
+  s.results.push({ word, correct: level === 'know', pts: result.pts });
+  s.idx++;
+  s.flipped = false;
   saveState(state);
   _renderFlashcardSession();
 }
@@ -2673,6 +2717,29 @@ function _endFlashcardSession() {
   const el = document.getElementById('vocabPageContent');
   if (!el || !_fcSession) return;
   const s = _fcSession;
+  if (s.mode === 'daily') {
+    const g = window.getDailyFlashcardGroup(state);
+    const firstTry = Object.keys(g.firstPass).filter(w => g.firstPass[w]).length;
+    const retakeWords = Object.keys(g.retakes || {});
+    el.innerHTML = `
+      <div style="text-align:center;padding:24px 0">
+        <div style="font-size:48px;margin-bottom:12px">🎉</div>
+        <h3 style="margin:0 0 8px;color:#16A34A">今天这一组全认识了!</h3>
+        <div style="font-size:14px;color:var(--color-text-light);margin-bottom:6px">
+          共 ${g.words.length} 个词 · 一遍就过 ${firstTry} 个${retakeWords.length ? ` · 补考过关 ${retakeWords.length} 个` : ''}
+        </div>
+        ${retakeWords.length ? `<div style="max-width:420px;margin:10px auto;padding:10px 12px;background:rgba(230,162,60,0.08);border:1px solid rgba(230,162,60,0.3);border-radius:8px;font-size:12px;color:#B45309;line-height:1.7;text-align:left">
+          🔁 <b>今天补考过的词</b> (明天这一组会优先排它们):<br>${retakeWords.map(w => escapeHtml(w)).join(' · ')}
+        </div>` : ''}
+        <div style="font-size:11px;color:#64748B;margin:10px 0 16px">明天会重新编一组, 今天点过不认识的会排进去</div>
+        <button class="btn-primary" onclick="exitFlashcardSession()">收工</button>
+      </div>
+    `;
+    _fcSession = null;
+    saveState(state);
+    renderHeader();
+    return;
+  }
   const correctCount = s.results.filter(r => r.correct).length;
   const totalPts = s.results.reduce((sum, r) => sum + r.pts, 0);
   el.innerHTML = `
@@ -2684,7 +2751,6 @@ function _endFlashcardSession() {
       </div>
       <div style="display:flex;gap:8px;justify-content:center">
         <button class="btn-primary" onclick="exitFlashcardSession()">返回卡组</button>
-        <button class="btn-sm" onclick="startFlashcardSession(null)">继续复习</button>
       </div>
     </div>
   `;
@@ -2701,15 +2767,16 @@ function exitFlashcardSession() {
 function renderFlashcardWidget() {
   const el = document.getElementById('flashcardWidgetCard');
   if (!el) return;
-  const due = getAllDueFlashcards(state);
+  // v19.87: 报"今天这一组还剩几个", 不再报只涨不落的到期总数
+  const grp = window.getDailyGroupRemaining ? window.getDailyGroupRemaining(state) : { remaining: 0, total: 0 };
   const stats = getFlashcardStats(state);
-  if (due.length === 0 && stats.mastered === 0) { el.style.display = 'none'; return; }
+  if (grp.total === 0 && stats.mastered === 0) { el.style.display = 'none'; return; }
   const pct = stats.total > 0 ? Math.round(stats.mastered / stats.total * 100) : 0;
   el.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span style="font-size:18px">📇</span>
       <span style="font-weight:600;font-size:14px">词汇闪卡</span>
-      <span style="margin-left:auto;font-size:12px;color:${due.length > 0 ? '#F59E0B' : '#10B981'}">${due.length > 0 ? due.length + ' 词待复习' : '✅ 今日完成'}</span>
+      <span style="margin-left:auto;font-size:12px;color:${grp.remaining > 0 ? '#F59E0B' : '#10B981'}">${grp.remaining > 0 ? '这一组还剩 ' + grp.remaining + ' 个' : '✅ 今天这一组全认识了'}</span>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <div style="flex:1;height:4px;background:#E2E8F0;border-radius:2px;overflow:hidden">

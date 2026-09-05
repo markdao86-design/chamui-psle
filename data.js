@@ -6157,6 +6157,100 @@ function reviewFlashcard(state, word, correct) {
   return { pts, interval: entry.interval, mastered: entry.mastered, nextReview: entry.nextReview };
 }
 
+// ============= v19.87: 每日一组闪卡 (用户 2026-09-05 定的规则) =============
+// 旧逻辑的问题: 一次抓 20 个到期词, 过一遍就散场, 不认识的等明天; 首页报的"到期总数"
+// 只涨不落, 越积越吓人。新逻辑改成"今天这一组, 每个词都点到认识才算完"。
+const FC_GROUP_SIZE = 20;          // 每天一组多少个词
+const FC_LAPSED_RESERVE = 1 / 3;   // 给"之前没记住的词"保底的比例
+
+function _fcToday() { return new Date().toISOString().slice(0, 10); }
+
+// 词的三种身份: new=从没练过 | lapsed=练过但上次没记住(要补) | due=到期常规复习
+function _fcClassify(state, word) {
+  const e = state.flashcardSRS && state.flashcardSRS[word];
+  if (!e) return 'new';
+  if (e.mastered) return null;
+  const today = _fcToday();
+  const isDue = !e.nextReview || e.nextReview <= today;
+  if (!isDue) return null;
+  // 上次自评没记住 (correctStreak 被清零) → 老赖, 要保底名额
+  return (e.correctStreak || 0) === 0 && e.lastReviewed ? 'lapsed' : 'due';
+}
+
+// 编今天这一组: 新词优先, 但"之前没记住的"保底 1/3 —— 否则查词多的日子老赖永远排不进来
+function buildDailyFlashcardGroup(state, size) {
+  size = size || FC_GROUP_SIZE;
+  const pools = { new: [], lapsed: [], due: [] };
+  for (const deck of FLASHCARD_DECKS) {
+    for (const w of deck.words) {
+      const kind = _fcClassify(state, w);
+      if (kind) pools[kind].push(w);
+    }
+  }
+  const reserve = Math.min(pools.lapsed.length, Math.ceil(size * FC_LAPSED_RESERVE));
+  const out = pools.lapsed.slice(0, reserve);                 // 老赖保底名额
+  for (const w of pools.new) { if (out.length >= size) break; out.push(w); }        // 新词优先填
+  for (const w of pools.lapsed.slice(reserve)) { if (out.length >= size) break; out.push(w); }
+  for (const w of pools.due) { if (out.length >= size) break; out.push(w); }        // 常规到期垫底
+  return out;
+}
+
+// 取/建今天这一组 (跨天自动重编)
+function getDailyFlashcardGroup(state, opts) {
+  const today = _fcToday();
+  const g = state.fcDailyGroup;
+  if (g && g.date === today) return g;
+  if (opts && opts.peekOnly && !(g && g.date === today)) {
+    const preview = buildDailyFlashcardGroup(state);
+    return { date: today, words: preview, queue: preview.slice(), firstPass: {}, retakes: {}, done: preview.length === 0, _preview: true };
+  }
+  const words = buildDailyFlashcardGroup(state);
+  state.fcDailyGroup = {
+    date: today,
+    words,                 // 今天这一组是哪些词 (固定不变)
+    queue: words.slice(),  // 还没点到"认识"的, 队尾轮回
+    firstPass: {},         // word -> 第一次自评结果 (曲线只认这个)
+    retakes: {},           // word -> 补考次数
+    done: words.length === 0
+  };
+  return state.fcDailyGroup;
+}
+
+// 今天这一组还剩几个 (首页/复习页报这个数, 不再报只涨不落的到期总数)
+function getDailyGroupRemaining(state) {
+  const g = getDailyFlashcardGroup(state, { peekOnly: true });
+  return { remaining: g.queue.length, total: g.words.length, done: !!g.done && g.words.length > 0, retakeCount: Object.keys(g.retakes || {}).length };
+}
+
+// 记一次自评。level: 'know' | 'vague' | 'dont'
+// 规则: 只有 know 才出队; vague/dont 转到队尾标"补考"。
+// 艾宾浩斯曲线只认当天第一次自评 —— 同一天补考三遍不会跳三关。
+function answerDailyFlashcard(state, word, level) {
+  const g = getDailyFlashcardGroup(state);
+  const isFirst = !(word in g.firstPass);
+  const known = level === 'know';
+  let srsResult = null;
+  if (isFirst) {
+    g.firstPass[word] = known;
+    srsResult = reviewFlashcard(state, word, known);   // 曲线只在第一次自评时推进
+  } else {
+    // 补考: 不动曲线, 也不给分
+    g.retakes[word] = (g.retakes[word] || 0) + 1;
+  }
+  const idx = g.queue.indexOf(word);
+  if (idx >= 0) {
+    g.queue.splice(idx, 1);
+    if (!known) g.queue.push(word);                     // 不认识/有点印象 → 转本组队尾
+  }
+  if (g.queue.length === 0) g.done = true;
+  return {
+    isFirst, known, done: g.done,
+    remaining: g.queue.length,
+    pts: srsResult ? srsResult.pts : 0,
+    retake: !isFirst
+  };
+}
+
 function getFlashcardStats(state) {
   if (!state.flashcardSRS) state.flashcardSRS = {};
   let total = 0, newCount = 0, learning = 0, mastered = 0;
@@ -8972,6 +9066,11 @@ window.VOCAB_MEANINGS = VOCAB_MEANINGS;
 window.getVocabMeaning = getVocabMeaning;
 // v19.5: 闪卡系统
 window.FLASHCARD_DECKS = FLASHCARD_DECKS;
+window.FC_GROUP_SIZE = FC_GROUP_SIZE;
+window.buildDailyFlashcardGroup = buildDailyFlashcardGroup;
+window.getDailyFlashcardGroup = getDailyFlashcardGroup;
+window.getDailyGroupRemaining = getDailyGroupRemaining;
+window.answerDailyFlashcard = answerDailyFlashcard;
 // v19.40: 闪卡反面 例句 + 常考题型
 window.VOCAB_EN = VOCAB_EN;
 window.VOCAB_SENT = VOCAB_SENT;

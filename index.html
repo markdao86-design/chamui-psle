@@ -2102,9 +2102,11 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   border-left:4px solid #E6A23C; padding:12px 16px; margin-top:4px;
   text-align:left; border-radius:6px; line-height:1.6;
 }
-.fc-btns { display:flex; gap:16px; justify-content:center; margin-top:18px; }
-.fc-btn-know, .fc-btn-dont { padding:14px 36px; border-radius:10px; border:none; font-size:18px; font-weight:700; cursor:pointer; }
+/* v19.87: 三档自评 (不认识 / 有点印象 / 认识) — 前两档都会把词排回本组队尾 */
+.fc-btns { display:flex; gap:10px; justify-content:center; margin-top:18px; flex-wrap:wrap; }
+.fc-btn-know, .fc-btn-dont, .fc-btn-vague { padding:14px 20px; border-radius:10px; border:none; font-size:16px; font-weight:700; cursor:pointer; flex:1 1 0; min-width:104px; max-width:180px; }
 .fc-btn-know { background:#16A34A; color:#fff; }
+.fc-btn-vague { background:#E6A23C; color:#fff; }
 .fc-btn-dont { background:#DC2626; color:#fff; }
 .fc-deck-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
 .fc-deck-item { padding:12px; border-radius:8px; border:1px solid #E2E8F0; background:#FFFFFF; cursor:pointer; transition:all .2s; }
@@ -5917,9 +5919,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=19.86"></script>
-<script src="data.js?v=19.86"></script>
-<script src="app.js?v=19.86"></script>
+<script src="character.js?v=19.87"></script>
+<script src="data.js?v=19.87"></script>
+<script src="app.js?v=19.87"></script>
 
 </body>
 </html>
