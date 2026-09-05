@@ -1581,6 +1581,15 @@ assert(/点开回看原文/.test(appSrc), 'v19.92: 每题都能回看原文 (原
   assert(!(W.CLOZE_QUESTIONS || []).some(q => /After he ___ his homework/.test(String(q.sentence || ''))), 'v19.93b: 换掉 after+过去完成时那道双答案题 (finished 和 had finished 都成立)');
 }
 
+// ===== v19.94: 换掉"干扰项其实也对"的题 (孩子选了合法英语却被判错) =====
+{
+  const S5 = W.SST_QUESTIONS || [];
+  const valid = ['So boring was the film that we all fell asleep.', 'Although rich, he is not happy.',
+                 'No other pupils in her class are as hardworking as Meiling.', 'The food was delicious, although very expensive.'];
+  const still = S5.filter(q => (q.opts || []).some(o => valid.includes(String(o))));
+  assert(still.length === 0, `v19.94: 已换掉 4 个本身合法的干扰项(倒装/省略让步从句/复数版比较) — 孩子选了会被冤枉判错 (残留 ${still.length})`);
+}
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
