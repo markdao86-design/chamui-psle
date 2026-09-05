@@ -870,7 +870,25 @@ function renderTodayThreeCard() {
 
   let itemsHtml, doneCount, headerSub, tipHtml;
 
-  if (isWeekday) {
+  // v19.79: 假期 (9/5-13) 今日 3 件事按假期课表走, 9/14 自动恢复
+  const holiday = window.getHolidayPlan && window.getHolidayPlan();
+  if (holiday) {
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const treeToday = Object.values(state.knowledgeStars || {}).some(r => r && r.lastDate === todayIso);
+    const appDone = treeToday || (todayCounts.vocab || 0) >= 1 || (todayCounts.scimcq || 0) >= 1 || (todayCounts.listen || 0) >= 1;
+    headerTitle = '🏖️ 假期任务 · ' + holiday.label;
+    headerColor = '#B45309';
+    counterFn = () => '照课表走';
+    doneCount = 0;
+    headerSub = '假期特别安排 · 详情看📆课表页 · 9/14(周一)恢复常规';
+    itemsHtml = holiday.three.map((t, i) => {
+      const done = i === 2 && appDone;
+      return item(t[0], t[1], t[2], done, t[3] || "gotoPage('schedule')", '#B45309');
+    }).join('');
+    tipHtml = `<div style="margin-top:8px;padding:8px;background:linear-gradient(135deg, rgba(230,162,60,0.10), rgba(192,86,33,0.05));border:1px solid rgba(230,162,60,0.30);border-radius:6px;font-size:11px;color:#B45309;line-height:1.5;text-align:center">
+      🏫 <b>班课优先 · 错题当天清</b> · 8:00 起床 21:30 熄灯 · 每晚填每日成绩单
+    </div>`;
+  } else if (isWeekday) {
     // 平日 3 件事: Oral + Cloze+SST + 科学章节
     const oral = window.getOralStatus ? window.getOralStatus(state) : { todaySec: 0, targetSec: 1500, pct: 0, done: false };
     const oralDone = oral.done || oral.todaySec >= 1500;
@@ -11082,12 +11100,201 @@ function computeSchedWeekSummary(mondayDate) {
   const graded = rows.filter(r => r[3] !== null);
   return { rows, passN: graded.filter(r => r[3]).length, gradedN: graded.length };
 }
+// ============ v19.79: 9月假期课表 (2026-09-05 ~ 09-13, 按日期匹配, 9/14 自动恢复常规) ============
+// 数据源: 桌面《PSLE_2027_假期课表_v2.docx》· 班课=上午Paper2突破班(9/7-10)+下午口语班(9/10-13)
+// 行类型: c=班课(蓝) s=自学 r=休息; three=[icon, 标题, 说明, 点击(可空=去课表页)] × 3 供主页今日卡
+const HOLIDAY_SCHED = {
+  '2026-09-05': { label: '9/5 周六 · 英语摸底日', start: '8:00 起床', blocks: [
+    ['8:45–9:55', '英语摸底小卷 · 限时70分', '《English Yearly 真题》旧年份拆件: 语法10+词汇10+语法填空10+完形15+阅读问答1篇', 's'],
+    ['10:20–11:05', '对答案 + 错题入本', '阅读问答家长按采分点批', 's'],
+    ['12:00–13:30', '午饭 + 午休', '', 'r'],
+    ['13:30–14:15', '科学问答大题 1组', '《Science For Primary Levels 5》· 错的概念翻《MC Science Revision Guide》', 's'],
+    ['14:40–15:25', '词汇 20题', '《Conquer Vocabulary Workbook 5》', 's'],
+    ['15:25–16:30', '户外运动 / 自由', '', 'r'],
+    ['16:30–17:15', '华文精读 1篇', '《伴你阅读》五上', 's'],
+    ['19:30–20:15', 'App: 科学知识树 1节点', '10题 · 填每日成绩单', 's'],
+    ['21:00–21:30', '睡前三段式背单词', '21:30 熄灯', 's'],
+  ], three: [
+    ['📝', '上午: 英语摸底小卷 70分', '《English Yearly》拆件 · 错题入本, 带着弱点上突破班'],
+    ['🔬', '下午: 科学大题 + 词汇 + 华文', '三块 · 块间休息'],
+    ['📱', '晚上: App 科学树 1节点 + 睡前单词', '做完填每日成绩单', "openKnowledgeTreeModal()"],
+  ]},
+  '2026-09-06': { label: '9/6 周日 · 科学模拟日', start: '8:00 起床', blocks: [
+    ['8:45–9:30', '科学选择题 28题 · 限时45分', '《PSLE Science 选择题 3-6年级》混合抽 · 模拟正式考A册 — 8月丢的8分全在选择题', 's'],
+    ['9:45–10:30', '科学问答大题 2组 · 限时45分', '《Science For Primary Levels 5》模拟B册 · 4分题写足采分点', 's'],
+    ['10:50–11:35', '对答案 + 错题入本', '错的概念当场翻《MC Science Revision Guide》', 's'],
+    ['12:00–13:30', '午饭 + 午休', '', 'r'],
+    ['13:30–14:15', '英语阅读理解问答 1篇', '《Conquer Comprehension P5》· 按分值数点', 's'],
+    ['14:40–15:25', '数学真题 15题', '《Maths Yearly 真题》', 's'],
+    ['15:25–16:30', '户外 / 自由', '', 'r'],
+    ['16:30–17:15', '英语改错 2篇', '《Editing Explained P5》· 给明天班课热身', 's'],
+    ['19:30–20:15', 'App: 知识树 1节点 + 词汇闪卡', '填每日成绩单', 's'],
+    ['21:00–21:30', '睡前三段式背单词', '21:30 熄灯', 's'],
+  ], three: [
+    ['🧪', '上午: 科学模拟 (选择题28 + 大题2组)', '限时 · 模拟正式考节奏'],
+    ['📖', '下午: 阅读问答 + 数学 + 改错', '三块 · 改错给明天班课热身'],
+    ['📱', '晚上: App 知识树 + 词汇 + 睡前单词', '做完填每日成绩单', "openKnowledgeTreeModal()"],
+  ]},
+  '2026-09-07': { label: '9/7 周一 · 突破班①', start: '8:00 起床 · 8:30 出发', blocks: [
+    ['9:00–11:00', 'P5 Paper2 高分突破班 ①', '带着 9/5 摸底卷的错题清单听课', 'c'],
+    ['11:15–11:45', '班课错题趁热整理进错题本', '当天清, 不过夜', 's'],
+    ['12:00–13:30', '午饭 + 午休', '', 'r'],
+    ['13:30–14:15', '科学选择题 20题', '《PSLE Science 选择题 3-6年级》· 从 9/6 暴露的弱主题开始', 's'],
+    ['14:40–15:25', '完形填空 2篇', '《Cloze Techniques Book 5》· 呼应班课', 's'],
+    ['15:25–16:30', '户外 / 自由', '', 'r'],
+    ['16:30–17:15', '数学真题 15题', '《Maths Yearly 真题》', 's'],
+    ['19:30–20:15', 'App: 词汇闪卡 + 知识树 1节点', '填每日成绩单', 's'],
+    ['21:00–21:30', '睡前三段式背单词', '21:30 熄灯', 's'],
+  ], three: [
+    ['🏫', '上午: Paper2 突破班① 9:00', '课后 11:15 错题趁热整理'],
+    ['✍️', '下午: 科学选择题20 + 完形2篇 + 数学15', '三块 · 块间休息'],
+    ['📱', '晚上: App 词汇 + 知识树 + 睡前单词', '做完填每日成绩单', "openKnowledgeTreeModal()"],
+  ]},
+  '2026-09-08': { label: '9/8 周二 · 突破班②', start: '8:00 起床 · 8:30 出发', blocks: [
+    ['9:00–11:00', 'P5 Paper2 高分突破班 ②', '', 'c'],
+    ['11:15–11:45', '班课错题趁热整理进错题本', '', 's'],
+    ['12:00–13:30', '午饭 + 午休', '', 'r'],
+    ['13:30–14:15', '科学问答大题 1组', '《Science For Primary Levels 5》', 's'],
+    ['14:40–15:25', '英语阅读理解问答 1篇', '《Conquer Comprehension P5》', 's'],
+    ['15:25–16:30', '户外 / 自由', '', 'r'],
+    ['16:30–17:15', '华文精读 1篇', '《伴你阅读》五上', 's'],
+    ['19:30–20:15', '英语听力 1套 (带音频)', '《PSLE English Listening 专项》· 转折词后抓答案 · 填每日成绩单', 's'],
+    ['21:00–21:30', '睡前三段式背单词', '21:30 熄灯', 's'],
+  ], three: [
+    ['🏫', '上午: Paper2 突破班② 9:00', '课后错题趁热整理'],
+    ['✍️', '下午: 科学大题 + 阅读问答 + 华文', '三块 · 块间休息'],
+    ['🎧', '晚上: 听力 1套 (带音频) + 睡前单词', '《Listening 专项》· 填每日成绩单'],
+  ]},
+  '2026-09-09': { label: '9/9 周三 · 突破班③', start: '8:00 起床 · 8:30 出发', blocks: [
+    ['9:00–11:00', 'P5 Paper2 高分突破班 ③', '', 'c'],
+    ['11:15–11:45', '班课错题趁热整理进错题本', '', 's'],
+    ['12:00–13:30', '午饭 + 午休', '', 'r'],
+    ['13:30–14:15', '科学选择题 20题', '《PSLE Science 选择题 3-6年级》', 's'],
+    ['14:40–15:25', '句型转换 10题', '《Synthesis & Transformation P5》', 's'],
+    ['15:25–16:30', '户外 / 自由', '', 'r'],
+    ['16:30–17:15', '情景写作 1篇', '题目取《English Yearly》Paper 1 · 逐内容点打勾, 家长按6点核', 's'],
+    ['19:30–20:15', 'App: 知识树 1节点', '填每日成绩单', 's'],
+    ['21:00–21:30', '睡前三段式背单词', '21:30 熄灯', 's'],
+  ], three: [
+    ['🏫', '上午: Paper2 突破班③ 9:00', '课后错题趁热整理'],
+    ['✍️', '下午: 科学选择题 + 句型转换 + 情景写作', '情景写作逐内容点打勾'],
+    ['📱', '晚上: App 知识树 + 睡前单词', '做完填每日成绩单', "openKnowledgeTreeModal()"],
+  ]},
+  '2026-09-10': { label: '9/10 周四 · 双班日 (最重)', start: '8:00 起床 · 8:30 出发', blocks: [
+    ['9:00–11:00', 'P5 Paper2 高分突破班 ④ (最后一节)', '', 'c'],
+    ['11:15–11:45', '四天班课错题合订复看一遍', '', 's'],
+    ['12:00–13:30', '午饭 + 午休', '', 'r'],
+    ['13:30–14:15', '科学问答大题 1组 (今日唯一自学)', '《Science For Primary Levels 5》', 's'],
+    ['14:15–15:30', '休息 + 点心', '双班日保存体力', 'r'],
+    ['16:15–18:15', 'P5 口语提升班 ①', '15:30 出发', 'c'],
+    ['19:30–20:00', 'App: 词汇闪卡 (轻量)', '填每日成绩单', 's'],
+    ['21:00–21:30', '睡前三段式背单词', '21:30 熄灯', 's'],
+  ], three: [
+    ['🏫', '上午: Paper2 突破班④ (最后一节)', '错题合订复看'],
+    ['🗣️', '下午: 口语提升班① 16:15', '中午好好休息, 今天只 1 块自学'],
+    ['📱', '晚上: App 词汇轻量 + 睡前单词', '做完填每日成绩单', "openKnowledgeTreeModal()"],
+  ]},
+  '2026-09-11': { label: '9/11 周五 · 作文日 + 口语班', start: '8:00 起床', blocks: [
+    ['8:45–9:30', '记叙作文 (上): 审题+提纲+开头3句', '《Model Compositions Book 5》参考开头模板', 's'],
+    ['9:50–10:35', '记叙作文 (下): 完成+自查', '主题词进每段 + 至少5个高级词 · 家长晚上按内容20+语言20批', 's'],
+    ['11:00–11:45', '科学选择题 20题', '《PSLE Science 选择题 3-6年级》', 's'],
+    ['12:00–13:30', '午饭 + 午休', '', 'r'],
+    ['13:30–14:15', '完形填空 2篇', '《Cloze Techniques Book 5》', 's'],
+    ['14:15–15:30', '休息 / 自由', '', 'r'],
+    ['16:15–18:15', 'P5 口语提升班 ②', '15:30 出发', 'c'],
+    ['19:30–20:15', 'App: 知识树 1节点', '填每日成绩单', 's'],
+    ['21:00–21:30', '睡前三段式背单词', '21:30 熄灯', 's'],
+  ], three: [
+    ['✍️', '上午: 记叙作文 1篇 + 科学选择题', '作文留给家长晚上批'],
+    ['🗣️', '下午: 完形2篇 → 口语班② 16:15', ''],
+    ['📱', '晚上: App 知识树 + 睡前单词', '做完填每日成绩单', "openKnowledgeTreeModal()"],
+  ]},
+  '2026-09-12': { label: '9/12 周六 · 自学 + 口语班', start: '8:00 起床', blocks: [
+    ['8:45–9:30', '数学真题 20题 · 限时', '《Maths Yearly 真题》', 's'],
+    ['9:50–10:35', '科学问答大题 1组', '《Science For Primary Levels 5》', 's'],
+    ['11:00–11:45', '英语阅读理解问答 1篇', '《Conquer Comprehension P5》', 's'],
+    ['12:00–13:30', '午饭 + 午休', '', 'r'],
+    ['13:30–14:15', '华文阅读理解 1篇', '《PSLE 华文 Yearly 真题》旧年份拆件 (含评分点) · 2分题写满点', 's'],
+    ['14:15–15:30', '自由', '', 'r'],
+    ['16:15–18:15', 'P5 口语提升班 ③', '15:30 出发', 'c'],
+    ['19:30–20:15', 'App: 词汇闪卡 + 知识树 1节点', '填每日成绩单', 's'],
+    ['21:00–21:30', '睡前三段式背单词', '21:30 熄灯', 's'],
+  ], three: [
+    ['📖', '上午: 数学20 + 科学大题 + 阅读问答', '三块 · 块间休息'],
+    ['🗣️', '下午: 华文阅读 → 口语班③ 16:15', '华文用 Yearly 真题, 含评分点'],
+    ['📱', '晚上: App 词汇 + 知识树 + 睡前单词', '做完填每日成绩单', "openKnowledgeTreeModal()"],
+  ]},
+  '2026-09-13': { label: '9/13 周日 · 收官复测日', start: '8:00 起床', blocks: [
+    ['8:45–9:55', '英语复测小卷 · 限时70分', '《English Yearly 真题》另一旧年份 · 与 9/5 同结构', 's'],
+    ['10:20–11:05', '对答案 + 与 9/5 摸底逐模块对比', '家长一起看: 突破班4天在哪些模块涨了分', 's'],
+    ['12:00–13:30', '午饭 + 午休', '', 'r'],
+    ['13:30–14:15', '假期错题总复盘', '9天错题本快过一遍, 只看错因', 's'],
+    ['14:15–15:30', '休息', '', 'r'],
+    ['16:15–18:15', 'P5 口语提升班 ④ (最后一节)', '15:30 出发', 'c'],
+    ['19:30–20:00', '收书包 · 回归开学节奏', '明天 9/14 (周一) 开学, 恢复常规课表', 's'],
+    ['21:00–21:30', '睡前三段式背单词', '21:30 熄灯', 's'],
+  ], three: [
+    ['🎯', '上午: 英语复测小卷 · 和 9/5 对比', '检验突破班 4 天效果'],
+    ['🗣️', '下午: 错题总复盘 → 口语班④ (最后一节)', ''],
+    ['🎒', '晚上: 收书包 + 睡前单词', '明天开学, 9/14 恢复常规课表'],
+  ]},
+};
+function getHolidayPlan(d) { return HOLIDAY_SCHED[schedLocalDate(d)] || null; }
+window.HOLIDAY_SCHED = HOLIDAY_SCHED;
+window.getHolidayPlan = getHolidayPlan;
+
 let _schedViewDay = null;      // 课表卡查看的星期 (null=今天)
+let _schedViewHKey = null;     // v19.79: 假期课表卡查看的日期 (null=今天)
 let _schedWeekOffset = 0;      // 打分表查看的周 (0=本周, -1=上周...)
 function _schedGridMonday() { const m = schedMonday(new Date()); m.setDate(m.getDate() + _schedWeekOffset * 7); return m; }
+// v19.79: 假期版课表卡 — 今天落在假期区间时替换"每日课表"卡, 打分表/计分卡/月趋势照旧
+function _renderHolidaySchedule(el) {
+  const todayKey = schedLocalDate();
+  const keys = Object.keys(HOLIDAY_SCHED);
+  const viewKey = (_schedViewHKey && HOLIDAY_SCHED[_schedViewHKey]) ? _schedViewHKey : todayKey;
+  const day = HOLIDAY_SCHED[viewKey];
+  const chips = keys.map(k => {
+    const sel = k === viewKey, isToday = k === todayKey;
+    return `<button onclick="window._schedSetHDay('${k}')" style="padding:5px 9px;border-radius:14px;border:1px solid ${sel ? 'rgba(30,64,175,0.6)' : '#CBD5E1'};background:${sel ? 'rgba(30,64,175,0.15)' : '#F8FAFC'};color:${sel ? '#1E40AF' : '#1E293B'};font-size:12px;font-weight:${isToday ? '700' : '400'}">${k.slice(8).replace(/^0/, '')}日${isToday ? '·今' : ''}</button>`;
+  }).join('');
+  const blocksHtml = day.blocks.map(b => {
+    const isClass = b[3] === 'c', isStudy = b[3] === 's';
+    const bg = isClass ? 'rgba(30,64,175,0.14)' : isStudy ? 'rgba(30,64,175,0.06)' : '#F8FAFC';
+    return `<div style="display:flex;gap:10px;padding:7px 10px;margin-top:6px;border-radius:8px;background:${bg};border-left:3px solid ${isClass || isStudy ? '#1E40AF' : '#E2E8F0'}">
+      <div style="min-width:86px;font-size:12px;color:${isClass || isStudy ? '#1E40AF' : '#1E293B'};font-weight:600">${b[0]}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:${isClass ? '900' : isStudy ? '700' : '400'};color:#1E293B">${isClass ? '🏫 ' : ''}${escapeHtml(b[1])}</div>
+      ${b[2] ? `<div style="font-size:11.5px;color:#1E293B;line-height:1.5;margin-top:2px">${escapeHtml(b[2])}</div>` : ''}</div></div>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title">🏖️ 假期课表 <span style="font-size:11px;color:#1E293B;font-weight:400">9/5–9/13 · 9/14 恢复常规</span></div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin:8px 0 4px">${chips}</div>
+      <div style="font-size:13px;font-weight:700;color:#1E40AF;margin-top:6px">${escapeHtml(day.label)}</div>
+      <div style="font-size:12px;color:#B45309;margin-top:4px">⏰ ${escapeHtml(day.start)}</div>
+      ${blocksHtml}
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title">✏️ 周打分表 <span style="font-size:11px;color:#1E293B;font-weight:400">只填数字 · 做完当场填 · 任意格可补填修正</span></div>
+      <div id="schedGridWrap"></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title">📊 周计分卡 <span style="font-size:11px;color:#1E293B;font-weight:400">按PSLE考试模块 · 自动从打分表汇总</span></div>
+      <div id="schedWeekSummary"></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title">📈 月度跟踪 <span style="font-size:11px;color:#1E293B;font-weight:400">最近8周关键指标</span></div>
+      <div id="schedMonthTrend"></div>
+    </div>`;
+  renderSchedGrid();
+  renderSchedWeekSummary();
+  renderSchedMonthTrend();
+}
+function _schedSetHDay(k) { _schedViewHKey = k; renderSchedulePage(); }
+window._schedSetHDay = _schedSetHDay;
 function renderSchedulePage() {
   const el = document.getElementById('page-schedule');
   if (!el) return;
+  if (getHolidayPlan()) { _renderHolidaySchedule(el); return; }
   const todayDow = new Date().getDay();
   const viewDow = _schedViewDay == null ? todayDow : _schedViewDay;
   const day = SCHED_DAYS[viewDow];

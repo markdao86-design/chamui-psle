@@ -1281,6 +1281,18 @@ assert(!/--color-bg: #0F172A/.test(idxSrc), 'v19.55: 暗主题变量已替换');
   assert(/-webkit-overflow-scrolling: touch/.test(idxSrc), 'v19.77: 弹层内滚动区有动量滚动');
 }
 
+// ===== v19.79: 9月假期课表 (9/5-13) + 练习弹层右侧滑动走廊 =====
+assert(/const HOLIDAY_SCHED = \{/.test(appSrc), 'v19.79: HOLIDAY_SCHED 已定义');
+assert((appSrc.match(/'2026-09-\d{2}': \{ label:/g) || []).length === 9, 'v19.79: 假期 9 天 (9/5-13) 全部有课表');
+assert((appSrc.match(/\], three: \[/g) || []).length === 9, 'v19.79: 假期 9 天都配了主页今日 3 件事');
+assert(/function getHolidayPlan\(/.test(appSrc) && /window\.getHolidayPlan = getHolidayPlan/.test(appSrc), 'v19.79: getHolidayPlan 定义+导出');
+assert(/if \(getHolidayPlan\(\)\) \{ _renderHolidaySchedule\(el\); return; \}/.test(appSrc), 'v19.79: 课表页接了假期分支 (防死代码)');
+assert(/const holiday = window\.getHolidayPlan && window\.getHolidayPlan\(\);/.test(appSrc) && /holiday\.three\.map/.test(appSrc), 'v19.79: 主页今日 3 件事接了假期分支');
+assert(/window\._schedSetHDay = _schedSetHDay/.test(appSrc), 'v19.79: 假期日期切换按钮已接线');
+assert(/9\/14 恢复常规|9\/14\(周一\)恢复常规/.test(appSrc), 'v19.79: 界面标明 9/14 自动恢复');
+assert(!/Science Yearly/.test(appSrc.match(/const HOLIDAY_SCHED[\s\S]*?window\.HOLIDAY_SCHED/)[0]), 'v19.79: 假期课表无 Science Yearly (未购, 用选择题册替代)');
+assert(/\.kt-inner \.cn-questions \{ padding-right: 38px; \}/.test(idxSrc), 'v19.79: 练习弹层右侧 38px 滑动走廊');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
