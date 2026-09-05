@@ -1470,6 +1470,25 @@ assert(/mg-q-long/.test(idxSrc) && /mg-q-xlong/.test(appSrc), 'v19.88: 长题干
     `v19.89: 三个英语库都能升到 Lv6 (原来 grammar/cloze/sst 只到 Lv5, 顶格档题不够会静默发简单题)`);
 }
 
+// ===== v19.90: 英语题库 6 处硬伤 (教研审计: 这些在教错知识) =====
+{
+  const S3 = W.SST_QUESTIONS || [], C3 = W.CLOZE_QUESTIONS || [], G3 = W.GRAMMAR_QUESTIONS || [];
+  // too...to: 不定式宾语与主句主语同指时必须省略, 原答案带 him 正好教反了 PSLE 判分点
+  const redundant = S3.filter(q => /\btoo\b[^]*for (anyone|me|us|him|her|them) to \w+ (it|him|her|them|us)\b/.test(String(q.opts[q.ans])));
+  assert(redundant.length === 0, `v19.90: SST 无 "too...to + 多余宾语" 的错误答案 (残留 ${redundant.length}) — 这是全国最高频失分点, 原来教反了`);
+  // 只差一对"成对逗号"的双正确答案 (限定性/非限定性两种都合法)
+  const balanced = s => { const t = String(s); const c = (t.match(/,/g) || []).length; return c === 2 || c === 0; };
+  let dbl = 0;
+  const norm = s => String(s).replace(/,/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+  S3.forEach(q => {
+    const a = q.opts[q.ans];
+    q.opts.forEach((o, k) => { if (k !== q.ans && norm(o) === norm(a) && balanced(o) && balanced(a)) dbl++; });
+  });
+  assert(dbl === 0, `v19.90: SST 无"只差一对逗号所以两个都对"的题 (残留 ${dbl}) — 限定性/非限定性定语从句两种写法都合法`);
+  assert(!C3.some(q => (q.opts || []).some(o => /reckessly/.test(o))), 'v19.90: Cloze 干扰项拼写已修 (拼错的干扰项等于送分)');
+  assert(!G3.some(q => /Were it not for/.test(String(q.q))), 'v19.90: 删掉倒装虚拟语气题 (中学内容, 且原句时态混搭不干净)');
+}
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
