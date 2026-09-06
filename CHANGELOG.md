@@ -1210,3 +1210,37 @@ QA 锁死: **每题采分点数必须等于分值**, 否则孩子勾满也拿不
 **QA 841 → 858**
 
 🤖 协作开发: [Claude Code](https://claude.com/claude-code)
+
+---
+
+## v20.1 (2026-09-06) — 生词模块新增 iWrite Weekly 卡组
+
+来源: 孩子补习班 iWrite Weekly 的 Overused verbs 讲义 handout 1/2/3/4/6/7/11 (CreativEdge)。
+讲义只有词和箭头, **一个例句都没有** —— 而他英语的病正是"认得出但用不出"。
+
+**131 词 / 393 句例句**, 每张卡背 = 中文释义 + 英文解释 + **3 句编号例句** + 一句
+"用它替换 said — 作文里写这个词, 别再写 said"。讲义的重点就是这个替换映射, 卡片得把它说出来。
+这一组的版式和其他卡组不同: 3 句例句取代原来的 1 句 + Cloze 考题。
+
+| handout | 覆盖的 overused verb | 词数 |
+|---|---|---|
+| 1 | said / looked | 18 |
+| 2 | asked / thanked / scolded / cried | 19 |
+| 3 | laughed / thought / understood / planned | 20 |
+| 4 | angry / confused / fearful / shocked / happy / curious / worried | 22 |
+| 6 | shocked / sad / happily | 18 |
+| 7 | serious / moved / said / agreed / fell | 15 |
+| 11 | embarrassed / determined / disappointed / sorry | 19 |
+
+QA 锁死两条: 每条必须正好 3 句; **3 句都要真的把这个词用进去** (否则又是一张背不下去的词表)。
+
+### 两个连带修的坑
+- **大卡组霸屏**: 131 个新词一次进池, "今天这一组"新词优先, 接下来 7 天全是它, 科学词/Cloze 词
+  整周断流。加 `FC_ONE_DECK_CAP = 1/2`: 单个卡组在每日一组里最多占一半。实测 10 iWrite + 10 其他。
+- **卡背溢出**: 560px 固定高, 3 句例句在手机宽度下溢出 98px。卡片是 absolute + 3D 翻转, 内容
+  撑不高容器, 只能卡内滚 —— 而卡片点一下就翻面, 手指滑动读例句会被判成点击翻回正面。
+  改成翻到背面时长到 700px (窄屏 760px), 最长的几条实测溢出全为 0。
+
+**QA 858 → 876**
+
+🤖 协作开发: [Claude Code](https://claude.com/claude-code)
