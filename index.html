@@ -2097,6 +2097,15 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 .fc-card-meaning { font-size:34px; font-weight:700; margin:6px 0 14px; text-align:center; color:#1E40AF; }
 .fc-card-endef { font-size:18px; color:#1E40AF; line-height:1.5; padding:10px 14px; background:#EFF6FF; border-radius:8px; margin-bottom:10px; }
 .fc-card-sentence { font-size:18px; color:#475569; font-style:italic; line-height:1.55; padding:10px 14px; margin-bottom:10px; background:#F1F5F9; border-radius:8px; }
+/* v20.1: iWrite Weekly 卡背有 3 句例句, 沿用 560px 会在手机宽度内溢出 98px。
+   卡片是 absolute + 3D 翻转, 内容撑不高容器 —— 只能靠 overflow 内滚, 而卡片本身点一下就翻面,
+   手指滑动读例句很容易被判成点击翻回正面。所以这一档直接把卡加高, 让内容装得下, 不触发内滚。 */
+.fc-card--3eg { transition:min-height .3s; }
+.fc-card--3eg.flipped, .fc-card--3eg.flipped .fc-card-inner { min-height:700px; }
+.fc-card--3eg .fc-card-sentence { font-size:16px; line-height:1.5; padding:10px 12px; }
+.fc-card--3eg .fc-card-endef { font-size:16px; }
+.fc-card--3eg .fc-card-meaning { font-size:30px; }
+@media (max-width:420px) { .fc-card--3eg.flipped, .fc-card--3eg.flipped .fc-card-inner { min-height:760px; } }
 .fc-card-qtype {
   font-size:18px; color:#92400E; background:#FFFBEB;
   border-left:4px solid #E6A23C; padding:12px 16px; margin-top:4px;
@@ -5928,9 +5937,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=20.0"></script>
-<script src="data.js?v=20.0"></script>
-<script src="app.js?v=20.0"></script>
+<script src="character.js?v=20.1"></script>
+<script src="data.js?v=20.1"></script>
+<script src="app.js?v=20.1"></script>
 
 </body>
 </html>

@@ -432,9 +432,11 @@ assert(typeof W.getVocabQuiz === 'function' && typeof W.getVocabEn === 'function
   assert(noZh.length === 0, `v19.43: 所有词有中文 (缺 ${noZh.length}: ${noZh.slice(0,5).join(',')})`);
   const noEn = allW.filter(w => !W.getVocabEn(w));
   assert(noEn.length === 0, `v19.43: 所有词有英文解释 (缺 ${noEn.length}: ${noEn.slice(0,5).join(',')})`);
-  const noS = allW.filter(w => !W.getVocabSent(w));
+  // v20.1: iWrite Weekly 走另一条路 —— 3 句例句 + "替换哪个 overused verb", 不用 VOCAB_SENT/VOCAB_QUIZ
+  const has3 = w => !!(W.getVocabEg3 && W.getVocabEg3(w));
+  const noS = allW.filter(w => !W.getVocabSent(w) && !has3(w));
   assert(noS.length === 0, `v19.43: 所有词有例句 (缺 ${noS.length}: ${noS.slice(0,5).join(',')})`);
-  const noQuiz = allW.filter(w => !W.getVocabQuiz(w));
+  const noQuiz = allW.filter(w => !W.getVocabQuiz(w) && !has3(w));
   assert(noQuiz.length === 0, `v19.43: 所有词有考题 (缺 ${noQuiz.length}: ${noQuiz.slice(0,5).join(',')})`);
 })();
 // 科学/数学考题准确性 (逐条核准, 防误导)
@@ -1735,6 +1737,57 @@ assert(/cn_oe:\s+\{ spot: '华文阅读理解二/.test(appSrc), 'v20.0: 错题�
   const withCn = (appSrc.match(/const GAME_LABEL = \{[^}]*cn_oe/g) || []).length;
   assert(withCn === copies, `v20.0: GAME_LABEL 共 ${copies} 份副本, 认识 cn_oe 的有 ${withCn} 份 — 必须相等, 漏的那份会把错题标题渲染成原始 key "cn_oe"`);
 }
+
+// ===== v20.1: iWrite Weekly 生词组 (补习班 Overused verbs 讲义) =====
+{
+  const IW = W.IWRITE_WEEKLY || [];
+  assert(IW.length >= 120, `v20.1: iWrite Weekly 词条 >=120 (实际 ${IW.length})`);
+  const deck = (W.FLASHCARD_DECKS || []).find(d => d.id === 'iwrite_weekly');
+  assert(deck && deck.words.length === IW.length, `v20.1: 卡组词数和词条数一致 (卡组 ${deck ? deck.words.length : 0} vs 词条 ${IW.length})`);
+  assert(deck && /iWrite Weekly/.test(deck.name), 'v20.1: 卡组名叫 iWrite Weekly');
+  const dup = deck ? deck.words.length - new Set(deck.words).size : -1;
+  assert(dup === 0, `v20.1: 卡组内没有重复词 (重复 ${dup})`);
+  // 每条都要 中文 + 英文解释 + 3 句例句 (用户 2026-09-06 明确要求)
+  const noEg = IW.filter(e => !Array.isArray(e.eg) || e.eg.length !== 3);
+  assert(noEg.length === 0, `v20.1: 每个词都是 3 句例句 (不足的 ${noEg.length} 个: ${noEg.slice(0,4).map(e=>e.w).join(',')})`);
+  const noDef = IW.filter(e => !e.zh || !e.en || !e.root);
+  assert(noDef.length === 0, `v20.1: 每个词都有中文/英文解释和源头动词 (缺的 ${noDef.length} 个)`);
+  // 例句必须真的把这个词用进去 —— 否则就是一张背不下去的词表
+  const STOP = ['was','it','a','an','the','with','in','on','to','my','his','her','of','and'];
+  const bad = [];
+  IW.forEach(e => {
+    const parts = String(e.w).toLowerCase().match(/[a-z']+/g).filter(x => STOP.indexOf(x) < 0);
+    const key = parts.sort((a, b) => b.length - a.length)[0];
+    const stem = (key.slice(-2) === 'ed' && key.length > 5) ? key.slice(0, -2) : key.slice(0, 5);
+    const hit = e.eg.filter(x => x.toLowerCase().indexOf(stem) >= 0).length;
+    if (hit < 3) bad.push(`${e.w}(${hit}/3)`);
+  });
+  assert(bad.length === 0, `v20.1: 3 句例句都要真的用上这个词 (没用上的: ${bad.slice(0,5).join(' ')})`);
+  // 七张讲义全覆盖
+  const hds = [...new Set(IW.map(e => e.hd))].sort((a,b)=>a-b);
+  assert(hds.join(',') === '1,2,3,4,6,7,11', `v20.1: handout 1/2/3/4/6/7/11 全录入 (实际 ${hds.join(',')})`);
+  // 查表接通
+  assert(W.getVocabEg3('sneered') && W.getVocabEg3('sneered').length === 3, 'v20.1: getVocabEg3 能取到 3 句');
+  assert(W.getVocabEg3('photosynthesis') === null, 'v20.1: 非本组的词不返回 3 句 (其他卡组仍是 1 句+考题)');
+  const _iwSneer = (W.IWRITE_WEEKLY || []).find(e => e.w === 'sneered');
+  assert(_iwSneer && W.getVocabMeaning('sneered') === _iwSneer.zh, 'v20.1: 中文释义按讲义义项走 (glanced 在讲义里就是"快速看一眼", 不走旧字典)');
+}
+// 死代码警钟: 写了必须接进闪卡渲染
+assert(/window\.getVocabEg3\(word\)/.test(appSrc), 'v20.1: getVocabEg3 已接入闪卡渲染 (不接入=白写)');
+assert(/eg3\s*\?[\s\S]{0,120}例句/.test(appSrc), 'v20.1: 闪卡反面真的渲染 3 句例句');
+assert(/用它替换/.test(appSrc), 'v20.1: 反面写明这个词替换哪个 overused verb (讲义的重点就是这个映射)');
+// 大卡组不能霸屏每日一组
+{
+  const g = W.buildDailyFlashcardGroup({ flashcardSRS: {} });
+  const cnt = {};
+  g.forEach(x => { const d = (W.FLASHCARD_DECKS.find(k => k.words.includes(x)) || {}).id; cnt[d] = (cnt[d] || 0) + 1; });
+  const worst = Math.max(...Object.values(cnt));
+  assert(worst <= Math.ceil(W.FC_GROUP_SIZE / 2), `v20.1: 单个卡组在每日一组里最多占一半 (实测最多 ${worst}/${g.length}); iWrite 一次进 131 个新词, 不限的话接下来 7 天天天全是它, 科学词/Cloze 词整周断流`);
+  assert(Object.keys(cnt).length >= 2, 'v20.1: 每日一组至少混两个卡组');
+}
+
+assert(/\.fc-card--3eg\.flipped[^{]*\{[^}]*min-height:700px/.test(idxSrc), 'v20.1: 3 句例句的卡背要加高 (原 560px 在手机宽度下溢出 98px, 只能在卡内滚 — 而卡片点一下就翻面, 滑动读例句会被判成点击翻回去)');
+assert(/fc-card--3eg/.test(appSrc), 'v20.1: 加高的 class 真的挂上去了');
 
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');

@@ -2643,23 +2643,30 @@ function _renderFlashcardSession() {
   const enDef = window.getVocabEn ? window.getVocabEn(word) : '';
   const sentence = window.getVocabSent ? window.getVocabSent(word) : '';
   const quiz = window.getVocabQuiz ? window.getVocabQuiz(word) : '';
+  // v20.1: iWrite Weekly 的词给 3 句例句 (讲义只给词, 他的病是"认得出用不出" —— 3 句才看得出搭配和语气)
+  const eg3 = window.getVocabEg3 ? window.getVocabEg3(word) : null;
+  const iwRoot = window.getVocabRoot ? window.getVocabRoot(word) : '';
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <button onclick="exitFlashcardSession()" style="padding:10px 22px;background:#1E40AF;color:#FFFFFF;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">← 返回卡组</button>
       <span style="font-size:16px;color:var(--color-text-light)">${headerRight}</span>
     </div>
     ${retakeBadge}
-    <div class="fc-card ${s.flipped ? 'flipped' : ''}" onclick="flipFlashcard()">
+    <div class="fc-card ${eg3 ? 'fc-card--3eg' : ''} ${s.flipped ? 'flipped' : ''}" onclick="flipFlashcard()">
       <div class="fc-card-inner">
         <div class="fc-card-front">
           <div class="fc-card-word">${word}</div>
-          <div class="fc-card-hint">点击翻转看解释 + 例句 + 考题</div>
+          <div class="fc-card-hint">${eg3 ? '点击翻转看解释 + 3 句例句' : '点击翻转看解释 + 例句 + 考题'}</div>
         </div>
         <div class="fc-card-back">
           <div class="fc-card-meaning">${meaning}</div>
           ${enDef ? `<div class="fc-card-endef">📖 英文解释: ${escapeHtml(enDef)}</div>` : ''}
-          ${sentence ? `<div class="fc-card-sentence">💬 例句: ${escapeHtml(sentence)}</div>` : ''}
-          ${quiz ? `<div class="fc-card-qtype">📝 ${escapeHtml(quiz)}</div>` : ''}
+          ${eg3
+            ? `<div class="fc-card-sentence">💬 例句<br>${eg3.map((x, i) => `<span style="display:block;margin-top:4px">${i + 1}. ${escapeHtml(x)}</span>`).join('')}</div>`
+            : (sentence ? `<div class="fc-card-sentence">💬 例句: ${escapeHtml(sentence)}</div>` : '')}
+          ${eg3
+            ? (iwRoot ? `<div class="fc-card-qtype">✍️ 用它替换 <b>${escapeHtml(iwRoot)}</b> — 作文里写这个词, 别再写 ${escapeHtml(iwRoot)}</div>` : '')
+            : (quiz ? `<div class="fc-card-qtype">📝 ${escapeHtml(quiz)}</div>` : '')}
         </div>
       </div>
     </div>
