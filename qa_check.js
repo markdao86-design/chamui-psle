@@ -1328,7 +1328,7 @@ assert(/const HOLIDAY_SCHED = \{/.test(appSrc), 'v19.79: HOLIDAY_SCHED 已定义
 assert((appSrc.match(/'2026-09-\d{2}': \{ label:/g) || []).length === 9, 'v19.79: 假期 9 天 (9/5-13) 全部有课表');
 assert((appSrc.match(/\], three: \[/g) || []).length === 9, 'v19.79: 假期 9 天都配了主页今日 3 件事');
 assert(/function getHolidayPlan\(/.test(appSrc) && /window\.getHolidayPlan = getHolidayPlan/.test(appSrc), 'v19.79: getHolidayPlan 定义+导出');
-assert(/if \(getHolidayPlan\(\)\) \{ _renderHolidaySchedule\(el\); return; \}/.test(appSrc), 'v19.79: 课表页接了假期分支 (防死代码)');
+assert(/if \(getHolidayPlan\(\) && !_schedForceNormal\) \{ _renderHolidaySchedule\(el\); return; \}/.test(appSrc), 'v19.79: 课表页接了假期分支 (防死代码) — v20.2 起加了看常规课表的开关');
 assert(/const holiday = window\.getHolidayPlan && window\.getHolidayPlan\(\);/.test(appSrc) && /holiday\.three\.map/.test(appSrc), 'v19.79: 主页今日 3 件事接了假期分支');
 assert(/window\._schedSetHDay = _schedSetHDay/.test(appSrc), 'v19.79: 假期日期切换按钮已接线');
 assert(/9\/14 恢复常规|9\/14\(周一\)恢复常规/.test(appSrc), 'v19.79: 界面标明 9/14 自动恢复');
@@ -1788,6 +1788,62 @@ assert(/用它替换/.test(appSrc), 'v20.1: 反面写明这个词替换哪个 ov
 
 assert(/\.fc-card--3eg\.flipped[^{]*\{[^}]*min-height:700px/.test(idxSrc), 'v20.1: 3 句例句的卡背要加高 (原 560px 在手机宽度下溢出 98px, 只能在卡内滚 — 而卡片点一下就翻面, 滑动读例句会被判成点击翻回去)');
 assert(/fc-card--3eg/.test(appSrc), 'v20.1: 加高的 class 真的挂上去了');
+
+// ===== v20.2: 假期课表排班规则 (用户 2026-09-09 当场指出来的四条) =====
+// 他圈着 9/9 那天问"下午休息要 4 个半小时么" —— 25+65+135+45=270 分钟空档全没写名字,
+// 看上去像凭空消失。规则: 午休 12-14 点 / 块间休息 10-15 分 / 连续学习满 3 小时插 30 分钟运动 /
+// 时间轴必须连续。
+{
+  const HS = (appSrc.match(/const HOLIDAY_SCHED = \{[\s\S]*?\n\};/) || [])[0];
+  assert(!!HS, 'v20.2: 能取到 HOLIDAY_SCHED');
+  const days = {};
+  const dayRe = /'(\d{4}-\d{2}-\d{2})': \{ label: '([^']*)'[\s\S]*?blocks: \[([\s\S]*?)\n  \], three:/g;
+  let mm;
+  while ((mm = dayRe.exec(HS))) {
+    const rows = [];
+    const rowRe = /\['([\d:\u2013\-]+)', '((?:[^'\\]|\\.)*)', '(?:[^'\\]|\\.)*', '([scr])'\]/g;
+    let r;
+    while ((r = rowRe.exec(mm[3]))) rows.push({ t: r[1], name: r[2], kind: r[3] });
+    days[mm[1]] = { label: mm[2], rows };
+  }
+  const keys = Object.keys(days);
+  assert(keys.length === 9, `v20.2: 假期 9 天全在 (实际 ${keys.length})`);
+
+  const toMin = t => { const [h, x] = t.split(':'); return +h * 60 + +x; };
+  const gaps = [], lunchBad = [], runBad = [], gapShort = [];
+  keys.forEach(k => {
+    let prev = null, run = 0;
+    days[k].rows.forEach(b => {
+      const [a, z] = b.t.replace(/\u2013/g, '-').split('-');
+      const S = toMin(a), E = toMin(z), dur = E - S;
+      if (prev !== null && S !== prev) gaps.push(`${k} ${b.t} 前空 ${S - prev} 分`);
+      if (b.kind === 'r') {
+        // 学习块之间的短休息要 10-15 分钟 (午饭/晚饭/自由这些长休息不算)
+        if (dur < 10 && /休息/.test(b.name)) gapShort.push(`${k} ${b.t} 只 ${dur} 分`);
+        if (dur >= 30) run = 0;
+      } else {
+        run += dur;
+        if (run > 180) runBad.push(`${k} ${b.t} 连续学习 ${run} 分`);
+      }
+      prev = E;
+    });
+    // 午休 12:00-14:00
+    const lunch = days[k].rows.find(b => /午饭/.test(b.name));
+    if (!lunch || lunch.t.replace(/\u2013/g, '-') !== '12:00-14:00') lunchBad.push(k + ' ' + (lunch ? lunch.t : '无午饭块'));
+  });
+  assert(gaps.length === 0, `v20.2: 时间轴必须连续, 不允许没写名字的空档 (${gaps.slice(0, 4).join(' / ')})`);
+  assert(lunchBad.length === 0, `v20.2: 假期午饭休息固定 12:00-14:00 (不合的: ${lunchBad.join(' ')})`);
+  assert(runBad.length === 0, `v20.2: 连续学习不得超 3 小时, 超了要插 30 分钟运动 (${runBad.slice(0, 3).join(' / ')})`);
+  assert(gapShort.length === 0, `v20.2: 块间休息至少 10 分钟 (${gapShort.slice(0, 3).join(' / ')})`);
+  // 每天都要真的有运动块, 不是只写"自由"
+  const noSport = keys.filter(k => !days[k].rows.some(b => b.kind === 'r' && /运动|户外|散步/.test(b.name)));
+  assert(noSport.length === 0, `v20.2: 每天都要有明写的户外运动块 (缺: ${noSport.join(',')})`);
+}
+// 假期期间常规课表要有入口 (原来 getHolidayPlan() 直接 return, 常规课表整个看不到)
+assert(/_schedForceNormal/.test(appSrc), 'v20.2: 有强制看常规课表的开关');
+assert(/getHolidayPlan\(\) && !_schedForceNormal/.test(appSrc), 'v20.2: 假期分支认这个开关, 不再无条件顶掉常规课表');
+assert(/看常规课表/.test(appSrc) && /回今天的假期课表/.test(appSrc), 'v20.2: 两张卡互相有跳转按钮');
+assert(/window\._schedToggleNormal/.test(appSrc), 'v20.2: 切换函数已导出 (不导出 onclick 调不到)');
 
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
