@@ -1198,7 +1198,7 @@ assert(/_ebApplyResult\(optIdx === item\.ans\)/.test(appSrc), 'v19.65: mcq提交
 assert(/item\.ans \?\? item\.correctAns/.test(appSrc), 'v19.65: 答错反馈兜底correctAns(修undefined)');
 // v19.66: 做题类统一 对/总 两格填写
 assert(/label: 'Editing 2篇: 对_\/共_题'/.test(appSrc), 'v19.66: Editing行改对/总格式');
-assert(/const wrongOf = /.test(appSrc) && /wrongOf\(1, 'ed'\)/.test(appSrc), 'v19.66: 错数从对/总推导');
+assert(/const wrongOf = /.test(appSrc) && /wrongAll\('ed'\)/.test(appSrc), 'v19.66: 错数从对/总推导 (v20.7 起全周聚合 wrongAll)');
 assert(!/label: '[^']*: 错_题'/.test(appSrc), 'v19.66: 无残留单格错题行');
 // v19.67: 答案详解+PSLE考点技巧
 assert(/const EB_TYPE_TIPS = \{/.test(appSrc) && /_ebTipsHtml\(item\.gameKey\)/.test(appSrc), 'v19.67: 题型考点技巧库+渲染接入');
@@ -1882,6 +1882,25 @@ assert(/window\._schedToggleNormal/.test(appSrc), 'v20.2: 切换函数已导出 
     bad = bad.concat(audit('常规' + m[1], parseRows(m[2]), { noRedoOk: d === 1 }));  // 周一 16:00 才到家, 5 小时塞不下二刷, 其余三天必须有
   });
   assert(bad.length === 0, `v20.4: 假期+常规课表全部合规 (${bad.length} 处: ${bad.slice(0, 5).join(' / ')})`);
+}
+
+// ===== v20.7: 周打分表 "成绩根本不对" (孩子实报) =====
+assert(!/width:26px/.test(appSrc), 'v20.7: 打分格不再 26px (两位数被截成一位: 云端存 20/30, 屏幕显示 2/3)');
+assert(/class="sg-num"/.test(appSrc) && /\.sg-num::-webkit-inner-spin-button/.test(idxSrc), 'v20.7: 数字框去掉上下箭头 (悬停时箭头占宽)');
+assert(/!row\.days\.includes\(d\) && !HOLIDAY_SCHED\[dk\]/.test(appSrc), 'v20.7: 假期日期所有打分行全开 (假期任务和平日课表不同, 按平日锁格子没地方填)');
+assert(/const f2All = key => ALL\.map/.test(appSrc) && !/pct\(\[f2\(1, 'oe'\), f2\(3, 'oe'\)\]\)/.test(appSrc), 'v20.7: 周汇总全周 7 天聚合, 不再按固定星期取数');
+{
+  const st0 = { scheduleScores: { '2026-09-08': { oe_a: 3, oe_b: 4, sci_mcq_a: 16, sci_mcq_b: 20 } } };
+  // app.js 不进 vm, 把周汇总用到的 4 个函数按源码抠出来单独跑
+  // 用 indexOf 抠函数源码, 不走 RegExp (heredoc 反斜杠总被吃掉)
+  const grab = (n, oneLine) => { const i = appSrc.indexOf('function ' + n + '('); if (i < 0) return ''; const j = oneLine ? appSrc.indexOf('\n', i) + 1 : appSrc.indexOf('\n}\n', i) + 3; return appSrc.slice(i, j); };
+  const one = n => grab(n, true), multi = n => grab(n, false);
+  const ctx2 = vm.createContext({ state: st0 });
+  vm.runInContext(multi('schedLocalDate') + one('getSchedScores') + one('_sv') + multi('computeSchedWeekSummary'), ctx2);
+  const r = vm.runInContext('computeSchedWeekSummary(new Date(2026, 8, 7, 12))', ctx2);
+  const oe = r.rows.find(x => /阅读OE/.test(x[0])), sci = r.rows.find(x => /科BktA/.test(x[0]));
+  assert(oe && oe[1] === '75%', `v20.7: 阅读OE 填在周二也算进周汇总 (实际 ${oe && oe[1]})`);
+  assert(sci && /16\/20/.test(sci[1]), `v20.7: 科学选择题按 对/共 显示, 不写死 /15 (实际 ${sci && sci[1]})`);
 }
 
 // ===== Output =====

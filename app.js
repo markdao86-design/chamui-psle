@@ -11239,7 +11239,7 @@ const SCHED_GRID = [
   { sec: '科学' },
   { key: 'sci_talk',label: '概念: 讲给家长30秒, 讲清?',      target: '勾',    type: 'chk',  days: [1] },
   { key: 'sci_oe',  label: '开放题2道: 术语全对_/2',         target: '2/2',   type: 'frac', days: [1] },
-  { key: 'sci_mcq', label: '诊断15题: 对_/15',              target: '≥12',   type: 'frac', days: [3] },
+  { key: 'sci_mcq', label: '科学选择题: 对_/共_题',          target: '≥80%',  type: 'frac', days: [3] },
   { key: 'sci_fix', label: '回炉(轮换周): 清掉_章',          target: '≥1',    type: 'num',  days: [5] },
   { sec: '华文 / 数学 / 周日' },
   { key: 'cn',      label: '华文阅读大题: 踩中_/共_点',      target: '漏≤2',  type: 'frac', days: [2] },
@@ -11286,26 +11286,28 @@ function computeSchedWeekSummary(mondayDate) {
     return tot ? Math.round(ok / tot * 100) : null;
   };
   const sum = (vals) => { const xs = vals.filter(v => v != null); return xs.length ? xs.reduce((a, b) => a + b, 0) : null; };
-  const f2 = (day, key) => [g(day, key + '_a'), g(day, key + '_b')];
-  const oePct = pct([f2(1, 'oe'), f2(3, 'oe')]);
-  const clozePct = pct([f2(2, 'cloze'), f2(5, 'cloze')]);
-  const vtPct = pct([f2(1, 'vt'), f2(2, 'vt'), f2(3, 'vt'), f2(5, 'vt'), f2(0, 'vt')]);
-  const wktPct = pct([f2(2, 'wkt')]);
-  // v19.66: 做题类统一"对_/共_"两格填写, 错数=共-对 (用户要求统一表述)
+  // v20.7: 不再按固定星期取数 (原来阅读OE只看周一周三, 假期填在周二就统计不到) —— 每个指标全周 7 天聚合
+  const ALL = [1, 2, 3, 4, 5, 6, 0];
+  const f2All = key => ALL.map(d => [g(d, key + '_a'), g(d, key + '_b')]);
+  const oePct = pct(f2All('oe'));
+  const clozePct = pct(f2All('cloze'));
+  const vtPct = pct(f2All('vt'));
+  const wktPct = pct(f2All('wkt'));
   const wrongOf = (day, key) => { const a = g(day, key + '_a'), b = g(day, key + '_b'); return (a == null || b == null) ? null : Math.max(0, b - a); };
-  const edW = sum([wrongOf(1, 'ed'), wrongOf(3, 'ed')]);
-  const grW = sum([wrongOf(1, 'gr'), wrongOf(3, 'gr')]);
-  const vwW = sum([wrongOf(2, 'vw'), wrongOf(5, 'vw')]);
-  const synW = sum([wrongOf(3, 'syn'), wrongOf(5, 'syn')]);
-  const sciMcq = g(3, 'sci_mcq_a');
-  const sciOe = g(1, 'sci_oe_a');
-  const cnMiss = wrongOf(2, 'cn');
-  const mathC = g(5, 'math_b'); // pair: a=错 b=粗心
-  const listen = g(2, 'listen');
-  const oralStar = g(0, 'oral');
-  const essayA = g(0, 'essay_a'), essayB = g(0, 'essay_b');
+  const wrongAll = key => sum(ALL.map(d => wrongOf(d, key)));
+  const edW = wrongAll('ed'), grW = wrongAll('gr'), vwW = wrongAll('vw'), synW = wrongAll('syn');
+  const sciMcqPct = pct(f2All('sci_mcq'));
+  const sciMcqA = sum(ALL.map(d => g(d, 'sci_mcq_a'))), sciMcqB = sum(ALL.map(d => g(d, 'sci_mcq_b')));
+  const sciOe = sum(ALL.map(d => g(d, 'sci_oe_a')));
+  const sciOeB = sum(ALL.map(d => g(d, 'sci_oe_b')));
+  const cnMiss = wrongAll('cn');
+  const firstOf = key => { for (const d of ALL) { const v = g(d, key); if (v != null) return v; } return null; };
+  const mathC = firstOf('math_b'); // pair: a=错 b=粗心
+  const listen = firstOf('listen');
+  const oralStar = firstOf('oral');
+  const essayA = firstOf('essay_a'), essayB = firstOf('essay_b');
   const essay = (essayA == null && essayB == null) ? null : (essayA || 0) + (essayB || 0);
-  const paperA = g(0, 'paper_a'), paperB = g(0, 'paper_b');
+  const paperA = firstOf('paper_a'), paperB = firstOf('paper_b');
   const rows = [ // [PSLE模块, 本周值, 达标线, pass(null=没数据)]
     ['英P2·阅读OE (20分)', oePct == null ? '—' : oePct + '%', '≥75%', oePct == null ? null : oePct >= 75],
     ['英P2·Editing (12分)', edW == null ? '—' : '错' + edW, '≤3', edW == null ? null : edW <= 3],
@@ -11314,8 +11316,8 @@ function computeSchedWeekSummary(mondayDate) {
     ['英P2·句型转换 (10分)', synW == null ? '—' : '错' + synW, '≤4', synW == null ? null : synW <= 4],
     ['英P1·作文 (55分)', essay == null ? '—' : essay + '/40', '≥上篇', essay == null ? null : true],
     ['英P3/P4·听说口语', (listen == null ? '—' : listen + '/3样') + '·' + (oralStar == null ? '—' : oralStar + '星'), '3样·≥3星', (listen == null && oralStar == null) ? null : ((listen || 0) >= 3 && (oralStar || 0) >= 3)],
-    ['科BktA·选择 (56分)', sciMcq == null ? '—' : '对' + sciMcq + '/15', '≥12', sciMcq == null ? null : sciMcq >= 12],
-    ['科BktB·开放题 (44分)', sciOe == null ? '—' : sciOe + '/2', '2/2', sciOe == null ? null : sciOe >= 2],
+    ['科BktA·选择 (56分)', sciMcqPct == null ? '—' : '对' + sciMcqA + '/' + sciMcqB + ' (' + sciMcqPct + '%)', '≥80%', sciMcqPct == null ? null : sciMcqPct >= 80],
+    ['科BktB·开放题 (44分)', sciOe == null ? '—' : sciOe + '/' + (sciOeB || 2), '全对', sciOe == null ? null : sciOe >= (sciOeB || 2)],
     ['华P2·阅读漏点', cnMiss == null ? '—' : '漏' + cnMiss, '≤2', cnMiss == null ? null : cnMiss <= 2],
     ['数·粗心新增', mathC == null ? '—' : mathC + '题', '≤2', mathC == null ? null : mathC <= 2],
     ['词汇底盘 (清测/睡前)', (wktPct == null ? '—' : wktPct + '%') + '/' + (vtPct == null ? '—' : vtPct + '%'), '≥80%', (wktPct == null && vtPct == null) ? null : ((wktPct == null || wktPct >= 80) && (vtPct == null || vtPct >= 80))],
@@ -11669,13 +11671,14 @@ function renderSchedGrid() {
     dks[d] = schedLocalDate(dd);
     heads.push(`<th style="padding:5px 2px;font-size:11px;color:${dks[d] === todayKey ? '#1E40AF' : '#1E293B'};font-weight:${dks[d] === todayKey ? '700' : '400'};text-align:center;min-width:58px">${SCHED_DAYS[d].label}<br>${dd.getMonth() + 1}/${dd.getDate()}${dks[d] === todayKey ? '·今' : ''}</th>`);
   });
-  const inpS = 'width:26px;padding:3px 1px;border-radius:5px;border:1px solid #CBD5E1;background:#F1F5F9;color:#1E293B;font-size:13px;text-align:center';
+  const inpS = 'width:40px;padding:3px 2px;border-radius:5px;border:1px solid #CBD5E1;background:#F1F5F9;color:#1E293B;font-size:13px;text-align:center';  // v20.7: 26px 会把两位数截成一位 (20/30 显示成 2/3)
   const inpW = 'width:40px;padding:3px 2px;border-radius:5px;border:1px solid #CBD5E1;background:#F1F5F9;color:#1E293B;font-size:13px;text-align:center';
   const bodyRows = SCHED_GRID.map(row => {
     if (row.sec) return `<tr><td colspan="${COLS.length + 1}" style="padding:6px 4px;font-size:12px;font-weight:700;color:#B45309;background:rgba(230,162,60,0.07)">${escapeHtml(row.sec)}</td></tr>`;
     const cells = COLS.map(d => {
-      if (!row.days.includes(d)) return `<td style="padding:4px 2px;text-align:center;color:#4A5568;font-size:12px">—</td>`;
       const dk = dks[d];
+      // v20.7: 假期周任务和平日课表不一样 (假期周一做的是科学选择题/完形/数学), 按平日锁格子就没地方填 → 假期日期全开
+      if (!row.days.includes(d) && !HOLIDAY_SCHED[dk]) return `<td style="padding:4px 2px;text-align:center;color:#4A5568;font-size:12px">—</td>`;
       const sc = scores[dk] || {};
       let ctrl;
       if (row.type === 'text') {
@@ -11683,9 +11686,9 @@ function renderSchedGrid() {
       } else if (row.type === 'chk') {
         ctrl = `<input type="checkbox" ${sc[row.key] ? 'checked' : ''} style="width:17px;height:17px" onchange="window.saveDailyScore('${dk}','${row.key}',this.checked?1:'')">`;
       } else if (row.type === 'frac' || row.type === 'pair') {
-        ctrl = `<input type="number" min="0" inputmode="numeric" value="${sc[row.key + '_a'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_a',this.value)"><span style="color:#1E293B;font-size:11px">/</span><input type="number" min="0" inputmode="numeric" value="${sc[row.key + '_b'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_b',this.value)">`;
+        ctrl = `<input type="number" class="sg-num" min="0" inputmode="numeric" value="${sc[row.key + '_a'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_a',this.value)"><span style="color:#1E293B;font-size:11px">/</span><input type="number" class="sg-num" min="0" inputmode="numeric" value="${sc[row.key + '_b'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_b',this.value)">`;
       } else {
-        ctrl = `<input type="number" min="0" inputmode="numeric" value="${sc[row.key] ?? ''}" style="${inpW}" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
+        ctrl = `<input type="number" class="sg-num" min="0" inputmode="numeric" value="${sc[row.key] ?? ''}" style="${inpW}" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
       }
       return `<td style="padding:4px 2px;text-align:center;white-space:nowrap">${ctrl}</td>`;
     }).join('');
@@ -11702,7 +11705,8 @@ function renderSchedGrid() {
     <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
       <thead><tr style="background:#F1F5F9"><th style="padding:5px 4px;font-size:11px;color:#1E293B;text-align:left">检查项</th>${heads.join('')}</tr></thead>
       <tbody>${bodyRows}</tbody></table></div>
-    <div style="font-size:11px;color:#1E293B;margin-top:6px">连续3天某项低于目标 → 不等周五, 当晚按手册响应规则调整</div>`;
+    <div style="font-size:11px;color:#1E293B;margin-top:6px">连续3天某项低于目标 → 不等周五, 当晚按手册响应规则调整</div>
+    ${Object.values(dks).some(k => HOLIDAY_SCHED[k]) ? '<div style="font-size:11px;color:#B45309;margin-top:4px">🏖️ 假期周: 哪天做了什么就填哪天, 所有格子都开着; 科学选择题填"科学选择题"行, 对几题/共几题</div>' : ''}`;
 }
 function renderSchedWeekSummary() {
   const el = document.getElementById('schedWeekSummary');
