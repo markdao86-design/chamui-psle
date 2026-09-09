@@ -1866,7 +1866,8 @@ assert(/window\._schedToggleNormal/.test(appSrc), 'v20.2: 切换函数已导出 
     if (opt.lunch && !rows.some(b => b.t === opt.lunch && /午饭/.test(b.name))) bad.push(label + ' 午休不是 12:00-14:00');
     if (!rows.some(b => b.kind === 'r' && /户外|散步/.test(b.name))) bad.push(label + ' 没有户外块');
     if (!opt.noRedoOk && !rows.some(b => b.kind === 's' && /二刷|三刷/.test(b.name))) bad.push(label + ' 没排薄弱模块二刷/三刷');
-    if (rows[rows.length - 1].t !== '21:00\u201321:30') bad.push(label + ' 最后一块不是 21:00 睡前单词');
+    const L = rows.length;  // v20.5: 单词完成再洗漱 —— 倒数第二块睡前单词, 最后一块洗漱到 21:30
+    if (!/睡前/.test(rows[L - 2].name) || rows[L - 1].name !== '洗漱' || !rows[L - 1].t.endsWith('21:30')) bad.push(label + ' 结尾不是 睡前单词→洗漱→21:30');
     return bad;
   };
   let bad = [];
