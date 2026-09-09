@@ -1845,6 +1845,31 @@ assert(/getHolidayPlan\(\) && !_schedForceNormal/.test(appSrc), 'v20.2: 假期�
 assert(/看常规课表/.test(appSrc) && /回今天的假期课表/.test(appSrc), 'v20.2: 两张卡互相有跳转按钮');
 assert(/window\._schedToggleNormal/.test(appSrc), 'v20.2: 切换函数已导出 (不导出 onclick 调不到)');
 
+// ===== v20.3: 常规课表课间规则 (用户 2026-09-09: 晚饭 1 小时 / 户外 30 分 / 其他课间休息 15 分即可) =====
+{
+  const SD = (appSrc.match(/const SCHED_DAYS = \{[\s\S]*?
+\};/) || [])[0];
+  const toMin = t => { const [h, x] = t.split(':'); return +h * 60 + +x; };
+  const bad = [];
+  [1, 2, 3, 5].forEach(d => {
+    const m = SD.match(new RegExp('  ' + d + ": \{ label: '([^']*)', start: '[^']*', blocks: \[\n([\s\S]*?)\n  \]\}"));
+    const rows = []; const re = /\['([\d:–]+)', '((?:[^'\]|\.)*)', '(?:[^'\]|\.)*', '([sr])'\]/g; let r;
+    while ((r = re.exec(m[2]))) rows.push({ t: r[1], name: r[2], kind: r[3] });
+    let prev = null;
+    rows.forEach(b => {
+      const [a, z] = b.t.split('–'); const S = toMin(a), E = toMin(z), dur = E - S;
+      if (prev !== null && S !== prev) bad.push(`${m[1]} ${b.t} 前有空档`);
+      if (b.name === '晚饭' && dur !== 60) bad.push(`${m[1]} 晚饭 ${dur} 分 (要 60)`);
+      if (b.name === '户外' && dur !== 30) bad.push(`${m[1]} 户外 ${dur} 分 (要 30)`);
+      if (/^休息/.test(b.name) && dur !== 15) bad.push(`${m[1]} ${b.t} ${b.name} ${dur} 分 (要 15)`);
+      prev = E;
+    });
+    if (!rows.some(b => b.name === '晚饭') || !rows.some(b => b.name === '户外')) bad.push(m[1] + ' 缺晚饭或户外');
+    if (rows[rows.length - 1].t !== '21:00–21:30') bad.push(m[1] + ' 最后不是 21:00-21:30 睡前单词');
+  });
+  assert(bad.length === 0, `v20.3: 常规课表 晚饭60/户外30/课间15/时间轴连续 (${bad.slice(0, 4).join(' / ')})`);
+}
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
