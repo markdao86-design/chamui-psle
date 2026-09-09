@@ -1845,29 +1845,42 @@ assert(/getHolidayPlan\(\) && !_schedForceNormal/.test(appSrc), 'v20.2: 假期�
 assert(/看常规课表/.test(appSrc) && /回今天的假期课表/.test(appSrc), 'v20.2: 两张卡互相有跳转按钮');
 assert(/window\._schedToggleNormal/.test(appSrc), 'v20.2: 切换函数已导出 (不导出 onclick 调不到)');
 
-// ===== v20.3: 常规课表课间规则 (用户 2026-09-09: 晚饭 1 小时 / 户外 30 分 / 其他课间休息 15 分即可) =====
+// ===== v20.4: 课表统一规则 (用户 2026-09-09 终版: 吃饭/户外可到 1h, 课间 15-20 分, 空档一律填薄弱模块二刷三刷) =====
 {
-  const SD = (appSrc.match(/const SCHED_DAYS = \{[\s\S]*?
-\};/) || [])[0];
   const toMin = t => { const [h, x] = t.split(':'); return +h * 60 + +x; };
-  const bad = [];
-  [1, 2, 3, 5].forEach(d => {
-    const m = SD.match(new RegExp('  ' + d + ": \{ label: '([^']*)', start: '[^']*', blocks: \[\n([\s\S]*?)\n  \]\}"));
-    const rows = []; const re = /\['([\d:–]+)', '((?:[^'\]|\.)*)', '(?:[^'\]|\.)*', '([sr])'\]/g; let r;
-    while ((r = re.exec(m[2]))) rows.push({ t: r[1], name: r[2], kind: r[3] });
-    let prev = null;
+  const parseRows = body => { const rows = []; const re = /\['([\d:\u2013]+)', '((?:[^'\\]|\\.)*)', '(?:[^'\\]|\\.)*', '([scr])'\]/g; let r; while ((r = re.exec(body))) rows.push({ t: r[1], name: r[2], kind: r[3] }); return rows; };
+  const audit = (label, rows, opt) => {
+    const bad = []; let prev = null, run = 0;
     rows.forEach(b => {
-      const [a, z] = b.t.split('–'); const S = toMin(a), E = toMin(z), dur = E - S;
-      if (prev !== null && S !== prev) bad.push(`${m[1]} ${b.t} 前有空档`);
-      if (b.name === '晚饭' && dur !== 60) bad.push(`${m[1]} 晚饭 ${dur} 分 (要 60)`);
-      if (b.name === '户外' && dur !== 30) bad.push(`${m[1]} 户外 ${dur} 分 (要 30)`);
-      if (/^休息/.test(b.name) && dur !== 15) bad.push(`${m[1]} ${b.t} ${b.name} ${dur} 分 (要 15)`);
+      const [x, y] = b.t.split('\u2013'); const S = toMin(x), E = toMin(y), dur = E - S;
+      if (prev !== null && S !== prev) bad.push(`${label} ${b.t} 前有空档`);
+      if (b.kind === 'r') {
+        if (/^自由/.test(b.name)) bad.push(`${label} ${b.t} 还留着"自由"(要填二刷)`);
+        if (/^休息/.test(b.name) && (dur < 10 || dur > 20)) bad.push(`${label} ${b.t} 课间 ${dur} 分 (要 10-20)`);
+        if (/^晚饭$/.test(b.name) && (dur < 45 || dur > 60)) bad.push(`${label} 晚饭 ${dur} 分`);
+        if (/^户外/.test(b.name) && (dur < 30 || dur > 60)) bad.push(`${label} 户外 ${dur} 分 (要 30-60)`);
+        if (dur >= 30) run = 0;
+      } else { run += dur; if (run > 180) bad.push(`${label} ${b.t} 连续学习 ${run} 分`); }
       prev = E;
     });
-    if (!rows.some(b => b.name === '晚饭') || !rows.some(b => b.name === '户外')) bad.push(m[1] + ' 缺晚饭或户外');
-    if (rows[rows.length - 1].t !== '21:00–21:30') bad.push(m[1] + ' 最后不是 21:00-21:30 睡前单词');
+    if (opt.lunch && !rows.some(b => b.t === opt.lunch && /午饭/.test(b.name))) bad.push(label + ' 午休不是 12:00-14:00');
+    if (!rows.some(b => b.kind === 'r' && /户外|散步/.test(b.name))) bad.push(label + ' 没有户外块');
+    if (!opt.noRedoOk && !rows.some(b => b.kind === 's' && /二刷|三刷/.test(b.name))) bad.push(label + ' 没排薄弱模块二刷/三刷');
+    if (rows[rows.length - 1].t !== '21:00\u201321:30') bad.push(label + ' 最后一块不是 21:00 睡前单词');
+    return bad;
+  };
+  let bad = [];
+  const HS = (appSrc.match(/const HOLIDAY_SCHED = \{[\s\S]*?\n\};/) || [''])[0];
+  const dayRe = /'(\d{4}-\d{2}-\d{2})': \{ label: '([^']*)'[\s\S]*?blocks: \[([\s\S]*?)\n  \], three:/g; let mm, n = 0;
+  while ((mm = dayRe.exec(HS))) { n++; bad = bad.concat(audit(mm[2], parseRows(mm[3]), { lunch: '12:00\u201314:00' })); }
+  assert(n === 9, `v20.4: 假期 9 天全在 (${n})`);
+  const SD = (appSrc.match(/const SCHED_DAYS = \{[\s\S]*?\n\};/) || [''])[0];
+  [1, 2, 3, 5].forEach(d => {
+    const m = SD.match(new RegExp('  ' + d + ": \\{ label: '([^']*)', start: '[^']*', blocks: \\[\\n([\\s\\S]*?)\\n  \\]\\}"));
+    assert(m, 'v20.4: 常规周' + d + ' 能解析');
+    bad = bad.concat(audit('常规' + m[1], parseRows(m[2]), { noRedoOk: d === 1 }));  // 周一 16:00 才到家, 5 小时塞不下二刷, 其余三天必须有
   });
-  assert(bad.length === 0, `v20.3: 常规课表 晚饭60/户外30/课间15/时间轴连续 (${bad.slice(0, 4).join(' / ')})`);
+  assert(bad.length === 0, `v20.4: 假期+常规课表全部合规 (${bad.length} 处: ${bad.slice(0, 5).join(' / ')})`);
 }
 
 // ===== Output =====
