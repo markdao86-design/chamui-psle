@@ -2551,12 +2551,14 @@ function submitMockExam() {
 let _fcSession = null;
 
 function _fcFmtDate(k) { const p = k.split('-'); return (+p[1]) + '/' + (+p[2]); }
+function _fcFmtFar(k) { const p = k.split('-'); return (+p[0] !== new Date().getFullYear() ? p[0] + '/' : '') + (+p[1]) + '/' + (+p[2]); }   // 跨年的日期带上年份
 function _fcDow(k) { const p = k.split('-'); return '日一二三四五六'[new Date(+p[0], +p[1] - 1, +p[2]).getDay()]; }
 // v21.0: 词汇页重做 —— 孩子实报"没有已学会的记录/没进度/不知道多久学完/每天多少没规划", 家长要每天看到背单词情况。
 // 根因: 原来只有"已掌握"一档, 要过 30 天关才算, 背了 549 个词页面还是 0/563; 且没有任何按天的记录。
 function renderVocabPage() {
   const el = document.getElementById('vocabPageContent');
   if (!el) return;
+  if (_fcQuiz) { _renderFcQuiz(); return; }
   if (_fcSession) { _renderFlashcardSession(); return; }
   const pr = window.getFcProgress(state);
   const size = window.getFcDailySize(state);
@@ -2572,21 +2574,22 @@ function renderVocabPage() {
   const sizeBtns = window.FC_SIZE_OPTIONS.map(n => {
     const e = window.estimateFcFinish(state, n), on = n === size;
     return `<button onclick="setFcSizeUI(${n})" style="flex:1 1 0;padding:7px 4px;border-radius:10px;border:1px solid ${on ? '#1E40AF' : '#CBD5E1'};background:${on ? '#1E40AF' : '#F8FAFC'};color:${on ? '#FFFFFF' : '#1E293B'};cursor:pointer;font-size:12px;line-height:1.5">
-      <b style="font-size:14px">每天 ${n} 个</b><br>${e.days ? _fcFmtDate(e.date) + ' 学完' : '已学完'}</button>`;
+      <b style="font-size:14px">每天 ${n} 个</b><br>${e.days > 0 ? _fcFmtFar(e.date) + ' 背完' : e.days < 0 ? '两年内背不完' : '已背完'}</button>`;
   }).join('');
   const log = window.getFcDailyLog(state, 14);
   const logRows = log.map(x => {
     const r = x.rec, isToday = x.date === today;
     const head = `<td style="padding:6px 4px;font-size:12px;white-space:nowrap;font-weight:${isToday ? 700 : 400};color:${isToday ? '#1E40AF' : '#1E293B'}">${_fcFmtDate(x.date)} 周${_fcDow(x.date)}${isToday ? '·今' : ''}</td>`;
-    if (!r) return `<tr style="border-bottom:1px solid #F1F5F9">${head}<td colspan="5" style="padding:6px 4px;font-size:12px;color:${isToday ? '#B45309' : '#DC2626'}">${isToday ? '还没开始' : '✗ 没背'}</td></tr>`;
+    if (!r) return `<tr style="border-bottom:1px solid #F1F5F9">${head}<td colspan="6" style="padding:6px 4px;font-size:12px;color:${isToday ? '#B45309' : '#DC2626'}">${isToday ? '还没开始' : '✗ 没背'}</td></tr>`;
     const perWord = r.total ? Math.round((r.secs || 0) / r.total) : 0;
     const fast = r.total >= 10 && perWord <= 2;
     return `<tr style="border-bottom:1px solid #F1F5F9">${head}
-      <td style="padding:6px 4px;font-size:12px;text-align:center;color:${r.done ? '#16A34A' : '#B45309'};font-weight:700">${r.done ? '✓' : '未完'} ${r.total}/${r.size || r.total}</td>
+      <td style="padding:6px 4px;font-size:12px;text-align:center;color:${r.done ? '#16A34A' : '#B45309'};font-weight:700">${r.done ? '✓' : r.total ? '未完' : '没背'} ${r.total}/${r.size || r.total}</td>
       <td style="padding:6px 4px;font-size:12px;text-align:center">${r.firstKnow}</td>
       <td style="padding:6px 4px;font-size:12px;text-align:center;color:${r.missed.length ? '#B45309' : '#1E293B'}">${r.missed.length ? `<span onclick="showFcDayMissed('${x.date}')" style="text-decoration:underline;cursor:pointer">${r.missed.length} 个</span>` : '0'}</td>
       <td style="padding:6px 4px;font-size:12px;text-align:center;color:#16A34A">${r.learned.length ? '+' + r.learned.length : '0'}</td>
-      <td style="padding:6px 4px;font-size:12px;text-align:center;color:${fast ? '#DC2626' : '#64748B'}">${Math.max(1, Math.round((r.secs || 0) / 60))} 分${fast ? ' ⚠️太快' : ''}</td></tr>`;
+      <td style="padding:6px 4px;font-size:12px;text-align:center;color:${fast ? '#DC2626' : '#64748B'}">${Math.max(1, Math.round((r.secs || 0) / 60))} 分${fast ? ' ⚠️太快' : ''}</td>
+      <td style="padding:6px 4px;font-size:12px;text-align:center;color:${r.quizTotal ? ((r.quizOk || 0) / r.quizTotal >= 0.9 ? '#16A34A' : '#B45309') : '#94A3B8'}">${r.quizTotal ? `<span ${(r.quizWrong || []).length ? `onclick="showFcDayQuizWrong('${x.date}')" style="text-decoration:underline;cursor:pointer"` : ''}>${r.quizOk || 0}/${r.quizTotal}</span>` : '—'}</td></tr>`;
   }).join('');
   const days7 = log.slice(0, 7).filter(x => x.rec && x.rec.done).length;
   const hard = window.getFcHardWords(state, 12);
@@ -2596,7 +2599,7 @@ function renderVocabPage() {
       <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
         <span style="font-size:26px;font-weight:800;color:#1E40AF">${pr.done}</span>
         <span style="font-size:13px;color:#64748B">/ ${pr.total} 个已学会 · ${pr.pct}%</span>
-        <span style="margin-left:auto;font-size:12px;color:#B45309;font-weight:600">${est.days ? '📅 预计 ' + _fcFmtDate(est.date) + ' 全部学会 (还要 ' + est.days + ' 天)' : '🎉 全部学会'}</span>
+        <span style="margin-left:auto;font-size:12px;color:#B45309;font-weight:600">${est.days > 0 ? '📅 预计 ' + _fcFmtFar(est.date) + ' 基本背完 (还要 ' + est.days + ' 天)' : est.days < 0 ? '⚠️ 按现在的量两年内背不完, 每天多背一些' : '🎉 全部掌握'}</span>
       </div>
       <div style="height:8px;background:#E2E8F0;border-radius:4px;overflow:hidden;margin:8px 0 10px;display:flex">
         <div style="width:${pr.total ? pr.mastered / pr.total * 100 : 0}%;background:#16A34A"></div>
@@ -2617,10 +2620,21 @@ function renderVocabPage() {
         ${grp.remaining > 0 ? `<button onclick="startFlashcardSession(null)" style="white-space:nowrap;padding:12px 26px;background:#1E40AF;color:#FFFFFF;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">${grp.remaining < grp.total ? '继续背' : '开始背'}</button>` : ''}
       </div>
     </div>
+    <div class="card" style="margin-bottom:12px;border-left:3px solid #7C3AED">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:700;font-size:15px">📝 单词考题 · PSLE 题型</div>
+          <div style="font-size:12px;color:#64748B;margin-top:2px">${(() => { const qs = window.getFcQuizStats(state), tr = (state.fcDaily || {})[today] || {}; return (tr.quizTotal ? `今天答了 ${tr.quizTotal} 题, 对 ${tr.quizOk || 0} 题 · ` : '今天还没考 · ') + (qs.pct == null ? '累计 0 题' : `累计正确率 ${qs.pct}% (${qs.ok + qs.bad} 题)`); })()}</div>
+        </div>
+        <button onclick="startFcQuiz('today')" style="white-space:nowrap;padding:12px 20px;background:#7C3AED;color:#FFFFFF;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">考今天这一组</button>
+      </div>
+      <div style="font-size:11px;color:#64748B;margin-top:6px">选择题 + 选词填空 · 答错的词退两级, 明天这一组优先补 · 按卡组考在页面最下面</div>
+    </div>
     <div class="card" style="margin-bottom:12px">
       <div style="font-size:14px;font-weight:700;margin-bottom:8px">📅 每天背多少</div>
       <div style="display:flex;gap:6px">${sizeBtns}</div>
-      <div style="font-size:11px;color:#64748B;margin-top:6px">每组 1/3 新词 + 2/3 复习 · 每个词都点到「认识」才算完</div>
+      <div style="font-size:11px;color:#64748B;margin-top:6px;line-height:1.7">每组 1/3 新词 + 2/3 复习 · 艾宾浩斯 6 次复习: 当天 → 隔 1 天 → 3 天 → 7 天 → 14 天 → 30 天, 6 次都认识才算掌握; 忘了退两级, 第二天先补<br>
+        ${est.days > 0 ? `按每天 ${size} 个、每天都背 (复习一遍过率按 ${Math.round(est.rate * 100)}% 算): 新词 <b>${_fcFmtFar(est.introDate)}</b> 全部见过一遍 · <b>${_fcFmtFar(est.date)}</b> 掌握 95% · 最后 5% 难词约到 ${est.masteredDate ? _fcFmtFar(est.masteredDate) : '更晚'} · 断一天顺延一天` : ''}</div>
     </div>
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px">
@@ -2628,24 +2642,117 @@ function renderVocabPage() {
         <div style="font-size:12px;color:${days7 >= 6 ? '#16A34A' : '#DC2626'};font-weight:600">近 7 天背了 ${days7} 天${gapDays != null && gapDays >= 2 ? ` · 上次 ${_fcFmtDate(pr.lastDate)} (${gapDays} 天前)` : ''}</div>
       </div>
       <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
-        <thead><tr style="background:#F1F5F9">${['日期', '完成', '一遍过', '没记住', '新学会', '用时'].map((h, i) => `<th style="padding:5px 4px;font-size:11px;color:#1E293B;text-align:${i ? 'center' : 'left'}">${h}</th>`).join('')}</tr></thead>
+        <thead><tr style="background:#F1F5F9">${['日期', '完成', '一遍过', '没记住', '新学会', '用时', '考题'].map((h, i) => `<th style="padding:5px 4px;font-size:11px;color:#1E293B;text-align:${i ? 'center' : 'left'}">${h}</th>`).join('')}</tr></thead>
         <tbody>${logRows}</tbody></table></div>
       ${hard.length ? `<div style="font-size:12px;color:#B45309;margin-top:8px;line-height:1.8">🧱 <b>老是记不住</b>: ${hard.map(h => escapeHtml(h.w) + '×' + h.lapses).join(' · ')}</div>` : ''}
     </div>
     <details class="card" style="margin-bottom:12px">
-      <summary style="font-size:14px;font-weight:700;cursor:pointer">📚 按卡组翻看 (只看不计进度)</summary>
+      <summary style="font-size:14px;font-weight:700;cursor:pointer">📚 按卡组翻看 / 考题 · ${FLASHCARD_DECKS.length} 个卡组</summary>
       <div class="fc-deck-grid">
         ${FLASHCARD_DECKS.map(deck => {
           const ok = deck.words.filter(w => ['learned', 'mastered'].indexOf(window.fcTier(state, w)) >= 0).length;
-          return `<div class="fc-deck-item" onclick="startFlashcardSession('${deck.id}')">
+          const fq = state.fcQuiz || {}, tested = deck.words.filter(w => fq[w]).length, right = deck.words.filter(w => fq[w] && fq[w].lastOk).length;
+          return `<div class="fc-deck-item" style="cursor:default">
             <div class="fc-deck-name">${deck.name}</div>
-            <div class="fc-deck-progress">${ok}/${deck.words.length} 已学会</div>
+            <div class="fc-deck-progress">${ok}/${deck.words.length} 已学会 · 考过 ${tested}${tested ? ' 对 ' + right : ''}</div>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <button onclick="startFlashcardSession('${deck.id}')" style="flex:1;padding:7px 4px;border-radius:8px;border:1px solid #CBD5E1;background:#F8FAFC;color:#1E293B;font-size:13px;cursor:pointer">翻看</button>
+              <button onclick="startFcQuiz('${deck.id}')" style="flex:1;padding:7px 4px;border-radius:8px;border:none;background:#7C3AED;color:#FFFFFF;font-size:13px;font-weight:700;cursor:pointer">考 20 题</button>
+            </div>
           </div>`;
         }).join('')}
       </div>
     </details>
   `;
 }
+// ============ v21.1: 考题会话 ============
+let _fcQuiz = null;
+function startFcQuiz(source) {
+  const words = window.pickQuizWords(state, source, 20);
+  const qs = words.map(w => window.buildVocabQuestion(w)).filter(Boolean);
+  if (!qs.length) { showToast('这里暂时没有可以考的词', 'info'); return; }
+  for (let i = qs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [qs[i], qs[j]] = [qs[j], qs[i]]; }
+  const deck = FLASHCARD_DECKS.find(d => d.id === source);
+  _fcQuiz = { title: source === 'today' ? '今天这一组' : (deck ? deck.name : ''), qs, idx: 0, ok: 0, pts: 0, wrong: [], picked: null };
+  _renderFcQuiz();
+  window.scrollTo(0, 0);
+}
+function _renderFcQuiz() {
+  const el = document.getElementById('vocabPageContent');
+  const z = _fcQuiz;
+  if (!el || !z) return;
+  if (z.idx >= z.qs.length) { _endFcQuiz(); return; }
+  const q = z.qs[z.idx], done = z.picked != null;
+  const stemHtml = q.stem != null ? escapeHtml(q.stem)
+    : escapeHtml(q.pre) + (q.underline ? `<u style="text-decoration-thickness:2px;text-underline-offset:4px;font-weight:700">${escapeHtml(q.target)}</u>` : `<b style="color:#7C3AED">${escapeHtml(q.target)}</b>`) + escapeHtml(q.post);
+  const opts = q.opts.map((o, i) => {
+    let st = 'border:1px solid #CBD5E1;background:#FFFFFF;color:#1E293B';
+    if (done && i === q.ans) st = 'border:2px solid #16A34A;background:#DCFCE7;color:#14532D;font-weight:700';
+    else if (done && i === z.picked) st = 'border:2px solid #DC2626;background:#FEE2E2;color:#7F1D1D';
+    return `<button ${done ? 'disabled' : ''} onclick="answerFcQuiz(${i})" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-top:8px;border-radius:10px;font-size:15px;line-height:1.5;cursor:${done ? 'default' : 'pointer'};${st}">${'ABCD'[i]}. ${escapeHtml(o)}</button>`;
+  }).join('');
+  const ipa = window.getVocabIpa(q.word);
+  const fb = !done ? '' : `<div style="margin-top:12px;padding:12px 14px;border-radius:10px;background:${z.picked === q.ans ? '#F0FDF4' : '#FFF7ED'};border:1px solid ${z.picked === q.ans ? '#86EFAC' : '#FDBA74'}">
+      <div style="font-size:15px;font-weight:800;color:${z.picked === q.ans ? '#16A34A' : '#C2410C'}">${z.picked === q.ans ? '✅ 答对了' : '❌ 答错了 — 这个词退两级, 明天这一组先补'}</div>
+      <div style="font-size:15px;margin-top:6px;color:#1E293B"><b>${escapeHtml(q.word)}</b> ${ipa ? '<span style="color:#64748B">/' + escapeHtml(ipa) + '/</span>' : ''} ${_fcSpk(q.word, 18)}</div>
+      <div style="font-size:14px;color:#1E293B;margin-top:4px;line-height:1.6">${escapeHtml(getVocabMeaning(q.word) === q.word ? '' : getVocabMeaning(q.word))}<br><span style="color:#475569">${escapeHtml(window.getVocabEn(q.word))}</span></div>
+    </div>
+    <div style="text-align:center;margin-top:14px"><button onclick="nextFcQuiz()" style="padding:12px 40px;background:#1E40AF;color:#FFFFFF;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer">${z.idx + 1 >= z.qs.length ? '看成绩' : '下一题 →'}</button></div>`;
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <button onclick="exitFcQuiz()" style="padding:10px 22px;background:#1E40AF;color:#FFFFFF;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">← 返回</button>
+      <span style="font-size:15px;color:var(--color-text-light)">${escapeHtml(z.title)} · 第 ${z.idx + 1} / ${z.qs.length} 题 · ✅ ${z.ok}</span>
+    </div>
+    <div class="card fc-quiz-card">
+      <span style="display:inline-block;font-size:12px;font-weight:700;color:#7C3AED;background:rgba(124,58,237,0.10);border-radius:12px;padding:3px 12px">${escapeHtml(q.label)}</span>
+      <div style="font-size:13px;color:#64748B;margin:10px 0 6px">${escapeHtml(q.prompt)}</div>
+      <div style="font-size:19px;line-height:1.7;color:#1E293B;font-weight:600">${stemHtml} ${q.say && done ? _fcSpk(q.say, 18) : ''}</div>
+      ${opts}
+      ${fb}
+    </div>
+    <div style="height:6px;background:#E2E8F0;border-radius:3px;margin-top:16px;overflow:hidden"><div style="height:100%;width:${Math.round(z.idx / z.qs.length * 100)}%;background:#C4B5FD"></div></div>`;
+}
+function answerFcQuiz(i) {
+  const z = _fcQuiz; if (!z || z.picked != null) return;
+  const q = z.qs[z.idx];
+  z.picked = i;
+  const ok = i === q.ans;
+  const r = window.recordVocabQuiz(state, q.word, ok);
+  if (ok) { z.ok++; z.pts += r.pts; } else z.wrong.push(q.word);
+  saveState(state);
+  _renderFcQuiz();
+}
+function nextFcQuiz() { const z = _fcQuiz; if (!z) return; z.idx++; z.picked = null; _renderFcQuiz(); window.scrollTo(0, 0); }
+function _endFcQuiz() {
+  const el = document.getElementById('vocabPageContent'), z = _fcQuiz;
+  if (!el || !z) return;
+  if (z.pts > 0) {
+    state.totalPoints = (state.totalPoints || 0) + z.pts;
+    if (!state.logs) state.logs = [];
+    state.logs.push({ reason: `📝 单词考题 ${z.title} ${z.ok}/${z.qs.length} +${z.pts}`, points: z.pts, type: 'flashcard_quiz', timestamp: Date.now() });
+  }
+  saveState(state);
+  const pct = Math.round(z.ok / z.qs.length * 100);
+  el.innerHTML = `
+    <div style="text-align:center;padding:24px 0">
+      <div style="font-size:48px;margin-bottom:8px">${pct >= 90 ? '🏆' : pct >= 70 ? '👍' : '💪'}</div>
+      <h3 style="margin:0 0 6px;color:${pct >= 90 ? '#16A34A' : '#1E293B'}">${escapeHtml(z.title)} · ${z.ok} / ${z.qs.length} 题 · ${pct}%</h3>
+      <div style="font-size:13px;color:#64748B;margin-bottom:10px">${pct >= 90 ? 'AL1 线是 90%, 这次过线了' : 'AL1 线是 90%, 还差 ' + (Math.ceil(z.qs.length * 0.9) - z.ok) + ' 题'}${z.pts ? ' · +' + z.pts + ' 分' : ''}</div>
+      ${z.wrong.length ? `<div style="max-width:520px;margin:10px auto;padding:10px 14px;background:rgba(230,162,60,0.08);border:1px solid rgba(230,162,60,0.3);border-radius:10px;text-align:left">
+        <div style="font-size:13px;font-weight:700;color:#B45309;margin-bottom:4px">答错的 ${z.wrong.length} 个词 (已退两级, 明天这一组先补)</div>${_fcWordRows(z.wrong)}</div>` : ''}
+      <button onclick="exitFcQuiz()" style="margin-top:12px;padding:12px 40px;background:#1E40AF;color:#FFFFFF;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer">返回</button>
+    </div>`;
+  _fcQuiz = null;
+  renderHeader();
+}
+function exitFcQuiz() { _fcQuiz = null; renderVocabPage(); }
+function showFcDayQuizWrong(dateKey) {
+  const r = (state.fcDaily || {})[dateKey];
+  if (!r || !(r.quizWrong || []).length) return;
+  _fcListModal(`${_fcFmtDate(dateKey)} 考题答错的 ${r.quizWrong.length} 个词`, _fcWordRows(r.quizWrong));
+}
+window.startFcQuiz = startFcQuiz; window.answerFcQuiz = answerFcQuiz; window.nextFcQuiz = nextFcQuiz; window.exitFcQuiz = exitFcQuiz; window.showFcDayQuizWrong = showFcDayQuizWrong;
+
 function setFcSizeUI(n) {
   const r = window.setFcDailySize(state, n);
   if (!r.ok) return;
@@ -2698,6 +2805,32 @@ function startFlashcardSession(deckId) {
   _renderFlashcardSession();
 }
 
+// v21.1: 小喇叭 —— 单词和每句例句都能点着听 (用户要求)。用浏览器自带语音, 英式发音, 不用联网下载音频。
+// 喇叭在卡片里面, 卡片点一下会翻面, 所以这里必须拦住冒泡, 不然一点喇叭卡就翻走了。
+function _fcSpk(text, size) {
+  return `<button class="fc-spk" data-say="${escapeAttr(String(text))}" onclick="fcSpeak(event, this)" aria-label="听发音" style="font-size:${size || 18}px">🔊</button>`;
+}
+let _fcVoice = null;
+function fcSpeak(ev, btn) {
+  if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+  if (!('speechSynthesis' in window)) { showToast('这个浏览器不支持朗读', 'warn'); return; }
+  const text = String(btn.getAttribute('data-say') || '').replace(/[“”]/g, '"');
+  if (!text) return;
+  if (!_fcVoice) {
+    const vs = speechSynthesis.getVoices() || [];
+    _fcVoice = vs.find(v => /en[-_]GB/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null;
+  }
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-GB';
+  if (_fcVoice) u.voice = _fcVoice;
+  u.rate = text.split(' ').length > 3 ? 0.88 : 0.8;   // 单词念慢一点
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+  btn.classList.add('fc-spk-on');
+  u.onend = u.onerror = () => btn.classList.remove('fc-spk-on');
+}
+window.fcSpeak = fcSpeak;
+
 function _renderFlashcardSession() {
   const el = document.getElementById('vocabPageContent');
   if (!el || !_fcSession) return;
@@ -2730,6 +2863,7 @@ function _renderFlashcardSession() {
   // v20.1: iWrite Weekly 的词给 3 句例句 (讲义只给词, 他的病是"认得出用不出" —— 3 句才看得出搭配和语气)
   const eg3 = window.getVocabEg3 ? window.getVocabEg3(word) : null;
   const iwRoot = window.getVocabRoot ? window.getVocabRoot(word) : '';
+  const ipa = window.getVocabIpa ? window.getVocabIpa(word) : '';   // v21.1: 音标
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <button onclick="exitFlashcardSession()" style="padding:10px 22px;background:#1E40AF;color:#FFFFFF;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">← 返回卡组</button>
@@ -2740,14 +2874,16 @@ function _renderFlashcardSession() {
       <div class="fc-card-inner">
         <div class="fc-card-front">
           <div class="fc-card-word">${word}</div>
+          <div class="fc-card-ipa">${ipa ? '/' + escapeHtml(ipa) + '/' : ''} ${_fcSpk(word, 22)}</div>
           <div class="fc-card-hint">${eg3 ? (eg3.length > 1 ? '点击翻转看解释 + ' + eg3.length + ' 句例句' : '点击翻转看解释 + 例句') : '点击翻转看解释 + 例句 + 考题'}</div>
         </div>
         <div class="fc-card-back">
+          <div class="fc-card-backword"><b>${escapeHtml(word)}</b> ${ipa ? '<span>/' + escapeHtml(ipa) + '/</span>' : ''} ${_fcSpk(word, 18)}</div>
           <div class="fc-card-meaning">${meaning}</div>
           ${enDef ? `<div class="fc-card-endef">📖 英文解释: ${escapeHtml(enDef)}</div>` : ''}
           ${eg3
-            ? `<div class="fc-card-sentence">💬 例句<br>${eg3.map((x, i) => `<span style="display:block;margin-top:4px">${i + 1}. ${escapeHtml(x)}</span>`).join('')}</div>`
-            : (sentence ? `<div class="fc-card-sentence">💬 例句: ${escapeHtml(sentence)}</div>` : '')}
+            ? `<div class="fc-card-sentence">💬 例句${eg3.map((x, i) => `<span style="display:block;margin-top:6px">${_fcSpk(x, 17)} ${eg3.length > 1 ? (i + 1) + '. ' : ''}${escapeHtml(x)}</span>`).join('')}</div>`
+            : (sentence ? `<div class="fc-card-sentence">${_fcSpk(sentence, 17)} 💬 例句: ${escapeHtml(sentence)}</div>` : '')}
           ${eg3
             ? (iwRoot ? `<div class="fc-card-qtype">✍️ 用它替换 <b>${escapeHtml(iwRoot)}</b> — 作文里写这个词, 别再写 ${escapeHtml(iwRoot)}</div>` : '')
             : (quiz ? `<div class="fc-card-qtype">📝 ${escapeHtml(quiz)}</div>` : '')}
@@ -2819,7 +2955,7 @@ function _endFlashcardSession() {
           共 ${g.words.length} 个词 · 一遍就过 ${firstTry} 个${retakeWords.length ? ` · 补考过关 ${retakeWords.length} 个` : ''}
         </div>
         ${(() => { const rec = (state.fcDaily || {})[g.date] || {}, pr = window.getFcProgress(state), est = window.estimateFcFinish(state);
-          return `<div style="font-size:14px;color:#1E40AF;font-weight:700;margin:8px 0">今天新学会 ${(rec.learned || []).length} 个 · 累计已学会 ${pr.done} / ${pr.total}${est.days ? ' · 预计 ' + _fcFmtDate(est.date) + ' 全部学会' : ''}</div>`; })()}
+          return `<div style="font-size:14px;color:#1E40AF;font-weight:700;margin:8px 0">今天新学会 ${(rec.learned || []).length} 个 · 累计已学会 ${pr.done} / ${pr.total}${est.days > 0 ? ' · 预计 ' + _fcFmtFar(est.date) + ' 基本背完' : ''}</div>`; })()}
         ${retakeWords.length ? `<div style="max-width:420px;margin:10px auto;padding:10px 12px;background:rgba(230,162,60,0.08);border:1px solid rgba(230,162,60,0.3);border-radius:8px;font-size:12px;color:#B45309;line-height:1.7;text-align:left">
           🔁 <b>今天补考过的词</b> (明天这一组会优先排它们):<br>${retakeWords.map(w => escapeHtml(w)).join(' · ')}
         </div>` : ''}
@@ -2864,7 +3000,7 @@ function renderFlashcardWidget() {
       <div style="flex:1;height:4px;background:#E2E8F0;border-radius:2px;overflow:hidden">
         <div style="height:100%;width:${pr.pct}%;background:#1E40AF"></div>
       </div>
-      <span style="font-size:11px;color:var(--color-text-light)">已学会 ${pr.done}/${pr.total}${est.days ? ' · ' + _fcFmtDate(est.date) + ' 学完' : ''}${streak ? ' · 🔥' + streak + '天' : ''}</span>
+      <span style="font-size:11px;color:var(--color-text-light)">已学会 ${pr.done}/${pr.total}${est.days > 0 ? ' · ' + _fcFmtFar(est.date) + ' 背完' : ''}${streak ? ' · 🔥' + streak + '天' : ''}</span>
     </div>
   `;
   el.style.display = '';

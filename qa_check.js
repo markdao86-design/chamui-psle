@@ -1962,6 +1962,65 @@ assert(/if \(!s\.seenBack\)/.test(appSrc), 'v21.0: 没翻面不许自评 (9/8 �
 }
 assert(/已学会 \$\{pr\.done\}\/\$\{pr\.total\}/.test(appSrc), 'v21.0: 主页入口卡报 已学会 x/总数 + 预计学完');
 
+// ===== v21.1: 艾宾浩斯完整链 + 逐天模拟预估 + 音标/发音 + 考题卡组 =====
+{
+  const all = W._fcAllWords();
+  // 艾宾浩斯: 6 次复习 (当天→1→3→7→14→30), 第 6 次 (隔 30 天) 还认识才算掌握
+  const st = { flashcardSRS: {}, totalPoints: 0, logs: [] };
+  const w0 = all[0]; const steps = [];
+  for (let i = 0; i < 6; i++) { W.reviewFlashcard(st, w0, true); steps.push(st.flashcardSRS[w0].mastered); }
+  assert(steps.join() === 'false,false,false,false,false,true', `v21.1: 连对 6 次才掌握, 第 5 次 (只过了 14 天关) 不算 (实际 ${steps.join()})`);
+  // 忘了退两级, 明天补 (不再归零)
+  const s2 = { flashcardSRS: {}, totalPoints: 0, logs: [] };
+  for (let i = 0; i < 4; i++) W.reviewFlashcard(s2, w0, true);
+  W.reviewFlashcard(s2, w0, false);
+  assert(s2.flashcardSRS[w0].interval === 2 && s2.flashcardSRS[w0].nextReview === W._fcToday(), `v21.1: 忘了从第 4 级退到第 2 级, 明天这一组先补 (实际 ${s2.flashcardSRS[w0].interval})`);
+  // 预估 = 逐天模拟
+  const fresh = () => ({ flashcardSRS: {}, totalPoints: 0, logs: [] });
+  const r30 = W.simulateFcPlan(fresh(), 30, 0.85), r40 = W.simulateFcPlan(fresh(), 40, 0.85);
+  assert(r30.masteredDays > 55 && r30.p95Days > 0 && r30.p95Days <= r30.masteredDays && r30.introDays > 0, `v21.1: 模拟给出 新词放完/95%掌握/全部掌握 三个日子 (${r30.introDays}/${r30.p95Days}/${r30.masteredDays} 天)`);
+  assert(r40.p95Days < r30.p95Days, `v21.1: 每天背得多 95% 掌握得早 (30个 ${r30.p95Days} 天, 40个 ${r40.p95Days} 天)`);
+  assert(W.simulateFcPlan(fresh(), 30, 0.85).p95Days === r30.p95Days, 'v21.1: 同样的输入出同样的日期 (固定种子, 页面刷新不乱跳)');
+  const e = W.estimateFcFinish(fresh(), 30);
+  assert(e.days === r30.p95Days && e.masteredDate && e.introDate, 'v21.1: 页面报的"基本背完"= 掌握 95% 那天');
+  // 音标: 每个词都有
+  const noIpa = all.filter(x => !W.getVocabIpa(x));
+  assert(noIpa.length === 0, `v21.1: ${all.length} 个词全部有音标 (缺 ${noIpa.length}: ${noIpa.slice(0, 5).join(',')})`);
+  assert(W.getVocabIpa('come across') === W.VOCAB_IPA['come'] + ' ' + W.VOCAB_IPA['across'], 'v21.1: 词组的音标按词拼起来');
+  assert(all.length >= 1040, `v21.1: 词库 ≥1040 (实际 ${all.length}), 含科学/数学术语 II`);
+  // 考题: 每个词都出得了题, 4 个不重复选项, 答案在里面
+  let seed = 11; const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const badQ = [], types = {};
+  for (let k = 0; k < 4; k++) all.forEach(x => {
+    const qq = W.buildVocabQuestion(x, rnd);
+    if (!qq || qq.opts.length !== 4 || new Set(qq.opts).size !== 4 || qq.ans < 0 || qq.ans > 3 || !qq.prompt) { badQ.push(x); return; }
+    types[qq.type] = (types[qq.type] || 0) + 1;
+    const right = qq.opts[qq.ans];
+    if ((qq.type === 'cloze' || qq.type === 'define') && right !== x) badQ.push(x + ':答案不是本词');
+    if (qq.type === 'meaning' && right !== W.getVocabEn(x)) badQ.push(x + ':答案不是本词的解释');
+  });
+  assert(badQ.length === 0, `v21.1: 每个词都能出题且题目合法 (坏 ${badQ.length}: ${badQ.slice(0, 5).join(' / ')})`);
+  assert(types.hand > 0 && types.cloze > 0 && types.meaning > 0 && types.define > 0, `v21.1: 四种题型都在出 (${JSON.stringify(types)})`);
+  const sciQ = W.buildVocabQuestion('photosynthesis', rnd);
+  assert(sciQ.type === 'define' && /Science/.test(sciQ.label), 'v21.1: 科学术语出"按描述选术语"');
+  // 考题答错: 退两级 + 明天补 + 记进当天
+  const s5 = fresh(); for (let i = 0; i < 4; i++) W.reviewFlashcard(s5, w0, true);
+  const rr = W.recordVocabQuiz(s5, w0, false);
+  const rec = s5.fcDaily[W._fcToday()];
+  assert(rr.lapsed && s5.flashcardSRS[w0].interval === 2 && s5.flashcardSRS[w0].nextReview === W._fcToday(), 'v21.1: 考题答错 → 这个词退两级, 明天这一组优先补 (考题比自评说了算)');
+  assert(rec.quizTotal === 1 && !rec.quizOk && rec.quizWrong[0] === w0, 'v21.1: 考题成绩记进当天, 家长看板能看到');
+  const p1 = W.recordVocabQuiz(s5, all[1], true).pts, p2 = W.recordVocabQuiz(s5, all[1], true).pts;
+  assert(p1 === 1 && p2 === 0, 'v21.1: 同一个词一天只给一次分 (防刷)');
+  assert(W.pickQuizWords(s5, 'psle_verbs', 20).length === 20, 'v21.1: 按卡组每次考 20 题');
+}
+assert(/function fcSpeak\(ev, btn\)[\s\S]{0,200}stopPropagation/.test(appSrc), 'v21.1: 点小喇叭不会把卡片翻走 (拦冒泡)');
+assert(/_fcSpk\(x, 17\)/.test(appSrc) && /_fcSpk\(word, 22\)/.test(appSrc), 'v21.1: 单词和每句例句旁都有小喇叭');
+assert(/getVocabIpa\(word\)/.test(appSrc) && /fc-card-ipa/.test(idxSrc), 'v21.1: 卡片正面显示音标');
+assert(/function startFcQuiz\(/.test(appSrc) && /startFcQuiz\('today'\)/.test(appSrc) && /startFcQuiz\('\$\{deck\.id\}'\)/.test(appSrc), 'v21.1: 考题入口: 考今天这一组 + 每个卡组考 20 题');
+assert(/recordVocabQuiz\(state, q\.word, ok\)/.test(appSrc), 'v21.1: 考题结果真的写回了 (不是死代码)');
+assert(/'考题'\]\.map/.test(appSrc), 'v21.1: 家长看板有"考题"列');
+assert(/\.fc-quiz-card \{[^}]*padding-right:38px/.test(idxSrc), 'v21.1: 考题卡右侧留手指滑动的空');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
