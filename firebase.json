@@ -16,7 +16,10 @@
       "*.ps1",
       "package.json",
       "package-lock.json",
-      "chamui_app_single.html"
+      "chamui_app_single.html",
+      "firebase_dump_*.json",
+      "qa_check.js",
+      "dump_firebase.js"
     ],
     "headers": [
       {
