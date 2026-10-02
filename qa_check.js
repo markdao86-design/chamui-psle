@@ -2071,6 +2071,21 @@ assert((appSrc.match(/window\.applyFarmCleanup\(state\)/g) || []).length >= 2, '
 assert(/remoteData\._cleanups\[FARM_CLEANUP_ID\]/.test(dataSrcV80), 'v21.2: 同步安全网放行"清理后分更低"的远端数据');
 assert(/type: points > 0 \? 'admin_award' : 'admin_deduct'/.test(appSrc), 'v21.2: 家长页加分的日志带类型 (闸门靠它数次数)');
 
+// ===== v21.3: 家长只读看板 parent.html =====
+{
+  const pSrc = fs.readFileSync(path.join(__dirname, 'parent.html'), 'utf8');
+  const pScripts = (pSrc.match(/<script[^>]*src="([^"]+)"/g) || []).map(x => x.replace(/.*src="/, '').replace(/\?.*/, '').replace(/"$/, ''));
+  const pCode = pSrc.slice(pSrc.indexOf('<script>'));
+  assert(pScripts.join() === 'data.js' && !/saveState\(|\.set\(|method:\s*['"](POST|PATCH|PUT|DELETE)/.test(pCode), `v21.3: 家长看板结构上只读 — 只加载 data.js (实际 ${pScripts.join()}), 不加载主程序和 Firebase SDK, 没有任何写数据的代码`);
+  assert(/firestore\.googleapis\.com\/v1\/projects\/chamui-psle/.test(pSrc) && /setInterval\(load, 60000\)/.test(pSrc), 'v21.3: 用只读 REST 接口取数据, 每分钟自动刷新');
+  const pv = (pSrc.match(/data\.js\?v=([\d.]+)/) || [])[1], iv = (idxSrc.match(/data\.js\?v=([\d.]+)/) || [])[1];
+  assert(pv && pv === iv, `v21.3: parent.html 引的 data.js 版本号要和 index.html 一致 (${pv} vs ${iv}) — 只改 index.html 的话家长看板会用旧词库算进度`);
+  ['getFcProgress', 'getFcDailySize', 'estimateFcFinish', 'getFcHardWords'].forEach(fn => assert(pSrc.indexOf('window.' + fn + '(') >= 0 && typeof W[fn] === 'function', `v21.3: 家长看板用到的 ${fn} 在 data.js 里真的导出了`));
+  assert(/state\.adminPassword/.test(pSrc) && !/console\.log\([^)]*adminPassword/.test(pSrc), 'v21.3: 用家长密码进, 密码不打日志');
+  assert(/href="parent\.html"/.test(idxSrc), 'v21.3: 主 app「其他」菜单里有家长看板入口');
+  assert(/parent\.html[\s\S]{0,120}no-cache/.test(fs.readFileSync(path.join(__dirname, 'firebase.json'), 'utf8')), 'v21.3: parent.html 不缓存 (改了马上生效)');
+}
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));

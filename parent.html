@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>家长看板 · 只读</title>
+<!--
+  v21.3 家长只读看板 (用户 2026-10-02: "家长登录能远程检查孩子的学习情况么" → "在 psle 这个页面上加")
+  为什么单做一页而不是在主 app 里看:
+    主 app 没有只读模式 —— 家长打开的和孩子打开的是同一份数据, 手滑点一下就改到孩子的记录,
+    而且每开一次都替孩子领一次"每日登录 +5"。
+  这一页的只读是结构上保证的, 不是靠自觉:
+    · 不加载 app.js, 不加载 Firebase SDK, 整页没有任何写数据的代码
+    · 数据用 Firestore 的只读 REST 接口取, 每分钟自动刷新
+    · data.js 只借它的纯计算函数 (进度 / 预计背完日期), 不调 saveState
+-->
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#F1F5F9;color:#1E293B;font-size:15px;line-height:1.6}
+.wrap{max-width:780px;margin:0 auto;padding:14px}
+h1{font-size:19px;margin:6px 0 2px;color:#1E40AF}
+.sub{font-size:12px;color:#64748B}
+.card{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:14px;margin-top:12px}
+.card h2{font-size:15px;margin:0 0 8px}
+.big{font-size:26px;font-weight:800;color:#1E40AF}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.tile{flex:1 1 0;min-width:72px;border:1px solid #E2E8F0;border-radius:10px;padding:8px 4px;text-align:center}
+.tile b{display:block;font-size:20px}.tile span{font-size:11px;color:#64748B}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;background:#F1F5F9;padding:5px 4px;text-align:center}
+td{font-size:12px;padding:6px 4px;border-bottom:1px solid #F1F5F9;text-align:center}
+th:first-child,td:first-child{text-align:left;white-space:nowrap}
+.ok{color:#16A34A;font-weight:700}.warn{color:#B45309;font-weight:700}.bad{color:#DC2626;font-weight:700}.mute{color:#94A3B8}
+.words{font-size:12px;color:#B45309;margin-top:8px;line-height:1.8}
+.scroll{overflow-x:auto}
+input,button{font-size:16px;padding:12px 14px;border-radius:10px;border:1px solid #CBD5E1;width:100%}
+button{background:#1E40AF;color:#fff;border:none;font-weight:700;margin-top:10px;cursor:pointer}
+.bar{height:8px;background:#E2E8F0;border-radius:4px;overflow:hidden;display:flex;margin:8px 0}
+</style>
+</head>
+<body>
+<div class="wrap" id="root"><h1>📋 家长看板</h1><div class="sub">加载中…</div></div>
+<script src="data.js?v=21.3"></script>
+<script>
+(function () {
+  'use strict';
+  var DOC_URL = 'https://firestore.googleapis.com/v1/projects/chamui-psle/databases/(default)/documents/chamui/main';
+  var AUTH_KEY = 'chamui_parent_ok';
+  var root = document.getElementById('root');
+  var state = null, lastFetch = 0, authed = false;
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  // Firestore REST 的带类型字段 → 普通值
+  function pv(f) {
+    if (!f || typeof f !== 'object') return null;
+    if ('integerValue' in f) return Number(f.integerValue);
+    if ('doubleValue' in f) return Number(f.doubleValue);
+    if ('stringValue' in f) return f.stringValue;
+    if ('booleanValue' in f) return f.booleanValue;
+    if ('nullValue' in f) return null;
+    if ('timestampValue' in f) return f.timestampValue;
+    if ('mapValue' in f) { var o = {}, fs = (f.mapValue && f.mapValue.fields) || {}; Object.keys(fs).forEach(function (k) { o[k] = pv(fs[k]); }); return o; }
+    if ('arrayValue' in f) return ((f.arrayValue && f.arrayValue.values) || []).map(pv);
+    return null;
+  }
+  function parseDoc(doc) { var o = {}, fs = (doc && doc.fields) || {}; Object.keys(fs).forEach(function (k) { o[k] = pv(fs[k]); }); return o; }
+  function hash(s) { var h = 5381; for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return String(h); }
+  function localDate(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function md(k) { return (+k.slice(5, 7)) + '/' + (+k.slice(8, 10)); }
+  function far(k) { return (+k.slice(0, 4) !== new Date().getFullYear() ? k.slice(0, 4) + '/' : '') + md(k); }
+  function dow(k) { var p = k.split('-'); return '日一二三四五六'[new Date(+p[0], +p[1] - 1, +p[2]).getDay()]; }
+
+  var SCORE = [['ed', 'Editing', 'f'], ['gr', 'Grammar', 'f'], ['oe', '阅读问答', 'f'], ['cloze', '完形', 'f'], ['vw', '词汇', 'f'], ['syn', '句型转换', 'f'],
+    ['sci_mcq', '科学选择题', 'f'], ['sci_oe', '科学开放题', 'f'], ['cn', '华文阅读', 'f'], ['vt', '睡前单词自测', 'f'], ['paper', '整卷', 'f'],
+    ['review', '错题复盘', 'c'], ['sleep', '21:30 收工', 'c'], ['parent', '家长已核对', 'c']];
+  var GAME = { cloze: '完形', editing: 'Editing', grammar: '语法', sst: '句型', knowledge: '知识树', vocab: '词汇', math: '数学', cn_oe: '华文问答', scimcq: '科学', listen: '听力' };
+
+  function board(st) {
+    var now = new Date(), today = localDate(now), days = [];
+    for (var i = 0; i < 14; i++) { var d = new Date(); d.setDate(d.getDate() - i); days.push(localDate(d)); }
+    var pr = window.getFcProgress(st), size = window.getFcDailySize(st), est = window.estimateFcFinish(st, size);
+    var fc = st.fcDaily || {}, t = fc[today];
+    var todayLine = !t ? '<span class="warn">今天还没背</span>'
+      : (t.done ? '<span class="ok">✓ 今天这一组完成</span>' : '<span class="warn">背到 ' + (t.total || 0) + '/' + (t.size || size) + '</span>')
+        + ' · 一遍过 ' + (t.firstKnow || 0) + ' · 没记住 ' + (t.missed || []).length + ' · 新学会 ' + (t.learned || []).length
+        + ' · 用时 ' + Math.max(1, Math.round((t.secs || 0) / 60)) + ' 分' + (t.quizTotal ? ' · 考题 ' + (t.quizOk || 0) + '/' + t.quizTotal : ' · 今天没考题');
+    var done7 = 0;
+    var rows = days.map(function (k, i) {
+      var r = fc[k], head = '<td>' + md(k) + ' 周' + dow(k) + (k === today ? '·今' : '') + '</td>';
+      if (!r || !(r.total || r.quizTotal)) return '<tr>' + head + '<td colspan="6" class="' + (k === today ? 'warn' : 'bad') + '">' + (k === today ? '还没开始' : '✗ 没背') + '</td></tr>';
+      if (i < 7 && r.done) done7++;
+      var per = r.total ? Math.round((r.secs || 0) / r.total) : 0, fast = (r.total || 0) >= 10 && per <= 2;
+      return '<tr>' + head + '<td class="' + (r.done ? 'ok' : 'warn') + '">' + (r.done ? '✓' : r.total ? '未完' : '没背') + ' ' + (r.total || 0) + '/' + (r.size || r.total || 0) + '</td>'
+        + '<td>' + (r.firstKnow || 0) + '</td><td>' + (r.missed || []).length + '</td><td class="ok">+' + (r.learned || []).length + '</td>'
+        + '<td class="' + (fast ? 'bad' : 'mute') + '">' + Math.max(1, Math.round((r.secs || 0) / 60)) + ' 分' + (fast ? ' ⚠️太快' : '') + '</td>'
+        + '<td>' + (r.quizTotal ? (r.quizOk || 0) + '/' + r.quizTotal : '—') + '</td></tr>';
+    }).join('');
+    var missed = t && (t.missed || []).length ? '<div class="words">今天第一遍没记住: ' + t.missed.map(esc).join(' · ') + '</div>' : '';
+    var qwrong = t && (t.quizWrong || []).length ? '<div class="words">今天考题答错: ' + t.quizWrong.map(esc).join(' · ') + '</div>' : '';
+    var hard = window.getFcHardWords(st, 12);
+
+    var sc = st.scheduleScores || {};
+    var scoreRows = days.slice(0, 7).map(function (k) {
+      var s = sc[k]; if (!s) return '';
+      var parts = [];
+      SCORE.forEach(function (x) {
+        if (x[2] === 'f' && s[x[0] + '_a'] != null && s[x[0] + '_b'] != null) parts.push(esc(x[1] + ' ' + s[x[0] + '_a'] + '/' + s[x[0] + '_b']));
+        else if (x[2] === 'c' && s[x[0]]) parts.push(esc(x[1]) + ' ✓');
+      });
+      if (s.note) parts.push('自学: ' + esc(s.note));
+      return parts.length ? '<tr><td>' + md(k) + ' 周' + dow(k) + '</td><td style="text-align:left">' + parts.join(' · ') + '</td></tr>' : '';
+    }).join('');
+
+    var logs = Array.isArray(st.logs) ? st.logs : [], pos = {};
+    logs.forEach(function (l) { if ((l.points || 0) > 0 && l.timestamp) { var k = localDate(new Date(l.timestamp)); pos[k] = (pos[k] || 0) + l.points; } });
+    var odd = Object.keys(pos).filter(function (k) { return pos[k] > 300 && days.indexOf(k) >= 0; }).sort().reverse();
+    var adminToday = logs.filter(function (l) { return l.type === 'admin_award' && l.timestamp && localDate(new Date(l.timestamp)) === today; });
+    var todayLogs = logs.filter(function (l) { return l.timestamp && localDate(new Date(l.timestamp)) === today && (l.points || 0) !== 0; });
+    var byReason = {}; todayLogs.forEach(function (l) { var k = String(l.reason || '').replace(/"[^"]*"/, '').replace(/\d+/g, '').trim().slice(0, 14); byReason[k] = (byReason[k] || 0) + l.points; });
+
+    var wrongs = Array.isArray(st.wrongAnswers) ? st.wrongAnswers : [], byGame = {};
+    wrongs.forEach(function (w) { var k = w.gameKey || '其他'; byGame[k] = (byGame[k] || 0) + 1; });
+    var wrongLine = Object.keys(byGame).sort(function (a, b) { return byGame[b] - byGame[a]; }).map(function (k) { return esc(GAME[k] || k) + ' ' + byGame[k]; }).join(' · ');
+    var stars = 0; Object.keys(st.knowledgeStars || {}).forEach(function (k) { stars += (st.knowledgeStars[k] || {}).stars || 0; });
+    var last = st._lastTouch ? new Date(st._lastTouch) : null;
+    var lastTxt = last ? md(localDate(last)) + ' ' + String(last.getHours()).padStart(2, '0') + ':' + String(last.getMinutes()).padStart(2, '0') : '—';
+    var w = function (n) { return pr.total ? (n / pr.total * 100) + '%' : '0%'; };
+
+    return '<h1>📋 家长看板</h1>'
+      + '<div class="sub">只读 · ' + md(today) + ' 周' + dow(today) + ' · 孩子最后一次操作 ' + esc(lastTxt) + ' · 每分钟自动刷新</div>'
+      + '<div class="card"><h2>📇 今天的单词</h2><div>' + todayLine + '</div>' + missed + qwrong + '</div>'
+      + '<div class="card"><h2>单词进度</h2><div><span class="big">' + pr.done + '</span> / ' + pr.total + ' 个已学会 · ' + pr.pct + '%'
+      + (est.days > 0 ? ' · <span class="warn">按每天 ' + size + ' 个, 预计 ' + far(est.date) + ' 基本背完</span>' : est.days < 0 ? ' · <span class="bad">按现在的量两年内背不完</span>' : '') + '</div>'
+      + '<div class="bar"><div style="width:' + w(pr.mastered) + ';background:#16A34A"></div><div style="width:' + w(pr.learned) + ';background:#1E40AF"></div><div style="width:' + w(pr.learning) + ';background:#93C5FD"></div></div>'
+      + '<div class="row"><div class="tile"><b style="color:#16A34A">' + pr.mastered + '</b><span>已掌握</span></div><div class="tile"><b style="color:#1E40AF">' + pr.learned + '</b><span>已学会</span></div><div class="tile"><b style="color:#3B82F6">' + pr.learning + '</b><span>学习中</span></div><div class="tile"><b style="color:#64748B">' + pr.new + '</b><span>还没学</span></div></div>'
+      + '<div class="sub" style="margin-top:8px">近 7 天背完了 <b class="' + (done7 >= 6 ? 'ok' : 'bad') + '">' + done7 + '</b> 天</div>'
+      + (hard.length ? '<div class="words">老是记不住: ' + hard.map(function (h) { return esc(h.w) + '×' + h.lapses; }).join(' · ') + '</div>' : '') + '</div>'
+      + '<div class="card"><h2>最近 14 天</h2><div class="scroll"><table><thead><tr><th>日期</th><th>完成</th><th>一遍过</th><th>没记住</th><th>新学会</th><th>用时</th><th>考题</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>'
+      + '<div class="card"><h2>✏️ 课表打分 · 最近 7 天</h2>' + (scoreRows ? '<div class="scroll"><table><tbody>' + scoreRows + '</tbody></table></div>' : '<div class="warn">这 7 天一格都没填</div>') + '</div>'
+      + '<div class="card"><h2>⭐ 积分</h2><div><span class="big">' + Number(st.totalPoints || 0) + '</span> 分 · 今天 +' + (pos[today] || 0) + ' · 知识树 ' + stars + '⭐</div>'
+      + (Object.keys(byReason).length ? '<div class="sub" style="margin-top:6px">今天进账: ' + Object.keys(byReason).map(function (k) { return esc(k) + ' ' + (byReason[k] > 0 ? '+' : '') + byReason[k]; }).join(' · ') + '</div>' : '')
+      + (adminToday.length ? '<div class="sub" style="margin-top:6px">今天家长页加分: ' + adminToday.map(function (l) { return esc(l.reason) + ' +' + l.points; }).join(' · ') + '</div>' : '')
+      + (odd.length ? '<div class="bad" style="margin-top:8px;font-size:13px">⚠️ 单日进账超过 300 分: ' + odd.map(function (k) { return md(k) + ' +' + pos[k]; }).join(' · ') + '</div>' : '') + '</div>'
+      + '<div class="card"><h2>📓 错题本 · ' + wrongs.length + ' 题待清</h2><div class="sub">' + (wrongLine || '空') + '</div></div>'
+      + '<div class="sub" style="margin-top:12px">这是只读页面, 改不了孩子的任何数据。<a href="#" id="pLock">锁定</a></div>';
+  }
+
+  function login(msg) {
+    root.innerHTML = '<h1>📋 家长看板</h1><div class="sub">只读 · 输入孩子 app 里的家长密码</div>'
+      + '<div class="card"><form id="pForm"><input type="password" id="pPw" placeholder="家长密码" autocomplete="current-password" required>'
+      + '<button type="submit">进入</button>' + (msg ? '<div class="bad" style="margin-top:10px;font-size:13px">' + esc(msg) + '</div>' : '') + '</form></div>';
+    document.getElementById('pForm').onsubmit = function (e) {
+      e.preventDefault();
+      var pw = document.getElementById('pPw').value;
+      if (!state || !state.adminPassword) return login('孩子的 app 里还没设家长密码, 先去 app 的管理页设一个');
+      if (pw !== String(state.adminPassword)) return login('密码不对');
+      try { localStorage.setItem(AUTH_KEY, hash('p|' + state.adminPassword)); } catch (err) {}
+      authed = true; render();
+    };
+  }
+  function render() {
+    if (!state) return;
+    var saved = null; try { saved = localStorage.getItem(AUTH_KEY); } catch (e) {}
+    // 家长改了密码, 这台设备上记住的登录自动失效
+    if (!authed && state.adminPassword && saved === hash('p|' + state.adminPassword)) authed = true;
+    if (!authed) { if (!document.getElementById('pForm')) login(''); return; }
+    root.innerHTML = board(state);
+    var lk = document.getElementById('pLock');
+    if (lk) lk.onclick = function (e) { e.preventDefault(); try { localStorage.removeItem(AUTH_KEY); } catch (err) {} authed = false; login(''); };
+  }
+  function load() {
+    fetch(DOC_URL, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (doc) { state = parseDoc(doc); lastFetch = Date.now(); render(); })
+      .catch(function (e) { if (!state) root.innerHTML = '<h1>📋 家长看板</h1><div class="card bad">数据取不到 (' + esc(e.message) + ')。<div class="sub">在中国大陆需要先连上 VPN。</div></div>'; });
+  }
+  window.__parentBoard = { board: board, parseDoc: parseDoc };   // 自测用
+  load();
+  setInterval(load, 60000);
+})();
+</script>
+</body>
+</html>
