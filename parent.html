@@ -41,7 +41,7 @@ button{background:#1E40AF;color:#fff;border:none;font-weight:700;margin-top:10px
 </head>
 <body>
 <div class="wrap" id="root"><h1>📋 家长看板</h1><div class="sub">加载中…</div></div>
-<script src="data.js?v=21.3"></script>
+<script src="data.js?v=21.4"></script>
 <script>
 (function () {
   'use strict';
@@ -131,7 +131,7 @@ button{background:#1E40AF;color:#fff;border:none;font-weight:700;margin-top:10px
       + '<div class="sub">只读 · ' + md(today) + ' 周' + dow(today) + ' · 孩子最后一次操作 ' + esc(lastTxt) + ' · 每分钟自动刷新</div>'
       + '<div class="card"><h2>📇 今天的单词</h2><div>' + todayLine + '</div>' + missed + qwrong + '</div>'
       + '<div class="card"><h2>单词进度</h2><div><span class="big">' + pr.done + '</span> / ' + pr.total + ' 个已学会 · ' + pr.pct + '%'
-      + (est.days > 0 ? ' · <span class="warn">按每天 ' + size + ' 个, 预计 ' + far(est.date) + ' 基本背完</span>' : est.days < 0 ? ' · <span class="bad">按现在的量两年内背不完</span>' : '') + '</div>'
+      + (est.days > 0 ? ' · <span class="warn">按每天新学 ' + size + ' 个 (复习另算), 预计 ' + far(est.date) + ' 基本背完</span>' : est.days < 0 ? ' · <span class="bad">按现在的量两年内背不完</span>' : '') + '</div>'
       + '<div class="bar"><div style="width:' + w(pr.mastered) + ';background:#16A34A"></div><div style="width:' + w(pr.learned) + ';background:#1E40AF"></div><div style="width:' + w(pr.learning) + ';background:#93C5FD"></div></div>'
       + '<div class="row"><div class="tile"><b style="color:#16A34A">' + pr.mastered + '</b><span>已掌握</span></div><div class="tile"><b style="color:#1E40AF">' + pr.learned + '</b><span>已学会</span></div><div class="tile"><b style="color:#3B82F6">' + pr.learning + '</b><span>学习中</span></div><div class="tile"><b style="color:#64748B">' + pr.new + '</b><span>还没学</span></div></div>'
       + '<div class="sub" style="margin-top:8px">近 7 天背完了 <b class="' + (done7 >= 6 ? 'ok' : 'bad') + '">' + done7 + '</b> 天</div>'

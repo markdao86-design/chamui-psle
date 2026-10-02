@@ -2578,7 +2578,7 @@ function renderVocabPage() {
   const sizeBtns = window.FC_SIZE_OPTIONS.map(n => {
     const e = window.estimateFcFinish(state, n), on = n === size;
     return `<button onclick="setFcSizeUI(${n})" style="flex:1 1 0;padding:7px 4px;border-radius:10px;border:1px solid ${on ? '#1E40AF' : '#CBD5E1'};background:${on ? '#1E40AF' : '#F8FAFC'};color:${on ? '#FFFFFF' : '#1E293B'};cursor:pointer;font-size:12px;line-height:1.5">
-      <b style="font-size:14px">每天 ${n} 个</b><br>${e.days > 0 ? _fcFmtFar(e.date) + ' 背完' : e.days < 0 ? '两年内背不完' : '已背完'}</button>`;
+      <b style="font-size:14px">每天新学 ${n} 个</b><br>${e.introDays > 0 ? '新词 ' + _fcFmtFar(e.introDate) + ' 学完' : e.days > 0 ? '新词已学完' : e.days < 0 ? '两年内背不完' : '已背完'}</button>`;
   }).join('');
   const log = window.getFcDailyLog(state, 14);
   const logRows = log.map(x => {
@@ -2635,10 +2635,10 @@ function renderVocabPage() {
       <div style="font-size:11px;color:#64748B;margin-top:6px">选择题 + 选词填空 · 答错的词退两级, 明天这一组优先补 · 按卡组考在页面最下面</div>
     </div>
     <div class="card" style="margin-bottom:12px">
-      <div style="font-size:14px;font-weight:700;margin-bottom:8px">📅 每天背多少</div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px">📅 每天新学多少 <span style="font-size:11px;font-weight:400;color:#64748B">复习另算 · 新学 + 复习一天最多 ${window.FC_DAILY_MAX} 个</span></div>
       <div style="display:flex;gap:6px">${sizeBtns}</div>
-      <div style="font-size:11px;color:#64748B;margin-top:6px;line-height:1.7">每组 1/3 新词 + 2/3 复习 · 艾宾浩斯 6 次复习: 当天 → 隔 1 天 → 3 天 → 7 天 → 14 天 → 30 天, 6 次都认识才算掌握; 忘了退两级, 第二天先补<br>
-        ${est.days > 0 ? `按每天 ${size} 个、每天都背 (复习一遍过率按 ${Math.round(est.rate * 100)}% 算): 新词 <b>${_fcFmtFar(est.introDate)}</b> 全部见过一遍 · <b>${_fcFmtFar(est.date)}</b> 掌握 95% · 最后 5% 难词约到 ${est.masteredDate ? _fcFmtFar(est.masteredDate) : '更晚'} · 断一天顺延一天` : ''}</div>
+      <div style="font-size:11px;color:#64748B;margin-top:6px;line-height:1.7">艾宾浩斯 6 次复习: 当天 → 隔 1 天 → 3 天 → 7 天 → 14 天 → 30 天, 6 次都认识才算掌握; 忘了退两级, 第二天先补<br>
+        ${est.days > 0 ? `按每天新学 ${size} 个、每天都背 (复习一遍过率按 ${Math.round(est.rate * 100)}% 算): 新词 <b>${_fcFmtFar(est.introDate)}</b> 全部见过一遍 · <b>${_fcFmtFar(est.date)}</b> 掌握 95% · 最后 5% 难词约到 ${est.masteredDate ? _fcFmtFar(est.masteredDate) : '更晚'} · 断一天顺延一天` : ''}</div>
     </div>
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px">
@@ -2761,7 +2761,7 @@ function setFcSizeUI(n) {
   const r = window.setFcDailySize(state, n);
   if (!r.ok) return;
   saveState(state);
-  showToast(r.today ? `每天 ${n} 个, 今天就按这个来` : `每天 ${n} 个, 今天这组已经开始了, 明天起生效`, 'info');
+  showToast(r.today ? `每天新学 ${n} 个, 今天就按这个来` : `每天新学 ${n} 个, 今天这组已经开始了, 明天起生效`, 'info');
   renderVocabPage();
 }
 function _fcListModal(title, bodyHtml) {

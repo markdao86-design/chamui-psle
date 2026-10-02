@@ -1926,13 +1926,19 @@ assert(/const f2All = key => ALL\.map/.test(appSrc) && !/pct\(\[f2\(1, 'oe'\), f
   assert(W.getFcDailySize(s2) === W.FC_GROUP_SIZE, 'v21.0: 默认每日规模');
   assert(W.setFcDailySize(s2, 40).ok && W.getFcDailySize(s2) === 40 && !W.setFcDailySize(s2, 999).ok, 'v21.0: 每日规模只能选 20/30/40');
   const e20 = W.estimateFcFinish(mk(), 20), e40 = W.estimateFcFinish(mk(), 40);
-  assert(e20.days > e40.days && e40.days > 0 && /^\d{4}-\d{2}-\d{2}$/.test(e40.date), `v21.0: 能算出预计学完日期, 每天背得多学完得早 (20个 ${e20.days}天 / 40个 ${e40.days}天)`);
+  assert(e20.introDays > e40.introDays && e40.days > 0 && /^\d{4}-\d{2}-\d{2}$/.test(e40.date), `v21.0: 能算出预计日期, 每天新学得多新词放完得早 (20个 ${e20.introDays}天 / 40个 ${e40.introDays}天; 全部掌握受每天 100 个总上限管, 差不多)`);
   // 每组 = 新词 1/3 + 复习 2/3 (原来新词优先, 词库一扩容老词永远轮不到复习)
   const s3 = mk();
   all.slice(0, 200).forEach(x => { s3.flashcardSRS[x] = { interval: 2, correctStreak: 2, lastReviewed: '2020-01-01', nextReview: '2020-01-04', mastered: false }; });
   const g3 = W.buildDailyFlashcardGroup(s3, 30);
   const nNew = g3.filter(x => !s3.flashcardSRS[x]).length;
-  assert(g3.length === 30 && nNew === 10, `v21.0: 30 个 = 10 新词 + 20 复习 (实际新词 ${nNew}/${g3.length})`);
+  assert(g3.length === 100 && nNew === 30, `v21.4: 每天新学 30 个 (不含复习) + 复习, 合计封顶 100 (实际新词 ${nNew}, 共 ${g3.length})`);
+  { // 复习不够多时不硬凑: 30 新词 + 实际到期的复习
+    const s3b = mk(); all.slice(0, 12).forEach(x => { s3b.flashcardSRS[x] = { interval: 2, correctStreak: 2, lastReviewed: '2020-01-01', nextReview: '2020-01-04', mastered: false }; });
+    const g = W.buildDailyFlashcardGroup(s3b, 30);
+    assert(g.length === 42 && g.filter(x => !s3b.flashcardSRS[x]).length === 30, `v21.4: 到期复习只有 12 个时 = 30 新 + 12 复习, 不凑数 (实际 ${g.length})`);
+    assert(W.FC_DAILY_MAX === 100 && W.FC_SIZE_OPTIONS.join() === '20,30,40', 'v21.4: 总上限 100; 每天新学可选 20/30/40');
+  }
   // 每日记录: 家长看板的数据源
   const s4 = mk();
   all.slice(0, 5).forEach(x => { s4.flashcardSRS[x] = { interval: 2, correctStreak: 2, lastReviewed: '2020-01-01', nextReview: '2020-01-04', mastered: false }; });
@@ -1979,7 +1985,7 @@ assert(/已学会 \$\{pr\.done\}\/\$\{pr\.total\}/.test(appSrc), 'v21.0: 主页�
   const fresh = () => ({ flashcardSRS: {}, totalPoints: 0, logs: [] });
   const r30 = W.simulateFcPlan(fresh(), 30, 0.85), r40 = W.simulateFcPlan(fresh(), 40, 0.85);
   assert(r30.masteredDays > 55 && r30.p95Days > 0 && r30.p95Days <= r30.masteredDays && r30.introDays > 0, `v21.1: 模拟给出 新词放完/95%掌握/全部掌握 三个日子 (${r30.introDays}/${r30.p95Days}/${r30.masteredDays} 天)`);
-  assert(r40.p95Days < r30.p95Days, `v21.1: 每天背得多 95% 掌握得早 (30个 ${r30.p95Days} 天, 40个 ${r40.p95Days} 天)`);
+  assert(r40.introDays < r30.introDays, `v21.1: 每天新学得多新词放完得早 (30个 ${r30.introDays} 天, 40个 ${r40.introDays} 天)`);
   assert(W.simulateFcPlan(fresh(), 30, 0.85).p95Days === r30.p95Days, 'v21.1: 同样的输入出同样的日期 (固定种子, 页面刷新不乱跳)');
   const e = W.estimateFcFinish(fresh(), 30);
   assert(e.days === r30.p95Days && e.masteredDate && e.introDate, 'v21.1: 页面报的"基本背完"= 掌握 95% 那天');

@@ -6035,9 +6035,11 @@ function reviewFlashcard(state, word, correct) {
 // ============= v19.87: 每日一组闪卡 (用户 2026-09-05 定的规则) =============
 // 旧逻辑的问题: 一次抓 20 个到期词, 过一遍就散场, 不认识的等明天; 首页报的"到期总数"
 // 只涨不落, 越积越吓人。新逻辑改成"今天这一组, 每个词都点到认识才算完"。
-const FC_GROUP_SIZE = 30;          // 每天一组多少个词 (默认; 家长可在词汇页改 20/30/40)
-const FC_SIZE_OPTIONS = [20, 30, 40, 50];
-const FC_NEW_SHARE = 1 / 3;        // 每天一组里新词占比, 其余是复习 —— v21.0: 原来"新词优先", 词库一扩容老词永远轮不到复习
+// v21.4 (用户 2026-10-02 定): 每天新学 30 个, 复习另算; 新词 + 复习加起来一天最多 100 个。
+// 所以"每日规模"现在指**每天新学几个**, 复习按艾宾浩斯到期多少来多少, 只受 100 的总上限管。
+const FC_GROUP_SIZE = 30;          // 每天新学几个 (默认; 词汇页可改 20/30/40)
+const FC_SIZE_OPTIONS = [20, 30, 40];
+const FC_DAILY_MAX = 100;          // 新词 + 复习, 一天最多这么多
 const FC_LAPSED_RESERVE = 1 / 3;   // 给"之前没记住的词"保底的比例
 const FC_ONE_DECK_CAP = 1 / 2;     // 单个卡组在每日一组里最多占的比例 (防一个大卡组霸屏)
 const FC_LEARNED_INTERVAL = 3;     // interval ≥3 = 隔了 3 天以上再见还认识 → 算"已学会"
@@ -6077,7 +6079,7 @@ function getFcProgress(state) {
   r.pct = r.total ? Math.round(r.done / r.total * 100) : 0;
   return r;
 }
-// v21.1: 按真实排程逐天模拟 —— 同一套配额 (1/3 新词 + 2/3 复习)、同一条艾宾浩斯间隔、每 1/(1-rate) 次复习忘一次。
+// v21.1: 按真实排程逐天模拟 —— 同一套配额 (每天新学 size 个 + 到期复习, 合计 ≤ FC_DAILY_MAX)、同一条艾宾浩斯间隔、每 1/(1-rate) 次复习忘一次。
 // 返回两个里程碑: learned=全部"已学会"(过 3 天关), mastered=全部"已掌握"(6 次复习走完, 过 30 天关)。
 // 假设每天都背; 断一天顺延一天。
 function simulateFcPlan(state, size, rate) {
@@ -6091,7 +6093,6 @@ function simulateFcPlan(state, size, rate) {
   // 今天这组已经过掉的不重复算
   const g = state.fcDailyGroup;
   if (g && g.date === today) { const doneToday = new Set(Object.keys(g.firstPass || {})); _fcAllWords().forEach((w, i) => { if (doneToday.has(w) && ws[i].due <= 0) ws[i].due = 1; }); }
-  const newQuota = Math.round(size * FC_NEW_SHARE);
   let seed = 20261002; const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;   // 固定种子: 同样的输入出同样的日期
   let n = 0, learnedDay = null, masteredDay = null, introDay = null, p95Day = null;
   const LIMIT = 900;
@@ -6115,8 +6116,8 @@ function simulateFcPlan(state, size, rate) {
     const mixed = [];
     for (let k = 0; k < Math.max(ripe.length, fresh.length); k++) { if (k < ripe.length) mixed.push(ripe[k]); if (k < fresh.length) mixed.push(fresh[k]); }
     const review = lapsed.concat(mixed);
-    const nNew = Math.min(news.length, Math.max(newQuota, size - review.length));
-    const nRev = Math.min(review.length, size - nNew);
+    const nNew = Math.min(news.length, size, FC_DAILY_MAX);
+    const nRev = Math.min(review.length, FC_DAILY_MAX - nNew);
     const group = review.slice(0, nRev).concat(news.slice(0, nNew));
     for (const x of group) {
       n++;
@@ -6162,24 +6163,22 @@ function _fcClassify(state, word) {
   return (e.correctStreak || 0) === 0 && e.lastReviewed ? 'lapsed' : 'due';
 }
 
-// 编今天这一组: 复习 2/3 (没记住的优先, 再按"最久没见"排) + 新词 1/3; 哪边不够另一边补
+// 编今天这一组: 新词 size 个 (不含复习) + 到期的复习, 合计不超过 FC_DAILY_MAX。
+// 复习里没记住的优先, 再"快熟的"和"刚学的"两头交替取 (只按到期日排的话积压时全是刚学的, "已学会"一直不涨)
 function buildDailyFlashcardGroup(state, size) {
   size = size || getFcDailySize(state);
   const pools = { new: [], lapsed: [], due: [] };
   _fcAllWords().forEach(w => { const kind = _fcClassify(state, w); if (kind) pools[kind].push(w); });
   const srs = state.flashcardSRS || {};
   pools.due.sort((x, y) => String(srs[x].nextReview || '').localeCompare(String(srs[y].nextReview || '')) || (srs[x].interval || 0) - (srs[y].interval || 0));
-  // 到期词两头交替取: "快熟的"(interval≥2, 再认一次就算学会) 和 "刚学的"(interval≤1, 隔天必须巩固)。
-  // 只按到期日排的话, 积压 500 个时前 5 天全是刚学的, "已学会"一直是 0 —— 孩子又会说没进度
   const ripe = pools.due.filter(w => (srs[w].interval || 0) >= FC_LEARNED_INTERVAL - 1), fresh = pools.due.filter(w => (srs[w].interval || 0) < FC_LEARNED_INTERVAL - 1);
   const mixed = [];
   for (let i = 0; i < Math.max(ripe.length, fresh.length); i++) { if (i < ripe.length) mixed.push(ripe[i]); if (i < fresh.length) mixed.push(fresh[i]); }
   const review = pools.lapsed.concat(mixed);
-  const newQuota = Math.round(size * FC_NEW_SHARE);
-  const nNew = Math.min(pools.new.length, Math.max(newQuota, size - review.length));
-  const nRev = Math.min(review.length, size - nNew);
+  const nNew = Math.min(pools.new.length, size, FC_DAILY_MAX);
+  const nRev = Math.min(review.length, FC_DAILY_MAX - nNew);
   const out = review.slice(0, nRev);
-  // 新词: 单个卡组最多占整组一半 (iWrite 一次进 131 个新词那种大卡组不许霸屏), 名额空出来再放开
+  // 新词: 单个卡组最多占新词名额的一半 (大卡组不许霸屏), 名额空出来再放开
   const capPerDeck = Math.max(1, Math.floor(size * FC_ONE_DECK_CAP));
   const takenBy = {};
   const deckOf = w => (FLASHCARD_DECKS.find(d => d.words.includes(w)) || {}).id || '_';
@@ -9311,7 +9310,7 @@ window.getAllDueFlashcards = getAllDueFlashcards;
 window.reviewFlashcard = reviewFlashcard;
 window.getFlashcardStats = getFlashcardStats;
 window.fcTier = fcTier; window.getFcProgress = getFcProgress; window.estimateFcFinish = estimateFcFinish; window.simulateFcPlan = simulateFcPlan;
-window.getFcDailySize = getFcDailySize; window.setFcDailySize = setFcDailySize; window.FC_SIZE_OPTIONS = FC_SIZE_OPTIONS;
+window.getFcDailySize = getFcDailySize; window.setFcDailySize = setFcDailySize; window.FC_SIZE_OPTIONS = FC_SIZE_OPTIONS; window.FC_DAILY_MAX = FC_DAILY_MAX;
 window.getFcDailyLog = getFcDailyLog; window.getFcStreak = getFcStreak; window.getFcWordsByTier = getFcWordsByTier; window.getFcHardWords = getFcHardWords;
 window._fcToday = _fcToday; window._fcAllWords = _fcAllWords;
 // v18 Phase 5.1
