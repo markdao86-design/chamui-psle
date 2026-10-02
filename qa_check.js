@@ -2021,6 +2021,56 @@ assert(/recordVocabQuiz\(state, q\.word, ok\)/.test(appSrc), 'v21.1: 考题结�
 assert(/'考题'\]\.map/.test(appSrc), 'v21.1: 家长看板有"考题"列');
 assert(/\.fc-quiz-card \{[^}]*padding-right:38px/.test(idxSrc), 'v21.1: 考题卡右侧留手指滑动的空');
 
+// ===== v21.2: 清除刷分记录 + 防刷 (用户 2026-10-02: 把之前他刷的历史记录清除, 以后要有防刷) =====
+{
+  const day = (y, m, d, h) => new Date(y, m - 1, d, h || 10).getTime();
+  const mk = () => {
+    const logs = [];
+    for (let i = 0; i < 221; i++) logs.push({ reason: i % 40 === 0 ? 'W26 第一��段总模考达标' : 'W26 第一阶段总模考达标', points: 100, week: 21, timestamp: day(2026, 9, 24) + i * 260 });
+    for (let i = 0; i < 300; i++) logs.push({ reason: '📇 词汇闪卡 "x' + i + '" +2', points: 2, type: 'flashcard', timestamp: day(2026, 9, 8) + i * 900 });
+    for (let i = 0; i < 9; i++) logs.push({ reason: '羽毛球运动', points: 5, week: 19, timestamp: day(2026, 9, 9) + i * 3000 });
+    logs.push({ reason: '羽毛球运动', points: 5, week: 20, timestamp: day(2026, 9, 15) });
+    logs.push({ reason: '每日登录奖励', points: 5, timestamp: day(2026, 9, 30) });
+    logs.push({ reason: '📇 词汇闪卡 "real" +2', points: 2, type: 'flashcard', timestamp: day(2026, 10, 2) });
+    const srs = { fake1: { interval: 2, lastReviewed: '2026-09-08' }, fake2: { interval: 1, lastReviewed: '2026-09-09' }, real: { interval: 1, lastReviewed: '2026-10-02' } };
+    return { logs, flashcardSRS: srs, daily: {}, weekly: {}, milestones: { W26: true }, totalPoints: 22777, lifetimeEarned: 22777,
+      dragonsUnlocked: { silver: { unlockedAt: 'x' }, gold: { unlockedAt: 'y' } }, activePetType: 'gold_dragon' };
+  };
+  const st = mk();
+  const r = W.applyFarmCleanup(st);
+  assert(r && r.nMilestone === 221, `v21.2: 221 条 W26 重复领取全清 (含 reason 存成乱码的) (实际 ${r && r.nMilestone})`);
+  assert(r.nFlash === 300 && st.logs.some(l => /real/.test(l.reason)), 'v21.2: 9/10 前的闪卡连点记录清掉, 之后真背的保留');
+  assert(r.nDup === 8 && st.logs.filter(l => l.reason === '羽毛球运动').length === 2, `v21.2: 家长页其他项同一天连点只留 1 条 (9 条留 1; 别的日子的不动) (清 ${r.nDup})`);
+  assert(r.nSrs === 2 && st.flashcardSRS.real && !st.flashcardSRS.fake1, 'v21.2: 9/9 前连点出来的单词进度归零, 今天真背的保留');
+  assert(st.totalPoints === 5 + 5 + 5 + 2 && st.lifetimeEarned === st.totalPoints, `v21.2: 总分按清理后的记录重算 (实际 ${st.totalPoints})`);
+  assert(st.dragonsUnlocked.silver === null && st.dragonsUnlocked.gold === null && st.activePetType === 'hamster', 'v21.2: 靠刷出来的分解锁的银龙/金龙收回 (不够 10000 分)');
+  assert(st.milestones.W26 === false, 'v21.2: W26 里程碑标记复位');
+  assert(W.applyFarmCleanup(st) === null, 'v21.2: 清理幂等, 跑第二遍什么都不做');
+  assert(st.logs.some(l => l.type === 'cleanup'), 'v21.2: 清理本身留一条记录 (家长翻日志看得到清了什么)');
+  // 防刷闸门
+  const s2 = { logs: [], milestones: {}, daily: {}, weekly: {} };
+  const t0 = day(2026, 10, 3);
+  assert(W.checkAdminAward(s2, 'W26 第一阶段总模考达标', 100, t0).ok, 'v21.2: 里程碑第一次能发');
+  s2.logs.push({ reason: 'W26 第一阶段总模考达标', points: 100, type: 'admin_award', timestamp: t0 }); s2.milestones.W26 = true;
+  assert(!W.checkAdminAward(s2, 'W26 第一阶段总模考达标', 100, t0 + 86400000 * 3).ok, 'v21.2: 里程碑发过就不能再发 (隔几天也不行)');
+  assert(!W.checkAdminAward(s2, '老师表扬', 10, t0 + 2000).ok, 'v21.2: 两次加分至少隔 5 秒 (221 次连点间隔是 0.26 秒)');
+  assert(W.checkAdminAward(s2, '老师表扬', 10, t0 + 6000).ok, 'v21.2: 隔 5 秒后别的项能加');
+  s2.logs.push({ reason: '老师表扬', points: 10, type: 'admin_award', timestamp: t0 + 6000 });
+  assert(!W.checkAdminAward(s2, '老师表扬', 10, t0 + 60000).ok, 'v21.2: 同一项一天只能加一次');
+  s2.logs.push({ reason: '期末考试优异(4 科 90+)', points: 180, type: 'admin_award', timestamp: t0 + 120000 });
+  assert(!W.checkAdminAward(s2, '月小测达标', 20, t0 + 200000).ok, 'v21.2: 家长页一天最多加 300 分');
+  assert(W.checkAdminAward(s2, '老师反馈学习问题', -10, t0 + 200000).ok, 'v21.2: 扣分不受限');
+  // 单日进账封顶: 通用安全网
+  const s3 = { logs: [], daily: {}, weekly: {} };
+  for (let i = 0; i < 100; i++) s3.logs.push({ reason: 'x', points: 100, timestamp: day(2026, 11, 1) + i * 1000 });
+  s3.logs.push({ reason: 'y', points: 50, timestamp: day(2026, 11, 2) });
+  assert(W.recalcTotalPoints(s3) === W.DAILY_EARN_CAP + 50, `v21.2: 单日正分最多算 ${W.DAILY_EARN_CAP} (一天刷 10000 分也只算 ${W.DAILY_EARN_CAP}) (实际 ${s3.totalPoints})`);
+}
+assert(/window\.checkAdminAward\(state, reason, points\)/.test(appSrc), 'v21.2: 家长页加分真的过闸门 (不是死代码)');
+assert((appSrc.match(/window\.applyFarmCleanup\(state\)/g) || []).length >= 2, 'v21.2: 加载时 + 收到远端数据时 都跑清理 (旧页面把脏数据推回来也会再清)');
+assert(/remoteData\._cleanups\[FARM_CLEANUP_ID\]/.test(dataSrcV80), 'v21.2: 同步安全网放行"清理后分更低"的远端数据');
+assert(/type: points > 0 \? 'admin_award' : 'admin_deduct'/.test(appSrc), 'v21.2: 家长页加分的日志带类型 (闸门靠它数次数)');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));

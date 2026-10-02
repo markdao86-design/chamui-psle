@@ -6036,7 +6036,7 @@ function reviewFlashcard(state, word, correct) {
 // 旧逻辑的问题: 一次抓 20 个到期词, 过一遍就散场, 不认识的等明天; 首页报的"到期总数"
 // 只涨不落, 越积越吓人。新逻辑改成"今天这一组, 每个词都点到认识才算完"。
 const FC_GROUP_SIZE = 30;          // 每天一组多少个词 (默认; 家长可在词汇页改 20/30/40)
-const FC_SIZE_OPTIONS = [20, 30, 40];
+const FC_SIZE_OPTIONS = [20, 30, 40, 50];
 const FC_NEW_SHARE = 1 / 3;        // 每天一组里新词占比, 其余是复习 —— v21.0: 原来"新词优先", 词库一扩容老词永远轮不到复习
 const FC_LAPSED_RESERVE = 1 / 3;   // 给"之前没记住的词"保底的比例
 const FC_ONE_DECK_CAP = 1 / 2;     // 单个卡组在每日一组里最多占的比例 (防一个大卡组霸屏)
@@ -8545,6 +8545,7 @@ function _isSyncDataSafeToAccept(remoteData) {
     const llogs = (localState.logs || []).length;
     const rlogs = (remoteData.logs || []).length;
     // v19.68: 远端时间戳比本地旧 → 旧设备写的, 拒收
+    if (remoteData._cleanups && remoteData._cleanups[FARM_CLEANUP_ID] && !(localState._cleanups && localState._cleanups[FARM_CLEANUP_ID])) return true;   // v21.2: 远端是清理后的数据
     const ltouch = localState._lastTouch || 0, rtouch = remoteData._lastTouch || 0;
     if (ltouch && rtouch && rtouch < ltouch && rp < lp) {
       console.warn(`[v19.68 sync 安全网] 远端 _lastTouch 更旧且分更低, 拒绝同步`);
@@ -8742,6 +8743,69 @@ function calcWeekDailyPoints(weekNum, state) {
 }
 
 // ============= 规则引擎 =============
+const DAILY_EARN_CAP = 400;   // 单日正分上限 (正常一天 50-150; 家长发最大的里程碑 200 也够)
+// 一次性里程碑: 发过就不能再发 (9 月那 221 次连点就是同一条 W26)
+const ONE_TIME_AWARDS = ['W14', 'W20', 'W26', 'W42', 'W52', 'W65', 'W68', 'W72', 'W73'];
+const ADMIN_AWARD_DAILY_CAP = 300;   // 家长页一天手动加分上限
+const ADMIN_AWARD_REASONS = ['4 周无问题奖励', 'W14 中期模拟卷达标', 'W20 P5 综合达标', '一日三餐都按时(全勤)', '作文 30+ 分', '学校测验优秀(≥90%)', '学校测验达标(≥80%)', '按时吃完饭', '月小测达标', '期中考试优异(4 科 90+)', '期末考试优异(4 科 90+)', '游泳运动', '羽毛球运动', '老师表扬', '良好作息一整天'];
+const ADMIN_AWARD_PER_DAY = { '按时吃完饭': 3 };   // 其余每项一天 1 次
+// 家长页加分前的闸门。返回 { ok, why }
+function checkAdminAward(state, reason, points, now) {
+  now = now || Date.now();
+  if (points <= 0) return { ok: true };
+  const key = ONE_TIME_AWARDS.find(k => String(reason).indexOf(k) >= 0);
+  const logs = state.logs || [];
+  if (key && ((state.milestones && state.milestones[key]) || logs.some(l => l.type === 'admin_award' && String(l.reason).indexOf(key) >= 0)))
+    return { ok: false, why: key + ' 这个里程碑已经发过了, 每个里程碑只发一次' };
+  const today = _fcLocalDate(new Date(now));
+  const todays = logs.filter(l => l.type === 'admin_award' && l.timestamp && _fcLocalDate(new Date(l.timestamp)) === today && (l.points || 0) > 0);
+  if (todays.filter(l => l.reason === reason).length >= (ADMIN_AWARD_PER_DAY[reason] || 1)) return { ok: false, why: '「' + reason + '」今天已经加过了, 这一项一天最多 ' + (ADMIN_AWARD_PER_DAY[reason] || 1) + ' 次' };
+  const last = todays.length ? Math.max.apply(null, todays.map(l => l.timestamp)) : 0;
+  if (now - last < 5000) return { ok: false, why: '操作太快, 5 秒后再加' };
+  const sum = todays.reduce((a, l) => a + l.points, 0);
+  if (sum + points > ADMIN_AWARD_DAILY_CAP) return { ok: false, why: '家长页今天已加 ' + sum + ' 分, 一天最多 ' + ADMIN_AWARD_DAILY_CAP + ' 分' };
+  return { ok: true };
+}
+// 一次性清理 (每台设备加载/同步时都会跑, 幂等): 旧设备把脏数据推回云端也会被再清一遍
+const FARM_CLEANUP_ID = 'farm-2026-10-02';
+function applyFarmCleanup(state) {
+  if (!state || (state._cleanups && state._cleanups[FARM_CLEANUP_ID])) return null;
+  const cutoff = new Date(2026, 8, 10).getTime();   // 9/10 0 点 (本地)
+  let nMilestone = 0, nFlash = 0, removed = 0, nSrs = 0, nDup = 0;
+  const seenAward = {};
+  state.logs = (state.logs || []).filter(l => {
+    const reason = String(l.reason || '');
+    // W26 里程碑 (有几条 reason 存成了乱码, 所以只认开头 + 100 分)
+    if (reason.indexOf('W26') === 0 && l.points === 100) { nMilestone++; removed += 100; return false; }
+    if (l.type === 'flashcard' && l.timestamp && l.timestamp < cutoff) { nFlash++; removed += l.points || 0; return false; }
+    // 家长页其他加分项同一天被连点 (9/9: 羽毛球 1 分钟内 9 次、作息 5 次、老师表扬 3 次): 每项每天只留 1 条
+    if (!l.type && (l.points || 0) > 0 && l.timestamp && ADMIN_AWARD_REASONS.indexOf(reason) >= 0) {
+      const k = reason + '|' + _fcLocalDate(new Date(l.timestamp));
+      seenAward[k] = (seenAward[k] || 0) + 1;
+      if (seenAward[k] > (ADMIN_AWARD_PER_DAY[reason] || 1)) { nDup++; removed += l.points; return false; }
+    }
+    return true;
+  });
+  const srs = state.flashcardSRS || {};
+  Object.keys(srs).forEach(w => { if (srs[w] && srs[w].lastReviewed && srs[w].lastReviewed <= '2026-09-09') { delete srs[w]; nSrs++; } });
+  if (state.milestones) state.milestones.W26 = false;
+  if (!state._cleanups) state._cleanups = {};
+  state._cleanups[FARM_CLEANUP_ID] = { at: Date.now(), nMilestone, nFlash, nSrs, nDup, removed };
+  const before = state.totalPoints || 0;
+  recalcTotalPoints(state);
+  state.lifetimeEarned = state.totalPoints;
+  // 靠刷出来的分解锁的龙收回: 银龙要 10000 分, 金龙要 105⭐ + 10000 分
+  let dragons = 0;
+  if (state.totalPoints < 10000 && state.dragonsUnlocked) {
+    if (state.dragonsUnlocked.silver) { state.dragonsUnlocked.silver = null; dragons++; }
+    if (state.dragonsUnlocked.gold) { state.dragonsUnlocked.gold = null; dragons++; }
+    if (state.activePetType === 'gold_dragon') state.activePetType = 'hamster';
+  }
+  delete state.fcDailyGroup;   // 今天这一组按清理后的词重新编
+  if (nMilestone || nFlash || nSrs || nDup) state.logs.push({ reason: '🧹 清除刷分记录: 里程碑重复领取 ' + nMilestone + ' 次, 家长页其他项连点 ' + nDup + ' 条, 闪卡连点 ' + nFlash + ' 条, 单词假进度 ' + nSrs + ' 个 (总分 ' + before + ' → ' + state.totalPoints + ')', points: 0, type: 'cleanup', timestamp: Date.now() });
+  return { nMilestone, nFlash, nSrs, nDup, removed, before, after: state.totalPoints, dragons };
+}
+
 function recalcTotalPoints(state) {
   let total = 0;
 
@@ -8764,9 +8828,16 @@ function recalcTotalPoints(state) {
   });
 
   // 3) 加日志积分(管理页手动加分)
+  // v21.2 防刷安全网: 同一天的正分合计最多算 DAILY_EARN_CAP。不管以后哪个入口再被连点, 一天最多多出这么多,
+  // 不会再出现一天 13,871 分这种事。扣分不封顶。
+  const posByDay = {};
   state.logs.forEach(log => {
-    total += log.points;
+    const p = log.points || 0;
+    if (p <= 0 || !log.timestamp) { total += p; return; }
+    const k = _fcLocalDate(new Date(log.timestamp));
+    posByDay[k] = (posByDay[k] || 0) + p;
   });
+  Object.keys(posByDay).forEach(k => { total += Math.min(posByDay[k], DAILY_EARN_CAP); });
 
   // v19.3: 允许积分下降(修复toggle刷分漏洞), lifetimeEarned 只增不减
   state.totalPoints = Math.max(0, total);
@@ -9157,6 +9228,7 @@ window.calcWeekCompletion = calcWeekCompletion;
 window.loadState = loadState;
 window.saveState = saveState;
 window.recalcTotalPoints = recalcTotalPoints;
+window.applyFarmCleanup = applyFarmCleanup; window.checkAdminAward = checkAdminAward; window.DAILY_EARN_CAP = DAILY_EARN_CAP; window.FARM_CLEANUP_ID = FARM_CLEANUP_ID;
 // v16
 window.SGD_PER_POINT = SGD_PER_POINT;
 window.ULTIMATE_PRIZE_SGD = ULTIMATE_PRIZE_SGD;

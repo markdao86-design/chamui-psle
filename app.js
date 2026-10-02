@@ -25,6 +25,8 @@ async function init() {
     console.warn('loadStateAsync 失败:', e);
     state = loadState();
   }
+  // v21.2: 一次性清理刷出来的记录 (幂等; 每台设备加载时都跑)
+  try { if (window.applyFarmCleanup && window.applyFarmCleanup(state)) saveState(state); } catch (e) { console.warn('cleanup 失败', e); }
   // v19.15c: 启动自动算 currentWeek (today vs WEEK_DATES, 不再依赖手动切换)
   if (window.computeCurrentWeekFromToday) {
     state.currentWeek = window.computeCurrentWeekFromToday();
@@ -127,6 +129,8 @@ async function init() {
       if (!remoteState.scores) remoteState.scores = {};
       recalcTotalPoints(remoteState);
       state = remoteState;
+      // v21.2: 没更新的旧页面可能把脏数据又推回云端 → 收到就再清一遍并写回
+      try { if (window.applyFarmCleanup && window.applyFarmCleanup(state)) saveState(state); } catch (e) { console.warn('cleanup 失败', e); }
       renderAll();
       // v19.53: 家长停在课表页时, 孩子远程填分即时刷新打分表+计分卡
       const schedPage = document.getElementById('page-schedule');
@@ -11147,11 +11151,15 @@ function resetAdminPassword() {
 function addPoints(reason, points) {
   // v16: 家长密码门控
   if (!requireAdminAuth()) return;
+  // v21.2 防刷: 里程碑只发一次 / 同一项一天一次 / 两次加分隔 5 秒 / 家长页一天最多 300 分
+  const gate = window.checkAdminAward(state, reason, points);
+  if (!gate.ok) { showToast('🚫 ' + gate.why, 'warn'); return; }
   const oldPoints = state.totalPoints;
 
   state.logs.push({
     reason,
     points,
+    type: points > 0 ? 'admin_award' : 'admin_deduct',
     week: state.currentWeek,
     timestamp: Date.now()
   });
