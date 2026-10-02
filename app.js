@@ -2569,7 +2569,6 @@ function renderVocabPage() {
   const est = window.estimateFcFinish(state, size);
   const grp = window.getDailyGroupRemaining(state);
   const g = window.getDailyFlashcardGroup(state, { peekOnly: true });
-  const nNewToday = g.words.filter(w => !(state.flashcardSRS || {})[w]).length;
   const streak = window.getFcStreak(state);
   const today = window._fcToday();
   const gapDays = pr.lastDate ? Math.round((new Date(today) - new Date(pr.lastDate)) / 86400000) : null;
@@ -2619,9 +2618,10 @@ function renderVocabPage() {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
         <div>
           <div style="font-weight:700;font-size:15px">${grp.total === 0 ? '今天没有要背的词' : grp.remaining > 0 ? `今天这一组: 还剩 ${grp.remaining} / ${grp.total} 个` : '✅ 今天这一组全认识了'}</div>
-          <div style="font-size:12px;color:#64748B;margin-top:2px">${grp.total ? `新词 ${nNewToday} 个 + 复习 ${grp.total - nNewToday} 个` : ''}${grp.retakeCount > 0 ? ` · 🔁 ${grp.retakeCount} 个补考过` : ''}${streak > 0 ? ` · 🔥 连续 ${streak} 天` : ''}</div>
+          <div style="font-size:12px;color:#64748B;margin-top:2px">${grp.total ? (grp.newCount != null ? `新词 ${grp.newCount} 个 + 复习 ${grp.total - grp.newCount} 个` : `共 ${grp.total} 个`) + (grp.extra ? ` · 已加 ${grp.extra} 组` : '') : ''}${grp.retakeCount > 0 ? ` · 🔁 ${grp.retakeCount} 个补考过` : ''}${streak > 0 ? ` · 🔥 连续 ${streak} 天` : ''}</div>
         </div>
-        ${grp.remaining > 0 ? `<button onclick="startFlashcardSession(null)" style="white-space:nowrap;padding:12px 26px;background:#1E40AF;color:#FFFFFF;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">${grp.remaining < grp.total ? '继续背' : '开始背'}</button>` : ''}
+        ${grp.remaining > 0 ? `<button onclick="startFlashcardSession(null)" style="white-space:nowrap;padding:12px 26px;background:#1E40AF;color:#FFFFFF;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">${grp.remaining < grp.total ? '继续背' : '开始背'}</button>`
+          : grp.total > 0 ? `<button onclick="addFcGroupUI()" style="white-space:nowrap;padding:12px 22px;background:#16A34A;color:#FFFFFF;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">➕ 再加一组</button>` : ''}
       </div>
     </div>
     <div class="card" style="margin-bottom:12px;border-left:3px solid #7C3AED">
@@ -2756,6 +2756,18 @@ function showFcDayQuizWrong(dateKey) {
   _fcListModal(`${_fcFmtDate(dateKey)} 考题答错的 ${r.quizWrong.length} 个词`, _fcWordRows(r.quizWrong));
 }
 window.startFcQuiz = startFcQuiz; window.answerFcQuiz = answerFcQuiz; window.nextFcQuiz = nextFcQuiz; window.exitFcQuiz = exitFcQuiz; window.showFcDayQuizWrong = showFcDayQuizWrong;
+
+// v21.5: 今天这一组背完后手动再加一组, 想加几次加几次
+function addFcGroupUI() {
+  const r = window.addExtraFlashcardGroup(state);
+  if (!r.added) { showToast(r.why === 'not_done' ? '先把现在这一组背完再加' : '词库里的词今天都排过了, 没有可加的了', 'info'); renderVocabPage(); return; }
+  saveState(state);
+  showToast(`➕ 加了一组 ${r.added} 个 (今天第 ${r.extra + 1} 组)`, 'happy');
+  _fcSession = { mode: 'daily', flipped: false };
+  _renderFlashcardSession();
+  window.scrollTo(0, 0);
+}
+window.addFcGroupUI = addFcGroupUI;
 
 function setFcSizeUI(n) {
   const r = window.setFcDailySize(state, n);
@@ -2964,7 +2976,10 @@ function _endFlashcardSession() {
           🔁 <b>今天补考过的词</b> (明天这一组会优先排它们):<br>${retakeWords.map(w => escapeHtml(w)).join(' · ')}
         </div>` : ''}
         <div style="font-size:11px;color:#64748B;margin:10px 0 16px">明天会重新编一组, 今天点过不认识的会排进去</div>
-        <button class="btn-primary" onclick="exitFlashcardSession()">收工</button>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button onclick="exitFlashcardSession()" style="padding:12px 30px;background:#F1F5F9;color:#1E293B;border:1px solid #CBD5E1;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">收工</button>
+          <button onclick="addFcGroupUI()" style="padding:12px 30px;background:#16A34A;color:#FFFFFF;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">➕ 再加一组</button>
+        </div>
       </div>
     `;
     _fcSession = null;

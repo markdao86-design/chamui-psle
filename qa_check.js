@@ -2092,6 +2092,29 @@ assert(/type: points > 0 \? 'admin_award' : 'admin_deduct'/.test(appSrc), 'v21.2
   assert(/parent\.html[\s\S]{0,120}no-cache/.test(fs.readFileSync(path.join(__dirname, 'firebase.json'), 'utf8')), 'v21.3: parent.html 不缓存 (改了马上生效)');
 }
 
+// ===== v21.5: 手动再加一组 (用户: "这个单词我手动加一组, 不停的加") =====
+{
+  const st = { flashcardSRS: {}, totalPoints: 0, logs: [] };
+  const g = W.getDailyFlashcardGroup(st);
+  assert(g.newCount === 30, `v21.5: 编组时记下新词数 (实际 ${g.newCount}); 背完后每个词都有记录, 事后数会显示"新词 0 个"`);
+  assert(W.addExtraFlashcardGroup(st).why === 'not_done', 'v21.5: 这一组没背完不能加');
+  const first = g.words.slice();
+  W.answerDailyFlashcard(st, first[0], 'dont', 5);
+  let guard = 0; while (st.fcDailyGroup.queue.length && guard++ < 500) W.answerDailyFlashcard(st, st.fcDailyGroup.queue[0], 'know', 5);
+  assert(st.fcDailyGroup.done && st.fcDaily[W._fcToday()].done, 'v21.5: 第一组背完');
+  const r1 = W.addExtraFlashcardGroup(st);
+  const g2 = st.fcDailyGroup;
+  assert(r1.added === 30 && g2.queue.length === 30 && g2.words.length === 60 && !g2.done, `v21.5: 再加一组 = 又 30 个新词进队 (加了 ${r1.added})`);
+  assert(g2.queue.every(w => first.indexOf(w) < 0), 'v21.5: 加的这组不含今天已经背过的词 (今天答错的词也不重复进)');
+  assert(g2.newCount === 60 && st.fcDaily[W._fcToday()].done === false && st.fcDaily[W._fcToday()].size === 60, 'v21.5: 新词数和当天记录跟着更新, 家长看板看得到今天变成 60 个');
+  guard = 0; while (st.fcDailyGroup.queue.length && guard++ < 500) W.answerDailyFlashcard(st, st.fcDailyGroup.queue[0], 'know', 5);
+  const r2 = W.addExtraFlashcardGroup(st);
+  assert(r2.added === 30 && r2.extra === 2 && st.fcDailyGroup.words.length === 90, 'v21.5: 可以一直加 (第 3 组)');
+  assert(st.fcDaily[W._fcToday()].total === 60, 'v21.5: 当天记录累计已过 60 个');
+}
+assert(/function addFcGroupUI\(\)/.test(appSrc) && (appSrc.match(/onclick="addFcGroupUI\(\)"/g) || []).length >= 2, 'v21.5: "再加一组"按钮在词汇页和背完页都有 (不是死代码)');
+assert(!/nNewToday/.test(appSrc), 'v21.5: 页面不再事后数新词 (背完后会数成 0)');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));

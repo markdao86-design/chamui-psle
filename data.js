@@ -6165,10 +6165,10 @@ function _fcClassify(state, word) {
 
 // 编今天这一组: 新词 size 个 (不含复习) + 到期的复习, 合计不超过 FC_DAILY_MAX。
 // 复习里没记住的优先, 再"快熟的"和"刚学的"两头交替取 (只按到期日排的话积压时全是刚学的, "已学会"一直不涨)
-function buildDailyFlashcardGroup(state, size) {
+function buildDailyFlashcardGroup(state, size, exclude) {
   size = size || getFcDailySize(state);
   const pools = { new: [], lapsed: [], due: [] };
-  _fcAllWords().forEach(w => { const kind = _fcClassify(state, w); if (kind) pools[kind].push(w); });
+  _fcAllWords().forEach(w => { if (exclude && exclude.has(w)) return; const kind = _fcClassify(state, w); if (kind) pools[kind].push(w); });
   const srs = state.flashcardSRS || {};
   pools.due.sort((x, y) => String(srs[x].nextReview || '').localeCompare(String(srs[y].nextReview || '')) || (srs[x].interval || 0) - (srs[y].interval || 0));
   const ripe = pools.due.filter(w => (srs[w].interval || 0) >= FC_LEARNED_INTERVAL - 1), fresh = pools.due.filter(w => (srs[w].interval || 0) < FC_LEARNED_INTERVAL - 1);
@@ -6195,11 +6195,13 @@ function getDailyFlashcardGroup(state, opts) {
   if (g && g.date === today) return g;
   if (opts && opts.peekOnly && !(g && g.date === today)) {
     const preview = buildDailyFlashcardGroup(state);
-    return { date: today, words: preview, queue: preview.slice(), firstPass: {}, retakes: {}, done: preview.length === 0, _preview: true };
+    return { date: today, words: preview, queue: preview.slice(), firstPass: {}, retakes: {}, done: preview.length === 0, _preview: true, newCount: preview.filter(w => !(state.flashcardSRS || {})[w]).length };
   }
   const words = buildDailyFlashcardGroup(state);
   state.fcDailyGroup = {
     date: today,
+    newCount: words.filter(w => !(state.flashcardSRS || {})[w]).length,   // 编组时记下新词数 (背完以后每个词都有记录了, 事后数会数成 0)
+    extra: 0,              // 手动加了几组
     words,                 // 今天这一组是哪些词 (固定不变)
     queue: words.slice(),  // 还没点到"认识"的, 队尾轮回
     firstPass: {},         // word -> 第一次自评结果 (曲线只认这个)
@@ -6209,10 +6211,27 @@ function getDailyFlashcardGroup(state, opts) {
   return state.fcDailyGroup;
 }
 
+// v21.5 手动再加一组 (用户: "这个单词我手动加一组, 不停的加")。今天这一组背完后才能加; 每次按同一套规则再编一组
+// (新学 N 个 + 还没轮到的到期复习), 今天已经碰过的词不重复进。想加几次加几次, 每日 100 的上限只管自动编的那一组。
+function addExtraFlashcardGroup(state) {
+  const g = getDailyFlashcardGroup(state);
+  if (g.queue.length > 0) return { added: 0, why: 'not_done' };
+  // 编组函数只看"到期/没学过", 今天答错的词到期日就是今天会被再选中 → 把今天碰过的排除
+  const extra = buildDailyFlashcardGroup(state, null, new Set(g.words));
+  if (!extra.length) return { added: 0, why: 'empty' };
+  g.newCount = (g.newCount || 0) + extra.filter(w => !(state.flashcardSRS || {})[w]).length;
+  g.words = g.words.concat(extra);
+  g.queue = extra.slice();
+  g.done = false;
+  g.extra = (g.extra || 0) + 1;
+  if (state.fcDaily && state.fcDaily[g.date]) { state.fcDaily[g.date].done = false; state.fcDaily[g.date].size = g.words.length; }
+  return { added: extra.length, extra: g.extra };
+}
+
 // 今天这一组还剩几个 (首页/复习页报这个数, 不再报只涨不落的到期总数)
 function getDailyGroupRemaining(state) {
   const g = getDailyFlashcardGroup(state, { peekOnly: true });
-  return { remaining: g.queue.length, total: g.words.length, done: !!g.done && g.words.length > 0, retakeCount: Object.keys(g.retakes || {}).length };
+  return { remaining: g.queue.length, total: g.words.length, done: !!g.done && g.words.length > 0, retakeCount: Object.keys(g.retakes || {}).length, newCount: g.newCount, extra: g.extra || 0 };
 }
 
 // 记一次自评。level: 'know' | 'vague' | 'dont'
@@ -9309,7 +9328,7 @@ window.getFlashcardsDue = getFlashcardsDue;
 window.getAllDueFlashcards = getAllDueFlashcards;
 window.reviewFlashcard = reviewFlashcard;
 window.getFlashcardStats = getFlashcardStats;
-window.fcTier = fcTier; window.getFcProgress = getFcProgress; window.estimateFcFinish = estimateFcFinish; window.simulateFcPlan = simulateFcPlan;
+window.fcTier = fcTier; window.getFcProgress = getFcProgress; window.estimateFcFinish = estimateFcFinish; window.simulateFcPlan = simulateFcPlan; window.addExtraFlashcardGroup = addExtraFlashcardGroup;
 window.getFcDailySize = getFcDailySize; window.setFcDailySize = setFcDailySize; window.FC_SIZE_OPTIONS = FC_SIZE_OPTIONS; window.FC_DAILY_MAX = FC_DAILY_MAX;
 window.getFcDailyLog = getFcDailyLog; window.getFcStreak = getFcStreak; window.getFcWordsByTier = getFcWordsByTier; window.getFcHardWords = getFcHardWords;
 window._fcToday = _fcToday; window._fcAllWords = _fcAllWords;
