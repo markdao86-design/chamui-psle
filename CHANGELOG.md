@@ -1393,3 +1393,19 @@ QA 979 → 981。
 顺带修: 背完后那行写"新词 0 个 + 复习 30 个" —— 事后数新词会数成 0, 改成编组时就记下。QA 981 → 991。
 
 🤖 协作开发: [Claude Code](https://claude.com/claude-code)
+
+---
+
+## v22.0 (2026-10-02) — 新切页「英语模块学习」
+用户: "新开一个切页叫英语模块学习, 英语按 paper1、paper2 的主要模块依次放练习的题库 (editing、grammar、cloze…), 每个模块记录正确率, 题型是 psle 真题和模拟题, 对标考试 AL1 的水准"。(之前那版"练习中心四科重排"用户叫停, 没并入; 练习中心原样未动。)
+
+- 导航多一个切页 📖 英语模块学习: Paper 1 (情境写作/记叙作文) → Paper 2 Booklet A (Grammar MCQ/Vocabulary MCQ/Visual Text) → Booklet B (Grammar Cloze/Editing/Comp Cloze/S&T/阅读问答) → Paper 3 听力 → Paper 4 口试 → Paper 2 限时模拟, 共 13 个模块
+- 每个模块两种练法: 题库练 (原有小游戏, 难度 Lv4 起) / 考点 10 题 (知识树节点)
+- **每个模块记正确率** (`state.engModules`): 题库小游戏、考点 10 题、单词考题、听力选择、Paper 2 模拟都记到对应模块; 显示 累计正确率 + 折算 AL + 最近一次 + 近 5 次; 顶部报"几个模块到 AL1"和最弱模块
+- 以前小游戏累计的对错一次性搬进来 (孩子真实数据: Grammar 94% AL1, Editing 25% 最弱)
+- 课表打分表里纸笔做的分数 (教辅/真题) 在对应模块用紫色一起显示
+- **如实说明**: 题库是按 PSLE 题型出的模拟题; 历年真题有版权不在 app 里, 纸上做完填分
+
+QA 991 → 1018。
+
+🤖 协作开发: [Claude Code](https://claude.com/claude-code)

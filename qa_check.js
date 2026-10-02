@@ -2115,6 +2115,43 @@ assert(/type: points > 0 \? 'admin_award' : 'admin_deduct'/.test(appSrc), 'v21.2
 assert(/function addFcGroupUI\(\)/.test(appSrc) && (appSrc.match(/onclick="addFcGroupUI\(\)"/g) || []).length >= 2, 'v21.5: "再加一组"按钮在词汇页和背完页都有 (不是死代码)');
 assert(!/nNewToday/.test(appSrc), 'v21.5: 页面不再事后数新词 (背完后会数成 0)');
 
+// ===== v22.0: 英语模块学习 (用户: 新开一个切页, 按 paper1/paper2 主要模块依次放题库, 每个模块记录正确率, 对标 AL1) =====
+{
+  const st = { gameStats: { grammar: { cumCorrect: 30, cumTotal: 40, difficulty: 4, recent: [] } }, scheduleScores: {}, flashcardSRS: {}, logs: [] };
+  const s0 = W.getEngModuleStats(st, 'grammar');
+  assert(s0.total === 40 && s0.pct === 75, `v22.0: 以前小游戏累计的对错搬进模块 (语法 30/40 = ${s0.pct}%)`);
+  W.recordGameRun(st, 'grammar', 9, 10);
+  W.recordGameRun(st, 'editing', 5, 12);
+  W.recordGameRun(st, 'scimcq', 10, 10);
+  const g1 = W.getEngModuleStats(st, 'grammar'), e1 = W.getEngModuleStats(st, 'editing');
+  assert(g1.total === 50 && g1.ok === 39 && g1.last.ok === 9 && g1.last.total === 10, `v22.0: 题库练完自动记进对应模块 (语法 ${g1.ok}/${g1.total})`);
+  assert(e1.pct === 42 && W.scoreToAL(e1.pct) > 1, 'v22.0: Editing 5/12 = 42%, 离 AL1 线 90% 差多少一眼看得到');
+  assert(!st.engModules.scimcq && Object.keys(st.engModules).every(k => !/sci|math/.test(k)), 'v22.0: 科学/数学的小游戏不混进英语模块');
+  W.recordEngModule(st, 'visualtext', 8, 10, 'node'); W.recordEngModule(st, 'visualtext', 10, 10, 'node');
+  const v1 = W.getEngModuleStats(st, 'visualtext');
+  assert(v1.total === 20 && v1.pct === 90 && st.engModules.visualtext.runs.length === 1, 'v22.0: 同一天同一来源并成一条记录');
+  W.recordVocabQuiz(st, 'conceal', true); W.recordVocabQuiz(st, 'abandon', false); W.recordVocabQuiz(st, 'photosynthesis', true);
+  assert(W.getEngModuleStats(st, 'vocab').total === 2, 'v22.0: 单词考题记进 Vocabulary MCQ 模块 (科学术语的考题不算英语)');
+  const k = W._fcToday(); st.scheduleScores[k] = { ed_a: 20, ed_b: 30 };
+  const p = W.getEngModuleStats(st, 'editing').paper;
+  assert(p && p.pct === 67, 'v22.0: 课表打分表里纸笔做的分数 (教辅/真题) 在对应模块一起显示');
+}
+{
+  const mods = (appSrc.match(/key: '([a-z_0-9]+)', (?:btn: '[^']*', )?name:/g) || []).map(x => x.replace(/key: '/, '').replace(/',.*/, ''));
+  ['sitwriting', 'writing', 'grammar', 'vocab', 'visualtext', 'gcloze', 'editing', 'compcloze', 'synthesis', 'comp_oe', 'listening', 'oral'].forEach(m => assert(mods.indexOf(m) >= 0, `v22.0: 英语模块页有 ${m} 这个模块`));
+  const order = ['sitwriting', 'grammar', 'editing', 'compcloze', 'synthesis', 'comp_oe', 'listening', 'oral'].map(m => mods.indexOf(m));
+  assert(order.every((x, i) => i === 0 || x > order[i - 1]), 'v22.0: 模块按考卷顺序排 (Paper 1 → Paper 2 Booklet A → Booklet B → Paper 3 → Paper 4)');
+  const nodeIds = (appSrc.slice(appSrc.indexOf('const ENG_MODULES'), appSrc.indexOf('function renderEngModulePage')).match(/node: '([a-z_]+)'/g) || []).map(x => x.slice(7, -1));
+  const tree = W.KNOWLEDGE_TREE['📖 英语'].map(n => n.id);
+  assert(nodeIds.length >= 11 && nodeIds.every(id => tree.indexOf(id) >= 0 && (W.getNodePractice(id) || []).length >= 10), 'v22.0: 每个模块挂的考点都真的存在且有 10 道题');
+  assert(nodeIds.every(id => W.ENG_MODULE_OF_NODE[id]), 'v22.0: 每个考点练完都知道该记到哪个模块');
+}
+assert(/data-page="engmod">[^<]*英语模块学习/.test(idxSrc) && /id="page-engmod"/.test(idxSrc), 'v22.0: 导航上有"英语模块学习"切页');
+assert(/if \(page === 'engmod'\)[\s\S]{0,40}renderEngModulePage\(\)/.test(appSrc), 'v22.0: 切到这一页会渲染 (不是空页)');
+assert(/window\.recordEngModule\(state, window\.ENG_MODULE_OF_NODE\[g\.nodeId\], score, total, 'node'\)/.test(appSrc), 'v22.0: 考点 10 题的对错记进模块');
+assert(/recordEngModule\(state, 'listening'/.test(appSrc) && /recordEngModule\(state, 'paper2'/.test(appSrc), 'v22.0: 听力选择题和 Paper 2 模拟也记');
+assert(/AL1 线是 90%/.test(appSrc) && /历年真题有版权不在 app 里/.test(appSrc), 'v22.0: 页面写明 AL1 线, 也如实写明题库是模拟题、真题在纸上做');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));

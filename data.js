@@ -2490,6 +2490,7 @@ function recordGameRun(state, gameKey, correct, total) {
   state.totalGameRuns = (state.totalGameRuns || 0) + 1;  // v18.58: 累积 mini-game 局数 (用于 game-runs 装备)
   const s = state.gameStats[gameKey];
   if (s.difficulty < minFloor) s.difficulty = minFloor;
+  if (ENG_MODULE_OF_GAME[gameKey]) recordEngModule(state, ENG_MODULE_OF_GAME[gameKey], correct, total, gameKey);   // v22.0
   const acc = total > 0 ? correct / total : 0;
   s.recent.push({ date: new Date().toISOString().slice(0,10), correct, total, accuracy: acc });
   if (s.recent.length > 5) s.recent.shift();
@@ -6393,6 +6394,7 @@ function recordVocabQuiz(state, word, correct) {
   rec.quizTotal = (rec.quizTotal || 0) + 1;
   if (correct) rec.quizOk = (rec.quizOk || 0) + 1;
   else { rec.quizWrong = rec.quizWrong || []; if (rec.quizWrong.indexOf(word) < 0) rec.quizWrong.push(word); }
+  { const dk = _fcDeckOf(word); if (dk && !/^(sci_|math_)/.test(dk.id)) recordEngModule(state, 'vocab', correct ? 1 : 0, 1, 'quiz'); }   // v22.0
   let lapsed = false;
   const e = state.flashcardSRS && state.flashcardSRS[word];
   if (!correct && e) {
@@ -6409,6 +6411,54 @@ function getFcQuizStats(state) {
   return { ok, bad, words, pct: ok + bad ? Math.round(ok / (ok + bad) * 100) : null };
 }
 window.buildVocabQuestion = buildVocabQuestion; window.pickQuizWords = pickQuizWords; window.recordVocabQuiz = recordVocabQuiz; window.getFcQuizStats = getFcQuizStats;
+
+// ============= v22.0: 英语模块正确率 (英语模块学习页的数据源) =============
+// 不管从哪个入口练 (题库小游戏 / 考点 10 题 / 单词考题 / Paper 2 模拟), 对错都记到卷子上对应的那个模块。
+// 同一天同一来源并成一条 (单词考题是一题一记, 不并的话一天几十条)。
+const ENG_MODULE_OF_GAME = { grammar: 'grammar', cloze: 'compcloze', sst: 'synthesis', editing: 'editing', comp_oe: 'comp_oe', listen: 'listening', listen_mcq: 'listening' };
+const ENG_MODULE_OF_NODE = { eng_basics: 'grammar', eng_vocab_mcq: 'vocab', eng_visualtext: 'visualtext', eng_cloze: 'gcloze', eng_editing: 'editing', eng_compcloze: 'compcloze', eng_synthesis: 'synthesis', eng_comp: 'comp_oe', eng_sitwriting: 'sitwriting', eng_writing: 'writing', eng_listening: 'listening', eng_oral: 'oral' };
+// 课表打分表里纸笔练习 (教辅/真题) 的格子 → 模块
+const ENG_MODULE_PAPER_KEY = { editing: 'ed', grammar: 'gr', comp_oe: 'oe', compcloze: 'cloze', vocab: 'vw', synthesis: 'syn' };
+function recordEngModule(state, modKey, ok, total, src) {
+  if (!modKey || !(total > 0)) return;
+  if (!state.engModules) state.engModules = {};
+  const m = state.engModules[modKey] = state.engModules[modKey] || { ok: 0, total: 0, runs: [] };
+  ok = Math.max(0, Math.min(total, ok));
+  m.ok += ok; m.total += total;
+  const today = _fcToday(), last = m.runs[m.runs.length - 1];
+  if (last && last.d === today && last.src === (src || '')) { last.ok += ok; last.total += total; }
+  else m.runs.push({ d: today, ok, total, src: src || '' });
+  if (m.runs.length > 30) m.runs = m.runs.slice(-30);
+}
+// 第一次用: 把以前小游戏累计的对错搬过来, 页面不至于从 0 开始
+function _seedEngModules(state) {
+  if (state.engModulesSeeded) return;
+  state.engModulesSeeded = true;
+  const gs = state.gameStats || {};
+  Object.keys(ENG_MODULE_OF_GAME).forEach(k => {
+    const g = gs[k];
+    if (!g || !g.cumTotal) return;
+    if (!state.engModules) state.engModules = {};
+    const key = ENG_MODULE_OF_GAME[k];
+    const m = state.engModules[key] = state.engModules[key] || { ok: 0, total: 0, runs: [] };
+    m.ok += g.cumCorrect || 0; m.total += g.cumTotal;
+  });
+}
+function getEngModuleStats(state, modKey) {
+  _seedEngModules(state);
+  const m = (state.engModules || {})[modKey] || { ok: 0, total: 0, runs: [] };
+  const r5 = m.runs.slice(-5), ro = r5.reduce((a, x) => a + x.ok, 0), rt = r5.reduce((a, x) => a + x.total, 0);
+  const out = { ok: m.ok, total: m.total, pct: m.total ? Math.round(m.ok / m.total * 100) : 0, runs: m.runs.length,
+    last: m.runs.length ? m.runs[m.runs.length - 1] : null, recent: rt ? Math.round(ro / rt * 100) : null, paper: null };
+  const pk = ENG_MODULE_PAPER_KEY[modKey];
+  if (pk) {
+    let a = 0, b = 0; const sc = state.scheduleScores || {};
+    for (let i = 0; i < 28; i++) { const dt = new Date(); dt.setDate(dt.getDate() - i); const x = sc[_fcLocalDate(dt)]; if (x && x[pk + '_a'] != null && x[pk + '_b']) { a += x[pk + '_a']; b += x[pk + '_b']; } }
+    if (b > 0) out.paper = { ok: a, total: b, pct: Math.round(a / b * 100) };
+  }
+  return out;
+}
+window.recordEngModule = recordEngModule; window.getEngModuleStats = getEngModuleStats; window.ENG_MODULE_OF_NODE = ENG_MODULE_OF_NODE; window.ENG_MODULE_OF_GAME = ENG_MODULE_OF_GAME;
 
 function getFlashcardStats(state) {
   if (!state.flashcardSRS) state.flashcardSRS = {};

@@ -483,6 +483,7 @@ function renderDashboard() {
   renderDailyQuestCard();  // v17.7 Phase 3
   renderPetWidget();  // v18 Phase 5.1
   renderGameHubCard(); // v19.3: 每日挑战入口
+  { const _em = document.getElementById('page-engmod'); if (_em && _em.classList.contains('active')) renderEngModulePage(); }   // v22.0: 练完回来正确率马上更新
   renderChallengeCard(); // v19.4: 限时挑战赛 (W15-W30)
   renderAchievementWall();  // v18 Phase 5.1
   renderReviewCard();  // v18 Phase 5.3
@@ -1543,6 +1544,7 @@ function submitLmAnswer(optIdx) {
   }
   saveState(state);
   // v19.32: 英语 scaffold 升降级检查
+  if (window.recordEngModule) { window.recordEngModule(state, 'listening', isCorrect ? 1 : 0, 1, 'listen_mcq'); saveState(state); }   // v22.0
   if (window._checkEnglishModeHook) window._checkEnglishModeHook('listen_mcq', isCorrect);
   // 1.5s 后自动下一题 (答错延 3s 让看原文)
   setTimeout(() => { g.idx++; _renderLmQuestion(); }, isCorrect ? 1500 : 3000);
@@ -2768,6 +2770,102 @@ function addFcGroupUI() {
   window.scrollTo(0, 0);
 }
 window.addFcGroupUI = addFcGroupUI;
+
+// ============ v22.0: 英语模块学习 (独立切页) ============
+// 用户 2026-10-02: "新开一个切页叫英语模块学习, 英语按 paper1、paper2 的主要模块依次放练习的题库 (editing、grammar、cloze…),
+// 每个模块记录正确率, 题型是 psle 真题和模拟题, 对标考试 AL1 的水准"。
+// 英语是他最弱的一科 (8 月 AL6), 原来 17 个小游戏平铺在练习页, 孩子分不清哪个游戏对应卷子上哪一题、也看不到每块的正确率。
+// 两种练法: 题库练 (open, 随机出题, 难度 Lv4 起) / 考点 10 题 (node, 基础→拉分)。两种的对错都记进同一个模块的正确率。
+// 不写每题分值和时长 —— 英语 2025 卷型改过, 以学校发的考试说明为准。
+const ENG_MODULES = [
+  { title: 'Paper 1 · Writing 写作', items: [
+    { key: 'sitwriting', btn: '去写', name: 'Situational Writing 情境写作', tip: '逐个内容点打勾, 一个都不能漏', open: 'openSituationalWritingModal()', bank: () => (window.SITUATIONAL_WRITING || []).length + ' 篇', node: 'eng_sitwriting' },
+    { key: 'writing', btn: '去写', name: 'Continuous Writing 记叙作文', tip: '写完由家长按 内容 + 语言 批', open: "document.querySelector('[data-page=essay]').click()", bank: () => '73 周题目', node: 'eng_writing' },
+  ] },
+  { title: 'Paper 2 · Booklet A 选择题', items: [
+    { key: 'grammar', name: 'Grammar MCQ 语法选择', tip: '先找时间信号词定时态', open: 'openGrammarGame()', bank: () => (window.GRAMMAR_QUESTIONS || []).length + ' 题', node: 'eng_basics' },
+    { key: 'vocab', name: 'Vocabulary MCQ 词汇选择', tip: '看搭配选词, 不靠中文翻译', open: "startFcQuizFromPractice('psle_verbs')", bank: () => '词库每个词都能出题', node: 'eng_vocab_mcq' },
+    { key: 'visualtext', name: 'Visual Text 看图理解', tip: '海报、传单里找细节, 注意小字', node: 'eng_visualtext' },
+  ] },
+  { title: 'Paper 2 · Booklet B 填写题', items: [
+    { key: 'gcloze', name: 'Grammar Cloze 语法填空', tip: '先看空格前后的词性', node: 'eng_cloze' },
+    { key: 'editing', name: 'Editing 改错', tip: '动词时态 · 拼写 · 介词 · 主谓一致', open: 'openEditingGame()', bank: () => (window.EDITING_PARAGRAPHS || []).length + ' 段', node: 'eng_editing' },
+    { key: 'compcloze', name: 'Comprehension Cloze 完形填空', tip: '先通读全文再填, 答案在上下文', open: 'openClozeGame()', bank: () => (window.CLOZE_QUESTIONS || []).length + ' 题', node: 'eng_compcloze' },
+    { key: 'synthesis', name: 'Synthesis & Transformation 句型转换', tip: '改写后意思必须和原句一样', open: 'openSstGame()', bank: () => (window.SST_QUESTIONS || []).length + ' 题', node: 'eng_synthesis' },
+    { key: 'comp_oe', name: 'Comprehension OE 阅读问答', tip: '几分写几个点 —— 8 月丢 7 分的地方', open: 'openCompOeGame()', bank: () => (window.COMP_OE_PASSAGES || []).length + ' 篇', node: 'eng_comp' },
+  ] },
+  { title: 'Paper 3 · Listening 听力', items: [
+    { key: 'listening', name: 'Listening Comprehension 听力', tip: '转折词后面是重点; 先读题再听', open: 'openListenMcqGame()', bank: () => (window.LISTENING_MCQ || []).length + ' 题', node: 'eng_listening' },
+  ] },
+  { title: 'Paper 4 · Oral 口试', items: [
+    { key: 'oral', btn: '朗读', name: 'Reading Aloud + 看图会话', tip: '朗读: 停顿 重音 语调; 会话: 观点 + 理由 + 亲身例子', open: 'openOralRAModal()', bank: () => (window.ORAL_RA_PASSAGES || []).length + ' 篇朗读 · ' + (window.ORAL_QUESTIONS || []).length + ' 道会话', node: 'eng_oral', open2: ['会话题', 'openOralPracticeModal()'] },
+  ] },
+  { title: '整卷', items: [
+    { key: 'paper2', btn: '开考', name: 'Paper 2 限时模拟', tip: '限时做一套, 出预测 AL', open: 'openPaper2MockGame()' },
+  ] },
+];
+function renderEngModulePage() {
+  const el = document.getElementById('engModuleContent');
+  if (!el) return;
+  const TREE = '📖 英语', nodes = (window.KNOWLEDGE_TREE || {})[TREE] || [];
+  const all = ENG_MODULES.reduce((a, s) => a.concat(s.items), []);
+  const stats = {}; all.forEach(it => { stats[it.key] = window.getEngModuleStats(state, it.key); });
+  const scored = all.filter(it => stats[it.key].total >= 10);
+  const al1 = scored.filter(it => stats[it.key].pct >= 90).length;
+  const weakest = scored.slice().sort((a, b) => stats[a.key].pct - stats[b.key].pct)[0];
+  const col = p => p >= 90 ? '#16A34A' : p >= 75 ? '#B45309' : '#DC2626';
+  let seq = 0;
+  const html = ENG_MODULES.map(sec => {
+    const rows = sec.items.map(it => {
+      seq++;
+      const s = stats[it.key], has = s.total > 0;
+      const idx = it.node ? nodes.findIndex(n => n.id === it.node) : -1;
+      const stars = it.node ? (((state.knowledgeStars || {})[it.node] || {}).stars || 0) : 0;
+      const btn = (label, onclick, primary) => `<button onclick="${onclick}" style="padding:10px 14px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;${primary ? 'background:#1E40AF;color:#FFFFFF;border:none' : 'background:#F8FAFC;color:#1E40AF;border:1px solid #CBD5E1'}">${label}</button>`;
+      const btns = [
+        it.open ? btn(it.btn || '题库练', it.open, true) : '',
+        it.open2 ? btn(it.open2[0], it.open2[1], false) : '',
+        idx >= 0 ? btn('考点 10 题', `openKnowledgePractice('${it.node}','${TREE}',${idx})`, !it.open) : '',
+      ].filter(Boolean).join('');
+      const detail = [
+        has ? `累计 ${s.ok}/${s.total} 题` : '',
+        s.last ? `最近一次 ${s.last.ok}/${s.last.total} (${_fcFmtDate(s.last.d)})` : '',
+        s.recent != null && s.runs >= 3 ? `近 5 次 ${s.recent}%` : '',
+        s.paper ? `<span style="color:#7C3AED">纸笔近 4 周 ${s.paper.ok}/${s.paper.total} = ${s.paper.pct}%</span>` : '',
+        idx >= 0 ? `考点 ${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}` : '',
+        it.bank ? `<span style="color:#94A3B8">${escapeHtml(it.bank())}</span>` : '',
+      ].filter(Boolean).join(' · ');
+      return `<div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin-top:8px;background:#FFFFFF;border:1px solid #E2E8F0;flex-wrap:wrap">
+        <div style="flex:0 0 64px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:${has ? col(s.pct) : '#CBD5E1'}">${has ? s.pct + '%' : '—'}</div>
+          <div style="font-size:11px;color:${has ? col(s.pct) : '#94A3B8'};font-weight:700">${has ? (s.total < 10 ? '题量还少' : 'AL' + window.scoreToAL(s.pct)) : '还没练'}</div>
+        </div>
+        <div style="flex:1 1 200px;min-width:0">
+          <div style="font-size:15px;font-weight:700;color:#1E293B">${seq}. ${escapeHtml(it.name)}</div>
+          ${it.tip ? `<div style="font-size:12px;color:#64748B">${escapeHtml(it.tip)}</div>` : ''}
+          <div style="font-size:11px;color:#64748B;margin-top:3px;line-height:1.6">${detail}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${btns}</div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-top:16px"><div style="font-size:13px;font-weight:800;color:#B45309;letter-spacing:.5px">${escapeHtml(sec.title)}</div>${rows}</div>`;
+  }).join('');
+  el.innerHTML = `
+    <div style="font-size:18px;font-weight:900;color:#1E40AF">📖 英语模块学习</div>
+    <div style="font-size:12px;color:#64748B;margin:4px 0 10px;line-height:1.7">按 PSLE 四张卷的顺序, 一个模块一个模块练。每个模块都记正确率, <b style="color:#16A34A">AL1 线是 90%</b>。<br>题库是按 PSLE 题型出的模拟题 (难度 Lv4 起); 历年真题有版权不在 app 里 —— 纸上做《English Yearly》, 分数填进课表打分表, 这里用紫色一起显示。</div>
+    <div class="card" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+      <div><span style="font-size:26px;font-weight:800;color:#1E40AF">${al1}</span><span style="font-size:13px;color:#64748B"> / ${all.length} 个模块到 AL1</span></div>
+      <div style="font-size:13px;color:#1E293B">${weakest ? `最弱: <b style="color:${col(stats[weakest.key].pct)}">${escapeHtml(weakest.name)} ${stats[weakest.key].pct}%</b> — 先补这个` : '练满 10 题的模块才参与排名'}</div>
+    </div>
+    ${html}`;
+}
+// 从别的页进单词考题: 先切到词汇页 (考题画在那一页上) 再开考
+function startFcQuizFromPractice(deckId) {
+  const tab = document.querySelector('[data-page=vocab]');
+  if (tab) tab.click();
+  setTimeout(() => startFcQuiz(deckId), 60);
+}
+window.ENG_MODULES = ENG_MODULES; window.renderEngModulePage = renderEngModulePage; window.startFcQuizFromPractice = startFcQuizFromPractice;
 
 function setFcSizeUI(n) {
   const r = window.setFcDailySize(state, n);
@@ -6782,6 +6880,7 @@ function submitKnowledgePractice() {
   }
   // 计算 ⭐ 数
   const acc = score / total;
+  if (window.ENG_MODULE_OF_NODE && window.ENG_MODULE_OF_NODE[g.nodeId]) window.recordEngModule(state, window.ENG_MODULE_OF_NODE[g.nodeId], score, total, 'node');   // v22.0
   let stars = 0;
   if (acc >= 1) stars = 3;
   else if (acc >= 0.8) stars = 2;
@@ -9233,6 +9332,7 @@ function _finishMcqGame() {
       window.bumpPaper2Sprint(state, 'cloze', clozeCorrect, clozeQs.length);
       window.bumpPaper2Sprint(state, 'sst', sstCorrect, sstQs.length);
     }
+    if (window.recordEngModule) window.recordEngModule(state, 'paper2', g.correct, g.qs.length, 'mock');   // v22.0
     // v19.12: 记录到 paper2ALHistory (用于综合 AL 预测)
     if (window.recordPaper2AL) {
       const numericAL = parseInt((estAL.match(/\d+/) || ['6'])[0]);
@@ -12134,6 +12234,9 @@ function _runPageHook(page) {
       }
       if (page === 'vocab') {
         renderVocabPage();
+      }
+      if (page === 'engmod') {
+        renderEngModulePage();
       }
       if (page === 'schedule') {
         _schedViewDay = null;  // 每次进入回到今天
