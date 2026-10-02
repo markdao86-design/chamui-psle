@@ -2550,58 +2550,137 @@ function submitMockExam() {
 // ============= v19.5: 词汇闪卡页 =============
 let _fcSession = null;
 
+function _fcFmtDate(k) { const p = k.split('-'); return (+p[1]) + '/' + (+p[2]); }
+function _fcDow(k) { const p = k.split('-'); return '日一二三四五六'[new Date(+p[0], +p[1] - 1, +p[2]).getDay()]; }
+// v21.0: 词汇页重做 —— 孩子实报"没有已学会的记录/没进度/不知道多久学完/每天多少没规划", 家长要每天看到背单词情况。
+// 根因: 原来只有"已掌握"一档, 要过 30 天关才算, 背了 549 个词页面还是 0/563; 且没有任何按天的记录。
 function renderVocabPage() {
   const el = document.getElementById('vocabPageContent');
   if (!el) return;
   if (_fcSession) { _renderFlashcardSession(); return; }
-  const stats = getFlashcardStats(state);
-  // v19.87: 改报"今天这一组还剩几个" — 原来报 getAllDueFlashcards 的到期总数, 那个数只涨不落越积越吓人
-  const grp = window.getDailyGroupRemaining ? window.getDailyGroupRemaining(state) : { remaining: 0, total: 0, done: false, retakeCount: 0 };
-  const pct = stats.total > 0 ? Math.round(stats.mastered / stats.total * 100) : 0;
+  const pr = window.getFcProgress(state);
+  const size = window.getFcDailySize(state);
+  const est = window.estimateFcFinish(state, size);
+  const grp = window.getDailyGroupRemaining(state);
+  const g = window.getDailyFlashcardGroup(state, { peekOnly: true });
+  const nNewToday = g.words.filter(w => !(state.flashcardSRS || {})[w]).length;
+  const streak = window.getFcStreak(state);
+  const today = window._fcToday();
+  const gapDays = pr.lastDate ? Math.round((new Date(today) - new Date(pr.lastDate)) / 86400000) : null;
+  const tile = (tier, icon, label, n, color) => `<button onclick="showFcWordList('${tier}')" style="flex:1 1 0;min-width:70px;padding:8px 4px;border-radius:10px;border:1px solid #E2E8F0;background:#FFFFFF;cursor:pointer;text-align:center">
+      <div style="font-size:20px;font-weight:800;color:${color}">${n}</div><div style="font-size:11px;color:#64748B">${icon} ${label}</div></button>`;
+  const sizeBtns = window.FC_SIZE_OPTIONS.map(n => {
+    const e = window.estimateFcFinish(state, n), on = n === size;
+    return `<button onclick="setFcSizeUI(${n})" style="flex:1 1 0;padding:7px 4px;border-radius:10px;border:1px solid ${on ? '#1E40AF' : '#CBD5E1'};background:${on ? '#1E40AF' : '#F8FAFC'};color:${on ? '#FFFFFF' : '#1E293B'};cursor:pointer;font-size:12px;line-height:1.5">
+      <b style="font-size:14px">每天 ${n} 个</b><br>${e.days ? _fcFmtDate(e.date) + ' 学完' : '已学完'}</button>`;
+  }).join('');
+  const log = window.getFcDailyLog(state, 14);
+  const logRows = log.map(x => {
+    const r = x.rec, isToday = x.date === today;
+    const head = `<td style="padding:6px 4px;font-size:12px;white-space:nowrap;font-weight:${isToday ? 700 : 400};color:${isToday ? '#1E40AF' : '#1E293B'}">${_fcFmtDate(x.date)} 周${_fcDow(x.date)}${isToday ? '·今' : ''}</td>`;
+    if (!r) return `<tr style="border-bottom:1px solid #F1F5F9">${head}<td colspan="5" style="padding:6px 4px;font-size:12px;color:${isToday ? '#B45309' : '#DC2626'}">${isToday ? '还没开始' : '✗ 没背'}</td></tr>`;
+    const perWord = r.total ? Math.round((r.secs || 0) / r.total) : 0;
+    const fast = r.total >= 10 && perWord <= 2;
+    return `<tr style="border-bottom:1px solid #F1F5F9">${head}
+      <td style="padding:6px 4px;font-size:12px;text-align:center;color:${r.done ? '#16A34A' : '#B45309'};font-weight:700">${r.done ? '✓' : '未完'} ${r.total}/${r.size || r.total}</td>
+      <td style="padding:6px 4px;font-size:12px;text-align:center">${r.firstKnow}</td>
+      <td style="padding:6px 4px;font-size:12px;text-align:center;color:${r.missed.length ? '#B45309' : '#1E293B'}">${r.missed.length ? `<span onclick="showFcDayMissed('${x.date}')" style="text-decoration:underline;cursor:pointer">${r.missed.length} 个</span>` : '0'}</td>
+      <td style="padding:6px 4px;font-size:12px;text-align:center;color:#16A34A">${r.learned.length ? '+' + r.learned.length : '0'}</td>
+      <td style="padding:6px 4px;font-size:12px;text-align:center;color:${fast ? '#DC2626' : '#64748B'}">${Math.max(1, Math.round((r.secs || 0) / 60))} 分${fast ? ' ⚠️太快' : ''}</td></tr>`;
+  }).join('');
+  const days7 = log.slice(0, 7).filter(x => x.rec && x.rec.done).length;
+  const hard = window.getFcHardWords(state, 12);
   el.innerHTML = `
-    <h2 style="margin:0 0 8px;font-size:18px">📇 PSLE 词汇闪卡</h2>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-      <span style="font-size:13px;color:var(--color-text-light)">已掌握 ${stats.mastered}/${stats.total}</span>
-      <div style="flex:1;height:6px;background:#E2E8F0;border-radius:3px;overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#10B981,#059669);transition:width .3s"></div>
+    <h2 style="margin:0 0 10px;font-size:18px">📇 单词闪卡</h2>
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+        <span style="font-size:26px;font-weight:800;color:#1E40AF">${pr.done}</span>
+        <span style="font-size:13px;color:#64748B">/ ${pr.total} 个已学会 · ${pr.pct}%</span>
+        <span style="margin-left:auto;font-size:12px;color:#B45309;font-weight:600">${est.days ? '📅 预计 ' + _fcFmtDate(est.date) + ' 全部学会 (还要 ' + est.days + ' 天)' : '🎉 全部学会'}</span>
       </div>
-      <span style="font-size:12px;font-weight:600;color:#10B981">${pct}%</span>
+      <div style="height:8px;background:#E2E8F0;border-radius:4px;overflow:hidden;margin:8px 0 10px;display:flex">
+        <div style="width:${pr.total ? pr.mastered / pr.total * 100 : 0}%;background:#16A34A"></div>
+        <div style="width:${pr.total ? pr.learned / pr.total * 100 : 0}%;background:#1E40AF"></div>
+        <div style="width:${pr.total ? pr.learning / pr.total * 100 : 0}%;background:#93C5FD"></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${tile('mastered', '🏆', '已掌握', pr.mastered, '#16A34A')}${tile('learned', '👍', '已学会', pr.learned, '#1E40AF')}${tile('learning', '📖', '学习中', pr.learning, '#3B82F6')}${tile('new', '🆕', '还没学', pr.new, '#64748B')}
+      </div>
+      <div style="font-size:11px;color:#64748B;margin-top:8px">点数字看是哪些词 · 已学会 = 隔 3 天以上再见还认识 · 已掌握 = 隔 30 天还认识</div>
     </div>
-    ${grp.remaining > 0 ? `
-      <div class="card" style="margin-bottom:12px;border-left:3px solid #F59E0B">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <div>
-            <div style="font-weight:600;font-size:14px">📦 今天这一组: 还剩 ${grp.remaining} / ${grp.total} 个</div>
-            <div style="font-size:11px;color:var(--color-text-light)">每个词都点到「认识」才算过关${grp.retakeCount > 0 ? ` · 🔁 ${grp.retakeCount} 个在补考` : ''}</div>
-          </div>
-          <button class="btn-primary" onclick="startFlashcardSession(null)">${grp.retakeCount > 0 ? '继续过' : '开始'}</button>
+    <div class="card" style="margin-bottom:12px;border-left:3px solid ${grp.remaining > 0 ? '#F59E0B' : '#10B981'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div>
+          <div style="font-weight:700;font-size:15px">${grp.total === 0 ? '今天没有要背的词' : grp.remaining > 0 ? `今天这一组: 还剩 ${grp.remaining} / ${grp.total} 个` : '✅ 今天这一组全认识了'}</div>
+          <div style="font-size:12px;color:#64748B;margin-top:2px">${grp.total ? `新词 ${nNewToday} 个 + 复习 ${grp.total - nNewToday} 个` : ''}${grp.retakeCount > 0 ? ` · 🔁 ${grp.retakeCount} 个补考过` : ''}${streak > 0 ? ` · 🔥 连续 ${streak} 天` : ''}</div>
         </div>
-      </div>
-    ` : `<div class="card" style="margin-bottom:12px;border-left:3px solid #10B981"><div style="font-weight:600;color:#10B981">✅ 今天这一组全认识了!</div><div style="font-size:11px;color:var(--color-text-light);margin-top:2px">明天会重新编一组, 今天点过不认识的会排进去</div></div>`}
-    <div style="font-size:14px;font-weight:600;margin-bottom:8px">卡组选择:</div>
-    <div class="fc-deck-grid">
-      ${FLASHCARD_DECKS.map(deck => {
-        const mastered = deck.words.filter(w => state.flashcardSRS && state.flashcardSRS[w] && state.flashcardSRS[w].mastered).length;
-        const deckDue = getFlashcardsDue(state, deck.id).length;
-        return `<div class="fc-deck-item" onclick="startFlashcardSession('${deck.id}')">
-          <div class="fc-deck-name">${deck.name}</div>
-          <div class="fc-deck-progress">${mastered}/${deck.words.length} 掌握${deckDue > 0 ? ` · <span style="color:#B45309">${deckDue}词待复习</span>` : ''}</div>
-        </div>`;
-      }).join('')}
-    </div>
-    <div style="margin-top:16px;padding:12px;background:#FFFFFF;border-radius:8px">
-      <div style="font-size:13px;font-weight:600;margin-bottom:6px">📊 艾宾浩斯进度</div>
-      <div style="display:flex;gap:16px;font-size:12px;color:var(--color-text-light)">
-        <span>🆕 新词: ${stats.newCount}</span>
-        <span>📖 学习中: ${stats.learning}</span>
-        <span>✅ 已掌握: ${stats.mastered}</span>
+        ${grp.remaining > 0 ? `<button onclick="startFlashcardSession(null)" style="white-space:nowrap;padding:12px 26px;background:#1E40AF;color:#FFFFFF;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">${grp.remaining < grp.total ? '继续背' : '开始背'}</button>` : ''}
       </div>
     </div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px">📅 每天背多少</div>
+      <div style="display:flex;gap:6px">${sizeBtns}</div>
+      <div style="font-size:11px;color:#64748B;margin-top:6px">每组 1/3 新词 + 2/3 复习 · 每个词都点到「认识」才算完</div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+        <div style="font-size:14px;font-weight:700">👨‍👩‍👦 家长看板 · 最近 14 天</div>
+        <div style="font-size:12px;color:${days7 >= 6 ? '#16A34A' : '#DC2626'};font-weight:600">近 7 天背了 ${days7} 天${gapDays != null && gapDays >= 2 ? ` · 上次 ${_fcFmtDate(pr.lastDate)} (${gapDays} 天前)` : ''}</div>
+      </div>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:#F1F5F9">${['日期', '完成', '一遍过', '没记住', '新学会', '用时'].map((h, i) => `<th style="padding:5px 4px;font-size:11px;color:#1E293B;text-align:${i ? 'center' : 'left'}">${h}</th>`).join('')}</tr></thead>
+        <tbody>${logRows}</tbody></table></div>
+      ${hard.length ? `<div style="font-size:12px;color:#B45309;margin-top:8px;line-height:1.8">🧱 <b>老是记不住</b>: ${hard.map(h => escapeHtml(h.w) + '×' + h.lapses).join(' · ')}</div>` : ''}
+    </div>
+    <details class="card" style="margin-bottom:12px">
+      <summary style="font-size:14px;font-weight:700;cursor:pointer">📚 按卡组翻看 (只看不计进度)</summary>
+      <div class="fc-deck-grid">
+        ${FLASHCARD_DECKS.map(deck => {
+          const ok = deck.words.filter(w => ['learned', 'mastered'].indexOf(window.fcTier(state, w)) >= 0).length;
+          return `<div class="fc-deck-item" onclick="startFlashcardSession('${deck.id}')">
+            <div class="fc-deck-name">${deck.name}</div>
+            <div class="fc-deck-progress">${ok}/${deck.words.length} 已学会</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </details>
   `;
 }
+function setFcSizeUI(n) {
+  const r = window.setFcDailySize(state, n);
+  if (!r.ok) return;
+  saveState(state);
+  showToast(r.today ? `每天 ${n} 个, 今天就按这个来` : `每天 ${n} 个, 今天这组已经开始了, 明天起生效`, 'info');
+  renderVocabPage();
+}
+function _fcListModal(title, bodyHtml) {
+  let m = document.getElementById('fcListModal');
+  if (!m) { m = document.createElement('div'); m.id = 'fcListModal'; m.className = 'vocab-modal'; document.body.appendChild(m); }
+  m.innerHTML = `<div class="mg-inner" style="max-width:640px;max-height:82vh;overflow-y:auto;text-align:left">
+    <div style="font-size:15px;font-weight:800;color:#1E40AF;margin-bottom:10px;padding-right:36px">${title}</div>${bodyHtml}
+    <button class="vocab-modal-close" onclick="document.getElementById('fcListModal').classList.remove('show')">×</button></div>`;
+  m.classList.add('show');
+}
+function _fcWordRows(words) {
+  const srs = state.flashcardSRS || {};
+  return words.map(w => `<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #F1F5F9;font-size:13px">
+    <b style="flex:0 0 42%;color:#1E293B">${escapeHtml(w)}</b><span style="flex:1;color:#64748B">${escapeHtml(getVocabMeaning(w) === w ? '' : getVocabMeaning(w))}</span>
+    ${srs[w] && srs[w].lastReviewed ? `<span style="font-size:11px;color:#94A3B8;white-space:nowrap">${_fcFmtDate(srs[w].lastReviewed)}</span>` : ''}</div>`).join('');
+}
+function showFcWordList(tier) {
+  const NAMES = { mastered: '🏆 已掌握', learned: '👍 已学会', learning: '📖 学习中', new: '🆕 还没学' };
+  const words = window.getFcWordsByTier(state, tier);
+  _fcListModal(`${NAMES[tier]} · ${words.length} 个`, words.length ? _fcWordRows(words) : '<div style="font-size:13px;color:#64748B;padding:12px 0">这一档现在还没有词</div>');
+}
+function showFcDayMissed(dateKey) {
+  const r = (state.fcDaily || {})[dateKey];
+  if (!r) return;
+  _fcListModal(`${_fcFmtDate(dateKey)} 第一遍没记住的 ${r.missed.length} 个词`, _fcWordRows(r.missed)
+    + (r.learned.length ? `<div style="font-size:13px;font-weight:700;color:#16A34A;margin:14px 0 4px">当天新学会 ${r.learned.length} 个</div>` + _fcWordRows(r.learned) : ''));
+}
+window.setFcSizeUI = setFcSizeUI; window.showFcWordList = showFcWordList; window.showFcDayMissed = showFcDayMissed;
 
 function startFlashcardSession(deckId) {
-  // v19.87: 默认走"今天这一组"(队列制, 全部点到认识才收工); 点具体卡组时仍是自由练习模式
   if (!deckId) {
     const g = window.getDailyFlashcardGroup(state);
     if (!g.words.length) { showToast('今天没有要过的词了 🎉', 'happy'); return; }
@@ -2611,9 +2690,11 @@ function startFlashcardSession(deckId) {
     _renderFlashcardSession();
     return;
   }
-  const words = getFlashcardsDue(state, deckId).slice(0, 15);
-  if (words.length === 0) { showToast('该卡组暂无待复习词', 'info'); return; }
-  _fcSession = { mode: 'deck', words, idx: 0, flipped: false, results: [] };
+  // v21.0: 卡组模式改成"只翻看不计进度"。原来这里每点一次认识就推一格曲线还给分 ——
+  // 9/8 那天一口气点了 514 个"认识"、拿了 529 分, 曲线被刷乱, 进度只走每日一组这一条路。
+  const deck = FLASHCARD_DECKS.find(d => d.id === deckId);
+  if (!deck || !deck.words.length) return;
+  _fcSession = { mode: 'deck', deckName: deck.name, words: deck.words.slice(), idx: 0, flipped: false };
   _renderFlashcardSession();
 }
 
@@ -2635,9 +2716,12 @@ function _renderFlashcardSession() {
   } else {
     if (s.idx >= s.words.length) { _endFlashcardSession(); return; }
     word = s.words[s.idx];
-    headerRight = `${s.idx + 1} / ${s.words.length}`;
+    headerRight = `${escapeHtml(s.deckName || '')} · ${s.idx + 1} / ${s.words.length}`;
     progressPct = Math.round((s.idx / s.words.length) * 100);
   }
+  // v21.0: 换了一张新卡才重新计时; 没翻过面不许自评 (不看背面连点"认识"= 刷过去, 不算背)
+  if (s.curWord !== word) { s.curWord = word; s.shownAt = Date.now(); s.seenBack = false; }
+  if (s.flipped) s.seenBack = true;
   const meaning = getVocabMeaning(word);
   // v19.43: 反面 = 中文 + 英文解释(短语) + 例句 + 考题 (科学/数学答案已逐条核准)
   const enDef = window.getVocabEn ? window.getVocabEn(word) : '';
@@ -2656,7 +2740,7 @@ function _renderFlashcardSession() {
       <div class="fc-card-inner">
         <div class="fc-card-front">
           <div class="fc-card-word">${word}</div>
-          <div class="fc-card-hint">${eg3 ? '点击翻转看解释 + 3 句例句' : '点击翻转看解释 + 例句 + 考题'}</div>
+          <div class="fc-card-hint">${eg3 ? (eg3.length > 1 ? '点击翻转看解释 + ' + eg3.length + ' 句例句' : '点击翻转看解释 + 例句') : '点击翻转看解释 + 例句 + 考题'}</div>
         </div>
         <div class="fc-card-back">
           <div class="fc-card-meaning">${meaning}</div>
@@ -2670,12 +2754,14 @@ function _renderFlashcardSession() {
         </div>
       </div>
     </div>
-    <div class="fc-btns">
+    ${s.mode === 'daily' ? `<div class="fc-btns" style="${s.seenBack ? '' : 'opacity:0.35;pointer-events:none'}">
       <button class="fc-btn-dont" onclick="answerFlashcard('dont')">❌ 不认识</button>
       <button class="fc-btn-vague" onclick="answerFlashcard('vague')">🤔 有点印象</button>
       <button class="fc-btn-know" onclick="answerFlashcard('know')">✅ 认识</button>
     </div>
-    ${s.mode === 'daily' ? `<div style="text-align:center;font-size:11px;color:#64748B;margin-top:6px">不认识 / 有点印象 → 这个词排到本组队尾, 待会儿还回来找你</div>` : ''}
+    <div style="text-align:center;font-size:11px;color:#64748B;margin-top:6px">${s.seenBack ? '不认识 / 有点印象 → 这个词排到本组队尾, 待会儿还回来找你' : '先在心里想意思, 再点卡片翻面对答案, 然后才能选'}</div>`
+    : `<div class="fc-btns"><button class="fc-btn-know" onclick="answerFlashcard('next')" style="max-width:260px">下一个 →</button></div>
+    <div style="text-align:center;font-size:11px;color:#64748B;margin-top:6px">这里只翻看, 不计进度 · 进度看「今天这一组」</div>`}
     <div style="height:6px;background:#E2E8F0;border-radius:3px;margin-top:16px;overflow:hidden">
       <div style="height:100%;width:${progressPct}%;background:#93C5FD;transition:width .3s"></div>
     </div>
@@ -2698,7 +2784,8 @@ function answerFlashcard(level) {
     const g = window.getDailyFlashcardGroup(state);
     const word = g.queue[0];
     if (!word) { _endFlashcardSession(); return; }
-    const r = window.answerDailyFlashcard(state, word, level);
+    if (!s.seenBack) { showToast('先翻面看答案再选', 'warn'); return; }
+    const r = window.answerDailyFlashcard(state, word, level, s.shownAt ? (Date.now() - s.shownAt) / 1000 : 0);
     s.flipped = false;
     saveState(state);
     if (level === 'know') {
@@ -2710,13 +2797,9 @@ function answerFlashcard(level) {
     _renderFlashcardSession();
     return;
   }
-  // 自由卡组模式: 保持原行为
-  const word = s.words[s.idx];
-  const result = reviewFlashcard(state, word, level === 'know');
-  s.results.push({ word, correct: level === 'know', pts: result.pts });
+  // v21.0 卡组模式: 只翻看, 不动曲线不给分
   s.idx++;
   s.flipped = false;
-  saveState(state);
   _renderFlashcardSession();
 }
 
@@ -2735,6 +2818,8 @@ function _endFlashcardSession() {
         <div style="font-size:14px;color:var(--color-text-light);margin-bottom:6px">
           共 ${g.words.length} 个词 · 一遍就过 ${firstTry} 个${retakeWords.length ? ` · 补考过关 ${retakeWords.length} 个` : ''}
         </div>
+        ${(() => { const rec = (state.fcDaily || {})[g.date] || {}, pr = window.getFcProgress(state), est = window.estimateFcFinish(state);
+          return `<div style="font-size:14px;color:#1E40AF;font-weight:700;margin:8px 0">今天新学会 ${(rec.learned || []).length} 个 · 累计已学会 ${pr.done} / ${pr.total}${est.days ? ' · 预计 ' + _fcFmtDate(est.date) + ' 全部学会' : ''}</div>`; })()}
         ${retakeWords.length ? `<div style="max-width:420px;margin:10px auto;padding:10px 12px;background:rgba(230,162,60,0.08);border:1px solid rgba(230,162,60,0.3);border-radius:8px;font-size:12px;color:#B45309;line-height:1.7;text-align:left">
           🔁 <b>今天补考过的词</b> (明天这一组会优先排它们):<br>${retakeWords.map(w => escapeHtml(w)).join(' · ')}
         </div>` : ''}
@@ -2747,22 +2832,15 @@ function _endFlashcardSession() {
     renderHeader();
     return;
   }
-  const correctCount = s.results.filter(r => r.correct).length;
-  const totalPts = s.results.reduce((sum, r) => sum + r.pts, 0);
   el.innerHTML = `
     <div style="text-align:center;padding:24px 0">
-      <div style="font-size:48px;margin-bottom:12px">🎉</div>
-      <h3 style="margin:0 0 8px">本轮完成!</h3>
-      <div style="font-size:14px;color:var(--color-text-light);margin-bottom:16px">
-        认识 ${correctCount}/${s.words.length} · 获得 +${totalPts} 积分
-      </div>
-      <div style="display:flex;gap:8px;justify-content:center">
-        <button class="btn-primary" onclick="exitFlashcardSession()">返回卡组</button>
-      </div>
+      <div style="font-size:48px;margin-bottom:12px">📚</div>
+      <h3 style="margin:0 0 8px">${escapeHtml(s.deckName || '')} 翻完了 · ${s.words.length} 个</h3>
+      <div style="font-size:13px;color:var(--color-text-light);margin-bottom:16px">翻看不计进度, 进度看「今天这一组」</div>
+      <button class="btn-primary" onclick="exitFlashcardSession()">返回</button>
     </div>
   `;
   _fcSession = null;
-  renderHeader();
 }
 
 function exitFlashcardSession() {
@@ -2774,22 +2852,19 @@ function exitFlashcardSession() {
 function renderFlashcardWidget() {
   const el = document.getElementById('flashcardWidgetCard');
   if (!el) return;
-  // v19.87: 报"今天这一组还剩几个", 不再报只涨不落的到期总数
-  const grp = window.getDailyGroupRemaining ? window.getDailyGroupRemaining(state) : { remaining: 0, total: 0 };
-  const stats = getFlashcardStats(state);
-  if (grp.total === 0 && stats.mastered === 0) { el.style.display = 'none'; return; }
-  const pct = stats.total > 0 ? Math.round(stats.mastered / stats.total * 100) : 0;
+  const grp = window.getDailyGroupRemaining(state), pr = window.getFcProgress(state), est = window.estimateFcFinish(state);
+  const streak = window.getFcStreak(state);
   el.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span style="font-size:18px">📇</span>
-      <span style="font-weight:600;font-size:14px">词汇闪卡</span>
-      <span style="margin-left:auto;font-size:12px;color:${grp.remaining > 0 ? '#F59E0B' : '#10B981'}">${grp.remaining > 0 ? '这一组还剩 ' + grp.remaining + ' 个' : '✅ 今天这一组全认识了'}</span>
+      <span style="font-weight:600;font-size:14px">单词闪卡</span>
+      <span style="margin-left:auto;font-size:12px;font-weight:600;color:${grp.remaining > 0 ? '#B45309' : '#10B981'}">${grp.total === 0 ? '今天没有要背的' : grp.remaining > 0 ? '今天还剩 ' + grp.remaining + ' / ' + grp.total : '✅ 今天这一组完成'}</span>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <div style="flex:1;height:4px;background:#E2E8F0;border-radius:2px;overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:#10B981"></div>
+        <div style="height:100%;width:${pr.pct}%;background:#1E40AF"></div>
       </div>
-      <span style="font-size:11px;color:var(--color-text-light)">${stats.mastered}/${stats.total}</span>
+      <span style="font-size:11px;color:var(--color-text-light)">已学会 ${pr.done}/${pr.total}${est.days ? ' · ' + _fcFmtDate(est.date) + ' 学完' : ''}${streak ? ' · 🔥' + streak + '天' : ''}</span>
     </div>
   `;
   el.style.display = '';

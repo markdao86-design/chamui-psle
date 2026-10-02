@@ -1903,6 +1903,65 @@ assert(/const f2All = key => ALL\.map/.test(appSrc) && !/pct\(\[f2\(1, 'oe'\), f
   assert(sci && /16\/20/.test(sci[1]), `v20.7: 科学选择题按 对/共 显示, 不写死 /15 (实际 ${sci && sci[1]})`);
 }
 
+// ===== v21.0: 单词闪卡重做 (孩子实报: 没有已学会的记录/没进度/不知道多久学完/每天多少没规划; 家长要每天看到情况) =====
+{
+  const mk = () => ({ flashcardSRS: {}, totalPoints: 0, logs: [] });
+  const all = W._fcAllWords();
+  assert(all.length >= 950 && new Set(all).size === all.length, `v21.0: 词库 ≥950 个不重复的词 (实际 ${all.length})`);
+  const VP = W.VOCAB_PLUS || [];
+  assert(VP.length >= 400, `v21.0: 扩容词 ≥400 (实际 ${VP.length})`);
+  const badVP = VP.filter(r => r.length !== 5 || !r[1] || !r[2] || !r[3] || !W.FLASHCARD_DECKS.some(d => d.id === r[4] && d.words.includes(r[0])));
+  assert(badVP.length === 0, `v21.0: 扩容词每条都有 中文/英文解释/例句 且真的进了卡组 (坏 ${badVP.length}: ${badVP.slice(0, 3).map(r => r[0])})`);
+  assert(W.FLASHCARD_DECKS.some(d => d.id === 'sec_words' && d.words.length >= 90), 'v21.0: 有初中进阶词卡组 (≥90 词)');
+  // 四档 + 进度
+  const st = mk();
+  assert(W.fcTier(st, all[0]) === 'new', 'v21.0: 没练过 = 还没学');
+  st.flashcardSRS[all[0]] = { interval: 2, correctStreak: 2 }; assert(W.fcTier(st, all[0]) === 'learning', 'v21.0: interval 2 = 学习中');
+  st.flashcardSRS[all[0]].interval = 3; assert(W.fcTier(st, all[0]) === 'learned', 'v21.0: 隔 3 天以上再见还认识 = 已学会 (原来只有 30 天关"已掌握"一档, 背了 549 个页面还是 0)');
+  st.flashcardSRS[all[0]].mastered = true; assert(W.fcTier(st, all[0]) === 'mastered', 'v21.0: 30 天关 = 已掌握');
+  const pr = W.getFcProgress(st);
+  assert(pr.total === all.length && pr.done === 1 && pr.new === all.length - 1, 'v21.0: 进度按不重复词数算');
+  // 每日规模 + 预计学完
+  const s2 = mk();
+  assert(W.getFcDailySize(s2) === W.FC_GROUP_SIZE, 'v21.0: 默认每日规模');
+  assert(W.setFcDailySize(s2, 40).ok && W.getFcDailySize(s2) === 40 && !W.setFcDailySize(s2, 999).ok, 'v21.0: 每日规模只能选 20/30/40');
+  const e20 = W.estimateFcFinish(mk(), 20), e40 = W.estimateFcFinish(mk(), 40);
+  assert(e20.days > e40.days && e40.days > 0 && /^\d{4}-\d{2}-\d{2}$/.test(e40.date), `v21.0: 能算出预计学完日期, 每天背得多学完得早 (20个 ${e20.days}天 / 40个 ${e40.days}天)`);
+  // 每组 = 新词 1/3 + 复习 2/3 (原来新词优先, 词库一扩容老词永远轮不到复习)
+  const s3 = mk();
+  all.slice(0, 200).forEach(x => { s3.flashcardSRS[x] = { interval: 2, correctStreak: 2, lastReviewed: '2020-01-01', nextReview: '2020-01-04', mastered: false }; });
+  const g3 = W.buildDailyFlashcardGroup(s3, 30);
+  const nNew = g3.filter(x => !s3.flashcardSRS[x]).length;
+  assert(g3.length === 30 && nNew === 10, `v21.0: 30 个 = 10 新词 + 20 复习 (实际新词 ${nNew}/${g3.length})`);
+  // 每日记录: 家长看板的数据源
+  const s4 = mk();
+  all.slice(0, 5).forEach(x => { s4.flashcardSRS[x] = { interval: 2, correctStreak: 2, lastReviewed: '2020-01-01', nextReview: '2020-01-04', mastered: false }; });
+  const g4 = W.getDailyFlashcardGroup(s4);
+  const wLearn = g4.words.find(x => s4.flashcardSRS[x]), wNew = g4.words.find(x => !s4.flashcardSRS[x]);
+  W.answerDailyFlashcard(s4, wLearn, 'know', 8);
+  W.answerDailyFlashcard(s4, wNew, 'dont', 5);
+  W.answerDailyFlashcard(s4, wNew, 'know', 5);
+  const rec = s4.fcDaily[W._fcToday()];
+  assert(rec && rec.total === 2 && rec.firstKnow === 1, `v21.0: 每日记录只数第一遍 (过了 ${rec && rec.total}, 一遍过 ${rec && rec.firstKnow})`);
+  assert(rec.learned.length === 1 && rec.learned[0] === wLearn, 'v21.0: 当天"新学会"的词记下来了');
+  assert(rec.missed.length === 1 && rec.missed[0] === wNew, 'v21.0: 当天第一遍没记住的词记下来了 (家长点开能看到是哪些)');
+  assert(rec.secs === 18 && rec.done === false, 'v21.0: 记用时 (一秒一个连点"认识"家长看得出来) 和是否完成');
+  assert((s4.flashcardSRS[wNew].lapses || 0) === 1, 'v21.0: 没记住的次数累计 → 难词榜');
+  const log = W.getFcDailyLog(s4, 14);
+  assert(log.length === 14 && log[0].rec === rec && log[1].rec === null, 'v21.0: 最近 14 天逐天列出, 没背的日子是空 (家长一眼看到断在哪天)');
+  let guard = 0; while (s4.fcDailyGroup.queue.length && guard++ < 300) W.answerDailyFlashcard(s4, s4.fcDailyGroup.queue[0], 'know', 3);
+  assert(s4.fcDaily[W._fcToday()].done === true && W.getFcStreak(s4) === 1, 'v21.0: 全组点到认识 → 当天记完成, 连续天数 +1');
+}
+assert(/function renderVocabPage\(\)[\s\S]{0,12000}家长看板/.test(appSrc) && /getFcDailyLog\(state, 14\)/.test(appSrc), 'v21.0: 词汇页有家长看板 (接了每日记录, 不是死代码)');
+assert(/estimateFcFinish\(state/.test(appSrc) && /setFcSizeUI\(/.test(appSrc), 'v21.0: 页面显示预计学完日期 + 可选每天背多少');
+assert(/showFcWordList\('\$\{tier\}'\)/.test(appSrc) && /window\.showFcWordList = showFcWordList/.test(appSrc), 'v21.0: 点数字能看到已学会/学习中/还没学 各是哪些词');
+assert(/if \(!s\.seenBack\)/.test(appSrc), 'v21.0: 没翻面不许自评 (9/8 一天点了 514 个"认识", 那不叫背)');
+{
+  const i = appSrc.indexOf('// v21.0 卡组模式: 只翻看'), j = appSrc.indexOf('function _endFlashcardSession');
+  assert(i > 0 && !/reviewFlashcard\(/.test(appSrc.slice(i, j)), 'v21.0: 卡组翻看不动曲线不给分 (进度只走每日一组)');
+}
+assert(/已学会 \$\{pr\.done\}\/\$\{pr\.total\}/.test(appSrc), 'v21.0: 主页入口卡报 已学会 x/总数 + 预计学完');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
