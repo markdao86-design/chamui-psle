@@ -721,8 +721,8 @@ assert(/id="thinkPuzzleCardOld"/.test(idxSrc), 'v19.18: 打卡页 thinkPuzzleCar
 // renderDashboard 调用新卡
 assert(/renderWeekMasterTipCard\(\)/.test(appSrc), 'v19.18: renderWeekMasterTipCard 被调用');
 assert(/renderThinkPuzzleCard\(state\.currentWeek\)/.test(appSrc), 'v19.18: renderThinkPuzzleCard 被主页调用');
-// 错题本卡红 badge
-assert(/background:#DC2626;color:#FFF[\s\S]{0,150}border-radius:14px/.test(appSrc), 'v19.18: 错题本红 badge 强提醒');
+// 错题本卡红 badge → v24.0 改成大数字 (傻瓜式: 数字大字 + 标签小字, 不再用红色小 badge)
+assert(/<span class="ui-num" style="color:#16A34A">\$\{wrongs\.length\}<\/span><span class="ui-num-label">题待复习<\/span>/.test(appSrc), 'v19.18→v24.0: 错题本卡题数用大数字强提醒 (原红 badge)');
 // renderWeekMasterTipCard 函数
 assert(/function renderWeekMasterTipCard/.test(appSrc), 'v19.18: renderWeekMasterTipCard 函数');
 // v19.80: 名师秘籍卡已换成知识树每日练 (WEEK_MASTER_TIPS 数据保留未接 UI)
@@ -2327,7 +2327,7 @@ assert(/function _dictDeep\(\)/.test(appSrc) && /_dictDeep\(\)/.test(appSrc.repl
   assert(q.length === 3 && q.indexOf('lamented') >= 0, 'v23.9: 考今天这一组 = 今天这一组全部词, 不管背没背 (用户: 先考后背也行, 两边对应就行)');
   const st2 = { flashcardSRS: {}, fcDaily: {} }; const q2 = W.pickQuizWords(st2, 'today');
   assert(st2.fcDailyGroup && st2.fcDailyGroup.date === W._fcToday() && q2.join() === st2.fcDailyGroup.words.join(), 'v23.9: 先考时把今天这一组真正编出来锁定, 之后背的也是这一份');
-  assert(/考今天这一组 \(\$\{n\} 个\)/.test(appSrc), 'v23.9: 按钮写明考几个');
+  assert(/考今天这一组 \(\$\{(n|quizN)\} 个\)/.test(appSrc), 'v23.9: 按钮写明考几个 (v24.0 变量名改 quizN, 文案不变)');
 }
 
 // ===== Output =====

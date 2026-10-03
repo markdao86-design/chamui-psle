@@ -5122,6 +5122,80 @@ p { font-size: 14px; line-height: 1.6; }
   color: #DC2626;
   border-color: #F0C9C6;
 }
+
+/* ===== v24.0 傻瓜式 UI 组件 (用户 2026-10-03: "每个页面都傻瓜式呈现, 非常容易理解和交互") =====
+   规则: 每页顶一句话 (.ui-hint) / 每卡一个主按钮 (.ui-cta) / 数字大字 (.ui-num) / 列表行 ≥56px 整行可点 (.ui-row) / 说明折叠 (.ui-more) */
+.ui-hint { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:700; color:#1E293B; background:rgba(30,64,175,0.06); border:1px solid rgba(30,64,175,0.20); border-radius:12px; padding:12px 14px; margin-bottom:12px; line-height:1.45; }
+.ui-hint .ui-hint-ico { font-size:22px; flex:0 0 auto; }
+.ui-hint b { color:#1E40AF; }
+.ui-hint.purple { background:rgba(124,58,237,0.06); border-color:rgba(124,58,237,0.22); } .ui-hint.purple b { color:#7C3AED; }
+.ui-hint.green { background:rgba(22,163,74,0.07); border-color:rgba(22,163,74,0.25); } .ui-hint.green b { color:#16A34A; }
+.ui-cta { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:48px; padding:12px 18px; border:none; border-radius:12px; background:#1E40AF; color:#FFFFFF; font-size:16px; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(30,64,175,0.25); transition:transform .1s; }
+.ui-cta:active { transform:scale(0.98); }
+.ui-cta.purple { background:#7C3AED; box-shadow:0 2px 8px rgba(124,58,237,0.25); }
+.ui-cta.green { background:#16A34A; box-shadow:0 2px 8px rgba(22,163,74,0.25); }
+.ui-cta.auto { width:auto; display:inline-flex; }
+.ui-cta:disabled { background:#E2E8F0; color:#94A3B8; box-shadow:none; cursor:default; }
+.ui-btn2 { display:inline-flex; align-items:center; justify-content:center; gap:4px; min-height:40px; padding:8px 14px; border:1px solid #CBD5E1; border-radius:10px; background:#FFFFFF; color:#1E40AF; font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.ui-btn2.purple { color:#7C3AED; border-color:#C4B5FD; }
+.ui-link { background:none; border:none; color:#1E40AF; font-size:13px; font-weight:600; text-decoration:underline; cursor:pointer; padding:4px 2px; }
+.ui-row { display:flex; align-items:center; gap:12px; min-height:56px; padding:10px 12px; border-bottom:1px solid #F1F5F9; background:#FFFFFF; }
+.ui-row:last-child { border-bottom:none; }
+.ui-row.clickable { cursor:pointer; }
+.ui-row.clickable:active { background:#F8FAFC; }
+.ui-row.done { background:#F8FAFC; }
+.ui-row.done .ui-row-title { color:#64748B; text-decoration:line-through; }
+.ui-row-ico { font-size:24px; width:34px; flex:0 0 34px; text-align:center; line-height:1; }
+.ui-row-main { flex:1; min-width:0; }
+.ui-row-title { font-size:15px; font-weight:700; color:#1E293B; line-height:1.35; }
+.ui-row-sub { font-size:13px; color:#64748B; margin-top:2px; line-height:1.4; }
+.ui-row-act { flex:0 0 auto; text-align:right; }
+.ui-list { border:1px solid #E2E8F0; border-radius:12px; overflow:hidden; background:#FFFFFF; }
+.ui-num { font-size:28px; font-weight:900; line-height:1.1; color:#1E40AF; }
+.ui-num.sm { font-size:22px; }
+.ui-num-label { font-size:12px; color:#64748B; margin-top:2px; }
+.ui-tiles { display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:8px; }
+.ui-tile { padding:10px 8px; border-radius:12px; background:#F8FAFC; border:1px solid #E2E8F0; text-align:center; }
+button.ui-tile { cursor:pointer; font-family:inherit; }
+.ui-more { margin-top:10px; }
+.ui-more > summary { cursor:pointer; font-size:13px; font-weight:700; color:#64748B; list-style:none; user-select:none; padding:6px 0; }
+.ui-more > summary::-webkit-details-marker { display:none; }
+.ui-more > summary::after { content:' ▾'; }
+.ui-more[open] > summary { color:#1E40AF; } .ui-more[open] > summary::after { content:' ▴'; }
+.ui-more-body { font-size:13px; color:#64748B; line-height:1.7; padding:8px 10px; background:#F8FAFC; border-radius:8px; }
+.ui-seg { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.ui-seg button { flex:1 1 auto; max-width:200px; min-height:44px; padding:8px 16px; border-radius:999px; border:1px solid #CBD5E1; background:#FFFFFF; color:#1E293B; font-size:15px; font-weight:700; cursor:pointer; }
+#wrongBookBody h1 { font-size:18px !important; margin:12px 0 6px !important; }
+#wrongBookBody h2 { font-size:15px !important; }
+.ui-seg button.on { background:#1E40AF; border-color:#1E40AF; color:#FFFFFF; }
+.ui-seg button .n { font-size:12px; font-weight:400; opacity:.8; margin-left:4px; }
+.ui-ok { color:#16A34A; font-weight:800; } .ui-warn { color:#B45309; font-weight:800; } .ui-bad { color:#DC2626; font-weight:800; } .ui-mute { color:#94A3B8; font-weight:700; }
+.ui-page-title { font-size:20px; font-weight:900; color:#1E293B; margin:0 0 8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.ui-page-title .sub { font-size:13px; font-weight:400; color:#64748B; }
+.ui-section { font-size:13px; font-weight:900; color:#B45309; letter-spacing:.5px; margin:16px 0 4px; }
+.ui-topbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.ui-topbar .grow { flex:1; }
+/* 首页: 两栏小标题去重 (卡内已有标题) */
+.home-grid-2col .home-col-left > div:first-child, .home-grid-2col .home-col-right > div:first-child { display:none; }
+#page-dashboard .ui-hint { margin-bottom:12px; }
+/* 手机 (≤640px): 顶栏不再竖排; 导航紧凑; 页边距 12px */
+@media (max-width: 640px) {
+  .app-header { padding:10px 14px; flex-wrap:wrap; gap:8px; }
+  .app-logo { font-size:19px !important; flex-wrap:wrap; gap:6px; }
+  .app-logo > span { white-space:nowrap; }
+  .app-logo .app-subtitle { flex:1 1 100%; margin-left:0 !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11px !important; }
+  .app-stats { gap:6px; flex-wrap:wrap; }
+  .stat-pill { font-size:12px !important; padding:4px 8px !important; gap:3px; }
+  .tabs { padding:8px 10px; gap:6px; flex-wrap:wrap; }
+  .tab-btn { padding:8px 10px !important; min-height:40px; font-size:13px !important; border-radius:9px; }
+  .main-container { padding:12px !important; }
+  .kt-page-wrap { padding:10px !important; }
+  .card { padding:12px !important; }
+  .ui-hint { font-size:14px; padding:10px 12px; }
+  .ui-tiles { grid-template-columns:repeat(2, 1fr); }
+  .ui-seg button { padding:8px 10px; font-size:14px; }
+  table.ui-table { font-size:12px; }
+}
 </style>
 </head>
 <body>
@@ -5165,7 +5239,7 @@ p { font-size: 14px; line-height: 1.6; }
   <!-- v19.54: 我的/暑假 收纳进 "⋯其他" (按钮仍在, JS click 可达) -->
   <button class="tab-btn" data-page="character" style="display:none">👤 我的</button>
   <button class="tab-btn" data-page="summer" style="display:none">📅 暑假</button>
-  <button class="tab-btn" id="moreTabBtn" onclick="window.toggleMoreMenu()" style="opacity:0.55">⋯ 其他</button>
+  <button class="tab-btn" id="moreTabBtn" onclick="window.toggleMoreMenu()" style="color:#64748B">⋯ 其他</button>
   <!-- 旧 3 个英语类 tab + 管理 tab 隐藏 (page 容器仍存在, JS 跳转可访问) -->
   <button class="tab-btn" data-page="knowledge" style="display:none">🌳 知识树</button>
   <button class="tab-btn" data-page="essay" style="display:none">📝 作文</button>
@@ -5175,15 +5249,19 @@ p { font-size: 14px; line-height: 1.6; }
 
 <!-- v19.54: "⋯其他" 收纳菜单 (我的/暑假/管理) -->
 <div id="moreMenu" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.55)" onclick="window.toggleMoreMenu()">
-  <div style="position:absolute;top:18%;left:50%;transform:translateX(-50%);background:#FFFFFF;border:1px solid #CBD5E1;border-radius:14px;padding:14px 16px;min-width:230px;box-shadow:0 8px 32px rgba(0,0,0,0.5)" onclick="event.stopPropagation()">
-    <div style="font-size:12px;color:#1E293B;margin-bottom:10px;font-weight:700">📦 收纳的页面</div>
-    <button onclick="window.gotoPage('history');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid #E2E8F0;background:#F1F5F9;color:#1E293B;font-size:14px;font-weight:600">📊 能力 <span style="font-size:11px;color:#1E293B;font-weight:400">AL 预测 · 雷达 · 成绩追踪</span></button>
-    <button onclick="window.gotoPage('checkin');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid #E2E8F0;background:#F1F5F9;color:#1E293B;font-size:14px;font-weight:600">✅ 打卡 <span style="font-size:11px;color:#1E293B;font-weight:400">73 周任务清单</span></button>
-    <button onclick="window.gotoPage('character');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid #E2E8F0;background:#F1F5F9;color:#1E293B;font-size:14px;font-weight:600">👤 我的 <span style="font-size:11px;color:#1E293B;font-weight:400">角色·装备·兑换</span></button>
-    <button onclick="window.gotoPage('summer');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid #E2E8F0;background:#F1F5F9;color:#1E293B;font-size:14px;font-weight:600">📅 暑假 <span style="font-size:11px;color:#1E293B;font-weight:400">已结束·存档</span></button>
-    <button onclick="window.toggleTargetSchoolModal();window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid #E2E8F0;background:#F1F5F9;color:#1E293B;font-size:14px;font-weight:600">🎯 目标校 <span style="font-size:11px;color:#1E293B;font-weight:400">录取概率</span></button>
-    <a href="parent.html" target="_blank" rel="noopener" style="display:block;width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid #E2E8F0;background:#F1F5F9;color:#1E293B;font-size:14px;font-weight:600;text-decoration:none;margin-bottom:6px">👨‍👩‍👦 家长看板 <span style="font-size:11px;color:#1E293B;font-weight:400">只读·远程看</span></a>
-    <button onclick="window.gotoPage('admin');window.toggleMoreMenu()" style="display:block;width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid #E2E8F0;background:#F1F5F9;color:#1E293B;font-size:14px;font-weight:600">⚙️ 管理 <span style="font-size:11px;color:#1E293B;font-weight:400">照片·设置</span></button>
+  <!-- v24.0 傻瓜式: 行 ≥56px 整行可点, 左 图标+名字+一句大白话, 右 ›; 底部一个关闭按钮 -->
+  <div style="position:absolute;top:10%;left:50%;transform:translateX(-50%);width:min(360px,92vw);background:#FFFFFF;border:1px solid #CBD5E1;border-radius:16px;padding:14px 14px 12px;box-shadow:0 8px 32px rgba(0,0,0,0.5)" onclick="event.stopPropagation()">
+    <div style="font-size:16px;color:#1E293B;margin-bottom:8px;font-weight:900">⋯ 其他页面 <span style="font-size:12px;color:#64748B;font-weight:400">不常用的都在这</span></div>
+    <div class="ui-list">
+      <button class="ui-row clickable" style="width:100%;border:none;text-align:left;font-family:inherit" onclick="window.gotoPage('history');window.toggleMoreMenu()"><span class="ui-row-ico">📊</span><span class="ui-row-main"><span class="ui-row-title">能力</span><span class="ui-row-sub" style="display:block">四科大概几 AL, 哪里弱</span></span><span style="color:#94A3B8;font-size:20px">›</span></button>
+      <button class="ui-row clickable" style="width:100%;border:none;border-top:1px solid #F1F5F9;text-align:left;font-family:inherit" onclick="window.toggleTargetSchoolModal();window.toggleMoreMenu()"><span class="ui-row-ico">🎯</span><span class="ui-row-main"><span class="ui-row-title">目标校</span><span class="ui-row-sub" style="display:block">录取概率</span></span><span style="color:#94A3B8;font-size:20px">›</span></button>
+      <button class="ui-row clickable" style="width:100%;border:none;border-top:1px solid #F1F5F9;text-align:left;font-family:inherit" onclick="window.gotoPage('character');window.toggleMoreMenu()"><span class="ui-row-ico">👤</span><span class="ui-row-main"><span class="ui-row-title">我的</span><span class="ui-row-sub" style="display:block">角色 · 装备 · 换奖励</span></span><span style="color:#94A3B8;font-size:20px">›</span></button>
+      <button class="ui-row clickable" style="width:100%;border:none;border-top:1px solid #F1F5F9;text-align:left;font-family:inherit" onclick="window.gotoPage('checkin');window.toggleMoreMenu()"><span class="ui-row-ico">✅</span><span class="ui-row-main"><span class="ui-row-title">打卡</span><span class="ui-row-sub" style="display:block">每周任务清单</span></span><span style="color:#94A3B8;font-size:20px">›</span></button>
+      <a class="ui-row clickable" href="parent.html" target="_blank" rel="noopener" style="border-top:1px solid #F1F5F9;text-decoration:none"><span class="ui-row-ico">👨‍👩‍👦</span><span class="ui-row-main"><span class="ui-row-title">家长看板</span><span class="ui-row-sub" style="display:block">家长远程看, 只读</span></span><span style="color:#94A3B8;font-size:20px">›</span></a>
+      <button class="ui-row clickable" style="width:100%;border:none;border-top:1px solid #F1F5F9;text-align:left;font-family:inherit" onclick="window.gotoPage('admin');window.toggleMoreMenu()"><span class="ui-row-ico">⚙️</span><span class="ui-row-main"><span class="ui-row-title">管理</span><span class="ui-row-sub" style="display:block">家长用: 照片 · 设置</span></span><span style="color:#94A3B8;font-size:20px">›</span></button>
+      <button class="ui-row clickable" style="width:100%;border:none;border-top:1px solid #F1F5F9;text-align:left;font-family:inherit" onclick="window.gotoPage('summer');window.toggleMoreMenu()"><span class="ui-row-ico">📅</span><span class="ui-row-main"><span class="ui-row-title">暑假</span><span class="ui-row-sub" style="display:block">已结束, 存档</span></span><span style="color:#94A3B8;font-size:20px">›</span></button>
+    </div>
+    <button class="ui-btn2" style="width:100%;margin-top:10px" onclick="window.toggleMoreMenu()">关闭</button>
   </div>
 </div>
 
@@ -5270,6 +5348,8 @@ p { font-size: 14px; line-height: 1.6; }
     <!-- v18.59: 错题本入口卡 (v19.14i 从折叠区提到主页) -->
     <div class="card" id="errorBankCardNew" style="border-left:4px solid #607D8B;display:none"></div>
 
+    <!-- v24.0 傻瓜式: 首页顶一句话说清今天干什么 (内容由 renderTodayThreeCard 填) -->
+    <div class="ui-hint" id="homeHint"><span class="ui-hint-ico">👋</span><span>今天就 3 件事: <b>① 填打卡表</b> → <b>② 复习错题</b> → <b>③ 学考点</b></span></div>
     <!-- v19.19: 主页 2 栏布局 (左行动 / 右信息教学), hero 上方已全宽 -->
     <div class="home-grid-2col">
       <!-- 左栏: 今日必做 行动驱动 (v19.22: gradReviewCard 移到右栏减拥挤) -->
@@ -5507,32 +5587,33 @@ p { font-size: 14px; line-height: 1.6; }
 
   <div class="page" id="page-practice">
     <div class="kt-page-wrap" style="padding:16px">
-      <div style="font-size:18px;font-weight:900;color:#1E40AF;margin-bottom:6px">📚 学习中心</div>
-      <div style="font-size:13px;color:#1E293B;margin-bottom:16px">选一项开始练 · 全部在二级页, 不打扰主页"今日 3 件事"</div>
+      <!-- v24.0 傻瓜式: 顶一句话 + 4 个大入口 (图标 + 名字 + 一句大白话), 旧的 "35 节点/73 周 prompt" 这类数字和术语去掉 -->
+      <div class="ui-hint green"><span class="ui-hint-ico">📚</span><span>想多练就从这里进: <b>点一个</b>开始</span></div>
+      <div class="ui-page-title">📚 学习中心</div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
-        <button class="practice-hub-btn" data-accent="green" onclick="document.querySelector('[data-page=knowledge]').click()" style="padding:18px 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
-          <div style="font-size:28px">🌳</div>
-          <div style="font-size:15px;font-weight:900;color:#1E293B;margin-top:6px">知识树</div>
-          <div style="font-size:11px;color:#1E293B;margin-top:3px">35 节点 · 105 道 PSLE 风练习</div>
+        <button class="practice-hub-btn" data-accent="green" onclick="document.querySelector('[data-page=knowledge]').click()" style="min-height:112px;padding:16px 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;cursor:pointer;text-align:left;transition:all 0.2s">
+          <div style="font-size:30px">🌳</div>
+          <div style="font-size:16px;font-weight:900;color:#1E293B;margin-top:6px">知识树</div>
+          <div style="font-size:13px;color:#64748B;margin-top:3px">一个考点一个考点过, 拿满 3 星</div>
         </button>
-        <button class="practice-hub-btn" data-accent="orange" onclick="document.querySelector('[data-page=paperbank]').click()" style="padding:18px 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
-          <div style="font-size:28px">📚</div>
-          <div style="font-size:15px;font-weight:900;color:#1E293B;margin-top:6px">题库</div>
-          <div style="font-size:11px;color:#1E293B;margin-top:3px">PSLE 真题 + Cloze + SST</div>
+        <button class="practice-hub-btn" data-accent="orange" onclick="document.querySelector('[data-page=paperbank]').click()" style="min-height:112px;padding:16px 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;cursor:pointer;text-align:left;transition:all 0.2s">
+          <div style="font-size:30px">📚</div>
+          <div style="font-size:16px;font-weight:900;color:#1E293B;margin-top:6px">题库</div>
+          <div style="font-size:13px;color:#64748B;margin-top:3px">按卷子题型刷题</div>
         </button>
-        <button class="practice-hub-btn" data-accent="cyan" onclick="document.querySelector('[data-page=vocab]').click()" style="padding:18px 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
-          <div style="font-size:28px">📇</div>
-          <div style="font-size:15px;font-weight:900;color:#1E293B;margin-top:6px">词汇</div>
-          <div style="font-size:11px;color:#1E293B;margin-top:3px">学科英语 500 词 + 闪卡</div>
+        <button class="practice-hub-btn" data-accent="cyan" onclick="document.querySelector('[data-page=vocab]').click()" style="min-height:112px;padding:16px 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;cursor:pointer;text-align:left;transition:all 0.2s">
+          <div style="font-size:30px">📇</div>
+          <div style="font-size:16px;font-weight:900;color:#1E293B;margin-top:6px">词汇</div>
+          <div style="font-size:13px;color:#64748B;margin-top:3px">背单词 + 单词考题</div>
         </button>
-        <button class="practice-hub-btn" data-accent="pink" onclick="document.querySelector('[data-page=essay]').click()" style="padding:18px 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s">
-          <div style="font-size:28px">📝</div>
-          <div style="font-size:15px;font-weight:900;color:#1E293B;margin-top:6px">作文</div>
-          <div style="font-size:11px;color:#1E293B;margin-top:3px">73 周 prompt + 升级闭环</div>
+        <button class="practice-hub-btn" data-accent="pink" onclick="document.querySelector('[data-page=essay]').click()" style="min-height:112px;padding:16px 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;cursor:pointer;text-align:left;transition:all 0.2s">
+          <div style="font-size:30px">📝</div>
+          <div style="font-size:16px;font-weight:900;color:#1E293B;margin-top:6px">作文</div>
+          <div style="font-size:13px;color:#64748B;margin-top:3px">每周一篇, 写完给家长批</div>
         </button>
       </div>
       <!-- v19.24: gameHubCard 从主页迁到练习中心 (主页 hero 不再插入) -->
-      <div style="margin-top:14px;font-size:12px;font-weight:900;color:#1E293B;letter-spacing:1px">⚔️ 每日挑战 + 所有 mini-game</div>
+      <div class="ui-section" style="margin-top:18px">⚔️ 每日挑战 + 所有 mini-game</div>
       <div id="gameHubCard" style="margin-top:6px"></div>
     </div>
   </div>
@@ -5981,9 +6062,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=23.10"></script>
-<script src="data.js?v=23.10"></script>
-<script src="app.js?v=23.10"></script>
+<script src="character.js?v=24.0"></script>
+<script src="data.js?v=24.0"></script>
+<script src="app.js?v=24.0"></script>
 
 </body>
 </html>
