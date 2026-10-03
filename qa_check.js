@@ -2298,6 +2298,14 @@ assert(/function renderWordBookCard\(\)/.test(appSrc) && /\$\{renderWordBookCard
 assert((appSrc.match(/window\.syncWordBookDeck\(state\)/g) || []).length >= 2, 'v23.2: 加载和云端同步后都把单词本同步成卡组');
 assert(/function _dictDeep\(\)/.test(appSrc) && /_dictDeep\(\)/.test(appSrc.replace('function _dictDeep()', '')), 'v23.2: 本地只有中文时能点一下联网补英文释义');
 
+// ===== v23.4: 今天考的 = 今天背过的 =====
+{
+  const st = { fcDailyGroup: { date: W._fcToday(), words: ['snarled', 'groused', 'lamented'], firstPass: { snarled: true, groused: false } } };
+  const q = W.pickQuizWords(st, 'today');
+  assert(q.length === 2 && q.indexOf('lamented') < 0, 'v23.4: 考今天这一组 = 只考今天已经背过的词 (用户: 今天考的要对应今天学的)');
+  assert(W.pickQuizWords({}, 'today').length === 0 && /先背再考/.test(appSrc) && /考今天学过的 \$\{n\} 个/.test(appSrc), 'v23.4: 一个没背时按钮禁用提示先背');
+}
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
