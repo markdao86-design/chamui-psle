@@ -21,3 +21,6 @@ Thumbs.db
 /tmp/
 nul
 firebase_dump_*.json
+
+# agent 工作区
+.claude/worktrees/
