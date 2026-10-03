@@ -2193,8 +2193,6 @@ assert(/key: 'ed',[^\n]*days: \[2\]/.test(appSrc) && /key: 'gr',[^\n]*days: \[3,
   assert(W.getEngModuleStats(st, 'sci:mcq').paper.pct === 80, 'v22.2: 纸上做的科学选择题分数在模块页一起显示');
 }
 
-assert(/data-page="vocab">[^
-]*
 assert(idxSrc.indexOf('data-page="practice">📚 学习中心</button>') > idxSrc.indexOf('data-page="vocab">📇 词汇</button>'), 'v22.2: 练习改名学习中心, 排在词汇后面 (用户 2026-10-03)');
 
 // ===== Output =====
