@@ -485,7 +485,7 @@ function renderDashboard() {
   renderDailyQuestCard();  // v17.7 Phase 3
   renderPetWidget();  // v18 Phase 5.1
   renderGameHubCard(); // v19.3: 每日挑战入口
-  { const _em = document.getElementById('page-engmod'); if (_em && _em.classList.contains('active')) renderEngModulePage(); }   // v22.0: 练完回来正确率马上更新
+  { const _em = document.getElementById('page-modules'); if (_em && _em.classList.contains('active')) renderModulesPage(); }   // v22.0/v23.8: 练完回来正确率马上更新
   { const _sm = document.getElementById('page-scimod'); if (_sm && _sm.classList.contains('active')) renderSciModulePage(); }   // v22.2
   renderChallengeCard(); // v19.4: 限时挑战赛 (W15-W30)
   renderAchievementWall();  // v18 Phase 5.1
@@ -940,7 +940,7 @@ function renderTodayThreeCard() {
       const done = flags[idx];
       const auto = sg && sig(sg) ? `<span style="font-size:11px;color:#16A34A;font-weight:700">App 已完成 ✓</span>` : '';
       let ctrl;
-      if (row && row.type !== 'chk') ctrl = `<div style="white-space:nowrap">${_sgCtrl(row, todayKey, sc)}</div><div style="font-size:10px;color:#64748B;text-align:right">${escapeHtml(row.label.replace(/:.*$/, ''))} · 目标 ${escapeHtml(row.target)}</div>`;
+      if (row && row.type !== 'chk') ctrl = `<div style="white-space:nowrap">${_sgCtrl(row, todayKey, sc)}</div><div style="font-size:10px;color:#64748B;text-align:right">${escapeHtml(row.label.replace(/:\s*[^:]*[_＿].*$/, ''))} · 目标 ${escapeHtml(row.target)}</div>`;
       else ctrl = `<input type="checkbox" ${manual['b' + b.i] ? 'checked' : ''} onchange="toggleTodayManual('b${b.i}')" style="width:20px;height:20px;cursor:pointer">`;
       return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid #F1F5F9;background:${done ? '#F8FAFC' : '#FFFFFF'};${done ? 'opacity:.6' : ''}">
         <div style="font-size:12px;color:#1E40AF;font-weight:700;white-space:nowrap;min-width:84px">${escapeHtml(b.t)}</div>
@@ -2864,8 +2864,19 @@ const MODULE_PAGE_CFG = {
   sci: { el: 'sciModuleContent', tree: '🔬 科学', modules: () => SCI_MODULES, title: '🔬 科学模块学习',
     intro: '先按卷子两本小册子 (Booklet A 选择题 / Booklet B 开放题) 练题型, 再按 MOE 五大主题一个考点一个考点过。每个考点都记正确率, <b style="color:#16A34A">AL1 线是 90%</b>。<br>题库是按 PSLE 题型出的模拟题; 纸上做的《PSLE Science 选择题》《Science For Primary Levels》分数填进课表打分表, 这里用紫色一起显示。' },
 };
-function renderEngModulePage() { renderModulePage(MODULE_PAGE_CFG.eng); }
-function renderSciModulePage() { renderModulePage(MODULE_PAGE_CFG.sci); }
+// v23.8: 合并成一个"模块学习"页: 顶部 英语 / 科学 两个分类 (和错题集一样), 下面是原来各自的模块列表 (渲染器不变)
+let _modSubj = 'eng';
+function _modSetSubj(s) { _modSubj = s; renderModulesPage(); }
+window._modSetSubj = _modSetSubj;
+function renderModulesPage() {
+  const el = document.getElementById('modulesContent'); if (!el) return;
+  const tab = (s, label) => `<button onclick="window._modSetSubj('${s}')" style="padding:8px 18px;border-radius:999px;border:1px solid ${_modSubj === s ? '#1E40AF' : '#CBD5E1'};background:${_modSubj === s ? '#1E40AF' : '#FFFFFF'};color:${_modSubj === s ? '#FFFFFF' : '#1E293B'};font-size:14px;font-weight:700;cursor:pointer">${label}</button>`;
+  el.innerHTML = `<div style="display:flex;gap:8px;margin-bottom:12px">${tab('eng', '📖 英语')}${tab('sci', '🔬 科学')}</div><div id="moduleBody"></div>`;
+  renderModulePage(Object.assign({}, MODULE_PAGE_CFG[_modSubj], { el: 'moduleBody' }));
+}
+window.renderModulesPage = renderModulesPage;
+function renderEngModulePage() { _modSubj = 'eng'; renderModulesPage(); }
+function renderSciModulePage() { _modSubj = 'sci'; renderModulesPage(); }
 function renderModulePage(cfg) {
   const el = document.getElementById(cfg.el);
   if (!el) return;
@@ -12012,17 +12023,19 @@ function _renderHolidaySchedule(el) {
       ${blocksHtml}
     </div>
     <div class="card" style="margin-bottom:12px">
-      <div class="card-title">✏️ 周打分表 <span style="font-size:11px;color:#1E293B;font-weight:400">只填数字 · 做完当场填 · 任意格可补填修正</span></div>
-      <div id="schedGridWrap"></div>
+      <div class="card-title">✏️ 打分 <span style="font-size:11px;color:#1E293B;font-weight:400">今天 · 做完当场填, 只填数字</span></div>
+      <div id="schedDayScore"></div>
+      <details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:#1E40AF;font-weight:700">整周表格 (家长核对用) ▾</summary><div id="schedGridWrap"></div></details>
     </div>
     <div class="card" style="margin-bottom:12px">
-      <div class="card-title">📊 周计分卡 <span style="font-size:11px;color:#1E293B;font-weight:400">按PSLE考试模块 · 自动从打分表汇总</span></div>
+      <div class="card-title">📊 本周 <span style="font-size:11px;color:#1E293B;font-weight:400">四科达标情况 · 自动从打分汇总</span></div>
       <div id="schedWeekSummary"></div>
     </div>
     <div class="card" style="margin-bottom:12px">
       <div class="card-title">📈 月度跟踪 <span style="font-size:11px;color:#1E293B;font-weight:400">最近8周关键指标</span></div>
       <div id="schedMonthTrend"></div>
     </div>`;
+  renderSchedDayScore(new Date().getDay());   // v23.8
   renderSchedGrid();
   renderSchedWeekSummary();
   renderSchedMonthTrend();
@@ -12061,22 +12074,48 @@ function renderSchedulePage() {
       ${blocksHtml}
     </div>
     <div class="card" style="margin-bottom:12px">
-      <div class="card-title">✏️ 周打分表 <span style="font-size:11px;color:#1E293B;font-weight:400">只填数字 · 做完当场填 · 任意格可补填修正</span></div>
-      <div id="schedGridWrap"></div>
+      <div class="card-title">✏️ 打分 <span style="font-size:11px;color:#1E293B;font-weight:400">${SCHED_DAYS[viewDow].label} · 做完当场填, 只填数字</span></div>
+      <div id="schedDayScore"></div>
+      <details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:#1E40AF;font-weight:700">整周表格 (家长核对用) ▾</summary><div id="schedGridWrap"></div></details>
     </div>
     <div class="card" style="margin-bottom:12px">
-      <div class="card-title">📊 周计分卡 <span style="font-size:11px;color:#1E293B;font-weight:400">按PSLE考试模块 · 自动从打分表汇总</span></div>
+      <div class="card-title">📊 本周 <span style="font-size:11px;color:#1E293B;font-weight:400">四科达标情况 · 自动从打分汇总</span></div>
       <div id="schedWeekSummary"></div>
     </div>
     <div class="card" style="margin-bottom:12px">
       <div class="card-title">📈 月度跟踪 <span style="font-size:11px;color:#1E293B;font-weight:400">最近8周关键指标</span></div>
       <div id="schedMonthTrend"></div>
     </div>`;
+  renderSchedDayScore(viewDow);   // v23.8: 按天填
   renderSchedGrid();
   renderSchedWeekSummary();
   renderSchedMonthTrend();
 }
 function _schedSetDay(d) { _schedViewDay = d; renderSchedulePage(); }
+// v23.8 (用户: "简化周打分表和周计分卡, 设计太复杂"): 打分按天填 —— 这一天课表上的学习块 + 每天必查 (错题/睡前单词/睡觉/家长核对/自学记录), 一行一格
+function _schedDateOfDow(dow) { const mon = _schedGridMonday(); const d = new Date(mon.getTime()); d.setDate(d.getDate() + (dow === 0 ? 6 : dow - 1)); return schedLocalDate(d); }
+function toggleManualFor(dk, key) { if (!state.todayManual) state.todayManual = {}; const m = state.todayManual[dk] = state.todayManual[dk] || {}; m[key] = !m[key]; saveState(state); renderSchedulePage(); }
+window.toggleManualFor = toggleManualFor;
+function renderSchedDayScore(dow) {
+  const el = document.getElementById('schedDayScore'); if (!el) return;
+  const dk = _schedDateOfDow(dow), scores = getSchedScores(), sc = scores[dk] || {}, manual = ((state.todayManual || {})[dk]) || {};
+  const day = SCHED_DAYS[dow] || { blocks: [] };
+  const gridKeyOf = (name) => /editing/i.test(name) ? 'ed' : /cloze/i.test(name) ? 'cloze' : /synthesis|句型/i.test(name) ? 'syn' : /语法/.test(name) ? 'gr' : /科学/.test(name) ? 'sci_mcq' : /语文|华文真题/.test(name) ? 'cn' : /范文/.test(name) ? 'essay' : /阅读/.test(name) ? 'oe' : null;
+  const blocks = (day.blocks || []).map((b, i) => ({ i, t: b[0], name: b[1], kind: b[3] })).filter(b => b.kind !== 'r' && !/睡觉|洗漱|吃饭|休息|午休/.test(b.name));
+  const row = (left, sub, ctrl) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid #F1F5F9"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:#1E293B">${left}</div>${sub ? `<div style="font-size:11px;color:#64748B">${sub}</div>` : ''}</div><div style="white-space:nowrap">${ctrl}</div></div>`;
+  const blockRows = blocks.map(b => {
+    const k = gridKeyOf(b.name), r = k ? SCHED_GRID.find(x => x.key === k) : null;
+    const ctrl = (r && r.type !== 'chk') ? _sgCtrl(r, dk, sc) : `<input type="checkbox" ${manual['b' + b.i] ? 'checked' : ''} onchange="toggleManualFor('${dk}','b${b.i}')" style="width:20px;height:20px;cursor:pointer">`;
+    return row(`<span style="color:#1E40AF;font-size:12px;margin-right:8px">${escapeHtml(b.t)}</span>${escapeHtml(b.name)}`, r ? `${escapeHtml(r.label.replace(/:\s*[^:]*[_＿].*$/, ''))} · 目标 ${escapeHtml(r.target)}` : '做完打勾', ctrl);
+  }).join('');
+  const dailyKeys = ['review', 'vt', 'sleep', 'parent', 'note'];
+  const dailyRows = dailyKeys.map(k => SCHED_GRID.find(x => x.key === k)).filter(r => r && (r.days.includes(dow) || HOLIDAY_SCHED[dk])).map(r => row(escapeHtml(r.label.replace(/:\s*[^:]*[_＿].*$/, '')), `目标 ${escapeHtml(r.target)}`, _sgCtrl(r, dk, sc))).join('');
+  el.innerHTML = `<div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;background:#FFFFFF">
+    ${blockRows || '<div style="padding:10px;font-size:13px;color:#64748B">这天课表上没有学习安排</div>'}
+    ${dailyRows ? `<div style="padding:6px 10px;background:#F1F5F9;font-size:12px;font-weight:700;color:#B45309">每天必查</div>${dailyRows}` : ''}
+  </div>`;
+}
+window.renderSchedDayScore = renderSchedDayScore;
 function _schedShiftWeek(n) { _schedWeekOffset += n; if (_schedWeekOffset > 0) _schedWeekOffset = 0; renderSchedGrid(); renderSchedWeekSummary(); }
 // 完整周打分网格 (行=检查项, 列=一/二/三/五/日)
 // v23.0: 一格打分控件 (课表页周表 + 主页每日分数打卡共用, 写同一份 state.scheduleScores)
@@ -12142,9 +12181,23 @@ function renderSchedWeekSummary() {
       <td style="padding:6px 4px;font-size:11px;color:#1E293B;text-align:center">${escapeHtml(target)}</td>
       <td style="padding:6px 4px;font-size:12px;text-align:center">${badge}</td></tr>`;
   }).join('');
-  el.innerHTML = `<div style="font-size:12px;color:${passN === gradedN && gradedN > 0 ? '#16A34A' : '#B45309'};margin:6px 0">${_schedWeekOffset === 0 ? '本周' : '该周'}已评 ${gradedN} 项 · 达标 ${passN} 项${gradedN > 0 && passN === gradedN ? ' — 全达标! 下周五二刷免掉 🎁' : ''}</div>
-  <table style="width:100%;border-collapse:collapse"><thead><tr style="background:#F1F5F9">
-  <th style="padding:5px 4px;font-size:11px;color:#1E293B;text-align:left">PSLE模块</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">本周</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">达标线</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">状态</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+  // v23.8: 先给四科大格 (一眼看哪科没达标), 13 行明细折叠
+  const subjOf = (name) => /^英/.test(name) ? '英语' : /^科/.test(name) ? '科学' : /^华/.test(name) ? '华文' : /^数/.test(name) ? '数学' : '其他';
+  const tiles = ['英语', '科学', '华文', '数学'].map(sj => {
+    const rs = rows.filter(r => subjOf(r[0]) === sj && r[3] !== null), ok = rs.filter(r => r[3]).length, miss = rs.filter(r => !r[3]);
+    const color = !rs.length ? '#94A3B8' : ok === rs.length ? '#16A34A' : miss.length >= 2 ? '#DC2626' : '#B45309';
+    return `<div style="flex:1;min-width:120px;padding:10px 12px;border-radius:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-top:4px solid ${color}">
+      <div style="font-size:13px;font-weight:900;color:#1E293B">${sj}</div>
+      <div style="font-size:22px;font-weight:900;color:${color};line-height:1.2">${rs.length ? ok + ' / ' + rs.length : '—'}</div>
+      <div style="font-size:11px;color:#64748B">${rs.length ? (ok === rs.length ? '全部达标' : '没达标: ' + miss.map(r => r[0].replace(/^[^·]*·/, '').replace(/\s*\(.*\)$/, '')).join('、')) : '这周还没填'}</div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap">${tiles}</div>
+  <div style="font-size:12px;color:${passN === gradedN && gradedN > 0 ? '#16A34A' : '#B45309'};margin:8px 0 4px">${_schedWeekOffset === 0 ? '本周' : '该周'}已评 ${gradedN} 项 · 达标 ${passN} 项</div>
+  <details><summary style="cursor:pointer;font-size:12px;color:#1E40AF;font-weight:700">按 PSLE 模块看明细 (13 项) ▾</summary>
+  <table style="width:100%;border-collapse:collapse;margin-top:6px"><thead><tr style="background:#F1F5F9">
+  <th style="padding:5px 4px;font-size:11px;color:#1E293B;text-align:left">PSLE模块</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">本周</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">达标线</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">结果</th></tr></thead>
+  <tbody>${rowsHtml}</tbody></table></details>`;
 }
 function renderSchedMonthTrend() {
   const el = document.getElementById('schedMonthTrend');
@@ -12263,9 +12316,10 @@ window.renderRoadmapCard = renderRoadmapCard;
 
 // ============ 事件绑定 ============
 // v19.54: 统一切页函数 (nav按钮 + "其他"收纳菜单共用, 含全部渲染hook)
-const MORE_MENU_PAGES = ['checkin', 'character', 'summer', 'admin'];  // v19.61: 收纳进"⋯其他"的页面(+打卡)
+const MORE_MENU_PAGES = ['checkin', 'character', 'summer', 'admin', 'history'];   // v23.7: 能力收进其他  // v19.61: 收纳进"⋯其他"的页面(+打卡)
 function gotoPage(page) {
   if (!page) return;  // "其他"按钮无 data-page, 防炸
+  if (page === 'engmod' || page === 'scimod') { _modSubj = page === 'engmod' ? 'eng' : 'sci'; page = 'modules'; }   // v23.8: 两个模块页合并, 旧名当别名
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const btn = document.querySelector(`.tab-btn[data-page="${page}"]`);
@@ -12327,6 +12381,9 @@ function _runPageHook(page) {
       }
       if (page === 'scimod') {
         renderSciModulePage();
+      }
+      if (page === 'modules') {
+        renderModulesPage();   // v23.8
       }
       if (page === 'tips') {
         renderTipsPage();   // v23.0: 答题技巧本
@@ -12852,7 +12909,7 @@ function renderDailyFocusCard() {
       <div style="font-size:12px;color:#64748B">今天 ${todayDone} / ${list.length}</div>
       <a href="#" onclick="gotoPage('tips');return false" style="margin-left:auto;font-size:12px;color:#1E40AF;white-space:nowrap">📘 答题技巧本 ${bookN ? '(' + bookN + ')' : ''} ›</a>
     </div>
-    <div style="font-size:11px;color:#888;margin-bottom:8px">每天 ${plan ? plan.perDay : '-'} 个, 英语科学交替 · 考点库 ${plan ? plan.total : 0} (英 ${plan ? plan.eng : 0} / 科 ${plan ? plan.sci : 0}) · 距考试 ${plan ? plan.daysLeft : '-'} 天 · 每个考点出现 ≥3 次: 已达 ${plan ? plan.atLeast3 : 0} 个, 最少 ${plan ? plan.minShown : 0} 次 · 已学完 ${doneN} 次</div>
+    <div style="font-size:11px;color:#888;margin-bottom:8px">每天 ${plan ? plan.perDay : '-'} 个, 英语科学交替, 优先 错得多 › 常考 › 没出现够 3 次 · 考点库 ${plan ? plan.total : 0} (英 ${plan ? plan.eng : 0} / 科 ${plan ? plan.sci : 0}) · 距考试 ${plan ? plan.daysLeft : '-'} 天 · 每个考点出现 ≥3 次: 已达 ${plan ? plan.atLeast3 : 0} 个, 最少 ${plan ? plan.minShown : 0} 次 · 已学完 ${doneN} 次</div>
     ${body}`;
   if (!list.length) { card.innerHTML = head('<div style="font-size:13px;color:#64748B;padding:10px">内容准备中 (专家审核后上线)</div>'); return; }
   card.innerHTML = head(list.map((entry, idx) => _dfEntryHtml(entry, idx, list.length, today)).join('') + `

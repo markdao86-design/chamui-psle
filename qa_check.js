@@ -2153,7 +2153,7 @@ assert(!/nNewToday/.test(appSrc), 'v21.5: 页面不再事后数新词 (背完后
   assert(nodeIds.length >= 11 && nodeIds.every(id => tree.indexOf(id) >= 0 && (W.getNodePractice(id) || []).length >= 10), 'v22.0: 每个模块挂的考点都真的存在且有 10 道题');
   assert(nodeIds.every(id => W.ENG_MODULE_OF_NODE[id]), 'v22.0: 每个考点练完都知道该记到哪个模块');
 }
-assert(/data-page="engmod">[^<]*英语模块学习/.test(idxSrc) && /id="page-engmod"/.test(idxSrc), 'v22.0: 导航上有"英语模块学习"切页');
+assert(/data-page="modules">[^<]*模块学习/.test(idxSrc) && /id="page-modules"/.test(idxSrc) && /page === 'engmod' \|\| page === 'scimod'/.test(appSrc), 'v22.0→v23.8: 导航上是合并后的"模块学习"切页, engmod/scimod 当别名');
 assert(/if \(page === 'engmod'\)[\s\S]{0,40}renderEngModulePage\(\)/.test(appSrc), 'v22.0: 切到这一页会渲染 (不是空页)');
 assert(/window\.recordEngModule\(state, window\.ENG_MODULE_OF_NODE\[g\.nodeId\], score, total, 'node'\)/.test(appSrc), 'v22.0: 考点 10 题的对错记进模块');
 assert(/recordEngModule\(state, 'listening'/.test(appSrc) && /recordEngModule\(state, 'paper2'/.test(appSrc), 'v22.0: 听力选择题和 Paper 2 模拟也记');
@@ -2180,8 +2180,8 @@ assert(/key: 'ed',[^\n]*days: \[2\]/.test(appSrc) && /key: 'gr',[^\n]*days: \[3,
   assert(nodeKeys.every(id => W.ENG_MODULE_OF_NODE[id] === 'sci:' + id && (W.getNodePractice(id) || []).length >= 10), 'v22.2: 每个科学考点练完记到自己的模块, 且有 10 道题');
   const chapters = (appSrc.match(/openSciMcqGame\('([a-z0-9_]+)'\)/g) || []).map(x => x.slice(16, -2));
   assert(chapters.length >= 6 && chapters.every(c => (W.SCIENCE_CHAPTERS || []).some(ch => ch.chapterId === c)), `v22.2: "本章选择题"挂的章节 id 都真的存在 (${chapters.join(',')})`);
-  assert(/data-page="scimod">[^<]*科学模块学习/.test(idxSrc) && /id="page-scimod"/.test(idxSrc) && /if \(page === 'scimod'\)[\s\S]{0,40}renderSciModulePage\(\)/.test(appSrc), 'v22.2: 导航上有"科学模块学习"切页且会渲染');
-  assert(/function renderModulePage\(cfg\)/.test(appSrc) && /renderModulePage\(MODULE_PAGE_CFG\.eng\)/.test(appSrc) && /renderModulePage\(MODULE_PAGE_CFG\.sci\)/.test(appSrc), 'v22.2: 英语/科学共用一个渲染器 (同样的逻辑)');
+  assert(/if \(page === 'modules'\)[\s\S]{0,40}renderModulesPage\(\)/.test(appSrc) && appSrc.indexOf("tab('sci', '🔬 科学')") >= 0, 'v22.2→v23.8: 模块学习页会渲染, 页内有英语/科学两类');
+  assert(/function renderModulePage\(cfg\)/.test(appSrc) && /renderModulePage\(Object\.assign\(\{\}, MODULE_PAGE_CFG\[_modSubj\]/.test(appSrc), 'v22.2/v23.8: 英语/科学共用一个渲染器 (同样的逻辑)');
   const st = { gameStats: {}, scheduleScores: {}, flashcardSRS: {}, logs: [] };
   W.recordGameRun(st, 'sci_oe', 7, 10); W.recordGameRun(st, 'scilab', 4, 5);
   assert(W.getEngModuleStats(st, 'sci:oe').pct === 70 && W.getEngModuleStats(st, 'sci:lab').pct === 80, 'v22.2: 科学开放题/实验题练完记进各自模块');
@@ -2193,7 +2193,16 @@ assert(idxSrc.indexOf('data-page="practice">📚 学习中心</button>') > idxSr
 
 // ===== v23.0: 首页三卡 + 每日考点学习 + 答题技巧本 =====
 assert(/data-page="tips">📘 答题技巧/.test(idxSrc) && /id="page-tips"/.test(idxSrc) && /page === 'tips'[\s\S]{0,60}renderTipsPage\(\)/.test(appSrc), 'v23.0: 导航有"答题技巧"切页且会渲染');
-assert(idxSrc.indexOf('data-page="vocab"') < idxSrc.indexOf('data-page="tips"') && idxSrc.indexOf('data-page="tips"') < idxSrc.indexOf('data-page="practice"') && idxSrc.indexOf('data-page="practice"') < idxSrc.indexOf('data-page="history"'), 'v23.0/v23.3: 词汇 → 答题技巧 → 学习中心 → 能力 (用户 2026-10-03 要求技巧和学习中心互换)');
+assert(idxSrc.indexOf('data-page="vocab"') < idxSrc.indexOf('data-page="tips"') && idxSrc.indexOf('data-page="tips"') < idxSrc.indexOf('data-page="wrongbook"') && idxSrc.indexOf('data-page="wrongbook"') < idxSrc.indexOf('data-page="practice"'), 'v23.7: 词汇 → 答题技巧 → 错题集 → 学习中心 (用户 2026-10-03)');
+assert(/data-page="history" style="display:none"/.test(idxSrc) && /MORE_MENU_PAGES = \[[^\]]*'history'/.test(appSrc) && /gotoPage\('history'\);window\.toggleMoreMenu\(\)/.test(idxSrc), 'v23.7: 能力收进 ⋯其他 菜单');
+{
+  const st = { dailyFocus: {}, dfShown: {}, engModules: {} };
+  const e1 = W.DAILY_FOCUS.find(e => e.subj === 'eng' && e.freq === 'high'), e2 = W.DAILY_FOCUS.find(e => e.subj === 'eng' && e.freq === 'mid');
+  assert(e1 && e2 && W.getDailyFocusScore(st, e1, '2026-10-05') > W.getDailyFocusScore(st, e2, '2026-10-05') - 0.02, 'v23.7: 其他相同时常考 (high) 优先于 mid');
+  const st2 = { dailyFocus: { '2026-10-01': { ids: [e2.id], done: { [e2.id]: { correct: false } } } }, dfShown: { [e2.id]: 1, [e1.id]: 1 }, dfLast: { [e2.id]: '2026-09-01', [e1.id]: '2026-09-01' }, engModules: {} };
+  assert(W.getDailyFocusErrRate(st2, e2) > W.getDailyFocusErrRate(st, e2) && W.getDailyFocusScore(st2, e2, '2026-10-05') > W.getDailyFocusScore(st2, e1, '2026-10-05'), 'v23.7: 答错过的考点错误率上升, 压过常考但没错过的 (错得多 > 常考)');
+  assert(W.DAILY_FOCUS.every(e => e.freq === 'high' || e.freq === 'mid'), 'v23.7: 每个考点都有常考度 freq');
+}
 assert(/id="dailyFocusCard"/.test(idxSrc) && /renderDailyFocusCard\(\)/.test(appSrc), 'v23.0: 主页右栏每日考点学习卡会渲染');
 assert(/_dashboardLegacy[\s\S]{0,600}id="paper2SprintCard"[\s\S]{0,300}id="thinkPuzzleCard"[\s\S]{0,200}id="weekMasterTipCard"/.test(idxSrc), 'v23.0: Paper2突击/思考题/知识树每日练 全部撤出首页 (DOM 留在隐藏容器)');
 {
