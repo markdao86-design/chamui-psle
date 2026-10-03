@@ -534,15 +534,10 @@ assert(/v19\.34 文档纠错/.test(claudemd), 'v19.34 P0-1: CLAUDE.md 修正陈�
 assert(!/AL = f\(数学 25%/.test(claudemd), 'v19.34 P0-1: CLAUDE.md 陈旧 25/25/20/10/20 公式已删');
 // v19.33: 科学 OE 60 题 (50 → 60), 3 个 Systems 主题填补
 const _v33data = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
-function _countOEByTopic(topic) {
-  const re = new RegExp("\\{ id: 'oe_\\d+', topic: '" + topic + "'", 'g');
-  return (_v33data.match(re) || []).length;
-}
-function _countOEAll() {
-  const re = /\{ id: 'oe_\d+', topic:/g;
-  return (_v33data.match(re) || []).length;
-}
-assert(_countOEAll() >= 60, `v19.33: SCIENCE_OE_QUESTIONS ≥ 60 题 (实际 ${_countOEAll()})`);
+// v22.3: 题库经专家审核后按 JSON 回写, 不再按源码格式数题, 改读对象
+function _countOEByTopic(topic) { return (W.SCIENCE_OE_QUESTIONS || []).filter(q => q.topic === topic).length; }
+function _countOEAll() { return (W.SCIENCE_OE_QUESTIONS || []).length; }
+assert(_countOEAll() >= 55, `v19.33: SCIENCE_OE_QUESTIONS ≥ 55 题 (实际 ${_countOEAll()}; v22.3 专家删了 3 道超纲题)`);
 assert(_countOEByTopic('Circulatory') >= 4, `v19.33: Circulatory OE ≥ 4 题 (Expert 4 P0, 实际 ${_countOEByTopic('Circulatory')})`);
 assert(_countOEByTopic('Respiratory') >= 3, `v19.33: Respiratory OE ≥ 3 题 (Expert 4 P0, 实际 ${_countOEByTopic('Respiratory')})`);
 assert(_countOEByTopic('Electrical Circuits') >= 3, `v19.33: Electrical Circuits OE ≥ 3 题 (Expert 4 P0, 实际 ${_countOEByTopic('Electrical Circuits')})`);
@@ -935,16 +930,16 @@ const leitnerGrad = (appSrc.match(/LEITNER_GRADUATION\s*\|\|\s*3/g) || []).lengt
 assert(leitnerGrad >= 2, `v19.14h P0-4: 两处都读 LEITNER_GRADUATION (实际 ${leitnerGrad})`);
 assert(/isReverseQ|反向题 \(NOT\/INCORRECT\)/.test(appSrc), 'v19.14h P1-1: OE 反向题封顶');
 // v19.14g: OE 题库扩到 50 题
-const oeCountV14g = (fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8').match(/id:\s*'oe_\d+'/g) || []).length;
+const oeCountV14g = _countOEAll();
 assert(oeCountV14g >= 50, `v19.14g: 科学 OE 题 ≥ 50 (实际 ${oeCountV14g})`);
 // v19.14g: 4 难章配比验证 (Plant Transport / Digestive / Light / Heat 各至少 6 道)
-const ptCount = (fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8').match(/topic:\s*'Plant Transport'/g) || []).length;
-const digCount = (fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8').match(/topic:\s*'Digestion'/g) || []).length;
-const lightCount = (fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8').match(/topic:\s*'Light'/g) || []).length;
-const heatCount = (fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8').match(/topic:\s*'Heat'/g) || []).length;
+const ptCount = _countOEByTopic('Plant Transport');
+const digCount = _countOEByTopic('Digestion');
+const lightCount = _countOEByTopic('Light');
+const heatCount = _countOEByTopic('Heat');
 assert(ptCount >= 6, `v19.14g: Plant Transport OE ≥ 6 (${ptCount})`);
 assert(digCount >= 6, `v19.14g: Digestion OE ≥ 6 (${digCount})`);
-assert(lightCount >= 6, `v19.14g: Light OE ≥ 6 (${lightCount})`);
+assert(lightCount >= 5, `v19.14g: Light OE ≥ 5 (${lightCount}; v22.3 专家删 1 道)`);
 assert(heatCount >= 7, `v19.14g: Heat OE ≥ 7 (${heatCount})`);
 // v19.14f 科学章节 filter + 子串漏洞修 (app 类)
 assert(/word boundary.*stem|safeStem.*RegExp/.test(appSrc), 'v19.14f: 关键词匹配改 word boundary + stem');
@@ -1032,7 +1027,7 @@ assert(/WEEKDAY_SOFT_CAP_GAMES/.test(dataSrcV14), 'v19.14d: 数学加 soft cap')
 assert(/from LEAVES to STORAGE ORGANS|translocation/.test(dataSrcV14), 'v19.14d: Phloem 修正不写双向');
 assert(/EMULSIFIES?\s+fat|emulsify fat/.test(dataSrcV14), 'v19.14d: Liver bile 改 emulsify');
 assert(/lighter\s*\/\s*not fully dark|影子 lighter/.test(dataSrcV14), 'v19.14d: Light translucent 影子加 lighter');
-assert(/'thin'.*'surface area'|villi.*'thin'/.test(dataSrcV14), 'v19.14d: OE #4 加 villi+thin wall keywords');
+// (v22.3 删: 专家审核指出 villi 是中学术语, 关键词已按 PSLE 口径改写) assert(/'thin'.*'surface area'|villi.*'thin'/.test(dataSrcV14), ...)
 assert(/Change 1:.*Change 2:|do NOT bracket heat/.test(dataSrcV14), 'v19.14d: OE #13 light/heat 独立');
 const mathCountV14d = ((dataSrcV14.match(/q:\s*'[^']+',\s*ans:/g) || []).length + (dataSrcV14.match(/"q":"[^"]+","ans":/g) || []).length);
 assert(mathCountV14d >= 90, `v19.14d: 数学题 ≥ 90 (实际 ${mathCountV14d}), 原 75 + 20`);
@@ -1102,7 +1097,7 @@ assert(sciVocabMatches >= 280, `v19.13: 科学词汇 ≥ 280 (实际 ${sciVocabM
 const oralCount = (dataSrc.match(/id:\s*'o_/g) || []).length;
 assert(oralCount >= 28, `v19.13: Oral 题库 ≥ 28 (实际 ${oralCount})`);
 // 15 OE 题
-const oeCount = (dataSrc.match(/id:\s*'oe_\d+'/g) || []).length;
+const oeCount = (W.SCIENCE_OE_QUESTIONS || []).length;
 assert(oeCount >= 13, `v19.13: 科学 OE 题 ≥ 13 (实际 ${oeCount})`);
 // 4 概念图
 ['plant_transport', 'digestive', 'light', 'heat'].forEach(k => {
