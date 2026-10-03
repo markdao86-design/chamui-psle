@@ -5123,99 +5123,231 @@ p { font-size: 14px; line-height: 1.6; }
   border-color: #F0C9C6;
 }
 
-/* ===== v24.0 傻瓜式 UI 组件 (用户 2026-10-03: "每个页面都傻瓜式呈现, 非常容易理解和交互") =====
-   规则: 每页顶一句话 (.ui-hint) / 每卡一个主按钮 (.ui-cta) / 数字大字 (.ui-num) / 列表行 ≥56px 整行可点 (.ui-row) / 说明折叠 (.ui-more) */
-.ui-hint { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:700; color:#1E293B; background:rgba(30,64,175,0.06); border:1px solid rgba(30,64,175,0.20); border-radius:12px; padding:12px 14px; margin-bottom:12px; line-height:1.45; }
-.ui-hint .ui-hint-ico { font-size:22px; flex:0 0 auto; }
-.ui-hint b { color:#1E40AF; }
-.ui-hint.purple { background:rgba(124,58,237,0.06); border-color:rgba(124,58,237,0.22); } .ui-hint.purple b { color:#7C3AED; }
-.ui-hint.green { background:rgba(22,163,74,0.07); border-color:rgba(22,163,74,0.25); } .ui-hint.green b { color:#16A34A; }
-.ui-cta { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:48px; padding:12px 18px; border:none; border-radius:12px; background:#1E40AF; color:#FFFFFF; font-size:16px; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(30,64,175,0.25); transition:transform .1s; }
+/* ===== v24.1 design tokens (v24.0 傻瓜式 UI 组件 → 设计层简化; 用户 2026-10-03 看截图: "还不算简洁") =====
+   四条规则, 全站复用:
+   色: 主色只有品蓝 --c-primary (主按钮/选中/链接); 状态色 ok/warn/bad 只做标记 (勾/叉/数字), 不做大面积底色; 紫色/黄提示条/卡片左彩条全撤
+   字: 五档 28 (大数字) / 18 (卡标题) / 15 (行标题/正文) / 13 (副标题) / 12 (标签); 英文题干和中文同一字体, 行高 1.6
+   形: 卡圆角 14 / 内部元素 10 / 胶囊 999; 阴影只有一种; 卡内分隔 1px, 不嵌套卡
+   间距: 8pt 网格 (8/16/24), 卡内 16, 卡间 16, 页边 16 (手机 12)
+   状态: 做完 = ✅ + 整行文字变灰 (不用删除线); 当前该做的那一行 = 左侧 3px 品蓝条 (全站唯一允许的彩条)
+   按钮: 一张卡一个实底主按钮 (.ui-cta); 次要动作一律文字链接 (.ui-btn2/.ui-link, 无边框); 勾选项用 32px 原生 checkbox (.ui-check)
+   v24.0 的 ui-* class 名保留 (QA 锁着), 这里只重定义它们的颜色/圆角/阴影/字号 */
+:root {
+  --c-primary:#1E40AF; --c-primary-soft:rgba(30,64,175,0.08);
+  --c-ok:#16A34A; --c-warn:#B45309; --c-bad:#DC2626;
+  --c-text:#1E293B; --c-text-2:#64748B; --c-text-3:#94A3B8;
+  --c-bg:#F1F5F9; --c-card:#FFFFFF; --c-card-2:#F8FAFC; --c-line:#EEF1F6; --c-border:#E2E8F0;
+  --fs-num:28px; --fs-h:18px; --fs-body:15px; --fs-sub:13px; --fs-tag:12px;
+  --r-card:14px; --r-el:10px; --r-pill:999px;
+  --sh:0 1px 3px rgba(15,23,42,.06);
+  --sp-1:8px; --sp-2:16px; --sp-3:24px;
+}
+/* 基础: 卡 / 页边距 */
+.card { padding:var(--sp-2); margin-bottom:var(--sp-2); border-radius:var(--r-card); border:1px solid var(--c-border); box-shadow:var(--sh); backdrop-filter:none; -webkit-backdrop-filter:none; }
+.main-container { padding:var(--sp-2); }
+.page > .kt-page-wrap { padding:0 !important; }
+/* 顶栏: 一行 (左 标题, 右 一个胶囊 + 同步圆点) */
+.app-header { padding:0 var(--sp-2); min-height:52px; gap:var(--sp-1); }
+.app-header .app-logo { font-size:var(--fs-h) !important; font-weight:800; color:var(--c-text); gap:6px; white-space:nowrap; min-width:0; overflow:hidden; }
+.app-logo .app-subtitle { display:none; font-size:var(--fs-tag) !important; color:var(--c-text-2) !important; font-weight:400; margin-left:var(--sp-1) !important; overflow:hidden; text-overflow:ellipsis; }
+@media (min-width: 900px) { .app-logo .app-subtitle { display:inline; } }
+.app-stats { gap:var(--sp-1); flex:0 0 auto; }
+.stat-pill { font-family:inherit; font-size:var(--fs-sub) !important; font-weight:700; padding:5px 12px !important; border-radius:var(--r-pill); border:1px solid var(--c-border); background:var(--c-card); color:var(--c-text); gap:4px; cursor:pointer; line-height:1.4; }
+.stat-pill.points { color:var(--c-primary); }
+.stat-pill::after { display:none !important; }
+#syncBadge { font-size:0 !important; width:8px; height:8px; padding:0 !important; border:none; border-radius:50%; background:#CBD5E1; cursor:default; flex:0 0 8px; }
+#syncBadge.sync-local { background:#CBD5E1; }
+#syncBadge.sync-syncing { background:var(--c-primary); }
+#syncBadge.sync-synced { background:var(--c-ok); }
+#syncBadge.sync-error { background:var(--c-bad); }
+/* 导航: 分段控件 (白底一条, 选中 = 品蓝实底白字, 其余无边框无阴影) */
+.tabs { gap:4px; padding:var(--sp-1) var(--sp-2); background:var(--c-card); border-bottom:1px solid var(--c-border); box-shadow:none; }
+.tab-btn { font-size:var(--fs-body) !important; font-weight:600; padding:8px 12px; min-height:40px; border:none; background:transparent; color:var(--c-text-2); border-radius:var(--r-el); box-shadow:none; }
+.tab-btn:hover { background:var(--c-card-2); color:var(--c-text); }
+.tab-btn.active { background:var(--c-primary); border-color:var(--c-primary); color:#FFFFFF; font-weight:700; }
+/* 其他 菜单顶部一行小字 (水晶 / 宝箱 / 周次, 从顶栏挪过来) */
+.more-stats { display:flex; align-items:center; gap:12px; flex-wrap:wrap; font-size:var(--fs-tag); color:var(--c-text-2); margin-bottom:var(--sp-1); }
+.more-stats .mystery-pill { cursor:pointer; color:var(--c-primary); font-weight:700; }
+/* ui-*: 页顶一句话 = 普通灰字 (不再是彩色提示条) */
+.ui-hint { display:block; font-size:var(--fs-sub); font-weight:400; color:var(--c-text-2); background:none; border:none; border-radius:0; padding:0; margin:0 0 12px; line-height:1.6; }
+.ui-hint .ui-hint-ico { font-size:var(--fs-sub); margin-right:4px; }
+.ui-hint b { color:var(--c-text); font-weight:700; }
+.ui-hint.purple, .ui-hint.green { background:none; border:none; }
+.ui-hint.purple b, .ui-hint.green b { color:var(--c-text); }
+/* 主按钮: 一卡一个, 只有品蓝 */
+.ui-cta { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:48px; padding:12px 18px; border:none; border-radius:var(--r-el); background:var(--c-primary); color:#FFFFFF; font-size:var(--fs-body); font-weight:700; box-shadow:none; cursor:pointer; font-family:inherit; transition:transform .1s; }
 .ui-cta:active { transform:scale(0.98); }
-.ui-cta.purple { background:#7C3AED; box-shadow:0 2px 8px rgba(124,58,237,0.25); }
-.ui-cta.green { background:#16A34A; box-shadow:0 2px 8px rgba(22,163,74,0.25); }
-.ui-cta.auto { width:auto; display:inline-flex; }
-.ui-cta:disabled { background:#E2E8F0; color:#94A3B8; box-shadow:none; cursor:default; }
-.ui-btn2 { display:inline-flex; align-items:center; justify-content:center; gap:4px; min-height:40px; padding:8px 14px; border:1px solid #CBD5E1; border-radius:10px; background:#FFFFFF; color:#1E40AF; font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap; }
-.ui-btn2.purple { color:#7C3AED; border-color:#C4B5FD; }
-.ui-link { background:none; border:none; color:#1E40AF; font-size:13px; font-weight:600; text-decoration:underline; cursor:pointer; padding:4px 2px; }
-.ui-row { display:flex; align-items:center; gap:12px; min-height:56px; padding:10px 12px; border-bottom:1px solid #F1F5F9; background:#FFFFFF; }
+.ui-cta.purple, .ui-cta.green { background:var(--c-primary); box-shadow:none; }
+.ui-cta.auto { width:auto; display:inline-flex; min-height:40px; padding:8px 14px; }
+.ui-cta:disabled { background:var(--c-border); color:var(--c-text-3); }
+/* 次要动作 = 文字链接 (品蓝, 无边框, 无底) */
+.ui-btn2, .ui-link { display:inline-flex; align-items:center; justify-content:center; gap:4px; min-height:32px; padding:4px 2px; border:none; border-radius:0; background:none; color:var(--c-primary); font-size:var(--fs-sub); font-weight:600; text-decoration:none; cursor:pointer; white-space:nowrap; font-family:inherit; }
+.ui-btn2.purple { color:var(--c-primary); border:none; }
+.ui-btn2:active, .ui-link:active { opacity:.7; }
+.ui-links { display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap; margin-top:var(--sp-1); }
+.ui-links .dot { color:var(--c-text-3); }
+/* 行: 卡内分隔线列表 (不嵌套卡) */
+.ui-row { display:flex; align-items:center; gap:12px; min-height:56px; padding:12px 0; border-bottom:1px solid var(--c-line); background:transparent; }
 .ui-row:last-child { border-bottom:none; }
 .ui-row.clickable { cursor:pointer; }
-.ui-row.clickable:active { background:#F8FAFC; }
-.ui-row.done { background:#F8FAFC; }
-.ui-row.done .ui-row-title { color:#64748B; text-decoration:line-through; }
-.ui-row-ico { font-size:24px; width:34px; flex:0 0 34px; text-align:center; line-height:1; }
+.ui-row.clickable:active { background:var(--c-card-2); }
+.ui-row.done { background:transparent; }
+.ui-row.done .ui-row-title, .ui-row.done .ui-row-sub, .ui-row.done .ui-row-time { color:var(--c-text-3); text-decoration:none; }
+.ui-row.now { box-shadow:inset 3px 0 0 var(--c-primary); padding-left:12px; }
+.ui-row.rest .ui-row-title { color:var(--c-text-3); font-weight:400; }
+.ui-row.open { border-bottom:none; }
+.df-body { padding:0 0 12px; border-bottom:1px solid var(--c-line); }
+.df-body:last-child { border-bottom:none; }
+.df-body .ui-stem:first-child { margin-top:0; }
+.ui-row-ico { font-size:22px; width:32px; flex:0 0 32px; text-align:center; line-height:1; }
 .ui-row-main { flex:1; min-width:0; }
-.ui-row-title { font-size:15px; font-weight:700; color:#1E293B; line-height:1.35; }
-.ui-row-sub { font-size:13px; color:#64748B; margin-top:2px; line-height:1.4; }
-.ui-row-act { flex:0 0 auto; text-align:right; }
-.ui-list { border:1px solid #E2E8F0; border-radius:12px; overflow:hidden; background:#FFFFFF; }
-.ui-num { font-size:28px; font-weight:900; line-height:1.1; color:#1E40AF; }
-.ui-num.sm { font-size:22px; }
-.ui-num-label { font-size:12px; color:#64748B; margin-top:2px; }
-.ui-tiles { display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:8px; }
-.ui-tile { padding:10px 8px; border-radius:12px; background:#F8FAFC; border:1px solid #E2E8F0; text-align:center; }
+.ui-row-time { font-size:var(--fs-tag); color:var(--c-text-2); line-height:1.4; }
+.ui-row-title { font-size:var(--fs-body); font-weight:600; color:var(--c-text); line-height:1.4; }
+.ui-row-sub { font-size:var(--fs-sub); color:var(--c-text-2); margin-top:2px; line-height:1.5; }
+.ui-row-act { flex:0 0 auto; text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.ui-list { border:none; border-radius:0; overflow:visible; background:transparent; }
+.ui-empty { padding:var(--sp-2); font-size:var(--fs-body); color:var(--c-text-2); text-align:center; }
+/* 大数字 */
+.ui-num { font-size:var(--fs-num); font-weight:800; line-height:1.1; color:var(--c-primary); }
+.ui-num.sm { font-size:var(--fs-h); }
+.ui-num-label { font-size:var(--fs-tag); color:var(--c-text-2); margin-top:2px; }
+.ui-tiles { display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:var(--sp-1); }
+.ui-tile { padding:12px 8px; border-radius:var(--r-el); background:var(--c-card-2); border:1px solid var(--c-border); text-align:center; }
 button.ui-tile { cursor:pointer; font-family:inherit; }
-.ui-more { margin-top:10px; }
-.ui-more > summary { cursor:pointer; font-size:13px; font-weight:700; color:#64748B; list-style:none; user-select:none; padding:6px 0; }
+/* 说明折叠 */
+.ui-more { margin-top:var(--sp-1); }
+.ui-more > summary { cursor:pointer; font-size:var(--fs-sub); font-weight:600; color:var(--c-primary); list-style:none; user-select:none; padding:6px 0; }
 .ui-more > summary::-webkit-details-marker { display:none; }
-.ui-more > summary::after { content:' ▾'; }
-.ui-more[open] > summary { color:#1E40AF; } .ui-more[open] > summary::after { content:' ▴'; }
-.ui-more-body { font-size:13px; color:#64748B; line-height:1.7; padding:8px 10px; background:#F8FAFC; border-radius:8px; }
-.ui-seg { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
-.ui-seg button { flex:1 1 auto; max-width:200px; min-height:44px; padding:8px 16px; border-radius:999px; border:1px solid #CBD5E1; background:#FFFFFF; color:#1E293B; font-size:15px; font-weight:700; cursor:pointer; }
-#wrongBookBody h1 { font-size:18px !important; margin:12px 0 6px !important; }
-#wrongBookBody h2 { font-size:15px !important; }
-.ui-seg button.on { background:#1E40AF; border-color:#1E40AF; color:#FFFFFF; }
-.ui-seg button .n { font-size:12px; font-weight:400; opacity:.8; margin-left:4px; }
-.ui-ok { color:#16A34A; font-weight:800; } .ui-warn { color:#B45309; font-weight:800; } .ui-bad { color:#DC2626; font-weight:800; } .ui-mute { color:#94A3B8; font-weight:700; }
-.ui-page-title { font-size:20px; font-weight:900; color:#1E293B; margin:0 0 8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.ui-page-title .sub { font-size:13px; font-weight:400; color:#64748B; }
-.ui-section { font-size:13px; font-weight:900; color:#B45309; letter-spacing:.5px; margin:16px 0 4px; }
-.ui-topbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.ui-more > summary::after { content:' ▾'; color:var(--c-text-3); }
+.ui-more[open] > summary { color:var(--c-primary); }
+.ui-more[open] > summary::after { content:' ▴'; }
+.ui-more-body { font-size:var(--fs-sub); color:var(--c-text-2); line-height:1.7; padding:8px 12px; background:var(--c-card-2); border-radius:var(--r-el); }
+.ui-more-body b { color:var(--c-text); }
+/* 折叠卡 (单词本 / 设置 / 家长记录 / 卡组 / 月度跟踪): 15px 标题 + 右侧数字 + ▾, 间距 8 */
+details.card.ui-more { margin:0 0 var(--sp-1); padding:12px var(--sp-2) !important; }
+details.card.ui-more > summary { display:flex; align-items:center; gap:var(--sp-1); font-size:var(--fs-body) !important; font-weight:600; color:var(--c-text) !important; padding:0; }
+details.card.ui-more > summary .n { margin-left:auto; font-size:var(--fs-sub); font-weight:400; color:var(--c-text-2); }
+details.card.ui-more > summary::after { margin-left:4px; }
+details.card.ui-more[open] { margin-bottom:var(--sp-2); }
+details.card.ui-more[open] > summary { margin-bottom:var(--sp-1); }
+/* 科目胶囊: 36px */
+.ui-seg { display:flex; gap:var(--sp-1); flex-wrap:wrap; margin-bottom:var(--sp-2); }
+.ui-seg button { flex:0 1 auto; max-width:none; min-height:36px; padding:6px 14px; border-radius:var(--r-pill); border:1px solid var(--c-border); background:var(--c-card); color:var(--c-text); font-size:var(--fs-body); font-weight:600; cursor:pointer; font-family:inherit; }
+.ui-seg button.on { background:var(--c-primary); border-color:var(--c-primary); color:#FFFFFF; }
+.ui-seg button .n { font-size:var(--fs-tag); font-weight:400; opacity:.8; margin-left:4px; }
+#wrongBookBody h1 { font-size:var(--fs-h) !important; margin:var(--sp-2) 0 4px !important; color:var(--c-text) !important; border-bottom:1px solid var(--c-line) !important; padding-bottom:6px !important; }
+#wrongBookBody h1:first-child { margin-top:0 !important; }
+#wrongBookBody h2 { font-size:var(--fs-body) !important; color:var(--c-text) !important; margin:var(--sp-2) 0 4px !important; }
+#wrongBookBody h2 small { font-size:var(--fs-tag) !important; color:var(--c-text-2) !important; }
+#wrongBookBody h2 button { float:right; padding:2px 0 !important; border:none !important; background:none !important; color:var(--c-primary) !important; font-size:var(--fs-sub) !important; font-weight:600; }
+/* 错题集每题块: 去掉卡套卡, 1px 分隔线列表; 正确答案一行绿字, 解析灰字 (PDF 导出仍走 _PDF_CSS 自己的样式) */
+#wrongBookBody div.wq { border:none; border-radius:0; border-bottom:1px solid var(--c-line); padding:12px 0; margin:0; }
+#wrongBookBody div.wq:last-child { border-bottom:none; }
+#wrongBookBody div.wq .q { font-size:var(--fs-body); font-weight:600; color:var(--c-text); line-height:1.6; }
+#wrongBookBody div.wq .o { font-size:var(--fs-sub); color:var(--c-text-2); margin-top:4px; line-height:1.7; }
+#wrongBookBody div.wq .ok { color:var(--c-ok); font-size:var(--fs-sub); font-weight:700; margin-top:4px; }
+#wrongBookBody div.wq .ex { background:none; color:var(--c-text-2); padding:0; margin-top:4px; font-size:var(--fs-sub); line-height:1.6; }
+#wrongBookBody div.tipbox { background:var(--c-card-2); border:none; border-radius:var(--r-el); padding:10px 12px; font-size:var(--fs-sub); color:var(--c-text-2); margin:var(--sp-1) 0; }
+#wrongBookBody div.tipbox div[style*="color:#7C3AED"], #wrongBookBody div.tipbox div[style*="color:#B45309"], #wrongBookBody div.tipbox div[style*="color:#1E40AF"] { color:var(--c-text) !important; }
+#wrongBookBody div.tipbox div[style*="border-left:3px solid #7C3AED"] { border-left-color:var(--c-border) !important; background:var(--c-card) !important; }
+#wrongBookBody details > summary { font-size:var(--fs-sub) !important; }
+/* 状态标记 (只做标记, 不做底色) */
+.ui-ok { color:var(--c-ok); font-weight:700; } .ui-warn { color:var(--c-warn); font-weight:700; } .ui-bad { color:var(--c-bad); font-weight:700; } .ui-mute { color:var(--c-text-3); font-weight:600; }
+/* 页/卡标题: 18px; 卡头 = 标题左 + 大数字右 */
+.ui-page-title { font-size:var(--fs-h); font-weight:800; color:var(--c-text); margin:0 0 var(--sp-1); display:flex; align-items:center; gap:var(--sp-1); flex-wrap:wrap; line-height:1.3; }
+.ui-page-title .sub { font-size:var(--fs-sub); font-weight:400; color:var(--c-text-2); }
+.ui-head { display:flex; align-items:center; gap:12px; margin-bottom:var(--sp-1); }
+.ui-head .ui-page-title { margin:0; flex:1; min-width:0; }
+.ui-head .ui-head-r { margin-left:auto; white-space:nowrap; text-align:right; display:flex; align-items:baseline; gap:4px; }
+.ui-head .ui-head-r .ui-num-label { display:inline; margin:0; }
+.ui-head-sub { display:flex; align-items:center; gap:var(--sp-1); flex-wrap:wrap; font-size:var(--fs-sub); color:var(--c-text-2); line-height:1.6; margin-bottom:12px; }
+.ui-head-sub .grow { flex:1; min-width:0; }
+.ui-head-sub .ui-tools { margin-left:auto; display:flex; gap:12px; }
+/* 分组标题: 12px 灰色大写字距 */
+.ui-section { font-size:var(--fs-tag); font-weight:700; color:var(--c-text-2); letter-spacing:1px; text-transform:uppercase; margin:var(--sp-3) 0 4px; }
+.ui-list > .ui-section:first-child, .card > .ui-section:first-child { margin-top:0; }
+.ui-topbar { display:flex; align-items:center; gap:var(--sp-1); flex-wrap:wrap; }
 .ui-topbar .grow { flex:1; }
-/* 首页: 两栏小标题去重 (卡内已有标题) */
+/* 12px 小标签 (科目 / 班课 / 自学), 代替卡片左彩条 */
+.ui-tag { display:inline-block; font-size:var(--fs-tag); font-weight:600; color:var(--c-text-2); background:var(--c-bg); border-radius:6px; padding:2px 8px; line-height:1.4; white-space:nowrap; vertical-align:middle; }
+.ui-tag.primary { color:var(--c-primary); background:var(--c-primary-soft); }
+/* 32px 原生勾选 */
+.ui-check { width:32px; height:32px; margin:0; cursor:pointer; accent-color:var(--c-primary); flex:0 0 32px; }
+/* 打分格: 对 / 共 两格 (主页打卡 + 课表 + 整周表共用 _sgCtrl) */
+.ui-ctrl-line { display:flex; align-items:center; justify-content:flex-end; gap:6px; white-space:nowrap; }
+.ui-ctrl-lbl { font-size:var(--fs-tag); color:var(--c-text-2); }
+.ui-ctrl-line .slash { font-size:var(--fs-sub); color:var(--c-text-3); }
+/* 题干 / 选项 / 分析区 */
+.ui-stem { font-size:var(--fs-body); line-height:1.6; color:var(--c-text); white-space:pre-wrap; font-family:inherit; padding:12px; background:var(--c-card-2); border-radius:var(--r-el); margin-top:var(--sp-1); }
+.ui-opt { display:block; width:100%; text-align:left; min-height:44px; padding:10px 14px; margin-top:var(--sp-1); border-radius:var(--r-el); border:1px solid var(--c-border); background:var(--c-card); color:var(--c-text); font-size:var(--fs-body); line-height:1.5; cursor:pointer; font-family:inherit; }
+.ui-opt:disabled { cursor:default; }
+.ui-opt.ok { border-color:var(--c-ok); color:var(--c-ok); font-weight:700; }
+.ui-opt.bad { border-color:var(--c-bad); color:var(--c-bad); }
+.ui-panel { background:var(--c-card-2); border-radius:var(--r-el); padding:12px; margin-top:var(--sp-1); font-size:var(--fs-sub); color:var(--c-text); line-height:1.7; }
+.ui-panel .lbl { font-size:var(--fs-tag); font-weight:700; color:var(--c-text-2); margin:10px 0 2px; letter-spacing:.5px; }
+.ui-panel .lbl:first-child { margin-top:0; }
+.ui-panel .muted { color:var(--c-text-2); }
+.ui-textarea { width:100%; box-sizing:border-box; margin-top:var(--sp-1); padding:12px; border-radius:var(--r-el); border:1px solid var(--c-border); font-size:var(--fs-body); color:var(--c-text); background:var(--c-card); line-height:1.6; font-family:inherit; }
+/* 进度条: 一条 */
+.ui-bar { height:8px; background:var(--c-border); border-radius:var(--r-pill); overflow:hidden; display:flex; margin:var(--sp-1) 0; }
+.ui-bar > div { height:100%; background:var(--c-primary); }
+.ui-bar > div.soft { background:#93C5FD; }
+.ui-bar > div.ok { background:var(--c-ok); }
+/* 日期胶囊 (课表): 36px, 文字 14 */
+.ui-chips { display:flex; gap:6px; flex-wrap:wrap; margin:var(--sp-1) 0 12px; }
+.ui-chips button { flex:1 1 44px; max-width:96px; min-height:36px; padding:4px 8px; border-radius:var(--r-pill); border:1px solid var(--c-border); background:var(--c-card); color:var(--c-text); font-size:14px; font-weight:600; cursor:pointer; white-space:nowrap; font-family:inherit; }
+.ui-chips button.on { background:var(--c-primary); border-color:var(--c-primary); color:#FFFFFF; }
+/* 学习中心 4 个入口 */
+.practice-hub-btn { min-height:112px; padding:var(--sp-2) 12px; background:var(--c-card); border:1px solid var(--c-border); border-radius:var(--r-el); cursor:pointer; text-align:left; transition:all .2s; font-family:inherit; }
+.practice-hub-btn .ico { font-size:28px; line-height:1; }
+.practice-hub-btn .nm { font-size:var(--fs-body); font-weight:700; color:var(--c-text); margin-top:var(--sp-1); }
+.practice-hub-btn .ds { font-size:var(--fs-sub); color:var(--c-text-2); margin-top:2px; }
+/* 首页: ≤1100px 单栏 (打卡 → 考点 → 错题); 桌面双栏 (左 打卡 + 错题, 右 考点); 两栏小标题去重 (卡内已有标题); 对齐 filler 不再显示 */
+.home-grid-2col { gap:var(--sp-2); margin-top:0; }
+.home-col-left, .home-col-right { gap:var(--sp-2); }
 .home-grid-2col .home-col-left > div:first-child, .home-grid-2col .home-col-right > div:first-child { display:none; }
+.home-grid-2col .card { margin-bottom:0; }
+.col-balance-filler { display:none !important; }
+@media (max-width: 1100px) {
+  .home-grid-2col { display:flex; flex-direction:column; }
+  .home-col-left, .home-col-right { display:contents; }
+  #todayThreeCard { order:1; } #dailyFocusCard { order:2; } #errorBankCard { order:3; }
+}
+@media (min-width: 1101px) {
+  .home-grid-2col { grid-template-columns:1fr 1fr; gap:var(--sp-2); }
+}
 #page-dashboard .ui-hint { margin-bottom:12px; }
-/* 手机 (≤640px): 顶栏不再竖排; 导航紧凑; 页边距 12px */
+/* 手机 (≤640px): 顶栏一行; 导航紧凑; 页边距 12px */
 @media (max-width: 640px) {
-  .app-header { padding:10px 14px; flex-wrap:wrap; gap:8px; }
-  .app-logo { font-size:19px !important; flex-wrap:wrap; gap:6px; }
+  .app-header { padding:0 12px; min-height:48px; flex-wrap:nowrap; gap:var(--sp-1); }
+  .app-header .app-logo { font-size:17px !important; flex-wrap:nowrap; gap:6px; }
   .app-logo > span { white-space:nowrap; }
-  .app-logo .app-subtitle { flex:1 1 100%; margin-left:0 !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11px !important; }
-  .app-stats { gap:6px; flex-wrap:wrap; }
-  .stat-pill { font-size:12px !important; padding:4px 8px !important; gap:3px; }
-  .tabs { padding:8px 10px; gap:6px; flex-wrap:wrap; }
-  .tab-btn { padding:8px 10px !important; min-height:40px; font-size:13px !important; border-radius:9px; }
+  .app-stats { gap:6px; flex-wrap:nowrap; }
+  .stat-pill { font-size:12px !important; padding:4px 10px !important; }
+  .tabs { padding:6px 8px; gap:2px; flex-wrap:wrap; }
+  .tab-btn { padding:8px 10px !important; min-height:40px; font-size:13px !important; border-radius:var(--r-el); }
   .main-container { padding:12px !important; }
-  .kt-page-wrap { padding:10px !important; }
   .card { padding:12px !important; }
-  .ui-hint { font-size:14px; padding:10px 12px; }
+  details.card.ui-more { padding:10px 12px !important; }
   .ui-tiles { grid-template-columns:repeat(2, 1fr); }
-  .ui-seg button { padding:8px 10px; font-size:14px; }
+  .ui-seg button { padding:6px 12px; font-size:13px; }
   table.ui-table { font-size:12px; }
+  .ui-row.now { padding-left:10px; }
 }
 </style>
 </head>
 <body>
 
+<!-- v24.1 设计层简化: 顶栏一行 = 左 标题 (不折行) · 右 一个胶囊 "⭐ 分 · Lv" (点进 我的) + 同步状态 8px 圆点; 水晶/宝箱/周次 挪到 ⋯其他 菜单顶部一行小字 -->
 <header class="app-header">
   <div class="app-logo">
     <span class="hammer-emoji">🔨</span>
-    <span>佑子的备考冒险</span>
-    <span class="app-subtitle" style="font-size:11px;color:var(--color-text-light);font-weight:400;margin-left:8px;">PSLE 4-6 分陪练 · 打卡是养成, 能力才是目标</span>
+    <span>佑子备考</span>
+    <span class="app-subtitle">PSLE 4-6 分陪练 · 打卡是养成, 能力才是目标</span>
   </div>
   <div class="app-stats">
-    <div class="stat-pill points">⭐ <span id="totalPoints">0</span> 分</div>
-    <div class="stat-pill crystals">💎 <span id="totalCrystals">0</span></div>
-    <div class="stat-pill level">Lv<span id="currentLevel">1</span></div>
-    <!-- v18.48: 宝箱挪到顶部, 跟分数同列 -->
-    <div class="stat-pill mystery-pill" id="mysteryTabBtn" onclick="openMysteryBoxModal()" title="🎁 神秘宝箱 + 抽奖碎片">
-      🎁 <span id="mysteryTabCount">0</span>
-    </div>
-    <div class="stat-pill week">W<span id="currentWeek">1</span> / 73</div>
-    <div class="stat-pill sync-local" id="syncBadge" title="数据同步状态">📴 本地</div>
+    <button class="stat-pill points" onclick="document.querySelector('[data-page=character]').click()" title="积分和等级 · 点进 我的">⭐ <span id="totalPoints">0</span> · Lv <span id="currentLevel">1</span></button>
+    <span class="stat-pill sync-local" id="syncBadge" title="数据同步状态">📴 本地</span>
   </div>
 </header>
 
@@ -5251,7 +5383,13 @@ button.ui-tile { cursor:pointer; font-family:inherit; }
 <div id="moreMenu" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.55)" onclick="window.toggleMoreMenu()">
   <!-- v24.0 傻瓜式: 行 ≥56px 整行可点, 左 图标+名字+一句大白话, 右 ›; 底部一个关闭按钮 -->
   <div style="position:absolute;top:10%;left:50%;transform:translateX(-50%);width:min(360px,92vw);background:#FFFFFF;border:1px solid #CBD5E1;border-radius:16px;padding:14px 14px 12px;box-shadow:0 8px 32px rgba(0,0,0,0.5)" onclick="event.stopPropagation()">
-    <div style="font-size:16px;color:#1E293B;margin-bottom:8px;font-weight:900">⋯ 其他页面 <span style="font-size:12px;color:#64748B;font-weight:400">不常用的都在这</span></div>
+    <div class="ui-page-title">⋯ 其他页面 <span class="sub">不常用的都在这</span></div>
+    <!-- v24.1: 顶栏撤下来的四个胶囊 (水晶 / 宝箱 / 周次) 在这里一行小字; id 不变, renderHeader / renderMysteryBoxCard 照旧写入 -->
+    <div class="more-stats">
+      <span>💎 <span id="totalCrystals">0</span> 水晶</span>
+      <span class="mystery-pill" id="mysteryTabBtn" onclick="openMysteryBoxModal()" title="🎁 神秘宝箱 + 抽奖碎片">🎁 <span id="mysteryTabCount">0</span> 宝箱</span>
+      <span>第 W<span id="currentWeek">1</span> / 73 周</span>
+    </div>
     <div class="ui-list">
       <button class="ui-row clickable" style="width:100%;border:none;text-align:left;font-family:inherit" onclick="window.gotoPage('history');window.toggleMoreMenu()"><span class="ui-row-ico">📊</span><span class="ui-row-main"><span class="ui-row-title">能力</span><span class="ui-row-sub" style="display:block">四科大概几 AL, 哪里弱</span></span><span style="color:#94A3B8;font-size:20px">›</span></button>
       <button class="ui-row clickable" style="width:100%;border:none;border-top:1px solid #F1F5F9;text-align:left;font-family:inherit" onclick="window.toggleTargetSchoolModal();window.toggleMoreMenu()"><span class="ui-row-ico">🎯</span><span class="ui-row-main"><span class="ui-row-title">目标校</span><span class="ui-row-sub" style="display:block">录取概率</span></span><span style="color:#94A3B8;font-size:20px">›</span></button>
@@ -5355,8 +5493,8 @@ button.ui-tile { cursor:pointer; font-family:inherit; }
       <!-- 左栏: 今日必做 行动驱动 (v19.22: gradReviewCard 移到右栏减拥挤) -->
       <div class="home-col-left">
         <!-- v23.0 (用户 2026-10-03 "首页太杂"): 左栏只留 每日分数打卡表 + 错题本 -->
-        <div style="font-size:12px;font-weight:900;color:#1E40AF;letter-spacing:1px;margin-bottom:6px">📝 每日分数打卡</div>
-        <div class="card" id="todayThreeCard" style="border-left:4px solid #1E40AF"></div>
+        <div class="ui-section">📝 每日分数打卡</div>
+        <div class="card" id="todayThreeCard"></div>
         <div class="card" id="errorBankCard"></div>
         <!-- v19.35: 自动对齐 filler — 长栏时被挤为 0 不留痕 -->
         <div class="col-balance-filler" id="leftColFiller"></div>
@@ -5364,8 +5502,8 @@ button.ui-tile { cursor:pointer; font-family:inherit; }
       <!-- 右栏: 教学 + 信息 + 复盘 (v19.23: 目标校下移到第 3, 教学卡上提) -->
       <div class="home-col-right">
         <!-- v23.0: 右栏 "教学+信息+复盘" 改成 每日考点学习 一张卡; 思考题/知识树每日练/毕业复测/Paper2突击 挪进下面隐藏的 legacy 容器 -->
-        <div style="font-size:12px;font-weight:900;color:#7C3AED;letter-spacing:1px;margin-bottom:6px">🎓 每日考点学习</div>
-        <div class="card" id="dailyFocusCard" style="border-left:4px solid #7C3AED"></div>
+        <div class="ui-section">🎓 每日考点学习</div>
+        <div class="card" id="dailyFocusCard"></div>
         <!-- v19.35: 自动对齐 filler — 短栏时撑空到与长栏等高 -->
         <div class="col-balance-filler" id="rightColFiller"></div>
       </div>
@@ -5588,32 +5726,35 @@ button.ui-tile { cursor:pointer; font-family:inherit; }
   <div class="page" id="page-practice">
     <div class="kt-page-wrap" style="padding:16px">
       <!-- v24.0 傻瓜式: 顶一句话 + 4 个大入口 (图标 + 名字 + 一句大白话), 旧的 "35 节点/73 周 prompt" 这类数字和术语去掉 -->
-      <div class="ui-hint green"><span class="ui-hint-ico">📚</span><span>想多练就从这里进: <b>点一个</b>开始</span></div>
-      <div class="ui-page-title">📚 学习中心</div>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
-        <button class="practice-hub-btn" data-accent="green" onclick="document.querySelector('[data-page=knowledge]').click()" style="min-height:112px;padding:16px 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;cursor:pointer;text-align:left;transition:all 0.2s">
-          <div style="font-size:30px">🌳</div>
-          <div style="font-size:16px;font-weight:900;color:#1E293B;margin-top:6px">知识树</div>
-          <div style="font-size:13px;color:#64748B;margin-top:3px">一个考点一个考点过, 拿满 3 星</div>
-        </button>
-        <button class="practice-hub-btn" data-accent="orange" onclick="document.querySelector('[data-page=paperbank]').click()" style="min-height:112px;padding:16px 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;cursor:pointer;text-align:left;transition:all 0.2s">
-          <div style="font-size:30px">📚</div>
-          <div style="font-size:16px;font-weight:900;color:#1E293B;margin-top:6px">题库</div>
-          <div style="font-size:13px;color:#64748B;margin-top:3px">按卷子题型刷题</div>
-        </button>
-        <button class="practice-hub-btn" data-accent="cyan" onclick="document.querySelector('[data-page=vocab]').click()" style="min-height:112px;padding:16px 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;cursor:pointer;text-align:left;transition:all 0.2s">
-          <div style="font-size:30px">📇</div>
-          <div style="font-size:16px;font-weight:900;color:#1E293B;margin-top:6px">词汇</div>
-          <div style="font-size:13px;color:#64748B;margin-top:3px">背单词 + 单词考题</div>
-        </button>
-        <button class="practice-hub-btn" data-accent="pink" onclick="document.querySelector('[data-page=essay]').click()" style="min-height:112px;padding:16px 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;cursor:pointer;text-align:left;transition:all 0.2s">
-          <div style="font-size:30px">📝</div>
-          <div style="font-size:16px;font-weight:900;color:#1E293B;margin-top:6px">作文</div>
-          <div style="font-size:13px;color:#64748B;margin-top:3px">每周一篇, 写完给家长批</div>
-        </button>
+      <!-- v24.1: 三页 (技巧/错题集/学习中心) 头部统一: 18px 标题 + 一行 13px 灰字; 4 个入口用 token 样式 (class 名 practice-hub-btn / data-accent 不变, QA 锁着) -->
+      <div class="card">
+        <div class="ui-head"><div class="ui-page-title">📚 学习中心</div><div class="ui-head-r"><span class="ui-num">4</span><span class="ui-num-label">个入口</span></div></div>
+        <div class="ui-head-sub"><span class="grow">想多练就从这里进, 点一个开始</span></div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+          <button class="practice-hub-btn" data-accent="green" onclick="document.querySelector('[data-page=knowledge]').click()">
+            <div class="ico">🌳</div>
+            <div class="nm">知识树</div>
+            <div class="ds">一个考点一个考点过, 拿满 3 星</div>
+          </button>
+          <button class="practice-hub-btn" data-accent="orange" onclick="document.querySelector('[data-page=paperbank]').click()">
+            <div class="ico">📚</div>
+            <div class="nm">题库</div>
+            <div class="ds">按卷子题型刷题</div>
+          </button>
+          <button class="practice-hub-btn" data-accent="cyan" onclick="document.querySelector('[data-page=vocab]').click()">
+            <div class="ico">📇</div>
+            <div class="nm">词汇</div>
+            <div class="ds">背单词 + 单词考题</div>
+          </button>
+          <button class="practice-hub-btn" data-accent="pink" onclick="document.querySelector('[data-page=essay]').click()">
+            <div class="ico">📝</div>
+            <div class="nm">作文</div>
+            <div class="ds">每周一篇, 写完给家长批</div>
+          </button>
+        </div>
       </div>
       <!-- v19.24: gameHubCard 从主页迁到练习中心 (主页 hero 不再插入) -->
-      <div class="ui-section" style="margin-top:18px">⚔️ 每日挑战 + 所有 mini-game</div>
+      <div class="ui-section">⚔️ 每日挑战 + 所有 mini-game</div>
       <div id="gameHubCard" style="margin-top:6px"></div>
     </div>
   </div>
@@ -6062,9 +6203,9 @@ button.ui-tile { cursor:pointer; font-family:inherit; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=24.0"></script>
-<script src="data.js?v=24.0"></script>
-<script src="app.js?v=24.0"></script>
+<script src="character.js?v=24.1"></script>
+<script src="data.js?v=24.1"></script>
+<script src="app.js?v=24.1"></script>
 
 </body>
 </html>

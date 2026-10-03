@@ -674,7 +674,7 @@ assert(/🎓 每日考点学习/.test(idxSrc), 'v19.23→v23.0: 右栏标题改"
 assert(/v19\.22: 错题本卡 \(整张可点 \+ game\/topic 分类 \+ 显眼大按钮\)/.test(appSrc), 'v19.22: 错题本卡注释');
 assert(/card\.onclick = \(e\) =>/.test(appSrc), 'v19.22: 错题本卡整张可点');
 assert(/📊 按科目分布:/.test(appSrc), 'v19.22: 按 game 分类显示');
-assert(/🎯 立即开始复习/.test(appSrc), 'v19.22: 显眼大按钮');
+assert(/<button class="ui-cta" onclick="event\.stopPropagation\(\); openErrorBank\(\)">开始复习 →<\/button>/.test(appSrc), 'v19.22→v24.1: 显眼大按钮 (v24.1 文案改"开始复习 →", 仍是卡上唯一实底主按钮)');
 // v19.22: 答错 modal 暂停
 assert(/function _ebNextManual/.test(appSrc), 'v19.22: 手动下一题函数');
 assert(/_ebPendingNext/.test(appSrc), 'v19.22: pending next 缓存');
@@ -721,8 +721,8 @@ assert(/id="thinkPuzzleCardOld"/.test(idxSrc), 'v19.18: 打卡页 thinkPuzzleCar
 // renderDashboard 调用新卡
 assert(/renderWeekMasterTipCard\(\)/.test(appSrc), 'v19.18: renderWeekMasterTipCard 被调用');
 assert(/renderThinkPuzzleCard\(state\.currentWeek\)/.test(appSrc), 'v19.18: renderThinkPuzzleCard 被主页调用');
-// 错题本卡红 badge → v24.0 改成大数字 (傻瓜式: 数字大字 + 标签小字, 不再用红色小 badge)
-assert(/<span class="ui-num" style="color:#16A34A">\$\{wrongs\.length\}<\/span><span class="ui-num-label">题待复习<\/span>/.test(appSrc), 'v19.18→v24.0: 错题本卡题数用大数字强提醒 (原红 badge)');
+// 错题本卡红 badge → v24.0 改成大数字 (傻瓜式: 数字大字 + 标签小字, 不再用红色小 badge) → v24.1 大数字不再 inline 上绿色 (全站大数字只有品蓝, 状态色只做标记)
+assert(/<span class="ui-num">\$\{wrongs\.length\}<\/span><span class="ui-num-label">题待复习<\/span>/.test(appSrc), 'v19.18→v24.1: 错题本卡题数用大数字强提醒 (原红 badge; v24.1 去 inline 绿色)');
 // renderWeekMasterTipCard 函数
 assert(/function renderWeekMasterTipCard/.test(appSrc), 'v19.18: renderWeekMasterTipCard 函数');
 // v19.80: 名师秘籍卡已换成知识树每日练 (WEEK_MASTER_TIPS 数据保留未接 UI)
@@ -904,7 +904,10 @@ assert(/c3-syn-opt/.test(appSrc), 'v19.14l: MCQ 选项渲染');
 // v19.14j 4 项: 装备 lock 撤 + 主页恢复入口 + 错题绿系 + SCIENCE_MCQ chapterId
 assert(!/平日 lock 装备穿戴\/卸下 — 防止/.test(appSrc), 'v19.14j: toggleEquipment 平日 lock 已撤');
 assert(!/showToast\('🔒 皮肤切换只在周末开放/.test(appSrc), 'v19.14j: setActiveSkin 平日 lock 已撤');
-assert(/已收集 \$\{wrongs\.length\} 题 🌱|borderLeft\s*=\s*'4px solid #66BB6A'/.test(appSrc), 'v19.14j: 错题色绿系 + 已收集文案');
+{ // v24.1: 卡片左彩条全站撤掉 (绿左条也撤), 去羞耻化改成"卡内不出现红色"来锁
+  const ebFn = (appSrc.match(/function renderErrorBankCard\(\)[\s\S]*?window\.renderErrorBankCard = renderErrorBankCard/) || [''])[0];
+  assert(ebFn.length > 0 && /card\.style\.borderLeft = ''/.test(ebFn) && !/#DC2626|#EF4444|#F44336/.test(ebFn), 'v19.14j→v24.1: 错题卡去羞耻化 (不回红色), 绿左彩条随 v24.1 全站彩条一起撤');
+}
 assert(/inferScimcqChapter|tagScimcqChapters/.test(appSrc) || /inferScimcqChapter/.test(appSrc), 'v19.14j: SCIENCE_MCQ chapterId runtime');
 // data 类
 // v19.14j data 类断言放后面 (在 dataSrcV14 之后)

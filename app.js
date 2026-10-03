@@ -871,18 +871,17 @@ function renderTodayThreeCard() {
   const isWeekday = window.isWeekdayToday ? window.isWeekdayToday() : true;
   // v19.15 P0-3: 卡片标题/计数器按平日 vs 周末分化 (周末改"自选推荐", 心理上从义务→自主)
   let headerTitle = '🎯 今日要做的 3 件事';
-  let headerColor = '#1E40AF';
   let counterFn = (done) => `${done} / 3 完成`;
 
-  // v19.15e: 暗调 + 青色发光风格, 匹配打卡页 .checkin-item (未做高亮 / 已做灰掉)
+  // v19.15e: 暗调 + 青色发光风格, 匹配打卡页 .checkin-item (未做高亮 / 已做灰掉) → v24.1 只剩假期分支在用, 改成 token 行 (做完 = ✅ + 变灰, 不用删除线)
   const item = (icon, label, sub, done, onclick, color) => `
-    <div onclick="${onclick}" style="display:flex;align-items:center;gap:10px;padding:14px;background:${done ? 'rgba(80,80,80,0.08)' : 'linear-gradient(135deg, rgba(30,64,175,0.08), rgba(30,64,175,0.02))'};border:${done ? '1px solid rgba(120,120,120,0.18)' : '1px solid rgba(30,64,175,0.45)'};box-shadow:${done ? 'none' : '0 0 12px rgba(30,64,175,0.10), inset 0 0 0 1px rgba(30,64,175,0.05)'};border-radius:8px;margin-bottom:8px;cursor:pointer;min-height:64px;transition:all 0.2s;${done ? 'opacity:0.45;filter:grayscale(0.6);' : ''}">
-      <div style="font-size:24px;width:32px;text-align:center">${done ? '✅' : icon}</div>
-      <div style="flex:1">
-        <div style="font-size:15px;font-weight:700;color:${done ? '#9E9E9E' : '#1E293B'};${done ? 'text-decoration:line-through;' : ''}">${label}</div>
-        <div style="font-size:12px;color:${done ? '#777' : '#1E293B'};margin-top:2px">${sub}</div>
+    <div class="ui-row clickable${done ? ' done' : ''}" onclick="${onclick}">
+      <div class="ui-row-ico">${done ? '✅' : icon}</div>
+      <div class="ui-row-main">
+        <div class="ui-row-title">${label}</div>
+        <div class="ui-row-sub">${sub}</div>
       </div>
-      <div style="color:${done ? '#777' : color};font-size:20px">›</div>
+      <div style="color:#94A3B8;font-size:20px">›</div>
     </div>
   `;
 
@@ -898,7 +897,6 @@ function renderTodayThreeCard() {
     const treeToday = Object.values(state.knowledgeStars || {}).some(r => r && r.lastDate === todayIso);
     const appDone = treeToday || (todayCounts.vocab || 0) >= 1 || (todayCounts.scimcq || 0) >= 1 || (todayCounts.listen || 0) >= 1;
     headerTitle = '🏖️ 假期任务 · ' + holiday.label;
-    headerColor = '#B45309';
     counterFn = () => '照课表走';
     doneCount = 0;
     headerSub = '假期特别安排 · 详情看📆课表页 · 9/14(周一)恢复常规';
@@ -906,9 +904,7 @@ function renderTodayThreeCard() {
       const done = i === 2 && appDone;
       return item(t[0], t[1], t[2], done, t[3] || "gotoPage('schedule')", '#B45309');
     }).join('');
-    tipHtml = `<div style="margin-top:8px;padding:8px;background:linear-gradient(135deg, rgba(230,162,60,0.10), rgba(192,86,33,0.05));border:1px solid rgba(230,162,60,0.30);border-radius:6px;font-size:11px;color:#B45309;line-height:1.5;text-align:center">
-      🏫 <b>班课优先 · 错题当天清</b> · 8:00 起床 21:30 熄灯 · 每晚填每日成绩单
-    </div>`;
+    tipHtml = `<div style="margin-top:8px;font-size:13px;color:#64748B;line-height:1.6;text-align:center">🏫 <b>班课优先 · 错题当天清</b> · 8:00 起床 21:30 熄灯 · 每晚填每日成绩单</div>`;
   } else {
     // v22.1: 按课表逐日生成 (用户 2026-10-03 的新表)。完成信号: App 里能测到的自动勾, 测不到的 (作业/班课) 点一下自己勾
     const dow = new Date().getDay();
@@ -926,45 +922,46 @@ function renderTodayThreeCard() {
     // v23.1 (用户 2026-10-03: "严格按课表来打卡, 不加多练习"): 打卡行 = 今天课表上的学习块 (c 班课 / s 自学), 不再把周表里所有格子都列出来
     // 每块一行: 时间 | 内容 | 打卡控件。能对上周表格子的 (Editing/Cloze/Synthesis/语法/科学/语文/范文/口语) 用同一个格子 (周表自动同步); 对不上的 (班课/作业/补习老师) 点一下打勾
     const scores = getSchedScores(), sc = scores[todayKey] || {};
-    const gridKeyOf = (name) => (schedKeysOf(name).filter(k => k !== 'hw')[0] || null);   // v23.10: 和周表同一张映射
     const sigOf = (name) => /单词/.test(name) ? 'vocab' : /口语/.test(name) ? 'oral' : /editing/i.test(name) ? 'editing' : /cloze/i.test(name) ? 'cloze' : /synthesis/i.test(name) ? 'sst' : /语法/.test(name) ? 'grammar' : null;
     const blocks = (day.blocks || []).map((b, i) => ({ i, t: b[0], name: b[1], note: b[2], kind: b[3] })).filter(b => b.kind !== 'r' && !/睡觉|洗漱|吃饭|休息|午休/.test(b.name));
     const gridFilled = (key) => { const r = SCHED_GRID.find(x => x.key === key); if (!r) return false; return (r.type === 'frac' || r.type === 'pair') ? (sc[key + '_a'] != null || sc[key + '_b'] != null) : (sc[key] != null && sc[key] !== ''); };
     const flags = blocks.map(b => { const ks = schedKeysOf(b.name).filter(x => x !== 'hw'), sg = sigOf(b.name); return !!manual['b' + b.i] || (sg ? sig(sg) : false) || (ks.length ? ks.every(k => gridFilled(k)) : false); });
     doneCount = flags.filter(Boolean).length;
     headerTitle = `📝 每日分数打卡 · ${day.label || ''}`;
-    counterFn = () => `${doneCount} / ${blocks.length} 完成`;
-    // v24.0 傻瓜式: 口径说明收进 "怎么填 ▾", 卡面只留 行 + 格子; 行 ≥56px, 勾选项用带字的大勾
+    counterFn = () => `${doneCount} / ${blocks.length}`;
+    // v24.1 设计层简化: 每行 = 时间 (12px 灰) + 名称 (15px) 左 | 右 一个控件 (32px 原生勾 或 "对/共" 两格, 格子里有占位不再另起说明行);
+    // 做完 = ✅ + 整行变灰 (不用删除线); 当前该做的那一行 = 左侧 3px 品蓝条; "怎么填" 折叠删掉
     headerSub = '';
+    const nowIdx = flags.indexOf(false);
     const rowHtml = (b, idx) => {
-      const k = gridKeyOf(b.name), row = k ? SCHED_GRID.find(x => x.key === k) : null, sg = sigOf(b.name);
+      const sg = sigOf(b.name);
       const done = flags[idx];
-      const auto = sg && sig(sg) ? `<span style="font-size:12px;color:#16A34A;font-weight:700">✅ App 已完成</span>` : '';
+      const auto = sg && sig(sg) ? `<span class="ui-ok" style="font-size:12px">✅ App 已完成</span>` : '';
       let ctrl, hint;
       const keys = schedKeysOf(b.name).filter(x => x !== 'hw').map(x => SCHED_GRID.find(r => r.key === x)).filter(Boolean);
       if (keys.length) {
-        // 一块对应多个格子 (如 Editing + Cloze + Synthesis) 时每格前面带短名; 只一格就不带
-        ctrl = keys.map(r => `<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;white-space:nowrap;margin-top:${keys.length > 1 ? 4 : 0}px">${keys.length > 1 ? `<span style="font-size:11px;color:#64748B">${escapeHtml(r.label.replace(/:\s*[^:]*[_＿].*$/, '').replace(/\s*\d+篇|\s*\d+题/g, ''))}</span>` : ''}${_sgCtrl(r, todayKey, sc)}</div>`).join('');
-        hint = `<span style="color:#1E40AF;font-weight:700">${keys.every(r => r.type === 'frac' || r.type === 'pair') ? '对几题 / 共几题' : '填数字'}</span> · 目标 ${keys.map(r => escapeHtml(r.target)).filter((v, i, a) => a.indexOf(v) === i).join(' / ')}`;
+        // 一块对应多个格子 (如 Editing + Cloze + Synthesis) 时行内两行小格, 每格前面带短名; 只一格就不带
+        ctrl = keys.map(r => `<div class="ui-ctrl-line">${keys.length > 1 ? `<span class="ui-ctrl-lbl">${escapeHtml(r.label.replace(/:\s*[^:]*[_＿].*$/, '').replace(/\s*\d+篇|\s*\d+题/g, ''))}</span>` : ''}${_sgCtrl(r, todayKey, sc)}</div>`).join('');
+        hint = `目标 ${keys.map(r => escapeHtml(r.target)).filter((v, i, a) => a.indexOf(v) === i).join(' / ')}`;
       } else {
-        ctrl = `<label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 10px;border-radius:10px;border:1px solid ${done ? '#86EFAC' : '#CBD5E1'};background:${done ? '#DCFCE7' : '#F8FAFC'}"><input type="checkbox" ${manual['b' + b.i] ? 'checked' : ''} onchange="toggleTodayManual('b${b.i}')" style="width:22px;height:22px;cursor:pointer"><span style="font-size:13px;font-weight:700;color:${done ? '#16A34A' : '#1E293B'}">${done ? '已完成' : '做完点这'}</span></label>`;
+        ctrl = `<input type="checkbox" class="ui-check" ${manual['b' + b.i] ? 'checked' : ''} onchange="toggleTodayManual('b${b.i}')" title="做完点一下">`;
         hint = '';
       }
-      return `<div class="ui-row${done ? ' done' : ''}">
+      const sub = [b.note ? escapeHtml(b.note) : '', hint].filter(Boolean).join(' · ');
+      return `<div class="ui-row${done ? ' done' : ''}${idx === nowIdx ? ' now' : ''}">
         <div class="ui-row-main">
-          <div style="font-size:12px;color:#1E40AF;font-weight:700">${escapeHtml(b.t)}</div>
+          <div class="ui-row-time">${escapeHtml(b.t)}</div>
           <div class="ui-row-title">${done ? '✅ ' : ''}${escapeHtml(b.name)}</div>
-          <div class="ui-row-sub">${[b.note ? escapeHtml(b.note) : '', hint].filter(Boolean).join(' · ')}</div>${auto}
+          ${sub ? `<div class="ui-row-sub">${sub}</div>` : ''}${auto}
         </div>
         <div class="ui-row-act">${ctrl}</div>
       </div>`;
     };
-    itemsHtml = blocks.length ? `<div class="ui-list">${blocks.map(rowHtml).join('')}</div>` : '<div style="font-size:15px;color:#64748B;padding:14px;text-align:center">🏖️ 今天课表上没有学习安排, 休息日</div>';
-    tipHtml = `<div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
-      <button class="ui-btn2" onclick="gotoPage('schedule')">📆 看整周课表和打分 ›</button>
-      <span style="font-size:13px;color:#B45309;font-weight:700">🌙 21:30 戴 OK 镜睡觉</span>
-    </div>
-    <details class="ui-more"><summary>怎么填</summary><div class="ui-more-body">1. 这里只列<b>今天课表上</b>的内容。<br>2. 做题的: 填 <b>对几题 / 共几题</b>, 课表页整周表会自动同步。<br>3. 班课、作业: 做完<b>点一下打勾</b>。<br>4. App 里练过的 (背单词 / Editing / Cloze…) 会自动打勾。</div></details>`;
+    itemsHtml = blocks.length ? `<div class="ui-list">${blocks.map(rowHtml).join('')}</div>` : '<div class="ui-empty">🏖️ 今天课表上没有学习安排, 休息日</div>';
+    tipHtml = `<div class="ui-links">
+      <button class="ui-btn2" onclick="gotoPage('schedule')">📆 看整周课表 ›</button>
+      <span style="font-size:13px;color:#64748B">🌙 21:30 戴 OK 镜睡觉</span>
+    </div>`;
     // 首页顶部那一句: 按今天进度指路
     const hintEl = document.getElementById('homeHint');
     if (hintEl) {
@@ -974,11 +971,11 @@ function renderTodayThreeCard() {
     }
   }
   card.innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:${headerSub ? 4 : 10}px">
-      <div style="font-size:17px;font-weight:900;color:${headerColor}">${headerTitle}</div>
-      <div style="margin-left:auto;text-align:right;white-space:nowrap"><span class="ui-num sm" style="color:${headerColor}">${counterFn(doneCount)}</span></div>
+    <div class="ui-head">
+      <div class="ui-page-title">${headerTitle}</div>
+      <div class="ui-head-r"><span class="ui-num sm">${counterFn(doneCount)}</span>${/\//.test(counterFn(doneCount)) ? '<span class="ui-num-label">完成</span>' : ''}</div>
     </div>
-    ${headerSub ? `<div style="font-size:12px;color:#64748B;margin-bottom:10px">${headerSub}</div>` : ''}
+    ${headerSub ? `<div class="ui-head-sub">${headerSub}</div>` : ''}
     ${itemsHtml}
     ${tipHtml}
   `;
@@ -2376,7 +2373,7 @@ function renderErrorBankCard() {
   card.style.display = '';
   const realExam = wrongs.filter(w => w.source === 'paper2-real').length;
   const appErrors = wrongs.length - realExam;
-  card.style.borderLeft = '4px solid #66BB6A';
+  card.style.borderLeft = '';   // v24.1: 卡片左彩条全撤
   card.style.cursor = 'pointer';
   card.onclick = (e) => {
     // 点内部按钮 (有自己 onclick) 时不触发外层
@@ -2397,24 +2394,20 @@ function renderErrorBankCard() {
     const g = w.source === 'paper2-real' ? '🔥 真考' : (GAME_LABEL[w.gameKey] || w.gameKey || '其他');
     byGame[g] = (byGame[g] || 0) + 1;
   });
-  const breakdown = Object.entries(byGame)
-    .sort((a, b) => b[1] - a[1])
-    .map(([k, v]) => `<span style="display:inline-block;margin:2px 4px 2px 0;padding:3px 8px;background:#F1F5F9;border:1px solid #E2E8F0;border-radius:10px;font-size:11px;color:#1E293B"><b style="color:#C05621">${v}</b> ${k}</span>`)
-    .join('');
-  // v24.0 傻瓜式: 大数字 + 一个主按钮; 规则/统计收进 "说明 ▾"
+  // v24.0 傻瓜式: 大数字 + 一个主按钮 → v24.1: 其余 (分布 chips / 说明 / 毕业统计) 全部收进 错题集 页, 卡上只剩 大数字 + 开始复习 + 一个文字链接
+  const sub = [realExam > 0 ? `真考错题 ${realExam} 题优先` : '', collectedItems.length ? `${collectedItems.length} 题答对过 1 次` : '', masteredItems.length ? `${masteredItems.length} 题快毕业` : ''].filter(Boolean).join(' · ');
+  const topGroups = Object.entries(byGame).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${k} ${v}`).join(' · ');   // breakdown chips 不再上卡, 分布全在 错题集 页
   card.innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-      <div style="font-size:17px;font-weight:900;color:#16A34A">📓 错题本 🌱</div>
-      <div style="margin-left:auto;display:flex;align-items:baseline;gap:6px"><span class="ui-num" style="color:#16A34A">${wrongs.length}</span><span class="ui-num-label">题待复习</span></div>
+    <div class="ui-head">
+      <div class="ui-page-title">📓 错题本</div>
+      <div class="ui-head-r"><span class="ui-num">${wrongs.length}</span><span class="ui-num-label">题待复习</span></div>
     </div>
-    <!-- v19.22: 按 game 分类 chips, 一眼看错题分布 -->
-    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:2px;margin-bottom:10px"><span style="font-size:12px;color:#64748B;margin-right:4px">📊 按科目分布:</span>${breakdown}</div>
+    <div class="ui-head-sub"><span class="grow">${sub || topGroups || '答错的题自动收进来, 连续答对 3 次毕业'}</span></div>
     <!-- v19.22: 显眼大按钮 (整张卡也可点) -->
-    <button class="ui-cta" onclick="event.stopPropagation(); openErrorBank()">🎯 立即开始复习 ${realExam > 0 ? `(真考 ${realExam} 题优先)` : `(${wrongs.length} 题)`} →</button>
-    <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
-      <button class="ui-btn2" onclick="event.stopPropagation(); gotoPage('wrongbook')">📕 看全部错题 / 打印 ›</button>
+    <button class="ui-cta" onclick="event.stopPropagation(); openErrorBank()">开始复习 →</button>
+    <div class="ui-links" style="justify-content:center">
+      <button class="ui-btn2" onclick="event.stopPropagation(); gotoPage('wrongbook')">看全部错题 / 打印 ›</button>
     </div>
-    <details class="ui-more" onclick="event.stopPropagation()"><summary>说明</summary><div class="ui-more-body">1. 已有 <b>${collectedItems.length}</b> 题答对过 1 次, <b>${masteredItems.length}</b> 题快毕业了。<br>2. 同一题<b>连续答对 3 次</b>就毕业出本 (+3 分), 14 天后再回测一次。<br>3. 答错会显示正确答案和解析, 看懂了点"下一题"。</div></details>
   `;
 }
 window.renderErrorBankCard = renderErrorBankCard;
@@ -2577,12 +2570,10 @@ function renderVocabPage() {
   const streak = window.getFcStreak(state);
   const today = window._fcToday();
   const gapDays = pr.lastDate ? Math.round((new Date(today) - new Date(pr.lastDate)) / 86400000) : null;
-  const tile = (tier, icon, label, n, color) => `<button onclick="showFcWordList('${tier}')" style="flex:1 1 0;min-width:70px;min-height:56px;padding:8px 4px;border-radius:10px;border:1px solid #E2E8F0;background:#F8FAFC;cursor:pointer;text-align:center">
-      <div style="font-size:22px;font-weight:900;color:${color};line-height:1.1">${n}</div><div style="font-size:12px;color:#64748B;margin-top:2px">${icon} ${label}</div></button>`;
   const sizeBtns = window.FC_SIZE_OPTIONS.map(n => {
     const e = window.estimateFcFinish(state, n), on = n === size;
-    return `<button onclick="setFcSizeUI(${n})" style="flex:1 1 0;padding:7px 4px;border-radius:10px;border:1px solid ${on ? '#1E40AF' : '#CBD5E1'};background:${on ? '#1E40AF' : '#F8FAFC'};color:${on ? '#FFFFFF' : '#1E293B'};cursor:pointer;font-size:12px;line-height:1.5">
-      <b style="font-size:14px">每天新学 ${n} 个</b><br>${e.introDays > 0 ? '新词 ' + _fcFmtFar(e.introDate) + ' 学完' : e.days > 0 ? '新词已学完' : e.days < 0 ? '两年内背不完' : '已背完'}</button>`;
+    return `<button onclick="setFcSizeUI(${n})" style="flex:1 1 0;padding:8px 4px;border-radius:10px;border:1px solid ${on ? '#1E40AF' : '#E2E8F0'};background:${on ? '#1E40AF' : '#FFFFFF'};color:${on ? '#FFFFFF' : '#1E293B'};cursor:pointer;font-size:12px;line-height:1.5;font-family:inherit">
+      <b style="font-size:15px">每天新学 ${n} 个</b><br>${e.introDays > 0 ? '新词 ' + _fcFmtFar(e.introDate) + ' 学完' : e.days > 0 ? '新词已学完' : e.days < 0 ? '两年内背不完' : '已背完'}</button>`;
   }).join('');
   const log = window.getFcDailyLog(state, 14);
   const logRows = log.map(x => {
@@ -2602,74 +2593,83 @@ function renderVocabPage() {
   const days7 = log.slice(0, 7).filter(x => x.rec && x.rec.done).length;
   const hard = window.getFcHardWords(state, 12);
   // v24.0 傻瓜式: 顺序改成 今天要做的 (背 → 考) 在最上, 进度/单词本其次, 设置/14 天记录/卡组全部折叠; 每卡一个主按钮
+  // v24.1 设计层简化: 背 + 考 合成一张 "今天" 卡, 两步进度 (① 背 ✅ 48/48 → ② 考 0/48); 任何时刻只有一个实底主按钮
+  //   (没背完 = 开始背 / 背完没考 = 开始考 / 都完 = 文字链接 再加一组); 进度卡四个数字格改成一行 + 一条进度条; 四个折叠标题统一样式
   const quizN = g.words.length, tr0 = (state.fcDaily || {})[today] || {}, qs0 = window.getFcQuizStats(state);
   const todayDone = grp.total > 0 && grp.remaining === 0;
+  const quizDone = !!tr0.quizTotal;
+  const stepRow = (no, label, sub, right, done, now) => `<div class="ui-row${done ? ' done' : ''}${now ? ' now' : ''}">
+      <div class="ui-row-main"><div class="ui-row-title">${done ? '✅ ' : no + ' '}${label}</div>${sub ? `<div class="ui-row-sub">${sub}</div>` : ''}</div>
+      <div class="ui-row-act"><span class="ui-num sm"${done ? ' style="color:#94A3B8"' : ''}>${right}</span></div>
+    </div>`;
+  const stepBg = grp.total === 0 ? '' : stepRow('①', '背今天这一组',
+    [grp.newCount != null ? `新词 ${grp.newCount} + 复习 ${grp.total - grp.newCount}` : `共 ${grp.total} 个`, grp.extra ? `已加 ${grp.extra} 组` : '', grp.retakeCount > 0 ? `🔁 ${grp.retakeCount} 个补考过` : '', streak > 0 ? `🔥 连续 ${streak} 天` : ''].filter(Boolean).join(' · '),
+    `${grp.total - grp.remaining}/${grp.total}`, todayDone, !todayDone);
+  const stepQz = grp.total === 0 ? '' : stepRow('②', '考今天这一组',
+    (quizDone ? `答了 ${tr0.quizTotal} 题, 对 ${tr0.quizOk || 0} 题` : 'PSLE 题型: 选择题 + 选词填空') + (qs0.pct == null ? '' : ` · 累计正确率 ${qs0.pct}%`),
+    quizDone ? `${tr0.quizOk || 0}/${tr0.quizTotal}` : `0/${quizN}`, quizDone, todayDone && !quizDone);
+  const mainBtn = grp.total === 0 ? ''
+    : !todayDone ? `<button class="ui-cta" onclick="startFlashcardSession(null)">${grp.remaining < grp.total ? '继续背' : '开始背'} (还剩 ${grp.remaining} 个) →</button>`
+    : !quizDone ? (quizN ? `<button class="ui-cta" onclick="startFcQuiz('today')">开始考今天这一组 (${quizN} 个) →</button>` : `<button class="ui-cta" disabled>今天没有要考的词</button>`)
+    : '';
+  const subLinks = grp.total === 0 ? '<span style="font-size:13px;color:#64748B">今天没有要背的词, 可以到下面按卡组翻看</span>'
+    : !todayDone ? (quizN ? `<button class="ui-btn2" onclick="startFcQuiz('today')">先考也行 ›</button>` : '')
+    : !quizDone ? `<button class="ui-btn2" onclick="addFcGroupUI()">➕ 再加一组</button>`
+    : `<button class="ui-btn2" onclick="addFcGroupUI()">➕ 再加一组 (学有余力再加)</button>${quizN ? `<span class="dot">·</span><button class="ui-btn2" onclick="startFcQuiz('today')">再考一次 ›</button>` : ''}`;
+  const tierLink = (tier, label, n) => `<button class="ui-link" onclick="showFcWordList('${tier}')" style="font-size:13px;color:#1E293B"><b style="font-size:15px;color:#1E40AF">${n}</b>&nbsp;${label}</button>`;
   el.innerHTML = `
-    <div class="ui-page-title">📇 单词闪卡</div>
-    <div class="ui-hint"><span class="ui-hint-ico">${todayDone ? (tr0.quizTotal ? '🎉' : '📝') : '📖'}</span><span>${grp.total === 0 ? '今天没有要背的词, 可以到下面<b>按卡组</b>翻看' : !todayDone ? `今天: <b>先背今天这一组</b> (还剩 ${grp.remaining} 个), 背完再<b>考一考</b>` : !tr0.quizTotal ? `今天这一组背完了 ✅ 现在<b>考一考</b>这 ${quizN} 个词` : `今天背完也考完了 🎉 想多学就<b>再加一组</b>`}</span></div>
-    <div class="card" style="margin-bottom:12px;border-left:4px solid ${grp.remaining > 0 ? '#1E40AF' : '#16A34A'}">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:900;font-size:17px;color:#1E293B">${grp.total === 0 ? '今天没有要背的词' : grp.remaining > 0 ? '① 背今天这一组' : '✅ 今天这一组全认识了'}</div>
-          <div style="font-size:13px;color:#64748B;margin-top:2px">${grp.total ? (grp.newCount != null ? `新词 ${grp.newCount} 个 + 复习 ${grp.total - grp.newCount} 个` : `共 ${grp.total} 个`) + (grp.extra ? ` · 已加 ${grp.extra} 组` : '') : ''}${grp.retakeCount > 0 ? ` · 🔁 ${grp.retakeCount} 个补考过` : ''}${streak > 0 ? ` · 🔥 连续 ${streak} 天` : ''}</div>
-        </div>
-        ${grp.total ? `<div style="text-align:right;white-space:nowrap"><span class="ui-num" style="color:${grp.remaining > 0 ? '#1E40AF' : '#16A34A'}">${grp.total - grp.remaining}</span><span class="ui-num-label" style="display:inline;margin-left:3px">/ ${grp.total} 个</span></div>` : ''}
+    <div class="ui-hint"><span class="ui-hint-ico">${todayDone ? (quizDone ? '🎉' : '📝') : '📖'}</span><span>${grp.total === 0 ? '今天没有要背的词' : !todayDone ? `今天: <b>先背</b>今天这一组 (还剩 ${grp.remaining} 个), 背完再<b>考一考</b>` : !quizDone ? `背完了 ✅ 现在<b>考一考</b>这 ${quizN} 个词` : `今天背完也考完了 🎉 想多学就再加一组`}</span></div>
+    <div class="card">
+      <div class="ui-head">
+        <div class="ui-page-title">📇 单词 · 今天</div>
+        ${grp.total ? `<div class="ui-head-r"><span class="ui-num">${(todayDone ? 1 : 0) + (quizDone ? 1 : 0)}</span><span class="ui-num-label">/ 2 步完成</span></div>` : ''}
       </div>
-      ${grp.remaining > 0 ? `<button class="ui-cta" onclick="startFlashcardSession(null)">${grp.remaining < grp.total ? '▶ 继续背' : '▶ 开始背'} (还剩 ${grp.remaining} 个)</button>`
-        : grp.total > 0 ? `<button class="ui-cta green" onclick="addFcGroupUI()">➕ 再加一组 (学有余力再加)</button>` : ''}
+      <div class="ui-list">${stepBg}${stepQz}</div>
+      ${mainBtn ? `<div style="margin-top:12px">${mainBtn}</div>` : ''}
+      <div class="ui-links" style="justify-content:center">${subLinks}</div>
     </div>
-    <div class="card" style="margin-bottom:12px;border-left:4px solid #7C3AED">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:900;font-size:17px;color:#1E293B">② 单词考题 <span style="font-size:12px;font-weight:400;color:#64748B">PSLE 题型</span></div>
-          <div style="font-size:13px;color:#64748B;margin-top:2px">${tr0.quizTotal ? `今天答了 ${tr0.quizTotal} 题, 对 ${tr0.quizOk || 0} 题` : '今天还没考'}${qs0.pct == null ? '' : ` · 累计正确率 ${qs0.pct}%`}</div>
-        </div>
-        ${tr0.quizTotal ? `<div style="text-align:right;white-space:nowrap"><span class="ui-num" style="color:${(tr0.quizOk || 0) / tr0.quizTotal >= 0.9 ? '#16A34A' : '#7C3AED'}">${tr0.quizOk || 0}</span><span class="ui-num-label" style="display:inline;margin-left:3px">/ ${tr0.quizTotal} 对</span></div>` : ''}
+    <div class="card">
+      <div class="ui-head">
+        <div class="ui-page-title">📈 词库进度</div>
+        <div class="ui-head-r"><span class="ui-num">${pr.done}</span><span class="ui-num-label">/ ${pr.total} 已学会 · ${pr.pct}%</span></div>
       </div>
-      ${quizN ? `<button class="ui-cta purple" onclick="startFcQuiz('today')">📝 考今天这一组 (${quizN} 个)</button>` : `<button class="ui-cta" disabled>今天没有要考的词</button>`}
-      <details class="ui-more"><summary>说明</summary><div class="ui-more-body">1. 考的就是<b>今天这一组</b>的词, 先考后背、先背后考都行。<br>2. 题型: 选择题 + 选词填空。<br>3. 答错的词<b>退两级</b>, 明天这一组优先补。<br>4. 想按卡组考, 到页面最下面。</div></details>
-    </div>
-    <div class="card" style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-        <div><span class="ui-num">${pr.done}</span><span class="ui-num-label" style="display:inline;margin-left:4px">/ ${pr.total} 个已学会 · ${pr.pct}%</span></div>
-        <span style="margin-left:auto;font-size:13px;color:#B45309;font-weight:700">${est.days > 0 ? '📅 预计 ' + _fcFmtFar(est.date) + ' 背完' : est.days < 0 ? '⚠️ 每天要多背一些' : '🎉 全部掌握'}</span>
+      <div class="ui-bar">
+        <div class="ok" style="width:${pr.total ? pr.mastered / pr.total * 100 : 0}%"></div>
+        <div style="width:${pr.total ? pr.learned / pr.total * 100 : 0}%"></div>
+        <div class="soft" style="width:${pr.total ? pr.learning / pr.total * 100 : 0}%"></div>
       </div>
-      <div style="height:10px;background:#E2E8F0;border-radius:5px;overflow:hidden;margin:0 0 10px;display:flex">
-        <div style="width:${pr.total ? pr.mastered / pr.total * 100 : 0}%;background:#16A34A"></div>
-        <div style="width:${pr.total ? pr.learned / pr.total * 100 : 0}%;background:#1E40AF"></div>
-        <div style="width:${pr.total ? pr.learning / pr.total * 100 : 0}%;background:#93C5FD"></div>
+      <div class="ui-links" style="margin-top:4px;gap:8px 16px">
+        ${tierLink('mastered', '掌握', pr.mastered)}${tierLink('learned', '学会', pr.learned)}${tierLink('learning', '学习中', pr.learning)}${tierLink('new', '没学', pr.new)}
+        <span style="margin-left:auto;font-size:13px;color:#64748B">${est.days > 0 ? '预计 ' + _fcFmtFar(est.date) + ' 背完' : est.days < 0 ? '每天要多背一些' : '全部掌握'}</span>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        ${tile('mastered', '🏆', '已掌握', pr.mastered, '#16A34A')}${tile('learned', '👍', '已学会', pr.learned, '#1E40AF')}${tile('learning', '📖', '学习中', pr.learning, '#3B82F6')}${tile('new', '🆕', '还没学', pr.new, '#64748B')}
-      </div>
-      <details class="ui-more"><summary>说明</summary><div class="ui-more-body">1. 点上面的数字能看是哪些词。<br>2. <b>已学会</b> = 隔 3 天以上再见还认识; <b>已掌握</b> = 隔 30 天还认识。<br>3. 复习节奏: 当天 → 隔 1 天 → 3 天 → 7 天 → 14 天 → 30 天, 6 次都认识才算掌握; 忘了退两级, 第二天先补。<br>${est.days > 0 ? `4. 按每天新学 ${size} 个、每天都背: 新词 <b>${_fcFmtFar(est.introDate)}</b> 全部见过一遍 · <b>${_fcFmtFar(est.date)}</b> 掌握 95% · 最后 5% 难词约到 ${est.masteredDate ? _fcFmtFar(est.masteredDate) : '更晚'} (还要 ${est.days} 天, 断一天顺延一天)。` : ''}</div></details>
+      <details class="ui-more"><summary>说明</summary><div class="ui-more-body">1. 点上面的数字能看是哪些词。<br>2. <b>学会</b> = 隔 3 天以上再见还认识; <b>掌握</b> = 隔 30 天还认识。<br>3. 复习节奏: 当天 → 隔 1 天 → 3 天 → 7 天 → 14 天 → 30 天, 6 次都认识才算掌握; 忘了退两级, 第二天先补。<br>${est.days > 0 ? `4. 按每天新学 ${size} 个、每天都背: 新词 <b>${_fcFmtFar(est.introDate)}</b> 全部见过一遍 · <b>${_fcFmtFar(est.date)}</b> 掌握 95% · 最后 5% 难词约到 ${est.masteredDate ? _fcFmtFar(est.masteredDate) : '更晚'} (还要 ${est.days} 天, 断一天顺延一天)。` : ''}</div></details>
     </div>
     ${renderWordBookCard()}
-    <details class="card ui-more" style="margin-bottom:12px;margin-top:0">
-      <summary style="font-size:15px;color:#1E293B">⚙️ 每天新学多少 <span style="color:#1E40AF">(现在 ${size} 个)</span></summary>
-      <div style="display:flex;gap:6px;margin-top:10px">${sizeBtns}</div>
+    <details class="card ui-more">
+      <summary>⚙️ 每天新学多少 <span class="n">现在 ${size} 个</span></summary>
+      <div style="display:flex;gap:8px">${sizeBtns}</div>
       <div style="font-size:13px;color:#64748B;margin-top:8px;line-height:1.7">复习另算 · 新学 + 复习一天最多 ${window.FC_DAILY_MAX} 个</div>
     </details>
-    <details class="card ui-more" style="margin-bottom:12px;margin-top:0">
-      <summary style="font-size:15px;color:#1E293B">👨‍👩‍👦 家长看板 · 最近 14 天 <span style="color:${days7 >= 6 ? '#16A34A' : '#DC2626'}">(近 7 天背了 ${days7} 天)</span></summary>
-      ${gapDays != null && gapDays >= 2 ? `<div style="font-size:13px;color:#DC2626;font-weight:700;margin-top:8px">上次背是 ${_fcFmtDate(pr.lastDate)} (${gapDays} 天前)</div>` : ''}
-      <div style="overflow-x:auto;margin-top:8px"><table style="width:100%;border-collapse:collapse">
-        <thead><tr style="background:#F1F5F9">${['日期', '完成', '一遍过', '没记住', '新学会', '用时', '考题'].map((h, i) => `<th style="padding:5px 4px;font-size:11px;color:#1E293B;text-align:${i ? 'center' : 'left'}">${h}</th>`).join('')}</tr></thead>
+    <details class="card ui-more">
+      <summary>👨‍👩‍👦 家长看板 · 最近 14 天 <span class="n">近 7 天背了 <b class="${days7 >= 6 ? 'ui-ok' : 'ui-bad'}">${days7}</b> 天</span></summary>
+      ${gapDays != null && gapDays >= 2 ? `<div class="ui-bad" style="font-size:13px;margin-bottom:8px">上次背是 ${_fcFmtDate(pr.lastDate)} (${gapDays} 天前)</div>` : ''}
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:#F8FAFC">${['日期', '完成', '一遍过', '没记住', '新学会', '用时', '考题'].map((h, i) => `<th style="padding:6px 4px;font-size:12px;color:#64748B;font-weight:600;text-align:${i ? 'center' : 'left'}">${h}</th>`).join('')}</tr></thead>
         <tbody>${logRows}</tbody></table></div>
-      ${hard.length ? `<div style="font-size:12px;color:#B45309;margin-top:8px;line-height:1.8">🧱 <b>老是记不住</b>: ${hard.map(h => escapeHtml(h.w) + '×' + h.lapses).join(' · ')}</div>` : ''}
+      ${hard.length ? `<div style="font-size:13px;color:#64748B;margin-top:8px;line-height:1.8">🧱 <b style="color:#1E293B">老是记不住</b>: ${hard.map(h => escapeHtml(h.w) + '×' + h.lapses).join(' · ')}</div>` : ''}
     </details>
-    <details class="card ui-more" style="margin-bottom:12px;margin-top:0">
-      <summary style="font-size:15px;color:#1E293B">📚 按卡组翻看 / 考题 · ${FLASHCARD_DECKS.length} 个卡组</summary>
-      <div class="fc-deck-grid">
+    <details class="card ui-more">
+      <summary>📚 按卡组翻看 / 考题 <span class="n">${FLASHCARD_DECKS.length} 个卡组</span></summary>
+      <div class="fc-deck-grid" style="margin-top:0">
         ${FLASHCARD_DECKS.map(deck => {
           const ok = deck.words.filter(w => ['learned', 'mastered'].indexOf(window.fcTier(state, w)) >= 0).length;
           const fq = state.fcQuiz || {}, tested = deck.words.filter(w => fq[w]).length, right = deck.words.filter(w => fq[w] && fq[w].lastOk).length;
           return `<div class="fc-deck-item" style="cursor:default">
             <div class="fc-deck-name">${deck.name}</div>
             <div class="fc-deck-progress">${ok}/${deck.words.length} 已学会 · 考过 ${tested}${tested ? ' 对 ' + right : ''}</div>
-            <div style="display:flex;gap:6px;margin-top:8px">
-              <button onclick="startFlashcardSession('${deck.id}')" style="flex:1;padding:7px 4px;border-radius:8px;border:1px solid #CBD5E1;background:#F8FAFC;color:#1E293B;font-size:13px;cursor:pointer">翻看</button>
-              <button onclick="startFcQuiz('${deck.id}')" style="flex:1;padding:7px 4px;border-radius:8px;border:none;background:#7C3AED;color:#FFFFFF;font-size:13px;font-weight:700;cursor:pointer">考 20 题</button>
+            <div class="ui-links" style="margin-top:4px">
+              <button class="ui-btn2" onclick="startFlashcardSession('${deck.id}')">翻看 ›</button>
+              <button class="ui-btn2" onclick="startFcQuiz('${deck.id}')">考 20 题 ›</button>
             </div>
           </div>`;
         }).join('')}
@@ -2876,9 +2876,9 @@ const SCI_MODULES = [
 ];
 const MODULE_PAGE_CFG = {
   eng: { el: 'engModuleContent', tree: '📖 英语', modules: () => ENG_MODULES, title: '📖 英语模块学习',
-    intro: '按 PSLE 四张卷的顺序, 一个模块一个模块练。每个模块都记正确率, <b style="color:#16A34A">AL1 线是 90%</b>。<br>题库是按 PSLE 题型出的模拟题 (难度 Lv4 起); 历年真题有版权不在 app 里 —— 纸上做《English Yearly》, 分数填进课表打分表, 这里用紫色一起显示。' },
+    intro: '按 PSLE 四张卷的顺序, 一个模块一个模块练。每个模块都记正确率, <b>AL1 线是 90%</b>。<br>题库是按 PSLE 题型出的模拟题 (难度 Lv4 起); 历年真题有版权不在 app 里 —— 纸上做《English Yearly》, 分数填进课表打分表, 这里一起显示 (纸笔近 4 周)。' },
   sci: { el: 'sciModuleContent', tree: '🔬 科学', modules: () => SCI_MODULES, title: '🔬 科学模块学习',
-    intro: '先按卷子两本小册子 (Booklet A 选择题 / Booklet B 开放题) 练题型, 再按 MOE 五大主题一个考点一个考点过。每个考点都记正确率, <b style="color:#16A34A">AL1 线是 90%</b>。<br>题库是按 PSLE 题型出的模拟题; 纸上做的《PSLE Science 选择题》《Science For Primary Levels》分数填进课表打分表, 这里用紫色一起显示。' },
+    intro: '先按卷子两本小册子 (Booklet A 选择题 / Booklet B 开放题) 练题型, 再按 MOE 五大主题一个考点一个考点过。每个考点都记正确率, <b>AL1 线是 90%</b>。<br>题库是按 PSLE 题型出的模拟题; 纸上做的《PSLE Science 选择题》《Science For Primary Levels》分数填进课表打分表, 这里一起显示 (纸笔近 4 周)。' },
 };
 // v23.8: 合并成一个"模块学习"页: 顶部 英语 / 科学 两个分类 (和错题集一样), 下面是原来各自的模块列表 (渲染器不变)
 let _modSubj = 'eng';
@@ -2911,36 +2911,39 @@ function renderModulePage(cfg) {
       const s = stats[it.key], has = s.total > 0;
       const idx = it.node ? nodes.findIndex(n => n.id === it.node) : -1;
       const stars = it.node ? (((state.knowledgeStars || {})[it.node] || {}).stars || 0) : 0;
-      const btn = (label, onclick, primary) => primary ? `<button class="ui-cta auto" style="min-height:44px;padding:10px 18px;font-size:15px" onclick="${onclick}">${label} →</button>` : `<button class="ui-btn2" onclick="${onclick}">${label}</button>`;
-      const btns = [
-        it.open ? btn(it.btn || '题库练', it.open, !(it.node && it.btn)) : '',
-        it.open2 ? btn(it.open2[0], it.open2[1], false) : '',
-        idx >= 0 ? btn('考点 10 题', `openKnowledgePractice('${it.node}','${TREE}',${idx})`, !it.open || !!it.btn) : '',
-      ].filter(Boolean).join('');
+      // v24.1 设计层简化: 每行只留一个实底主按钮 (有考点题 → "练 10 题 →"; 没有 → 题库入口 "去写 / 开考 / 题库练 →"), 其他动作一律文字链接;
+      // 百分比 28px 左对齐统一宽 56px; 行用 1px 分隔线不再一行一个边框卡; 分组标题 12px 灰色大写字距
+      const primary = (label, onclick) => `<button class="ui-cta auto" onclick="${onclick}">${label} →</button>`;
+      const link = (label, onclick) => `<button class="ui-btn2" onclick="${onclick}">${label} ›</button>`;
+      const nodeGo = idx >= 0 ? `openKnowledgePractice('${it.node}','${TREE}',${idx})` : '';
+      let mainBtn = '', links = [];
+      const writing = /去写/.test(it.btn || '');   // 写作类: 主按钮是 "去写", 考点题退成文字链接
+      if (idx >= 0 && !writing) { mainBtn = primary('练 10 题', nodeGo); if (it.open) links.push(link(it.btn || '题库练', it.open)); }
+      else if (it.open) { mainBtn = primary(it.btn || '题库练', it.open); if (idx >= 0) links.push(link('考点 10 题', nodeGo)); }
+      if (it.open2) links.push(link(it.open2[0], it.open2[1]));
       const detail = [
         has ? `累计 ${s.ok}/${s.total} 题` : '',
         s.last ? `最近一次 ${s.last.ok}/${s.last.total} (${_fcFmtDate(s.last.d)})` : '',
         s.recent != null && s.runs >= 3 ? `近 5 次 ${s.recent}%` : '',
-        s.paper ? `<span style="color:#7C3AED">纸笔近 4 周 ${s.paper.ok}/${s.paper.total} = ${s.paper.pct}%</span>` : '',
+        s.paper ? `纸笔近 4 周 ${s.paper.ok}/${s.paper.total} = ${s.paper.pct}%` : '',
         idx >= 0 ? `考点 ${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}` : '',
-        it.bank ? `<span style="color:#94A3B8">${escapeHtml(it.bank())}</span>` : '',
+        it.bank ? escapeHtml(it.bank()) : '',
       ].filter(Boolean).join(' · ');
-      // v24.0 傻瓜式: 左 大百分比 + 状态色/图标, 中 名字 + 一行提示, 右 一个主按钮 (其余描边); 统计明细一行小字
-      const status = !has ? '<span class="ui-mute">还没练</span>' : s.total < 10 ? '<span class="ui-warn">题量还少</span>' : s.pct >= 90 ? '<span class="ui-ok">✅ AL1</span>' : s.pct >= 75 ? `<span class="ui-warn">⚠️ AL${window.scoreToAL(s.pct)}</span>` : `<span class="ui-bad">❌ AL${window.scoreToAL(s.pct)}</span>`;
-      return `<div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin-top:8px;background:#FFFFFF;border:1px solid ${has && s.total >= 10 && s.pct < 75 ? '#FECACA' : '#E2E8F0'};flex-wrap:wrap;min-height:64px">
-        <div style="flex:0 0 72px;text-align:center">
+      const status = !has ? '<span class="ui-mute">还没练</span>' : s.total < 10 ? '<span class="ui-mute">题量还少</span>' : s.pct >= 90 ? '<span class="ui-ok">✅ AL1</span>' : s.pct >= 75 ? `<span class="ui-warn">AL${window.scoreToAL(s.pct)}</span>` : `<span class="ui-bad">✗ AL${window.scoreToAL(s.pct)}</span>`;
+      return `<div class="ui-row" style="flex-wrap:wrap">
+        <div style="flex:0 0 56px;min-width:56px">
           <div class="ui-num" style="color:${has ? col(s.pct) : '#CBD5E1'}">${has ? s.pct + '%' : '—'}</div>
           <div style="font-size:12px;margin-top:2px">${status}</div>
         </div>
-        <div style="flex:1 1 180px;min-width:0">
-          <div style="font-size:15px;font-weight:700;color:#1E293B">${seq}. ${escapeHtml(it.name)}</div>
-          ${it.tip ? `<div style="font-size:13px;color:#64748B;margin-top:2px">${escapeHtml(it.tip)}</div>` : ''}
-          ${detail ? `<div style="font-size:12px;color:#94A3B8;margin-top:3px;line-height:1.6">${detail}</div>` : ''}
+        <div class="ui-row-main" style="flex:1 1 160px">
+          <div class="ui-row-title">${seq}. ${escapeHtml(it.name)}</div>
+          ${it.tip ? `<div class="ui-row-sub">${escapeHtml(it.tip)}</div>` : ''}
+          ${detail ? `<div style="font-size:12px;color:#94A3B8;margin-top:2px;line-height:1.6">${detail}</div>` : ''}
         </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${btns}</div>
+        <div class="ui-row-act">${mainBtn}${links.join('')}</div>
       </div>`;
     }).join('');
-    return `<div style="margin-top:16px"><div class="ui-section">${escapeHtml(sec.title)}</div>${rows}</div>`;
+    return `<div class="ui-section">${escapeHtml(sec.title)}</div><div class="ui-list">${rows}</div>`;
   }).join('');
   // 最弱模块一键去练 (主按钮): 有题库入口走题库, 否则走考点 10 题
   let weakCta = '';
@@ -2950,15 +2953,15 @@ function renderModulePage(cfg) {
     if (go) weakCta = `<button class="ui-cta" style="margin-top:10px" onclick="${go}">🎯 先补最弱: ${escapeHtml(weakest.name)} (${stats[weakest.key].pct}%) →</button>`;
   }
   el.innerHTML = `
-    <div class="card" style="border-left:4px solid #1E40AF">
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <div class="ui-page-title" style="margin:0">${cfg.title}</div>
-        <div style="margin-left:auto;white-space:nowrap"><span class="ui-num" style="color:${al1 === all.length ? '#16A34A' : '#1E40AF'}">${al1}</span><span class="ui-num-label" style="display:inline;margin-left:4px">/ ${all.length} 个模块到 AL1</span></div>
+    <div class="card">
+      <div class="ui-head">
+        <div class="ui-page-title">${cfg.title}</div>
+        <div class="ui-head-r"><span class="ui-num">${al1}</span><span class="ui-num-label">/ ${all.length} 个模块到 AL1</span></div>
       </div>
-      ${weakCta || `<div style="font-size:13px;color:#64748B;margin-top:6px">每个模块练满 10 题, 这里就会告诉你最弱的是哪个</div>`}
+      ${weakCta || `<div class="ui-head-sub"><span class="grow">每个模块练满 10 题, 这里就会告诉你最弱的是哪个</span></div>`}
       <details class="ui-more"><summary>说明</summary><div class="ui-more-body">${cfg.intro}</div></details>
     </div>
-    ${html}`;
+    <div class="card">${html}</div>`;
 }
 // 从别的页进单词考题: 先切到词汇页 (考题画在那一页上) 再开考
 function startFcQuizFromPractice(deckId) {
@@ -12110,42 +12113,32 @@ function renderSchedulePage() {
   const day = SCHED_DAYS[viewDow];
   // 1) 课表卡
   // v24.0 傻瓜式: 日期胶囊 ≥40px; 课表行 = 时间 | 内容 (班课/自学高亮); 版本号/口径去掉; 月度跟踪折叠
+  // v24.1 设计层简化: 日期胶囊 36px 文字 14; 课表行去掉三种底色, 班课/自学用 12px 标签, 休息行灰字;
+  //   "今天打分" 卡并进课表卡 (课表行右侧直接放打分格, 由 renderSchedDayScore 渲染整张表, 不再下面重复列一遍)
   const chips = [1, 2, 3, 4, 5, 6, 0].map(d =>
-    `<button onclick="window._schedSetDay(${d})" style="flex:1 1 60px;max-width:120px;min-height:40px;padding:6px 8px;border-radius:12px;border:1px solid ${d === viewDow ? '#1E40AF' : '#CBD5E1'};background:${d === viewDow ? '#1E40AF' : '#F8FAFC'};color:${d === viewDow ? '#FFFFFF' : '#1E293B'};font-size:14px;font-weight:${d === todayDow || d === viewDow ? '800' : '500'};cursor:pointer;white-space:nowrap">${SCHED_DAYS[d].label}${d === todayDow ? ' · 今' : ''}</button>`
+    `<button class="${d === viewDow ? 'on' : ''}" onclick="window._schedSetDay(${d})"${d === todayDow && d !== viewDow ? ' style="font-weight:800;color:#1E40AF"' : ''}>${SCHED_DAYS[d].label}${d === todayDow ? ' · 今' : ''}</button>`
   ).join('');
-  const blocksHtml = day.blocks.map(b => {
-    const isStudy = b[3] === 's', isClass = b[3] === 'c';
-    return `<div class="ui-row" style="min-height:52px;background:${isClass ? 'rgba(30,64,175,0.10)' : isStudy ? 'rgba(30,64,175,0.04)' : '#FFFFFF'};border-left:4px solid ${isClass ? '#1E40AF' : isStudy ? '#93C5FD' : 'transparent'}">
-      <div style="flex:0 0 92px;font-size:13px;color:${isStudy || isClass ? '#1E40AF' : '#64748B'};font-weight:700;white-space:nowrap">${b[0]}</div>
-      <div class="ui-row-main"><div class="ui-row-title" style="font-weight:${isClass ? '900' : isStudy ? '700' : '500'};color:${isStudy || isClass ? '#1E293B' : '#64748B'}">${isClass ? '🏫 ' : isStudy ? '✏️ ' : ''}${escapeHtml(b[1])}</div>
-      ${b[2] ? `<div class="ui-row-sub">${escapeHtml(b[2])}</div>` : ''}</div></div>`;
-  }).join('');
   const isToday = viewDow === todayDow;
+  const studyN = (day.blocks || []).filter(b => (b[3] === 's' || b[3] === 'c') && !/睡觉|洗漱|吃饭|休息|午休/.test(b[1])).length;
   el.innerHTML = `
-    <div class="ui-hint"><span class="ui-hint-ico">📆</span><span>${isToday ? '这是<b>今天的课表</b>, 做完一项就到下面<b>填分</b>' : `正在看<b>${SCHED_DAYS[viewDow].label}</b>的课表, 点"${SCHED_DAYS[todayDow].label} · 今"回到今天`}</span></div>
-    <div class="card" style="margin-bottom:12px">
-      <div class="ui-topbar">
-        <div class="ui-page-title" style="margin:0">📆 课表 · ${SCHED_DAYS[viewDow].label}</div>
-        ${getHolidayPlan() ? `<button class="ui-btn2" onclick="window._schedToggleNormal(false)">🏖️ 回今天的假期课表</button>` : ''}
+    <div class="ui-hint"><span class="ui-hint-ico">📆</span><span>${isToday ? '这是<b>今天的课表</b>, 做完一项就在右边<b>填分 / 打勾</b>' : `正在看<b>${SCHED_DAYS[viewDow].label}</b>的课表, 点"${SCHED_DAYS[todayDow].label} · 今"回到今天`}</span></div>
+    <div class="card">
+      <div class="ui-head">
+        <div class="ui-page-title">📆 课表 · ${SCHED_DAYS[viewDow].label}</div>
+        <div class="ui-head-r"><span class="ui-num sm">${studyN}</span><span class="ui-num-label">项要做</span></div>
       </div>
-      ${getHolidayPlan() ? '<div style="font-size:13px;color:#B45309;margin-top:4px">现在是假期, 这是开学后的常规课表</div>' : ''}
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 8px">${chips}</div>
-      <div style="font-size:13px;color:#B45309;font-weight:700;margin-bottom:8px">${day.start ? '⏰ ' + day.start + ' 开始 · 🌙 21:30 戴 OK 镜睡觉' : '🏖️ 全天无任务'}</div>
-      ${day.blocks.length ? `<div class="ui-list">${blocksHtml}</div>` : ''}
-    </div>
-    <div class="card" style="margin-bottom:12px;border-left:4px solid #1E40AF">
-      <div class="ui-page-title" style="margin-bottom:4px">✏️ ${isToday ? '今天' : SCHED_DAYS[viewDow].label}打分</div>
-      <div style="font-size:13px;color:#64748B;margin-bottom:8px">做完当场填, 只填数字: <b style="color:#1E40AF">对几题 / 共几题</b></div>
+      <div class="ui-head-sub"><span class="grow">${day.start ? '⏰ ' + day.start + ' 开始 · 🌙 21:30 戴 OK 镜睡觉' : '🏖️ 全天无任务'}${getHolidayPlan() ? ' · 现在是假期, 这是开学后的常规课表' : ''}</span>${getHolidayPlan() ? `<button class="ui-btn2" onclick="window._schedToggleNormal(false)">🏖️ 回今天的假期课表 ›</button>` : ''}</div>
+      <div class="ui-chips">${chips}</div>
       <div id="schedDayScore"></div>
       <details class="ui-more"><summary>整周表格 (家长核对用)</summary><div id="schedGridWrap"></div></details>
     </div>
-    <div class="card" style="margin-bottom:12px">
-      <div class="ui-page-title" style="margin-bottom:4px">📊 本周四科 <span class="sub">自动从打分汇总</span></div>
+    <div class="card">
+      <div class="ui-head"><div class="ui-page-title">📊 本周四科 <span class="sub">自动从打分汇总</span></div></div>
       <div id="schedWeekSummary"></div>
     </div>
-    <details class="card ui-more" style="margin-bottom:12px;margin-top:0">
-      <summary style="font-size:15px;color:#1E293B">📈 月度跟踪 <span style="color:#64748B;font-weight:400">(最近 8 周)</span></summary>
-      <div id="schedMonthTrend" style="margin-top:8px"></div>
+    <details class="card ui-more">
+      <summary>📈 月度跟踪 <span class="n">最近 8 周</span></summary>
+      <div id="schedMonthTrend"></div>
     </details>`;
   renderSchedDayScore(viewDow);   // v23.8: 按天填
   renderSchedGrid();
@@ -12161,28 +12154,42 @@ function renderSchedDayScore(dow) {
   const el = document.getElementById('schedDayScore'); if (!el) return;
   const dk = _schedDateOfDow(dow), scores = getSchedScores(), sc = scores[dk] || {}, manual = ((state.todayManual || {})[dk]) || {};
   const day = SCHED_DAYS[dow] || { blocks: [] };
-  const blocks = (day.blocks || []).map((b, i) => ({ i, t: b[0], name: b[1], kind: b[3] })).filter(b => b.kind !== 'r' && !/睡觉|洗漱|吃饭|休息|午休/.test(b.name));
-  // v24.0 傻瓜式: 行 ≥56px, 左 标题+一行说明, 右 一个控件; 勾选项用带字的大勾 ("做完点这" / "已完成")
-  const row = (left, sub, ctrl, done) => `<div class="ui-row${done ? ' done' : ''}"><div class="ui-row-main"><div class="ui-row-title">${left}</div>${sub ? `<div class="ui-row-sub">${sub}</div>` : ''}</div><div class="ui-row-act" style="white-space:nowrap">${ctrl}</div></div>`;
-  const chkCtrl = (checked, onchange) => `<label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 10px;border-radius:10px;border:1px solid ${checked ? '#86EFAC' : '#CBD5E1'};background:${checked ? '#DCFCE7' : '#F8FAFC'}"><input type="checkbox" ${checked ? 'checked' : ''} onchange="${onchange}" style="width:22px;height:22px;cursor:pointer"><span style="font-size:13px;font-weight:700;color:${checked ? '#16A34A' : '#1E293B'}">${checked ? '已完成' : '做完点这'}</span></label>`;
+  // v24.0 傻瓜式: 行 ≥56px, 左 标题+一行说明, 右 一个控件
+  // v24.1 设计层简化: 这里渲染整张课表 (含休息行, 灰字无控件) —— 每行 = 时间 (12px 灰) + 名称 (15px) + 12px 标签 班课/自学 | 右 一个控件 (32px 原生勾 / 对·共两格);
+  //   做完 = ✅ + 整行变灰; 今天第一条没做完的 = 左侧 3px 品蓝条; 最后接 "每天必查" (睡觉 / 家长核对)
+  const isRest = b => b[3] === 'r' || /睡觉|洗漱|吃饭|休息|午休/.test(b[1]);
+  const isToday = dk === schedLocalDate();
+  const kindTag = k => k === 'c' ? '<span class="ui-tag primary">班课</span>' : k === 's' ? '<span class="ui-tag">自学</span>' : '';
+  const chkCtrl = (checked, onchange) => `<input type="checkbox" class="ui-check" ${checked ? 'checked' : ''} onchange="${onchange}" title="做完点一下">`;
   const shortLabel = r => escapeHtml(r.label.replace(/:\s*[^:]*[_＿].*$/, ''));
-  const blockRows = blocks.map(b => {
-    const rs = schedKeysOf(b.name).map(k => SCHED_GRID.find(x => x.key === k)).filter(Boolean);
+  let firstTodo = isToday;
+  const row = (t, title, sub, ctrl, done, rest) => {
+    const now = !rest && !done && !!ctrl && firstTodo; if (now) firstTodo = false;
+    return `<div class="ui-row${done ? ' done' : ''}${now ? ' now' : ''}${rest ? ' rest' : ''}"><div class="ui-row-main">${t ? `<div class="ui-row-time">${t}</div>` : ''}<div class="ui-row-title">${done ? '✅ ' : ''}${title}</div>${sub ? `<div class="ui-row-sub">${sub}</div>` : ''}</div>${ctrl ? `<div class="ui-row-act">${ctrl}</div>` : ''}</div>`;
+  };
+  const blockRows = (day.blocks || []).map((b, i) => {
+    const t = escapeHtml(b[0]), name = escapeHtml(b[1]), note = b[2] ? escapeHtml(b[2]) : '';
+    if (isRest(b)) return row(t, name, note, '', false, true);
+    const rs = schedKeysOf(b[1]).map(k => SCHED_GRID.find(x => x.key === k)).filter(Boolean);
     const scoreRows = rs.filter(r => r.type !== 'chk');
     const hwRow = rs.find(r => r.key === 'hw');
-    const head = `<span style="color:#1E40AF;font-size:12px;margin-right:8px">${escapeHtml(b.t)}</span>${escapeHtml(b.name)}`;
+    const title = `${name} ${kindTag(b[3])}`;
     if (!scoreRows.length) {
-      const checked = hwRow ? !!sc[hwRow.key] : !!manual['b' + b.i];
-      const onchange = hwRow ? `window.saveDailyScore('${dk}','${hwRow.key}',this.checked?1:'')` : `toggleManualFor('${dk}','b${b.i}')`;
-      return row(head, '', chkCtrl(checked, onchange), checked);
+      const checked = hwRow ? !!sc[hwRow.key] : !!manual['b' + i];
+      const onchange = hwRow ? `window.saveDailyScore('${dk}','${hwRow.key}',this.checked?1:'')` : `toggleManualFor('${dk}','b${i}')`;
+      return row(t, title, note, chkCtrl(checked, onchange), checked, false);
     }
-    return scoreRows.map((r, i) => row(i === 0 ? head : `<span style="color:#94A3B8;font-size:12px;margin-right:8px">└</span>${shortLabel(r)}`, (i === 0 && scoreRows.length === 1 ? shortLabel(r) + ' · ' : '') + `<span style="color:#1E40AF;font-weight:700">${r.type === 'frac' || r.type === 'pair' ? '对几题 / 共几题' : r.type === 'text' ? '写一句' : '填数字'}</span> · 目标 ${escapeHtml(r.target)}`, _sgCtrl(r, dk, sc))).join('');
+    const filled = scoreRows.every(r => (r.type === 'frac' || r.type === 'pair') ? (sc[r.key + '_a'] != null || sc[r.key + '_b'] != null) : (sc[r.key] != null && sc[r.key] !== ''));
+    const ctrl = scoreRows.map(r => `<div class="ui-ctrl-line">${scoreRows.length > 1 ? `<span class="ui-ctrl-lbl">${shortLabel(r).replace(/\s*\d+篇|\s*\d+题/g, '')}</span>` : ''}${_sgCtrl(r, dk, sc)}</div>`).join('');
+    const targets = scoreRows.map(r => escapeHtml(r.target)).filter((v, k, a) => a.indexOf(v) === k).join(' / ');
+    const sub = [note, scoreRows.length === 1 && scoreRows[0].type === 'text' ? '写一句' : '', targets ? `目标 ${targets}` : ''].filter(Boolean).join(' · ');
+    return row(t, title, sub, ctrl, filled, false);
   }).join('');
   const dailyKeys = ['sleep', 'parent'];
-  const dailyRows = dailyKeys.map(k => SCHED_GRID.find(x => x.key === k)).filter(r => r && (r.days.includes(dow) || HOLIDAY_SCHED[dk])).map(r => row(shortLabel(r), `目标 ${escapeHtml(r.target)}`, r.type === 'chk' ? chkCtrl(!!sc[r.key], `window.saveDailyScore('${dk}','${r.key}',this.checked?1:'')`) : _sgCtrl(r, dk, sc), r.type === 'chk' && !!sc[r.key])).join('');
+  const dailyRows = dailyKeys.map(k => SCHED_GRID.find(x => x.key === k)).filter(r => r && (r.days.includes(dow) || HOLIDAY_SCHED[dk])).map(r => row('每天必查', shortLabel(r), `目标 ${escapeHtml(r.target)}`, r.type === 'chk' ? chkCtrl(!!sc[r.key], `window.saveDailyScore('${dk}','${r.key}',this.checked?1:'')`) : _sgCtrl(r, dk, sc), r.type === 'chk' && !!sc[r.key], false)).join('');
   el.innerHTML = `<div class="ui-list">
-    ${blockRows || '<div style="padding:14px;font-size:14px;color:#64748B;text-align:center">这天课表上没有学习安排</div>'}
-    ${dailyRows ? `<div style="padding:8px 12px;background:#FEF3C7;font-size:13px;font-weight:800;color:#B45309">每天必查</div>${dailyRows}` : ''}
+    ${blockRows || '<div class="ui-empty">这天课表上没有学习安排</div>'}
+    ${dailyRows}
   </div>`;
 }
 window.renderSchedDayScore = renderSchedDayScore;
@@ -12190,11 +12197,12 @@ function _schedShiftWeek(n) { _schedWeekOffset += n; if (_schedWeekOffset > 0) _
 // 完整周打分网格 (行=检查项, 列=一/二/三/五/日)
 // v23.0: 一格打分控件 (课表页周表 + 主页每日分数打卡共用, 写同一份 state.scheduleScores)
 function _sgCtrl(row, dk, sc) {
-  const inpS = 'width:40px;padding:3px 2px;border-radius:5px;border:1px solid #CBD5E1;background:#F1F5F9;color:#1E293B;font-size:13px;text-align:center';  // v20.7: 26px 会把两位数截成一位 (20/30 显示成 2/3)
-  if (row.type === 'text') return `<input type="text" maxlength="200" placeholder="如: 读书20页" value="${escapeHtml(String(sc[row.key] ?? ''))}" style="width:92px;padding:4px 5px;border-radius:5px;border:1px solid #CBD5E1;background:#F8FAFC;color:#1E293B;font-size:12px" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
-  if (row.type === 'chk') return `<input type="checkbox" ${sc[row.key] ? 'checked' : ''} style="width:17px;height:17px" onchange="window.saveDailyScore('${dk}','${row.key}',this.checked?1:'')">`;
-  if (row.type === 'frac' || row.type === 'pair') return `<input type="number" class="sg-num" min="0" inputmode="numeric" value="${sc[row.key + '_a'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_a',this.value)"><span style="color:#1E293B;font-size:11px">/</span><input type="number" class="sg-num" min="0" inputmode="numeric" value="${sc[row.key + '_b'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_b',this.value)">`;
-  return `<input type="number" class="sg-num" min="0" inputmode="numeric" value="${sc[row.key] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
+  // v24.1: 格子 40px 白底圆角 8 字 15; "对 / 共" 两格用占位字说明, 不再另起说明行; 勾选项 32px 原生 checkbox
+  const inpS = 'width:40px;padding:5px 2px;border-radius:8px;border:1px solid #CBD5E1;background:#FFFFFF;color:#1E293B;font-size:15px;text-align:center';  // v20.7: 26px 会把两位数截成一位 (20/30 显示成 2/3)
+  if (row.type === 'text') return `<input type="text" maxlength="200" placeholder="如: 读书20页" value="${escapeHtml(String(sc[row.key] ?? ''))}" style="width:96px;padding:5px 6px;border-radius:8px;border:1px solid #CBD5E1;background:#FFFFFF;color:#1E293B;font-size:13px" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
+  if (row.type === 'chk') return `<input type="checkbox" class="ui-check" ${sc[row.key] ? 'checked' : ''} onchange="window.saveDailyScore('${dk}','${row.key}',this.checked?1:'')">`;
+  if (row.type === 'frac' || row.type === 'pair') return `<input type="number" class="sg-num" min="0" inputmode="numeric" placeholder="对" value="${sc[row.key + '_a'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_a',this.value)"><span class="slash" style="color:#94A3B8;font-size:13px">/</span><input type="number" class="sg-num" min="0" inputmode="numeric" placeholder="共" value="${sc[row.key + '_b'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_b',this.value)">`;
+  return `<input type="number" class="sg-num" min="0" inputmode="numeric" placeholder="数" value="${sc[row.key] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
 }
 function renderSchedGrid() {
   const wrap = document.getElementById('schedGridWrap');
@@ -12208,12 +12216,12 @@ function renderSchedGrid() {
     const offset = d === 0 ? 6 : d - 1;
     const dd = new Date(mon.getTime()); dd.setDate(dd.getDate() + offset);
     dks[d] = schedLocalDate(dd);
-    heads.push(`<th style="padding:5px 2px;font-size:11px;color:${dks[d] === todayKey ? '#1E40AF' : '#1E293B'};font-weight:${dks[d] === todayKey ? '700' : '400'};text-align:center;min-width:58px">${SCHED_DAYS[d].label}<br>${dd.getMonth() + 1}/${dd.getDate()}${dks[d] === todayKey ? '·今' : ''}</th>`);
+    heads.push(`<th style="padding:6px 2px;font-size:12px;color:${dks[d] === todayKey ? '#1E40AF' : '#64748B'};font-weight:${dks[d] === todayKey ? '700' : '500'};text-align:center;min-width:58px">${SCHED_DAYS[d].label}<br>${dd.getMonth() + 1}/${dd.getDate()}${dks[d] === todayKey ? '·今' : ''}</th>`);
   });
   const inpS = 'width:40px;padding:3px 2px;border-radius:5px;border:1px solid #CBD5E1;background:#F1F5F9;color:#1E293B;font-size:13px;text-align:center';  // v20.7: 26px 会把两位数截成一位 (20/30 显示成 2/3)
   const inpW = 'width:40px;padding:3px 2px;border-radius:5px;border:1px solid #CBD5E1;background:#F1F5F9;color:#1E293B;font-size:13px;text-align:center';
   const bodyRows = SCHED_GRID.map(row => {
-    if (row.sec) return `<tr><td colspan="${COLS.length + 1}" style="padding:6px 4px;font-size:12px;font-weight:700;color:#B45309;background:rgba(230,162,60,0.07)">${escapeHtml(row.sec)}</td></tr>`;
+    if (row.sec) return `<tr><td colspan="${COLS.length + 1}" style="padding:8px 4px 2px;font-size:12px;font-weight:700;color:#64748B;letter-spacing:1px">${escapeHtml(row.sec)}</td></tr>`;
     const cells = COLS.map(d => {
       const dk = dks[d];
       // v20.7: 假期周任务和平日课表不一样 (假期周一做的是科学选择题/完形/数学), 按平日锁格子就没地方填 → 假期日期全开
@@ -12222,21 +12230,21 @@ function renderSchedGrid() {
       const ctrl = _sgCtrl(row, dk, sc);
       return `<td style="padding:4px 2px;text-align:center;white-space:nowrap">${ctrl}</td>`;
     }).join('');
-    return `<tr style="border-bottom:1px solid #F1F5F9">
-      <td style="padding:5px 4px;font-size:12px;color:#1E293B;min-width:128px">${escapeHtml(row.label)}<br><span style="font-size:10px;color:#1E293B">目标 ${escapeHtml(row.target)}</span></td>${cells}</tr>`;
+    return `<tr style="border-bottom:1px solid #EEF1F6">
+      <td style="padding:6px 4px;font-size:13px;color:#1E293B;min-width:128px">${escapeHtml(row.label)}<br><span style="font-size:12px;color:#64748B">目标 ${escapeHtml(row.target)}</span></td>${cells}</tr>`;
   }).join('');
   const weekLabel = `${mon.getMonth() + 1}/${mon.getDate()} 那一周`;
   wrap.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 6px">
-      <button onclick="window._schedShiftWeek(-1)" style="padding:4px 12px;border-radius:8px;border:1px solid #CBD5E1;background:#F1F5F9;color:#1E293B;font-size:12px">‹ 上周</button>
-      <div style="font-size:13px;font-weight:700;color:${_schedWeekOffset === 0 ? '#1E40AF' : '#B45309'}">${_schedWeekOffset === 0 ? '本周 · ' : ''}${weekLabel}</div>
-      <button onclick="window._schedShiftWeek(1)" ${_schedWeekOffset >= 0 ? 'disabled style="opacity:0.3;padding:4px 12px;border-radius:8px;border:1px solid #E2E8F0;background:none;color:#4A5568;font-size:12px"' : 'style="padding:4px 12px;border-radius:8px;border:1px solid #CBD5E1;background:#F1F5F9;color:#1E293B;font-size:12px"'}>下周 ›</button>
+      <button class="ui-btn2" onclick="window._schedShiftWeek(-1)">‹ 上周</button>
+      <div style="font-size:13px;font-weight:700;color:#1E293B">${_schedWeekOffset === 0 ? '本周 · ' : ''}${weekLabel}</div>
+      <button class="ui-btn2" onclick="window._schedShiftWeek(1)" ${_schedWeekOffset >= 0 ? 'disabled style="opacity:0.3"' : ''}>下周 ›</button>
     </div>
     <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
-      <thead><tr style="background:#F1F5F9"><th style="padding:5px 4px;font-size:11px;color:#1E293B;text-align:left">检查项</th>${heads.join('')}</tr></thead>
+      <thead><tr style="background:#F8FAFC"><th style="padding:6px 4px;font-size:12px;color:#64748B;font-weight:600;text-align:left">检查项</th>${heads.join('')}</tr></thead>
       <tbody>${bodyRows}</tbody></table></div>
-    <div style="font-size:11px;color:#1E293B;margin-top:6px">连续3天某项低于目标 → 不等周五, 当晚按手册响应规则调整</div>
-    ${Object.values(dks).some(k => HOLIDAY_SCHED[k]) ? '<div style="font-size:11px;color:#B45309;margin-top:4px">🏖️ 假期周: 哪天做了什么就填哪天, 所有格子都开着; 科学选择题填"科学选择题"行, 对几题/共几题</div>' : ''}`;
+    <div style="font-size:12px;color:#64748B;margin-top:6px">连续3天某项低于目标 → 不等周五, 当晚按手册响应规则调整</div>
+    ${Object.values(dks).some(k => HOLIDAY_SCHED[k]) ? '<div style="font-size:12px;color:#64748B;margin-top:4px">🏖️ 假期周: 哪天做了什么就填哪天, 所有格子都开着; 科学选择题填"科学选择题"行, 对几题/共几题</div>' : ''}`;
 }
 function renderSchedWeekSummary() {
   const el = document.getElementById('schedWeekSummary');
@@ -12973,22 +12981,22 @@ function renderDailyFocusCard() {
   const doneN = Object.keys(state.dfDone || {}).length, bookN = (state.tipBook || []).length;
   const todayDone = list.filter(e => window.getDailyFocusDone(state, e.id, today)).length;
   if (!_dfUi.open || !list.some(e => e.id === _dfUi.open)) { const first = list.find(e => !window.getDailyFocusDone(state, e.id, today)) || list[0]; _dfUi.open = first ? first.id : null; }
-  // v24.0 傻瓜式: 标题 + 大数字 "今天 X/N"; 排题口径/考点库数字收进 "说明 ▾"
+  // v24.0 傻瓜式: 标题 + 大数字 "今天 X/N"; 排题口径/考点库数字收进 "说明 ▾" → v24.1: 紫色撤掉用品蓝, 标题 18 / 数字 28 / 灰字 13, 次要动作全是文字链接
   const head = (body) => `
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-      <div style="font-size:17px;font-weight:900;color:#7C3AED">🎓 每日考点学习</div>
-      <div style="margin-left:auto;white-space:nowrap"><span class="ui-num sm" style="color:#7C3AED">${todayDone} / ${list.length}</span><span class="ui-num-label" style="display:inline;margin-left:4px">今天学完</span></div>
+    <div class="ui-head">
+      <div class="ui-page-title">🎓 每日考点学习</div>
+      <div class="ui-head-r"><span class="ui-num sm">${todayDone} / ${list.length}</span><span class="ui-num-label">今天学完</span></div>
     </div>
-    <div style="font-size:13px;color:#64748B;margin-bottom:10px">${todayDone < list.length ? '点下面的考点, 先答题再看分析' : '今天的学完了 👍 想多学就点下面"再加一个"'}</div>
+    <div class="ui-head-sub"><span class="grow">${todayDone < list.length ? '点一个考点, 先答题再看分析' : '今天的学完了 👍 想多学就点"再加一个"'}</span></div>
     ${body}`;
   const foot = `
-    <div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap">
-      <button class="ui-btn2 purple" onclick="window._dfNext()">➕ 再加一个考点</button>
+    <div class="ui-links">
+      <button class="ui-btn2" onclick="window._dfNext()">➕ 再加一个考点</button>
       <button class="ui-btn2" onclick="gotoPage('tips')">📘 答题技巧本${bookN ? ' (' + bookN + ')' : ''} ›</button>
     </div>
     <details class="ui-more"><summary>说明</summary><div class="ui-more-body">1. 每天 <b>${plan ? plan.perDay : '-'}</b> 个考点, 英语、科学轮着来; 先排<b>错得多</b>的, 再排<b>常考</b>的, 再排没见够 3 次的。<br>2. 考点库共 <b>${plan ? plan.total : 0}</b> 个 (英语 ${plan ? plan.eng : 0} / 科学 ${plan ? plan.sci : 0}), 距考试 <b>${plan ? plan.daysLeft : '-'}</b> 天。<br>3. 每个考点要见够 3 次: 已达标 ${plan ? plan.atLeast3 : 0} 个, 最少的见过 ${plan ? plan.minShown : 0} 次; 累计学完 ${doneN} 次。<br>4. 学完的关键总结自动收进<b>答题技巧本</b>, 每个考点第一次学完 +5 分。</div></details>`;
-  if (!list.length) { card.innerHTML = head('<div style="font-size:13px;color:#64748B;padding:10px">内容准备中 (专家审核后上线)</div>'); return; }
-  card.innerHTML = head(list.map((entry, idx) => _dfEntryHtml(entry, idx, list.length, today)).join('') + foot);
+  if (!list.length) { card.innerHTML = head('<div class="ui-empty">内容准备中 (专家审核后上线)</div>'); return; }
+  card.innerHTML = head(`<div class="ui-list">${list.map((entry, idx) => _dfEntryHtml(entry, idx, list.length, today)).join('')}</div>` + foot);
 }
 function _dfEntryHtml(entry, idx, n, today) {
   const u = _dfU(entry.id);
@@ -12996,53 +13004,56 @@ function _dfEntryHtml(entry, idx, n, today) {
   const answered = !!rec || u.revealed;
   const open = _dfUi.open === entry.id;
   const tb = window.getTechniqueMod ? window.getTechniqueMod(entry.subj, entry.mod) : null;
-  const subjColor = entry.subj === 'sci' ? '#0D9488' : '#7C3AED';
-  const title = `<div class="ui-row clickable${answered ? ' done' : ''}" onclick="window._dfOpen('${entry.id}')" style="border-radius:10px;border:1px solid ${open ? '#C4B5FD' : '#E2E8F0'};background:${open ? 'rgba(124,58,237,0.06)' : answered ? '#F8FAFC' : '#FFFFFF'};margin-top:${idx ? 8 : 0}px">
-      <span style="font-size:12px;font-weight:900;color:#FFFFFF;background:${subjColor};border-radius:8px;padding:4px 8px;white-space:nowrap;flex:0 0 auto">${idx + 1}/${n} ${escapeHtml(DF_SUBJ_LABEL[entry.subj] || entry.subj)}</span>
-      <div class="ui-row-main"><div class="ui-row-title">${answered ? '✅ ' : ''}${escapeHtml(entry.title)}</div><div class="ui-row-sub">${escapeHtml(tb ? tb.title : entry.mod)} · ${escapeHtml(entry.topic || '')}</div></div>
-      <span style="font-size:13px;color:${open ? '#7C3AED' : '#64748B'};font-weight:700;white-space:nowrap">${open ? '收起 ▲' : answered ? '再看 ▼' : '开始 ▼'}</span>
+  // v24.1 设计层简化: 考点行 = 12px 科目小标签 + 标题 + 副标题 (不再用紫/青实底块); 打开的那一行 = 左侧 3px 品蓝条;
+  // 默认只露 标题 + 题干 + 选项; "为什么常考" + "这类题怎么做" 合成一个文字链接 "先看方法 ›" 放题干上方; ①②③④ 编号删掉; 答完后分析区一块灰底
+  const title = `<div class="ui-row clickable${answered ? ' done' : ''}${open ? ' now open' : ''}" onclick="window._dfOpen('${entry.id}')">
+      <div class="ui-row-main"><div class="ui-row-title">${answered ? '✅ ' : ''}${escapeHtml(entry.title)}</div><div class="ui-row-sub"><span class="ui-tag${entry.subj === 'sci' ? '' : ' primary'}">${escapeHtml(DF_SUBJ_LABEL[entry.subj] || entry.subj)}</span> ${escapeHtml(tb ? tb.title : entry.mod)} · ${escapeHtml(entry.topic || '')}</div></div>
+      <span style="font-size:13px;color:${open ? '#1E40AF' : '#94A3B8'};font-weight:600;white-space:nowrap">${open ? '收起 ▲' : answered ? '再看 ▼' : (idx + 1) + '/' + n + ' ▼'}</span>
     </div>`;
   if (!open) return title;
   const isMcq = entry.q.type === 'mcq';
   const picked = rec ? rec.picked : u.picked;
-  const sec = (nn, t, inner, color) => `<div style="margin-top:10px"><div style="font-size:12px;font-weight:900;color:${color || '#1E40AF'};margin-bottom:4px">${nn} ${t}</div>${inner}</div>`;
-  const methodHtml = tb ? `
-    <div onclick="window._dfToggleMethod('${entry.id}')" style="cursor:pointer;display:flex;align-items:center;gap:6px;min-height:44px;padding:8px 12px;border-radius:10px;background:#EFF6FF;border:1px solid #93C5FD;font-size:14px;color:#1E40AF;font-weight:700">${tb.icon || '📘'} ${escapeHtml(tb.title)} 这类题怎么做 <span style="margin-left:auto;font-size:12px;font-weight:700;white-space:nowrap">${u.method ? '收起 ▲' : '点开看 ▼'}</span></div>
-    ${u.method ? `<div style="padding:8px 10px;border:1px solid #DBEAFE;border-top:none;border-radius:0 0 8px 8px;background:#FFFFFF">
-      <div style="font-size:11px;color:#64748B;margin-bottom:4px">${escapeHtml(tb.paper)}</div>
-      ${tb.steps.map((s, i) => `<div style="font-size:12px;color:#1E293B;line-height:1.7"><b>${i + 1}.</b> ${s}</div>`).join('')}
-      ${tb.template && tb.template.length ? `<div style="margin-top:6px;font-size:11px;font-weight:700;color:#7C3AED">答题模板</div>${tb.template.slice(0, 4).map(t => `<div style="font-size:12px;color:#1E293B;line-height:1.6;padding:3px 8px;margin-top:3px;background:#F5F3FF;border-left:3px solid #7C3AED;border-radius:4px">${t}</div>`).join('')}` : ''}
-      <div style="font-size:11px;color:#64748B;margin-top:6px">完整版 (常见坑 + 交卷自查) 在 <a href="#" onclick="gotoPage('tips');window._tipsOpen && window._tipsOpen('${entry.subj}','${entry.mod}');return false" style="color:#1E40AF">答题技巧</a> 页</div>
-    </div>` : ''}` : '';
-  let qHtml = `<div style="font-size:13px;color:#1E293B;line-height:1.7;white-space:pre-wrap;padding:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;font-family:Georgia,serif">${escapeHtml(entry.q.stem)}</div>`;
+  const tipsLink = `<a href="#" onclick="gotoPage('tips');window._tipsOpen && window._tipsOpen('${entry.subj}','${entry.mod}');return false" style="color:#1E40AF">答题技巧 › ${escapeHtml(DF_SUBJ_LABEL[entry.subj] || '')} › ${escapeHtml(tb ? tb.title : entry.mod)}</a>`;
+  const methodHtml = `
+    <div style="margin-top:8px"><button class="ui-link" onclick="window._dfToggleMethod('${entry.id}')">${u.method ? '收起方法 ▴' : '先看方法 ›'}</button></div>
+    ${u.method ? `<div class="ui-panel">
+      <div class="lbl">为什么常考</div><div class="muted">${escapeHtml(entry.why)}</div>
+      ${tb ? `<div class="lbl">${escapeHtml(tb.title)} 这类题怎么做 <span style="font-weight:400">· ${escapeHtml(tb.paper)}</span></div>
+      ${tb.steps.map((s, i) => `<div><b>${i + 1}.</b> ${s}</div>`).join('')}
+      ${tb.template && tb.template.length ? `<div class="lbl">答题模板</div>${tb.template.slice(0, 4).map(t => `<div>${t}</div>`).join('')}` : ''}
+      <div class="muted" style="margin-top:6px;font-size:12px">完整版 (常见坑 + 交卷自查) 在 ${tipsLink}</div>` : ''}
+    </div>` : ''}`;
+  let qHtml = `<div class="ui-stem">${escapeHtml(entry.q.stem)}${entry.q.marks ? ` <span style="font-size:12px;color:#64748B">(${entry.q.marks} 分)</span>` : ''}</div>`;
   if (isMcq) {
-    qHtml += `<div style="display:grid;grid-template-columns:1fr;gap:6px;margin-top:8px">${entry.q.opts.map((o, i) => {
-      let bg = '#FFFFFF', bd = '#CBD5E1', fw = '400';
-      if (answered) { if (i === entry.q.ans) { bg = '#DCFCE7'; bd = '#16A34A'; fw = '900'; } else if (i === picked) { bg = '#FEE2E2'; bd = '#DC2626'; } }
-      return `<button ${answered ? 'disabled' : ''} onclick="window._dfPick('${entry.id}',${i})" style="text-align:left;min-height:44px;padding:10px 14px;border-radius:10px;border:1px solid ${bd};background:${bg};color:#1E293B;font-size:14px;line-height:1.5;font-weight:${fw};cursor:${answered ? 'default' : 'pointer'}">(${String.fromCharCode(65 + i)}) ${escapeHtml(o)}</button>`;
-    }).join('')}</div>`;
+    qHtml += entry.q.opts.map((o, i) => {
+      let cls = '';
+      if (answered) { if (i === entry.q.ans) cls = ' ok'; else if (i === picked) cls = ' bad'; }
+      return `<button class="ui-opt${cls}" ${answered ? 'disabled' : ''} onclick="window._dfPick('${entry.id}',${i})">${answered && i === entry.q.ans ? '✓ ' : answered && i === picked ? '✗ ' : ''}(${String.fromCharCode(65 + i)}) ${escapeHtml(o)}</button>`;
+    }).join('');
   } else {
     const draft = (rec && rec.draft) || u.draft;
     qHtml += answered
-      ? `<div style="margin-top:8px"><div style="font-size:11px;font-weight:700;color:#16A34A">✅ 范例答案 (marker 会给满分的写法)</div><div style="font-size:13px;color:#1E293B;line-height:1.7;white-space:pre-wrap;padding:8px 10px;background:#DCFCE7;border:1px solid #86EFAC;border-radius:8px;font-family:Georgia,serif">${escapeHtml(String(entry.q.ans))}</div>${draft ? `<div style="font-size:11px;color:#64748B;margin-top:4px">你写的: ${escapeHtml(String(draft))}</div>` : ''}</div>`
-      : `<textarea id="dfDraft_${entry.id}" rows="3" placeholder="先自己写一写, 写完再看范例" style="width:100%;box-sizing:border-box;margin-top:8px;padding:10px;border-radius:10px;border:1px solid #CBD5E1;font-size:14px;color:#1E293B;background:#FFFFFF">${escapeHtml(u.draft)}</textarea>
-         <button class="ui-cta purple" style="margin-top:8px" onclick="window._dfRevealShort('${entry.id}')">写好了, 看范例答案和分析 →</button>`;
+      ? `<div class="ui-panel"><div class="lbl">范例答案 (marker 会给满分的写法)</div><div style="white-space:pre-wrap;font-size:15px;line-height:1.6">${escapeHtml(String(entry.q.ans))}</div>${draft ? `<div class="muted" style="margin-top:6px;font-size:12px">你写的: ${escapeHtml(String(draft))}</div>` : ''}</div>`
+      : `<textarea id="dfDraft_${entry.id}" rows="3" class="ui-textarea" placeholder="先自己写一写, 写完再看范例">${escapeHtml(u.draft)}</textarea>
+         <button class="ui-cta" style="margin-top:8px" onclick="window._dfRevealShort('${entry.id}')">写好了, 看范例答案和分析 →</button>`;
   }
   let afterHtml = '';
   if (answered) {
     const ok = isMcq ? picked === entry.q.ans : null;
-    afterHtml = `
-      ${isMcq ? `<div style="margin-top:8px;font-size:13px;font-weight:900;color:${ok ? '#16A34A' : '#DC2626'}">${ok ? '✅ 答对了 +5 分' : '❌ 答错了, 正确是 (' + String.fromCharCode(65 + entry.q.ans) + ') · 看懂分析也 +5 分'}</div>` : '<div style="margin-top:8px;font-size:13px;font-weight:900;color:#16A34A">✅ 学完 +5 分</div>'}
-      ${sec('③', '这道题怎么分析', `<div style="padding:8px 10px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px">${entry.steps.map(s => `<div style="font-size:12px;color:#1E293B;line-height:1.7">${escapeHtml(s)}</div>`).join('')}
-        <div style="margin-top:6px;font-size:12px;color:#B45309;line-height:1.6">⚠️ <b>最容易错在</b>: ${escapeHtml(entry.trap)}</div>
-        ${entry.template ? `<div style="margin-top:6px;font-size:12px;color:#1E293B;line-height:1.6;padding:4px 8px;background:#F5F3FF;border-left:3px solid #7C3AED;border-radius:4px">📐 模板: ${escapeHtml(entry.template)}</div>` : ''}</div>`)}
-      ${sec('④', '关键总结 → 已收进答题技巧本', `<div style="padding:8px 10px;background:#FEF3C7;border:1px solid #FCD34D;border-radius:8px">${entry.takeaways.map(t => `<div style="font-size:12px;color:#1E293B;line-height:1.7">⭐ ${escapeHtml(t)}</div>`).join('')}
-        <div style="font-size:11px;color:#64748B;margin-top:4px">在 <a href="#" onclick="gotoPage('tips');window._tipsOpen && window._tipsOpen('${entry.subj}','${entry.mod}');return false" style="color:#1E40AF">答题技巧 › ${escapeHtml(DF_SUBJ_LABEL[entry.subj] || '')} › ${escapeHtml(tb ? tb.title : entry.mod)}</a> 里能找到</div></div>`, '#B45309')}`;
+    afterHtml = `<div class="ui-panel">
+      ${isMcq ? `<div class="${ok ? 'ui-ok' : 'ui-bad'}" style="font-size:15px">${ok ? '✅ 答对了 +5 分' : '❌ 答错了, 正确是 (' + String.fromCharCode(65 + entry.q.ans) + ') · 看懂分析也 +5 分'}</div>` : '<div class="ui-ok" style="font-size:15px">✅ 学完 +5 分</div>'}
+      <div class="lbl">这道题怎么分析</div>
+      ${entry.steps.map(s => `<div>${escapeHtml(s)}</div>`).join('')}
+      <div style="margin-top:6px"><b class="ui-warn">⚠️ 最容易错在</b>: ${escapeHtml(entry.trap)}</div>
+      ${entry.template ? `<div style="margin-top:6px">📐 模板: ${escapeHtml(entry.template)}</div>` : ''}
+      <div class="lbl">关键总结 → 已收进答题技巧本</div>
+      ${entry.takeaways.map(t => `<div>⭐ ${escapeHtml(t)}</div>`).join('')}
+      <div class="muted" style="margin-top:6px;font-size:12px">在 ${tipsLink} 里能找到</div>
+    </div>`;
   }
-  return title + `<div style="padding:6px 4px 2px">
-    <div style="font-size:12px;color:#64748B;line-height:1.6">${escapeHtml(entry.why)}</div>
-    ${sec('①', '这类题的一般方法', methodHtml)}
-    ${sec('②', '这道题' + (entry.q.marks ? ` <span style="font-weight:400;color:#64748B">(${entry.q.marks} 分)</span>` : ''), qHtml)}
+  return title + `<div class="df-body">
+    ${methodHtml}
+    ${qHtml}
     ${afterHtml}
   </div>`;
 }
@@ -13108,40 +13119,37 @@ function renderTipsPage() {
     const m = sb.mods[key];
     const mine = window.getTipBookByMod(state, _tipsSubj, key);
     const open = _tipsOpenMod === key;
-    const li = (arr, pre) => arr.map((x, i) => `<div style="font-size:13px;color:#1E293B;line-height:1.75">${pre === '#' ? '<b>' + (i + 1) + '.</b> ' : pre}${x}</div>`).join('');
-    const box = (title, inner, color, bg) => inner ? `<div style="margin-top:10px"><div style="font-size:12px;font-weight:900;color:${color};margin-bottom:4px">${title}</div><div style="padding:8px 10px;background:${bg};border-radius:8px">${inner}</div></div>` : '';
-    return `<div id="tipmod-${key}" class="card" style="margin-bottom:10px;border-left:4px solid ${open ? '#7C3AED' : '#E2E8F0'};padding:4px 12px ${open ? '14px' : '4px'} !important">
-      <div class="ui-row clickable" onclick="window._tipsToggle('${key}')" style="border-bottom:none;padding:10px 0;background:transparent">
+    // v24.1 设计层简化: 模块 = 一行 (整行可点) + 打开后一块灰底分析区 (四段用 12px 灰标签分隔, 不再四种底色 / 紫左条 / ①②③④ / Georgia)
+    const li = (arr, pre) => arr.map((x, i) => `<div>${pre === '#' ? '<b>' + (i + 1) + '.</b> ' : pre}${x}</div>`).join('');
+    const box = (title, inner) => inner ? `<div class="lbl">${title}</div>${inner}` : '';
+    return `<div id="tipmod-${key}" class="ui-row clickable${open ? ' now open' : ''}" onclick="window._tipsToggle('${key}')">
         <div class="ui-row-ico">${m.icon || '📘'}</div>
-        <div class="ui-row-main"><div class="ui-row-title">${escapeHtml(m.title)}</div><div class="ui-row-sub">${escapeHtml(m.paper)}${mine.length ? ` · <span style="color:#B45309;font-weight:700">⭐ 我收藏 ${mine.length} 条</span>` : ''}</div></div>
-        <div style="color:${open ? '#7C3AED' : '#64748B'};font-size:13px;font-weight:700;white-space:nowrap">${open ? '收起 ▲' : '打开 ▼'}</div>
+        <div class="ui-row-main"><div class="ui-row-title">${escapeHtml(m.title)}</div><div class="ui-row-sub">${escapeHtml(m.paper)}${mine.length ? ` · ⭐ 我收藏 ${mine.length} 条` : ''}</div></div>
+        <div style="color:${open ? '#1E40AF' : '#94A3B8'};font-size:13px;font-weight:600;white-space:nowrap">${open ? '收起 ▲' : '打开 ▼'}</div>
       </div>
-      ${open ? `
-        ${box('① 做题方法 (按顺序)', li(m.steps, '#'), '#1E40AF', '#EFF6FF')}
-        ${box('② 答题模板 / 句式', m.template.length ? m.template.map(t => `<div style="font-size:13px;color:#1E293B;line-height:1.6;padding:4px 8px;margin-top:4px;background:#FFFFFF;border-left:3px solid #7C3AED;border-radius:4px;font-family:Georgia,serif">${t}</div>`).join('') : '', '#7C3AED', '#F5F3FF')}
-        ${box('③ 最常丢分的坑', li(m.traps, '⚠️ '), '#B45309', '#FEF3C7')}
-        ${box('④ 交卷前自查', li(m.check, '☐ '), '#16A34A', '#DCFCE7')}
-        ${box('⭐ 我从每日考点学到的 (自动收藏)', mine.length ? mine.map(t => `<div style="font-size:13px;color:#1E293B;line-height:1.7">⭐ ${escapeHtml(t.text)} <span style="font-size:11px;color:#94A3B8">· ${escapeHtml(t.from || '')} · ${t.date}</span></div>`).join('') : '<div style="font-size:12px;color:#94A3B8">还没有 · 主页"每日考点学习"学完会自动收进来</div>', '#B45309', '#FFFBEB')}
-      ` : ''}
-    </div>`;
+      ${open ? `<div class="df-body"><div class="ui-panel" style="margin-top:0">
+        ${box('做题方法 (按顺序)', li(m.steps, '#'))}
+        ${box('答题模板 / 句式', m.template.length ? m.template.map(t => `<div>${t}</div>`).join('') : '')}
+        ${box('最常丢分的坑', li(m.traps, '⚠️ '))}
+        ${box('交卷前自查', li(m.check, '☐ '))}
+        ${box('⭐ 我从每日考点学到的 (自动收藏)', mine.length ? mine.map(t => `<div>⭐ ${escapeHtml(t.text)} <span class="muted" style="font-size:12px">· ${escapeHtml(t.from || '')} · ${t.date}</span></div>`).join('') : '<div class="muted">还没有 · 主页"每日考点学习"学完会自动收进来</div>')}
+      </div></div>` : ''}`;
   }).join('');
   const total = Object.keys(book).reduce((n, s) => n + book[s].order.length, 0);
   const starN = (state.tipBook || []).length;
+  // v24.1: 三页 (技巧 / 错题集 / 学习中心) 头部统一: 18px 标题 + 右侧 28px 数字 + 一行 13px 灰字; 下载/打印 = 右侧两个文字链接; 科目胶囊 36px
   el.innerHTML = `
-    <div class="ui-hint purple"><span class="ui-hint-ico">📘</span><span>先选科目, 再<b>点开一个题型</b>看: 怎么做 → 模板 → 常见坑 → 交卷前自查</span></div>
-    <div class="card" style="border-left:4px solid #7C3AED">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <div class="ui-page-title" style="margin:0">📘 答题技巧本</div>
-        <div style="margin-left:auto;white-space:nowrap"><span class="ui-num" style="color:#7C3AED">${starN}</span><span class="ui-num-label" style="display:inline;margin-left:4px">条我学到的</span></div>
+    <div class="ui-hint"><span class="ui-hint-ico">📘</span><span>先选科目, 再<b>点开一个题型</b>看: 怎么做 → 模板 → 常见坑 → 交卷前自查</span></div>
+    <div class="card">
+      <div class="ui-head">
+        <div class="ui-page-title">📘 答题技巧本</div>
+        <div class="ui-head-r"><span class="ui-num">${starN}</span><span class="ui-num-label">条我学到的</span></div>
       </div>
-      <div class="ui-seg" style="margin:10px 0 8px">${subjTabs}</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="ui-btn2 purple" onclick="window.downloadTipBookPdf()">⬇️ 下载 PDF</button>
-        <button class="ui-btn2" onclick="window.openTipBookPrint()">🖨️ 打印</button>
-      </div>
+      <div class="ui-head-sub"><span class="grow">四科 ${total} 个考试模块, 每个都有 做题方法 / 模板 / 常见坑 / 自查</span><span class="ui-tools"><button class="ui-btn2" onclick="window.downloadTipBookPdf()">⬇️ 下载 PDF</button><button class="ui-btn2" onclick="window.openTipBookPrint()">🖨️ 打印</button></span></div>
+      <div class="ui-seg" style="margin-bottom:0">${subjTabs}</div>
       <details class="ui-more"><summary>说明</summary><div class="ui-more-body">1. 四科共 <b>${total}</b> 个考试模块, 每个都有: 做题方法 / 答题模板 / 最常丢分的坑 / 交卷前自查。<br>2. 主页"每日考点学习"学完的关键总结会<b>自动收进</b>对应模块 (⭐ 我学到的)。<br>3. 下载 PDF 或打印可以贴在书桌前。</div></details>
     </div>
-    ${mods}`;
+    <div class="card"><div class="ui-list">${mods}</div></div>`;
 }
 window.renderTipsPage = renderTipsPage;
 // 汇总打印: 四科全部模块 + 收藏要点, 开新窗口走浏览器打印 (手机上可"存为 PDF")
@@ -13310,15 +13318,15 @@ function _dictBind() {
 function renderWordBookCard() {
   const list = window.getWordBookList ? window.getWordBookList(state) : [];
   const n = list.length;
-  const rows = list.slice(0, 30).map(x => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F1F5F9">
-      <div style="flex:1;min-width:0"><b style="font-size:14px">${escapeHtml(x.word)}</b> ${x.ipa ? `<span style="color:#64748B;font-size:11px">/${escapeHtml(x.ipa)}/</span>` : ''} ${_fcSpk(x.word, 14)}<div style="font-size:12px;color:#1E293B">${escapeHtml(x.zh || x.en || '')}</div>${x.ctx ? `<div style="font-size:11px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(x.ctx)}</div>` : ''}</div>
-      <div style="font-size:10px;color:#94A3B8;white-space:nowrap">${x.inDeck ? '闪卡复习中' : '词库已有'}<br>${escapeHtml(x.date || '')}</div>
-      <button onclick="window.removeFromWordBook(state,'${escapeHtml(x.word)}');saveState(state);renderVocabPage()" style="border:none;background:none;color:#94A3B8;cursor:pointer;font-size:14px">✕</button>
+  const rows = list.slice(0, 30).map(x => `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #EEF1F6">
+      <div style="flex:1;min-width:0"><b style="font-size:15px">${escapeHtml(x.word)}</b> ${x.ipa ? `<span style="color:#64748B;font-size:12px">/${escapeHtml(x.ipa)}/</span>` : ''} ${_fcSpk(x.word, 14)}<div style="font-size:13px;color:#1E293B">${escapeHtml(x.zh || x.en || '')}</div>${x.ctx ? `<div style="font-size:12px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(x.ctx)}</div>` : ''}</div>
+      <div style="font-size:12px;color:#94A3B8;white-space:nowrap;text-align:right">${x.inDeck ? '闪卡复习中' : '词库已有'}<br>${escapeHtml(x.date || '')}</div>
+      <button onclick="window.removeFromWordBook(state,'${escapeHtml(x.word)}');saveState(state);renderVocabPage()" style="border:none;background:none;color:#94A3B8;cursor:pointer;font-size:15px">✕</button>
     </div>`).join('');
-  // v24.0 傻瓜式: 标题 + 大数字, 怎么用一句话; 列表默认折叠 (有词时展开前 30)
-  return `<details class="card ui-more" style="border-left:4px solid #F59E0B;margin-bottom:12px;margin-top:0" ${n ? 'open' : ''}>
-    <summary style="font-size:15px;color:#1E293B">📔 我的单词本 <span style="color:#B45309">(${n} 词)</span></summary>
-    <div style="font-size:13px;color:#64748B;margin-top:6px">任何英文词 <b>手机长按 / 电脑鼠标停上去</b> 就能查, 点 ⭐ 就收进来, 自动跟闪卡一起复习</div>
+  // v24.0 傻瓜式: 标题 + 大数字, 怎么用一句话; 列表默认折叠 (有词时展开前 30) → v24.1: 折叠标题统一 (15px + 右侧数字 + ▾), 左彩条撤
+  return `<details class="card ui-more" ${n ? 'open' : ''}>
+    <summary>📔 我的单词本 <span class="n">${n} 词</span></summary>
+    <div style="font-size:13px;color:#64748B">任何英文词 <b>手机长按 / 电脑鼠标停上去</b> 就能查, 点 ⭐ 就收进来, 自动跟闪卡一起复习</div>
     ${n ? `<div style="margin-top:8px">${rows}${n > 30 ? `<div style="font-size:12px;color:#94A3B8;margin-top:4px">只显示最近 30 个 · 全部 ${n} 个都在闪卡「我的单词本」卡组里</div>` : ''}</div>` : ''}
   </details>`;
 }
@@ -13454,20 +13462,19 @@ function renderWrongBookPage() {
   // v24.0 傻瓜式: 顶一句话 + 大数字 + 一个主按钮 (开始复习); 下载/打印描边; 科目胶囊 ≥44px; 规则折叠
   const tab = s => `<button class="${_wbSubj === s ? 'on' : ''}" onclick="window._wbSetSubj('${s}')">${s}<span class="n">${s === '全部' ? all.length : (counts[s] || 0)}</span></button>`;
   const shown = _wbSubj === '全部' ? all.length : (counts[_wbSubj] || 0);
+  // v24.1: 头部和 技巧 / 学习中心 统一 (18px 标题 + 右侧 28px 数字 + 一行 13px 灰字 + 右侧 下载/打印 文字链接); 红左条撤; 每题块改分隔线列表 (CSS #wrongBookBody div.wq)
+  const collected = all.filter(w => (w.correctStreak || 0) >= 1).length, nearGrad = all.filter(w => (w.correctStreak || 0) >= 2).length;
   el.innerHTML = `
-    <div class="ui-hint"><span class="ui-hint-ico">📕</span><span>${all.length ? '错题按<b>科目 → 题型</b>分好了, 点<b>开始复习</b>一题一题过; 要纸上做就<b>下载 / 打印</b>' : '还没有错题, 做题答错了会自动收进来'}</span></div>
-    <div class="card" style="border-left:4px solid #DC2626">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <div class="ui-page-title" style="margin:0">📕 错题集</div>
-        <div style="margin-left:auto;white-space:nowrap"><span class="ui-num" style="color:#DC2626">${shown}</span><span class="ui-num-label" style="display:inline;margin-left:4px">题${_wbSubj === '全部' ? '' : ' · ' + _wbSubj}</span></div>
+    <div class="ui-hint"><span class="ui-hint-ico">📕</span><span>${all.length ? '错题按<b>科目 → 题型</b>分好了, 点<b>开始复习</b>一题一题过; 要纸上做就下载 / 打印' : '还没有错题, 做题答错了会自动收进来'}</span></div>
+    <div class="card">
+      <div class="ui-head">
+        <div class="ui-page-title">📕 错题集</div>
+        <div class="ui-head-r"><span class="ui-num">${shown}</span><span class="ui-num-label">题${_wbSubj === '全部' ? '' : ' · ' + _wbSubj}</span></div>
       </div>
-      <div class="ui-seg" style="margin:10px 0">${['全部'].concat(WB_SUBJECTS).map(tab).join('')}</div>
-      ${all.length ? `<button class="ui-cta" onclick="openErrorBank()">🎯 开始复习 (到期的先来) →</button>` : ''}
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-        <button class="ui-btn2" onclick="window.downloadWrongBookPdf()">⬇️ 下载 PDF</button>
-        <button class="ui-btn2" onclick="window.printWrongBook()">🖨️ 打印</button>
-      </div>
-      <details class="ui-more"><summary>说明</summary><div class="ui-more-body">1. 每组错题上面都有<b>同类讲解</b> (这类题怎么做 / 常见坑 / 模板)。<br>2. 同一题<b>连续答对 3 次</b>自动毕业出本, 14 天后回测一次。<br>3. "开始复习"按到期顺序出题; 想只练某一组, 点那组标题右边的"复习这组"。<br>4. 真考错题排最前。</div></details>
+      <div class="ui-head-sub"><span class="grow">${all.length ? `📊 按科目分布: ${WB_SUBJECTS.filter(s => counts[s]).map(s => `${s} ${counts[s]}`).join(' · ')}` : '答错的题自动收进来'}</span><span class="ui-tools"><button class="ui-btn2" onclick="window.downloadWrongBookPdf()">⬇️ 下载 PDF</button><button class="ui-btn2" onclick="window.printWrongBook()">🖨️ 打印</button></span></div>
+      <div class="ui-seg">${['全部'].concat(WB_SUBJECTS).map(tab).join('')}</div>
+      ${all.length ? `<button class="ui-cta" onclick="openErrorBank()">开始复习 (到期的先来) →</button>` : ''}
+      <details class="ui-more"><summary>说明</summary><div class="ui-more-body">1. 每组错题上面都有<b>同类讲解</b> (这类题怎么做 / 常见坑 / 模板)。<br>2. 已有 <b>${collected}</b> 题答对过 1 次, <b>${nearGrad}</b> 题快毕业; 同一题<b>连续答对 3 次</b>自动毕业出本, 14 天后回测一次。<br>3. "开始复习"按到期顺序出题; 想只练某一组, 点那组标题右边的"复习这组"。<br>4. 真考错题排最前。</div></details>
     </div>
     <div class="card" id="wrongBookBody"><style>#wrongBookBody ${_PDF_CSS.split('}').map(r => r.trim()).filter(Boolean).map(r => '#wrongBookBody ' + r + '}').join('')}</style>${_wrongBookHtml(_wbSubj, false)}</div>`;
 }
