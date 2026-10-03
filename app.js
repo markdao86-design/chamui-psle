@@ -849,6 +849,18 @@ window.renderAdmissionForecastCard = renderAdmissionForecastCard;
 // ============================================================
 
 // A1: 今日 3 件事 sticky 卡 — v19.14b 加平日/周末分化
+// v22.1: 作业/班课这类 App 测不到的项, 点一下自己打勾 (只记当天, 不给分)
+function toggleTodayManual(i) {
+  const k = schedLocalDate();
+  if (!state.todayManual) state.todayManual = {};
+  const keys = Object.keys(state.todayManual).sort();
+  while (keys.length > 30) delete state.todayManual[keys.shift()];
+  const m = state.todayManual[k] = state.todayManual[k] || {};
+  m[i] = !m[i];
+  saveState(state);
+  renderTodayThreeCard();
+}
+window.toggleTodayManual = toggleTodayManual;
 function renderTodayThreeCard() {
   const card = document.getElementById('todayThreeCard');
   if (!card) return;
@@ -893,77 +905,34 @@ function renderTodayThreeCard() {
     tipHtml = `<div style="margin-top:8px;padding:8px;background:linear-gradient(135deg, rgba(230,162,60,0.10), rgba(192,86,33,0.05));border:1px solid rgba(230,162,60,0.30);border-radius:6px;font-size:11px;color:#B45309;line-height:1.5;text-align:center">
       🏫 <b>班课优先 · 错题当天清</b> · 8:00 起床 21:30 熄灯 · 每晚填每日成绩单
     </div>`;
-  } else if (isWeekday) {
-    // 平日 3 件事: Oral + Cloze+SST + 科学章节
-    const oral = window.getOralStatus ? window.getOralStatus(state) : { todaySec: 0, targetSec: 1500, pct: 0, done: false };
-    const oralDone = oral.done || oral.todaySec >= 1500;
-    const paper2Done = todayPaper2 >= 15;
-    const week = state.currentWeek || 1;
-    const chapter = window.getCurrentScienceChapter ? window.getCurrentScienceChapter(week) : null;
-    const sciDone = (todayCounts.scimcq || 0) >= 1 || (todayCounts.sci_oe || 0) >= 1;
-    doneCount = (oralDone?1:0) + (paper2Done?1:0) + (sciDone?1:0);
-    headerSub = `平日 · 英语 70% + 科学 30%`;
-    // v19.14k: 科学章节内细分进度 + 今日 S2 段具体任务 (对接 WEEK_TASKS day-by-day)
-    let chapterSubProgress = '', todayS2Task = '';
-    if (chapter && chapter.weeks) {
-      const chapterTotalWeeks = chapter.weeks[1] - chapter.weeks[0] + 1;
-      const chapterWeekIdx = week - chapter.weeks[0] + 1;
-      if (chapterTotalWeeks > 1) {
-        // 难章 2 周: 第 1 周 = 概念建立, 第 2 周 = 深化与应用
-        const phase = chapterWeekIdx === 1 ? '概念建立' : '深化与应用';
-        chapterSubProgress = ` · 第 ${chapterWeekIdx}/${chapterTotalWeeks} 周 ${phase}`;
-      }
-      // 今日 S2 段具体任务 (从 WEEK_TASKS 取)
-      const todayKey = (typeof todayDayKeyForWeek === 'function') ? todayDayKeyForWeek(week) : null;
-      if (todayKey && window.WEEK_TASKS && window.WEEK_TASKS[week - 1]) {
-        const days = window.WEEK_TASKS[week - 1].days;
-        const dayTasks = days && days[todayKey];
-        if (dayTasks) {
-          // 平日找 S2 段, 周末找 WSS/WUS
-          const taskText = dayTasks.S2 || dayTasks.WSS || dayTasks.WUS || '';
-          // 只取 🔬 开头的科学任务
-          if (taskText && taskText.match(/🔬|科学|Plant|Digestive|Heat|Light|Magnet|Diversity|Photosynthesis|Respiration|Matter|Force|Cell|Experiment/i)) {
-            todayS2Task = taskText.length > 36 ? taskText.substring(0, 34) + '…' : taskText;
-          }
-        }
-      }
-    }
-    const sciSub = chapter
-      ? (todayS2Task
-          ? `<b>今天</b>: ${escapeHtml(todayS2Task)}<br><span style="font-size:10px;color:#888">${escapeHtml(chapter.title)} ${chapter.stars}${chapterSubProgress}</span>`
-          : `${escapeHtml(chapter.title)} ${chapter.stars}${chapterSubProgress} · 含概念图`)
-      : '科学 MCQ + OE 训练';
-    itemsHtml = [
-      item('🗣️', 'Oral 25 min', `${Math.round(oral.todaySec/60)}/25 min · 抽 PSLE 口试题`, oralDone, 'openOralPracticeModal()', '#0277BD'),
-      item('🎯', '10 Cloze + 5 SST', `今日 ${todayPaper2}/15 题 · 英语 AL6→AL2 关键`, paper2Done, 'openPaper2MockGame()', '#1E40AF'),
-      item('🔬', chapter ? '本周科学 1 节' : '科学练习', sciSub, sciDone, chapter && chapter.diagram ? `openConceptDiagram('${chapter.diagram}'); setTimeout(openScienceOEGame, 100)` : 'openSciMcqGame()', '#2E7D32')
-    ].join('');
-    tipHtml = `<div style="margin-top:8px;padding:8px;background:linear-gradient(135deg, rgba(230,162,60,0.10), rgba(192,86,33,0.05));border:1px solid rgba(230,162,60,0.30);border-radius:6px;font-size:11px;color:#B45309;line-height:1.5;text-align:center">
-      📅 <b>英语优先</b> — 英语 AL6 → AL1 缺口最大; 华文已掉到 AL2, 科学 AL3, 都要补 (目标: 四科全 AL1)
-    </div>`;
   } else {
-    // v19.15 P0-3: 周末改"自选推荐"模式 — 从"必做 3 件"→"挑 1-2 件就好, 休息也算赢"
-    // 心理学家警告: 周末双科爆发风险 → 改自主规划框架
-    const mathDone = (todayCounts.math || 0) >= 1;
-    const chineseDone = (todayCounts.chinese || 0) >= 1;
-    const cloze5Done = todayPaper2 >= 5;
-    const sciDone = (todayCounts.scimcq || 0) >= 1 || (todayCounts.sci_oe || 0) >= 1;
-    const item3Done = cloze5Done && sciDone;
-    doneCount = (mathDone?1:0) + (chineseDone?1:0) + (item3Done?1:0);
-    headerTitle = '🌿 周末推荐 · 自选';
-    headerColor = '#2E7D32';
-    counterFn = (done) => done === 0 ? '休息日 · 自由安排' : `已挑 ${done} 件 · 1-2 件就够`;
-    headerSub = `周末灵活安排 · 休息也算赢 (PSLE 是 17 月马拉松, 不靠冲刺)`;
-    itemsHtml = [
-      item('➗', '数学 P5/P6 (可选)', '10 题 · 维持 AL1 · 30 分钟内', mathDone, 'openMathGame()', '#FFA000'),
-      item('🇨🇳', '华文阅读 (可选)', '10 题 · 维持 AL1 · 20 分钟内', chineseDone, 'openChineseMcqGame()', '#C62828'),
-      item('📖', '英语+科学 保手感 (可选)', `Cloze ${todayPaper2}/5 + 1 套科学 · 15 分钟内`, item3Done, cloze5Done ? 'openSciMcqGame()' : 'openClozeGame()', '#7B1FA2')
-    ].join('');
-    tipHtml = `<div style="margin-top:8px;padding:8px;background:linear-gradient(135deg, rgba(22,163,74,0.10), rgba(46,125,50,0.05));border:1px solid rgba(22,163,74,0.30);border-radius:6px;font-size:11px;color:#15803D;line-height:1.5;text-align:center">
-      🛋️ <b>挑 1-2 件就好</b> · 周日下午 14-18 完全休息 (手册硬红线) · 累了直接关 app, 不掉 streak
+    // v22.1: 按课表逐日生成 (用户 2026-10-03 的新表)。完成信号: App 里能测到的自动勾, 测不到的 (作业/班课) 点一下自己勾
+    const dow = new Date().getDay();
+    const day = SCHED_DAYS[dow] || { three: [] };
+    const todayKey = schedLocalDate();
+    const manual = ((state.todayManual || {})[todayKey]) || {};
+    const oral = window.getOralStatus ? window.getOralStatus(state) : { todaySec: 0, done: false };
+    const fcRec = ((state.fcDaily || {})[todayKey]) || null;
+    const sig = (k) => {
+      if (k === 'none') return false;
+      if (k === 'manual') return false;
+      return k.split('+').every(s => s === 'vocab' ? !!(fcRec && fcRec.done) : s === 'oral' ? (oral.done || (oral.todaySec || 0) >= 600) : (todayCounts[s] || 0) >= 1);
+    };
+    const three = day.three || [];
+    const flags = three.map((t, i) => t[3] === 'manual' || t[3] === 'none' ? !!manual[i] : sig(t[3]));
+    doneCount = flags.filter(Boolean).length;
+    headerTitle = `🎯 今日必做 · ${day.label || ''}`;
+    counterFn = () => `${doneCount} / ${three.length} 完成`;
+    headerSub = '按今天的课表 · 点一项: 能在 App 练的直接开练, 作业/班课点一下打勾';
+    itemsHtml = three.map((t, i) => {
+      const click = t[4] ? t[4] : `toggleTodayManual(${i})`;
+      const sub = t[2] || (t[3] === 'manual' ? '做完点一下打勾' : t[3] === 'none' ? '' : '');
+      return item(t[0], t[1], sub, flags[i], click, '#1E40AF');
+    }).join('') || '<div style="font-size:13px;color:#64748B;padding:10px">今天课表上没有安排</div>';
+    tipHtml = `<div style="margin-top:8px;padding:8px;background:linear-gradient(135deg, rgba(230,162,60,0.10), rgba(192,86,33,0.05));border:1px solid rgba(230,162,60,0.30);border-radius:6px;font-size:12px;color:#1E293B;line-height:1.6">
+      📅 完整时间表看 <b>课表</b> 页 · 21:30 戴 OK 镜睡觉
     </div>`;
   }
-
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <div style="font-size:17px;font-weight:900;color:${headerColor}">${headerTitle}</div>
@@ -11483,78 +11452,104 @@ function resetData() {
 
 // ============ v19.50-51: 每日课表 + 完整周打分表 + PSLE计分卡 + 月跟踪 (手册v18.6) ============
 // 课表数据: 手册v18.6全天时刻表 (2026.9起, 周四/周六全天无任务)
+// v22.1: 用户 2026-10-03 给的新课表, 逐格照抄 (c=上学/班课 s=自学 r=吃饭休息); three=今日必做 [icon, 标题, 说明, 完成信号, 点击]
 const SCHED_DAYS = {
-  1: { label: '周一', start: '16:00', blocks: [
-    ['16:00–16:35', '英语·改错+语法', '《Editing Explained》2篇+《Grammar MCQs》12题, 错因标[陷阱/超纲/语法点]', 's'],
-    ['16:35–16:50', '休息 15 分', '', 'r'],
-    ['16:50–17:30', '英语·阅读OE', '《Conquer Comprehension》1篇·四步法: 定位→改写→完整句→回读自查·留家长批', 's'],
-    ['17:30–17:45', '休息 15 分', '', 'r'],
-    ['17:45–18:20', '科学·概念', '《MC Revision Guide》本周章读透+概念图讲一遍', 's'],
-    ['18:20–18:50', '户外', '', 'r'],
-    ['18:50–19:35', '晚饭', '周一 16:00 才到家, 全周最紧, 晚饭 45 分', 'r'],
-    ['19:35–20:05', '科学·开放题+表述卡', '《Science For Primary Levels 5/6》2道+手写表述卡2张', 's'],
-    ['20:05–20:20', '休息 15 分', '', 'r'],
-    ['20:20–20:45', '订正与收尾', '错题入本+看家长批注补漏点', 's'],
-    ['20:45–21:15', '睡前单词', '新词10分+滚动复习10分+自测10分', 's'],
-    ['21:15–21:30', '洗漱', '21:30 熄灯', 'r'],
+  1: { label: '周一', start: '14:00', blocks: [
+    ['07:30–13:30', '上学', '', 'c'],
+    ['14:00–15:30', '高级华文', '', 'c'],
+    ['15:50–17:30', '周六补习班作业', '', 's'],
+    ['17:30–18:00', '吃饭', '', 'r'],
+    ['18:00–20:00', '补习老师 (Editing、Cloze、Synthesis 各两篇)', '', 'c'],
+    ['20:00–20:15', '休息', '', 'r'],
+    ['20:15–21:00', '背单词、口语打卡', 'App 今天这一组 + 口语', 's'],
+    ['21:30–22:00', '戴OK镜、睡觉', '', 'r'],
+  ], three: [
+    ['📝', '周六补习班作业 15:50', '写完对答案', 'manual', ""],
+    ['🏫', '补习老师 18:00', 'Editing、Cloze、Synthesis 各两篇', 'manual', ""],
+    ['📇', '背单词 + 口语打卡 20:15', 'App 今天这一组 + Oral', 'vocab+oral', "gotoPage('vocab')"],
   ]},
-  2: { label: '周二', start: '15:00', blocks: [
-    ['15:00–15:35', '英语·完形+词汇', '《Cloze Techniques》1篇+《Conquer Vocabulary》25题', 's'],
-    ['15:35–15:50', '休息 15 分', '', 'r'],
-    ['15:50–16:20', '英语·听说', '口试朗读录音回听/看图会话/《PSLE Listening》1节', 's'],
-    ['16:20–16:35', '休息 15 分', '', 'r'],
-    ['16:35–17:20', '华文·阅读踩点', '专项册/旧年真题1篇·按分值数点(双周:伴你阅读精读)', 's'],
-    ['17:20–17:50', '户外', '', 'r'],
-    ['17:50–18:50', '晚饭', '', 'r'],
-    ['18:50–19:20', '订正与收尾', '对marking scheme数踩点, 漏的抄标准表述', 's'],
-    ['19:20–19:35', '休息 15 分', '', 'r'],
-    ['19:35–20:05', '词汇周清测', '上周新词+错词全测, 错词归档回睡前本', 's'],
-    ['20:05–20:20', '休息 15 分', '', 'r'],
-    ['20:20–20:45', '薄弱模块二刷: 华文阅读问答', 'App 华文阅读·问答 1 篇, 逐点核对', 's'],
-    ['20:45–21:15', '睡前单词', '三段式', 's'],
-    ['21:15–21:30', '洗漱', '21:30 熄灯', 'r'],
+  2: { label: '周二', start: '15:10', blocks: [
+    ['07:30–13:30', '上学', '', 'c'],
+    ['14:15–15:00', '休息', '', 'r'],
+    ['15:10–16:00', '周六写作补习班作业', '', 's'],
+    ['16:10–17:00', 'Editing 2 篇', '', 's'],
+    ['17:10–18:00', 'Cloze 2 篇', '', 's'],
+    ['19:00–19:50', 'Synthesis 2 篇', '', 's'],
+    ['20:00–20:45', '背单词', 'App 今天这一组', 's'],
+    ['21:00–21:30', '口语打卡', '', 's'],
+    ['21:30–22:00', '戴OK镜、睡觉', '', 'r'],
+  ], three: [
+    ['📝', '周六写作补习班作业 15:10', '', 'manual', ""],
+    ['🔍', 'Editing 2 篇 16:10', '错因标 陷阱/超纲/语法点', 'editing', "openEditingGame()"],
+    ['🧩', 'Cloze 2 篇 17:10', '先通读再填', 'cloze', "openClozeGame()"],
+    ['🔄', 'Synthesis 2 篇 19:00', '意思必须和原句一样', 'sst', "openSstGame()"],
+    ['📇', '背单词 20:00', 'App 今天这一组', 'vocab', "gotoPage('vocab')"],
+    ['🗣️', '口语打卡 21:00', '', 'oral', "openOralPracticeModal()"],
   ]},
-  3: { label: '周三', start: '15:00', blocks: [
-    ['15:00–15:40', '英语·改错+语法', '《Editing Explained》2篇+《Grammar MCQs》12题', 's'],
-    ['15:40–15:55', '休息 15 分', '', 'r'],
-    ['15:55–16:35', '英语·阅读OE', '《Conquer Comprehension》1篇(本周第2篇)·留家长批', 's'],
-    ['16:35–16:50', '休息 15 分', '', 'r'],
-    ['16:50–17:10', '英语·句型转换', '《Synthesis and Transformation》1单元', 's'],
-    ['17:10–17:40', '户外', '', 'r'],
-    ['17:40–18:40', '晚饭', '', 'r'],
-    ['18:40–19:15', '科学·选择题诊断', '《Science Topical题库》本周章15题限时22分+订正·错章上薄弱清单', 's'],
-    ['19:15–19:30', '休息 15 分', '', 'r'],
-    ['19:30–20:05', '薄弱模块二刷: 本周英+科错题', '错题本本周英+科错题全部重做+表述卡抽背5张', 's'],
-    ['20:05–20:20', '休息 15 分', '', 'r'],
-    ['20:20–20:45', '薄弱模块三刷', '二刷时还错的题再做第三遍, 三遍都对才从错题本毕业', 's'],
-    ['20:45–21:15', '睡前单词', '三段式·今晚新词排进周五自测', 's'],
-    ['21:15–21:30', '洗漱', '21:30 熄灯', 'r'],
+  3: { label: '周三', start: '15:10', blocks: [
+    ['07:30–13:30', '上学', '', 'c'],
+    ['14:15–15:00', '休息', '', 'r'],
+    ['15:10–16:00', '背作文范文半篇', '', 's'],
+    ['16:10–17:00', '背单词', 'App 今天这一组', 's'],
+    ['17:10–17:30', '口语打卡', '', 's'],
+    ['17:30–18:00', '吃饭', '', 'r'],
+    ['18:00–20:00', '补习老师 (Editing、Cloze、Synthesis 各两篇)', '', 'c'],
+    ['20:15–21:00', '语法 30 题', '', 's'],
+    ['21:30–22:00', '戴OK镜、睡觉', '', 'r'],
+  ], three: [
+    ['📖', '背作文范文半篇 15:10', '', 'manual', ""],
+    ['📇', '背单词 16:10', 'App 今天这一组', 'vocab', "gotoPage('vocab')"],
+    ['🗣️', '口语打卡 17:10', '', 'oral', "openOralPracticeModal()"],
+    ['🏫', '补习老师 18:00', 'Editing、Cloze、Synthesis 各两篇', 'manual', ""],
+    ['✏️', '语法 30 题 20:15', '', 'grammar', "openGrammarGame()"],
   ]},
-  4: { label: '周四', start: '', blocks: [['全天', '另有安排', '不排任何本手册任务 🎉', 'r']] },
-  5: { label: '周五', start: '15:00', blocks: [
-    ['15:00–15:35', '英语·完形+词汇', '《Cloze Techniques》1篇+《Conquer Vocabulary》25题', 's'],
-    ['15:35–15:50', '休息 15 分', '', 'r'],
-    ['15:50–16:15', '英语·句型转换', '《Synthesis and Transformation》1单元(本周第2个)', 's'],
-    ['16:15–16:30', '休息 15 分', '', 'r'],
-    ['16:30–17:05', '三周轮换', '①数学旧年真题半卷15题限时 ②科学薄弱回炉 ③华文专项加练·按周循环', 's'],
-    ['17:05–17:35', '户外', '', 'r'],
-    ['17:35–18:35', '晚饭', '', 'r'],
-    ['18:35–19:10', '错题二刷', '本周改错/语法/完形/句型/阅读OE错题全部重做', 's'],
-    ['19:10–19:25', '休息 15 分', '', 'r'],
-    ['19:25–19:50', '计分卡+归档', '每日成绩单汇总进周计分卡·错题本归档', 's'],
-    ['19:50–20:05', '休息 15 分', '', 'r'],
-    ['20:05–20:45', '薄弱模块三刷', '二刷时还错的题再做第三遍, 三遍都对才从错题本毕业', 's'],
-    ['20:45–21:15', '睡前单词', '三段式·补测周三新词', 's'],
-    ['21:15–21:30', '洗漱', '21:30 熄灯', 'r'],
+  4: { label: '周四', start: '15:00', blocks: [
+    ['07:30–13:30', '上学', '', 'c'],
+    ['13:40–15:00', '吃饭+休息', '', 'r'],
+    ['15:00–20:30', '英语+可续', '', 'c'],
+    ['21:00–21:30', '口语打卡', '', 's'],
+    ['21:30–22:00', '戴OK镜、睡觉', '', 'r'],
+  ], three: [
+    ['🏫', '英语 + 可续 15:00–20:30', '', 'manual', ""],
+    ['🗣️', '口语打卡 21:00', '', 'oral', "openOralPracticeModal()"],
   ]},
-  6: { label: '周六', start: '', blocks: [['全天', '另有安排', '不排任何本手册任务 🎉', 'r']] },
-  0: { label: '周日', start: '15:00', blocks: [
-    ['15:00–15:55', '作文', 'W1/3英语整篇·W2华文整篇·W4英提纲20分。英语=范文拆解15+仿写40', 's'],
-    ['16:05–18:45', '限时整卷', '轮动英→科→英→数(华每8周)。英110分/科105分/华100分/数P1 60+P2 90。近5年封存卷', 's'],
-    ['整卷后', '晚饭+自由', '', 'r'],
-    ['19:15–19:50', '家长批改', '开放题按采分点逐点勾·作文内容20+语言20', 's'],
-    ['19:50–20:15', '口语', '英语12分+华文12分情景对话', 's'],
-    ['20:15–20:35', '周复盘', '孩子按PSLE模块念计分卡·定下周动作', 's'],
+  5: { label: '周五', start: '15:10', blocks: [
+    ['07:30–13:30', '上学', '', 'c'],
+    ['14:15–15:00', '休息', '', 'r'],
+    ['15:10–17:00', '周四作业', '', 's'],
+    ['17:30–18:00', '吃饭', '', 'r'],
+    ['18:00–20:00', '补习老师 (Editing、Cloze、Synthesis 各两篇)', '', 'c'],
+    ['20:15–21:00', '语法 30 题', '', 's'],
+    ['21:00–21:30', '口语打卡', '', 's'],
+    ['21:30–22:00', '戴OK镜、睡觉', '', 'r'],
+  ], three: [
+    ['📝', '周四作业 15:10', '', 'manual', ""],
+    ['🏫', '补习老师 18:00', 'Editing、Cloze、Synthesis 各两篇', 'manual', ""],
+    ['✏️', '语法 30 题 20:15', '', 'grammar', "openGrammarGame()"],
+    ['🗣️', '口语打卡 21:00', '', 'oral', "openOralPracticeModal()"],
+  ]},
+  6: { label: '周六', start: '9:00', blocks: [
+    ['9:00–11:00', '写作课', '', 'c'],
+    ['13:00–14:00', '午休', '', 'r'],
+    ['14:10–15:40', '科学', '', 's'],
+    ['16:00–19:00', '英语课', '', 'c'],
+    ['19:00–20:00', '吃饭', '', 'r'],
+    ['20:00–21:00', '背单词、范文半篇', 'App 今天这一组 + 范文', 's'],
+    ['21:30–22:00', '戴OK镜、睡觉', '', 'r'],
+  ], three: [
+    ['✍️', '写作课 9:00', '', 'manual', ""],
+    ['🔬', '科学 14:10', '', 'scimcq', "openSciMcqGame()"],
+    ['🏫', '英语课 16:00', '', 'manual', ""],
+    ['📇', '背单词 + 范文半篇 20:00', 'App 今天这一组', 'vocab', "gotoPage('vocab')"],
+  ]},
+  0: { label: '周日', start: '9:00', blocks: [
+    ['9:00–10:30', '语文真题', '', 's'],
+    ['11:00–12:30', '口语课', '', 'c'],
+    ['12:30–', '休息', '下午晚上休息', 'r'],
+  ], three: [
+    ['🇨🇳', '语文真题 9:00', '', 'manual', ""],
+    ['🗣️', '口语课 11:00', '', 'manual', ""],
+    ['🛋️', '下午晚上休息', '', 'none', ""],
   ]},
 };
 // v19.51: 周打分表矩阵 (对齐手册附录B每日成绩单)
@@ -11562,30 +11557,30 @@ const SCHED_DAYS = {
 // days: 该行哪些天有格 (1一 2二 3三 5五 0日)
 const SCHED_GRID = [
   { sec: '英语' },
-  { key: 'ed',      label: 'Editing 2篇: 对_/共_题',        target: '错≤1/天', type: 'frac', days: [1, 3] },
-  { key: 'gr',      label: 'Grammar 12题: 对_/共_题',       target: '错≤2/天', type: 'frac', days: [1, 3] },
-  { key: 'oe',      label: '阅读OE: 答完整_/共_题',          target: '≥75%',  type: 'frac', days: [1, 3] },
-  { key: 'cloze',   label: 'Cloze: 对_/共_空',              target: '≥70%',  type: 'frac', days: [2, 5] },
-  { key: 'vw',      label: 'Vocabulary: 对_/共_题',         target: '错≤5/周', type: 'frac', days: [2, 5] },
-  { key: 'syn',     label: '句型转换: 对_/共_题',            target: '错≤3/周', type: 'frac', days: [3, 5] },
-  { key: 'listen',  label: '听说: 完成朗读/会话/听力_样',    target: '3样',   type: 'num',  days: [2] },
-  { key: 'wkt',     label: '词汇周清测: 对_/共_',            target: '≥80%',  type: 'frac', days: [2] },
+  { key: 'ed',      label: 'Editing 2篇: 对_/共_题',        target: '错≤1/天', type: 'frac', days: [2] },
+  { key: 'gr',      label: '语法30题: 对_/共_题',          target: '错≤3/天', type: 'frac', days: [3, 5] },
+  { key: 'oe',      label: '阅读OE: 答完整_/共_题',          target: '≥75%',  type: 'frac', days: [4] },
+  { key: 'cloze',   label: 'Cloze: 对_/共_空',              target: '≥70%',  type: 'frac', days: [2] },
+  { key: 'vw',      label: 'Vocabulary: 对_/共_题',         target: '错≤5/周', type: 'frac', days: [1, 2, 3, 6] },
+  { key: 'syn',     label: '句型转换: 对_/共_题',            target: '错≤3/周', type: 'frac', days: [2] },
+  { key: 'listen',  label: '口语打卡: 完成_次',              target: '1次',   type: 'num',  days: [1, 2, 3, 4, 5] },
+  { key: 'wkt',     label: '词汇周清测: 对_/共_',            target: '≥80%',  type: 'frac', days: [6] },
   { sec: '科学' },
-  { key: 'sci_talk',label: '概念: 讲给家长30秒, 讲清?',      target: '勾',    type: 'chk',  days: [1] },
-  { key: 'sci_oe',  label: '开放题2道: 术语全对_/2',         target: '2/2',   type: 'frac', days: [1] },
-  { key: 'sci_mcq', label: '科学选择题: 对_/共_题',          target: '≥80%',  type: 'frac', days: [3] },
-  { key: 'sci_fix', label: '回炉(轮换周): 清掉_章',          target: '≥1',    type: 'num',  days: [5] },
+  { key: 'sci_talk',label: '概念: 讲给家长30秒, 讲清?',      target: '勾',    type: 'chk',  days: [6] },
+  { key: 'sci_oe',  label: '开放题2道: 术语全对_/2',         target: '2/2',   type: 'frac', days: [6] },
+  { key: 'sci_mcq', label: '科学选择题: 对_/共_题',          target: '≥80%',  type: 'frac', days: [6] },
+  { key: 'sci_fix', label: '回炉(轮换周): 清掉_章',          target: '≥1',    type: 'num',  days: [6] },
   { sec: '华文 / 数学 / 周日' },
-  { key: 'cn',      label: '华文阅读大题: 踩中_/共_点',      target: '漏≤2',  type: 'frac', days: [2] },
-  { key: 'math',    label: '数学半卷(轮换周): 错_/粗心_',    target: '粗心0', type: 'pair', days: [5] },
+  { key: 'cn',      label: '华文阅读大题: 踩中_/共_点',      target: '漏≤2',  type: 'frac', days: [0] },
+  { key: 'math',    label: '数学半卷(轮换周): 错_/粗心_',    target: '粗心0', type: 'pair', days: [6] },
   { key: 'paper',   label: '周日整卷: 得分_/满分_',          target: '记录',  type: 'frac', days: [0] },
-  { key: 'essay',   label: '作文(单周): 内容_/20+语言_/20',  target: '≥上篇', type: 'pair', days: [0] },
+  { key: 'essay',   label: '范文半篇: 背完_/对家长复述_(1=是)', target: '1/1',  type: 'pair', days: [3, 6] },
   { key: 'oral',    label: '口语2场(英/华): 家长打_星(1-5)', target: '≥3星',  type: 'num',  days: [0] },
   { sec: '每天必查' },
-  { key: 'review',  label: '错题登记/复盘/二刷: 完成',       target: '勾',    type: 'chk',  days: [1, 2, 3, 5, 0] },
-  { key: 'vt',      label: '睡前单词自测: 对_/共_',          target: '≥80%',  type: 'frac', days: [1, 2, 3, 5, 0] },
-  { key: 'sleep',   label: '21:30准时收工',                 target: '勾',    type: 'chk',  days: [1, 2, 3, 5, 0] },
-  { key: 'parent',  label: '家长已核对',                    target: '勾',    type: 'chk',  days: [1, 2, 3, 5, 0] },
+  { key: 'review',  label: '错题登记/复盘/二刷: 完成',       target: '勾',    type: 'chk',  days: [1, 2, 3, 5, 6] },
+  { key: 'vt',      label: '睡前单词自测: 对_/共_',          target: '≥80%',  type: 'frac', days: [1, 2, 3, 6] },
+  { key: 'sleep',   label: '21:30戴OK镜准时睡',                 target: '勾',    type: 'chk',  days: [1, 2, 3, 4, 5, 6, 0] },
+  { key: 'parent',  label: '家长已核对',                    target: '勾',    type: 'chk',  days: [1, 2, 3, 4, 5, 6, 0] },
   { sec: '自学记录(周四/周六自由安排日重点填)' },
   { key: 'note',    label: '今天自学了什么(手动填写)',       target: '自由填', type: 'text', days: [1, 2, 3, 4, 5, 6, 0] },
 ];
@@ -11955,21 +11950,21 @@ function renderSchedulePage() {
     `<button onclick="window._schedSetDay(${d})" style="padding:5px 10px;border-radius:14px;border:1px solid ${d === viewDow ? 'rgba(30,64,175,0.6)' : '#CBD5E1'};background:${d === viewDow ? 'rgba(30,64,175,0.15)' : '#F8FAFC'};color:${d === viewDow ? '#1E40AF' : '#1E293B'};font-size:12px;font-weight:${d === todayDow ? '700' : '400'}">${SCHED_DAYS[d].label}${d === todayDow ? '·今' : ''}</button>`
   ).join('');
   const blocksHtml = day.blocks.map(b => {
-    const isStudy = b[3] === 's';
-    return `<div style="display:flex;gap:10px;padding:7px 10px;margin-top:6px;border-radius:8px;background:${isStudy ? 'rgba(30,64,175,0.06)' : '#F8FAFC'};border-left:3px solid ${isStudy ? '#1E40AF' : '#E2E8F0'}">
-      <div style="min-width:86px;font-size:12px;color:${isStudy ? '#1E40AF' : '#1E293B'};font-weight:600">${b[0]}</div>
-      <div style="flex:1"><div style="font-size:13px;font-weight:${isStudy ? '700' : '400'};color:${isStudy ? '#1E293B' : '#1E293B'}">${escapeHtml(b[1])}</div>
+    const isStudy = b[3] === 's', isClass = b[3] === 'c';
+    return `<div style="display:flex;gap:10px;padding:7px 10px;margin-top:6px;border-radius:8px;background:${isClass ? 'rgba(30,64,175,0.14)' : isStudy ? 'rgba(30,64,175,0.06)' : '#F8FAFC'};border-left:3px solid ${isStudy || isClass ? '#1E40AF' : '#E2E8F0'}">
+      <div style="min-width:86px;font-size:12px;color:${isStudy || isClass ? '#1E40AF' : '#1E293B'};font-weight:600">${b[0]}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:${isClass ? '900' : isStudy ? '700' : '400'};color:#1E293B">${isClass ? '🏫 ' : ''}${escapeHtml(b[1])}</div>
       ${b[2] ? `<div style="font-size:11.5px;color:#1E293B;line-height:1.5;margin-top:2px">${escapeHtml(b[2])}</div>` : ''}</div></div>`;
   }).join('');
   el.innerHTML = `
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-        <div class="card-title" style="margin:0">📆 每日课表 <span style="font-size:11px;color:#1E293B;font-weight:400">手册v18.6 · 单块≤45分 · 21:30收工</span></div>
+        <div class="card-title" style="margin:0">📆 每日课表 <span style="font-size:11px;color:#1E293B;font-weight:400">2026-10-03 版 · 22:00 睡觉</span></div>
         ${getHolidayPlan() ? `<button onclick="window._schedToggleNormal(false)" style="padding:5px 12px;border-radius:14px;border:1px solid rgba(30,64,175,0.4);background:rgba(30,64,175,0.10);color:#1E40AF;font-size:12px;font-weight:700;cursor:pointer">🏖️ 回今天的假期课表</button>` : ''}
       </div>
       ${getHolidayPlan() ? '<div style="font-size:11px;color:#B45309;margin-top:4px">现在是假期 (9/5–9/13), 这是 9/14 开学后恢复的常规课表</div>' : ''}
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 4px">${chips}</div>
-      <div style="font-size:12px;color:#B45309;margin-top:6px">${day.start ? '⏰ ' + day.start + ' 到家即正式开始(作业课间已清)' : '🏖️ 全天无任务'}</div>
+      <div style="font-size:12px;color:#B45309;margin-top:6px">${day.start ? '⏰ ' + day.start + ' 开始 · 21:30 戴 OK 镜睡觉' : '🏖️ 全天无任务'}</div>
       ${blocksHtml}
     </div>
     <div class="card" style="margin-bottom:12px">

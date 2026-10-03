@@ -894,8 +894,8 @@ const leitnerPlus2 = (appSrc.match(/state\.totalPoints\s*=\s*\(state\.totalPoint
 assert(leitnerPlus2 === 0, `v19.15 P0-1: 旧 +2 每次答对已删除 (实际残留 ${leitnerPlus2})`);
 
 // v19.15 P0-3 app 类断言 (data 类移到 dataSrcV14 之后)
-assert(/headerTitle\s*=\s*'🌿 周末推荐 · 自选'|周末推荐 · 自选/.test(appSrc), 'v19.15 P0-3: 周末标题改"自选推荐"');
-assert(/挑 1-2 件就好|休息也算赢/.test(appSrc), 'v19.15 P0-3: 周末提示文案改"挑 1-2 件"');
+// (v22.1 删: 今日必做改成按课表生成, 旧写死文案不再存在) void(/headerTitle\s*=\s*'🌿 周末推荐 · 自选'|周末推荐 · 自选/.test(appSrc), 'v19.15 P0-3: 周末标题改"自选推荐"');
+// (v22.1 删: 今日必做改成按课表生成, 旧写死文案不再存在) void(/挑 1-2 件就好|休息也算赢/.test(appSrc), 'v19.15 P0-3: 周末提示文案改"挑 1-2 件"');
 assert(/今日已练 \$\{totalToday\} 局, 注意休息|PSLE 是 17 月马拉松/.test(appSrc), 'v19.15 P0-3: _bumpDailyGameCount 加软提示 toast');
 assert(/今日 \$\{totalToday\} 局太多了/.test(appSrc), 'v19.15 P0-3: 15 局强劝 toast');
 // v19.14l Cloze 3 件事改 MCQ
@@ -903,9 +903,9 @@ assert(/pickClozeSyn|getClozeSynonymOptions/.test(appSrc), 'v19.14l: Cloze syn M
 assert(/data-mode=.{1,30}mcq.{0,20}input|data-mode=.{1,40}'mcq'.{0,30}'input'/.test(appSrc), 'v19.14l: MCQ/input 双模式');
 assert(/c3-syn-opt/.test(appSrc), 'v19.14l: MCQ 选项渲染');
 // v19.14k 今日 3 件事科学项加章节内进度 + 今日 S2 任务
-assert(/chapterSubProgress|第 \$\{chapterWeekIdx\}\/\$\{chapterTotalWeeks\} 周/.test(appSrc), 'v19.14k: 章节内周进度');
-assert(/概念建立|深化与应用/.test(appSrc), 'v19.14k: 难章 2 周分阶段标签');
-assert(/todayS2Task|dayTasks\.S2/.test(appSrc), 'v19.14k: 今日 S2 段具体任务读取');
+// (v22.1 删: 今日必做改成按课表生成, 旧写死文案不再存在) void(/chapterSubProgress|第 \$\{chapterWeekIdx\}\/\$\{chapterTotalWeeks\} 周/.test(appSrc), 'v19.14k: 章节内周进度');
+// (v22.1 删: 今日必做改成按课表生成, 旧写死文案不再存在) void(/概念建立|深化与应用/.test(appSrc), 'v19.14k: 难章 2 周分阶段标签');
+// (v22.1 删: 今日必做改成按课表生成, 旧写死文案不再存在) void(/todayS2Task|dayTasks\.S2/.test(appSrc), 'v19.14k: 今日 S2 段具体任务读取');
 // v19.14j 4 项: 装备 lock 撤 + 主页恢复入口 + 错题绿系 + SCIENCE_MCQ chapterId
 assert(!/平日 lock 装备穿戴\/卸下 — 防止/.test(appSrc), 'v19.14j: toggleEquipment 平日 lock 已撤');
 assert(!/showToast\('🔒 皮肤切换只在周末开放/.test(appSrc), 'v19.14j: setActiveSkin 平日 lock 已撤');
@@ -1164,7 +1164,7 @@ assert(/function renderSchedGrid\(/.test(appSrc), 'v19.51: renderSchedGrid 已�
 assert(/renderSchedGrid\(\)/.test(appSrc), 'v19.51: renderSchedGrid 被调用');
 assert(/_schedShiftWeek/.test(appSrc) && /window\._schedShiftWeek = _schedShiftWeek/.test(appSrc), 'v19.51: 周切换已接入+导出');
 assert(/'家长已核对'/.test(appSrc), 'v19.51: 家长核对行存在');
-assert(/21:30准时收工/.test(appSrc), 'v19.51: 收工勾选行存在');
+// (v22.1 删: 今日必做改成按课表生成, 旧写死文案不再存在) void(/21:30准时收工/.test(appSrc), 'v19.51: 收工勾选行存在');
 assert(/math_b/.test(appSrc), 'v19.51: 数学pair(错/粗心)计入汇总');
 assert(/essay_a/.test(appSrc) && /essay_b/.test(appSrc), 'v19.51: 作文内容+语言两栏');
 assert((appSrc.match(/SCHED_GRID/g) || []).length >= 3, 'v19.51: SCHED_GRID 被渲染使用');
@@ -1326,7 +1326,7 @@ assert(!/--color-bg: #0F172A/.test(idxSrc), 'v19.55: 暗主题变量已替换');
 // ===== v19.79: 9月假期课表 (9/5-13) + 练习弹层右侧滑动走廊 =====
 assert(/const HOLIDAY_SCHED = \{/.test(appSrc), 'v19.79: HOLIDAY_SCHED 已定义');
 assert((appSrc.match(/'2026-09-\d{2}': \{ label:/g) || []).length === 9, 'v19.79: 假期 9 天 (9/5-13) 全部有课表');
-assert((appSrc.match(/\], three: \[/g) || []).length === 9, 'v19.79: 假期 9 天都配了主页今日 3 件事');
+assert((appSrc.match(/\], three: \[/g) || []).length === 16, 'v19.79/v22.1: 假期 9 天 + 常规 7 天都配了主页今日必做');
 assert(/function getHolidayPlan\(/.test(appSrc) && /window\.getHolidayPlan = getHolidayPlan/.test(appSrc), 'v19.79: getHolidayPlan 定义+导出');
 assert(/if \(getHolidayPlan\(\) && !_schedForceNormal\) \{ _renderHolidaySchedule\(el\); return; \}/.test(appSrc), 'v19.79: 课表页接了假期分支 (防死代码) — v20.2 起加了看常规课表的开关');
 assert(/const holiday = window\.getHolidayPlan && window\.getHolidayPlan\(\);/.test(appSrc) && /holiday\.three\.map/.test(appSrc), 'v19.79: 主页今日 3 件事接了假期分支');
@@ -1876,12 +1876,23 @@ assert(/window\._schedToggleNormal/.test(appSrc), 'v20.2: 切换函数已导出 
   while ((mm = dayRe.exec(HS))) { n++; bad = bad.concat(audit(mm[2], parseRows(mm[3]), { lunch: '12:00\u201314:00' })); }
   assert(n === 9, `v20.4: 假期 9 天全在 (${n})`);
   const SD = (appSrc.match(/const SCHED_DAYS = \{[\s\S]*?\n\};/) || [''])[0];
-  [1, 2, 3, 5].forEach(d => {
-    const m = SD.match(new RegExp('  ' + d + ": \\{ label: '([^']*)', start: '[^']*', blocks: \\[\\n([\\s\\S]*?)\\n  \\]\\}"));
-    assert(m, 'v20.4: 常规周' + d + ' 能解析');
-    bad = bad.concat(audit('常规' + m[1], parseRows(m[2]), { noRedoOk: d === 1 }));  // 周一 16:00 才到家, 5 小时塞不下二刷, 其余三天必须有
+  // v22.1: 常规课表改成用户 2026-10-03 给的表 (逐格照抄), 不再按 v20.4 的排班规则审, 只核对抄得对不对
+  const must = {
+    1: ['07:30–13:30|上学', '14:00–15:30|高级华文', '15:50–17:30|周六补习班作业', '18:00–20:00|补习老师 (Editing、Cloze、Synthesis 各两篇)', '20:15–21:00|背单词、口语打卡', '21:30–22:00|戴OK镜、睡觉'],
+    2: ['15:10–16:00|周六写作补习班作业', '16:10–17:00|Editing 2 篇', '17:10–18:00|Cloze 2 篇', '19:00–19:50|Synthesis 2 篇', '20:00–20:45|背单词', '21:00–21:30|口语打卡'],
+    3: ['15:10–16:00|背作文范文半篇', '16:10–17:00|背单词', '17:10–17:30|口语打卡', '18:00–20:00|补习老师 (Editing、Cloze、Synthesis 各两篇)', '20:15–21:00|语法 30 题'],
+    4: ['13:40–15:00|吃饭+休息', '15:00–20:30|英语+可续', '21:00–21:30|口语打卡'],
+    5: ['15:10–17:00|周四作业', '18:00–20:00|补习老师 (Editing、Cloze、Synthesis 各两篇)', '20:15–21:00|语法 30 题', '21:00–21:30|口语打卡'],
+    6: ['9:00–11:00|写作课', '13:00–14:00|午休', '14:10–15:40|科学', '16:00–19:00|英语课', '20:00–21:00|背单词、范文半篇'],
+    0: ['9:00–10:30|语文真题', '11:00–12:30|口语课'],
+  };
+  Object.keys(must).forEach(d => {
+    const m = SD.match(new RegExp('  ' + d + ": \\{ label: '([^']*)', start: '[^']*', blocks: \\[\\n([\\s\\S]*?)\\n  \\], three:"));
+    assert(m, 'v22.1: 常规周' + d + ' 能解析');
+    const rows = parseRows(m[2]).map(r => r.t + '|' + r.name);
+    must[d].forEach(x => { if (rows.indexOf(x) < 0) bad.push('常规' + m[1] + ' 缺 ' + x); });
   });
-  assert(bad.length === 0, `v20.4: 假期+常规课表全部合规 (${bad.length} 处: ${bad.slice(0, 5).join(' / ')})`);
+  assert(bad.length === 0, `v20.4/v22.1: 假期课表合规 + 常规课表和用户 2026-10-03 的表一致 (${bad.length} 处: ${bad.slice(0, 5).join(' / ')})`);
 }
 
 // ===== v20.7: 周打分表 "成绩根本不对" (孩子实报) =====
@@ -2151,6 +2162,18 @@ assert(/if \(page === 'engmod'\)[\s\S]{0,40}renderEngModulePage\(\)/.test(appSrc
 assert(/window\.recordEngModule\(state, window\.ENG_MODULE_OF_NODE\[g\.nodeId\], score, total, 'node'\)/.test(appSrc), 'v22.0: 考点 10 题的对错记进模块');
 assert(/recordEngModule\(state, 'listening'/.test(appSrc) && /recordEngModule\(state, 'paper2'/.test(appSrc), 'v22.0: 听力选择题和 Paper 2 模拟也记');
 assert(/AL1 线是 90%/.test(appSrc) && /历年真题有版权不在 app 里/.test(appSrc), 'v22.0: 页面写明 AL1 线, 也如实写明题库是模拟题、真题在纸上做');
+
+// ===== v22.1: 今日必做按课表生成 =====
+assert(/const day = SCHED_DAYS\[dow\] \|\| \{ three: \[\] \};/.test(appSrc) && /day\.three/.test(appSrc), 'v22.1: 今日必做从 SCHED_DAYS[今天].three 生成, 不再写死 Oral/Cloze/科学');
+assert(/function toggleTodayManual\(i\)/.test(appSrc) && /toggleTodayManual\(\$\{i\}\)/.test(appSrc), 'v22.1: 作业/班课这类 App 测不到的项能点一下自己打勾');
+assert(/s === 'vocab' \? !!\(fcRec && fcRec\.done\)/.test(appSrc), 'v22.1: "背单词"按 App 今天这一组背完自动勾');
+{
+  const SD = (appSrc.match(/const SCHED_DAYS = \{[\s\S]*?\n\};/) || [''])[0];
+  const sig = (SD.match(/'(manual|none|vocab|oral|vocab\+oral|editing|cloze|sst|grammar|scimcq)', "/g) || []).length;
+  assert(sig >= 26, `v22.1: 7 天的今日必做共 ${sig} 项, 每项都带完成信号`);
+  assert(/\['🏫', '补习老师 18:00', 'Editing、Cloze、Synthesis 各两篇'/.test(SD), 'v22.1: 补习老师那项带着用户第二版表补的内容 (Editing、Cloze、Synthesis 各两篇)');
+}
+assert(/key: 'ed',[^\n]*days: \[2\]/.test(appSrc) && /key: 'gr',[^\n]*days: \[3, 5\]/.test(appSrc) && /key: 'sci_mcq',[^\n]*days: \[6\]/.test(appSrc) && /key: 'cn',[^\n]*days: \[0\]/.test(appSrc), 'v22.1: 周打分表的格子按新课表开 (Editing 周二 / 语法 周三周五 / 科学 周六 / 语文真题 周日)');
 
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
