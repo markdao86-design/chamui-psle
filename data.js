@@ -6394,7 +6394,7 @@ function recordVocabQuiz(state, word, correct) {
   rec.quizTotal = (rec.quizTotal || 0) + 1;
   if (correct) rec.quizOk = (rec.quizOk || 0) + 1;
   else { rec.quizWrong = rec.quizWrong || []; if (rec.quizWrong.indexOf(word) < 0) rec.quizWrong.push(word); }
-  { const dk = _fcDeckOf(word); if (dk && !/^(sci_|math_)/.test(dk.id)) recordEngModule(state, 'vocab', correct ? 1 : 0, 1, 'quiz'); }   // v22.0
+  { const dk = _fcDeckOf(word); if (dk) recordEngModule(state, /^sci_/.test(dk.id) ? 'sci:terms' : /^math_/.test(dk.id) ? 'math:terms' : 'vocab', correct ? 1 : 0, 1, 'quiz'); }   // v22.0/v22.2: 英语词→词汇模块, 科学术语→科学术语模块
   let lapsed = false;
   const e = state.flashcardSRS && state.flashcardSRS[word];
   if (!correct && e) {
@@ -6415,10 +6415,13 @@ window.buildVocabQuestion = buildVocabQuestion; window.pickQuizWords = pickQuizW
 // ============= v22.0: 英语模块正确率 (英语模块学习页的数据源) =============
 // 不管从哪个入口练 (题库小游戏 / 考点 10 题 / 单词考题 / Paper 2 模拟), 对错都记到卷子上对应的那个模块。
 // 同一天同一来源并成一条 (单词考题是一题一记, 不并的话一天几十条)。
-const ENG_MODULE_OF_GAME = { grammar: 'grammar', cloze: 'compcloze', sst: 'synthesis', editing: 'editing', comp_oe: 'comp_oe', listen: 'listening', listen_mcq: 'listening' };
+// v22.2: 科学也进来 (键用 sci: 前缀, 和英语模块分开存)
+const ENG_MODULE_OF_GAME = { grammar: 'grammar', cloze: 'compcloze', sst: 'synthesis', editing: 'editing', comp_oe: 'comp_oe', listen: 'listening', listen_mcq: 'listening', scimcq: 'sci:mcq', sci_oe: 'sci:oe', scilab: 'sci:lab' };
+const SCI_NODE_IDS = ['sci_diversity', 'sci_plant_lc', 'sci_material', 'sci_magnets', 'sci_forces', 'sci_light_heat', 'sci_matter', 'sci_cells', 'sci_digestive', 'sci_water', 'sci_plant_transport', 'sci_reproduction', 'sci_respiratory', 'sci_energy', 'sci_electric', 'sci_adaptations', 'sci_ecosystem', 'sci_revision', 'sci_psle'];
 const ENG_MODULE_OF_NODE = { eng_basics: 'grammar', eng_vocab_mcq: 'vocab', eng_visualtext: 'visualtext', eng_cloze: 'gcloze', eng_editing: 'editing', eng_compcloze: 'compcloze', eng_synthesis: 'synthesis', eng_comp: 'comp_oe', eng_sitwriting: 'sitwriting', eng_writing: 'writing', eng_listening: 'listening', eng_oral: 'oral' };
+SCI_NODE_IDS.forEach(id => { ENG_MODULE_OF_NODE[id] = 'sci:' + id; });   // 科学每个考点自成一个模块
 // 课表打分表里纸笔练习 (教辅/真题) 的格子 → 模块
-const ENG_MODULE_PAPER_KEY = { editing: 'ed', grammar: 'gr', comp_oe: 'oe', compcloze: 'cloze', vocab: 'vw', synthesis: 'syn' };
+const ENG_MODULE_PAPER_KEY = { editing: 'ed', grammar: 'gr', comp_oe: 'oe', compcloze: 'cloze', vocab: 'vw', synthesis: 'syn', 'sci:mcq': 'sci_mcq', 'sci:oe': 'sci_oe' };
 function recordEngModule(state, modKey, ok, total, src) {
   if (!modKey || !(total > 0)) return;
   if (!state.engModules) state.engModules = {};
@@ -6458,7 +6461,7 @@ function getEngModuleStats(state, modKey) {
   }
   return out;
 }
-window.recordEngModule = recordEngModule; window.getEngModuleStats = getEngModuleStats; window.ENG_MODULE_OF_NODE = ENG_MODULE_OF_NODE; window.ENG_MODULE_OF_GAME = ENG_MODULE_OF_GAME;
+window.recordEngModule = recordEngModule; window.getEngModuleStats = getEngModuleStats; window.ENG_MODULE_OF_NODE = ENG_MODULE_OF_NODE; window.ENG_MODULE_OF_GAME = ENG_MODULE_OF_GAME; window.SCI_NODE_IDS = SCI_NODE_IDS;
 
 function getFlashcardStats(state) {
   if (!state.flashcardSRS) state.flashcardSRS = {};

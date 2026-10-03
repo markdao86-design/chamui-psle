@@ -484,6 +484,7 @@ function renderDashboard() {
   renderPetWidget();  // v18 Phase 5.1
   renderGameHubCard(); // v19.3: 每日挑战入口
   { const _em = document.getElementById('page-engmod'); if (_em && _em.classList.contains('active')) renderEngModulePage(); }   // v22.0: 练完回来正确率马上更新
+  { const _sm = document.getElementById('page-scimod'); if (_sm && _sm.classList.contains('active')) renderSciModulePage(); }   // v22.2
   renderChallengeCard(); // v19.4: 限时挑战赛 (W15-W30)
   renderAchievementWall();  // v18 Phase 5.1
   renderReviewCard();  // v18 Phase 5.3
@@ -2773,18 +2774,70 @@ const ENG_MODULES = [
     { key: 'paper2', btn: '开考', name: 'Paper 2 限时模拟', tip: '限时做一套, 出预测 AL', open: 'openPaper2MockGame()' },
   ] },
 ];
-function renderEngModulePage() {
-  const el = document.getElementById('engModuleContent');
+// v22.2: 科学模块学习 (用户: "再加一个切页, 整理科学模块学习, 按同样的逻辑")
+// 科学卷只有 Booklet A 选择题 + Booklet B 开放题, 考点按 MOE 五大主题排: Diversity / Cycles / Systems / Interactions / Energy。
+// 每个考点自成一个模块记正确率; 有对应章节题库的考点, "题库练"直接按章节抽选择题。
+const SCI_MODULES = [
+  { title: 'Booklet A · 选择题', items: [
+    { key: 'sci:mcq', name: '科学选择题 (全部主题混合)', tip: '8 月丢的 8 分全在这 —— 先排除, 再对课本概念', open: 'openSciMcqGame()', bank: () => (window.SCIENCE_MCQ || []).length + ' 题' },
+    { key: 'sci:terms', name: '科学术语', tip: '按描述选术语; 拼错 = 0 分', open: "startFcQuizFromPractice('sci_life')", bank: () => '4 组术语' },
+  ] },
+  { title: 'Booklet B · 开放题', items: [
+    { key: 'sci:oe', name: '科学开放题', tip: '用课本标准说法, 2 分题写 2 个点', open: 'openScienceOEGame()', bank: () => (window.SCIENCE_OE_QUESTIONS || []).length + ' 题' },
+    { key: 'sci:lab', name: '实验题 · 变量', tip: '改变的 / 测量的 / 保持不变的', open: 'openSciClassifyGame()', bank: () => (window.SCIENCE_CLASSIFY || []).length + ' 组' },
+  ] },
+  { title: '主题 1 · Diversity 多样性', items: [
+    { key: 'sci:sci_diversity', name: 'Diversity 分类', node: 'sci_diversity', open: "openSciMcqGame('p3_diversity')", btn: '本章选择题' },
+    { key: 'sci:sci_material', name: '材料性质', node: 'sci_material' },
+  ] },
+  { title: '主题 2 · Cycles 循环', items: [
+    { key: 'sci:sci_plant_lc', name: '植物生命周期', node: 'sci_plant_lc', open: "openSciMcqGame('p3_plant_life')", btn: '本章选择题' },
+    { key: 'sci:sci_matter', name: '物质三态', node: 'sci_matter', open: "openSciMcqGame('p4_matter')", btn: '本章选择题' },
+    { key: 'sci:sci_water', name: '水循环', node: 'sci_water' },
+    { key: 'sci:sci_reproduction', name: '生殖', node: 'sci_reproduction' },
+  ] },
+  { title: '主题 3 · Systems 系统', items: [
+    { key: 'sci:sci_cells', name: '细胞', node: 'sci_cells' },
+    { key: 'sci:sci_digestive', name: '消化系统', node: 'sci_digestive', open: "openSciMcqGame('p4_digestive')", btn: '本章选择题', diagram: 'digestive' },
+    { key: 'sci:sci_plant_transport', name: '植物运输', node: 'sci_plant_transport', open: "openSciMcqGame('p4_plant_transport')", btn: '本章选择题', diagram: 'plant_transport' },
+    { key: 'sci:sci_respiratory', name: '呼吸与循环', node: 'sci_respiratory' },
+    { key: 'sci:sci_electric', name: '电路', node: 'sci_electric' },
+  ] },
+  { title: '主题 4 · Interactions 相互作用', items: [
+    { key: 'sci:sci_magnets', name: '磁铁', node: 'sci_magnets', open: "openSciMcqGame('p4_magnet')", btn: '本章选择题' },
+    { key: 'sci:sci_forces', name: '力', node: 'sci_forces' },
+    { key: 'sci:sci_adaptations', name: '适应', node: 'sci_adaptations' },
+    { key: 'sci:sci_ecosystem', name: '生态与环境', node: 'sci_ecosystem' },
+  ] },
+  { title: '主题 5 · Energy 能量', items: [
+    { key: 'sci:sci_light_heat', name: '光与热', node: 'sci_light_heat', open: "openSciMcqGame('p4_light')", btn: '本章选择题', diagram: 'light' },
+    { key: 'sci:sci_energy', name: '能量转换', node: 'sci_energy' },
+  ] },
+  { title: '收尾', items: [
+    { key: 'sci:sci_revision', name: 'PSLE 复习', node: 'sci_revision' },
+    { key: 'sci:sci_psle', name: 'PSLE 笔试', node: 'sci_psle' },
+  ] },
+];
+const MODULE_PAGE_CFG = {
+  eng: { el: 'engModuleContent', tree: '📖 英语', modules: () => ENG_MODULES, title: '📖 英语模块学习',
+    intro: '按 PSLE 四张卷的顺序, 一个模块一个模块练。每个模块都记正确率, <b style="color:#16A34A">AL1 线是 90%</b>。<br>题库是按 PSLE 题型出的模拟题 (难度 Lv4 起); 历年真题有版权不在 app 里 —— 纸上做《English Yearly》, 分数填进课表打分表, 这里用紫色一起显示。' },
+  sci: { el: 'sciModuleContent', tree: '🔬 科学', modules: () => SCI_MODULES, title: '🔬 科学模块学习',
+    intro: '先按卷子两本小册子 (Booklet A 选择题 / Booklet B 开放题) 练题型, 再按 MOE 五大主题一个考点一个考点过。每个考点都记正确率, <b style="color:#16A34A">AL1 线是 90%</b>。<br>题库是按 PSLE 题型出的模拟题; 纸上做的《PSLE Science 选择题》《Science For Primary Levels》分数填进课表打分表, 这里用紫色一起显示。' },
+};
+function renderEngModulePage() { renderModulePage(MODULE_PAGE_CFG.eng); }
+function renderSciModulePage() { renderModulePage(MODULE_PAGE_CFG.sci); }
+function renderModulePage(cfg) {
+  const el = document.getElementById(cfg.el);
   if (!el) return;
-  const TREE = '📖 英语', nodes = (window.KNOWLEDGE_TREE || {})[TREE] || [];
-  const all = ENG_MODULES.reduce((a, s) => a.concat(s.items), []);
+  const TREE = cfg.tree, nodes = (window.KNOWLEDGE_TREE || {})[TREE] || [];
+  const all = cfg.modules().reduce((a, s) => a.concat(s.items), []);
   const stats = {}; all.forEach(it => { stats[it.key] = window.getEngModuleStats(state, it.key); });
   const scored = all.filter(it => stats[it.key].total >= 10);
   const al1 = scored.filter(it => stats[it.key].pct >= 90).length;
   const weakest = scored.slice().sort((a, b) => stats[a.key].pct - stats[b.key].pct)[0];
   const col = p => p >= 90 ? '#16A34A' : p >= 75 ? '#B45309' : '#DC2626';
   let seq = 0;
-  const html = ENG_MODULES.map(sec => {
+  const html = cfg.modules().map(sec => {
     const rows = sec.items.map(it => {
       seq++;
       const s = stats[it.key], has = s.total > 0;
@@ -2792,9 +2845,9 @@ function renderEngModulePage() {
       const stars = it.node ? (((state.knowledgeStars || {})[it.node] || {}).stars || 0) : 0;
       const btn = (label, onclick, primary) => `<button onclick="${onclick}" style="padding:10px 14px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;${primary ? 'background:#1E40AF;color:#FFFFFF;border:none' : 'background:#F8FAFC;color:#1E40AF;border:1px solid #CBD5E1'}">${label}</button>`;
       const btns = [
-        it.open ? btn(it.btn || '题库练', it.open, true) : '',
+        it.open ? btn(it.btn || '题库练', it.open, !(it.node && it.btn)) : '',
         it.open2 ? btn(it.open2[0], it.open2[1], false) : '',
-        idx >= 0 ? btn('考点 10 题', `openKnowledgePractice('${it.node}','${TREE}',${idx})`, !it.open) : '',
+        idx >= 0 ? btn('考点 10 题', `openKnowledgePractice('${it.node}','${TREE}',${idx})`, !it.open || !!it.btn) : '',
       ].filter(Boolean).join('');
       const detail = [
         has ? `累计 ${s.ok}/${s.total} 题` : '',
@@ -2820,8 +2873,8 @@ function renderEngModulePage() {
     return `<div style="margin-top:16px"><div style="font-size:13px;font-weight:800;color:#B45309;letter-spacing:.5px">${escapeHtml(sec.title)}</div>${rows}</div>`;
   }).join('');
   el.innerHTML = `
-    <div style="font-size:18px;font-weight:900;color:#1E40AF">📖 英语模块学习</div>
-    <div style="font-size:12px;color:#64748B;margin:4px 0 10px;line-height:1.7">按 PSLE 四张卷的顺序, 一个模块一个模块练。每个模块都记正确率, <b style="color:#16A34A">AL1 线是 90%</b>。<br>题库是按 PSLE 题型出的模拟题 (难度 Lv4 起); 历年真题有版权不在 app 里 —— 纸上做《English Yearly》, 分数填进课表打分表, 这里用紫色一起显示。</div>
+    <div style="font-size:18px;font-weight:900;color:#1E40AF">${cfg.title}</div>
+    <div style="font-size:12px;color:#64748B;margin:4px 0 10px;line-height:1.7">${cfg.intro}</div>
     <div class="card" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
       <div><span style="font-size:26px;font-weight:800;color:#1E40AF">${al1}</span><span style="font-size:13px;color:#64748B"> / ${all.length} 个模块到 AL1</span></div>
       <div style="font-size:13px;color:#1E293B">${weakest ? `最弱: <b style="color:${col(stats[weakest.key].pct)}">${escapeHtml(weakest.name)} ${stats[weakest.key].pct}%</b> — 先补这个` : '练满 10 题的模块才参与排名'}</div>
@@ -2834,7 +2887,7 @@ function startFcQuizFromPractice(deckId) {
   if (tab) tab.click();
   setTimeout(() => startFcQuiz(deckId), 60);
 }
-window.ENG_MODULES = ENG_MODULES; window.renderEngModulePage = renderEngModulePage; window.startFcQuizFromPractice = startFcQuizFromPractice;
+window.ENG_MODULES = ENG_MODULES; window.SCI_MODULES = SCI_MODULES; window.renderEngModulePage = renderEngModulePage; window.renderSciModulePage = renderSciModulePage; window.startFcQuizFromPractice = startFcQuizFromPractice;
 
 function setFcSizeUI(n) {
   const r = window.setFcDailySize(state, n);
@@ -12232,6 +12285,9 @@ function _runPageHook(page) {
       }
       if (page === 'engmod') {
         renderEngModulePage();
+      }
+      if (page === 'scimod') {
+        renderSciModulePage();
       }
       if (page === 'schedule') {
         _schedViewDay = null;  // 每次进入回到今天
