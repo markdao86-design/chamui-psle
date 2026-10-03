@@ -2254,6 +2254,32 @@ assert(/function openTipBookPrint\(\)/.test(appSrc) && /openTipBookPrint\(\)/.te
   assert(/buildVocabQuestion\(w, null, source === 'today' \? null : source\)/.test(appSrc), 'v23.0: 按卡组考时把卡组传给出题器 (freezing 跨卡组)');
 }
 
+// ===== v23.2: 全站悬浮查词 + 单词本 (逻辑对齐口语教练 App) =====
+assert(W.CORE_DICT && Object.keys(W.CORE_DICT).length >= 1200 && typeof W.lookupDictLocal === 'function' && typeof W.lookupDictOnline === 'function', 'v23.2: 内置离线词典 ≥1200 词 + 本地/联网两级查词');
+{
+  const a = W.lookupDictLocal('snarled'), b = W.lookupDictLocal('charges'), c = W.lookupDictLocal('photosynthesising');
+  assert(a && a.src === 'vocab' && a.zh && a.en && a.tip, 'v23.2: 本站词库的词查出 中文+英文释义+考点');
+  assert(b && b.src === 'core' && b.base === 'charge' && b.zh, 'v23.2: 变形词退回原形查 (charges → charge)');
+  assert(c && c.base === 'photosynthesis', 'v23.2: -ing 变形退回 (photosynthesising → photosynthesis)');
+  assert(W.lookupDictLocal('the') && W.DICT_STOP.has('the'), 'v23.2: 停用词在词典里但悬浮不触发');
+}
+{
+  const st = { wordBook: {} };
+  assert(W.addToWordBook(st, 'Solar!', { zh: '太阳的' }, 'The solar panel.') === 'added' && st.wordBook.solar && st.wordBook.solar.ctx === 'The solar panel.', 'v23.2: 收藏单词本 (大小写/标点归一, 带例句)');
+  assert(W.addToWordBook(st, 'the', {}, '') === 'skip' && W.addToWordBook(st, 'solar', {}, '') === 'already', 'v23.2: 停用词不收, 重复不收');
+  assert(W.FLASHCARD_DECKS[0].id === 'wordbook' && W.FLASHCARD_DECKS[0].words.indexOf('solar') >= 0, 'v23.2: 单词本是排第一的闪卡卡组 (收藏的词优先进今天这一组)');
+  assert(W.addToWordBook(st, 'snarled', { zh: 'x' }, '') === 'added' && W.FLASHCARD_DECKS[0].words.indexOf('snarled') < 0 && W.inWordBook(st, 'snarled'), 'v23.2: 词库里已有的词收藏后不重复进卡组, 只标记');
+  assert(W.removeFromWordBook(st, 'solar') && W.FLASHCARD_DECKS[0].words.indexOf('solar') < 0, 'v23.2: 移除单词本同步卡组');
+  W.removeFromWordBook(st, 'snarled');
+}
+assert(/function _dictWordAt\(x, y\)/.test(appSrc) && /caretPositionFromPoint/.test(appSrc) && /function showDictPop\(w\)/.test(appSrc) && /_dictBind\(\);/.test(appSrc), 'v23.2: 悬浮取词 + 弹层 + 启动时绑定');
+assert(/'mousemove'/.test(appSrc.slice(appSrc.indexOf('function _dictBind'))) && /_dictTouchTimer = setTimeout/.test(appSrc), 'v23.2: 桌面悬浮 0.4s / 触屏长按 0.5s 两种触发');
+assert(/closest\('#dictPop, input, textarea, select, nav/.test(appSrc), 'v23.2: 输入框/导航/弹层自身不触发查词');
+assert(/function _dictToggleBook\(\)/.test(appSrc) && /window\.addToWordBook\(state, k, d, _dictCur\.ctx\)/.test(appSrc), 'v23.2: 弹层里 ⭐ 收藏/移除');
+assert(/function renderWordBookCard\(\)/.test(appSrc) && /\$\{renderWordBookCard\(\)\}/.test(appSrc), 'v23.2: 词汇页顶部有单词本卡');
+assert((appSrc.match(/window\.syncWordBookDeck\(state\)/g) || []).length >= 2, 'v23.2: 加载和云端同步后都把单词本同步成卡组');
+assert(/function _dictDeep\(\)/.test(appSrc) && /_dictDeep\(\)/.test(appSrc.replace('function _dictDeep()', '')), 'v23.2: 本地只有中文时能点一下联网补英文释义');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));

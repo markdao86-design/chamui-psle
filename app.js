@@ -27,6 +27,7 @@ async function init() {
   }
   // v21.2: 一次性清理刷出来的记录 (幂等; 每台设备加载时都跑)
   try { if (window.applyFarmCleanup && window.applyFarmCleanup(state)) saveState(state); } catch (e) { console.warn('cleanup 失败', e); }
+  if (window.syncWordBookDeck) window.syncWordBookDeck(state);   // v23.2: 单词本 → 闪卡卡组
   // v19.15c: 启动自动算 currentWeek (today vs WEEK_DATES, 不再依赖手动切换)
   if (window.computeCurrentWeekFromToday) {
     state.currentWeek = window.computeCurrentWeekFromToday();
@@ -131,6 +132,7 @@ async function init() {
       state = remoteState;
       // v21.2: 没更新的旧页面可能把脏数据又推回云端 → 收到就再清一遍并写回
       try { if (window.applyFarmCleanup && window.applyFarmCleanup(state)) saveState(state); } catch (e) { console.warn('cleanup 失败', e); }
+      if (window.syncWordBookDeck) window.syncWordBookDeck(state);   // v23.2
       renderAll();
       // v19.53: 家长停在课表页时, 孩子远程填分即时刷新打分表+计分卡
       const schedPage = document.getElementById('page-schedule');
@@ -2587,6 +2589,7 @@ function renderVocabPage() {
   const hard = window.getFcHardWords(state, 12);
   el.innerHTML = `
     <h2 style="margin:0 0 10px;font-size:18px">📇 单词闪卡</h2>
+    ${renderWordBookCard()}
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
         <span style="font-size:26px;font-weight:800;color:#1E40AF">${pr.done}</span>
@@ -12814,6 +12817,7 @@ function initModalScrollLock() {
   }, { passive: true });
 
   syncModalScrollLock();
+  _dictBind();   // v23.2: 全站悬浮/长按查词
 }
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initModalScrollLock);
@@ -13019,3 +13023,151 @@ function openTipBookPrint() {
   setTimeout(() => { try { w.focus(); w.print(); } catch (e) {} }, 400);
 }
 window.openTipBookPrint = openTipBookPrint;
+
+// ============= v23.2: 全站悬浮查词弹层 + 单词本 =============
+// 桌面: 鼠标停在英文词上 0.4s 出小弹层; 平板/手机: 长按 0.5s。弹层: 词 · 音标 · 🔊 · 中文 · 英文释义 · ⭐收藏/已收藏 · (本站词库的词带考点)
+// 不在输入框/按钮里触发; 弹层自己不触发; 停用词 (the/is/...) 不触发
+let _dictPopEl = null, _dictHoverTimer = null, _dictHideTimer = null, _dictTouchTimer = null, _dictCur = null, _dictTouchXY = null;
+function _dictEnsurePop() {
+  if (_dictPopEl) return _dictPopEl;
+  const el = document.createElement('div');
+  el.id = 'dictPop';
+  el.style.cssText = 'position:fixed;z-index:10050;max-width:300px;min-width:200px;background:#FFFFFF;border:1px solid #CBD5E1;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.18);padding:10px 12px;font-size:13px;color:#1E293B;line-height:1.55;display:none';
+  el.addEventListener('mouseenter', () => { clearTimeout(_dictHideTimer); });
+  el.addEventListener('mouseleave', () => { _dictScheduleHide(); });
+  el.addEventListener('touchstart', (e) => { e.stopPropagation(); }, { passive: true });
+  document.body.appendChild(el);
+  _dictPopEl = el;
+  return el;
+}
+function _dictScheduleHide(ms) { clearTimeout(_dictHideTimer); _dictHideTimer = setTimeout(hideDictPop, ms || 350); }
+function hideDictPop() { if (_dictPopEl) _dictPopEl.style.display = 'none'; _dictCur = null; }
+window.hideDictPop = hideDictPop;
+// 从坐标拿到鼠标下面的那个英文词 + 它所在的句子 (给单词本当例句)
+function _dictWordAt(x, y) {
+  let node = null, off = 0;
+  if (document.caretPositionFromPoint) { const p = document.caretPositionFromPoint(x, y); if (p) { node = p.offsetNode; off = p.offset; } }
+  else if (document.caretRangeFromPoint) { const r = document.caretRangeFromPoint(x, y); if (r) { node = r.startContainer; off = r.startOffset; } }
+  if (!node || node.nodeType !== 3) return null;
+  const host = node.parentElement;
+  if (!host || host.closest('#dictPop, input, textarea, select, nav, .tabs, #moreMenu, [contenteditable]')) return null;
+  const t = node.nodeValue || '';
+  const isW = c => /[A-Za-z'’-]/.test(c);
+  if (!isW(t[off] || '') && !isW(t[off - 1] || '')) return null;
+  let a = off, b = off;
+  while (a > 0 && isW(t[a - 1])) a--;
+  while (b < t.length && isW(t[b])) b++;
+  const raw = t.slice(a, b);
+  if (!/^[A-Za-z][A-Za-z'’-]*$/.test(raw) || raw.replace(/[^A-Za-z]/g, '').length < 2) return null;
+  // 句子: 取这个文本节点 (和父元素的文本) 里包含这个词的那一句
+  const full = (host.innerText || t).replace(/\s+/g, ' ');
+  const sents = full.split(/(?<=[.!?])\s+/);
+  const ctx = sents.find(s2 => s2.indexOf(raw) >= 0) || '';
+  return { raw, key: window.dictKey(raw), ctx: ctx.length > 160 ? '' : ctx, rect: { x, y } };
+}
+function _dictRender(d, w, loading) {
+  const el = _dictEnsurePop();
+  const inBook = window.inWordBook(state, w.key);
+  const zh = d && d.zh ? escapeHtml(d.zh) : '';
+  const ipa = d && d.ipa ? `<span style="color:#64748B;font-size:12px">/${escapeHtml(d.ipa)}/</span>` : '';
+  const pos = d && d.pos ? `<span style="font-size:11px;color:#7C3AED;background:#F5F3FF;border-radius:6px;padding:1px 6px;margin-left:4px">${escapeHtml(d.pos)}</span>` : '';
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px">
+      <b style="font-size:16px">${escapeHtml(d && d.base ? d.base : w.key)}</b>${pos}${ipa}
+      <button onclick="event.stopPropagation();window._dictSay()" style="border:none;background:none;cursor:pointer;font-size:16px;padding:0 2px">🔊</button>
+      <button onclick="event.stopPropagation();hideDictPop()" style="margin-left:auto;border:none;background:none;cursor:pointer;color:#94A3B8;font-size:14px">✕</button>
+    </div>
+    ${d && d.base && d.base !== w.key ? `<div style="font-size:11px;color:#64748B">${escapeHtml(w.key)} → 原形 ${escapeHtml(d.base)}</div>` : ''}
+    ${loading ? '<div style="color:#64748B;font-size:12px;margin-top:4px">本地词典没有, 联网查询中…</div>' : ''}
+    ${zh ? `<div style="font-size:15px;font-weight:700;margin-top:4px">${zh}</div>` : (!loading ? '<div style="color:#B45309;font-size:12px;margin-top:4px">没查到中文释义' + (navigator.onLine ? '' : ' (现在离线)') + '</div>' : '')}
+    ${d && d.en ? `<div style="color:#475569;font-size:12px;margin-top:2px">${escapeHtml(d.en)}</div>` : ''}
+    ${d && d.ex ? `<div style="color:#64748B;font-size:12px;margin-top:2px;font-style:italic">${escapeHtml(d.ex)}</div>` : ''}
+    ${d && d.tip ? `<div style="margin-top:6px;padding:5px 8px;background:#FEF3C7;border-radius:6px;font-size:12px">📌 ${escapeHtml(d.tip)}</div>` : ''}
+    ${d && !loading && d.src !== 'online' && !d.en ? `<div style="margin-top:4px"><a href="#" onclick="event.stopPropagation();window._dictDeep();return false" style="font-size:11px;color:#1E40AF">🔍 联网查英文释义 / 例句 / 更多义项</a></div>` : ''}
+    <div style="display:flex;gap:6px;margin-top:8px;align-items:center">
+      <button onclick="event.stopPropagation();window._dictToggleBook()" style="flex:1;padding:7px 10px;border-radius:8px;border:1px solid ${inBook ? '#CBD5E1' : '#F59E0B'};background:${inBook ? '#F1F5F9' : '#FEF3C7'};color:#1E293B;font-weight:700;font-size:12px;cursor:pointer">${inBook ? '✓ 已在单词本 (点一下移除)' : '⭐ 收藏到单词本'}</button>
+      <a href="#" onclick="event.stopPropagation();hideDictPop();gotoPage('vocab');return false" style="font-size:11px;color:#1E40AF;white-space:nowrap">单词本 ›</a>
+    </div>`;
+  el.style.display = 'block';
+  // 定位: 鼠标右下, 出屏则翻到左/上
+  const vw = window.innerWidth, vh = window.innerHeight, r = el.getBoundingClientRect();
+  let left = w.rect.x + 12, top = w.rect.y + 16;
+  if (left + r.width > vw - 8) left = Math.max(8, w.rect.x - r.width - 12);
+  if (top + r.height > vh - 8) top = Math.max(8, w.rect.y - r.height - 12);
+  el.style.left = left + 'px'; el.style.top = top + 'px';
+}
+async function showDictPop(w) {
+  if (!w || !w.key || window.DICT_STOP.has(w.key)) return;
+  if (_dictCur && _dictCur.key === w.key && _dictPopEl && _dictPopEl.style.display === 'block') return;
+  _dictCur = w;
+  let d = window.lookupDictLocal(w.key);
+  _dictCur.d = d;
+  _dictRender(d, w, !d);
+  if (!d) {
+    const od = await window.lookupDictOnline(state, w.key);
+    if (!_dictCur || _dictCur.key !== w.key) return;
+    _dictCur.d = od;
+    if (od) saveState(state);   // 联网结果缓存进 state
+    _dictRender(od, w, false);
+  }
+}
+window.showDictPop = showDictPop;
+function _dictSay() { if (!_dictCur) return; const t = (_dictCur.d && _dictCur.d.base) || _dictCur.key; if (window.fcSpeak) { try { const u = new SpeechSynthesisUtterance(t); u.lang = 'en-GB'; u.rate = 0.85; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {} } }
+function _dictToggleBook() {
+  if (!_dictCur) return;
+  const k = _dictCur.key, d = _dictCur.d || {};
+  if (window.inWordBook(state, k)) { window.removeFromWordBook(state, k); showToast('已从单词本移除', 'info'); }
+  else { const r = window.addToWordBook(state, k, d, _dictCur.ctx); if (r === 'added') showToast('⭐ 已收进单词本, 会进闪卡「我的单词本」卡组复习', 'happy'); }
+  saveState(state);
+  _dictRender(_dictCur.d, _dictCur, false);
+  if (document.getElementById('page-vocab') && document.getElementById('page-vocab').classList.contains('active') && typeof renderVocabPage === 'function') renderVocabPage();
+}
+// 本地词典只有中文时, 点一下联网补英文释义/例句/其他义项 (合并显示, 本地中文保留)
+async function _dictDeep() {
+  if (!_dictCur) return; const w = _dictCur, base = w.d || {};
+  _dictRender(Object.assign({}, base, { en: '', ex: '' }), w, true);
+  const od = await window.lookupDictOnline(state, w.key);
+  if (!_dictCur || _dictCur.key !== w.key) return;
+  const merged = od ? Object.assign({}, base, { en: od.en || '', ex: od.ex || '', ipa: base.ipa || od.ipa || '', pos: base.pos || od.pos || '', zh: base.zh || od.zh || '', src: 'online' }) : Object.assign({}, base, { src: 'online' });
+  _dictCur.d = merged; if (od) saveState(state);
+  _dictRender(merged, w, false);
+}
+window._dictSay = _dictSay; window._dictToggleBook = _dictToggleBook; window._dictDeep = _dictDeep;
+function _dictBind() {
+  // 桌面悬浮
+  document.addEventListener('mousemove', (e) => {
+    if (e.target && e.target.closest && e.target.closest('#dictPop')) return;
+    clearTimeout(_dictHoverTimer);
+    _dictHoverTimer = setTimeout(() => {
+      const w = _dictWordAt(e.clientX, e.clientY);
+      if (w) { clearTimeout(_dictHideTimer); showDictPop(w); }
+      else if (_dictPopEl && _dictPopEl.style.display === 'block') _dictScheduleHide(500);
+    }, 400);
+  }, { passive: true });
+  // 触屏长按
+  document.addEventListener('touchstart', (e) => {
+    if (!e.touches[0] || (e.target && e.target.closest && e.target.closest('#dictPop'))) return;
+    _dictTouchXY = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    clearTimeout(_dictTouchTimer);
+    _dictTouchTimer = setTimeout(() => { const w = _dictWordAt(_dictTouchXY.x, _dictTouchXY.y); if (w) showDictPop(w); }, 500);
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => { if (_dictTouchXY && e.touches[0] && (Math.abs(e.touches[0].clientX - _dictTouchXY.x) > 8 || Math.abs(e.touches[0].clientY - _dictTouchXY.y) > 8)) clearTimeout(_dictTouchTimer); }, { passive: true });
+  document.addEventListener('touchend', () => { clearTimeout(_dictTouchTimer); }, { passive: true });
+  document.addEventListener('touchstart', (e) => { if (_dictPopEl && _dictPopEl.style.display === 'block' && !(e.target.closest && e.target.closest('#dictPop'))) hideDictPop(); }, { passive: true });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideDictPop(); });
+}
+// 词汇页顶部的单词本卡
+function renderWordBookCard() {
+  const list = window.getWordBookList ? window.getWordBookList(state) : [];
+  const n = list.length;
+  const rows = list.slice(0, 30).map(x => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F1F5F9">
+      <div style="flex:1;min-width:0"><b style="font-size:14px">${escapeHtml(x.word)}</b> ${x.ipa ? `<span style="color:#64748B;font-size:11px">/${escapeHtml(x.ipa)}/</span>` : ''} ${_fcSpk(x.word, 14)}<div style="font-size:12px;color:#1E293B">${escapeHtml(x.zh || x.en || '')}</div>${x.ctx ? `<div style="font-size:11px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(x.ctx)}</div>` : ''}</div>
+      <div style="font-size:10px;color:#94A3B8;white-space:nowrap">${x.inDeck ? '闪卡复习中' : '词库已有'}<br>${escapeHtml(x.date || '')}</div>
+      <button onclick="window.removeFromWordBook(state,'${escapeHtml(x.word)}');saveState(state);renderVocabPage()" style="border:none;background:none;color:#94A3B8;cursor:pointer;font-size:14px">✕</button>
+    </div>`).join('');
+  return `<div class="card" style="border-left:4px solid #F59E0B">
+    <div style="display:flex;align-items:center;gap:8px"><div style="font-size:16px;font-weight:900;color:#1E293B">📔 我的单词本</div><div style="font-size:12px;color:#64748B">${n} 词 · 全站任何英文词 <b>鼠标停上去 / 手机长按</b> 就能查, 点 ⭐ 收藏</div></div>
+    ${n ? `<div style="margin-top:8px">${rows}${n > 30 ? `<div style="font-size:11px;color:#94A3B8;margin-top:4px">只显示最近 30 个 · 全部 ${n} 个都在闪卡「我的单词本」卡组里</div>` : ''}</div>` : '<div style="font-size:12px;color:#94A3B8;margin-top:6px">还没有收藏 · 查过的词点 ⭐ 就进来, 自动变成闪卡跟其他词一起按艾宾浩斯复习</div>'}
+  </div>`;
+}
+window.renderWordBookCard = renderWordBookCard;
