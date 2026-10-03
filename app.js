@@ -12331,6 +12331,9 @@ function _runPageHook(page) {
       if (page === 'tips') {
         renderTipsPage();   // v23.0: 答题技巧本
       }
+      if (page === 'wrongbook') {
+        renderWrongBookPage();   // v23.3: 错题集
+      }
       if (page === 'schedule') {
         _schedViewDay = null;  // 每次进入回到今天
         renderSchedulePage();
@@ -12827,36 +12830,56 @@ if (document.readyState === 'loading') {
 window.initModalScrollLock = initModalScrollLock;
 window.syncModalScrollLock = syncModalScrollLock;
 
-// ============= v23.0: 每日考点学习 (主页右栏, 取代思考题/知识树每日练/毕业复测三张卡) =============
-// 用户 2026-10-03: "保留教学、信息、复盘改成每日考点学习: 真的是英语和科学的 PSLE 常考点, 附同类型题的解题技巧和答题模板;
-// 如 cloze 先讲整个 cloze 的一般性方法论, 再针对这道题分析; 关键总结自动收藏到技巧本"
-let _dfUi = { date: null, picked: null, revealed: false, method: false, draft: '' };
+// ============= v23.0/v23.3: 每日考点学习 (主页右栏) =============
+// v23.3: 每天 k 个考点 (k 按 考点总数×3 ÷ 距考试天数 算, 2-6), 英语科学交替, 出现次数最少的优先 → 到考前每个考点至少出现 3 次
+let _dfUi = { date: null, open: null, by: {} };
 const DF_SUBJ_LABEL = { eng: '英语', sci: '科学', math: '数学', cn: '华文' };
-function _dfReset(today) { if (_dfUi.date !== today) _dfUi = { date: today, picked: null, revealed: false, method: false, draft: '' }; }
+function _dfReset(today) { if (_dfUi.date !== today) _dfUi = { date: today, open: null, by: {} }; }
+function _dfU(id) { return _dfUi.by[id] = _dfUi.by[id] || { picked: null, revealed: false, method: false, draft: '' }; }
 function renderDailyFocusCard() {
   const card = document.getElementById('dailyFocusCard');
   if (!card) return;
   const today = schedLocalDate();
   _dfReset(today);
-  const entry = window.getDailyFocus ? window.getDailyFocus(state, today) : null;
-  const rec = ((state.dailyFocus || {})[today]) || {};
+  const list = window.getDailyFocusList ? window.getDailyFocusList(state, today) : [];
+  const plan = window.getDailyFocusPlan ? window.getDailyFocusPlan(state, today) : null;
   const doneN = Object.keys(state.dfDone || {}).length, bookN = (state.tipBook || []).length;
+  const todayDone = list.filter(e => window.getDailyFocusDone(state, e.id, today)).length;
+  if (!_dfUi.open || !list.some(e => e.id === _dfUi.open)) { const first = list.find(e => !window.getDailyFocusDone(state, e.id, today)) || list[0]; _dfUi.open = first ? first.id : null; }
   const head = (body) => `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
       <div style="font-size:17px;font-weight:900;color:#7C3AED">🎓 每日考点学习</div>
+      <div style="font-size:12px;color:#64748B">今天 ${todayDone} / ${list.length}</div>
       <a href="#" onclick="gotoPage('tips');return false" style="margin-left:auto;font-size:12px;color:#1E40AF;white-space:nowrap">📘 答题技巧本 ${bookN ? '(' + bookN + ')' : ''} ›</a>
     </div>
-    <div style="font-size:11px;color:#888;margin-bottom:10px">每天一个 PSLE 常考点: 先学这类题怎么做 → 做一道同难度的题 → 看逐步分析 → 关键总结自动收进技巧本 · 已学 ${doneN} 个</div>
+    <div style="font-size:11px;color:#888;margin-bottom:8px">每天 ${plan ? plan.perDay : '-'} 个, 英语科学交替 · 考点库 ${plan ? plan.total : 0} (英 ${plan ? plan.eng : 0} / 科 ${plan ? plan.sci : 0}) · 距考试 ${plan ? plan.daysLeft : '-'} 天 · 每个考点出现 ≥3 次: 已达 ${plan ? plan.atLeast3 : 0} 个, 最少 ${plan ? plan.minShown : 0} 次 · 已学完 ${doneN} 次</div>
     ${body}`;
-  if (!entry) { card.innerHTML = head('<div style="font-size:13px;color:#64748B;padding:10px">内容准备中 (专家审核后上线)</div>'); return; }
+  if (!list.length) { card.innerHTML = head('<div style="font-size:13px;color:#64748B;padding:10px">内容准备中 (专家审核后上线)</div>'); return; }
+  card.innerHTML = head(list.map((entry, idx) => _dfEntryHtml(entry, idx, list.length, today)).join('') + `
+    <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+      <button onclick="window._dfNext()" style="padding:8px 14px;border-radius:8px;border:1px solid #7C3AED;background:#FFFFFF;color:#7C3AED;font-weight:700;font-size:13px;cursor:pointer">再加一个考点 →</button>
+      <span style="font-size:11px;color:#64748B">学有余力就加, 加的也计入出现次数</span>
+    </div>`);
+}
+function _dfEntryHtml(entry, idx, n, today) {
+  const u = _dfU(entry.id);
+  const rec = window.getDailyFocusDone(state, entry.id, today);
+  const answered = !!rec || u.revealed;
+  const open = _dfUi.open === entry.id;
   const tb = window.getTechniqueMod ? window.getTechniqueMod(entry.subj, entry.mod) : null;
-  const answered = !!rec.answered || _dfUi.revealed;
+  const subjColor = entry.subj === 'sci' ? '#0D9488' : '#7C3AED';
+  const title = `<div onclick="window._dfOpen('${entry.id}')" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${open ? 'rgba(124,58,237,0.06)' : '#F8FAFC'};border:1px solid ${open ? '#C4B5FD' : '#E2E8F0'};margin-top:${idx ? 8 : 0}px">
+      <span style="font-size:11px;font-weight:900;color:#FFFFFF;background:${subjColor};border-radius:6px;padding:2px 7px;white-space:nowrap">${idx + 1}/${n} ${escapeHtml(DF_SUBJ_LABEL[entry.subj] || entry.subj)}</span>
+      <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:#1E293B;${answered ? 'text-decoration:line-through;opacity:.7' : ''}">${answered ? '✅ ' : ''}${escapeHtml(entry.title)}</div><div style="font-size:11px;color:#64748B">${escapeHtml(tb ? tb.title : entry.mod)} · ${escapeHtml(entry.topic || '')}</div></div>
+      <span style="font-size:11px;color:#64748B">${open ? '▲' : '▼'}</span>
+    </div>`;
+  if (!open) return title;
   const isMcq = entry.q.type === 'mcq';
-  const picked = rec.answered ? rec.picked : _dfUi.picked;
-  const sec = (n, title, inner, color) => `<div style="margin-top:10px"><div style="font-size:12px;font-weight:900;color:${color || '#1E40AF'};margin-bottom:4px">${n} ${title}</div>${inner}</div>`;
+  const picked = rec ? rec.picked : u.picked;
+  const sec = (nn, t, inner, color) => `<div style="margin-top:10px"><div style="font-size:12px;font-weight:900;color:${color || '#1E40AF'};margin-bottom:4px">${nn} ${t}</div>${inner}</div>`;
   const methodHtml = tb ? `
-    <div onclick="window._dfToggleMethod()" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;background:#EFF6FF;border:1px solid #93C5FD;font-size:13px;color:#1E40AF;font-weight:700">${tb.icon || '📘'} ${escapeHtml(tb.title)} 这类题怎么做 <span style="margin-left:auto;font-size:11px;font-weight:400">${_dfUi.method ? '收起 ▲' : '展开 ▼'}</span></div>
-    ${_dfUi.method ? `<div style="padding:8px 10px;border:1px solid #DBEAFE;border-top:none;border-radius:0 0 8px 8px;background:#FFFFFF">
+    <div onclick="window._dfToggleMethod('${entry.id}')" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;background:#EFF6FF;border:1px solid #93C5FD;font-size:13px;color:#1E40AF;font-weight:700">${tb.icon || '📘'} ${escapeHtml(tb.title)} 这类题怎么做 <span style="margin-left:auto;font-size:11px;font-weight:400">${u.method ? '收起 ▲' : '展开 ▼'}</span></div>
+    ${u.method ? `<div style="padding:8px 10px;border:1px solid #DBEAFE;border-top:none;border-radius:0 0 8px 8px;background:#FFFFFF">
       <div style="font-size:11px;color:#64748B;margin-bottom:4px">${escapeHtml(tb.paper)}</div>
       ${tb.steps.map((s, i) => `<div style="font-size:12px;color:#1E293B;line-height:1.7"><b>${i + 1}.</b> ${s}</div>`).join('')}
       ${tb.template && tb.template.length ? `<div style="margin-top:6px;font-size:11px;font-weight:700;color:#7C3AED">答题模板</div>${tb.template.slice(0, 4).map(t => `<div style="font-size:12px;color:#1E293B;line-height:1.6;padding:3px 8px;margin-top:3px;background:#F5F3FF;border-left:3px solid #7C3AED;border-radius:4px">${t}</div>`).join('')}` : ''}
@@ -12867,13 +12890,14 @@ function renderDailyFocusCard() {
     qHtml += `<div style="display:grid;grid-template-columns:1fr;gap:6px;margin-top:8px">${entry.q.opts.map((o, i) => {
       let bg = '#FFFFFF', bd = '#CBD5E1', fw = '400';
       if (answered) { if (i === entry.q.ans) { bg = '#DCFCE7'; bd = '#16A34A'; fw = '900'; } else if (i === picked) { bg = '#FEE2E2'; bd = '#DC2626'; } }
-      return `<button ${answered ? 'disabled' : ''} onclick="window._dfPick(${i})" style="text-align:left;padding:9px 12px;border-radius:8px;border:1px solid ${bd};background:${bg};color:#1E293B;font-size:13px;font-weight:${fw};cursor:${answered ? 'default' : 'pointer'}">(${String.fromCharCode(65 + i)}) ${escapeHtml(o)}</button>`;
+      return `<button ${answered ? 'disabled' : ''} onclick="window._dfPick('${entry.id}',${i})" style="text-align:left;padding:9px 12px;border-radius:8px;border:1px solid ${bd};background:${bg};color:#1E293B;font-size:13px;font-weight:${fw};cursor:${answered ? 'default' : 'pointer'}">(${String.fromCharCode(65 + i)}) ${escapeHtml(o)}</button>`;
     }).join('')}</div>`;
   } else {
+    const draft = (rec && rec.draft) || u.draft;
     qHtml += answered
-      ? `<div style="margin-top:8px"><div style="font-size:11px;font-weight:700;color:#16A34A">✅ 范例答案 (marker 会给满分的写法)</div><div style="font-size:13px;color:#1E293B;line-height:1.7;white-space:pre-wrap;padding:8px 10px;background:#DCFCE7;border:1px solid #86EFAC;border-radius:8px;font-family:Georgia,serif">${escapeHtml(String(entry.q.ans))}</div>${_dfUi.draft || rec.draft ? `<div style="font-size:11px;color:#64748B;margin-top:4px">你写的: ${escapeHtml(String(_dfUi.draft || rec.draft))}</div>` : ''}</div>`
-      : `<textarea id="dfDraft" rows="3" placeholder="先自己写, 写完再看范例 (不写也能看, 但写了才记得住)" style="width:100%;box-sizing:border-box;margin-top:8px;padding:8px;border-radius:8px;border:1px solid #CBD5E1;font-size:13px;color:#1E293B;background:#FFFFFF">${escapeHtml(_dfUi.draft)}</textarea>
-         <button onclick="window._dfRevealShort()" style="margin-top:6px;padding:8px 14px;border-radius:8px;border:none;background:#7C3AED;color:#FFFFFF;font-weight:700;font-size:13px;cursor:pointer">写好了, 看范例答案和分析 →</button>`;
+      ? `<div style="margin-top:8px"><div style="font-size:11px;font-weight:700;color:#16A34A">✅ 范例答案 (marker 会给满分的写法)</div><div style="font-size:13px;color:#1E293B;line-height:1.7;white-space:pre-wrap;padding:8px 10px;background:#DCFCE7;border:1px solid #86EFAC;border-radius:8px;font-family:Georgia,serif">${escapeHtml(String(entry.q.ans))}</div>${draft ? `<div style="font-size:11px;color:#64748B;margin-top:4px">你写的: ${escapeHtml(String(draft))}</div>` : ''}</div>`
+      : `<textarea id="dfDraft_${entry.id}" rows="3" placeholder="先自己写, 写完再看范例 (不写也能看, 但写了才记得住)" style="width:100%;box-sizing:border-box;margin-top:8px;padding:8px;border-radius:8px;border:1px solid #CBD5E1;font-size:13px;color:#1E293B;background:#FFFFFF">${escapeHtml(u.draft)}</textarea>
+         <button onclick="window._dfRevealShort('${entry.id}')" style="margin-top:6px;padding:8px 14px;border-radius:8px;border:none;background:#7C3AED;color:#FFFFFF;font-weight:700;font-size:13px;cursor:pointer">写好了, 看范例答案和分析 →</button>`;
   }
   let afterHtml = '';
   if (answered) {
@@ -12884,70 +12908,59 @@ function renderDailyFocusCard() {
         <div style="margin-top:6px;font-size:12px;color:#B45309;line-height:1.6">⚠️ <b>最容易错在</b>: ${escapeHtml(entry.trap)}</div>
         ${entry.template ? `<div style="margin-top:6px;font-size:12px;color:#1E293B;line-height:1.6;padding:4px 8px;background:#F5F3FF;border-left:3px solid #7C3AED;border-radius:4px">📐 模板: ${escapeHtml(entry.template)}</div>` : ''}</div>`)}
       ${sec('④', '关键总结 → 已收进答题技巧本', `<div style="padding:8px 10px;background:#FEF3C7;border:1px solid #FCD34D;border-radius:8px">${entry.takeaways.map(t => `<div style="font-size:12px;color:#1E293B;line-height:1.7">⭐ ${escapeHtml(t)}</div>`).join('')}
-        <div style="font-size:11px;color:#64748B;margin-top:4px">在 <a href="#" onclick="gotoPage('tips');window._tipsOpen && window._tipsOpen('${entry.subj}','${entry.mod}');return false" style="color:#1E40AF">答题技巧 › ${escapeHtml(DF_SUBJ_LABEL[entry.subj] || '')} › ${escapeHtml(tb ? tb.title : entry.mod)}</a> 里能找到</div></div>`, '#B45309')}
-      <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
-        <button onclick="window._dfNext()" style="padding:8px 14px;border-radius:8px;border:1px solid #7C3AED;background:#FFFFFF;color:#7C3AED;font-weight:700;font-size:13px;cursor:pointer">再学一个考点 →</button>
-        <span style="font-size:11px;color:#64748B">明天自动换下一个</span>
-      </div>`;
+        <div style="font-size:11px;color:#64748B;margin-top:4px">在 <a href="#" onclick="gotoPage('tips');window._tipsOpen && window._tipsOpen('${entry.subj}','${entry.mod}');return false" style="color:#1E40AF">答题技巧 › ${escapeHtml(DF_SUBJ_LABEL[entry.subj] || '')} › ${escapeHtml(tb ? tb.title : entry.mod)}</a> 里能找到</div></div>`, '#B45309')}`;
   }
-  card.innerHTML = head(`
-    <div style="font-size:11px;font-weight:700;color:#7C3AED;letter-spacing:.5px">${escapeHtml(DF_SUBJ_LABEL[entry.subj] || entry.subj)} · ${escapeHtml(tb ? tb.title : entry.mod)} · ${escapeHtml(entry.topic || '')}</div>
-    <div style="font-size:16px;font-weight:900;color:#1E293B;margin:2px 0 4px">${escapeHtml(entry.title)}</div>
+  return title + `<div style="padding:6px 4px 2px">
     <div style="font-size:12px;color:#64748B;line-height:1.6">${escapeHtml(entry.why)}</div>
     ${sec('①', '这类题的一般方法', methodHtml)}
-    ${sec('②', '今天这道题' + (entry.q.marks ? ` <span style="font-weight:400;color:#64748B">(${entry.q.marks} 分)</span>` : ''), qHtml)}
+    ${sec('②', '这道题' + (entry.q.marks ? ` <span style="font-weight:400;color:#64748B">(${entry.q.marks} 分)</span>` : ''), qHtml)}
     ${afterHtml}
-  `);
+  </div>`;
 }
 window.renderDailyFocusCard = renderDailyFocusCard;
-function _dfToggleMethod() { _dfUi.method = !_dfUi.method; renderDailyFocusCard(); }
+function _dfOpen(id) { _dfUi.open = (_dfUi.open === id) ? null : id; renderDailyFocusCard(); }
+function _dfToggleMethod(id) { const u = _dfU(id); u.method = !u.method; renderDailyFocusCard(); }
+function _dfEntry(id) { return (window.DAILY_FOCUS || []).find(e => e.id === id); }
 function _dfComplete(entry, patch) {
   const today = schedLocalDate();
   const first = !((state.dfDone || {})[entry.id]);
-  if (!state.dfDone) state.dfDone = {};
-  state.dfDone[entry.id] = today;
-  window.markDailyFocus(state, entry.id, Object.assign({ answered: true }, patch || {}));
+  window.markDailyFocus(state, entry.id, patch || {});
   const n = window.addTipBookEntries(state, entry.takeaways.map((t, i) => ({ key: entry.id + '#' + i, subj: entry.subj, mod: entry.mod, text: t, from: entry.title })));
   if (first) {
     state.totalPoints = (state.totalPoints || 0) + 5;
     if (!state.logs) state.logs = [];
     state.logs.push({ reason: `🎓 每日考点学习: ${entry.title} +5`, points: 5, type: 'daily_focus', week: state.currentWeek, timestamp: Date.now() });
   }
+  if (!state.dfDone) state.dfDone = {};
+  state.dfDone[entry.id] = today;
   saveState(state);
   if (n) showToast(`⭐ ${n} 条关键总结已收进答题技巧本`, 'happy');
-  _dfUi.revealed = true;
+  _dfU(entry.id).revealed = true;
   renderDailyFocusCard();
   if (typeof updateCharacterDisplay === 'function') try { updateCharacterDisplay(); } catch (e) {}
 }
-function _dfPick(i) {
-  const entry = window.getDailyFocus(state, schedLocalDate());
-  if (!entry || _dfUi.revealed) return;
-  _dfUi.picked = i;
+function _dfPick(id, i) {
+  const entry = _dfEntry(id); const u = _dfU(id);
+  if (!entry || u.revealed || window.getDailyFocusDone(state, id, schedLocalDate())) return;
+  u.picked = i;
   _dfComplete(entry, { picked: i, correct: i === entry.q.ans });
 }
-function _dfRevealShort() {
-  const entry = window.getDailyFocus(state, schedLocalDate());
-  if (!entry) return;
-  const ta = document.getElementById('dfDraft');
-  _dfUi.draft = ta ? ta.value.trim().slice(0, 600) : '';
-  _dfComplete(entry, { draft: _dfUi.draft });
+function _dfRevealShort(id) {
+  const entry = _dfEntry(id); if (!entry) return;
+  const ta = document.getElementById('dfDraft_' + id);
+  const u = _dfU(id); u.draft = ta ? ta.value.trim().slice(0, 600) : '';
+  _dfComplete(entry, { draft: u.draft });
 }
-// 再学一个: 同一天换下一条没学过的 (优先同科目), 今天的记录指向新条目
+// 再加一个: 挑出现次数最少的 (和今天最后一个不同科), 追加到今天的列表
 function _dfNext() {
-  const list = window.DAILY_FOCUS || [];
-  const done = state.dfDone || {};
-  const cur = window.getDailyFocus(state, schedLocalDate());
-  const fresh = list.filter(x => !done[x.id] && (!cur || x.id !== cur.id));
-  if (!fresh.length) { showToast('所有考点都学过一遍了 🎉 明天开始二轮', 'happy'); return; }
-  const same = fresh.filter(x => cur && x.subj === cur.subj);
-  const pick = (same.length ? same : fresh)[Math.floor(Math.random() * (same.length ? same : fresh).length)];
-  window.markDailyFocus(state, pick.id, { answered: false, picked: null, draft: '' });
+  const e = window.addDailyFocusExtra(state, schedLocalDate());
+  if (!e) { showToast('考点库全部排完了 🎉', 'happy'); return; }
   saveState(state);
-  _dfUi = { date: schedLocalDate(), picked: null, revealed: false, method: false, draft: '' };
+  _dfUi.open = e.id;
   renderDailyFocusCard();
-  const card = document.getElementById('dailyFocusCard'); if (card && card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const el = document.getElementById('dailyFocusCard'); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-window._dfToggleMethod = _dfToggleMethod; window._dfPick = _dfPick; window._dfRevealShort = _dfRevealShort; window._dfNext = _dfNext;
+window._dfOpen = _dfOpen; window._dfToggleMethod = _dfToggleMethod; window._dfPick = _dfPick; window._dfRevealShort = _dfRevealShort; window._dfNext = _dfNext;
 
 // ============= v23.0: 答题技巧 切页 (各科按考试模块: 方法 + 模板 + 常见坑 + 自查 + 我收藏的要点) =============
 let _tipsSubj = 'eng', _tipsOpenMod = null;
@@ -12988,7 +13001,7 @@ function renderTipsPage() {
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <div style="font-size:17px;font-weight:900;color:#1E293B">📘 答题技巧本</div>
         <div style="font-size:12px;color:#64748B">四科 ${total} 个考试模块 · 方法 + 模板 + 坑 + 自查 · 收藏 ${(state.tipBook || []).length} 条</div>
-        <button onclick="window.openTipBookPrint()" style="margin-left:auto;padding:7px 12px;border-radius:8px;border:none;background:#7C3AED;color:#FFFFFF;font-weight:700;font-size:12px;cursor:pointer">🖨️ 汇总成一份技巧本 (打印 / 存 PDF)</button>
+        <div style="margin-left:auto;display:flex;gap:6px"><button onclick="window.downloadTipBookPdf()" style="padding:7px 12px;border-radius:8px;border:none;background:#7C3AED;color:#FFFFFF;font-weight:700;font-size:12px;cursor:pointer">⬇️ 下载 PDF 技巧本</button><button onclick="window.openTipBookPrint()" style="padding:7px 12px;border-radius:8px;border:1px solid #CBD5E1;background:#FFFFFF;color:#1E293B;font-weight:700;font-size:12px;cursor:pointer">🖨️ 打印</button></div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">${subjTabs}</div>
     </div>
@@ -13027,7 +13040,7 @@ window.openTipBookPrint = openTipBookPrint;
 // ============= v23.2: 全站悬浮查词弹层 + 单词本 =============
 // 桌面: 鼠标停在英文词上 0.4s 出小弹层; 平板/手机: 长按 0.5s。弹层: 词 · 音标 · 🔊 · 中文 · 英文释义 · ⭐收藏/已收藏 · (本站词库的词带考点)
 // 不在输入框/按钮里触发; 弹层自己不触发; 停用词 (the/is/...) 不触发
-let _dictPopEl = null, _dictHoverTimer = null, _dictHideTimer = null, _dictTouchTimer = null, _dictCur = null, _dictTouchXY = null;
+let _dictPopEl = null, _dictHoverTimer = null, _dictHideTimer = null, _dictTouchTimer = null, _dictCur = null, _dictTouchXY = null, _dictSuppress = null;   // _dictSuppress: 手动关掉的那个词, 鼠标没离开前不再弹
 function _dictEnsurePop() {
   if (_dictPopEl) return _dictPopEl;
   const el = document.createElement('div');
@@ -13041,7 +13054,7 @@ function _dictEnsurePop() {
   return el;
 }
 function _dictScheduleHide(ms) { clearTimeout(_dictHideTimer); _dictHideTimer = setTimeout(hideDictPop, ms || 350); }
-function hideDictPop() { if (_dictPopEl) _dictPopEl.style.display = 'none'; _dictCur = null; }
+function hideDictPop(manual) { if (_dictPopEl) _dictPopEl.style.display = 'none'; if (manual && _dictCur) _dictSuppress = _dictCur.key; _dictCur = null; }
 window.hideDictPop = hideDictPop;
 // 从坐标拿到鼠标下面的那个英文词 + 它所在的句子 (给单词本当例句)
 function _dictWordAt(x, y) {
@@ -13075,7 +13088,7 @@ function _dictRender(d, w, loading) {
     <div style="display:flex;align-items:center;gap:6px">
       <b style="font-size:16px">${escapeHtml(d && d.base ? d.base : w.key)}</b>${pos}${ipa}
       <button onclick="event.stopPropagation();window._dictSay()" style="border:none;background:none;cursor:pointer;font-size:16px;padding:0 2px">🔊</button>
-      <button onclick="event.stopPropagation();hideDictPop()" style="margin-left:auto;border:none;background:none;cursor:pointer;color:#94A3B8;font-size:14px">✕</button>
+      <button onclick="event.stopPropagation();hideDictPop(true)" style="margin-left:auto;border:none;background:none;cursor:pointer;color:#94A3B8;font-size:16px;padding:0 4px">✕</button>
     </div>
     ${d && d.base && d.base !== w.key ? `<div style="font-size:11px;color:#64748B">${escapeHtml(w.key)} → 原形 ${escapeHtml(d.base)}</div>` : ''}
     ${loading ? '<div style="color:#64748B;font-size:12px;margin-top:4px">本地词典没有, 联网查询中…</div>' : ''}
@@ -13104,7 +13117,8 @@ async function showDictPop(w) {
   _dictCur.d = d;
   _dictRender(d, w, !d);
   if (!d) {
-    const od = await window.lookupDictOnline(state, w.key);
+    let od = null;
+    try { od = await Promise.race([window.lookupDictOnline(state, w.key), new Promise(res => setTimeout(() => res(null), 7000))]); } catch (e) { od = null; }   // 兜底: 7 秒没结果就显示"没查到", 不能一直转
     if (!_dictCur || _dictCur.key !== w.key) return;
     _dictCur.d = od;
     if (od) saveState(state);   // 联网结果缓存进 state
@@ -13140,8 +13154,8 @@ function _dictBind() {
     clearTimeout(_dictHoverTimer);
     _dictHoverTimer = setTimeout(() => {
       const w = _dictWordAt(e.clientX, e.clientY);
-      if (w) { clearTimeout(_dictHideTimer); showDictPop(w); }
-      else if (_dictPopEl && _dictPopEl.style.display === 'block') _dictScheduleHide(500);
+      if (w && w.key !== _dictSuppress) { _dictSuppress = null; clearTimeout(_dictHideTimer); showDictPop(w); }
+      else if (!w) { _dictSuppress = null; if (_dictPopEl && _dictPopEl.style.display === 'block') _dictScheduleHide(500); }
     }, 400);
   }, { passive: true });
   // 触屏长按
@@ -13171,3 +13185,150 @@ function renderWordBookCard() {
   </div>`;
 }
 window.renderWordBookCard = renderWordBookCard;
+
+// ============= v23.3: PDF 导出 (用户: "默认是打印, 我无法存 pdf") =============
+// 浏览器端把 HTML 渲染成图片再拼 A4 PDF (html2canvas + jsPDF, 用时从 cdnjs 动态加载; 中文靠栅格化, 不用嵌字体)。失败退回打印。
+function _loadScriptOnce(url) { return new Promise((res, rej) => { if (document.querySelector(`script[src="${url}"]`)) return res(); const s = document.createElement('script'); s.src = url; s.onload = res; s.onerror = () => rej(new Error('load fail ' + url)); document.head.appendChild(s); }); }
+async function downloadHtmlAsPdf(innerHtml, filename, title) {
+  showToast('正在生成 PDF, 内容多的话要十几秒…', 'info');
+  try {
+    await _loadScriptOnce('vendor/html2canvas.min.js?v=1');
+    await _loadScriptOnce('vendor/jspdf.umd.min.js?v=1');
+  } catch (e) { showToast('PDF 组件加载失败 (离线?), 改用打印', 'warn'); return _printHtml(innerHtml, title); }
+  const host = document.createElement('div');
+  host.style.cssText = 'position:fixed;left:-10000px;top:0;width:760px;background:#FFFFFF;color:#1E293B;font-family:"Microsoft YaHei","PingFang SC",Arial,sans-serif;font-size:13px;line-height:1.6;padding:24px;z-index:-1';
+  host.innerHTML = `<style>${_PDF_CSS}</style><div style="text-align:center;margin-bottom:12px"><div style="font-size:22px;font-weight:900;color:#1E40AF">${escapeHtml(title || '')}</div><div style="font-size:12px;color:#64748B">生成于 ${schedLocalDate()}</div></div>${innerHtml}`;
+  document.body.appendChild(host);
+  try {
+    const canvas = await window.html2canvas(host, { scale: 2, backgroundColor: '#FFFFFF', useCORS: true, logging: false });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+    const pw = 210, ph = 297, margin = 8;
+    const imgW = pw - margin * 2, pxPerMm = canvas.width / imgW;
+    const pageHpx = Math.floor((ph - margin * 2) * pxPerMm);
+    let y = 0, first = true;
+    while (y < canvas.height) {
+      const h = Math.min(pageHpx, canvas.height - y);
+      const slice = document.createElement('canvas'); slice.width = canvas.width; slice.height = h;
+      slice.getContext('2d').drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+      if (!first) pdf.addPage();
+      pdf.addImage(slice.toDataURL('image/jpeg', 0.9), 'JPEG', margin, margin, imgW, h / pxPerMm);
+      first = false; y += h;
+    }
+    pdf.save(filename);
+    showToast('✅ PDF 已生成, 看浏览器下载', 'happy');
+  } catch (e) { console.warn(e); showToast('PDF 生成失败, 改用打印', 'warn'); _printHtml(innerHtml, title); }
+  finally { host.remove(); }
+}
+const _PDF_CSS = 'h1{color:#1E40AF;border-bottom:3px solid #1E40AF;padding-bottom:4px;font-size:20px;margin:18px 0 8px}h2{color:#7C3AED;margin:14px 0 4px;font-size:16px}h2 small{color:#64748B;font-weight:400;font-size:11px;margin-left:8px}h3{font-size:12px;color:#B45309;margin:8px 0 2px}ol,ul{margin:0;padding-left:20px;font-size:12px}li{margin:2px 0}.tpl li{font-family:Georgia,serif;background:#F5F3FF;padding:2px 6px;margin:3px 0;list-style:none;border-left:3px solid #7C3AED}.chk li{list-style:none}section{page-break-inside:avoid;margin-bottom:6px}.wq{border:1px solid #E2E8F0;border-radius:6px;padding:8px 10px;margin:6px 0;page-break-inside:avoid}.wq .q{font-weight:700}.wq .o{font-size:12px;color:#475569}.wq .ok{color:#16A34A;font-weight:700}.wq .ex{font-size:12px;color:#1E293B;background:#F8FAFC;padding:4px 8px;border-radius:4px;margin-top:4px}.tipbox{background:#EFF6FF;border:1px solid #93C5FD;border-radius:6px;padding:6px 10px;font-size:12px;margin:6px 0}';
+function _printHtml(innerHtml, title) {
+  const w = window.open('', '_blank');
+  if (!w) { showToast('浏览器拦截了新窗口, 允许弹窗后再试', 'warn'); return; }
+  w.document.write(`<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>${escapeHtml(title || '')}</title><style>body{font-family:"Microsoft YaHei",Arial,sans-serif;color:#1E293B;max-width:800px;margin:24px auto;padding:0 16px;line-height:1.6}${_PDF_CSS}@media print{body{margin:0}}</style></head><body><div style="text-align:center;margin-bottom:12px"><div style="font-size:22px;font-weight:900;color:#1E40AF">${escapeHtml(title || '')}</div><div style="font-size:12px;color:#64748B">${schedLocalDate()}</div></div>${innerHtml}</body></html>`);
+  w.document.close();
+  setTimeout(() => { try { w.focus(); w.print(); } catch (e) {} }, 400);
+}
+window.downloadHtmlAsPdf = downloadHtmlAsPdf;
+// 技巧本正文 HTML (打印和 PDF 共用)
+function _tipBookHtml() {
+  const book = window.TECHNIQUE_BOOK; const esc = s => escapeHtml(String(s)); let html = '';
+  Object.keys(book).forEach(s => {
+    const sb = book[s]; html += `<h1>${esc(sb.label)}</h1>`;
+    sb.order.forEach(key => {
+      const m = sb.mods[key], mine = window.getTipBookByMod(state, s, key);
+      html += `<section><h2>${m.icon || ''} ${esc(m.title)} <small>${esc(m.paper)}</small></h2><h3>做题方法</h3><ol>${m.steps.map(x => `<li>${x}</li>`).join('')}</ol>${m.template.length ? `<h3>答题模板</h3><ul class="tpl">${m.template.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}<h3>最常丢分的坑</h3><ul>${m.traps.map(x => `<li>${x}</li>`).join('')}</ul><h3>交卷前自查</h3><ul class="chk">${m.check.map(x => `<li>☐ ${x}</li>`).join('')}</ul>${mine.length ? `<h3>⭐ 我学到的</h3><ul>${mine.map(t => `<li>${esc(t.text)} <small>(${esc(t.from)} · ${t.date})</small></li>`).join('')}</ul>` : ''}</section>`;
+    });
+  });
+  return html;
+}
+function downloadTipBookPdf() { downloadHtmlAsPdf(_tipBookHtml(), `PSLE答题技巧本_${schedLocalDate()}.pdf`, 'PSLE 答题技巧本'); }
+window.downloadTipBookPdf = downloadTipBookPdf; window._tipBookHtml = _tipBookHtml;
+
+// ============= v23.3: 错题集 切页 (用户: "错题本提供错题归集、同类讲解, 能下载和打印, 专门做一个切页, 按科目真题错题集") =============
+const WB_SUBJECTS = ['英语', '科学', '数学', '华文'];
+// gameKey → (科目, 题型名, 技巧本模块)
+const WB_TYPE = {
+  editing: ['英语', 'Editing 改错', 'eng', 'editing'], cloze: ['英语', 'Comprehension Cloze 完形', 'eng', 'cloze'], sst: ['英语', 'Synthesis 句型转换', 'eng', 'synthesis'], grammar: ['英语', 'Grammar MCQ 语法', 'eng', 'gram_mcq'],
+  vocab: ['英语', 'Vocabulary 词汇', 'eng', 'vocab_mcq'], listen: ['英语', 'Listening 听力', 'eng', 'listening'], comp_oe: ['英语', 'Comprehension OE 阅读问答', 'eng', 'comp_oe'],
+  scimcq: ['科学', 'Science MCQ 选择题', 'sci', 'mcq'], scilab: ['科学', 'Science 实验题', 'sci', 'oe_exp'], sci_oe: ['科学', 'Science OE 开放题', 'sci', 'oe_explain'], sciclassify: ['科学', 'Science 分类', 'sci', 'oe_compare'],
+  math: ['数学', '数学', 'math', 'careless'], unit: ['数学', '数学 单位换算', 'math', 'careless'], chinese: ['华文', '华文', 'cn', 'reading'], chinese_oe: ['华文', '华文 阅读问答', 'cn', 'reading'],
+};
+function _wbSubjectOf(it) {
+  if (it.subj) { const s = String(it.subj).replace(/[^一-龥]/g, ''); if (WB_SUBJECTS.indexOf(s) >= 0) return s; }
+  const t = WB_TYPE[it.gameKey]; if (t) return t[0];
+  if (it.nodeId) { if (/^sci_/.test(it.nodeId)) return '科学'; if (/^eng_/.test(it.nodeId)) return '英语'; if (/^math_/.test(it.nodeId)) return '数学'; if (/^cn_|^chi_/.test(it.nodeId)) return '华文'; }
+  return '英语';
+}
+function _wbNodeName(nodeId) { const kt = window.KNOWLEDGE_TREE || {}; for (const s of Object.keys(kt)) { const n = (kt[s] || []).find(x => x.id === nodeId); if (n) return n.name; } return nodeId; }
+function _wbGroupOf(it) {
+  if (it.source === 'paper2-real') return { key: 'real:' + (it.gameKey || ''), label: '🔥 真考错题 · ' + ((WB_TYPE[it.gameKey] || [])[1] || it.gameKey), tb: WB_TYPE[it.gameKey] ? [WB_TYPE[it.gameKey][2], WB_TYPE[it.gameKey][3]] : null, gameKey: it.gameKey };
+  if (it.gameKey === 'knowledge' && it.nodeId) { const sub = _wbSubjectOf(it); const mod = /^sci_/.test(it.nodeId) ? ['sci', 'mcq'] : /^eng_/.test(it.nodeId) ? ['eng', 'gram_mcq'] : /^math_/.test(it.nodeId) ? ['math', 'careless'] : ['cn', 'reading']; return { key: 'node:' + it.nodeId, label: '🌳 考点 · ' + _wbNodeName(it.nodeId), tb: mod, gameKey: 'knowledge', sub }; }
+  const t = WB_TYPE[it.gameKey]; return { key: 'g:' + it.gameKey, label: (t ? t[1] : (it.gameKey || '其他')), tb: t ? [t[2], t[3]] : null, gameKey: it.gameKey };
+}
+function _wbAnswerText(it) {
+  if (Array.isArray(it.opts) && it.opts.length && typeof it.ans === 'number') return String.fromCharCode(65 + it.ans) + '. ' + it.opts[it.ans];
+  if (it.correctAns != null) return String(it.correctAns);
+  if (Array.isArray(it.opts) && it.opts.length && /^\d+$/.test(String(it.ans))) return String.fromCharCode(65 + Number(it.ans)) + '. ' + it.opts[Number(it.ans)];
+  return String(it.ans != null ? it.ans : (it.answer || ''));
+}
+let _wbSubj = '全部';
+function _wbSetSubj(s) { _wbSubj = s; renderWrongBookPage(); }
+window._wbSetSubj = _wbSetSubj;
+// 正文 HTML (页面 / PDF / 打印共用; forExport=true 不出按钮、讲解全展开)
+function _wrongBookHtml(subjFilter, forExport) {
+  const all = (state.wrongAnswers || []).slice().sort((a, b) => String(b.addedDate || '').localeCompare(String(a.addedDate || '')));
+  const esc = s => escapeHtml(String(s == null ? '' : s));
+  let html = '';
+  WB_SUBJECTS.forEach(sub => {
+    if (subjFilter && subjFilter !== '全部' && subjFilter !== sub) return;
+    const items = all.filter(it => _wbSubjectOf(it) === sub);
+    if (!items.length) return;
+    const groups = {};
+    items.forEach(it => { const g = _wbGroupOf(it); (groups[g.key] = groups[g.key] || { g, items: [] }).items.push(it); });
+    const order = Object.values(groups).sort((a, b) => (b.g.key.startsWith('real') ? 1 : 0) - (a.g.key.startsWith('real') ? 1 : 0) || b.items.length - a.items.length);
+    html += `<h1>${esc(sub)} 错题集 <small style="font-size:12px;color:#64748B;font-weight:400">${items.length} 题 · 按题型归集</small></h1>`;
+    order.forEach(({ g, items: its }) => {
+      const tb = g.tb && window.getTechniqueMod ? window.getTechniqueMod(g.tb[0], g.tb[1]) : null;
+      const et = EB_TYPE_TIPS[g.gameKey];
+      const gid = 'wbg_' + g.key.replace(/[^a-z0-9]/gi, '_');
+      const lesson = `<div class="tipbox"><div style="font-weight:900;color:#1E40AF;margin-bottom:2px">📘 同类讲解 · ${esc(tb ? tb.title : (et ? et.spot : g.label))}</div>
+          ${et ? et.tips.map((x, i) => `<div>${i + 1}. ${x}</div>`).join('') : ''}
+          ${tb ? `<div style="margin-top:4px;font-weight:700;color:#7C3AED">做题方法</div>${tb.steps.map((x, i) => `<div>${i + 1}. ${x}</div>`).join('')}<div style="margin-top:4px;font-weight:700;color:#B45309">最常丢分的坑</div>${tb.traps.map(x => `<div>⚠️ ${x}</div>`).join('')}${tb.template.length ? `<div style="margin-top:4px;font-weight:700;color:#7C3AED">模板</div>${tb.template.slice(0, 4).map(x => `<div style="font-family:Georgia,serif;padding:2px 6px;background:#F5F3FF;border-left:3px solid #7C3AED;margin:2px 0">${x}</div>`).join('')}` : ''}` : ''}
+        </div>`;
+      html += `<section><h2>${esc(g.label)} <small>${its.length} 题</small>${!forExport && g.gameKey && g.gameKey !== 'knowledge' ? ` <button onclick="startErrorBankReview('${esc(g.gameKey)}','all')" style="float:right;padding:4px 10px;border-radius:8px;border:1px solid #1E40AF;background:#FFFFFF;color:#1E40AF;font-size:12px;cursor:pointer">▶ 复习这组</button>` : ''}</h2>
+        ${forExport ? lesson : `<details ${its.length >= 5 ? 'open' : ''}><summary style="cursor:pointer;font-size:12px;color:#1E40AF;font-weight:700">📘 同类讲解 (这类题怎么做 / 坑 / 模板) ▾</summary>${lesson}</details>`}
+        ${its.map((it, i) => `<div class="wq">
+          <div class="q">${i + 1}. ${esc(it.q || it.question || '')}${it.tag ? ` <span style="font-size:11px;color:#DC2626">[真考 ${esc(it.tag)}]</span>` : ''}</div>
+          ${Array.isArray(it.opts) && it.opts.length ? `<div class="o">${it.opts.map((o, k) => `<span style="margin-right:10px;${(typeof it.ans === 'number' ? it.ans : Number(it.ans)) === k ? 'color:#16A34A;font-weight:700' : ''}">${String.fromCharCode(65 + k)}. ${esc(o)}</span>`).join('')}</div>` : ''}
+          <div class="ok">✅ ${esc(_wbAnswerText(it))}</div>
+          ${it.explain ? `<div class="ex">💡 ${esc(it.explain)}</div>` : ''}
+          <div style="font-size:11px;color:#94A3B8;margin-top:3px">${esc(it.addedDate || '')} · 错 ${1 + (it.retries || 0)} 次${it.correctStreak ? ` · 已连对 ${it.correctStreak}` : ''}${it.nodeId ? ' · ' + esc(_wbNodeName(it.nodeId)) : ''}</div>
+        </div>`).join('')}
+      </section>`;
+    });
+  });
+  return html || '<div style="padding:20px;color:#64748B;text-align:center">这个科目还没有错题 🎉</div>';
+}
+function renderWrongBookPage() {
+  const el = document.getElementById('wrongBookContent'); if (!el) return;
+  const all = state.wrongAnswers || [];
+  const counts = {}; all.forEach(it => { const s = _wbSubjectOf(it); counts[s] = (counts[s] || 0) + 1; });
+  const tab = s => `<button onclick="window._wbSetSubj('${s}')" style="padding:7px 14px;border-radius:999px;border:1px solid ${_wbSubj === s ? '#1E40AF' : '#CBD5E1'};background:${_wbSubj === s ? '#1E40AF' : '#FFFFFF'};color:${_wbSubj === s ? '#FFFFFF' : '#1E293B'};font-size:13px;font-weight:700;cursor:pointer">${s} <span style="font-size:11px;font-weight:400;opacity:.8">${s === '全部' ? all.length : (counts[s] || 0)}</span></button>`;
+  el.innerHTML = `
+    <div class="card" style="border-left:4px solid #DC2626">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="font-size:17px;font-weight:900;color:#1E293B">📕 错题集</div>
+        <div style="font-size:12px;color:#64748B">${all.length} 题 · 按科目 → 题型归集 · 每组带同类讲解 · 真考错题优先</div>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button onclick="window.downloadWrongBookPdf()" style="padding:7px 12px;border-radius:8px;border:none;background:#DC2626;color:#FFFFFF;font-weight:700;font-size:12px;cursor:pointer">⬇️ 下载 PDF</button>
+          <button onclick="window.printWrongBook()" style="padding:7px 12px;border-radius:8px;border:1px solid #CBD5E1;background:#FFFFFF;color:#1E293B;font-weight:700;font-size:12px;cursor:pointer">🖨️ 打印</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">${['全部'].concat(WB_SUBJECTS).map(tab).join('')}</div>
+      <div style="font-size:11px;color:#64748B;margin-top:6px">答对 3 次自动毕业出本 (14 天后回测) · 首页错题本卡的"立即开始复习"按艾宾浩斯到期题走</div>
+    </div>
+    <div class="card" id="wrongBookBody"><style>#wrongBookBody ${_PDF_CSS.split('}').map(r => r.trim()).filter(Boolean).map(r => '#wrongBookBody ' + r + '}').join('')}</style>${_wrongBookHtml(_wbSubj, false)}</div>`;
+}
+function downloadWrongBookPdf() { downloadHtmlAsPdf(_wrongBookHtml(_wbSubj, true), `PSLE错题集_${_wbSubj}_${schedLocalDate()}.pdf`, `PSLE 错题集 · ${_wbSubj}`); }
+function printWrongBook() { _printHtml(_wrongBookHtml(_wbSubj, true), `PSLE 错题集 · ${_wbSubj}`); }
+window.renderWrongBookPage = renderWrongBookPage; window.downloadWrongBookPdf = downloadWrongBookPdf; window.printWrongBook = printWrongBook;

@@ -5155,8 +5155,9 @@ p { font-size: 14px; line-height: 1.6; }
   <!-- v19.61: 打卡收纳进 "⋯其他" (按钮仍在, JS click 可达) -->
   <button class="tab-btn" data-page="checkin" style="display:none">✅ 打卡</button>
   <button class="tab-btn" data-page="vocab">📇 词汇</button>
-  <button class="tab-btn" data-page="practice">📚 学习中心</button>
+  <button class="tab-btn" data-page="wrongbook">📕 错题集</button>
   <button class="tab-btn" data-page="tips">📘 答题技巧</button>
+  <button class="tab-btn" data-page="practice">📚 学习中心</button>
   <button class="tab-btn" data-page="history">📊 能力</button>
   <!-- v19.54: 我的/暑假 收纳进 "⋯其他" (按钮仍在, JS click 可达) -->
   <button class="tab-btn" data-page="character" style="display:none">👤 我的</button>
@@ -5483,6 +5484,11 @@ p { font-size: 14px; line-height: 1.6; }
 
   <div class="page" id="page-scimod">
     <div class="kt-page-wrap" style="padding:16px" id="sciModuleContent"><p style="color:var(--color-text-light);text-align:center;padding:40px">加载中…</p></div>
+  </div>
+
+  <!-- v23.3: 错题集 (按科目 → 题型归集 + 同类讲解 + 下载/打印) -->
+  <div class="page" id="page-wrongbook">
+    <div class="kt-page-wrap" style="padding:16px" id="wrongBookContent"></div>
   </div>
 
   <!-- v23.0: 答题技巧本 (各科按考试模块: 方法 + 模板 + 坑 + 自查 + 每日考点收藏) -->
@@ -5966,9 +5972,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=23.2"></script>
-<script src="data.js?v=23.2"></script>
-<script src="app.js?v=23.2"></script>
+<script src="character.js?v=23.3"></script>
+<script src="data.js?v=23.3"></script>
+<script src="app.js?v=23.3"></script>
 
 </body>
 </html>

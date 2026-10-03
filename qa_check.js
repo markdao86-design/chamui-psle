@@ -2193,7 +2193,7 @@ assert(idxSrc.indexOf('data-page="practice">📚 学习中心</button>') > idxSr
 
 // ===== v23.0: 首页三卡 + 每日考点学习 + 答题技巧本 =====
 assert(/data-page="tips">📘 答题技巧/.test(idxSrc) && /id="page-tips"/.test(idxSrc) && /page === 'tips'[\s\S]{0,60}renderTipsPage\(\)/.test(appSrc), 'v23.0: 导航有"答题技巧"切页且会渲染');
-assert(idxSrc.indexOf('data-page="practice"') < idxSrc.indexOf('data-page="tips"') && idxSrc.indexOf('data-page="tips"') < idxSrc.indexOf('data-page="history"'), 'v23.0: 答题技巧排在学习中心后、能力前');
+assert(idxSrc.indexOf('data-page="vocab"') < idxSrc.indexOf('data-page="tips"') && idxSrc.indexOf('data-page="tips"') < idxSrc.indexOf('data-page="practice"') && idxSrc.indexOf('data-page="practice"') < idxSrc.indexOf('data-page="history"'), 'v23.0/v23.3: 词汇 → 答题技巧 → 学习中心 → 能力 (用户 2026-10-03 要求技巧和学习中心互换)');
 assert(/id="dailyFocusCard"/.test(idxSrc) && /renderDailyFocusCard\(\)/.test(appSrc), 'v23.0: 主页右栏每日考点学习卡会渲染');
 assert(/_dashboardLegacy[\s\S]{0,600}id="paper2SprintCard"[\s\S]{0,300}id="thinkPuzzleCard"[\s\S]{0,200}id="weekMasterTipCard"/.test(idxSrc), 'v23.0: Paper2突击/思考题/知识树每日练 全部撤出首页 (DOM 留在隐藏容器)');
 {
@@ -2212,7 +2212,25 @@ assert(/const TECHNIQUE_BOOK = \{/.test(dataSrc) && W.TECHNIQUE_BOOK && ['eng', 
   assert(/14 分/.test(B.eng.mods.sw.paper) && /36 分/.test(B.eng.mods.compo.paper) && /10 题 10 分/.test(B.eng.mods.editing.paper) && /15 分/.test(B.eng.mods.oral_read.paper) && /25 分/.test(B.eng.mods.oral_conv.paper), 'v23.0: 分值按 SEAB 2025 新卷 (SW14/CW36/Editing10/RA15/SBC25)');
 }
 assert(typeof W.getDailyFocus === 'function' && typeof W.addTipBookEntries === 'function' && typeof W.markDailyFocus === 'function', 'v23.0: 每日考点/技巧本 数据函数都导出');
-assert(/window\.getDailyFocus\(state, today\)/.test(appSrc) && /window\.addTipBookEntries\(state, entry\.takeaways/.test(appSrc) && /state\.dfDone\[entry\.id\] = today/.test(appSrc), 'v23.0: 学完 → takeaways 自动进 tipBook, dfDone 记学过 (死代码警钟三件套)');
+assert(/window\.getDailyFocusList\(state, today\)/.test(appSrc) && /window\.addTipBookEntries\(state, entry\.takeaways/.test(appSrc) && /state\.dfDone\[entry\.id\] = today/.test(appSrc), 'v23.0/v23.3: 学完 → takeaways 自动进 tipBook, dfDone 记学过 (死代码警钟三件套)');
+// ===== v23.3: 每日多考点排程 (英科交替, 出现次数最少优先, 考前每个 ≥3 次) =====
+{
+  const st = { dailyFocus: {}, dfShown: {} };
+  const plan = W.getDailyFocusPlan(st, '2026-10-04');
+  assert(plan.perDay >= 2 && plan.perDay <= 6 && plan.perDay >= Math.min(6, Math.ceil(3 * W.DAILY_FOCUS.length / plan.daysLeft)), `v23.3: 每天考点数按 3×总数÷剩余天数 (${plan.total} 条 / ${plan.daysLeft} 天 → ${plan.perDay} 个)`);
+  const l1 = W.getDailyFocusList(st, '2026-10-04'), l2 = W.getDailyFocusList(st, '2026-10-04');
+  assert(l1.length === plan.perDay && l1.map(e => e.id).join() === l2.map(e => e.id).join(), 'v23.3: 同一天列表固定');
+  assert(l1.length >= 2 && l1[0].subj !== l1[1].subj, 'v23.3: 英语科学交替');
+  // 模拟到考前每天都学: 每个考点出现 ≥3 次
+  const st2 = { dailyFocus: {}, dfShown: {} };
+  const start = new Date('2026-10-04T12:00:00'), end = new Date(W.DF_EXAM_DATE + 'T12:00:00');
+  for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) W.getDailyFocusList(st2, d.toISOString().slice(0, 10));
+  const minShown = Math.min.apply(null, W.DAILY_FOCUS.map(e => st2.dfShown[e.id] || 0));
+  assert(minShown >= 3, `v23.3: 每天都学的话, 到考前每个考点至少出现 3 次 (最少 ${minShown})`);
+  const ex = W.addDailyFocusExtra(st, '2026-10-04');
+  assert(ex && st.dailyFocus['2026-10-04'].ids.length === plan.perDay + 1 && st.dfShown[ex.id] >= 1, 'v23.3: 再加一个考点追加到今天并计入出现次数');
+  assert(/function _dfEntryHtml\(entry, idx, n, today\)/.test(appSrc) && /_dfOpen\('\$\{entry\.id\}'\)/.test(appSrc) && /addDailyFocusExtra\(state, schedLocalDate\(\)\)/.test(appSrc), 'v23.3: 主页卡按列表渲染多个考点, 可折叠, 可再加');
+}
 assert(/type: 'daily_focus'/.test(appSrc) && /if \(first\)/.test(appSrc), 'v23.0: 每日考点 +5 分只发一次 (防重复点)');
 assert(/function openTipBookPrint\(\)/.test(appSrc) && /openTipBookPrint\(\)/.test(appSrc.replace('function openTipBookPrint()', '')), 'v23.0: 技巧本能汇总打印');
 {
