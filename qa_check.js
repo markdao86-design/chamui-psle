@@ -2311,10 +2311,12 @@ assert(/function _dictDeep\(\)/.test(appSrc) && /_dictDeep\(\)/.test(appSrc.repl
 
 // ===== v23.4: 今天考的 = 今天背过的 =====
 {
-  const st = { fcDailyGroup: { date: W._fcToday(), words: ['snarled', 'groused', 'lamented'], firstPass: { snarled: true, groused: false } } };
+  const st = { fcDailyGroup: { date: W._fcToday(), words: ['snarled', 'groused', 'lamented'], firstPass: { snarled: true } } };
   const q = W.pickQuizWords(st, 'today');
-  assert(q.length === 2 && q.indexOf('lamented') < 0, 'v23.4: 考今天这一组 = 只考今天已经背过的词 (用户: 今天考的要对应今天学的)');
-  assert(W.pickQuizWords({}, 'today').length === 0 && /先背再考/.test(appSrc) && /考今天学过的 \$\{n\} 个/.test(appSrc), 'v23.4: 一个没背时按钮禁用提示先背');
+  assert(q.length === 3 && q.indexOf('lamented') >= 0, 'v23.9: 考今天这一组 = 今天这一组全部词, 不管背没背 (用户: 先考后背也行, 两边对应就行)');
+  const st2 = { flashcardSRS: {}, fcDaily: {} }; const q2 = W.pickQuizWords(st2, 'today');
+  assert(st2.fcDailyGroup && st2.fcDailyGroup.date === W._fcToday() && q2.join() === st2.fcDailyGroup.words.join(), 'v23.9: 先考时把今天这一组真正编出来锁定, 之后背的也是这一份');
+  assert(/考今天这一组 \(\$\{n\} 个\)/.test(appSrc), 'v23.9: 按钮写明考几个');
 }
 
 // ===== Output =====

@@ -2622,9 +2622,9 @@ function renderVocabPage() {
           <div style="font-weight:700;font-size:15px">📝 单词考题 · PSLE 题型</div>
           <div style="font-size:12px;color:#64748B;margin-top:2px">${(() => { const qs = window.getFcQuizStats(state), tr = (state.fcDaily || {})[today] || {}; return (tr.quizTotal ? `今天答了 ${tr.quizTotal} 题, 对 ${tr.quizOk || 0} 题 · ` : '今天还没考 · ') + (qs.pct == null ? '累计 0 题' : `累计正确率 ${qs.pct}% (${qs.ok + qs.bad} 题)`); })()}</div>
         </div>
-        ${(() => { const n = window.pickQuizWords(state, 'today').length; return n ? `<button onclick="startFcQuiz('today')" style="white-space:nowrap;padding:12px 20px;background:#7C3AED;color:#FFFFFF;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">考今天学过的 ${n} 个</button>` : `<button disabled style="white-space:nowrap;padding:12px 20px;background:#E2E8F0;color:#94A3B8;border:none;border-radius:10px;font-size:15px;font-weight:700">先背再考</button>`; })()}
+        ${(() => { const n = g.words.length; return n ? `<button onclick="startFcQuiz('today')" style="white-space:nowrap;padding:12px 20px;background:#7C3AED;color:#FFFFFF;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">考今天这一组 (${n} 个)</button>` : `<button disabled style="white-space:nowrap;padding:12px 20px;background:#E2E8F0;color:#94A3B8;border:none;border-radius:10px;font-size:15px;font-weight:700">今天没有要考的词</button>`; })()}
       </div>
-      <div style="font-size:11px;color:#64748B;margin-top:6px">只考今天背过的词 (背一个就能考一个) · 选择题 + 选词填空 · 答错的词退两级, 明天这一组优先补 · 按卡组考在页面最下面</div>
+      <div style="font-size:11px;color:#64748B;margin-top:6px">考的就是今天这一组的词, 先考后背、先背后考都行 · 选择题 + 选词填空 · 答错的词退两级, 明天这一组优先补 · 按卡组考在页面最下面</div>
     </div>
     <div class="card" style="margin-bottom:12px">
       <div style="font-size:14px;font-weight:700;margin-bottom:8px">📅 每天新学多少 <span style="font-size:11px;font-weight:400;color:#64748B">复习另算 · 新学 + 复习一天最多 ${window.FC_DAILY_MAX} 个</span></div>

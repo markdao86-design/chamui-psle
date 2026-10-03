@@ -6400,8 +6400,9 @@ function buildVocabQuestion(word, rnd, deckHint) {
 // 选哪些词来考: 'today'=今天这一组; 卡组 id=那个卡组里 没考过的 → 上次考错的 → 最久没考的
 function pickQuizWords(state, source, n) {
   const fq = state.fcQuiz || {};
-  // v23.4 (用户 2026-10-03: "今天考的要对应今天学的"): 只考今天这一组里已经背过 (点过认识/不认识) 的词; 一个都没背就返回空, 按钮提示先背
-  if (source === 'today') { const g = state.fcDailyGroup; if (!g || g.date !== _fcToday()) return []; const fp = g.firstPass || {}; return g.words.filter(w => fp[w] != null); }
+  // v23.9 (用户 2026-10-03: "不要先背再考, 先做再背也行, 总之每天背诵的和考题是对应的"): 考题 = 今天这一组的全部词 (含手动加的组)。
+  // 先把今天这一组真正编出来并锁定 (不用 peekOnly 预览), 这样先考后背、先背后考两边都是同一份词
+  if (source === 'today') { const g = getDailyFlashcardGroup(state); return (g && g.words ? g.words : []).slice(); }
   const deck = FLASHCARD_DECKS.find(d => d.id === source);
   if (!deck) return [];
   const rank = w => { const q = fq[w]; return !q ? 0 : q.lastOk === false ? 1 : 2; };
