@@ -2239,12 +2239,14 @@ assert(/function openTipBookPrint\(\)/.test(appSrc) && /openTipBookPrint\(\)/.te
   L.forEach(e => {
     if (!e.id || !/^(eng|sci)$/.test(e.subj) || !W.TECHNIQUE_BOOK[e.subj].mods[e.mod]) bad.push(e.id + ':mod');
     if (!e.q || !/^(mcq|short)$/.test(e.q.type) || !e.q.stem) bad.push(e.id + ':q');
-    if (e.q && e.q.type === 'mcq' && (!Array.isArray(e.q.opts) || e.q.opts.length !== 4 || new Set(e.q.opts).size !== 4 || typeof e.q.ans !== 'number' || e.q.ans < 0 || e.q.ans > 3)) bad.push(e.id + ':opts');
+    if (e.q && e.q.type === 'mcq' && (!Array.isArray(e.q.opts) || e.q.opts.length < 3 || e.q.opts.length > 4 || new Set(e.q.opts).size !== e.q.opts.length || typeof e.q.ans !== 'number' || e.q.ans < 0 || e.q.ans >= e.q.opts.length)) bad.push(e.id + ':opts');   // v23.6: 听力题按真卷 3 个选项
+    if (e.q && e.q.type === 'mcq' && e.mod === 'listening' && e.q.opts.length !== 3) bad.push(e.id + ':听力应 3 选项');
+    if (e.subj === 'eng' && /^oral_/.test(e.mod) && /视频|video/i.test(JSON.stringify(e))) bad.push(e.id + ':口试材料是照片不是视频');
     if (!Array.isArray(e.steps) || e.steps.length < 2 || !e.trap || !Array.isArray(e.takeaways) || !e.takeaways.length) bad.push(e.id + ':steps');
   });
   assert(bad.length === 0, `v23.0: 每日考点条目结构齐 (坏: ${bad.slice(0, 5).join(',')})`);
   assert(new Set(L.map(e => e.id)).size === L.length, 'v23.0: 每日考点 id 不重复');
-  if (L.length) assert(L.filter(e => e.subj === 'eng').length >= 30 && L.filter(e => e.subj === 'sci').length >= 20, `v23.0: 每日考点 英语 ≥30 科学 ≥20 (实际 ${L.filter(e => e.subj === 'eng').length}/${L.filter(e => e.subj === 'sci').length})`);
+  if (L.length) assert(L.filter(e => e.subj === 'eng').length >= 130 && L.filter(e => e.subj === 'sci').length >= 100, `v23.0/v23.6: 每日考点 英语 ≥130 科学 ≥100 (全量清单覆盖; 实际 ${L.filter(e => e.subj === 'eng').length}/${L.filter(e => e.subj === 'sci').length})`);
 }
 
 // ===== v23.0b: 词汇考题 四专家审词条 + 出题器升级 =====
