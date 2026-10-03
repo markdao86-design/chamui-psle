@@ -669,7 +669,7 @@ assert(/week: 3, subject: '🔬 P3 Animal Life Cycle'/.test(_v24data), 'v19.24: 
 assert(/week: 4, subject: '🔬 P3 Plant Parts'/.test(_v24data), 'v19.24: W4 P3 Plant Parts');
 // v19.23→v19.80: 右栏顺序 思考题 → 知识树每日练(原名师秘籍容器) → 毕业题 (目标校已收进 ⋯其他 弹层)
 assert(/id="thinkPuzzleCard"[\s\S]{0,300}id="weekMasterTipCard"[\s\S]{0,300}id="gradReviewCard"/.test(idxSrc), 'v19.80: 右栏顺序 思考→每日练→毕业');
-assert(/🎓 教学 \+ 信息 \+ 复盘/.test(idxSrc), 'v19.23: 右栏标题改"教学 + 信息 + 复盘"');
+assert(/🎓 每日考点学习/.test(idxSrc), 'v19.23→v23.0: 右栏标题改"每日考点学习" (用户 2026-10-03)');
 // v19.22: 错题本卡 改进
 assert(/v19\.22: 错题本卡 \(整张可点 \+ game\/topic 分类 \+ 显眼大按钮\)/.test(appSrc), 'v19.22: 错题本卡注释');
 assert(/card\.onclick = \(e\) =>/.test(appSrc), 'v19.22: 错题本卡整张可点');
@@ -684,7 +684,7 @@ const oldEbDualTimer = (appSrc.match(/setTimeout\(\(\) => _renderErrorBankReview
 assert(oldEbDualTimer === 0, `v19.22: 旧 1200/2200 双 setTimeout 已撤 (实际 ${oldEbDualTimer})`);
 // v19.22: gradReviewCard 移到右栏
 // v19.22 + 23: gradReviewCard 在右栏 (v19.23 后注释改成 "教学 + 信息 + 复盘")
-assert(/<!-- 右栏:[\s\S]{0,800}id="gradReviewCard"/.test(idxSrc), 'v19.22+23: gradReviewCard 在右栏');
+assert(/_dashboardLegacy[\s\S]{0,800}id="gradReviewCard"/.test(idxSrc), 'v19.22+23→v23.0: gradReviewCard 挪进隐藏 legacy 容器 (首页只留三卡)');
 // v19.21: Paper 2 弱点卡改暗调
 assert(/weight:900;color:#1E40AF">🎯 Paper 2 弱点突击/.test(appSrc), "v19.63: Paper 2 标题品蓝(亮主题收敛)");
 // [v19.55 亮色主题: 暗色机制断言废除] assert(/rgba\(255,255,255,0\.04\);border:1px solid rgba\(255,255,255,0\.10\)[\s\S]{0,500}Cloze 单空填/.test(appSrc), 'v19.21: Cloze 块用透明背景');
@@ -705,9 +705,9 @@ assert(/linear-gradient\(90deg,#B45309,#16A34A\)/.test(appSrc), 'v19.21: 进度�
 assert(/class="home-grid-2col"/.test(idxSrc), 'v19.19: home-grid-2col 容器');
 assert(/class="home-col-left"/.test(idxSrc), 'v19.19: home-col-left');
 assert(/class="home-col-right"/.test(idxSrc), 'v19.19: home-col-right');
-assert(/⚡ 今日必做/.test(idxSrc), 'v19.19: 左栏标题');
+assert(/📝 每日分数打卡/.test(idxSrc), 'v19.19→v23.0: 左栏标题 每日分数打卡');
 // v19.23 右栏标题改 "🎓 教学 + 信息 + 复盘" (上面已断言)
-assert(/🎓 教学 \+ 信息 \+ 复盘|🎓 目标 \+ 教学/.test(idxSrc), 'v19.19+23: 右栏标题');
+assert(/🎓 每日考点学习/.test(idxSrc), 'v19.19+23→v23.0: 右栏标题');
 assert(/@media \(min-width:\s*900px\)[\s\S]{0,200}grid-template-columns:\s*1fr 1fr/.test(idxSrc), 'v19.19: 响应式 ≥900px 2 栏 / 其他 1 栏');
 // 防回归: 旧"📚 学习入口" 单栏标题已撤
 assert(!/📚 学习入口<\/div>/.test(idxSrc), 'v19.19: 旧学习入口单栏标题已撤');
@@ -738,7 +738,7 @@ const dataSrcV80 = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8');
 assert(/function getNextThinkPuzzle\(/.test(dataSrcV80) && /window\.getNextThinkPuzzle = getNextThinkPuzzle/.test(dataSrcV80) && /function getThinkPuzzleByWeek\(/.test(dataSrcV80), 'v19.80: 思考题取题 helper 定义+导出');
 assert(typeof W.getNextThinkPuzzle === 'function' && W.getNextThinkPuzzle({ thinkPuzzleAnswers: {} }, null) !== null, 'v19.80: getNextThinkPuzzle 空答案时能取到题');
 // v19.80: 布局 — 错题本在今日3件事前, 目标校进 ⋯其他 弹层
-assert(idxSrc.indexOf('id="errorBankCard"') < idxSrc.indexOf('id="todayThreeCard"'), 'v19.80: 错题本卡在今日 3 件事前面');
+assert(idxSrc.indexOf('id="todayThreeCard"') < idxSrc.indexOf('id="errorBankCard"'), 'v19.80→v23.0: 每日分数打卡在左栏第一, 错题本第二 (用户 2026-10-03)');
 assert(/id="targetSchoolModal"/.test(idxSrc) && /window\.toggleTargetSchoolModal\(\);window\.toggleMoreMenu\(\)/.test(idxSrc), 'v19.80: 目标校收进 ⋯其他 菜单弹层');
 assert((idxSrc.match(/id="targetSchoolMini"/g) || []).length === 1, 'v19.80: targetSchoolMini 只在弹层里出现一次');
 assert(/function toggleTargetSchoolModal\(/.test(appSrc) && /window\.toggleTargetSchoolModal = toggleTargetSchoolModal/.test(appSrc), 'v19.80: 目标校弹层开关定义+导出');
@@ -2008,7 +2008,8 @@ assert(/已学会 \$\{pr\.done\}\/\$\{pr\.total\}/.test(appSrc), 'v21.0: 主页�
     if (!qq || qq.opts.length !== 4 || new Set(qq.opts).size !== 4 || qq.ans < 0 || qq.ans > 3 || !qq.prompt) { badQ.push(x); return; }
     types[qq.type] = (types[qq.type] || 0) + 1;
     const right = qq.opts[qq.ans];
-    if ((qq.type === 'cloze' || qq.type === 'define') && right !== x) badQ.push(x + ':答案不是本词');
+    if (qq.type === 'define' && right !== x) badQ.push(x + ':答案不是本词');
+    if (qq.type === 'cloze' && !(right === x || (qq.optWords && qq.optWords[qq.ans] === x))) badQ.push(x + ':答案不是本词');   // v23.0: cloze 正确项用例句里的实际形态 (broke down), optWords 记原词
     if (qq.type === 'meaning' && right !== W.getVocabEn(x)) badQ.push(x + ':答案不是本词的解释');
   });
   assert(badQ.length === 0, `v21.1: 每个词都能出题且题目合法 (坏 ${badQ.length}: ${badQ.slice(0, 5).join(' / ')})`);
@@ -2189,6 +2190,69 @@ assert(/key: 'ed',[^\n]*days: \[2\]/.test(appSrc) && /key: 'gr',[^\n]*days: \[3,
 }
 
 assert(idxSrc.indexOf('data-page="practice">📚 学习中心</button>') > idxSrc.indexOf('data-page="vocab">📇 词汇</button>'), 'v22.2: 练习改名学习中心, 排在词汇后面 (用户 2026-10-03)');
+
+// ===== v23.0: 首页三卡 + 每日考点学习 + 答题技巧本 =====
+assert(/data-page="tips">📘 答题技巧/.test(idxSrc) && /id="page-tips"/.test(idxSrc) && /page === 'tips'[\s\S]{0,60}renderTipsPage\(\)/.test(appSrc), 'v23.0: 导航有"答题技巧"切页且会渲染');
+assert(idxSrc.indexOf('data-page="practice"') < idxSrc.indexOf('data-page="tips"') && idxSrc.indexOf('data-page="tips"') < idxSrc.indexOf('data-page="history"'), 'v23.0: 答题技巧排在学习中心后、能力前');
+assert(/id="dailyFocusCard"/.test(idxSrc) && /renderDailyFocusCard\(\)/.test(appSrc), 'v23.0: 主页右栏每日考点学习卡会渲染');
+assert(/_dashboardLegacy[\s\S]{0,600}id="paper2SprintCard"[\s\S]{0,300}id="thinkPuzzleCard"[\s\S]{0,200}id="weekMasterTipCard"/.test(idxSrc), 'v23.0: Paper2突击/思考题/知识树每日练 全部撤出首页 (DOM 留在隐藏容器)');
+{
+  const home = (idxSrc.match(/<div class="home-grid-2col">[\s\S]*?<!-- v19.14i/) || [''])[0];
+  const cards = (home.match(/id="[A-Za-z0-9_]+Card"/g) || []);
+  assert(cards.length === 3 && /todayThreeCard/.test(cards[0]) && /errorBankCard/.test(cards[1]) && /dailyFocusCard/.test(cards[2]), `v23.0: 首页两栏只剩 3 张卡 (打分/错题本/每日考点), 实际 ${cards.join(',')}`);
+}
+assert(/function _sgCtrl\(row, dk, sc\)/.test(appSrc) && /function _dailyScoreRowsHtml\(dow, dk\)/.test(appSrc) && /_dailyScoreRowsHtml\(dow, todayKey\)/.test(appSrc), 'v23.0: 主页每日分数打卡复用课表页同一个打分控件, 写同一份 scheduleScores');
+assert((appSrc.match(/_sgCtrl\(/g) || []).length >= 3, 'v23.0: 课表页周表也改走 _sgCtrl (不留两份控件代码)');
+assert(/const TECHNIQUE_BOOK = \{/.test(dataSrc) && W.TECHNIQUE_BOOK && ['eng', 'sci', 'math', 'cn'].every(s => W.TECHNIQUE_BOOK[s] && W.TECHNIQUE_BOOK[s].order.every(m => W.TECHNIQUE_BOOK[s].mods[m])), 'v23.0: 答题技巧本四科齐, order 里每个模块都有内容');
+{
+  const B = W.TECHNIQUE_BOOK; let bad = [];
+  Object.keys(B).forEach(s => B[s].order.forEach(m => { const x = B[s].mods[m]; if (!x.title || !x.paper || !(x.steps || []).length || !Array.isArray(x.template) || !(x.traps || []).length || !(x.check || []).length) bad.push(s + '/' + m); }));
+  assert(bad.length === 0, `v23.0: 每个模块都有 方法/模板/坑/自查 四块 (缺: ${bad.join(',')})`);
+  assert(B.eng.order.length === 14 && B.sci.order.length === 6, `v23.0: 英语 14 模块 (2025 新卷) / 科学 6 类 (实际 ${B.eng.order.length}/${B.sci.order.length})`);
+  assert(/14 分/.test(B.eng.mods.sw.paper) && /36 分/.test(B.eng.mods.compo.paper) && /10 题 10 分/.test(B.eng.mods.editing.paper) && /15 分/.test(B.eng.mods.oral_read.paper) && /25 分/.test(B.eng.mods.oral_conv.paper), 'v23.0: 分值按 SEAB 2025 新卷 (SW14/CW36/Editing10/RA15/SBC25)');
+}
+assert(typeof W.getDailyFocus === 'function' && typeof W.addTipBookEntries === 'function' && typeof W.markDailyFocus === 'function', 'v23.0: 每日考点/技巧本 数据函数都导出');
+assert(/window\.getDailyFocus\(state, today\)/.test(appSrc) && /window\.addTipBookEntries\(state, entry\.takeaways/.test(appSrc) && /state\.dfDone\[entry\.id\] = today/.test(appSrc), 'v23.0: 学完 → takeaways 自动进 tipBook, dfDone 记学过 (死代码警钟三件套)');
+assert(/type: 'daily_focus'/.test(appSrc) && /if \(first\)/.test(appSrc), 'v23.0: 每日考点 +5 分只发一次 (防重复点)');
+assert(/function openTipBookPrint\(\)/.test(appSrc) && /openTipBookPrint\(\)/.test(appSrc.replace('function openTipBookPrint()', '')), 'v23.0: 技巧本能汇总打印');
+{
+  // 每日考点条目结构校验 (有内容时)
+  const L = W.DAILY_FOCUS || []; let bad = [];
+  L.forEach(e => {
+    if (!e.id || !/^(eng|sci)$/.test(e.subj) || !W.TECHNIQUE_BOOK[e.subj].mods[e.mod]) bad.push(e.id + ':mod');
+    if (!e.q || !/^(mcq|short)$/.test(e.q.type) || !e.q.stem) bad.push(e.id + ':q');
+    if (e.q && e.q.type === 'mcq' && (!Array.isArray(e.q.opts) || e.q.opts.length !== 4 || new Set(e.q.opts).size !== 4 || typeof e.q.ans !== 'number' || e.q.ans < 0 || e.q.ans > 3)) bad.push(e.id + ':opts');
+    if (!Array.isArray(e.steps) || e.steps.length < 2 || !e.trap || !Array.isArray(e.takeaways) || !e.takeaways.length) bad.push(e.id + ':steps');
+  });
+  assert(bad.length === 0, `v23.0: 每日考点条目结构齐 (坏: ${bad.slice(0, 5).join(',')})`);
+  assert(new Set(L.map(e => e.id)).size === L.length, 'v23.0: 每日考点 id 不重复');
+  if (L.length) assert(L.filter(e => e.subj === 'eng').length >= 30 && L.filter(e => e.subj === 'sci').length >= 20, `v23.0: 每日考点 英语 ≥30 科学 ≥20 (实际 ${L.filter(e => e.subj === 'eng').length}/${L.filter(e => e.subj === 'sci').length})`);
+}
+
+// ===== v23.0b: 词汇考题 四专家审词条 + 出题器升级 =====
+{
+  const ctx2 = {}; const vm2 = require('vm');
+  vm2.runInContext(dataSrc + ';window.__g={buildVocabQuestion,_fcCanDistract,_fcLocate,_fcMatchTense,_fcParseHandQuiz};', vm2.createContext({ window: ctx2, document: {}, localStorage: { getItem: () => null, setItem: () => {} }, console }));
+  const g = ctx2.__g;
+  assert(ctx2.VOCAB_TIPS && Object.keys(ctx2.VOCAB_TIPS).length >= 1000, `v23.0: 每词考点解析 VOCAB_TIPS ≥1000 (实际 ${Object.keys(ctx2.VOCAB_TIPS || {}).length})`);
+  assert(ctx2.FC_BAN_PAIRS && ctx2.FC_BAN_PAIRS.length >= 100 && typeof ctx2.fcIsBanned === 'function', 'v23.0: 专家 banPair 表 ≥100 对并接进出题器');
+  assert(ctx2.VOCAB_FIXES && Object.keys(ctx2.VOCAB_FIXES).length >= 100, 'v23.0: 词条修订覆盖层 ≥100 词');
+  assert(g._fcCanDistract('overjoyed', 'ecstatic') === false && g._fcCanDistract('however', 'on the other hand') === false, 'v23.0: 义场过滤: 同义/同功能连接词不互为干扰项');
+  const l1 = g._fcLocate('come across', 'I came across an old letter.'), l2 = g._fcLocate('pick up', 'Can you pick me up at six?');
+  assert(l1 && l1.target === 'came across' && l2 && l2.target === 'pick me up', 'v23.0: 词组定位支持时态变形和代词插入');
+  assert(g._fcLocate('pat', 'The pattern was nice.') === null, 'v23.0: 白名单后缀, pat 不会配到 pattern');
+  assert(g._fcMatchTense('broke down', 'give in') === 'gave in' && g._fcMatchTense('looked up to', 'turn out') === 'turned out', 'v23.0: cloze 干扰项跟正确项同时态');
+  let seed = 5; const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  let none = 0, bad = 0, cloze = 0, banHit = 0, n = 0;
+  ctx2.FLASHCARD_DECKS.forEach(d => d.words.forEach(x => { for (let k = 0; k < 3; k++) { const q = g.buildVocabQuestion(x, rnd, d.id); if (!q) { none++; break; } n++; if (q.type === 'cloze') cloze++; if (q.opts.length !== 4 || new Set(q.opts).size !== 4 || q.ans < 0 || !Array.isArray(q.optWords)) bad++; (q.optWords || []).forEach(o => { if (o && o !== x && ctx2.fcIsBanned(x, o)) banHit++; }); } }));
+  assert(none === 0 && bad === 0, `v23.0: 全词库出题无空题/坏题 (空 ${none} 坏 ${bad} / ${n})`);
+  assert(banHit === 0, `v23.0: banPair 的词从不同场出现 (${banHit})`);
+  assert(cloze >= 150, `v23.0: 词组 cloze 题救回 (≥150, 实际 ${cloze})`);
+  const t = g.buildVocabQuestion('xylem', rnd, 'sci_life');
+  assert(t && t.opts.indexOf('phloem') >= 0, 'v23.0: 术语卡组干扰项优先同主题兄弟词 (xylem 配 phloem)');
+  assert(/function _fcQuizExplainHtml\(q\)/.test(appSrc) && /_fcQuizExplainHtml\(q\)/.test(appSrc.replace('function _fcQuizExplainHtml(q)', '')) && /其他选项为什么不对/.test(appSrc) && /getVocabTip/.test(appSrc), 'v23.0: 考题答后有详细解析 (语境线索/其他选项为什么不对/考点)');
+  assert(/buildVocabQuestion\(w, null, source === 'today' \? null : source\)/.test(appSrc), 'v23.0: 按卡组考时把卡组传给出题器 (freezing 跨卡组)');
+}
 
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');

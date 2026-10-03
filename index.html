@@ -5156,6 +5156,7 @@ p { font-size: 14px; line-height: 1.6; }
   <button class="tab-btn" data-page="checkin" style="display:none">✅ 打卡</button>
   <button class="tab-btn" data-page="vocab">📇 词汇</button>
   <button class="tab-btn" data-page="practice">📚 学习中心</button>
+  <button class="tab-btn" data-page="tips">📘 答题技巧</button>
   <button class="tab-btn" data-page="history">📊 能力</button>
   <!-- v19.54: 我的/暑假 收纳进 "⋯其他" (按钮仍在, JS click 可达) -->
   <button class="tab-btn" data-page="character" style="display:none">👤 我的</button>
@@ -5268,22 +5269,18 @@ p { font-size: 14px; line-height: 1.6; }
     <div class="home-grid-2col">
       <!-- 左栏: 今日必做 行动驱动 (v19.22: gradReviewCard 移到右栏减拥挤) -->
       <div class="home-col-left">
-        <div style="font-size:12px;font-weight:900;color:#1E40AF;letter-spacing:1px;margin-bottom:6px">⚡ 今日必做</div>
-        <!-- v19.80: 错题本提到今日3件事前面 (用户点名) -->
-        <div class="card" id="errorBankCard"></div>
+        <!-- v23.0 (用户 2026-10-03 "首页太杂"): 左栏只留 每日分数打卡表 + 错题本 -->
+        <div style="font-size:12px;font-weight:900;color:#1E40AF;letter-spacing:1px;margin-bottom:6px">📝 每日分数打卡</div>
         <div class="card" id="todayThreeCard" style="border-left:4px solid #1E40AF"></div>
-        <div class="card" id="paper2SprintCard"></div>
+        <div class="card" id="errorBankCard"></div>
         <!-- v19.35: 自动对齐 filler — 长栏时被挤为 0 不留痕 -->
         <div class="col-balance-filler" id="leftColFiller"></div>
       </div>
       <!-- 右栏: 教学 + 信息 + 复盘 (v19.23: 目标校下移到第 3, 教学卡上提) -->
       <div class="home-col-right">
-        <div style="font-size:12px;font-weight:900;color:#1E40AF;letter-spacing:1px;margin-bottom:6px">🎓 教学 + 信息 + 复盘</div>
-        <!-- v19.63: 每日揭秘思考题恢复显示 (曾被误 hide, render 一直在空转) -->
-        <div class="card think-puzzle-card" id="thinkPuzzleCard"></div>
-        <div class="card" id="weekMasterTipCard"></div>
-        <!-- v19.80: targetSchoolMini 收进 ⋯其他 菜单弹层 (用户点名), 卡在 targetSchoolModal 里 -->
-        <div id="gradReviewCard"></div>
+        <!-- v23.0: 右栏 "教学+信息+复盘" 改成 每日考点学习 一张卡; 思考题/知识树每日练/毕业复测/Paper2突击 挪进下面隐藏的 legacy 容器 -->
+        <div style="font-size:12px;font-weight:900;color:#7C3AED;letter-spacing:1px;margin-bottom:6px">🎓 每日考点学习</div>
+        <div class="card" id="dailyFocusCard" style="border-left:4px solid #7C3AED"></div>
         <!-- v19.35: 自动对齐 filler — 短栏时撑空到与长栏等高 -->
         <div class="col-balance-filler" id="rightColFiller"></div>
       </div>
@@ -5292,6 +5289,11 @@ p { font-size: 14px; line-height: 1.6; }
     <!-- v19.14i (UI 专家): "📋 更多详情" 折叠区改为彻底隐藏 (display:none), DOM 保留以兼容 render 函数 -->
     <!-- 内容 (智慧教练/进度/成就墙/皮肤更衣室/装备/双龙) 在 👤 我的 tab 已经有完整渲染 -->
     <div id="_dashboardLegacy" style="display:none">
+      <!-- v23.0: 首页撤下来的卡 (DOM 保留给 render 函数, 不显示) -->
+      <div class="card" id="paper2SprintCard"></div>
+      <div class="card think-puzzle-card" id="thinkPuzzleCard"></div>
+      <div class="card" id="weekMasterTipCard"></div>
+      <div id="gradReviewCard"></div>
       <!-- 原 details summary 已删 -->
       <span></span>
 
@@ -5481,6 +5483,11 @@ p { font-size: 14px; line-height: 1.6; }
 
   <div class="page" id="page-scimod">
     <div class="kt-page-wrap" style="padding:16px" id="sciModuleContent"><p style="color:var(--color-text-light);text-align:center;padding:40px">加载中…</p></div>
+  </div>
+
+  <!-- v23.0: 答题技巧本 (各科按考试模块: 方法 + 模板 + 坑 + 自查 + 每日考点收藏) -->
+  <div class="page" id="page-tips">
+    <div class="kt-page-wrap" style="padding:16px" id="tipsPageContent"></div>
   </div>
 
   <div class="page" id="page-practice">
@@ -5959,9 +5966,9 @@ p { font-size: 14px; line-height: 1.6; }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=22.3"></script>
-<script src="data.js?v=22.3"></script>
-<script src="app.js?v=22.3"></script>
+<script src="character.js?v=23.0"></script>
+<script src="data.js?v=23.0"></script>
+<script src="app.js?v=23.0"></script>
 
 </body>
 </html>

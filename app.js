@@ -508,6 +508,7 @@ function renderDashboard() {
   if (typeof renderGradReviewCard === 'function') renderGradReviewCard();   // v19.17 毕业题间隔复习
   // v19.18: 主页学习入口区 4 卡复活 — 思考题 + 名师秘籍 (paper2/error 已在上面)
   if (typeof renderThinkPuzzleCard === 'function') renderThinkPuzzleCard(state.currentWeek);
+  if (typeof renderDailyFocusCard === 'function') renderDailyFocusCard();   // v23.0: 每日考点学习 (主页右栏)
   if (typeof renderWeekMasterTipCard === 'function') renderWeekMasterTipCard();
   renderCompTrackerCard(); // v19.5: 作文质量追踪
   renderWeakChallengeCard(); // v19.5: 弱科挑战
@@ -922,16 +923,15 @@ function renderTodayThreeCard() {
     const three = day.three || [];
     const flags = three.map((t, i) => t[3] === 'manual' || t[3] === 'none' ? !!manual[i] : sig(t[3]));
     doneCount = flags.filter(Boolean).length;
-    headerTitle = `🎯 今日必做 · ${day.label || ''}`;
-    counterFn = () => `${doneCount} / ${three.length} 完成`;
-    headerSub = '按今天的课表 · 点一项: 能在 App 练的直接开练, 作业/班课点一下打勾';
-    itemsHtml = three.map((t, i) => {
-      const click = t[4] ? t[4] : `toggleTodayManual(${i})`;
-      const sub = t[2] || (t[3] === 'manual' ? '做完点一下打勾' : t[3] === 'none' ? '' : '');
-      return item(t[0], t[1], sub, flags[i], click, '#1E40AF');
-    }).join('') || '<div style="font-size:13px;color:#64748B;padding:10px">今天课表上没有安排</div>';
+    // v23.0: 用户 2026-10-03 "首页太杂": 左栏第一卡改成"每日分数打卡表" —— 只列今天要打卡的模块 + 对应打分格 (和课表页周打分矩阵同一份数据)
+    headerTitle = `📝 每日分数打卡 · ${day.label || ''}`;
+    counterFn = () => `课表 ${doneCount} / ${three.length}`;
+    headerSub = '上面是今天课表 (做完点一下打勾) · 下面是今天要填的分数, 填了课表页周表自动同步';
+    const chip = (t, i) => { const click = t[4] ? t[4] : `toggleTodayManual(${i})`; return `<div onclick="${click}" style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid ${flags[i] ? '#CBD5E1' : 'rgba(30,64,175,0.45)'};background:${flags[i] ? '#F1F5F9' : 'rgba(30,64,175,0.06)'};cursor:pointer;font-size:12px;color:${flags[i] ? '#94A3B8' : '#1E293B'};${flags[i] ? 'text-decoration:line-through;' : ''}"><span>${flags[i] ? '✅' : t[0]}</span><b>${escapeHtml(t[1])}</b></div>`; };
+    const rowsHtml = (typeof _dailyScoreRowsHtml === 'function') ? _dailyScoreRowsHtml(dow, todayKey) : '';
+    itemsHtml = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${three.map(chip).join('') || '<span style="font-size:12px;color:#64748B">今天课表上没有安排</span>'}</div>${rowsHtml}`;
     tipHtml = `<div style="margin-top:8px;padding:8px;background:linear-gradient(135deg, rgba(230,162,60,0.10), rgba(192,86,33,0.05));border:1px solid rgba(230,162,60,0.30);border-radius:6px;font-size:12px;color:#1E293B;line-height:1.6">
-      📅 完整时间表看 <b>课表</b> 页 · 21:30 戴 OK 镜睡觉
+      📅 完整时间表和整周打分看 <b><a href="#" onclick="gotoPage('schedule');return false" style="color:#1E40AF">课表</a></b> 页 · 21:30 戴 OK 镜睡觉
     </div>`;
   }
   card.innerHTML = `
@@ -2645,7 +2645,7 @@ function renderVocabPage() {
 let _fcQuiz = null;
 function startFcQuiz(source) {
   const words = window.pickQuizWords(state, source, 20);
-  const qs = words.map(w => window.buildVocabQuestion(w)).filter(Boolean);
+  const qs = words.map(w => window.buildVocabQuestion(w, null, source === 'today' ? null : source)).filter(Boolean);   // v23.0: 跨卡组重复词按当前卡组出题
   if (!qs.length) { showToast('这里暂时没有可以考的词', 'info'); return; }
   for (let i = qs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [qs[i], qs[j]] = [qs[j], qs[i]]; }
   const deck = FLASHCARD_DECKS.find(d => d.id === source);
@@ -2672,6 +2672,7 @@ function _renderFcQuiz() {
       <div style="font-size:15px;font-weight:800;color:${z.picked === q.ans ? '#16A34A' : '#C2410C'}">${z.picked === q.ans ? '✅ 答对了' : '❌ 答错了 — 这个词退两级, 明天这一组先补'}</div>
       <div style="font-size:15px;margin-top:6px;color:#1E293B"><b>${escapeHtml(q.word)}</b> ${ipa ? '<span style="color:#64748B">/' + escapeHtml(ipa) + '/</span>' : ''} ${_fcSpk(q.word, 18)}</div>
       <div style="font-size:14px;color:#1E293B;margin-top:4px;line-height:1.6">${escapeHtml(getVocabMeaning(q.word) === q.word ? '' : getVocabMeaning(q.word))}<br><span style="color:#475569">${escapeHtml(window.getVocabEn(q.word))}</span></div>
+      ${_fcQuizExplainHtml(q)}
     </div>
     <div style="text-align:center;margin-top:14px"><button onclick="nextFcQuiz()" style="padding:12px 40px;background:#1E40AF;color:#FFFFFF;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer">${z.idx + 1 >= z.qs.length ? '看成绩' : '下一题 →'}</button></div>`;
   el.innerHTML = `
@@ -2687,6 +2688,25 @@ function _renderFcQuiz() {
       ${fb}
     </div>
     <div style="height:6px;background:#E2E8F0;border-radius:3px;margin-top:16px;overflow:hidden"><div style="height:100%;width:${Math.round(z.idx / z.qs.length * 100)}%;background:#C4B5FD"></div></div>`;
+}
+// v23.0: 考点详细解析 (用户 2026-10-03: "讲考点进行详细解析"): 语境线索 + 每个干扰项为什么不对 + 这个词 PSLE 怎么考
+function _fcQuizExplainHtml(q) {
+  const row = (ico, title, body) => body ? `<div style="margin-top:8px"><div style="font-size:12px;font-weight:900;color:#1E40AF">${ico} ${title}</div><div style="font-size:13px;color:#1E293B;line-height:1.7">${body}</div></div>` : '';
+  let clue = '';
+  if (q.say && q.type !== 'hand') {
+    const sent = escapeHtml(q.pre || '') + `<mark style="background:#FEF08A;padding:0 3px;border-radius:3px;font-weight:700">${escapeHtml(q.type === 'cloze' ? q.opts[q.ans] : (q.target || q.word))}</mark>` + escapeHtml(q.post || '');
+    clue = sent + `<div style="font-size:12px;color:#64748B;margin-top:2px">${q.type === 'meaning' ? '词义题看划线词<b>前后的动作和情绪</b>: 它们限定了这个词只能是这个意思' : q.type === 'cloze' ? '选词题看空格<b>前后的搭配</b> (动词 + 介词 / 宾语是什么), 再看整句逻辑' : ''}</div>`;
+  }
+  let others = '';
+  if (Array.isArray(q.optWords) && q.optWords.some(Boolean)) {
+    others = q.optWords.map((w, i) => {
+      if (!w || i === q.ans) return '';
+      const zh = getVocabMeaning(w) === w ? '' : getVocabMeaning(w);
+      return `<div>✗ <b>${escapeHtml(q.type === 'meaning' ? w : q.opts[i])}</b>${q.type === 'meaning' ? '' : ''} = ${escapeHtml(zh || window.getVocabEn(w))}${zh ? ` <span style="color:#64748B">(${escapeHtml(window.getVocabEn(w))})</span>` : ''}</div>`;
+    }).join('');
+  }
+  const tip = q.tip || (window.getVocabTip ? window.getVocabTip(q.word) : '');
+  return row('🔎', '语境线索', clue) + row('🚫', '其他选项为什么不对', others) + (tip ? `<div style="margin-top:8px;padding:8px 10px;background:#FEF3C7;border:1px solid #FCD34D;border-radius:8px;font-size:13px;color:#1E293B;line-height:1.6">📌 <b>考点</b>: ${escapeHtml(tip)}</div>` : '');
 }
 function answerFcQuiz(i) {
   const z = _fcQuiz; if (!z || z.picked != null) return;
@@ -12039,6 +12059,35 @@ function renderSchedulePage() {
 function _schedSetDay(d) { _schedViewDay = d; renderSchedulePage(); }
 function _schedShiftWeek(n) { _schedWeekOffset += n; if (_schedWeekOffset > 0) _schedWeekOffset = 0; renderSchedGrid(); renderSchedWeekSummary(); }
 // 完整周打分网格 (行=检查项, 列=一/二/三/五/日)
+// v23.0: 一格打分控件 (课表页周表 + 主页每日分数打卡共用, 写同一份 state.scheduleScores)
+function _sgCtrl(row, dk, sc) {
+  const inpS = 'width:40px;padding:3px 2px;border-radius:5px;border:1px solid #CBD5E1;background:#F1F5F9;color:#1E293B;font-size:13px;text-align:center';  // v20.7: 26px 会把两位数截成一位 (20/30 显示成 2/3)
+  if (row.type === 'text') return `<input type="text" maxlength="200" placeholder="如: 读书20页" value="${escapeHtml(String(sc[row.key] ?? ''))}" style="width:92px;padding:4px 5px;border-radius:5px;border:1px solid #CBD5E1;background:#F8FAFC;color:#1E293B;font-size:12px" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
+  if (row.type === 'chk') return `<input type="checkbox" ${sc[row.key] ? 'checked' : ''} style="width:17px;height:17px" onchange="window.saveDailyScore('${dk}','${row.key}',this.checked?1:'')">`;
+  if (row.type === 'frac' || row.type === 'pair') return `<input type="number" class="sg-num" min="0" inputmode="numeric" value="${sc[row.key + '_a'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_a',this.value)"><span style="color:#1E293B;font-size:11px">/</span><input type="number" class="sg-num" min="0" inputmode="numeric" value="${sc[row.key + '_b'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_b',this.value)">`;
+  return `<input type="number" class="sg-num" min="0" inputmode="numeric" value="${sc[row.key] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
+}
+// v23.0: 主页"每日分数打卡表": 今天课表上要打卡的模块 (SCHED_GRID 里 days 含今天的行) + 打分格; 假期日期全开
+const _SG_PRACTICE_OF = { ed: 'openEditingGame()', gr: 'openGrammarGame()', cloze: 'openClozeGame()', syn: 'openSstGame()', oe: 'openCompOeGame()', sci_mcq: 'openSciMcqGame()', sci_oe: 'openScienceOEGame()', vt: "gotoPage('vocab')", wkt: "gotoPage('vocab')", vw: "gotoPage('vocab')", cn: 'openChineseOeGame()', math: 'openMathGame()' };
+function _dailyScoreRowsHtml(dow, dk) {
+  const scores = getSchedScores(), sc = scores[dk] || {};
+  const holiday = !!HOLIDAY_SCHED[dk];
+  const rows = SCHED_GRID.filter(r => !r.sec && (holiday || r.days.includes(dow)));
+  if (!rows.length) return '';
+  const filled = rows.filter(r => r.type === 'frac' || r.type === 'pair' ? (sc[r.key + '_a'] != null || sc[r.key + '_b'] != null) : sc[r.key] != null && sc[r.key] !== '').length;
+  const line = rows.map(r => {
+    const go = _SG_PRACTICE_OF[r.key] ? `<a href="#" onclick="${_SG_PRACTICE_OF[r.key]};return false" style="font-size:11px;color:#1E40AF;margin-left:6px;white-space:nowrap">去练 ›</a>` : '';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-bottom:1px solid #F1F5F9">
+      <div style="flex:1;min-width:0"><div style="font-size:13px;color:#1E293B;font-weight:600">${escapeHtml(r.label)}</div><div style="font-size:11px;color:#64748B">目标 ${escapeHtml(r.target)}${go}</div></div>
+      <div style="white-space:nowrap">${_sgCtrl(r, dk, sc)}</div>
+    </div>`;
+  }).join('');
+  return `<div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;background:#FFFFFF">
+    <div style="display:flex;align-items:center;padding:6px 8px;background:#F1F5F9;font-size:12px;font-weight:700;color:#1E40AF">今天要填的分数 <span style="margin-left:auto;font-weight:400;color:${filled === rows.length ? '#16A34A' : '#64748B'}">${filled} / ${rows.length} 已填</span></div>
+    ${line}
+  </div>`;
+}
+window._dailyScoreRowsHtml = _dailyScoreRowsHtml;
 function renderSchedGrid() {
   const wrap = document.getElementById('schedGridWrap');
   if (!wrap) return;
@@ -12062,16 +12111,7 @@ function renderSchedGrid() {
       // v20.7: 假期周任务和平日课表不一样 (假期周一做的是科学选择题/完形/数学), 按平日锁格子就没地方填 → 假期日期全开
       if (!row.days.includes(d) && !HOLIDAY_SCHED[dk]) return `<td style="padding:4px 2px;text-align:center;color:#4A5568;font-size:12px">—</td>`;
       const sc = scores[dk] || {};
-      let ctrl;
-      if (row.type === 'text') {
-        ctrl = `<input type="text" maxlength="200" placeholder="如: 读书20页" value="${escapeHtml(String(sc[row.key] ?? ''))}" style="width:92px;padding:4px 5px;border-radius:5px;border:1px solid #CBD5E1;background:#F8FAFC;color:#1E293B;font-size:12px" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
-      } else if (row.type === 'chk') {
-        ctrl = `<input type="checkbox" ${sc[row.key] ? 'checked' : ''} style="width:17px;height:17px" onchange="window.saveDailyScore('${dk}','${row.key}',this.checked?1:'')">`;
-      } else if (row.type === 'frac' || row.type === 'pair') {
-        ctrl = `<input type="number" class="sg-num" min="0" inputmode="numeric" value="${sc[row.key + '_a'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_a',this.value)"><span style="color:#1E293B;font-size:11px">/</span><input type="number" class="sg-num" min="0" inputmode="numeric" value="${sc[row.key + '_b'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_b',this.value)">`;
-      } else {
-        ctrl = `<input type="number" class="sg-num" min="0" inputmode="numeric" value="${sc[row.key] ?? ''}" style="${inpW}" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
-      }
+      const ctrl = _sgCtrl(row, dk, sc);
       return `<td style="padding:4px 2px;text-align:center;white-space:nowrap">${ctrl}</td>`;
     }).join('');
     return `<tr style="border-bottom:1px solid #F1F5F9">
@@ -12288,6 +12328,9 @@ function _runPageHook(page) {
       }
       if (page === 'scimod') {
         renderSciModulePage();
+      }
+      if (page === 'tips') {
+        renderTipsPage();   // v23.0: 答题技巧本
       }
       if (page === 'schedule') {
         _schedViewDay = null;  // 每次进入回到今天
@@ -12783,3 +12826,200 @@ if (document.readyState === 'loading') {
 }
 window.initModalScrollLock = initModalScrollLock;
 window.syncModalScrollLock = syncModalScrollLock;
+
+// ============= v23.0: 每日考点学习 (主页右栏, 取代思考题/知识树每日练/毕业复测三张卡) =============
+// 用户 2026-10-03: "保留教学、信息、复盘改成每日考点学习: 真的是英语和科学的 PSLE 常考点, 附同类型题的解题技巧和答题模板;
+// 如 cloze 先讲整个 cloze 的一般性方法论, 再针对这道题分析; 关键总结自动收藏到技巧本"
+let _dfUi = { date: null, picked: null, revealed: false, method: false, draft: '' };
+const DF_SUBJ_LABEL = { eng: '英语', sci: '科学', math: '数学', cn: '华文' };
+function _dfReset(today) { if (_dfUi.date !== today) _dfUi = { date: today, picked: null, revealed: false, method: false, draft: '' }; }
+function renderDailyFocusCard() {
+  const card = document.getElementById('dailyFocusCard');
+  if (!card) return;
+  const today = schedLocalDate();
+  _dfReset(today);
+  const entry = window.getDailyFocus ? window.getDailyFocus(state, today) : null;
+  const rec = ((state.dailyFocus || {})[today]) || {};
+  const doneN = Object.keys(state.dfDone || {}).length, bookN = (state.tipBook || []).length;
+  const head = (body) => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="font-size:17px;font-weight:900;color:#7C3AED">🎓 每日考点学习</div>
+      <a href="#" onclick="gotoPage('tips');return false" style="margin-left:auto;font-size:12px;color:#1E40AF;white-space:nowrap">📘 答题技巧本 ${bookN ? '(' + bookN + ')' : ''} ›</a>
+    </div>
+    <div style="font-size:11px;color:#888;margin-bottom:10px">每天一个 PSLE 常考点: 先学这类题怎么做 → 做一道同难度的题 → 看逐步分析 → 关键总结自动收进技巧本 · 已学 ${doneN} 个</div>
+    ${body}`;
+  if (!entry) { card.innerHTML = head('<div style="font-size:13px;color:#64748B;padding:10px">内容准备中 (专家审核后上线)</div>'); return; }
+  const tb = window.getTechniqueMod ? window.getTechniqueMod(entry.subj, entry.mod) : null;
+  const answered = !!rec.answered || _dfUi.revealed;
+  const isMcq = entry.q.type === 'mcq';
+  const picked = rec.answered ? rec.picked : _dfUi.picked;
+  const sec = (n, title, inner, color) => `<div style="margin-top:10px"><div style="font-size:12px;font-weight:900;color:${color || '#1E40AF'};margin-bottom:4px">${n} ${title}</div>${inner}</div>`;
+  const methodHtml = tb ? `
+    <div onclick="window._dfToggleMethod()" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;background:#EFF6FF;border:1px solid #93C5FD;font-size:13px;color:#1E40AF;font-weight:700">${tb.icon || '📘'} ${escapeHtml(tb.title)} 这类题怎么做 <span style="margin-left:auto;font-size:11px;font-weight:400">${_dfUi.method ? '收起 ▲' : '展开 ▼'}</span></div>
+    ${_dfUi.method ? `<div style="padding:8px 10px;border:1px solid #DBEAFE;border-top:none;border-radius:0 0 8px 8px;background:#FFFFFF">
+      <div style="font-size:11px;color:#64748B;margin-bottom:4px">${escapeHtml(tb.paper)}</div>
+      ${tb.steps.map((s, i) => `<div style="font-size:12px;color:#1E293B;line-height:1.7"><b>${i + 1}.</b> ${s}</div>`).join('')}
+      ${tb.template && tb.template.length ? `<div style="margin-top:6px;font-size:11px;font-weight:700;color:#7C3AED">答题模板</div>${tb.template.slice(0, 4).map(t => `<div style="font-size:12px;color:#1E293B;line-height:1.6;padding:3px 8px;margin-top:3px;background:#F5F3FF;border-left:3px solid #7C3AED;border-radius:4px">${t}</div>`).join('')}` : ''}
+      <div style="font-size:11px;color:#64748B;margin-top:6px">完整版 (常见坑 + 交卷自查) 在 <a href="#" onclick="gotoPage('tips');window._tipsOpen && window._tipsOpen('${entry.subj}','${entry.mod}');return false" style="color:#1E40AF">答题技巧</a> 页</div>
+    </div>` : ''}` : '';
+  let qHtml = `<div style="font-size:13px;color:#1E293B;line-height:1.7;white-space:pre-wrap;padding:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;font-family:Georgia,serif">${escapeHtml(entry.q.stem)}</div>`;
+  if (isMcq) {
+    qHtml += `<div style="display:grid;grid-template-columns:1fr;gap:6px;margin-top:8px">${entry.q.opts.map((o, i) => {
+      let bg = '#FFFFFF', bd = '#CBD5E1', fw = '400';
+      if (answered) { if (i === entry.q.ans) { bg = '#DCFCE7'; bd = '#16A34A'; fw = '900'; } else if (i === picked) { bg = '#FEE2E2'; bd = '#DC2626'; } }
+      return `<button ${answered ? 'disabled' : ''} onclick="window._dfPick(${i})" style="text-align:left;padding:9px 12px;border-radius:8px;border:1px solid ${bd};background:${bg};color:#1E293B;font-size:13px;font-weight:${fw};cursor:${answered ? 'default' : 'pointer'}">(${String.fromCharCode(65 + i)}) ${escapeHtml(o)}</button>`;
+    }).join('')}</div>`;
+  } else {
+    qHtml += answered
+      ? `<div style="margin-top:8px"><div style="font-size:11px;font-weight:700;color:#16A34A">✅ 范例答案 (marker 会给满分的写法)</div><div style="font-size:13px;color:#1E293B;line-height:1.7;white-space:pre-wrap;padding:8px 10px;background:#DCFCE7;border:1px solid #86EFAC;border-radius:8px;font-family:Georgia,serif">${escapeHtml(String(entry.q.ans))}</div>${_dfUi.draft || rec.draft ? `<div style="font-size:11px;color:#64748B;margin-top:4px">你写的: ${escapeHtml(String(_dfUi.draft || rec.draft))}</div>` : ''}</div>`
+      : `<textarea id="dfDraft" rows="3" placeholder="先自己写, 写完再看范例 (不写也能看, 但写了才记得住)" style="width:100%;box-sizing:border-box;margin-top:8px;padding:8px;border-radius:8px;border:1px solid #CBD5E1;font-size:13px;color:#1E293B;background:#FFFFFF">${escapeHtml(_dfUi.draft)}</textarea>
+         <button onclick="window._dfRevealShort()" style="margin-top:6px;padding:8px 14px;border-radius:8px;border:none;background:#7C3AED;color:#FFFFFF;font-weight:700;font-size:13px;cursor:pointer">写好了, 看范例答案和分析 →</button>`;
+  }
+  let afterHtml = '';
+  if (answered) {
+    const ok = isMcq ? picked === entry.q.ans : null;
+    afterHtml = `
+      ${isMcq ? `<div style="margin-top:8px;font-size:13px;font-weight:900;color:${ok ? '#16A34A' : '#DC2626'}">${ok ? '✅ 答对了 +5 分' : '❌ 答错了, 正确是 (' + String.fromCharCode(65 + entry.q.ans) + ') · 看懂分析也 +5 分'}</div>` : '<div style="margin-top:8px;font-size:13px;font-weight:900;color:#16A34A">✅ 学完 +5 分</div>'}
+      ${sec('③', '这道题怎么分析', `<div style="padding:8px 10px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px">${entry.steps.map(s => `<div style="font-size:12px;color:#1E293B;line-height:1.7">${escapeHtml(s)}</div>`).join('')}
+        <div style="margin-top:6px;font-size:12px;color:#B45309;line-height:1.6">⚠️ <b>最容易错在</b>: ${escapeHtml(entry.trap)}</div>
+        ${entry.template ? `<div style="margin-top:6px;font-size:12px;color:#1E293B;line-height:1.6;padding:4px 8px;background:#F5F3FF;border-left:3px solid #7C3AED;border-radius:4px">📐 模板: ${escapeHtml(entry.template)}</div>` : ''}</div>`)}
+      ${sec('④', '关键总结 → 已收进答题技巧本', `<div style="padding:8px 10px;background:#FEF3C7;border:1px solid #FCD34D;border-radius:8px">${entry.takeaways.map(t => `<div style="font-size:12px;color:#1E293B;line-height:1.7">⭐ ${escapeHtml(t)}</div>`).join('')}
+        <div style="font-size:11px;color:#64748B;margin-top:4px">在 <a href="#" onclick="gotoPage('tips');window._tipsOpen && window._tipsOpen('${entry.subj}','${entry.mod}');return false" style="color:#1E40AF">答题技巧 › ${escapeHtml(DF_SUBJ_LABEL[entry.subj] || '')} › ${escapeHtml(tb ? tb.title : entry.mod)}</a> 里能找到</div></div>`, '#B45309')}
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+        <button onclick="window._dfNext()" style="padding:8px 14px;border-radius:8px;border:1px solid #7C3AED;background:#FFFFFF;color:#7C3AED;font-weight:700;font-size:13px;cursor:pointer">再学一个考点 →</button>
+        <span style="font-size:11px;color:#64748B">明天自动换下一个</span>
+      </div>`;
+  }
+  card.innerHTML = head(`
+    <div style="font-size:11px;font-weight:700;color:#7C3AED;letter-spacing:.5px">${escapeHtml(DF_SUBJ_LABEL[entry.subj] || entry.subj)} · ${escapeHtml(tb ? tb.title : entry.mod)} · ${escapeHtml(entry.topic || '')}</div>
+    <div style="font-size:16px;font-weight:900;color:#1E293B;margin:2px 0 4px">${escapeHtml(entry.title)}</div>
+    <div style="font-size:12px;color:#64748B;line-height:1.6">${escapeHtml(entry.why)}</div>
+    ${sec('①', '这类题的一般方法', methodHtml)}
+    ${sec('②', '今天这道题' + (entry.q.marks ? ` <span style="font-weight:400;color:#64748B">(${entry.q.marks} 分)</span>` : ''), qHtml)}
+    ${afterHtml}
+  `);
+}
+window.renderDailyFocusCard = renderDailyFocusCard;
+function _dfToggleMethod() { _dfUi.method = !_dfUi.method; renderDailyFocusCard(); }
+function _dfComplete(entry, patch) {
+  const today = schedLocalDate();
+  const first = !((state.dfDone || {})[entry.id]);
+  if (!state.dfDone) state.dfDone = {};
+  state.dfDone[entry.id] = today;
+  window.markDailyFocus(state, entry.id, Object.assign({ answered: true }, patch || {}));
+  const n = window.addTipBookEntries(state, entry.takeaways.map((t, i) => ({ key: entry.id + '#' + i, subj: entry.subj, mod: entry.mod, text: t, from: entry.title })));
+  if (first) {
+    state.totalPoints = (state.totalPoints || 0) + 5;
+    if (!state.logs) state.logs = [];
+    state.logs.push({ reason: `🎓 每日考点学习: ${entry.title} +5`, points: 5, type: 'daily_focus', week: state.currentWeek, timestamp: Date.now() });
+  }
+  saveState(state);
+  if (n) showToast(`⭐ ${n} 条关键总结已收进答题技巧本`, 'happy');
+  _dfUi.revealed = true;
+  renderDailyFocusCard();
+  if (typeof updateCharacterDisplay === 'function') try { updateCharacterDisplay(); } catch (e) {}
+}
+function _dfPick(i) {
+  const entry = window.getDailyFocus(state, schedLocalDate());
+  if (!entry || _dfUi.revealed) return;
+  _dfUi.picked = i;
+  _dfComplete(entry, { picked: i, correct: i === entry.q.ans });
+}
+function _dfRevealShort() {
+  const entry = window.getDailyFocus(state, schedLocalDate());
+  if (!entry) return;
+  const ta = document.getElementById('dfDraft');
+  _dfUi.draft = ta ? ta.value.trim().slice(0, 600) : '';
+  _dfComplete(entry, { draft: _dfUi.draft });
+}
+// 再学一个: 同一天换下一条没学过的 (优先同科目), 今天的记录指向新条目
+function _dfNext() {
+  const list = window.DAILY_FOCUS || [];
+  const done = state.dfDone || {};
+  const cur = window.getDailyFocus(state, schedLocalDate());
+  const fresh = list.filter(x => !done[x.id] && (!cur || x.id !== cur.id));
+  if (!fresh.length) { showToast('所有考点都学过一遍了 🎉 明天开始二轮', 'happy'); return; }
+  const same = fresh.filter(x => cur && x.subj === cur.subj);
+  const pick = (same.length ? same : fresh)[Math.floor(Math.random() * (same.length ? same : fresh).length)];
+  window.markDailyFocus(state, pick.id, { answered: false, picked: null, draft: '' });
+  saveState(state);
+  _dfUi = { date: schedLocalDate(), picked: null, revealed: false, method: false, draft: '' };
+  renderDailyFocusCard();
+  const card = document.getElementById('dailyFocusCard'); if (card && card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+window._dfToggleMethod = _dfToggleMethod; window._dfPick = _dfPick; window._dfRevealShort = _dfRevealShort; window._dfNext = _dfNext;
+
+// ============= v23.0: 答题技巧 切页 (各科按考试模块: 方法 + 模板 + 常见坑 + 自查 + 我收藏的要点) =============
+let _tipsSubj = 'eng', _tipsOpenMod = null;
+function _tipsOpen(subj, mod) { _tipsSubj = subj || _tipsSubj; _tipsOpenMod = mod || null; renderTipsPage(); setTimeout(() => { const el = document.getElementById('tipmod-' + _tipsOpenMod); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50); }
+function _tipsSetSubj(s) { _tipsSubj = s; _tipsOpenMod = null; renderTipsPage(); }
+function _tipsToggle(mod) { _tipsOpenMod = (_tipsOpenMod === mod) ? null : mod; renderTipsPage(); }
+window._tipsOpen = _tipsOpen; window._tipsSetSubj = _tipsSetSubj; window._tipsToggle = _tipsToggle;
+function renderTipsPage() {
+  const el = document.getElementById('tipsPageContent');
+  if (!el || !window.TECHNIQUE_BOOK) return;
+  const book = window.TECHNIQUE_BOOK;
+  const subjTabs = Object.keys(book).map(s => `<button onclick="window._tipsSetSubj('${s}')" style="padding:7px 14px;border-radius:999px;border:1px solid ${_tipsSubj === s ? '#1E40AF' : '#CBD5E1'};background:${_tipsSubj === s ? '#1E40AF' : '#FFFFFF'};color:${_tipsSubj === s ? '#FFFFFF' : '#1E293B'};font-size:13px;font-weight:700;cursor:pointer">${book[s].label} <span style="font-size:11px;font-weight:400;opacity:.8">${(state.tipBook || []).filter(t => t.subj === s).length || ''}</span></button>`).join('');
+  const sb = book[_tipsSubj];
+  const mods = sb.order.map(key => {
+    const m = sb.mods[key];
+    const mine = window.getTipBookByMod(state, _tipsSubj, key);
+    const open = _tipsOpenMod === key;
+    const li = (arr, pre) => arr.map((x, i) => `<div style="font-size:13px;color:#1E293B;line-height:1.75">${pre === '#' ? '<b>' + (i + 1) + '.</b> ' : pre}${x}</div>`).join('');
+    const box = (title, inner, color, bg) => inner ? `<div style="margin-top:10px"><div style="font-size:12px;font-weight:900;color:${color};margin-bottom:4px">${title}</div><div style="padding:8px 10px;background:${bg};border-radius:8px">${inner}</div></div>` : '';
+    return `<div id="tipmod-${key}" class="card" style="margin-bottom:10px;border-left:4px solid ${open ? '#7C3AED' : '#E2E8F0'}">
+      <div onclick="window._tipsToggle('${key}')" style="cursor:pointer;display:flex;align-items:center;gap:10px">
+        <div style="font-size:22px">${m.icon || '📘'}</div>
+        <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:900;color:#1E293B">${escapeHtml(m.title)}</div><div style="font-size:11px;color:#64748B">${escapeHtml(m.paper)}${mine.length ? ` · <span style="color:#B45309;font-weight:700">⭐ 我收藏 ${mine.length} 条</span>` : ''}</div></div>
+        <div style="color:#64748B;font-size:12px">${open ? '收起 ▲' : '展开 ▼'}</div>
+      </div>
+      ${open ? `
+        ${box('① 做题方法 (按顺序)', li(m.steps, '#'), '#1E40AF', '#EFF6FF')}
+        ${box('② 答题模板 / 句式', m.template.length ? m.template.map(t => `<div style="font-size:13px;color:#1E293B;line-height:1.6;padding:4px 8px;margin-top:4px;background:#FFFFFF;border-left:3px solid #7C3AED;border-radius:4px;font-family:Georgia,serif">${t}</div>`).join('') : '', '#7C3AED', '#F5F3FF')}
+        ${box('③ 最常丢分的坑', li(m.traps, '⚠️ '), '#B45309', '#FEF3C7')}
+        ${box('④ 交卷前自查', li(m.check, '☐ '), '#16A34A', '#DCFCE7')}
+        ${box('⭐ 我从每日考点学到的 (自动收藏)', mine.length ? mine.map(t => `<div style="font-size:13px;color:#1E293B;line-height:1.7">⭐ ${escapeHtml(t.text)} <span style="font-size:11px;color:#94A3B8">· ${escapeHtml(t.from || '')} · ${t.date}</span></div>`).join('') : '<div style="font-size:12px;color:#94A3B8">还没有 · 主页"每日考点学习"学完会自动收进来</div>', '#B45309', '#FFFBEB')}
+      ` : ''}
+    </div>`;
+  }).join('');
+  const total = Object.keys(book).reduce((n, s) => n + book[s].order.length, 0);
+  el.innerHTML = `
+    <div class="card" style="border-left:4px solid #7C3AED">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="font-size:17px;font-weight:900;color:#1E293B">📘 答题技巧本</div>
+        <div style="font-size:12px;color:#64748B">四科 ${total} 个考试模块 · 方法 + 模板 + 坑 + 自查 · 收藏 ${(state.tipBook || []).length} 条</div>
+        <button onclick="window.openTipBookPrint()" style="margin-left:auto;padding:7px 12px;border-radius:8px;border:none;background:#7C3AED;color:#FFFFFF;font-weight:700;font-size:12px;cursor:pointer">🖨️ 汇总成一份技巧本 (打印 / 存 PDF)</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">${subjTabs}</div>
+    </div>
+    ${mods}`;
+}
+window.renderTipsPage = renderTipsPage;
+// 汇总打印: 四科全部模块 + 收藏要点, 开新窗口走浏览器打印 (手机上可"存为 PDF")
+function openTipBookPrint() {
+  const book = window.TECHNIQUE_BOOK; if (!book) return;
+  const esc = s => escapeHtml(String(s));
+  let html = '';
+  Object.keys(book).forEach(s => {
+    const sb = book[s];
+    html += `<h1>${esc(sb.label)}</h1>`;
+    sb.order.forEach(key => {
+      const m = sb.mods[key], mine = window.getTipBookByMod(state, s, key);
+      html += `<section><h2>${m.icon || ''} ${esc(m.title)} <small>${esc(m.paper)}</small></h2>
+        <h3>做题方法</h3><ol>${m.steps.map(x => `<li>${x}</li>`).join('')}</ol>
+        ${m.template.length ? `<h3>答题模板</h3><ul class="tpl">${m.template.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
+        <h3>最常丢分的坑</h3><ul>${m.traps.map(x => `<li>${x}</li>`).join('')}</ul>
+        <h3>交卷前自查</h3><ul class="chk">${m.check.map(x => `<li>☐ ${x}</li>`).join('')}</ul>
+        ${mine.length ? `<h3>⭐ 我学到的</h3><ul>${mine.map(t => `<li>${esc(t.text)} <small>(${esc(t.from)} · ${t.date})</small></li>`).join('')}</ul>` : ''}
+      </section>`;
+    });
+  });
+  const w = window.open('', '_blank');
+  if (!w) { showToast('浏览器拦截了新窗口, 允许弹窗后再试', 'warn'); return; }
+  w.document.write(`<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>PSLE 答题技巧本 · ${schedLocalDate()}</title>
+    <style>body{font-family:"Microsoft YaHei",Arial,sans-serif;color:#1E293B;max-width:800px;margin:24px auto;padding:0 16px;line-height:1.6}h1{color:#1E40AF;border-bottom:3px solid #1E40AF;padding-bottom:4px;page-break-before:always}h1:first-child{page-break-before:auto}h2{color:#7C3AED;margin:18px 0 4px;font-size:17px}h2 small{color:#64748B;font-weight:400;font-size:12px;margin-left:8px}h3{font-size:13px;color:#B45309;margin:10px 0 2px}ol,ul{margin:0;padding-left:20px;font-size:13px}li{margin:2px 0}.tpl li{font-family:Georgia,serif;background:#F5F3FF;padding:2px 6px;margin:3px 0;list-style:none;border-left:3px solid #7C3AED}.chk li{list-style:none}section{page-break-inside:avoid}@media print{body{margin:0}}</style></head><body>
+    <div style="text-align:center;margin-bottom:12px"><div style="font-size:22px;font-weight:900;color:#1E40AF">PSLE 答题技巧本</div><div style="font-size:12px;color:#64748B">按 2025 起新卷结构 · 生成于 ${schedLocalDate()} · 收藏要点 ${(state.tipBook || []).length} 条</div></div>${html}</body></html>`);
+  w.document.close();
+  setTimeout(() => { try { w.focus(); w.print(); } catch (e) {} }, 400);
+}
+window.openTipBookPrint = openTipBookPrint;
