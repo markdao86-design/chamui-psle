@@ -2161,7 +2161,7 @@ assert(/AL1 线是 90%/.test(appSrc) && /历年真题有版权不在 app 里/.te
 
 // ===== v22.1: 今日必做按课表生成 =====
 assert(/const day = SCHED_DAYS\[dow\] \|\| \{ three: \[\] \};/.test(appSrc) && /day\.three/.test(appSrc), 'v22.1: 今日必做从 SCHED_DAYS[今天].three 生成, 不再写死 Oral/Cloze/科学');
-assert(/function toggleTodayManual\(i\)/.test(appSrc) && /toggleTodayManual\(\$\{i\}\)/.test(appSrc), 'v22.1: 作业/班课这类 App 测不到的项能点一下自己打勾');
+assert(/function toggleTodayManual\(i\)/.test(appSrc) && /toggleTodayManual\('b\$\{b\.i\}'\)/.test(appSrc), 'v22.1/v23.1: 作业/班课这类 App 测不到的项能点一下自己打勾 (按课表块编号)');
 assert(/s === 'vocab' \? !!\(fcRec && fcRec\.done\)/.test(appSrc), 'v22.1: "背单词"按 App 今天这一组背完自动勾');
 {
   const SD = (appSrc.match(/const SCHED_DAYS = \{[\s\S]*?\n\};/) || [''])[0];
@@ -2201,7 +2201,7 @@ assert(/_dashboardLegacy[\s\S]{0,600}id="paper2SprintCard"[\s\S]{0,300}id="think
   const cards = (home.match(/id="[A-Za-z0-9_]+Card"/g) || []);
   assert(cards.length === 3 && /todayThreeCard/.test(cards[0]) && /errorBankCard/.test(cards[1]) && /dailyFocusCard/.test(cards[2]), `v23.0: 首页两栏只剩 3 张卡 (打分/错题本/每日考点), 实际 ${cards.join(',')}`);
 }
-assert(/function _sgCtrl\(row, dk, sc\)/.test(appSrc) && /function _dailyScoreRowsHtml\(dow, dk\)/.test(appSrc) && /_dailyScoreRowsHtml\(dow, todayKey\)/.test(appSrc), 'v23.0: 主页每日分数打卡复用课表页同一个打分控件, 写同一份 scheduleScores');
+assert(/function _sgCtrl\(row, dk, sc\)/.test(appSrc) && /_sgCtrl\(row, todayKey, sc\)/.test(appSrc) && /const gridKeyOf = \(name\)/.test(appSrc) && /day\.blocks \|\| \[\]/.test(appSrc), 'v23.0/v23.1: 主页每日分数打卡 = 今天课表的学习块 (严格按课表, 不加练习), 打分格复用课表页控件写同一份 scheduleScores');
 assert((appSrc.match(/_sgCtrl\(/g) || []).length >= 3, 'v23.0: 课表页周表也改走 _sgCtrl (不留两份控件代码)');
 assert(/const TECHNIQUE_BOOK = \{/.test(dataSrc) && W.TECHNIQUE_BOOK && ['eng', 'sci', 'math', 'cn'].every(s => W.TECHNIQUE_BOOK[s] && W.TECHNIQUE_BOOK[s].order.every(m => W.TECHNIQUE_BOOK[s].mods[m])), 'v23.0: 答题技巧本四科齐, order 里每个模块都有内容');
 {

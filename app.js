@@ -921,15 +921,32 @@ function renderTodayThreeCard() {
       return k.split('+').every(s => s === 'vocab' ? !!(fcRec && fcRec.done) : s === 'oral' ? (oral.done || (oral.todaySec || 0) >= 600) : (todayCounts[s] || 0) >= 1);
     };
     const three = day.three || [];
-    const flags = three.map((t, i) => t[3] === 'manual' || t[3] === 'none' ? !!manual[i] : sig(t[3]));
+    // v23.1 (用户 2026-10-03: "严格按课表来打卡, 不加多练习"): 打卡行 = 今天课表上的学习块 (c 班课 / s 自学), 不再把周表里所有格子都列出来
+    // 每块一行: 时间 | 内容 | 打卡控件。能对上周表格子的 (Editing/Cloze/Synthesis/语法/科学/语文/范文/口语) 用同一个格子 (周表自动同步); 对不上的 (班课/作业/补习老师) 点一下打勾
+    const scores = getSchedScores(), sc = scores[todayKey] || {};
+    const gridKeyOf = (name) => /editing/i.test(name) ? 'ed' : /cloze/i.test(name) ? 'cloze' : /synthesis|句型/i.test(name) ? 'syn' : /语法/.test(name) ? 'gr' : /科学/.test(name) ? 'sci_mcq' : /语文|华文真题/.test(name) ? 'cn' : /范文/.test(name) ? 'essay' : /阅读/.test(name) ? 'oe' : null;
+    const sigOf = (name) => /单词/.test(name) ? 'vocab' : /口语/.test(name) ? 'oral' : /editing/i.test(name) ? 'editing' : /cloze/i.test(name) ? 'cloze' : /synthesis/i.test(name) ? 'sst' : /语法/.test(name) ? 'grammar' : null;
+    const blocks = (day.blocks || []).map((b, i) => ({ i, t: b[0], name: b[1], note: b[2], kind: b[3] })).filter(b => b.kind !== 'r' && !/睡觉|洗漱|吃饭|休息|午休/.test(b.name));
+    const gridFilled = (key) => { const r = SCHED_GRID.find(x => x.key === key); if (!r) return false; return (r.type === 'frac' || r.type === 'pair') ? (sc[key + '_a'] != null || sc[key + '_b'] != null) : (sc[key] != null && sc[key] !== ''); };
+    const flags = blocks.map(b => { const k = gridKeyOf(b.name), sg = sigOf(b.name); return !!manual['b' + b.i] || (sg ? sig(sg) : false) || (k ? gridFilled(k) : false); });
     doneCount = flags.filter(Boolean).length;
-    // v23.0: 用户 2026-10-03 "首页太杂": 左栏第一卡改成"每日分数打卡表" —— 只列今天要打卡的模块 + 对应打分格 (和课表页周打分矩阵同一份数据)
     headerTitle = `📝 每日分数打卡 · ${day.label || ''}`;
-    counterFn = () => `课表 ${doneCount} / ${three.length}`;
-    headerSub = '上面是今天课表 (做完点一下打勾) · 下面是今天要填的分数, 填了课表页周表自动同步';
-    const chip = (t, i) => { const click = t[4] ? t[4] : `toggleTodayManual(${i})`; return `<div onclick="${click}" style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid ${flags[i] ? '#CBD5E1' : 'rgba(30,64,175,0.45)'};background:${flags[i] ? '#F1F5F9' : 'rgba(30,64,175,0.06)'};cursor:pointer;font-size:12px;color:${flags[i] ? '#94A3B8' : '#1E293B'};${flags[i] ? 'text-decoration:line-through;' : ''}"><span>${flags[i] ? '✅' : t[0]}</span><b>${escapeHtml(t[1])}</b></div>`; };
-    const rowsHtml = (typeof _dailyScoreRowsHtml === 'function') ? _dailyScoreRowsHtml(dow, todayKey) : '';
-    itemsHtml = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${three.map(chip).join('') || '<span style="font-size:12px;color:#64748B">今天课表上没有安排</span>'}</div>${rowsHtml}`;
+    counterFn = () => `${doneCount} / ${blocks.length} 完成`;
+    headerSub = '只列今天课表上的内容 · 有分数的填对几题/共几题 (课表页周表自动同步), 班课作业做完点一下打勾';
+    const rowHtml = (b, idx) => {
+      const k = gridKeyOf(b.name), row = k ? SCHED_GRID.find(x => x.key === k) : null, sg = sigOf(b.name);
+      const done = flags[idx];
+      const auto = sg && sig(sg) ? `<span style="font-size:11px;color:#16A34A;font-weight:700">App 已完成 ✓</span>` : '';
+      let ctrl;
+      if (row && row.type !== 'chk') ctrl = `<div style="white-space:nowrap">${_sgCtrl(row, todayKey, sc)}</div><div style="font-size:10px;color:#64748B;text-align:right">${escapeHtml(row.label.replace(/:.*$/, ''))} · 目标 ${escapeHtml(row.target)}</div>`;
+      else ctrl = `<input type="checkbox" ${manual['b' + b.i] ? 'checked' : ''} onchange="toggleTodayManual('b${b.i}')" style="width:20px;height:20px;cursor:pointer">`;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid #F1F5F9;background:${done ? '#F8FAFC' : '#FFFFFF'};${done ? 'opacity:.6' : ''}">
+        <div style="font-size:12px;color:#1E40AF;font-weight:700;white-space:nowrap;min-width:84px">${escapeHtml(b.t)}</div>
+        <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:#1E293B;${done ? 'text-decoration:line-through;' : ''}">${done ? '✅ ' : ''}${escapeHtml(b.name)}</div>${b.note ? `<div style="font-size:11px;color:#64748B">${escapeHtml(b.note)}</div>` : ''}${auto}</div>
+        <div style="text-align:right">${ctrl}</div>
+      </div>`;
+    };
+    itemsHtml = blocks.length ? `<div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden">${blocks.map(rowHtml).join('')}</div>` : '<div style="font-size:13px;color:#64748B;padding:10px">今天课表上没有学习安排 · 休息日</div>';
     tipHtml = `<div style="margin-top:8px;padding:8px;background:linear-gradient(135deg, rgba(230,162,60,0.10), rgba(192,86,33,0.05));border:1px solid rgba(230,162,60,0.30);border-radius:6px;font-size:12px;color:#1E293B;line-height:1.6">
       📅 完整时间表和整周打分看 <b><a href="#" onclick="gotoPage('schedule');return false" style="color:#1E40AF">课表</a></b> 页 · 21:30 戴 OK 镜睡觉
     </div>`;
@@ -12067,27 +12084,6 @@ function _sgCtrl(row, dk, sc) {
   if (row.type === 'frac' || row.type === 'pair') return `<input type="number" class="sg-num" min="0" inputmode="numeric" value="${sc[row.key + '_a'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_a',this.value)"><span style="color:#1E293B;font-size:11px">/</span><input type="number" class="sg-num" min="0" inputmode="numeric" value="${sc[row.key + '_b'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_b',this.value)">`;
   return `<input type="number" class="sg-num" min="0" inputmode="numeric" value="${sc[row.key] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
 }
-// v23.0: 主页"每日分数打卡表": 今天课表上要打卡的模块 (SCHED_GRID 里 days 含今天的行) + 打分格; 假期日期全开
-const _SG_PRACTICE_OF = { ed: 'openEditingGame()', gr: 'openGrammarGame()', cloze: 'openClozeGame()', syn: 'openSstGame()', oe: 'openCompOeGame()', sci_mcq: 'openSciMcqGame()', sci_oe: 'openScienceOEGame()', vt: "gotoPage('vocab')", wkt: "gotoPage('vocab')", vw: "gotoPage('vocab')", cn: 'openChineseOeGame()', math: 'openMathGame()' };
-function _dailyScoreRowsHtml(dow, dk) {
-  const scores = getSchedScores(), sc = scores[dk] || {};
-  const holiday = !!HOLIDAY_SCHED[dk];
-  const rows = SCHED_GRID.filter(r => !r.sec && (holiday || r.days.includes(dow)));
-  if (!rows.length) return '';
-  const filled = rows.filter(r => r.type === 'frac' || r.type === 'pair' ? (sc[r.key + '_a'] != null || sc[r.key + '_b'] != null) : sc[r.key] != null && sc[r.key] !== '').length;
-  const line = rows.map(r => {
-    const go = _SG_PRACTICE_OF[r.key] ? `<a href="#" onclick="${_SG_PRACTICE_OF[r.key]};return false" style="font-size:11px;color:#1E40AF;margin-left:6px;white-space:nowrap">去练 ›</a>` : '';
-    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-bottom:1px solid #F1F5F9">
-      <div style="flex:1;min-width:0"><div style="font-size:13px;color:#1E293B;font-weight:600">${escapeHtml(r.label)}</div><div style="font-size:11px;color:#64748B">目标 ${escapeHtml(r.target)}${go}</div></div>
-      <div style="white-space:nowrap">${_sgCtrl(r, dk, sc)}</div>
-    </div>`;
-  }).join('');
-  return `<div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;background:#FFFFFF">
-    <div style="display:flex;align-items:center;padding:6px 8px;background:#F1F5F9;font-size:12px;font-weight:700;color:#1E40AF">今天要填的分数 <span style="margin-left:auto;font-weight:400;color:${filled === rows.length ? '#16A34A' : '#64748B'}">${filled} / ${rows.length} 已填</span></div>
-    ${line}
-  </div>`;
-}
-window._dailyScoreRowsHtml = _dailyScoreRowsHtml;
 function renderSchedGrid() {
   const wrap = document.getElementById('schedGridWrap');
   if (!wrap) return;
