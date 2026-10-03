@@ -1153,7 +1153,7 @@ assert(/周日才开放/.test(appSrc), 'v19.38: app.js 含"周日才开放"新�
 assert(/data-page="schedule"/.test(idxSrc), 'v19.50: nav 含课表 tab 按钮');
 assert(/id="page-schedule"/.test(idxSrc), 'v19.50: page-schedule 容器存在');
 assert(/const SCHED_DAYS = \{/.test(appSrc), 'v19.50: SCHED_DAYS 课表数据存在');
-assert(/const SCHED_GRID = \[/.test(appSrc), 'v19.51: SCHED_GRID 周打分矩阵存在');
+assert(/const SCHED_GRID = \(function \(\) \{/.test(appSrc) && /const SCHED_ROW_DEF = \{/.test(appSrc), 'v19.51→v23.10: SCHED_GRID 周打分矩阵存在 (从课表自动生成)');
 // v19.51: 完整周打分表 (行×5学习日网格, 任意格可填, 周切换)
 assert(/function renderSchedGrid\(/.test(appSrc), 'v19.51: renderSchedGrid 已定义');
 assert(/renderSchedGrid\(\)/.test(appSrc), 'v19.51: renderSchedGrid 被调用');
@@ -1167,7 +1167,7 @@ assert(/overflow-x:auto/.test(appSrc), 'v19.51: 打分表横向滚动容器(手�
 assert(/v19\.53: 家长停在课表页/.test(appSrc), 'v19.53: 远程更新即时刷新课表页(多设备查看)');
 // v19.59: 打分表全周7天 + 自学记录文本行
 assert(/const COLS = \[1, 2, 3, 4, 5, 6, 0\]/.test(appSrc), 'v19.59: 打分表含周四/周六列');
-assert(/key: 'note'/.test(appSrc) && /type: 'text'/.test(appSrc), 'v19.59: 自学记录文本行存在');
+// (v23.10 删: 自学记录文本行不在课表上, 用户要求周表和课表全对上) assert(/key: 'note'/.test(appSrc) && /type: 'text'/.test(appSrc), 'v19.59: 自学记录文本行存在');
 assert(/field === 'note'/.test(appSrc), 'v19.59: note 存文本不转数字');
 assert(/row\.type === 'text'/.test(appSrc), 'v19.59: text 输入渲染分支');
 // v19.62: 能力页按计分卡维度评估
@@ -1192,7 +1192,7 @@ assert(/function submitErrorBankSelf\(/.test(appSrc) && /window\.submitErrorBank
 assert(/_ebApplyResult\(optIdx === item\.ans\)/.test(appSrc), 'v19.65: mcq提交复用共享结果处理');
 assert(/item\.ans \?\? item\.correctAns/.test(appSrc), 'v19.65: 答错反馈兜底correctAns(修undefined)');
 // v19.66: 做题类统一 对/总 两格填写
-assert(/label: 'Editing 2篇: 对_\/共_题'/.test(appSrc), 'v19.66: Editing行改对/总格式');
+assert(/label: 'Editing: 对_\/共_题'/.test(appSrc), 'v19.66/v23.10: Editing行改对/总格式');
 assert(/const wrongOf = /.test(appSrc) && /wrongAll\('ed'\)/.test(appSrc), 'v19.66: 错数从对/总推导 (v20.7 起全周聚合 wrongAll)');
 assert(!/label: '[^']*: 错_题'/.test(appSrc), 'v19.66: 无残留单格错题行');
 // v19.67: 答案详解+PSLE考点技巧
@@ -1901,7 +1901,8 @@ assert(/const f2All = key => ALL\.map/.test(appSrc) && !/pct\(\[f2\(1, 'oe'\), f
   // 用 indexOf 抠函数源码, 不走 RegExp (heredoc 反斜杠总被吃掉)
   const grab = (n, oneLine) => { const i = appSrc.indexOf('function ' + n + '('); if (i < 0) return ''; const j = oneLine ? appSrc.indexOf('\n', i) + 1 : appSrc.indexOf('\n}\n', i) + 3; return appSrc.slice(i, j); };
   const one = n => grab(n, true), multi = n => grab(n, false);
-  const ctx2 = vm.createContext({ state: st0 });
+  const ctx2 = vm.createContext({ state: st0, window: {}, console });
+  { const i0 = appSrc.indexOf('const SCHED_DAYS = {'); const j0 = appSrc.indexOf('window.SCHED_GRID = SCHED_GRID; window.schedKeysOf = schedKeysOf;'); vm.runInContext(appSrc.slice(i0, j0), ctx2); }   // v23.10: 周表从课表生成, 汇总要用 SCHED_GRID
   vm.runInContext(multi('schedLocalDate') + one('getSchedScores') + one('_sv') + multi('computeSchedWeekSummary'), ctx2);
   const r = vm.runInContext('computeSchedWeekSummary(new Date(2026, 8, 7, 12))', ctx2);
   const oe = r.rows.find(x => /阅读OE/.test(x[0])), sci = r.rows.find(x => /科BktA/.test(x[0]));
@@ -2169,7 +2170,17 @@ assert(/s === 'vocab' \? !!\(fcRec && fcRec\.done\)/.test(appSrc), 'v22.1: "背�
   assert(sig >= 26, `v22.1: 7 天的今日必做共 ${sig} 项, 每项都带完成信号`);
   assert(/\['🏫', '补习老师 18:00', 'Editing、Cloze、Synthesis 各两篇'/.test(SD), 'v22.1: 补习老师那项带着用户第二版表补的内容 (Editing、Cloze、Synthesis 各两篇)');
 }
-assert(/key: 'ed',[^\n]*days: \[2\]/.test(appSrc) && /key: 'gr',[^\n]*days: \[3, 5\]/.test(appSrc) && /key: 'sci_mcq',[^\n]*days: \[6\]/.test(appSrc) && /key: 'cn',[^\n]*days: \[0\]/.test(appSrc), 'v22.1: 周打分表的格子按新课表开 (Editing 周二 / 语法 周三周五 / 科学 周六 / 语文真题 周日)');
+{
+  // v23.10: 周打分表从课表自动生成, 用对象断言 (课表上哪天有什么, 表里就只开那一格)
+  const A = {}; { const vmA = require('vm'); const i0 = appSrc.indexOf('const SCHED_DAYS = {'); const j0 = appSrc.indexOf('window.SCHED_GRID = SCHED_GRID; window.schedKeysOf = schedKeysOf;'); vmA.runInContext(appSrc.slice(i0, j0) + 'window.SCHED_GRID=SCHED_GRID;window.schedKeysOf=schedKeysOf;', vmA.createContext({ window: A, console })); }
+  const G = {}; (A.SCHED_GRID || []).forEach(r => { if (r.key) G[r.key] = r.days.slice().sort(); });
+  const eq = (k, d) => G[k] && G[k].join() === d.slice().sort().join();
+  assert(eq('ed', [1, 2, 3, 5]) && eq('cloze', [1, 2, 3, 5]) && eq('syn', [1, 2, 3, 5]), `v22.1/v23.10: Editing/Cloze/Synthesis = 周二自学 + 周一三五补习老师 (实际 ${JSON.stringify(G.ed)})`);
+  assert(eq('gr', [3, 5]) && eq('sci_mcq', [6]) && eq('sci_oe', [6]) && eq('cn', [0]) && eq('oral', [0]) && eq('listen', [1, 2, 3, 4, 5]) && eq('vt', [1, 2, 3, 6]) && eq('essay', [3, 6]), `v23.10: 语法三五 / 科学六 / 语文真题日 / 口语课日 / 口语打卡一到五 / 背单词一二三六 / 范文三六 (实际 gr=${JSON.stringify(G.gr)} vt=${JSON.stringify(G.vt)})`);
+  assert(!G.vw && !G.wkt && !G.math && !G.paper && !G.review && !G.note && !G.sci_talk && !G.sci_fix, 'v23.10: 课表上没有的项 (词汇周清测/数学半卷/周日整卷/回炉…) 不再出现在周表');
+  assert(eq('sleep', [0, 1, 2, 3, 4, 5, 6]) && eq('parent', [0, 1, 2, 3, 4, 5, 6]) && G.hw && G.hw.length >= 4, 'v23.10: 每天必查只留 睡觉 + 家长核对; 作业/班课有勾');
+  assert(A.schedKeysOf('补习老师 (Editing、Cloze、Synthesis 各两篇)').join() === 'ed,cloze,syn' && A.schedKeysOf('背单词、口语打卡').join() === 'vt,listen' && A.schedKeysOf('周四作业').join() === 'hw' && A.schedKeysOf('上学').length === 0, 'v23.10: 课表块 → 打分行 映射 (补习老师拆三行, 一块多项)');
+}
 
 // ===== v22.2: 科学模块学习 (用户: 再加一个切页, 按同样的逻辑) =====
 {
@@ -2210,7 +2221,7 @@ assert(/_dashboardLegacy[\s\S]{0,600}id="paper2SprintCard"[\s\S]{0,300}id="think
   const cards = (home.match(/id="[A-Za-z0-9_]+Card"/g) || []);
   assert(cards.length === 3 && /todayThreeCard/.test(cards[0]) && /errorBankCard/.test(cards[1]) && /dailyFocusCard/.test(cards[2]), `v23.0: 首页两栏只剩 3 张卡 (打分/错题本/每日考点), 实际 ${cards.join(',')}`);
 }
-assert(/function _sgCtrl\(row, dk, sc\)/.test(appSrc) && /_sgCtrl\(row, todayKey, sc\)/.test(appSrc) && /const gridKeyOf = \(name\)/.test(appSrc) && /day\.blocks \|\| \[\]/.test(appSrc), 'v23.0/v23.1: 主页每日分数打卡 = 今天课表的学习块 (严格按课表, 不加练习), 打分格复用课表页控件写同一份 scheduleScores');
+assert(/function _sgCtrl\(row, dk, sc\)/.test(appSrc) && /_sgCtrl\(r, todayKey, sc\)/.test(appSrc) && /schedKeysOf\(b\.name\)/.test(appSrc) && /day\.blocks \|\| \[\]/.test(appSrc), 'v23.0/v23.1/v23.10: 主页每日分数打卡 = 今天课表的学习块 (严格按课表, 不加练习), 打分格复用课表页控件写同一份 scheduleScores');
 assert((appSrc.match(/_sgCtrl\(/g) || []).length >= 3, 'v23.0: 课表页周表也改走 _sgCtrl (不留两份控件代码)');
 assert(/const TECHNIQUE_BOOK = \{/.test(dataSrc) && W.TECHNIQUE_BOOK && ['eng', 'sci', 'math', 'cn'].every(s => W.TECHNIQUE_BOOK[s] && W.TECHNIQUE_BOOK[s].order.every(m => W.TECHNIQUE_BOOK[s].mods[m])), 'v23.0: 答题技巧本四科齐, order 里每个模块都有内容');
 {

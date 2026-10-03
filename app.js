@@ -926,11 +926,11 @@ function renderTodayThreeCard() {
     // v23.1 (用户 2026-10-03: "严格按课表来打卡, 不加多练习"): 打卡行 = 今天课表上的学习块 (c 班课 / s 自学), 不再把周表里所有格子都列出来
     // 每块一行: 时间 | 内容 | 打卡控件。能对上周表格子的 (Editing/Cloze/Synthesis/语法/科学/语文/范文/口语) 用同一个格子 (周表自动同步); 对不上的 (班课/作业/补习老师) 点一下打勾
     const scores = getSchedScores(), sc = scores[todayKey] || {};
-    const gridKeyOf = (name) => /editing/i.test(name) ? 'ed' : /cloze/i.test(name) ? 'cloze' : /synthesis|句型/i.test(name) ? 'syn' : /语法/.test(name) ? 'gr' : /科学/.test(name) ? 'sci_mcq' : /语文|华文真题/.test(name) ? 'cn' : /范文/.test(name) ? 'essay' : /阅读/.test(name) ? 'oe' : null;
+    const gridKeyOf = (name) => (schedKeysOf(name).filter(k => k !== 'hw')[0] || null);   // v23.10: 和周表同一张映射
     const sigOf = (name) => /单词/.test(name) ? 'vocab' : /口语/.test(name) ? 'oral' : /editing/i.test(name) ? 'editing' : /cloze/i.test(name) ? 'cloze' : /synthesis/i.test(name) ? 'sst' : /语法/.test(name) ? 'grammar' : null;
     const blocks = (day.blocks || []).map((b, i) => ({ i, t: b[0], name: b[1], note: b[2], kind: b[3] })).filter(b => b.kind !== 'r' && !/睡觉|洗漱|吃饭|休息|午休/.test(b.name));
     const gridFilled = (key) => { const r = SCHED_GRID.find(x => x.key === key); if (!r) return false; return (r.type === 'frac' || r.type === 'pair') ? (sc[key + '_a'] != null || sc[key + '_b'] != null) : (sc[key] != null && sc[key] !== ''); };
-    const flags = blocks.map(b => { const k = gridKeyOf(b.name), sg = sigOf(b.name); return !!manual['b' + b.i] || (sg ? sig(sg) : false) || (k ? gridFilled(k) : false); });
+    const flags = blocks.map(b => { const ks = schedKeysOf(b.name).filter(x => x !== 'hw'), sg = sigOf(b.name); return !!manual['b' + b.i] || (sg ? sig(sg) : false) || (ks.length ? ks.every(k => gridFilled(k)) : false); });
     doneCount = flags.filter(Boolean).length;
     headerTitle = `📝 每日分数打卡 · ${day.label || ''}`;
     counterFn = () => `${doneCount} / ${blocks.length} 完成`;
@@ -940,7 +940,8 @@ function renderTodayThreeCard() {
       const done = flags[idx];
       const auto = sg && sig(sg) ? `<span style="font-size:11px;color:#16A34A;font-weight:700">App 已完成 ✓</span>` : '';
       let ctrl;
-      if (row && row.type !== 'chk') ctrl = `<div style="white-space:nowrap">${_sgCtrl(row, todayKey, sc)}</div><div style="font-size:10px;color:#64748B;text-align:right">${escapeHtml(row.label.replace(/:\s*[^:]*[_＿].*$/, ''))} · 目标 ${escapeHtml(row.target)}</div>`;
+      const keys = schedKeysOf(b.name).filter(x => x !== 'hw').map(x => SCHED_GRID.find(r => r.key === x)).filter(Boolean);
+      if (keys.length) ctrl = keys.map(r => `<div style="white-space:nowrap;margin-top:2px">${_sgCtrl(r, todayKey, sc)}</div><div style="font-size:10px;color:#64748B;text-align:right">${escapeHtml(r.label.replace(/:\s*[^:]*[_＿].*$/, ''))} · 目标 ${escapeHtml(r.target)}</div>`).join('');
       else ctrl = `<input type="checkbox" ${manual['b' + b.i] ? 'checked' : ''} onchange="toggleTodayManual('b${b.i}')" style="width:20px;height:20px;cursor:pointer">`;
       return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid #F1F5F9;background:${done ? '#F8FAFC' : '#FFFFFF'};${done ? 'opacity:.6' : ''}">
         <div style="font-size:12px;color:#1E40AF;font-weight:700;white-space:nowrap;min-width:84px">${escapeHtml(b.t)}</div>
@@ -11659,35 +11660,60 @@ const SCHED_DAYS = {
 // v19.51: 周打分表矩阵 (对齐手册附录B每日成绩单)
 // type: num=1个数 / frac=对_/共_ / pair=两个独立数 / chk=勾
 // days: 该行哪些天有格 (1一 2二 3三 5五 0日)
-const SCHED_GRID = [
-  { sec: '英语' },
-  { key: 'ed',      label: 'Editing 2篇: 对_/共_题',        target: '错≤1/天', type: 'frac', days: [2] },
-  { key: 'gr',      label: '语法30题: 对_/共_题',          target: '错≤3/天', type: 'frac', days: [3, 5] },
-  { key: 'oe',      label: '阅读OE: 答完整_/共_题',          target: '≥75%',  type: 'frac', days: [4] },
-  { key: 'cloze',   label: 'Cloze: 对_/共_空',              target: '≥70%',  type: 'frac', days: [2] },
-  { key: 'vw',      label: 'Vocabulary: 对_/共_题',         target: '错≤5/周', type: 'frac', days: [1, 2, 3, 6] },
-  { key: 'syn',     label: '句型转换: 对_/共_题',            target: '错≤3/周', type: 'frac', days: [2] },
-  { key: 'listen',  label: '口语打卡: 完成_次',              target: '1次',   type: 'num',  days: [1, 2, 3, 4, 5] },
-  { key: 'wkt',     label: '词汇周清测: 对_/共_',            target: '≥80%',  type: 'frac', days: [6] },
-  { sec: '科学' },
-  { key: 'sci_talk',label: '概念: 讲给家长30秒, 讲清?',      target: '勾',    type: 'chk',  days: [6] },
-  { key: 'sci_oe',  label: '开放题2道: 术语全对_/2',         target: '2/2',   type: 'frac', days: [6] },
-  { key: 'sci_mcq', label: '科学选择题: 对_/共_题',          target: '≥80%',  type: 'frac', days: [6] },
-  { key: 'sci_fix', label: '回炉(轮换周): 清掉_章',          target: '≥1',    type: 'num',  days: [6] },
-  { sec: '华文 / 数学 / 周日' },
-  { key: 'cn',      label: '华文阅读大题: 踩中_/共_点',      target: '漏≤2',  type: 'frac', days: [0] },
-  { key: 'math',    label: '数学半卷(轮换周): 错_/粗心_',    target: '粗心0', type: 'pair', days: [6] },
-  { key: 'paper',   label: '周日整卷: 得分_/满分_',          target: '记录',  type: 'frac', days: [0] },
-  { key: 'essay',   label: '范文半篇: 背完_/对家长复述_(1=是)', target: '1/1',  type: 'pair', days: [3, 6] },
-  { key: 'oral',    label: '口语2场(英/华): 家长打_星(1-5)', target: '≥3星',  type: 'num',  days: [0] },
-  { sec: '每天必查' },
-  { key: 'review',  label: '错题登记/复盘/二刷: 完成',       target: '勾',    type: 'chk',  days: [1, 2, 3, 5, 6] },
-  { key: 'vt',      label: '睡前单词自测: 对_/共_',          target: '≥80%',  type: 'frac', days: [1, 2, 3, 6] },
-  { key: 'sleep',   label: '21:30戴OK镜准时睡',                 target: '勾',    type: 'chk',  days: [1, 2, 3, 4, 5, 6, 0] },
-  { key: 'parent',  label: '家长已核对',                    target: '勾',    type: 'chk',  days: [1, 2, 3, 4, 5, 6, 0] },
-  { sec: '自学记录(周四/周六自由安排日重点填)' },
-  { key: 'note',    label: '今天自学了什么(手动填写)',       target: '自由填', type: 'text', days: [1, 2, 3, 4, 5, 6, 0] },
-];
+// v23.10: 周打分表不再手写, 从课表 SCHED_DAYS 自动生成 —— 课表上哪天有什么, 表里就只有那一行那一格 (用户: "每周打分明细应该和课表内容能全对上")
+// 一个课表块 → 0-3 个打分行 (补习老师 = Editing + Cloze + Synthesis 三行; 班课/作业 = 一个"完成"勾); 每天必查只留 睡觉 + 家长核对
+const SCHED_ROW_DEF = {
+  ed:      { sec: '英语', label: 'Editing: 对_/共_题',         target: '错≤1',    type: 'frac' },
+  cloze:   { sec: '英语', label: 'Cloze: 对_/共_空',           target: '≥70%',    type: 'frac' },
+  syn:     { sec: '英语', label: 'Synthesis: 对_/共_题',       target: '错≤1',    type: 'frac' },
+  gr:      { sec: '英语', label: '语法30题: 对_/共_题',        target: '错≤3',    type: 'frac' },
+  oe:      { sec: '英语', label: '英语自学: 对_/共_题',        target: '≥75%',    type: 'frac' },
+  vt:      { sec: '英语', label: '背单词: 考对_/共_',          target: '≥80%',    type: 'frac' },
+  essay:   { sec: '英语', label: '范文半篇: 背完_/复述_(1=是)', target: '1/1',    type: 'pair' },
+  listen:  { sec: '英语', label: '口语打卡: 完成_次',          target: '1次',     type: 'num'  },
+  oral:    { sec: '英语', label: '口语课: 家长打_星(1-5)',     target: '≥3星',    type: 'num'  },
+  sci_mcq: { sec: '科学', label: '科学选择题: 对_/共_题',      target: '≥80%',    type: 'frac' },
+  sci_oe:  { sec: '科学', label: '科学开放题: 术语全对_/共_',  target: '全对',    type: 'frac' },
+  cn:      { sec: '华文', label: '语文真题: 踩中_/共_点',      target: '漏≤2',    type: 'frac' },
+  hw:      { sec: '作业 / 班课', label: '作业、班课: 完成',    target: '勾',      type: 'chk'  },
+  sleep:   { sec: '每天必查', label: '21:30戴OK镜准时睡',      target: '勾',      type: 'chk'  },
+  parent:  { sec: '每天必查', label: '家长已核对',             target: '勾',      type: 'chk'  },
+};
+// 课表块名 → 打分行 key 列表 (主页每日打卡 / 课表页按天填 / 整周表格 三处共用这一张映射)
+function schedKeysOf(name) {
+  const n = String(name || '');
+  if (/上学|睡觉|洗漱|吃饭|休息|午休/.test(n)) return [];
+  const keys = [];
+  if (/editing/i.test(n)) keys.push('ed');
+  if (/cloze/i.test(n)) keys.push('cloze');
+  if (/synthesis|句型/i.test(n)) keys.push('syn');
+  if (/语法/.test(n)) keys.push('gr');
+  if (/单词/.test(n)) keys.push('vt');
+  if (/范文/.test(n)) keys.push('essay');
+  if (/口语课/.test(n)) keys.push('oral'); else if (/口语/.test(n)) keys.push('listen');
+  if (/科学/.test(n)) keys.push('sci_mcq', 'sci_oe');
+  if (/语文|华文真题/.test(n)) keys.push('cn');
+  if (/阅读|英语\+/.test(n)) keys.push('oe');
+  if (!keys.length && /作业|课$|课\b|华文|班/.test(n)) keys.push('hw');
+  return keys;
+}
+const SCHED_GRID = (function () {
+  const days = {}; Object.keys(SCHED_ROW_DEF).forEach(k => { days[k] = []; });
+  [1, 2, 3, 4, 5, 6, 0].forEach(d => {
+    const day = SCHED_DAYS[d]; if (!day) return;
+    (day.blocks || []).forEach(b => { if (b[3] === 'r') return; schedKeysOf(b[1]).forEach(k => { if (days[k] && days[k].indexOf(d) < 0) days[k].push(d); }); });
+    days.sleep.push(d); days.parent.push(d);
+  });
+  const out = []; let lastSec = null;
+  Object.keys(SCHED_ROW_DEF).forEach(k => {
+    if (!days[k].length) return;
+    const def = SCHED_ROW_DEF[k];
+    if (def.sec !== lastSec) { out.push({ sec: def.sec }); lastSec = def.sec; }
+    out.push({ key: k, label: def.label, target: def.target, type: def.type, days: days[k] });
+  });
+  return out;
+})();
+window.SCHED_GRID = SCHED_GRID; window.schedKeysOf = schedKeysOf; window.SCHED_ROW_DEF = SCHED_ROW_DEF;
 function schedLocalDate(d) {
   d = d || new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -11743,21 +11769,25 @@ function computeSchedWeekSummary(mondayDate) {
   const paperA = firstOf('paper_a'), paperB = firstOf('paper_b');
   const rows = [ // [PSLE模块, 本周值, 达标线, pass(null=没数据)]
     ['英P2·阅读OE (20分)', oePct == null ? '—' : oePct + '%', '≥75%', oePct == null ? null : oePct >= 75],
-    ['英P2·Editing (12分)', edW == null ? '—' : '错' + edW, '≤3', edW == null ? null : edW <= 3],
+    ['英P2·Editing (10分)', edW == null ? '—' : '错' + edW, '≤3', edW == null ? null : edW <= 3],
     ['英P2·Grammar+词汇MCQ', (grW == null ? '—' : '错' + grW) + '/' + (vwW == null ? '—' : '错' + vwW), '≤4/≤10', (grW == null && vwW == null) ? null : ((grW == null || grW <= 4) && (vwW == null || vwW <= 10))],
     ['英P2·完形 (15分)', clozePct == null ? '—' : clozePct + '%', '≥70%', clozePct == null ? null : clozePct >= 70],
     ['英P2·句型转换 (10分)', synW == null ? '—' : '错' + synW, '≤4', synW == null ? null : synW <= 4],
-    ['英P1·作文 (55分)', essay == null ? '—' : essay + '/40', '≥上篇', essay == null ? null : true],
+    ['英P1·作文 (36分)', essay == null ? '—' : essay + '/40', '≥上篇', essay == null ? null : true],
     ['英P3/P4·听说口语', (listen == null ? '—' : listen + '/3样') + '·' + (oralStar == null ? '—' : oralStar + '星'), '3样·≥3星', (listen == null && oralStar == null) ? null : ((listen || 0) >= 3 && (oralStar || 0) >= 3)],
-    ['科BktA·选择 (56分)', sciMcqPct == null ? '—' : '对' + sciMcqA + '/' + sciMcqB + ' (' + sciMcqPct + '%)', '≥80%', sciMcqPct == null ? null : sciMcqPct >= 80],
-    ['科BktB·开放题 (44分)', sciOe == null ? '—' : sciOe + '/' + (sciOeB || 2), '全对', sciOe == null ? null : sciOe >= (sciOeB || 2)],
+    ['科BktA·选择 (60分)', sciMcqPct == null ? '—' : '对' + sciMcqA + '/' + sciMcqB + ' (' + sciMcqPct + '%)', '≥80%', sciMcqPct == null ? null : sciMcqPct >= 80],
+    ['科BktB·开放题 (40分)', sciOe == null ? '—' : sciOe + '/' + (sciOeB || 2), '全对', sciOe == null ? null : sciOe >= (sciOeB || 2)],
     ['华P2·阅读漏点', cnMiss == null ? '—' : '漏' + cnMiss, '≤2', cnMiss == null ? null : cnMiss <= 2],
     ['数·粗心新增', mathC == null ? '—' : mathC + '题', '≤2', mathC == null ? null : mathC <= 2],
-    ['词汇底盘 (清测/睡前)', (wktPct == null ? '—' : wktPct + '%') + '/' + (vtPct == null ? '—' : vtPct + '%'), '≥80%', (wktPct == null && vtPct == null) ? null : ((wktPct == null || wktPct >= 80) && (vtPct == null || vtPct >= 80))],
+    ['背单词 (考题正确率)', (wktPct == null ? '—' : wktPct + '%') + '/' + (vtPct == null ? '—' : vtPct + '%'), '≥80%', (wktPct == null && vtPct == null) ? null : ((wktPct == null || wktPct >= 80) && (vtPct == null || vtPct >= 80))],
     ['周日整卷', paperA == null ? '—' : paperA + '/' + (paperB || '?'), '记录', paperA == null ? null : true],
   ];
-  const graded = rows.filter(r => r[3] !== null);
-  return { rows, passN: graded.filter(r => r[3]).length, gradedN: graded.length };
+  // v23.10: 只留课表里真有的项 (周表从课表生成后, 没有的 key 永远是 '—', 不该出现在计分卡里)
+  const have = new Set(SCHED_GRID.filter(r => r.key).map(r => r.key));
+  const needs = { '英P2·阅读OE (20分)': ['oe'], '英P2·Editing (10分)': ['ed'], '英P2·Grammar+词汇MCQ': ['gr'], '英P2·完形 (15分)': ['cloze'], '英P2·句型转换 (10分)': ['syn'], '英P1·作文 (36分)': ['essay'], '英P3/P4·听说口语': ['listen', 'oral'], '科BktA·选择 (60分)': ['sci_mcq'], '科BktB·开放题 (40分)': ['sci_oe'], '华P2·阅读漏点': ['cn'], '数·粗心新增': ['math'], '背单词 (考题正确率)': ['vt', 'wkt'], '周日整卷': ['paper'] };
+  const kept = rows.filter(r => !needs[r[0]] || needs[r[0]].some(k => have.has(k)));
+  const graded = kept.filter(r => r[3] !== null);
+  return { rows: kept, passN: graded.filter(r => r[3]).length, gradedN: graded.length };
 }
 // ============ v19.79: 9月假期课表 (2026-09-05 ~ 09-13, 按日期匹配, 9/14 自动恢复常规) ============
 // 数据源: 桌面《PSLE_2027_假期课表_v2.docx》· 班课=上午Paper2突破班(9/7-10)+下午口语班(9/10-13)
@@ -12100,15 +12130,17 @@ function renderSchedDayScore(dow) {
   const el = document.getElementById('schedDayScore'); if (!el) return;
   const dk = _schedDateOfDow(dow), scores = getSchedScores(), sc = scores[dk] || {}, manual = ((state.todayManual || {})[dk]) || {};
   const day = SCHED_DAYS[dow] || { blocks: [] };
-  const gridKeyOf = (name) => /editing/i.test(name) ? 'ed' : /cloze/i.test(name) ? 'cloze' : /synthesis|句型/i.test(name) ? 'syn' : /语法/.test(name) ? 'gr' : /科学/.test(name) ? 'sci_mcq' : /语文|华文真题/.test(name) ? 'cn' : /范文/.test(name) ? 'essay' : /阅读/.test(name) ? 'oe' : null;
   const blocks = (day.blocks || []).map((b, i) => ({ i, t: b[0], name: b[1], kind: b[3] })).filter(b => b.kind !== 'r' && !/睡觉|洗漱|吃饭|休息|午休/.test(b.name));
   const row = (left, sub, ctrl) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid #F1F5F9"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:#1E293B">${left}</div>${sub ? `<div style="font-size:11px;color:#64748B">${sub}</div>` : ''}</div><div style="white-space:nowrap">${ctrl}</div></div>`;
   const blockRows = blocks.map(b => {
-    const k = gridKeyOf(b.name), r = k ? SCHED_GRID.find(x => x.key === k) : null;
-    const ctrl = (r && r.type !== 'chk') ? _sgCtrl(r, dk, sc) : `<input type="checkbox" ${manual['b' + b.i] ? 'checked' : ''} onchange="toggleManualFor('${dk}','b${b.i}')" style="width:20px;height:20px;cursor:pointer">`;
-    return row(`<span style="color:#1E40AF;font-size:12px;margin-right:8px">${escapeHtml(b.t)}</span>${escapeHtml(b.name)}`, r ? `${escapeHtml(r.label.replace(/:\s*[^:]*[_＿].*$/, ''))} · 目标 ${escapeHtml(r.target)}` : '做完打勾', ctrl);
+    const rs = schedKeysOf(b.name).map(k => SCHED_GRID.find(x => x.key === k)).filter(Boolean);
+    const scoreRows = rs.filter(r => r.type !== 'chk');
+    const hwRow = rs.find(r => r.key === 'hw');
+    const head = `<span style="color:#1E40AF;font-size:12px;margin-right:8px">${escapeHtml(b.t)}</span>${escapeHtml(b.name)}`;
+    if (!scoreRows.length) return row(head, '做完打勾', hwRow ? _sgCtrl(hwRow, dk, sc) : `<input type="checkbox" ${manual['b' + b.i] ? 'checked' : ''} onchange="toggleManualFor('${dk}','b${b.i}')" style="width:20px;height:20px;cursor:pointer">`);
+    return scoreRows.map((r, i) => row(i === 0 ? head : `<span style="color:#94A3B8;font-size:12px;margin-right:8px">└</span>${escapeHtml(r.label.replace(/:\s*[^:]*[_＿].*$/, ''))}`, (i === 0 && scoreRows.length === 1 ? escapeHtml(r.label.replace(/:\s*[^:]*[_＿].*$/, '')) + ' · ' : '') + `目标 ${escapeHtml(r.target)}`, _sgCtrl(r, dk, sc))).join('');
   }).join('');
-  const dailyKeys = ['review', 'vt', 'sleep', 'parent', 'note'];
+  const dailyKeys = ['sleep', 'parent'];
   const dailyRows = dailyKeys.map(k => SCHED_GRID.find(x => x.key === k)).filter(r => r && (r.days.includes(dow) || HOLIDAY_SCHED[dk])).map(r => row(escapeHtml(r.label.replace(/:\s*[^:]*[_＿].*$/, '')), `目标 ${escapeHtml(r.target)}`, _sgCtrl(r, dk, sc))).join('');
   el.innerHTML = `<div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;background:#FFFFFF">
     ${blockRows || '<div style="padding:10px;font-size:13px;color:#64748B">这天课表上没有学习安排</div>'}
