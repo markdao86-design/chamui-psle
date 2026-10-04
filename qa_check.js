@@ -2341,7 +2341,11 @@ assert(/function _dictDeep\(\)/.test(appSrc) && /_dictDeep\(\)/.test(appSrc.repl
   assert(n >= 110 && bad === 0 && typeof W.TECH_QUIZ_SKIP === 'object', `v24.3: 31 个模块都能生成技巧题 (按评审 banRules 跳过并列步骤的下一步题), 4 个不重复选项 (共 ${n} 题, 坏 ${bad})`);
   { const sample = W.buildTechniqueQuiz('sci', 'oe_exp', rnd); assert(!sample.some(q => /Only the is|The , and/.test(q.opts.join('|'))) && !sample.some(q => /下一步/.test(q.stem)), 'v24.3: 科学模板占位符不再被当 HTML 剥掉; oe_exp 不出下一步题'); }
   assert(/function startTechQuiz\(subj, moduleKey\)/.test(appSrc) && /startTechQuiz\('\$\{subj\}','\$\{it\.key\}'\)/.test(appSrc) && /function _renderTechSummary\(el, tb\)/.test(appSrc) && /recordTechniqueQuiz\(state, z\.subj, z\.mod, z\.ok, z\.qs\.length\)/.test(appSrc) && /key: 'tech:' \+ z\.mod \+ '#trap' \+ i/.test(appSrc), 'v24.3: 模块行有"技巧测一测", 测完给总结, 坑自动进技巧本, 记成绩');
-  assert(/onclick="submitMcqAnswer\(-1\)">💡 不会, 看答案和解析/.test(appSrc) && /onclick="_advanceMcqNext\(\)">下一题 →/.test(appSrc) && !/isCorrect \? 1200 : 4500/.test(appSrc), 'v24.3: 通用选择题游戏每题能看答案; 答错/看答案后不自动跳, 点下一题');
+  assert(/onclick="submitMcqAnswer\(-1\)">💡 不会, 看答案和解析/.test(appSrc) && /onclick="_advanceMcqNext\(\)">\$\{g\.idx \+ 1 >= g\.qs\.length \? '看成绩 →' : '下一题 →'\}/.test(appSrc) && !/isCorrect \? 1200 : 4500/.test(appSrc) && !/setTimeout\(\(\) => \{ g\.idx\+\+; if \(g\.idx >= g\.qs\.length\) _finishMcqGame/.test(appSrc), 'v24.3/v24.4: 通用选择题每题能看答案; 答对答错都不自动跳, 点"下一题 →"');
+  assert(/window\._lmNext = \(\) => \{ g\.idx\+\+; _renderLmQuestion\(\); \};/.test(appSrc) && !/setTimeout\(\(\) => \{ g\.idx\+\+; _renderLmQuestion\(\); \}, isCorrect/.test(appSrc), 'v24.4: 听力选择题不自动跳, 点下一题');
+  assert(/recordGameRun\(state, 'editing', foundN, need \+ g\.wrong\)/.test(appSrc) && /gameKey: 'vocab', type: 'mcq'/.test(appSrc), 'v24.4: 看答案也算做过 (Editing 记一局+入错题本; 单词考题答错/看答案入错题本)');
+  assert(/function nextEditingParagraph\(\)/.test(appSrc) && (appSrc.match(/onclick="nextEditingParagraph\(\)">下一题 →/g) || []).length === 2, 'v24.4: Editing 全找到 / 看答案后 都有"下一题 →"换下一段');
+  assert(appSrc.indexOf('if (false) {') >= 0 && appSrc.indexOf('setTimeout(next, 1500);') >= 0, 'v24.4: 错题本复习答对也等点下一题');
   assert(/function peekEditingAnswers\(\)/.test(appSrc) && /peekEditingAnswers\(\)">💡 找不到了, 看答案和解析/.test(appSrc) && /if \(!g \|\| g\.peeked\) return;/.test(appSrc), 'v24.3: Editing 能看全部答案和解析, 看过不计分');
   assert(/onclick="answerFcQuiz\(-1\)">💡 不会, 看答案和解析/.test(appSrc) && /z\.picked === -1 \? '💡 看了答案/.test(appSrc), 'v24.3: 单词考题每题能看答案 (算答错退两级)');
   assert(/_tqPickOpt\(-1\)">💡 不会, 看答案和解析/.test(appSrc), 'v24.3: 技巧题每题能看答案和解析');

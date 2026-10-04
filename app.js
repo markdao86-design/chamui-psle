@@ -1552,8 +1552,9 @@ function submitLmAnswer(optIdx) {
   // v19.32: 英语 scaffold 升降级检查
   if (window.recordEngModule) { window.recordEngModule(state, 'listening', isCorrect ? 1 : 0, 1, 'listen_mcq'); saveState(state); }   // v22.0
   if (window._checkEnglishModeHook) window._checkEnglishModeHook('listen_mcq', isCorrect);
-  // 1.5s 后自动下一题 (答错延 3s 让看原文)
-  setTimeout(() => { g.idx++; _renderLmQuestion(); }, isCorrect ? 1500 : 3000);
+  // v24.4: 不自动跳, 出"下一题"按钮
+  { const fbEl = document.getElementById('lmFeedback'); if (fbEl) fbEl.insertAdjacentHTML('beforeend', '<div style="text-align:center;margin-top:10px"><button class="ui-cta auto" onclick="window._lmNext()">下一题 →</button></div>'); else { g.idx++; _renderLmQuestion(); } }
+  window._lmNext = () => { g.idx++; _renderLmQuestion(); };
 }
 function _finishLmGame() {
   const g = _lmState;
@@ -2748,7 +2749,11 @@ function answerFcQuiz(i) {
   z.picked = i;
   const ok = i === q.ans;
   const r = window.recordVocabQuiz(state, q.word, ok);
-  if (ok) { z.ok++; z.pts += r.pts; } else z.wrong.push(q.word);
+  if (ok) { z.ok++; z.pts += r.pts; } else {
+    z.wrong.push(q.word);
+    // v24.4: 答错 / 看答案 的词进错题本 (错题集里按 词汇 归集)
+    if (window.addToErrorBank) window.addToErrorBank(state, { gameKey: 'vocab', type: 'mcq', q: (q.stem != null ? q.stem : (q.pre || '') + '______' + (q.post || '')) + ' [' + q.label + ']', opts: q.opts, ans: q.ans, correctAns: q.opts[q.ans], explain: q.explain + (q.tip ? ' · 考点: ' + q.tip : ''), word: q.word });
+  }
   saveState(state);
   _renderFcQuiz();
 }
@@ -7538,8 +7543,8 @@ function _handleErrorBankResult(isCorrect, item, next) {
   document.querySelectorAll('.mcq-opt').forEach(b => b.disabled = true);
   const ebInput = document.getElementById('ebMathInput');
   if (ebInput) ebInput.disabled = true;
-  // 答对自动跳 (1.5s 读完反馈), 答错等用户点按钮
-  if (isCorrect) {
+  // v24.4: 答对答错都等用户点"下一题" (原来答对 1.5s 自动跳)
+  if (false) {
     setTimeout(next, 1500);
   } else {
     _ebPendingNext = next;
@@ -9238,8 +9243,8 @@ function submitMcqAnswer(idx) {
     }
   }
   // v19.70/v24.3: 答对 1.2s 后跳; 答错/看答案 不自动跳, 等孩子看完解析自己点"下一题"
-  if (isCorrect) { setTimeout(() => { g.idx++; if (g.idx >= g.qs.length) _finishMcqGame(); else _renderMcqGame(); }, 1200); }
-  else if (fb) { fb.insertAdjacentHTML('beforeend', '<div style="text-align:center;margin-top:10px"><button class="ui-cta auto" onclick="_advanceMcqNext()">下一题 →</button></div>'); }
+  // v24.4 (用户 2026-10-04: "一道题答完了, 直接出下一题按钮, 所有都这样改"): 答对答错都不自动跳, 出"下一题 →"
+  if (fb) fb.insertAdjacentHTML('beforeend', `<div style="text-align:center;margin-top:10px"><button class="ui-cta auto" onclick="_advanceMcqNext()">${g.idx + 1 >= g.qs.length ? '看成绩 →' : '下一题 →'}</button></div>`);
 }
 
 // v19.14h: 保存 3 件事并进入下一题 (显式按钮替代倒计时)
@@ -9255,11 +9260,9 @@ function skipCloze3ThingsAndNext() {
 function _advanceMcqNext() {
   const g = _mcqGameState;
   if (!g) return;
-  setTimeout(() => {
-    g.idx++;
-    if (g.idx >= g.qs.length) _finishMcqGame();
-    else _renderMcqGame();
-  }, 400);
+  g.idx++;
+  if (g.idx >= g.qs.length) _finishMcqGame();
+  else _renderMcqGame();
 }
 
 // v19.14l: Cloze 3 件事 MCQ 模式 — 点击选项
@@ -9794,19 +9797,48 @@ function _renderEditingGame() {
       <div class="eg-instr">📋 段落里有 ${need} 个错(主谓/时态/拼写/介词/冠词). 点击错词标红.</div>
       <div class="eg-text">${wordHtml}</div>
       ${g.peeked ? `<div style="margin-top:10px;padding:10px 12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px">
-          <div style="font-size:14px;font-weight:800;color:#1E40AF;margin-bottom:6px">💡 答案和解析 (这篇不计分)</div>
+          <div style="font-size:14px;font-weight:800;color:#1E40AF;margin-bottom:6px">💡 答案和解析 (算做过一遍, 已进错题本; 没积分)</div>
           ${g.para.errors.map((e, i) => `<div style="font-size:14px;color:#1E293B;line-height:1.7"><b>${i + 1}.</b> <span style="color:#DC2626">${escapeHtml(e.word)}</span> → <b style="color:#16A34A">${escapeHtml((e.fix || e.correct || (String(e.reason || '').split('→')[1] || '')).trim())}</b> <span style="color:#64748B">· ${escapeHtml(e.explain || e.rule || String(e.reason || '').split('→')[0])}</span></div>`).join('')}
           ${typeof _ebTipsHtml === 'function' ? _ebTipsHtml('editing') : ''}
-          <div style="text-align:center;margin-top:10px"><button class="ui-cta auto" onclick="closeEditingGame()">知道了, 关闭</button></div>
+          <div style="text-align:center;margin-top:10px;display:flex;gap:12px;justify-content:center"><button class="ui-cta auto" onclick="nextEditingParagraph()">下一题 →</button><button class="ui-btn2" onclick="closeEditingGame()">关闭</button></div>
         </div>`
-      : g.found.size >= need ? `<div class="eg-victory">🎉 全找到! +10 分 + 1 宝箱<br><button class="btn btn-primary" onclick="closeEditingGame()">太棒了!</button></div>`
+      : g.found.size >= need ? `<div class="eg-victory">🎉 全找到! +10 分 + 1 宝箱<br><div style="display:flex;gap:12px;justify-content:center;margin-top:8px"><button class="ui-cta auto" onclick="nextEditingParagraph()">下一题 →</button><button class="ui-btn2" onclick="closeEditingGame()">关闭</button></div></div>`
       : `<div style="text-align:center;margin-top:8px"><button class="ui-btn2" onclick="peekEditingAnswers()">💡 找不到了, 看答案和解析 ›</button></div>`}
     </div>
   `;
   modal.classList.add('show');
 }
 // v24.3: 看答案 — 把所有错词标出来 + 逐条解析, 这篇不计分
-function peekEditingAnswers() { const g = _editingGameState; if (!g || g.peeked) return; g.peeked = true; g.errIdx.forEach(i => g.found.add(i)); _renderEditingGame(); }
+// v24.4: 下一题 = 再抽一段 (跳过刚做的), 不关弹层
+function nextEditingParagraph() {
+  const g = _editingGameState; const last = g ? g.para : null;
+  const diff = window.getDifficulty ? window.getDifficulty(state, 'editing') : 1;
+  let para = null;
+  for (let i = 0; i < 8; i++) { const p = window.getEditingByDiff ? window.getEditingByDiff(diff) : window.EDITING_PARAGRAPHS[Math.floor(Math.random() * window.EDITING_PARAGRAPHS.length)]; if (p && p !== last) { para = p; break; } }
+  if (!para) { closeEditingGame(); return; }
+  const _egWords = para.text.split(/\s+/).map(w => w.replace(/[.,!?;:]$/, ''));
+  const _egUsed = new Set();
+  const _egErrIdx = para.errors.map(e => { const k = String(e.word || '').split(' ')[0].replace(/[.,!?;:]$/, ''); for (let i = 0; i < _egWords.length; i++) { if (_egWords[i] === k && !_egUsed.has(i)) { _egUsed.add(i); return i; } } return -1; }).filter(i => i >= 0);
+  _editingGameState = { para, errIdx: _egErrIdx, total: _egErrIdx.length || 5, found: new Set(), wrong: 0, startedAt: Date.now(), diff };
+  _renderEditingGame();
+}
+window.nextEditingParagraph = nextEditingParagraph;
+function peekEditingAnswers() {
+  const g = _editingGameState; if (!g || g.peeked) return;
+  g.peeked = true;
+  // v24.4 (用户: "我看了答案, 这道题也算做了, 加入错题本"): 按 找到几个/总数 记一局 (没找到的算错), 整段入错题本, 不给积分
+  const need = g.total || 5, foundN = g.found.size;
+  if (window.recordGameRun) window.recordGameRun(state, 'editing', foundN, need + g.wrong);
+  if (window.recordEngModule) window.recordEngModule(state, 'editing', foundN, need, 'editing_peek');
+  if (window.addToErrorBank) {
+    const realErrors = (g.para.errors || []).filter(e => !/备用/.test(e.reason || ''));
+    window.addToErrorBank(state, { gameKey: 'editing', type: 'editing', q: '找出这段里的错词并改正 — "' + g.para.text + '" (你看了答案, 找到 ' + foundN + '/' + need + ')', correctAns: realErrors.map(e => e.word + '→' + ((e.reason || '').split('→')[1] || e.reason)).join(', '), explain: '逐个错词: ' + realErrors.map(e => e.word + ' (' + (e.reason || '') + ')').join('; ') });
+  }
+  _bumpDailyGameCount('editing');
+  saveState(state);
+  g.errIdx.forEach(i => g.found.add(i));
+  _renderEditingGame();
+}
 window.peekEditingAnswers = peekEditingAnswers;
 function clickEditingWord(idx) {
   const g = _editingGameState;
