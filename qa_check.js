@@ -2123,7 +2123,7 @@ assert(/type: points > 0 \? 'admin_award' : 'admin_deduct'/.test(appSrc), 'v21.2
   assert(r2.added === 30 && r2.extra === 2 && st.fcDailyGroup.words.length === 90, 'v21.5: 可以一直加 (第 3 组)');
   assert(st.fcDaily[W._fcToday()].total === 60, 'v21.5: 当天记录累计已过 60 个');
 }
-assert(/function addFcGroupUI\(\)/.test(appSrc) && (appSrc.match(/onclick="addFcGroupUI\(\)"/g) || []).length >= 2, 'v21.5: "再加一组"按钮在词汇页和背完页都有 (不是死代码)');
+assert(/function addFcGroupUI\(\)/.test(appSrc) && (appSrc.match(/addFcGroupUI\(\)/g) || []).length >= 3, 'v21.5/v24.2: "再加一组"按钮在词汇页 (背完行右侧) 和背完页都有 (不是死代码)');
 assert(!/nNewToday/.test(appSrc), 'v21.5: 页面不再事后数新词 (背完后会数成 0)');
 
 // ===== v22.0: 英语模块学习 (用户: 新开一个切页, 按 paper1/paper2 主要模块依次放题库, 每个模块记录正确率, 对标 AL1) =====
@@ -2330,7 +2330,7 @@ assert(/function _dictDeep\(\)/.test(appSrc) && /_dictDeep\(\)/.test(appSrc.repl
   assert(q.length === 3 && q.indexOf('lamented') >= 0, 'v23.9: 考今天这一组 = 今天这一组全部词, 不管背没背 (用户: 先考后背也行, 两边对应就行)');
   const st2 = { flashcardSRS: {}, fcDaily: {} }; const q2 = W.pickQuizWords(st2, 'today');
   assert(st2.fcDailyGroup && st2.fcDailyGroup.date === W._fcToday() && q2.join() === st2.fcDailyGroup.words.join(), 'v23.9: 先考时把今天这一组真正编出来锁定, 之后背的也是这一份');
-  assert(/考今天这一组 \(\$\{(n|quizN)\} 个\)/.test(appSrc), 'v23.9: 按钮写明考几个 (v24.0 变量名改 quizN, 文案不变)');
+  assert(/`0\/\$\{quizN\}`/.test(appSrc) && /rowBtn\(quizDone \? '再考一次 ›' : '开始考 →', "startFcQuiz\('today'\)"/.test(appSrc), 'v23.9/v24.2: 考题行右侧写明 0/N 个 + 行内"开始考"按钮 (用户 2026-10-04: 直接在背/考后面加按钮)');
 }
 
 // ===== Output =====

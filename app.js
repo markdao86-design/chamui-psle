@@ -2598,24 +2598,22 @@ function renderVocabPage() {
   const quizN = g.words.length, tr0 = (state.fcDaily || {})[today] || {}, qs0 = window.getFcQuizStats(state);
   const todayDone = grp.total > 0 && grp.remaining === 0;
   const quizDone = !!tr0.quizTotal;
-  const stepRow = (no, label, sub, right, done, now) => `<div class="ui-row${done ? ' done' : ''}${now ? ' now' : ''}">
+  // v24.2 (用户 2026-10-04: "直接在背这一组和考这一组后面加按钮开始"): 每一步右侧自带按钮, 不再下面放一个大按钮 + "先考也行"
+  const stepRow = (no, label, sub, right, done, now, btn) => `<div class="ui-row${done ? ' done' : ''}${now ? ' now' : ''}">
       <div class="ui-row-main"><div class="ui-row-title">${done ? '✅ ' : no + ' '}${label}</div>${sub ? `<div class="ui-row-sub">${sub}</div>` : ''}</div>
-      <div class="ui-row-act"><span class="ui-num sm"${done ? ' style="color:#94A3B8"' : ''}>${right}</span></div>
+      <div class="ui-row-act" style="display:flex;flex-direction:row;align-items:center;gap:12px"><span class="ui-num sm"${done ? ' style="color:#94A3B8"' : ''}>${right}</span>${btn || ''}</div>
     </div>`;
+  const rowBtn = (label, onclick, primary) => `<button class="${primary ? 'ui-cta' : 'ui-btn2'}" style="${primary ? 'width:auto;min-height:40px;padding:0 16px;font-size:14px;white-space:nowrap' : 'white-space:nowrap'}" onclick="${onclick}">${label}</button>`;
   const stepBg = grp.total === 0 ? '' : stepRow('①', '背今天这一组',
     [grp.newCount != null ? `新词 ${grp.newCount} + 复习 ${grp.total - grp.newCount}` : `共 ${grp.total} 个`, grp.extra ? `已加 ${grp.extra} 组` : '', grp.retakeCount > 0 ? `🔁 ${grp.retakeCount} 个补考过` : '', streak > 0 ? `🔥 连续 ${streak} 天` : ''].filter(Boolean).join(' · '),
-    `${grp.total - grp.remaining}/${grp.total}`, todayDone, !todayDone);
+    `${grp.total - grp.remaining}/${grp.total}`, todayDone, !todayDone,
+    todayDone ? rowBtn('➕ 再加一组', 'addFcGroupUI()', false) : rowBtn((grp.remaining < grp.total ? '继续背' : '开始背') + ' →', 'startFlashcardSession(null)', true));
   const stepQz = grp.total === 0 ? '' : stepRow('②', '考今天这一组',
     (quizDone ? `答了 ${tr0.quizTotal} 题, 对 ${tr0.quizOk || 0} 题` : 'PSLE 题型: 选择题 + 选词填空') + (qs0.pct == null ? '' : ` · 累计正确率 ${qs0.pct}%`),
-    quizDone ? `${tr0.quizOk || 0}/${tr0.quizTotal}` : `0/${quizN}`, quizDone, todayDone && !quizDone);
-  const mainBtn = grp.total === 0 ? ''
-    : !todayDone ? `<button class="ui-cta" onclick="startFlashcardSession(null)">${grp.remaining < grp.total ? '继续背' : '开始背'} (还剩 ${grp.remaining} 个) →</button>`
-    : !quizDone ? (quizN ? `<button class="ui-cta" onclick="startFcQuiz('today')">开始考今天这一组 (${quizN} 个) →</button>` : `<button class="ui-cta" disabled>今天没有要考的词</button>`)
-    : '';
-  const subLinks = grp.total === 0 ? '<span style="font-size:13px;color:#64748B">今天没有要背的词, 可以到下面按卡组翻看</span>'
-    : !todayDone ? (quizN ? `<button class="ui-btn2" onclick="startFcQuiz('today')">先考也行 ›</button>` : '')
-    : !quizDone ? `<button class="ui-btn2" onclick="addFcGroupUI()">➕ 再加一组</button>`
-    : `<button class="ui-btn2" onclick="addFcGroupUI()">➕ 再加一组 (学有余力再加)</button>${quizN ? `<span class="dot">·</span><button class="ui-btn2" onclick="startFcQuiz('today')">再考一次 ›</button>` : ''}`;
+    quizDone ? `${tr0.quizOk || 0}/${tr0.quizTotal}` : `0/${quizN}`, quizDone, todayDone && !quizDone,
+    quizN ? rowBtn(quizDone ? '再考一次 ›' : '开始考 →', "startFcQuiz('today')", !quizDone) : '');
+  const mainBtn = '';
+  const subLinks = grp.total === 0 ? '<span style="font-size:13px;color:#64748B">今天没有要背的词, 可以到下面按卡组翻看</span>' : '';
   const tierLink = (tier, label, n) => `<button class="ui-link" onclick="showFcWordList('${tier}')" style="font-size:13px;color:#1E293B"><b style="font-size:15px;color:#1E40AF">${n}</b>&nbsp;${label}</button>`;
   el.innerHTML = `
     <div class="ui-hint"><span class="ui-hint-ico">${todayDone ? (quizDone ? '🎉' : '📝') : '📖'}</span><span>${grp.total === 0 ? '今天没有要背的词' : !todayDone ? `今天: <b>先背</b>今天这一组 (还剩 ${grp.remaining} 个), 背完再<b>考一考</b>` : !quizDone ? `背完了 ✅ 现在<b>考一考</b>这 ${quizN} 个词` : `今天背完也考完了 🎉 想多学就再加一组`}</span></div>
@@ -2625,8 +2623,7 @@ function renderVocabPage() {
         ${grp.total ? `<div class="ui-head-r"><span class="ui-num">${(todayDone ? 1 : 0) + (quizDone ? 1 : 0)}</span><span class="ui-num-label">/ 2 步完成</span></div>` : ''}
       </div>
       <div class="ui-list">${stepBg}${stepQz}</div>
-      ${mainBtn ? `<div style="margin-top:12px">${mainBtn}</div>` : ''}
-      <div class="ui-links" style="justify-content:center">${subLinks}</div>
+      ${subLinks ? `<div class="ui-links" style="justify-content:center">${subLinks}</div>` : ''}
     </div>
     <div class="card">
       <div class="ui-head">
