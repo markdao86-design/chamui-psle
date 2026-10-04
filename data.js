@@ -11550,3 +11550,66 @@ function removeFromWordBook(state, word) {
 function getWordBookList(state) { const wb = (state && state.wordBook) || {}; return Object.keys(wb).map(w => Object.assign({ word: w, inDeck: !_wbInOtherDeck(w) }, wb[w])).sort((a, b) => String(b.date).localeCompare(String(a.date))); }
 window.CORE_DICT = CORE_DICT; window.DICT_STOP = DICT_STOP; window.dictKey = dictKey; window.lookupDictLocal = lookupDictLocal; window.lookupDictOnline = lookupDictOnline;
 window.WORDBOOK_DECK = WORDBOOK_DECK; window.syncWordBookDeck = syncWordBookDeck; window.inWordBook = inWordBook; window.addToWordBook = addToWordBook; window.removeFromWordBook = removeFromWordBook; window.getWordBookList = getWordBookList;
+
+// ============= v24.3: 技巧测一测 (用户 2026-10-04: "在模块学习里把答题技巧对应进去, 先把答题技巧作为考题测试一遍, 再总结") =============
+// 每个模块 5 道: 第一步是什么 / 某步之后下一步 / 哪条是这类题最常丢分的坑 / 交卷前自查哪条 / 哪句是正确模板。
+// 题目全部由 TECHNIQUE_BOOK (已过评审团) 的内容生成: 正确项来自本模块, 干扰项来自同科其他模块, 所以答案唯一。
+const TECH_MOD_OF_MODULE = { grammar: 'gram_mcq', vocab: 'vocab_mcq', visualtext: 'visual', gcloze: 'gram_cloze', editing: 'editing', compcloze: 'cloze', synthesis: 'synthesis', comp_oe: 'comp_oe', sitwriting: 'sw', writing: 'compo', listening: 'listening', oral: 'oral_conv', 'sci:mcq': 'mcq', 'sci:oe': 'oe_explain', 'sci:lab': 'oe_exp', 'sci:terms': 'mcq' };
+function techModOfModule(moduleKey) { if (TECH_MOD_OF_MODULE[moduleKey]) return TECH_MOD_OF_MODULE[moduleKey]; if (/^sci:/.test(moduleKey)) return 'oe_explain'; return null; }
+// v24.3 评审修订: 技巧本里 <changed variable> <feature> 这类占位符不是 HTML 标签, 先换成 ＿＿ 再剥 b/u/i
+function _tqStrip(s) { return String(s || '').replace(/<(?!\/?(?:b|u|i|br|em|strong|mark)\b)[^<>]+>/g, '＿＿').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(); }
+// 评审 banRules: 并列类别步骤不出"下一步"题; 元模块 (careless) 不出坑/自查; 兄弟模块内容互通的不做干扰项
+const TECH_QUIZ_SKIP = { 'eng:gram_mcq': ['next'], 'eng:editing': ['next'], 'eng:synthesis': ['next'], 'eng:vocab_cloze': ['next'], 'eng:listening': ['next'], 'eng:sw': ['next'], 'eng:compo': ['next'], 'eng:oral_read': ['next'], 'eng:oral_conv': ['next'], 'sci:oe_exp': ['next'], 'sci:oe_compare': ['step1', 'next'], 'sci:oe_apply': ['next'], 'sci:oe_data': ['next'], 'sci:oe_explain': ['next'], 'math:careless': ['trap', 'check', 'next'], 'math:fraction_ratio': ['step1', 'next'], 'math:geometry': ['step1', 'next'], 'math:model': ['next'], 'math:percent': ['next'], 'math:speed': ['next'], 'cn:writing': ['step1', 'next'], 'cn:listening': ['next', 'template'], 'cn:reading': ['next'], 'cn:oral': ['next'], 'cn:cloze_cn': ['next'] };
+const TECH_QUIZ_SIBLINGS = [['model', 'fraction_ratio'], ['oe_exp', 'oe_data'], ['oe_apply', 'oe_explain'], ['gram_mcq', 'gram_cloze'], ['gram_mcq', 'vocab_mcq', 'vocab_cloze', 'gram_cloze', 'cloze', 'editing'], ['sw', 'compo', 'oral_conv', 'oral_read', 'writing', 'oral'], ['reading', 'cloze_cn']];
+const TECH_WRITING_MODS = new Set(['sw', 'compo', 'oral_conv', 'oral_read', 'writing', 'oral']);
+function _tqSkip(subj, mod, type) { return (TECH_QUIZ_SKIP[subj + ':' + mod] || []).indexOf(type) >= 0; }
+function _tqIsSibling(a, b) { return TECH_QUIZ_SIBLINGS.some(g => g.indexOf(a) >= 0 && g.indexOf(b) >= 0); }
+function _tqClip(s, n) { s = _tqStrip(s); return s.length > (n || 110) ? s.slice(0, (n || 110) - 1) + '…' : s; }
+function _tqShuffle(arr, rnd) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = arr[i]; arr[i] = arr[j]; arr[j] = t; } return arr; }
+function _tqPick(arr, n, rnd, exclude) { const pool = arr.filter(x => !exclude || !exclude.has(x)); return _tqShuffle(pool.slice(), rnd).slice(0, n); }
+function _tqOthers(subj, mod, field) {
+  const sb = TECHNIQUE_BOOK[subj]; const out = [];
+  sb.order.forEach(k => {
+    if (k === mod || _tqIsSibling(k, mod)) return;                       // 兄弟模块 (内容互通) 不做干扰项
+    if (subj === 'math' && k === 'careless') return;                     // 防粗心的坑对任何数学题都成立
+    if (TECH_WRITING_MODS.has(mod) && field === 'template' && TECH_WRITING_MODS.has(k)) return;   // 写作/口语模板句式互通
+    (sb.mods[k][field] || []).forEach(x => { const t = _tqStrip(x); if (TECH_WRITING_MODS.has(mod) && field === 'traps' && /拼写|拼错|时态|语法|搭配|错别字/.test(t)) return; out.push(t); });   // 写作题的坑排斥"拼写/时态"这类对任何写作都成立的
+  });
+  return out.filter(Boolean);
+}
+function _tqMake(stem, correct, distractors, rnd, explain) {
+  const seen = new Set([correct]); const ds = [];
+  for (const d of distractors) { if (ds.length >= 3) break; if (!seen.has(d) && d !== correct) { seen.add(d); ds.push(d); } }
+  if (ds.length < 3) return null;
+  const opts = _tqShuffle([correct].concat(ds).map(x => _tqClip(x)), rnd);
+  const ans = opts.indexOf(_tqClip(correct));
+  return { type: 'mcq', stem, opts, ans, explain: explain || '' };
+}
+function buildTechniqueQuiz(subj, mod, rnd) {
+  rnd = rnd || Math.random;
+  const m = getTechniqueMod(subj, mod); if (!m) return [];
+  const T = m.title, steps = m.steps.map(_tqStrip), traps = (m.traps || []).map(_tqStrip), checks = (m.check || []).map(_tqStrip), tpls = (m.template || []).map(_tqStrip);
+  const qs = []; const usedTrap = new Set();
+  const isOral = /^oral_|^oral$/.test(mod), when = isOral ? '说完前' : '交卷前';
+  // 1 第一步 (并列类别型的步骤不出)
+  if (!_tqSkip(subj, mod, 'step1')) qs.push(_tqMake(`做「${T}」, 拿到题<b>第一步</b>该做什么?`, steps[0], steps.slice(1), rnd, '第一步: ' + steps[0]));
+  // 2 某步之后 (只在流程型步骤之间出, 多数模块按评审结论跳过)
+  if (!_tqSkip(subj, mod, 'next') && steps.length >= 3) { const k = 1 + Math.floor(rnd() * (steps.length - 2)); qs.push(_tqMake(`「${T}」: 做完『${_tqClip(steps[k - 1], 60)}』之后, <b>下一步</b>是?`, steps[k], steps.filter((_, i) => i !== k), rnd, '第 ' + (k + 1) + ' 步: ' + steps[k])); }
+  // 3 坑
+  if (!_tqSkip(subj, mod, 'trap') && traps.length) { const t = traps[Math.floor(rnd() * traps.length)]; usedTrap.add(t); qs.push(_tqMake(`下面哪一条是「${T}」<b>最常丢分的坑</b>?`, t, _tqPick(_tqOthers(subj, mod, 'traps'), 8, rnd), rnd, '这类题的坑: ' + traps.join(' / '))); }
+  // 4 自查
+  if (!_tqSkip(subj, mod, 'check') && checks.length) { const c = checks[Math.floor(rnd() * checks.length)]; qs.push(_tqMake(`「${T}」${when}, 下面哪一条是<b>要自查</b>的?`, c, _tqPick(_tqOthers(subj, mod, 'check'), 8, rnd), rnd, when + '自查: ' + checks.join(' / '))); }
+  // 5 模板 (没有模板就再出一道没用过的坑)
+  if (!_tqSkip(subj, mod, 'template') && tpls.length) { const p = tpls[Math.floor(rnd() * tpls.length)]; qs.push(_tqMake(`下面哪句是「${T}」的<b>正确写法 / 模板</b>?`, p, _tqPick(_tqOthers(subj, mod, 'template'), 8, rnd), rnd, '模板: ' + p)); }
+  else if (!_tqSkip(subj, mod, 'trap')) { const rest = traps.filter(t => !usedTrap.has(t)); if (rest.length) { const t2 = _tqPick(rest, 1, rnd)[0]; qs.push(_tqMake(`「${T}」还有一个常见坑是?`, t2, _tqPick(_tqOthers(subj, mod, 'traps'), 8, rnd), rnd, '这类题的坑: ' + traps.join(' / '))); } }
+  return qs.filter(Boolean).slice(0, 5);
+}
+function recordTechniqueQuiz(state, subj, mod, ok, total) {
+  if (!state.techQuiz) state.techQuiz = {};
+  const k = subj + ':' + mod;
+  const r = state.techQuiz[k] = state.techQuiz[k] || { runs: 0, best: 0, ok: 0, total: 0, last: null };
+  r.runs++; r.ok = ok; r.total = total; r.best = Math.max(r.best, total ? Math.round(ok / total * 100) : 0); r.last = _fcToday();
+  return r;
+}
+function getTechniqueQuizStat(state, subj, mod) { return ((state && state.techQuiz) || {})[subj + ':' + mod] || null; }
+window.TECH_MOD_OF_MODULE = TECH_MOD_OF_MODULE; window.TECH_QUIZ_SKIP = TECH_QUIZ_SKIP; window.techModOfModule = techModOfModule; window.buildTechniqueQuiz = buildTechniqueQuiz; window.recordTechniqueQuiz = recordTechniqueQuiz; window.getTechniqueQuizStat = getTechniqueQuizStat;

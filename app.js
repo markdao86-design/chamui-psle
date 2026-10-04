@@ -2702,7 +2702,7 @@ function _renderFcQuiz() {
   }).join('');
   const ipa = window.getVocabIpa(q.word);
   const fb = !done ? '' : `<div style="margin-top:12px;padding:12px 14px;border-radius:10px;background:${z.picked === q.ans ? '#F0FDF4' : '#FFF7ED'};border:1px solid ${z.picked === q.ans ? '#86EFAC' : '#FDBA74'}">
-      <div style="font-size:15px;font-weight:800;color:${z.picked === q.ans ? '#16A34A' : '#C2410C'}">${z.picked === q.ans ? '✅ 答对了' : '❌ 答错了 — 这个词退两级, 明天这一组先补'}</div>
+      <div style="font-size:15px;font-weight:800;color:${z.picked === q.ans ? '#16A34A' : '#C2410C'}">${z.picked === q.ans ? '✅ 答对了' : z.picked === -1 ? '💡 看了答案 — 这个词退两级, 明天这一组先补' : '❌ 答错了 — 这个词退两级, 明天这一组先补'}</div>
       <div style="font-size:15px;margin-top:6px;color:#1E293B"><b>${escapeHtml(q.word)}</b> ${ipa ? '<span style="color:#64748B">/' + escapeHtml(ipa) + '/</span>' : ''} ${_fcSpk(q.word, 18)}</div>
       <div style="font-size:14px;color:#1E293B;margin-top:4px;line-height:1.6">${escapeHtml(getVocabMeaning(q.word) === q.word ? '' : getVocabMeaning(q.word))}<br><span style="color:#475569">${escapeHtml(window.getVocabEn(q.word))}</span></div>
       ${_fcQuizExplainHtml(q)}
@@ -2718,6 +2718,7 @@ function _renderFcQuiz() {
       <div style="font-size:13px;color:#64748B;margin:10px 0 6px">${escapeHtml(q.prompt)}</div>
       <div style="font-size:19px;line-height:1.7;color:#1E293B;font-weight:600">${stemHtml} ${q.say && done ? _fcSpk(q.say, 18) : ''}</div>
       ${opts}
+      ${done ? '' : `<div style="text-align:center;margin-top:8px"><button class="ui-btn2" onclick="answerFcQuiz(-1)">💡 不会, 看答案和解析 ›</button></div>`}
       ${fb}
     </div>
     <div style="height:6px;background:#E2E8F0;border-radius:3px;margin-top:16px;overflow:hidden"><div style="height:100%;width:${Math.round(z.idx / z.qs.length * 100)}%;background:#C4B5FD"></div></div>`;
@@ -2918,6 +2919,9 @@ function renderModulePage(cfg) {
       if (idx >= 0 && !writing) { mainBtn = primary('练 10 题', nodeGo); if (it.open) links.push(link(it.btn || '题库练', it.open)); }
       else if (it.open) { mainBtn = primary(it.btn || '题库练', it.open); if (idx >= 0) links.push(link('考点 10 题', nodeGo)); }
       if (it.open2) links.push(link(it.open2[0], it.open2[1]));
+      // v24.3: 技巧测一测 (先把这类题的做法当考题测一遍再看总结)
+      { const subj = TREE === '🔬 科学' ? 'sci' : 'eng'; const tm = window.techModOfModule ? window.techModOfModule(it.key) : null;
+        if (tm && window.getTechniqueMod(subj, tm)) { const st = window.getTechniqueQuizStat(state, subj, tm); links.push(link(st ? `🧠 技巧 ${st.best}% · 再测` : '🧠 技巧测一测', `startTechQuiz('${subj}','${it.key}')`)); } }
       const detail = [
         has ? `累计 ${s.ok}/${s.total} 题` : '',
         s.last ? `最近一次 ${s.last.ok}/${s.last.total} (${_fcFmtDate(s.last.d)})` : '',
@@ -2947,7 +2951,8 @@ function renderModulePage(cfg) {
   if (weakest) {
     const wIdx = weakest.node ? nodes.findIndex(n => n.id === weakest.node) : -1;
     const go = weakest.open || (wIdx >= 0 ? `openKnowledgePractice('${weakest.node}','${TREE}',${wIdx})` : '');
-    if (go) weakCta = `<button class="ui-cta" style="margin-top:10px" onclick="${go}">🎯 先补最弱: ${escapeHtml(weakest.name)} (${stats[weakest.key].pct}%) →</button>`;
+    // v24.3 (用户: "大长条太丑"): 改成一行 —— 左边 "最弱: 名称 25%", 右边一个小按钮
+    if (go) weakCta = `<div class="ui-row" style="padding:8px 0;border:none"><div class="ui-row-main"><div class="ui-row-title" style="font-size:15px">🎯 最弱: ${escapeHtml(weakest.name)} <span style="color:#DC2626;font-weight:900">${stats[weakest.key].pct}%</span></div><div class="ui-row-sub">先把这个补到 90%</div></div><div class="ui-row-act"><button class="ui-cta auto" onclick="${go}">去练 →</button></div></div>`;
   }
   el.innerHTML = `
     <div class="card">
@@ -9133,6 +9138,7 @@ function _renderMcqGame() {
       ${ruleHtml}
       ${q.tag && !g.isMock ? `<div class="mcq-tag">${escapeHtml(q.tag)}</div>` : ''}
       <div class="mcq-opts${isSst ? ' sst-opts' : ''}">${optsHtml}</div>
+      ${g.isMock ? '' : '<div style="text-align:center;margin-top:6px"><button class="ui-btn2" onclick="submitMcqAnswer(-1)">💡 不会, 看答案和解析 ›</button></div>'}
       <div class="mcq-feedback"></div>
       <button class="vocab-modal-close mg-close" onclick="closeMcqGame()">×</button>
     </div>`;
@@ -9185,9 +9191,11 @@ function submitMcqAnswer(idx) {
   const expl = q.explain || _generateMcqExplain(q);
   const fb = document.querySelector('.mcq-feedback');
   if (fb) {
+    // v24.3 (用户 2026-10-04: "每个题都要能查看答案和详细解析"): 看答案 (idx=-1) 算答错; 答错/看答案 → 详细解析 (题解 + 这类题的考点技巧) + 自己点下一题, 不再 4.5 秒自动跳
+    const tipsHtml = (!isCorrect && typeof _ebTipsHtml === 'function') ? _ebTipsHtml(g.key) : '';
     fb.innerHTML = isCorrect
       ? `✅ <b>答对!</b> ${escapeHtml(expl)}`
-      : `❌ 应是 <b>${String.fromCharCode(65+q.ans)}. ${escapeHtml(q.opts[q.ans])}</b><br>💡 ${escapeHtml(expl)}`;
+      : `${idx === -1 ? '💡 答案是' : '❌ 应是'} <b>${String.fromCharCode(65+q.ans)}. ${escapeHtml(q.opts[q.ans])}</b><br>💡 ${escapeHtml(expl)}${tipsHtml}`;
     fb.className = 'mcq-feedback show ' + (isCorrect ? 'fb-correct' : 'fb-wrong');
 
     // v19.14e/h/l: Cloze 错题"3 件事卡" — v19.14l 同义词改 3 选 1 MCQ (心理学家原建议, 接受度 30→75%)
@@ -9229,12 +9237,9 @@ function submitMcqAnswer(idx) {
       return;
     }
   }
-  // v19.70: 答对 1.2s / 答错非 Cloze 4.5s 后跳 (详解变长, 2.2s 读不完)
-  setTimeout(() => {
-    g.idx++;
-    if (g.idx >= g.qs.length) _finishMcqGame();
-    else _renderMcqGame();
-  }, isCorrect ? 1200 : 4500);
+  // v19.70/v24.3: 答对 1.2s 后跳; 答错/看答案 不自动跳, 等孩子看完解析自己点"下一题"
+  if (isCorrect) { setTimeout(() => { g.idx++; if (g.idx >= g.qs.length) _finishMcqGame(); else _renderMcqGame(); }, 1200); }
+  else if (fb) { fb.insertAdjacentHTML('beforeend', '<div style="text-align:center;margin-top:10px"><button class="ui-cta auto" onclick="_advanceMcqNext()">下一题 →</button></div>'); }
 }
 
 // v19.14h: 保存 3 件事并进入下一题 (显式按钮替代倒计时)
@@ -9788,14 +9793,24 @@ function _renderEditingGame() {
       </div>
       <div class="eg-instr">📋 段落里有 ${need} 个错(主谓/时态/拼写/介词/冠词). 点击错词标红.</div>
       <div class="eg-text">${wordHtml}</div>
-      ${g.found.size >= need ? `<div class="eg-victory">🎉 全找到! +10 分 + 1 宝箱<br><button class="btn btn-primary" onclick="closeEditingGame()">太棒了!</button></div>` : ''}
+      ${g.peeked ? `<div style="margin-top:10px;padding:10px 12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px">
+          <div style="font-size:14px;font-weight:800;color:#1E40AF;margin-bottom:6px">💡 答案和解析 (这篇不计分)</div>
+          ${g.para.errors.map((e, i) => `<div style="font-size:14px;color:#1E293B;line-height:1.7"><b>${i + 1}.</b> <span style="color:#DC2626">${escapeHtml(e.word)}</span> → <b style="color:#16A34A">${escapeHtml((e.fix || e.correct || (String(e.reason || '').split('→')[1] || '')).trim())}</b> <span style="color:#64748B">· ${escapeHtml(e.explain || e.rule || String(e.reason || '').split('→')[0])}</span></div>`).join('')}
+          ${typeof _ebTipsHtml === 'function' ? _ebTipsHtml('editing') : ''}
+          <div style="text-align:center;margin-top:10px"><button class="ui-cta auto" onclick="closeEditingGame()">知道了, 关闭</button></div>
+        </div>`
+      : g.found.size >= need ? `<div class="eg-victory">🎉 全找到! +10 分 + 1 宝箱<br><button class="btn btn-primary" onclick="closeEditingGame()">太棒了!</button></div>`
+      : `<div style="text-align:center;margin-top:8px"><button class="ui-btn2" onclick="peekEditingAnswers()">💡 找不到了, 看答案和解析 ›</button></div>`}
     </div>
   `;
   modal.classList.add('show');
 }
+// v24.3: 看答案 — 把所有错词标出来 + 逐条解析, 这篇不计分
+function peekEditingAnswers() { const g = _editingGameState; if (!g || g.peeked) return; g.peeked = true; g.errIdx.forEach(i => g.found.add(i)); _renderEditingGame(); }
+window.peekEditingAnswers = peekEditingAnswers;
 function clickEditingWord(idx) {
   const g = _editingGameState;
-  if (!g) return;
+  if (!g || g.peeked) return;
   const need = g.total || 5;
   if (g.found.has(idx)) return;
   if ((g.errIdx || []).includes(idx)) {
@@ -13478,3 +13493,81 @@ function renderWrongBookPage() {
 function downloadWrongBookPdf() { downloadHtmlAsPdf(_wrongBookHtml(_wbSubj, true), `PSLE错题集_${_wbSubj}_${schedLocalDate()}.pdf`, `PSLE 错题集 · ${_wbSubj}`); }
 function printWrongBook() { _printHtml(_wrongBookHtml(_wbSubj, true), `PSLE 错题集 · ${_wbSubj}`); }
 window.renderWrongBookPage = renderWrongBookPage; window.downloadWrongBookPdf = downloadWrongBookPdf; window.printWrongBook = printWrongBook;
+
+// ============= v24.3: 模块学习 → 技巧测一测 (先把该模块的答题技巧当考题测一遍, 再给总结, 要点自动进技巧本) =============
+let _tq = null;   // { subj, mod, moduleKey, qs, idx, picked, ok, peeked }
+function startTechQuiz(subj, moduleKey) {
+  const mod = window.techModOfModule(moduleKey); if (!mod) { showToast('这个模块还没有技巧内容', 'info'); return; }
+  const qs = window.buildTechniqueQuiz(subj, mod);
+  if (!qs.length) { showToast('这个模块还没有技巧内容', 'info'); return; }
+  _tq = { subj, mod, moduleKey, qs, idx: 0, picked: null, ok: 0, peeked: 0 };
+  _renderTechQuiz();
+  window.scrollTo(0, 0);
+}
+window.startTechQuiz = startTechQuiz;
+function _renderTechQuiz() {
+  const el = document.getElementById('moduleBody'); const z = _tq; if (!el || !z) return;
+  const tb = window.getTechniqueMod(z.subj, z.mod);
+  if (z.idx >= z.qs.length) { _renderTechSummary(el, tb); return; }
+  const q = z.qs[z.idx], done = z.picked != null;
+  const opts = q.opts.map((o, i) => {
+    let st = 'border:1px solid #CBD5E1;background:#FFFFFF;color:#1E293B';
+    if (done && i === q.ans) st = 'border:2px solid #16A34A;background:#F0FDF4;color:#14532D;font-weight:700';
+    else if (done && i === z.picked) st = 'border:2px solid #DC2626;background:#FEF2F2;color:#7F1D1D';
+    return `<button ${done ? 'disabled' : ''} onclick="window._tqPickOpt(${i})" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-top:8px;border-radius:10px;font-size:15px;line-height:1.5;cursor:${done ? 'default' : 'pointer'};${st}">${'ABCD'[i]}. ${escapeHtml(o)}</button>`;
+  }).join('');
+  const fb = !done ? `<div style="text-align:center;margin-top:10px"><button class="ui-btn2" onclick="window._tqPickOpt(-1)">💡 不会, 看答案和解析 ›</button></div>`
+    : `<div class="ui-panel" style="margin-top:12px;padding:12px 14px;border-radius:10px;background:#F8FAFC;border:1px solid #E2E8F0">
+        <div style="font-size:15px;font-weight:800;color:${z.picked === q.ans ? '#16A34A' : '#DC2626'}">${z.picked === q.ans ? '✅ 答对了' : z.picked === -1 ? '💡 答案是 ' + 'ABCD'[q.ans] : '❌ 答错了, 应是 ' + 'ABCD'[q.ans]}</div>
+        <div style="font-size:14px;color:#1E293B;margin-top:6px;line-height:1.7">${escapeHtml(q.explain || '')}</div>
+        <div style="font-size:13px;color:#64748B;margin-top:6px">这是「${escapeHtml(tb.title)}」的做题方法, 测完会给整套总结</div>
+        <div style="text-align:center;margin-top:12px"><button class="ui-cta auto" onclick="window._tqNext()">${z.idx + 1 >= z.qs.length ? '看技巧总结 →' : '下一题 →'}</button></div>
+      </div>`;
+  el.innerHTML = `
+    <div class="ui-head" style="margin-bottom:8px">
+      <button class="ui-btn2" onclick="renderModulesPage()">← 返回模块学习</button>
+      <div class="ui-head-r" style="font-size:13px;color:#64748B">${escapeHtml(tb.title)} · 技巧测一测 · 第 ${z.idx + 1} / ${z.qs.length} 题 · ✅ ${z.ok}</div>
+    </div>
+    <div class="card">
+      <div style="font-size:12px;color:#1E40AF;font-weight:700;margin-bottom:6px">🧠 先测你记没记住这类题的做法</div>
+      <div style="font-size:16px;line-height:1.7;color:#1E293B;font-weight:600">${q.stem}</div>
+      ${opts}
+      ${fb}
+    </div>`;
+}
+function _tqPickOpt(i) {
+  const z = _tq; if (!z || z.picked != null) return;
+  const q = z.qs[z.idx];
+  z.picked = i;
+  if (i === q.ans) z.ok++; else if (i === -1) z.peeked++;
+  _renderTechQuiz();
+}
+function _tqNext() { const z = _tq; if (!z) return; z.idx++; z.picked = null; _renderTechQuiz(); window.scrollTo(0, 0); }
+window._tqPickOpt = _tqPickOpt; window._tqNext = _tqNext;
+function _renderTechSummary(el, tb) {
+  const z = _tq;
+  const r = window.recordTechniqueQuiz(state, z.subj, z.mod, z.ok, z.qs.length);
+  // 要点 (坑 + 自查) 自动进技巧本
+  const n = window.addTipBookEntries(state, (tb.traps || []).map((t, i) => ({ key: 'tech:' + z.mod + '#trap' + i, subj: z.subj, mod: z.mod, text: t.replace(/<[^>]+>/g, ''), from: tb.title + ' 技巧测一测' })));
+  if (r.runs === 1) { state.totalPoints = (state.totalPoints || 0) + 5; if (!state.logs) state.logs = []; state.logs.push({ reason: `🧠 技巧测一测: ${tb.title} ${z.ok}/${z.qs.length} +5`, points: 5, type: 'tech_quiz', week: state.currentWeek, timestamp: Date.now() }); }
+  saveState(state);
+  if (n) showToast(`⭐ ${n} 条要点已收进答题技巧本`, 'happy');
+  const li = (arr, pre) => arr.map((x, i) => `<div style="font-size:14px;color:#1E293B;line-height:1.75">${pre === '#' ? '<b>' + (i + 1) + '.</b> ' : pre}${x}</div>`).join('');
+  const box = (title, inner) => inner ? `<div style="margin-top:12px"><div style="font-size:13px;font-weight:900;color:#1E40AF;margin-bottom:4px">${title}</div><div style="padding:10px 12px;background:#F8FAFC;border-radius:10px">${inner}</div></div>` : '';
+  const pct = Math.round(z.ok / z.qs.length * 100);
+  el.innerHTML = `
+    <div class="ui-head" style="margin-bottom:8px"><button class="ui-btn2" onclick="renderModulesPage()">← 返回模块学习</button></div>
+    <div class="card">
+      <div class="ui-head"><div class="ui-page-title">📘 ${escapeHtml(tb.title)} · 技巧总结</div><div class="ui-head-r"><span class="ui-num" style="color:${pct >= 80 ? '#16A34A' : '#1E40AF'}">${z.ok}</span><span class="ui-num-label">/ ${z.qs.length} 题${z.peeked ? ' · 看了 ' + z.peeked + ' 题答案' : ''}</span></div></div>
+      <div style="font-size:13px;color:#64748B">${escapeHtml(tb.paper)} · ${pct >= 80 ? '方法记住了, 去练题吧' : '有几步没记牢, 看完总结再测一次'}</div>
+      ${box('① 做题方法 (按顺序)', li(tb.steps, '#'))}
+      ${box('② 答题模板 / 句式', (tb.template || []).map(t => `<div style="font-size:14px;color:#1E293B;line-height:1.6;padding:4px 8px;margin-top:4px;background:#FFFFFF;border-left:3px solid #1E40AF;border-radius:4px">${t}</div>`).join(''))}
+      ${box('③ 最常丢分的坑 (已收进技巧本)', li(tb.traps || [], '⚠️ '))}
+      ${box('④ 交卷前自查', li(tb.check || [], '☐ '))}
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap">
+        <button class="ui-cta auto" onclick="renderModulesPage()">去练这个模块的题 →</button>
+        <button class="ui-btn2" onclick="startTechQuiz('${z.subj}','${escapeHtml(z.moduleKey)}')">再测一次 ›</button>
+        <button class="ui-btn2" onclick="gotoPage('tips');window._tipsOpen && window._tipsOpen('${z.subj}','${z.mod}')">在答题技巧页看 ›</button>
+      </div>
+    </div>`;
+}

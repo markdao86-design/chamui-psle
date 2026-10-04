@@ -2333,6 +2333,20 @@ assert(/function _dictDeep\(\)/.test(appSrc) && /_dictDeep\(\)/.test(appSrc.repl
   assert(/`0\/\$\{quizN\}`/.test(appSrc) && /rowBtn\(quizDone \? '再考一次 ›' : '开始考 →', "startFcQuiz\('today'\)"/.test(appSrc), 'v23.9/v24.2: 考题行右侧写明 0/N 个 + 行内"开始考"按钮 (用户 2026-10-04: 直接在背/考后面加按钮)');
 }
 
+// ===== v24.3: 技巧测一测 + 每题都能看答案和详细解析 =====
+{
+  assert(typeof W.buildTechniqueQuiz === 'function' && typeof W.techModOfModule === 'function' && W.techModOfModule('compcloze') === 'cloze' && W.techModOfModule('sci:lab') === 'oe_exp' && W.techModOfModule('sci:sci_light_heat') === 'oe_explain', 'v24.3: 模块 → 技巧本模块 映射');
+  let n = 0, bad = 0; let seed = 9; const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  Object.keys(W.TECHNIQUE_BOOK).forEach(s => W.TECHNIQUE_BOOK[s].order.forEach(m => { const qs = W.buildTechniqueQuiz(s, m, rnd); n += qs.length; qs.forEach(q => { if (q.opts.length !== 4 || new Set(q.opts).size !== 4 || q.ans < 0 || !q.explain && q.explain !== '') bad++; }); if (qs.length < 3 && m !== 'careless') bad++; }));   // careless 是元模块, 评审定只出第一步+模板 2 题
+  assert(n >= 110 && bad === 0 && typeof W.TECH_QUIZ_SKIP === 'object', `v24.3: 31 个模块都能生成技巧题 (按评审 banRules 跳过并列步骤的下一步题), 4 个不重复选项 (共 ${n} 题, 坏 ${bad})`);
+  { const sample = W.buildTechniqueQuiz('sci', 'oe_exp', rnd); assert(!sample.some(q => /Only the is|The , and/.test(q.opts.join('|'))) && !sample.some(q => /下一步/.test(q.stem)), 'v24.3: 科学模板占位符不再被当 HTML 剥掉; oe_exp 不出下一步题'); }
+  assert(/function startTechQuiz\(subj, moduleKey\)/.test(appSrc) && /startTechQuiz\('\$\{subj\}','\$\{it\.key\}'\)/.test(appSrc) && /function _renderTechSummary\(el, tb\)/.test(appSrc) && /recordTechniqueQuiz\(state, z\.subj, z\.mod, z\.ok, z\.qs\.length\)/.test(appSrc) && /key: 'tech:' \+ z\.mod \+ '#trap' \+ i/.test(appSrc), 'v24.3: 模块行有"技巧测一测", 测完给总结, 坑自动进技巧本, 记成绩');
+  assert(/onclick="submitMcqAnswer\(-1\)">💡 不会, 看答案和解析/.test(appSrc) && /onclick="_advanceMcqNext\(\)">下一题 →/.test(appSrc) && !/isCorrect \? 1200 : 4500/.test(appSrc), 'v24.3: 通用选择题游戏每题能看答案; 答错/看答案后不自动跳, 点下一题');
+  assert(/function peekEditingAnswers\(\)/.test(appSrc) && /peekEditingAnswers\(\)">💡 找不到了, 看答案和解析/.test(appSrc) && /if \(!g \|\| g\.peeked\) return;/.test(appSrc), 'v24.3: Editing 能看全部答案和解析, 看过不计分');
+  assert(/onclick="answerFcQuiz\(-1\)">💡 不会, 看答案和解析/.test(appSrc) && /z\.picked === -1 \? '💡 看了答案/.test(appSrc), 'v24.3: 单词考题每题能看答案 (算答错退两级)');
+  assert(/_tqPickOpt\(-1\)">💡 不会, 看答案和解析/.test(appSrc), 'v24.3: 技巧题每题能看答案和解析');
+}
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
