@@ -6111,7 +6111,10 @@ function buildDailyFlashcardGroup(state, size, exclude) {
   _fcAllWords().forEach(w => { if (exclude && exclude.has(w)) return; const kind = _fcClassify(state, w); if (kind) pools[kind].push(w); });
   const srs = state.flashcardSRS || {};
   // v24.5 (用户: "最不熟练的词"优先): 复习名额只有 20 个, 按 忘的次数多 → 间隔短 → 到期早 排, 刚忘的 (lapsed) 永远排最前
-  const unfam = (x, y) => ((srs[y].lapses || 0) - (srs[x].lapses || 0)) || ((srs[x].interval || 0) - (srs[y].interval || 0)) || String(srs[x].nextReview || '').localeCompare(String(srs[y].nextReview || ''));
+  // v24.8 (用户: "做题错的多的单词也应该优先复习"): 不熟度 = 背的时候忘的次数 + 考题答错的次数 (fcQuiz.bad), 大的排前
+  const fq = state.fcQuiz || {};
+  const unf = w => (srs[w].lapses || 0) + ((fq[w] || {}).bad || 0);
+  const unfam = (x, y) => (unf(y) - unf(x)) || ((srs[x].interval || 0) - (srs[y].interval || 0)) || String(srs[x].nextReview || '').localeCompare(String(srs[y].nextReview || ''));
   pools.lapsed.sort(unfam); pools.due.sort(unfam);
   const review = pools.lapsed.concat(pools.due);
   const nNew = Math.min(pools.new.length, size, FC_DAILY_MAX);

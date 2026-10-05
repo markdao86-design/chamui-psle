@@ -2364,6 +2364,11 @@ assert(/function _dictDeep\(\)/.test(appSrc) && /_dictDeep\(\)/.test(appSrc.repl
   const s4 = { flashcardSRS: {} }; const all4 = W._fcAllWords().slice(0, 60);
   all4.forEach((x, i) => { s4.flashcardSRS[x] = { interval: 1, correctStreak: 1, lastReviewed: '2020-01-01', nextReview: '2020-01-02', mastered: false, lapses: i % 5 }; });
   const g4 = W.buildDailyFlashcardGroup(s4, 30); const rev = g4.filter(x => s4.flashcardSRS[x]);
+  { // v24.8: 考题答错多的也优先 —— 一个 lapses 0 的词考错 5 次, 要挤进复习名额
+    const s5 = JSON.parse(JSON.stringify(s4)); const w0 = all4.find(x => s5.flashcardSRS[x].lapses === 0); s5.fcQuiz = { [w0]: { ok: 0, bad: 5, last: null, lastOk: false } };
+    const g5 = W.buildDailyFlashcardGroup(s5, 30); const rev5 = g5.filter(x => s5.flashcardSRS[x]);
+    assert(rev5.indexOf(w0) === 0, `v24.8: 做题错得多的词优先复习 (考错 5 次的词排第 ${rev5.indexOf(w0) + 1})`);
+  }
   assert(rev.length === 40 && rev.filter(x => s4.flashcardSRS[x].lapses >= 2).length === 36 && rev.every(x => s4.flashcardSRS[x].lapses >= 1), `v24.7: 复习名额给最不熟的 (忘的次数最多的 40 个: lapses 4/3/2 各 12 全进, lapses 0 一个不进; 实际 ${rev.length} 个, 最少 lapses ${Math.min.apply(null, rev.map(x => s4.flashcardSRS[x].lapses))})`);
 }
 
