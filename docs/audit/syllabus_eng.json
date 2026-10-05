@@ -1,0 +1,982 @@
+[
+ {
+  "mod": "sw",
+  "topic": "邮件格式",
+  "detail": "考 email/letter/report 的格式要素: 称呼、开头点明目的、分段、落款。陷阱: 漏写 Dear/Regards, 或正式邮件用 Hi 开头丢格式分。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "sw",
+  "topic": "内容点全覆盖",
+  "detail": "题目给 5-6 个 content points (含图文素材里的信息), 每点必须写到且写对。陷阱: 只写 4 点或把图里的时间地点抄错, 每漏一点扣内容分。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "sw",
+  "topic": "正式语气",
+  "detail": "写给校长/机构/陌生成人用 formal register: 不缩写、不口语、不用 slang。陷阱: 写给朋友却全程正式, 或 formal 信里出现 gonna/awesome。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "sw",
+  "topic": "目的受众判断",
+  "detail": "先从题干抓 PAC: Purpose(告知/投诉/邀请/求助)、Audience、Context, 决定语气与称呼。陷阱: 把 report to teacher 写成给同学的 email。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "sw",
+  "topic": "图文信息提取",
+  "detail": "从海报/通知/对话截图中提取 who/what/when/where/why, 转成自己的句子。陷阱: 整句照抄素材, 或图中三选一的信息没做选择并说明理由。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "sw",
+  "topic": "阐述与理由",
+  "detail": "每个 content point 要 elaborate: 给原因、细节或影响, 不是一句带过。陷阱: 六点各写一句话, 字数够但 elaboration 分低。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "sw",
+  "topic": "口语体转书面",
+  "detail": "把素材中的对话/口语提示转写成第三人称书面叙述。陷阱: 直接抄 'Can you help me?' 而不转为 'I would like to ask for your help'。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "compo",
+  "topic": "开头吸引",
+  "detail": "用对话/动作/环境/悬念开头, 两三句内进入情境。陷阱: 'One sunny day...' 套话开头, 或背景铺垫超过一段才切入主题。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "compo",
+  "topic": "showing 技巧",
+  "detail": "用动作、表情、感官细节、对话展现情绪, 不直接说 'He was scared'。陷阱: 只堆好词 (plethora of) 不贴情境, 或 show 得过长拖慢情节。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "compo",
+  "topic": "结尾呼应主题",
+  "detail": "结尾要回扣题目主题词并点出反思/成长, 与开头形成闭环。陷阱: 'And I learnt my lesson' 一句草草收尾, 或结尾跑题。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "compo",
+  "topic": "三图选一切题",
+  "detail": "PSLE 给主题 + 3 张图, 至少用 1 张, 全文必须紧扣主题词 (如 A Mistake/Being Responsible)。陷阱: 图用了但主题词在文中无体现, 判 off-topic。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "compo",
+  "topic": "情节结构五段",
+  "detail": "Orientation-Rising Action-Climax-Resolution-Reflection, 高潮占最大篇幅。陷阱: 铺垫两页, 高潮两句话; 或没有 resolution 就结束。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "compo",
+  "topic": "对话推进情节",
+  "detail": "对话要服务情节或刻画人物, 用引号标点规范, 换人换行。陷阱: 连续闲聊式对话无信息量, 或引号逗号句号位置错。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "compo",
+  "topic": "段落与衔接",
+  "detail": "每段一个场景/一个时间点, 用 transition (Moments later/Just then) 衔接。陷阱: 整篇一两段, 或时间跳跃无过渡让读者迷失。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "compo",
+  "topic": "时态一致",
+  "detail": "叙事全文过去时, 回忆用过去完成, 对话内可用现在时。陷阱: 写着写着从 past 滑到 present, 语言分直接掉档。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "compo",
+  "topic": "人物心理与成长",
+  "detail": "主角要有内心挣扎、决定、转变, 体现 character arc。陷阱: 人物从头到尾扁平, 事件发生了但人没变。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "过去完成时",
+  "detail": "by the time / after / before / when 两动作先后, 先发生者用 had done。陷阱: 两个动作都用 simple past; 或 by the time 后句误用 had。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "关系代词 whose",
+  "detail": "who/whom/which/whose/that/where 选择, whose 表所属, where 需介词含义。陷阱: 人用 which; 所属关系选 who's; 介词后只能 whom/which。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "疑问尾句",
+  "detail": "陈述肯定则尾句否定, 助动词时态一致; I am→aren't I; Let's→shall we; 祈使→will you; nobody/nothing→they/it。陷阱: 主句含 never/hardly 视为否定。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "一般过去 vs 现在完成",
+  "detail": "有明确过去时间 (yesterday/last week/ago) 用 simple past; just/already/yet/since/for/ever 用 present perfect。陷阱: 'since 2020' 配 simple past。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "主谓一致 each",
+  "detail": "each/every/either/neither/one of + 单数动词; a number of 复数, the number of 单数; news/mathematics 单数。陷阱: 'one of the boys who ___' 看先行词。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "就近原则 nor",
+  "detail": "neither...nor / either...or / not only...but also / or 动词跟最近主语; as well as / together with / with 跟前面主语。陷阱: 看到两个主语就用复数。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "条件句三型",
+  "detail": "If + present → will; If + past → would; If + had done → would have done; unless = if not。陷阱: if 从句用 will; 第三条件句混用 would 和 had。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "情态动词",
+  "detail": "must/have to (义务), must have done (推测过去), should have done (本该), need not (不必), could/might (可能)。陷阱: mustn't 当 '不必' 用; can 与 may 语气混淆。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "冠词与零冠词",
+  "detail": "a/an 按发音 (an hour/a university); the 特指与唯一; 不可数泛指零冠词; 乐器 the, 球类零冠词。陷阱: 'a advice', 'the breakfast', 'play the football'。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "比较级最高级",
+  "detail": "两者比较用 -er/more; 三者以上 -est/the most; as...as; the more...the more; than 后代词格。陷阱: 'more better'; 'the tallest of the two'; 'than me/than I'。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "介词搭配",
+  "detail": "动词/形容词固定介词: interested in, good at, afraid of, consist of, arrive at/in, depend on, apologise to...for。陷阱: 中式直译 'discuss about', 'reach to'。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "代词指代与格",
+  "detail": "主格/宾格/所有格/反身代词, one/ones 替代, everyone...his or her/their。陷阱: 'between you and I'; 'myself' 当主语; its 与 it's。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "连接词逻辑",
+  "detail": "although/despite/in spite of 词性差异; so...that/such...that; because/because of; while/whereas 对比; otherwise。陷阱: although 与 but 同时用; despite 后接句子。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "被动语态",
+  "detail": "be + 过去分词, 时态随 be 变; 施动者 by; 情态动词 + be done; 感官动词被动加 to。陷阱: 'was being built' 与 'had been built' 时态搭配上下文。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "动名词与不定式",
+  "detail": "enjoy/avoid/mind/suggest/finish + V-ing; want/decide/refuse/manage + to V; stop/remember/forget 两者意义不同; used to/be used to。陷阱: 'look forward to see'。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "过去进行与过去时",
+  "detail": "背景动作 was doing, 插入动作 did; while + 进行, when + 一般。陷阱: 两个同时持续动作都该用进行; 'while he cooked' 不算错但题目要求选最佳。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "数量词可数不可数",
+  "detail": "much/many, few/a few/little/a little, fewer/less, amount/number, each/every/all/both/none。陷阱: 'less people'; 'a few money'; 'both of them was'。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "间接疑问语序",
+  "detail": "宾语从句用陈述语序: I wonder where he is; whether/if 引导一般疑问。陷阱: 'Do you know where is he?'; that 从句误加问号。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "gram_mcq",
+  "topic": "副词与形容词",
+  "detail": "修饰动词用副词 (quickly), 系动词 (look/seem/feel/taste) 后用形容词; hard/hardly, late/lately, good/well。陷阱: 'feel badly'; 'he works hardly'。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "vocab_mcq",
+  "topic": "看的近义词辨析",
+  "detail": "glance/glare/stare/gaze/peer/peep/glimpse 按时长、情绪、方式区分。陷阱: 'glanced at him angrily' 该用 glared; 'peered through the fog' 不是 stared。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "vocab_mcq",
+  "topic": "语境褒贬",
+  "detail": "同义词含褒贬差异: slim/skinny, thrifty/stingy, confident/arrogant, curious/nosy。陷阱: 上文明显夸人却选贬义词, 或反之。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "vocab_mcq",
+  "topic": "动词精准度",
+  "detail": "walk 类 (stroll/trudge/stagger/limp/tiptoe), say 类 (mutter/exclaim/stammer/snap), 按方式与情绪选最精确动词。陷阱: 选意思对但力度/方式不匹配的词。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "vocab_mcq",
+  "topic": "固定搭配动词",
+  "detail": "make/do/take/have/pay 搭配: make a decision, do homework, take a photo, pay attention, run a risk。陷阱: 'do a mistake'; 'take a decision' (英式可但 PSLE 选 make)。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "vocab_mcq",
+  "topic": "短语动词",
+  "detail": "put off/put up with/call off/turn down/look into/come across/give in/break down 等多义短语动词按语境选。陷阱: 介词换一个意思全变 (look up vs look into)。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "vocab_mcq",
+  "topic": "成语与习语",
+  "detail": "PSLE 常考 idiom: a blessing in disguise, once in a blue moon, hit the nail on the head, the last straw, in hot water。陷阱: 望文生义或选字面相近但含义不同的。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "vocab_mcq",
+  "topic": "形近词混淆",
+  "detail": "affect/effect, advice/advise, accept/except, lose/loose, quite/quiet, principal/principle, stationary/stationery。陷阱: 词性对但拼写错位。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "vocab_mcq",
+  "topic": "情绪形容词分级",
+  "detail": "annoyed→angry→furious→livid; sad→miserable→devastated; happy→elated→ecstatic, 按语境强度选。陷阱: 小事选 devastated 过度; 大事选 upset 不足。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "vocab_mcq",
+  "topic": "声音词专属搭配",
+  "detail": "动物叫声 (roar/hiss/chirp/bleat), 物体声音 (creak/rustle/clatter/thud/screech), 人声 (giggle/sob/groan)。陷阱: 'the door roared'; 'leaves clattered'。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "vocab_cloze",
+  "topic": "词性变化",
+  "detail": "给词根要求变成名词/形容词/副词/动词形式 (succeed→success/successful/successfully)。陷阱: 空格前有 the/an 要名词, 前有 be 动词可能要形容词, 前有动词要副词。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "vocab_cloze",
+  "topic": "动词名词搭配",
+  "detail": "选项中 collocation 固定: raise funds, achieve a goal, commit a crime, draw a conclusion, cause damage。陷阱: 'make damage'; 'do a conclusion'。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "vocab_cloze",
+  "topic": "语境对比线索",
+  "detail": "however/but/unlike/although 提示空格与前文相反; similarly/also 提示相同。陷阱: 只看空格所在句, 不看上一句的转折词。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "vocab_cloze",
+  "topic": "词形时态匹配",
+  "detail": "选对词后还要配对时态和单复数 (选项常给 原形, 需保持与全文时态一致)。陷阱: 选项中出现同词不同形式 (grow/grew/grown) 分散注意。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "vocab_cloze",
+  "topic": "干扰项排除法",
+  "detail": "15 个选项填 10 空, 多出 5 个干扰; 先按词性分类, 再按语义配对。陷阱: 一个词填两处, 或先入为主填了后面更合适的词。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "vocab_cloze",
+  "topic": "主题词场联想",
+  "detail": "文章主题 (环保/科技/动物) 决定词场, 用上下文反复出现的概念推断空格 (如 habitat/extinct/conserve 成组)。陷阱: 孤立填词不顾全文主题。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "vocab_cloze",
+  "topic": "前后缀词义",
+  "detail": "un-/dis-/in-/im- 否定, -less/-ful 相反, re- 重复, mis- 错误; 根据上下文正负判断加不加否定前缀。陷阱: unable 与 disabled 不同义。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "visual",
+  "topic": "主旨 purpose 题",
+  "detail": "问 'What is the purpose of this poster?', 答 to inform/persuade/invite/warn/promote, 看标题和最大字。陷阱: 把某条细节当成整体目的。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "visual",
+  "topic": "目标读者",
+  "detail": "问 'Who is the poster most likely meant for?', 从称呼/活动性质/地点推断 (students/parents/residents)。陷阱: 选图里出现的人而不是看海报的人。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "visual",
+  "topic": "细节定位与条件",
+  "detail": "时间/地点/价格/资格条件 (only for/must be/aged 7-12) 的精确匹配。陷阱: 看漏 except/only/before/after 等限定词; 两个相近日期混淆。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "visual",
+  "topic": "隐含推断",
+  "detail": "从图文组合推断未直说的信息: 为什么用某图、slogan 暗示什么、哪句话说明活动免费。陷阱: 只找字面匹配, 遇到 'suggests/implies' 题不敢推。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "visual",
+  "topic": "排除法 NOT 题",
+  "detail": "'Which of the following is NOT mentioned/true?' 三对一错, 需逐项回文核对。陷阱: 看到前两项对就直接选第三项; 把 NOT 看漏选成正确项。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "visual",
+  "topic": "文体识别",
+  "detail": "识别 advertisement/notice/email/webpage/leaflet/article 及其典型特征 (订阅按钮=网页, 回执条=通知)。陷阱: 把网页截图当广告; 忽略图上的 URL/图标线索。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "visual",
+  "topic": "词义词组语境题",
+  "detail": "问图文中某短语 'free of charge'/'first-come-first-served'/'subject to availability' 的意思。陷阱: 望文生义; 不结合前后文。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "gram_cloze",
+  "topic": "since 与 for",
+  "detail": "since + 时间点, for + 时间段, 常与现在完成连用; since 也作 '因为'。陷阱: 'for 2019'; 'since three years'。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "gram_cloze",
+  "topic": "冠词 a/an",
+  "detail": "按首音选 a/an (an honest, a European, an MRT); 第二次提及用 the; 不可数/复数泛指零冠词。陷阱: 空格要填 the 而非 a/an 的特指情形。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "gram_cloze",
+  "topic": "助动词选择",
+  "detail": "do/does/did/has/have/had/is/are/was/were 按主语和时态填; 否定与疑问需助动词; 强调句 do。陷阱: 'has' 后要 done 而 'had' 可跟 to; 'did' 后动词原形。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "gram_cloze",
+  "topic": "关系代词填空",
+  "detail": "填 who/which/whose/where/when/that; 介词后只能 whom/which; 非限定性不能用 that。陷阱: 'the reason ___' 填 why; 'the day ___' 填 when。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_cloze",
+  "topic": "介词填空",
+  "detail": "时间 (at/on/in/by/until), 方位 (above/beneath/among/between), 固定搭配 (in charge of, on behalf of, at the expense of)。陷阱: 'in the weekend'; 'by/until' 混淆。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_cloze",
+  "topic": "连接词填空",
+  "detail": "填 although/unless/whereas/so/yet/otherwise/whether; 看逻辑关系与标点。陷阱: 句首逗号前后结构决定填 Although 还是 However; 'whether...or' 搭配。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_cloze",
+  "topic": "代词与限定词",
+  "detail": "填 it/they/them/their/its/one/ones/other/another/each other; 指代前文名词的数与性。陷阱: 'the other' vs 'another'; 'every one' vs 'everyone'。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "gram_cloze",
+  "topic": "比较结构填空",
+  "detail": "填 than/as/more/most/the (the more...the more); 'different from', 'similar to', 'prefer...to'。陷阱: 'prefer...than'; 'superior than'。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "gram_cloze",
+  "topic": "不定式 to 与 for",
+  "detail": "目的用 to/in order to; 'so as to'; 'for + V-ing' 表功能; too...to / enough to。陷阱: 'for to'; 'look forward to' 后跟 V-ing 而非原形。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "gram_cloze",
+  "topic": "there be 句型",
+  "detail": "填 there/it 开头的存在句与形式主语: There is/are, It is + adj + to。陷阱: 'It has many people' 中式表达; there 后动词单复数跟后面名词。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "editing",
+  "topic": "拼写: 双写辅音",
+  "detail": "重读闭音节加后缀双写 (beginning/occurred/stopped/referred), 但 opened/visited 不双写; 名词 committee/accommodation/necessary。陷阱: 'begining', 'occured', 'untill'。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "editing",
+  "topic": "时态: 过去完成时",
+  "detail": "叙事中 by the time/after/before/realised that 后的动作应改为 had done。陷阱: 看到 had 就想改成 simple past; 两个过去动作无先后时不需过去完成。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "editing",
+  "topic": "主谓一致: 中间插入语",
+  "detail": "主语后跟 of/with/as well as/, who... 插入语, 动词仍跟真正主语 (The box of toys is...)。陷阱: 被就近名词 toys 带偏选复数动词。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "editing",
+  "topic": "拼写: 同音异形词",
+  "detail": "their/there/they're, your/you're, its/it's, to/too/two, whose/who's, past/passed, than/then。陷阱: 读音完全相同, 只能靠词性判断。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "editing",
+  "topic": "拼写: ie/ei词尾",
+  "detail": "receive/believe/weird; -ance/-ence (appearance/independence); -able/-ible (responsible/available); -ly 加法 (truly/completely)。陷阱: 'recieve', 'definately', 'seperate'。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "editing",
+  "topic": "拼写: 常见易错词",
+  "detail": "PSLE 高频: environment, government, embarrassed, disappointed, surprise, exercise, immediately, because, beautiful, restaurant。陷阱: 漏字母 (enviroment) 或多字母 (dissappointed)。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "editing",
+  "topic": "语法: 时态一致",
+  "detail": "段落全文过去时中混入现在时动词, 或反之; said + that 从句时态后移。陷阱: 'He said he is tired' 要改 was; 不要把对话中的现在时改掉。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "editing",
+  "topic": "语法: 介词误用",
+  "detail": "improve on→improve, discuss about→discuss, married with→to, consist in→of, arrive to→at, superior than→to。陷阱: 介词错在'多余'而不是'选错'。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "editing",
+  "topic": "语法: 词形变化",
+  "detail": "动词原形/过去分词 (has went→gone), 形容词副词 (ran quick→quickly), 名词单复数 (many informations→information), 可数不可数。陷阱: 一个词同时错词形和拼写, 只能改一个。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "editing",
+  "topic": "语法: 代词与冠词",
+  "detail": "he/him/his 错格, its/their 数不一致, a/an 误用, the 多余或缺失。陷阱: 'everyone...their' 在 PSLE 要改成 his or her 还是接受, 以标答为准。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "editing",
+  "topic": "语法: 连接词与搭配",
+  "detail": "although...but 双连, because...so 双连, neither...or, not only...but; 动词搭配 'make him to do'。陷阱: 改法只能一词, 不能增删重写。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "cloze",
+  "topic": "连接词逻辑空",
+  "detail": "空格为逻辑关系词: However/Therefore/Moreover/Otherwise/Instead/Although; 看前后句关系 (转折/因果/递进/条件)。陷阱: 因果与转折方向看反; 不看标点 (However 后有逗号)。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "cloze",
+  "topic": "固定搭配介词",
+  "detail": "空格为搭配中的介词或小词: in order to, as a result, at the same time, due to, instead of, in spite of。陷阱: 填了语义通但搭配不对的词 (because of→despite)。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "cloze",
+  "topic": "指代与反身代词",
+  "detail": "空格填 it/they/them/this/these/one/which/themselves, 指代前文名词或整件事。陷阱: 单复数与前文不符; 'themselves' 与 'each other' 混淆。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "cloze",
+  "topic": "上下文同义复现",
+  "detail": "答案词在上文或下文以同义/原词形式出现 (如空格前段提到 'conserve', 空格填 'protect')。陷阱: 不往后读就填, 错过后文明示的答案。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "cloze",
+  "topic": "对比与并列线索",
+  "detail": "unlike/while/whereas 提示反义; both...and/as well as 提示同义或并列; not...but。陷阱: 看到 'not' 却填了与前文同义的词。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "cloze",
+  "topic": "词性与语法限定",
+  "detail": "先判断空格词性 (前有冠词→名词, 前有助动词→动词原形/分词, 前有 be→形容词/分词), 再填语义。陷阱: 语义对但词性错 (填 succeed 该填 success)。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "cloze",
+  "topic": "常识与主题线索",
+  "detail": "说明文常考主题常识 (动物习性/环保/科技/健康), 用常识排除不合理选项。陷阱: 过度依赖常识而违背文中明说的反常事实。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "cloze",
+  "topic": "时态与数的一致",
+  "detail": "填动词时要与全文时态、主语单复数一致 (is/are, was/were, has/have, do/does)。陷阱: 填对词义但 -s/-ed 形式错, PSLE 拼写与形式全错不给分。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "间接引语: 疑问句",
+  "detail": "'Where are you going?' asked Tom. → Tom asked where I was going. 语序改陈述, 时态后移, 人称与时间词 (now→then, tomorrow→the next day)。陷阱: 保留问号或疑问语序。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "synthesis",
+  "topic": "转折从句→despite",
+  "detail": "Although he was tired, he... → Despite/In spite of being tired, ... 或 despite his tiredness。陷阱: despite 后接完整句子; 'despite of'。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "synthesis",
+  "topic": "too…to 改写",
+  "detail": "so...that...not → too...to; 或 → not...enough to。陷阱: too...to 句中多余的 not; 主语不同时需加 for sb。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "synthesis",
+  "topic": "间接引语: 陈述句",
+  "detail": "'I will come tomorrow,' she said. → She said that she would come the next day. 时态后移、人称、时间地点词变化。陷阱: 漏改 here→there, this→that; will→would。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "间接引语: 祈使句",
+  "detail": "'Don't touch it,' Mum said to me. → Mum told me not to touch it. 用 told/ordered/asked + sb + (not) to。陷阱: 'told me don't'; 'asked that I'。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "主动→被动",
+  "detail": "The boy broke the window. → The window was broken by the boy. 时态随 be 变, 宾语提前。陷阱: 现在完成被动 'has been done'; 双宾语句被动化; 丢 by 短语。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "条件句 unless",
+  "detail": "If you don't study, you will fail. → Unless you study, ... 或 → You will fail unless...。陷阱: unless 后再加 not (双重否定)。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "倒装 No sooner",
+  "detail": "As soon as he arrived, it rained. → No sooner had he arrived than it rained. / Hardly had...when。陷阱: 不倒装; than/when 配错; 后半句时态。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "倒装句 Not only",
+  "detail": "He is clever and hardworking. → Not only is he clever but he is also hardworking. 主谓倒装在 not only 后。陷阱: 'Not only he is'; 第二分句漏 also 或主语。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "so/such…that",
+  "detail": "The bag was so heavy that... ↔ It was such a heavy bag that...。such + a + adj + n; so + adj。陷阱: 'such heavy bag' 漏冠词; 'so a heavy'。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "关系从句合并",
+  "detail": "两句合一: The man is my uncle. He is wearing a hat. → The man who is wearing a hat is my uncle. 用 who/which/whose/where。陷阱: 从句放错位置; 保留多余代词 (who he)。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "原因句→due to",
+  "detail": "because + 句子 ↔ because of/due to/owing to + 名词短语 (his illness/being ill)。陷阱: 'due to he was ill'; 名词化失败。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "prefer…to 改写",
+  "detail": "He likes tea more than coffee. → He prefers tea to coffee. / He would rather drink tea than coffee. 陷阱: 'prefer...than'; 'would rather to'。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "比较级互换",
+  "detail": "A is taller than B. → B is not as tall as A. / B is shorter than A. 或 → No one...as...as。陷阱: 否定后比较方向反了; 'not so tall than'。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "wish 虚拟遗憾",
+  "detail": "I regret that I did not study. → I wish I had studied. / If only I had studied. 现在的愿望用 past, 过去的遗憾用 past perfect。陷阱: 'wish I studied'。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "强调句 It was",
+  "detail": "Tom broke it. → It was Tom who broke it. 强调主语或宾语。陷阱: 强调人用 who, 物用 that; 时态要与原句一致。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "分词短语开头",
+  "detail": "After he had finished, he left. → Having finished, he left. / Because he was tired, he... → Tired, he... 或 Being tired。陷阱: 悬垂分词 (主语不一致)。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "neither 合并句",
+  "detail": "Tom did not go. Jerry did not go. → Neither Tom nor Jerry went. / Both...and; either...or。陷阱: neither 后动词仍用否定; 就近原则。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "synthesis",
+  "topic": "动名词作主语",
+  "detail": "It is dangerous to swim here. → Swimming here is dangerous. 或 → To swim here is dangerous。陷阱: 'Swim here is'; 动名词短语后动词用单数。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "comp_oe",
+  "topic": "原文摘词题",
+  "detail": "'Which word/phrase in paragraph 3 tells you that...' 要抄原词原形, 一词题只写一词。陷阱: 抄整句; 抄错段; 改了词形。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "comp_oe",
+  "topic": "判断题要证据",
+  "detail": "True/False 题要先判断再用原文证据支持, 证据与判断必须逻辑匹配。陷阱: 判断对但证据抄了无关句; 把推测当证据。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "comp_oe",
+  "topic": "推断人物感受",
+  "detail": "'How did X feel when...' 要给具体情绪词 + 原文依据 (动作/对话/表情)。陷阱: 只写 sad/happy 不说依据; 用 'feel like' 答成行为。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "comp_oe",
+  "topic": "直接信息题",
+  "detail": "'What/Where/When/Who' 定位原文后用完整句作答, 可部分借用原文但要回答到点。陷阱: 抄整段; 时态不一致; 代词 he/it 不改具体名词。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "comp_oe",
+  "topic": "Why 推理题",
+  "detail": "'Why did X do Y?' 要给动机/原因, 常需结合前后两段; 答 'because + 原因'。陷阱: 只复述动作不给原因; 原因写成结果。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "comp_oe",
+  "topic": "词义猜测题",
+  "detail": "'What does the word X mean in paragraph 2?' 用语境推断, 用自己的词解释。陷阱: 抄同一句其他词; 只给一个近义词而不符合该语境义。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "comp_oe",
+  "topic": "指代题",
+  "detail": "'What does \"it/this/they\" refer to?' 答案一般在前一两句, 要写具体名词短语。陷阱: 'this' 常指代整件事而非单个名词; 指代答得太短 (只写 'the plan')。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "comp_oe",
+  "topic": "顺序排列题",
+  "detail": "Sequence: 给 4-5 个事件按文中发生顺序编号 (注意叙事倒叙/回忆)。陷阱: 按文中出现位置排而不按实际时间; 过去完成时暗示更早。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "comp_oe",
+  "topic": "表格填空题",
+  "detail": "Table/graphic organiser: 按栏目 (cause/effect, before/after, character/action) 从文中提取对应信息。陷阱: 填错栏; 填了句子而栏目要求短语。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "comp_oe",
+  "topic": "own words 改述",
+  "detail": "题目标 'in your own words' 必须换词换结构, 保留原意。陷阱: 只换一两个词仍算抄; 换词后意思偏移; 专有名词和不可替换的词可保留。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "comp_oe",
+  "topic": "作者意图与写法",
+  "detail": "'Why did the writer use ...(exclamation mark/short sentence/the word X)?' 答效果 (to emphasise/to show urgency/to create suspense)。陷阱: 解释内容而非写法效果。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "comp_oe",
+  "topic": "对比与变化题",
+  "detail": "'How was X different before and after...?' / 'In what way did X change?' 要两面都写 (before + after)。陷阱: 只写其中一面; 两面不构成对照。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "comp_oe",
+  "topic": "隐含推断题",
+  "detail": "'What can you infer / What does this suggest about X?' 文中未直说, 从行为对话推性格/关系/处境。陷阱: 推得过远无文本支撑; 只复述表面信息。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "comp_oe",
+  "topic": "两点与三点题",
+  "detail": "题干 'Give two reasons/What were the three things', 分值对应点数, 必须按数给且不重复。陷阱: 写了三点其实是同一点换说法; 多写错点倒扣。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "listening",
+  "topic": "关键词 vs 干扰",
+  "detail": "选项中的词原文都出现, 但只有一个符合题意; 注意否定、转折后的改口 ('Actually, no...')。陷阱: 听到匹配词就选; 没听到 but 后面的更正。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "listening",
+  "topic": "推断说话人目的",
+  "detail": "'Why is the speaker making this announcement / Why did X call?' 判断 to remind/to apologise/to persuade/to inform。陷阱: 把某个细节当整体目的。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "listening",
+  "topic": "推断语气感受",
+  "detail": "从语调、用词、语境推断说话人情绪态度 (disappointed/relieved/sarcastic/doubtful)。陷阱: 被语气词 'great!' 误导 (可能是讽刺)。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "listening",
+  "topic": "图片选择题",
+  "detail": "前几题为三图选一: 听描述选对应图片 (位置/数量/动作/物品细节)。陷阱: 图中有多个相似物, 要听清 'next to/behind/the one with'。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "listening",
+  "topic": "数字时间细节",
+  "detail": "听时间/日期/价格/数量/电话号码, 常有改口或两个数字对比。陷阱: 13/30, 15/50 听辨; 'half past' 与 'half to'; 先说原价后说折扣价。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "listening",
+  "topic": "顺序与因果",
+  "detail": "听叙述中的 first/then/after that/finally 与 because/so 判断事件顺序或原因。陷阱: 题目问 'what did X do first' 而文中最先提到的不是最先做的。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "listening",
+  "topic": "预读选项抓重点",
+  "detail": "每段录音播两遍, 第一遍前预读题干和选项划关键词, 第一遍选, 第二遍核。陷阱: 第一遍没看题导致只能靠第二遍; 两遍选不同答案时犹豫改错。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "oral_read",
+  "topic": "标点停顿",
+  "detail": "逗号短停、句号长停、引号前后换气, 列举项间停顿等长。陷阱: 一口气读到换气点才停; 遇到长句乱停拆散意群。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "oral_read",
+  "topic": "疑问与感叹语调",
+  "detail": "一般疑问句升调, 特殊疑问句降调, 感叹句重音落在感叹词与关键词。陷阱: 全文平调; 疑问句读成陈述。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "oral_read",
+  "topic": "情感表达",
+  "detail": "对话部分按人物情绪变声调 (兴奋/紧张/生气/失望), 叙述部分保持自然。陷阱: 把情感读成夸张表演; 对话与叙述无区分。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "oral_read",
+  "topic": "发音与尾音",
+  "detail": "th/v/w/r 等易错音, 词尾 -ed/-s/-t 不吞音, 双元音读满。陷阱: 'three' 读 'tree'; 'asked' 吞掉 -ed; 'walked' 读成 'walk'。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "oral_read",
+  "topic": "流畅度与语速",
+  "detail": "匀速、不回读、不自我纠正过多, 生词按拼读规则试读不停顿。陷阱: 遇生词卡住很久; 语速过快吞词; 读错后反复重读整句。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "oral_read",
+  "topic": "重音与意群",
+  "detail": "实词重读、虚词轻读, 长句按意群 (sense groups) 分段读, 对比词加重。陷阱: 每个词同等重音; 把 'the/a/of' 重读。",
+  "freq": "mid",
+  "exists": false
+ },
+ {
+  "mod": "oral_conv",
+  "topic": "PEEL 结构答题",
+  "detail": "Point-Elaboration-Example-Link: 先立场, 再解释, 举例, 回扣问题。陷阱: 只有 Point 一句话; 举例跑题; 不回扣问题。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "oral_conv",
+  "topic": "举个人经历",
+  "detail": "用自己/家人/同学的真实经历支撑观点, 有时间地点人物细节。陷阱: 经历编得空泛 ('once I helped someone'); 与问题无关。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "oral_conv",
+  "topic": "卡壳兜底句型",
+  "detail": "'That's an interesting question. Let me think...' / 'In my opinion...' / 'For instance...' 争取时间并保持流畅。陷阱: 沉默超过 5 秒; 'erm...' 连串。",
+  "freq": "high",
+  "exists": true
+ },
+ {
+  "mod": "oral_conv",
+  "topic": "视频刺激描述",
+  "detail": "第一题通常问 'What is happening in the video / What did you notice', 要描述人物动作场景并点出主题。陷阱: 只说一句 'people are recycling'; 没抓到视频传达的主题。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "oral_conv",
+  "topic": "观点与理由两面",
+  "detail": "'Do you think...? Why?' 先明确立场再给 2 个理由, 可补一面不同看法显示思辨。陷阱: 立场摇摆; 理由只有一个; 理由重复。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "oral_conv",
+  "topic": "主题词汇储备",
+  "detail": "常考主题 (环保/科技/健康/社区/家庭/校园/节俭/诚信) 各备 5-8 个主题词与表达。陷阱: 词汇贫乏反复用 good/bad/nice; 中式直译。",
+  "freq": "high",
+  "exists": false
+ },
+ {
+  "mod": "oral_conv",
+  "topic": "互动与眼神",
+  "detail": "与考官自然眼神交流, 听懂追问再答, 不懂可礼貌请重复 ('Could you repeat the question?')。陷阱: 低头背诵; 没听懂硬答; 答非所问。",
+  "freq": "mid",
+  "exists": false
+ }
+]

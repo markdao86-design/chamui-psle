@@ -2,6 +2,9 @@
 
 > 这个文件是 Claude Code 自动加载的项目背景。**任何账号 git clone 后第一件事就是读这里。** 然后再看 `HANDOFF.md` (详细) 和 `CHANGELOG.md` (改造历史)。
 
+> ⚡ **2026-10-05 状态: v24.9**。本文件第 4/7/8 节是 v19 时代写的, 文件架构/规模/TODO 已过时, **以 `DEV_SESSION_NOTES.md` (接手指南) 和 `~/.claude/skills/psle-app-dev/SKILL.md` (项目手册, 用 claude-brain-sync 恢复) 为准**; 第 1/2/3/6/7.6/9 节的画像、红线、部署铁律、配色、协作风格仍然有效。
+> 设计规范 (一个主色 / 五档字号 / 一卡一按钮 / 做完 ✅ 变灰 / 说明折叠 / 每题可看答案) 在 skill 7.z; 单词线 140/天 口径在 skill 7.w; 出题必过 agent 审在 skill 第 6 节。
+
 ---
 
 ## 1. 用户画像 + 孩子真实 AL 起点 (核心!)
@@ -92,7 +95,11 @@ chamui-psle/
 ├── data.js                 题库 + 算法 + 状态 schema (~5k 行)
 ├── app.js                  UI 渲染 + 事件 + 游戏逻辑 (~5k 行)
 ├── character.js            角色 SVG 生成 (12 级 + 61 装备 + 6 皮肤) (~1.5k 行)
-├── qa_check.js             149 项断言 (Node vm.runInContext)
+├── qa_check.js             1112 项断言 (Node vm.runInContext) — 必须 exit 0 才能部署
+├── parent.html             家长只读看板 (读 Firestore REST, 家长密码)
+├── tools/                  prune_hosting_versions.js (清 Hosting 配额) · audit/ (题库审核脚本)
+├── docs/audit/             给 agent 的评审 brief + PSLE 全量考点清单 (syllabus_eng/sci.json)
+├── vendor/                 html2canvas + jspdf (PDF 导出自托管)
 ├── build.py                4 文件合并 → chamui_app_single.html
 ├── deploy.sh               build + git push + Firebase deploy (一键)
 ├── chamui_app_single.html  生成物 (单文件部署用)
