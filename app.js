@@ -2791,7 +2791,7 @@ window.startFcQuiz = startFcQuiz; window.answerFcQuiz = answerFcQuiz; window.nex
 
 // v21.5: 今天这一组背完后手动再加一组, 想加几次加几次
 function addFcGroupUI() {
-  if (window.getDailyLoad) { const L = window.getDailyLoad(state); const size = window.getFcDailySize(state); if (L.words + Math.max(L.questions, L.words) + size * 2 > L.cap) { showToast(`🌙 今天 新词 ${L.newWords} + 复习 ${L.reviewWords} + 考题 ${Math.max(L.questions, L.words)} 已经 ${L.words + Math.max(L.questions, L.words)}, 再加一组 (${size} 词 + ${size} 题) 会超 100, 明天再加`, 'warn'); return; } }   // v24.5: 新词+复习+考题 ≤ 100
+  if (window.getDailyLoad) { const L = window.getDailyLoad(state); const size = window.getFcDailySize(state); if (L.words + Math.max(L.questions, L.words) + size * 2 > L.cap) { showToast(`🌙 今天 新词 ${L.newWords} + 复习 ${L.reviewWords} + 考题 ${Math.max(L.questions, L.words)} 已经 ${L.words + Math.max(L.questions, L.words)}, 再加一组 (${size} 词 + ${size} 题) 会超 ${L.cap}, 明天再加`, 'warn'); return; } }   // v24.5: 新词+复习+考题 ≤ 100
   const r = window.addExtraFlashcardGroup(state);
   if (!r.added) { showToast(r.why === 'not_done' ? '先把现在这一组背完再加' : '词库里的词今天都排过了, 没有可加的了', 'info'); renderVocabPage(); return; }
   saveState(state);
