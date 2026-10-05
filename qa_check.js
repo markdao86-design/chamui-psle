@@ -1947,7 +1947,7 @@ assert(/const f2All = key => ALL\.map/.test(appSrc) && !/pct\(\[f2\(1, 'oe'\), f
     const s3b = mk(); all.slice(0, 12).forEach(x => { s3b.flashcardSRS[x] = { interval: 2, correctStreak: 2, lastReviewed: '2020-01-01', nextReview: '2020-01-04', mastered: false }; });
     const g = W.buildDailyFlashcardGroup(s3b, 30);
     assert(g.length === 42 && g.filter(x => !s3b.flashcardSRS[x]).length === 30, `v21.4: 到期复习只有 12 个时 = 30 新 + 12 复习, 不凑数 (实际 ${g.length})`);
-    assert(W.FC_DAILY_MAX === 100 && W.FC_SIZE_OPTIONS.join() === '20,30,40', 'v21.4: 总上限 100; 每天新学可选 20/30/40');
+    assert(W.FC_DAILY_MAX === 100 && W.FC_GROUP_SIZE === 30 && W.FC_SIZE_OPTIONS.join() === '20,30,40' && W.DAILY_LOAD_CAP === 100, 'v21.4/v24.5: 新词 30 不变, 新+复习 ≤100, 可选 20/30/40; 新词+题 全天 ≤ 100 (复习不计)');
   }
   // 每日记录: 家长看板的数据源
   const s4 = mk();
@@ -2107,7 +2107,7 @@ assert(/type: points > 0 \? 'admin_award' : 'admin_deduct'/.test(appSrc), 'v21.2
 {
   const st = { flashcardSRS: {}, totalPoints: 0, logs: [] };
   const g = W.getDailyFlashcardGroup(st);
-  assert(g.newCount === 30, `v21.5: 编组时记下新词数 (实际 ${g.newCount}); 背完后每个词都有记录, 事后数会显示"新词 0 个"`);
+  assert(g.newCount === 30, `v21.5/v24.5: 编组时记下新词数 (实际 ${g.newCount}); 背完后每个词都有记录, 事后数会显示"新词 0 个"`);
   assert(W.addExtraFlashcardGroup(st).why === 'not_done', 'v21.5: 这一组没背完不能加');
   const first = g.words.slice();
   W.answerDailyFlashcard(st, first[0], 'dont', 5);
@@ -2115,13 +2115,13 @@ assert(/type: points > 0 \? 'admin_award' : 'admin_deduct'/.test(appSrc), 'v21.2
   assert(st.fcDailyGroup.done && st.fcDaily[W._fcToday()].done, 'v21.5: 第一组背完');
   const r1 = W.addExtraFlashcardGroup(st);
   const g2 = st.fcDailyGroup;
-  assert(r1.added === 30 && g2.queue.length === 30 && g2.words.length === 60 && !g2.done, `v21.5: 再加一组 = 又 30 个新词进队 (加了 ${r1.added})`);
+  assert(r1.added === 30 && g2.queue.length === 30 && g2.words.length === 60 && !g2.done, `v21.5/v24.5: 再加一组 = 又 30 个新词进队 (加了 ${r1.added})`);
   assert(g2.queue.every(w => first.indexOf(w) < 0), 'v21.5: 加的这组不含今天已经背过的词 (今天答错的词也不重复进)');
-  assert(g2.newCount === 60 && st.fcDaily[W._fcToday()].done === false && st.fcDaily[W._fcToday()].size === 60, 'v21.5: 新词数和当天记录跟着更新, 家长看板看得到今天变成 60 个');
+  assert(g2.newCount === 60 && st.fcDaily[W._fcToday()].done === false && st.fcDaily[W._fcToday()].size === 60, 'v21.5/v24.5: 新词数和当天记录跟着更新, 家长看板看得到今天变成 60 个');
   guard = 0; while (st.fcDailyGroup.queue.length && guard++ < 500) W.answerDailyFlashcard(st, st.fcDailyGroup.queue[0], 'know', 5);
   const r2 = W.addExtraFlashcardGroup(st);
-  assert(r2.added === 30 && r2.extra === 2 && st.fcDailyGroup.words.length === 90, 'v21.5: 可以一直加 (第 3 组)');
-  assert(st.fcDaily[W._fcToday()].total === 60, 'v21.5: 当天记录累计已过 60 个');
+  assert(r2.added === 30 && r2.extra === 2 && st.fcDailyGroup.words.length === 90, 'v21.5/v24.5: 可以一直加 (第 3 组; 全天 单词+题 ≤100 的闸在 UI 层 addFcGroupUI)');
+  assert(st.fcDaily[W._fcToday()].total === 60, 'v21.5/v24.5: 当天记录累计已过 60 个');
 }
 assert(/function addFcGroupUI\(\)/.test(appSrc) && (appSrc.match(/addFcGroupUI\(\)/g) || []).length >= 3, 'v21.5/v24.2: "再加一组"按钮在词汇页 (背完行右侧) 和背完页都有 (不是死代码)');
 assert(!/nNewToday/.test(appSrc), 'v21.5: 页面不再事后数新词 (背完后会数成 0)');
@@ -2349,6 +2349,18 @@ assert(/function _dictDeep\(\)/.test(appSrc) && /_dictDeep\(\)/.test(appSrc.repl
   assert(/function peekEditingAnswers\(\)/.test(appSrc) && /peekEditingAnswers\(\)">💡 找不到了, 看答案和解析/.test(appSrc) && /if \(!g \|\| g\.peeked\) return;/.test(appSrc), 'v24.3: Editing 能看全部答案和解析, 看过不计分');
   assert(/onclick="answerFcQuiz\(-1\)">💡 不会, 看答案和解析/.test(appSrc) && /z\.picked === -1 \? '💡 看了答案/.test(appSrc), 'v24.3: 单词考题每题能看答案 (算答错退两级)');
   assert(/_tqPickOpt\(-1\)">💡 不会, 看答案和解析/.test(appSrc), 'v24.3: 技巧题每题能看答案和解析');
+}
+
+// ===== v24.5: 全天 单词+题 ≤ 100 =====
+{
+  const st = { fcDailyGroup: { date: W._fcToday(), words: new Array(80).fill('w'), newCount: 55 }, engModules: { grammar: { ok: 0, total: 0, runs: [{ d: W._fcToday(), ok: 20, total: 30 }] } }, dailyFocus: { [W._fcToday()]: { ids: [], done: { a: {}, b: {} } } }, techQuiz: { 'eng:cloze': { last: W._fcToday(), total: 5 } } };
+  const L = W.getDailyLoad(st);
+  assert(L.words === 55 && L.questions === 37 && L.total === 92 && !L.full && L.left === 8, `v24.5: 今日学习量 = 新词 55 (复习 25 不算) + 题 (30 模块 + 2 考点 + 5 技巧) = 92`);
+  st.engModules.grammar.runs[0].total = 40; assert(W.getDailyLoad(st).full, 'v24.5: 到 100 算满');
+  assert(/if \(L\.full\) \{ showToast\(`🌙 今天已经做了/.test(appSrc) && /function _checkGameDailyLock\(gameKey\) \{\n  \/\/ v24\.5/.test(appSrc), 'v24.5: 开练闸: 满 100 提示明天继续');
+  assert((appSrc.match(/window\.getDailyLoad\(state\)/g) || []).length >= 4, 'v24.5: 加组 / 加考点 / 开练 / 首页都查今日学习量');
+  assert(/今日 \$\{L\.total\}\/\$\{L\.cap\} \(新词 \$\{L\.words\} \+ 题 \$\{L\.questions\}\)/.test(appSrc), 'v24.5: 首页顶部显示 今日 n/100 (新词 + 题)');
+  
 }
 
 // ===== Output =====

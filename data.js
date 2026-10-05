@@ -5962,8 +5962,10 @@ function reviewFlashcard(state, word, correct) {
 // 只涨不落, 越积越吓人。新逻辑改成"今天这一组, 每个词都点到认识才算完"。
 // v21.4 (用户 2026-10-02 定): 每天新学 30 个, 复习另算; 新词 + 复习加起来一天最多 100 个。
 // 所以"每日规模"现在指**每天新学几个**, 复习按艾宾浩斯到期多少来多少, 只受 100 的总上限管。
+// v24.5 (用户 2026-10-05 最终口径: "单词新 + 题 上限 ≤ 100", 新词 30 不变, 复习不计入)
 const FC_GROUP_SIZE = 30;          // 每天新学几个 (默认; 词汇页可改 20/30/40)
 const FC_SIZE_OPTIONS = [20, 30, 40];
+const DAILY_LOAD_CAP = 100;        // 一天 新词 + 题 总量上限 (复习不算)
 const FC_DAILY_MAX = 100;          // 新词 + 复习, 一天最多这么多
 const FC_LAPSED_RESERVE = 1 / 3;   // 给"之前没记住的词"保底的比例
 const FC_ONE_DECK_CAP = 1 / 2;     // 单个卡组在每日一组里最多占的比例 (防一个大卡组霸屏)
@@ -5972,6 +5974,20 @@ const FC_LEARNED_INTERVAL = 3;     // interval ≥3 = 隔了 3 天以上再见�
 function _fcLocalDate(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function _fcToday() { return _fcLocalDate(new Date()); }
 function getFcDailySize(state) { const n = state && state.fcDailySize; return FC_SIZE_OPTIONS.indexOf(n) >= 0 ? n : FC_GROUP_SIZE; }
+
+// ---- v24.5 今日学习量: 新词 (今天这一组的新词, 含加组; 复习不算) + 题 (各模块今天答的题 + 每日考点 + 技巧测一测) ≤ 100 ----
+function getDailyLoad(state) {
+  const today = _fcToday();
+  const g = state && state.fcDailyGroup && state.fcDailyGroup.date === today ? state.fcDailyGroup : null;
+  const words = g ? (g.newCount != null ? g.newCount : g.words.filter(w => !((state.flashcardSRS || {})[w])).length) : 0;
+  let questions = 0;
+  Object.keys((state && state.engModules) || {}).forEach(k => ((state.engModules[k] || {}).runs || []).forEach(r => { if (r.d === today) questions += r.total || 0; }));
+  const df = ((state && state.dailyFocus) || {})[today]; if (df && df.done) questions += Object.keys(df.done).length;
+  Object.keys((state && state.techQuiz) || {}).forEach(k => { const r = state.techQuiz[k]; if (r && r.last === today) questions += r.total || 0; });
+  const total = words + questions;
+  return { words, questions, total, cap: DAILY_LOAD_CAP, left: Math.max(0, DAILY_LOAD_CAP - total), full: total >= DAILY_LOAD_CAP };
+}
+window.getDailyLoad = getDailyLoad; window.DAILY_LOAD_CAP = DAILY_LOAD_CAP;
 // 改每日规模: 今天这组还没开始就立刻重编, 已经开始了明天生效
 function setFcDailySize(state, n) {
   if (FC_SIZE_OPTIONS.indexOf(n) < 0) return { ok: false };
