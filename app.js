@@ -11746,7 +11746,7 @@ const SCHED_ROW_DEF = {
   oe:      { sec: '英语', label: '英语自学: 对_/共_题',        target: '≥75%',    type: 'frac' },
   vt:      { sec: '英语', label: '背单词: 考对_/共_',          target: '≥80%',    type: 'frac' },
   essay:   { sec: '英语', label: '范文半篇: 背完_/复述_(1=是)', target: '1/1',    type: 'pair' },
-  listen:  { sec: '英语', label: '口语打卡: 完成_次',          target: '1次',     type: 'num'  },
+  listen:  { sec: '英语', label: '口语打卡: 完成',             target: '勾',      type: 'chk'  },   // v24.9 (用户: 口语打卡没有分数, 只勾打卡)
   oral:    { sec: '英语', label: '口语课: 家长打_星(1-5)',     target: '≥3星',    type: 'num'  },
   sci_mcq: { sec: '科学', label: '科学选择题: 对_/共_题',      target: '≥80%',    type: 'frac' },
   sci_oe:  { sec: '科学', label: '科学开放题: 术语全对_/共_',  target: '全对',    type: 'frac' },
@@ -11838,7 +11838,7 @@ function computeSchedWeekSummary(mondayDate) {
   const cnMiss = wrongAll('cn');
   const firstOf = key => { for (const d of ALL) { const v = g(d, key); if (v != null) return v; } return null; };
   const mathC = firstOf('math_b'); // pair: a=错 b=粗心
-  const listen = firstOf('listen');
+  const listen = sum(ALL.map(d => g(d, 'listen') ? 1 : null));   // v24.9: 口语打卡改成勾, 本周勾了几天
   const oralStar = firstOf('oral');
   const essayA = firstOf('essay_a'), essayB = firstOf('essay_b');
   const essay = (essayA == null && essayB == null) ? null : (essayA || 0) + (essayB || 0);
@@ -11850,7 +11850,7 @@ function computeSchedWeekSummary(mondayDate) {
     ['英P2·完形 (15分)', clozePct == null ? '—' : clozePct + '%', '≥70%', clozePct == null ? null : clozePct >= 70],
     ['英P2·句型转换 (10分)', synW == null ? '—' : '错' + synW, '≤4', synW == null ? null : synW <= 4],
     ['英P1·作文 (36分)', essay == null ? '—' : essay + '/40', '≥上篇', essay == null ? null : true],
-    ['英P3/P4·听说口语', (listen == null ? '—' : listen + '/3样') + '·' + (oralStar == null ? '—' : oralStar + '星'), '3样·≥3星', (listen == null && oralStar == null) ? null : ((listen || 0) >= 3 && (oralStar || 0) >= 3)],
+    ['英P3/P4·口语', (listen == null ? '—' : '打卡 ' + listen + ' 天') + ' · ' + (oralStar == null ? '—' : oralStar + '星'), '≥4天·≥3星', (listen == null && oralStar == null) ? null : ((listen || 0) >= 4 && (oralStar || 0) >= 3)],
     ['科BktA·选择 (60分)', sciMcqPct == null ? '—' : '对' + sciMcqA + '/' + sciMcqB + ' (' + sciMcqPct + '%)', '≥80%', sciMcqPct == null ? null : sciMcqPct >= 80],
     ['科BktB·开放题 (40分)', sciOe == null ? '—' : sciOe + '/' + (sciOeB || 2), '全对', sciOe == null ? null : sciOe >= (sciOeB || 2)],
     ['华P2·阅读漏点', cnMiss == null ? '—' : '漏' + cnMiss, '≤2', cnMiss == null ? null : cnMiss <= 2],
@@ -12217,7 +12217,7 @@ function renderSchedDayScore(dow) {
     const t = escapeHtml(b[0]), name = escapeHtml(b[1]), note = b[2] ? escapeHtml(b[2]) : '';
     if (isRest(b)) return row(t, name, note, '', false, true);
     const rs = schedKeysOf(b[1]).map(k => SCHED_GRID.find(x => x.key === k)).filter(Boolean);
-    const scoreRows = rs.filter(r => r.type !== 'chk');
+    const scoreRows = rs.filter(r => r.key !== 'hw');   // v24.9: 勾类格子 (口语打卡) 也走周表同一格, 只有作业/班课用 hw
     const hwRow = rs.find(r => r.key === 'hw');
     const title = `${name} ${kindTag(b[3])}`;
     if (!scoreRows.length) {

@@ -2372,6 +2372,9 @@ assert(/function _dictDeep\(\)/.test(appSrc) && /_dictDeep\(\)/.test(appSrc.repl
   assert(rev.length === 40 && rev.filter(x => s4.flashcardSRS[x].lapses >= 2).length === 36 && rev.every(x => s4.flashcardSRS[x].lapses >= 1), `v24.7: 复习名额给最不熟的 (忘的次数最多的 40 个: lapses 4/3/2 各 12 全进, lapses 0 一个不进; 实际 ${rev.length} 个, 最少 lapses ${Math.min.apply(null, rev.map(x => s4.flashcardSRS[x].lapses))})`);
 }
 
+// ===== v24.9: 口语打卡只勾不打分 =====
+assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾',\s+type: 'chk'/.test(appSrc) && /const scoreRows = rs\.filter\(r => r\.key !== 'hw'\);/.test(appSrc) && /'打卡 ' \+ listen \+ ' 天'/.test(appSrc), 'v24.9: 口语打卡是勾 (主页/课表/周表同一格), 计分卡按本周打卡天数');
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));
