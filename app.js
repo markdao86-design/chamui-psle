@@ -968,7 +968,7 @@ function renderTodayThreeCard() {
       const wrongN = (state.wrongAnswers || []).length;
       const step = doneCount < blocks.length ? `<b>先填打卡表</b> (${doneCount}/${blocks.length} 完成) → 复习错题 → 学考点` : wrongN ? `打卡表填好了 ✅ → <b>去复习错题</b> (${wrongN} 题) → 学考点` : `打卡表填好了 ✅ → <b>往下学今天的考点</b>`;
       const L = window.getDailyLoad ? window.getDailyLoad(state) : null;   // v24.5 今日学习量 (单词+题 ≤ 100)
-      hintEl.innerHTML = `<span class="ui-hint-ico">${doneCount < blocks.length ? '👋' : '👍'}</span><span>${step}</span>${L ? `<span style="margin-left:auto;white-space:nowrap;color:${L.full ? '#B45309' : '#64748B'}">今日 ${L.total}/${L.cap} (新词 ${L.words} + 题 ${L.questions})</span>` : ''}`;
+      hintEl.innerHTML = `<span class="ui-hint-ico">${doneCount < blocks.length ? '👋' : '👍'}</span><span>${step}</span>${L ? `<span style="margin-left:auto;white-space:nowrap;color:${L.full ? '#B45309' : '#64748B'}">单词 ${L.words + Math.max(L.questions, L.words)}/${L.cap} (新 ${L.newWords} + 复习 ${L.reviewWords} + 考题 ${L.words})</span>` : ''}`;
     }
   }
   card.innerHTML = `
@@ -2791,7 +2791,7 @@ window.startFcQuiz = startFcQuiz; window.answerFcQuiz = answerFcQuiz; window.nex
 
 // v21.5: 今天这一组背完后手动再加一组, 想加几次加几次
 function addFcGroupUI() {
-  if (window.getDailyLoad) { const L = window.getDailyLoad(state); if (L.full) { showToast(`🌙 今天 新词+题 已到 ${L.total}/100, 明天再加`, 'warn'); return; } }   // v24.5
+  if (window.getDailyLoad) { const L = window.getDailyLoad(state); const size = window.getFcDailySize(state); if (L.words + Math.max(L.questions, L.words) + size * 2 > L.cap) { showToast(`🌙 今天 新词 ${L.newWords} + 复习 ${L.reviewWords} + 考题 ${Math.max(L.questions, L.words)} 已经 ${L.words + Math.max(L.questions, L.words)}, 再加一组 (${size} 词 + ${size} 题) 会超 100, 明天再加`, 'warn'); return; } }   // v24.5: 新词+复习+考题 ≤ 100
   const r = window.addExtraFlashcardGroup(state);
   if (!r.added) { showToast(r.why === 'not_done' ? '先把现在这一组背完再加' : '词库里的词今天都排过了, 没有可加的了', 'info'); renderVocabPage(); return; }
   saveState(state);
@@ -6539,8 +6539,6 @@ function _getMultiplierLabel(playNum) {
 }
 // 检查游戏是否可玩, 不可玩则弹提示并返回 false
 function _checkGameDailyLock(gameKey) {
-  // v24.5: 一天 单词+题 ≤ 100 (用户: 拉长周期, 每日别太多)
-  if (window.getDailyLoad) { const L = window.getDailyLoad(state); if (L.full) { showToast(`🌙 今天已经做了 ${L.total} 个 (新词 ${L.words} + 题 ${L.questions}), 到 100 个上限了, 明天继续`, 'warn'); return false; } }
   // v19.14b: 平日 hard lock — math/chinese/unit 平日完全不能玩
   if (window.WEEKDAY_LOCKED_GAMES && window.WEEKDAY_LOCKED_GAMES.includes(gameKey)) {
     if (window.isWeekdayToday && window.isWeekdayToday()) {
@@ -13141,7 +13139,6 @@ function _dfRevealShort(id) {
 }
 // 再加一个: 挑出现次数最少的 (和今天最后一个不同科), 追加到今天的列表
 function _dfNext() {
-  if (window.getDailyLoad) { const L = window.getDailyLoad(state); if (L.full) { showToast(`🌙 今天 新词+题 已到 ${L.total}/100, 明天继续`, 'warn'); return; } }   // v24.5
   const e = window.addDailyFocusExtra(state, schedLocalDate());
   if (!e) { showToast('考点库全部排完了 🎉', 'happy'); return; }
   saveState(state);

@@ -5962,11 +5962,11 @@ function reviewFlashcard(state, word, correct) {
 // 只涨不落, 越积越吓人。新逻辑改成"今天这一组, 每个词都点到认识才算完"。
 // v21.4 (用户 2026-10-02 定): 每天新学 30 个, 复习另算; 新词 + 复习加起来一天最多 100 个。
 // 所以"每日规模"现在指**每天新学几个**, 复习按艾宾浩斯到期多少来多少, 只受 100 的总上限管。
-// v24.5 (用户 2026-10-05 最终口径: "单词新 + 题 上限 ≤ 100", 新词 30 不变, 复习不计入)
+// v24.5 (用户 2026-10-05 最终口径: "每日新词 30 + 最不熟练的复习词 + 这些词 (新旧) 的考题, 总共 ≤ 100"): 每词一道考题 → 新+复习 ≤ 50 = 30 新 + 20 最不熟
 const FC_GROUP_SIZE = 30;          // 每天新学几个 (默认; 词汇页可改 20/30/40)
 const FC_SIZE_OPTIONS = [20, 30, 40];
-const DAILY_LOAD_CAP = 100;        // 一天 新词 + 题 总量上限 (复习不算)
-const FC_DAILY_MAX = 100;          // 新词 + 复习, 一天最多这么多
+const DAILY_LOAD_CAP = 100;        // 一天 新词 + 复习词 + 单词考题 总量上限
+const FC_DAILY_MAX = 50;           // 新词 + 复习, 一天最多这么多 (v24.5: 100→50, 和考题合计 ≤100)
 const FC_LAPSED_RESERVE = 1 / 3;   // 给"之前没记住的词"保底的比例
 const FC_ONE_DECK_CAP = 1 / 2;     // 单个卡组在每日一组里最多占的比例 (防一个大卡组霸屏)
 const FC_LEARNED_INTERVAL = 3;     // interval ≥3 = 隔了 3 天以上再见还认识 → 算"已学会"
@@ -5975,17 +5975,16 @@ function _fcLocalDate(d) { d = d || new Date(); return d.getFullYear() + '-' + S
 function _fcToday() { return _fcLocalDate(new Date()); }
 function getFcDailySize(state) { const n = state && state.fcDailySize; return FC_SIZE_OPTIONS.indexOf(n) >= 0 ? n : FC_GROUP_SIZE; }
 
-// ---- v24.5 今日学习量: 新词 (今天这一组的新词, 含加组; 复习不算) + 题 (各模块今天答的题 + 每日考点 + 技巧测一测) ≤ 100 ----
+// ---- v24.5 今日单词量: 新词 + 复习词 (今天这一组, 含加组) + 单词考题 (今天答的) ≤ 100; 做题模块不在这个闸里 ----
 function getDailyLoad(state) {
   const today = _fcToday();
   const g = state && state.fcDailyGroup && state.fcDailyGroup.date === today ? state.fcDailyGroup : null;
-  const words = g ? (g.newCount != null ? g.newCount : g.words.filter(w => !((state.flashcardSRS || {})[w])).length) : 0;
-  let questions = 0;
-  Object.keys((state && state.engModules) || {}).forEach(k => ((state.engModules[k] || {}).runs || []).forEach(r => { if (r.d === today) questions += r.total || 0; }));
-  const df = ((state && state.dailyFocus) || {})[today]; if (df && df.done) questions += Object.keys(df.done).length;
-  Object.keys((state && state.techQuiz) || {}).forEach(k => { const r = state.techQuiz[k]; if (r && r.last === today) questions += r.total || 0; });
+  const words = g ? g.words.length : 0;
+  const newWords = g ? (g.newCount != null ? g.newCount : g.words.filter(w => !((state.flashcardSRS || {})[w])).length) : 0;
+  const rec = ((state && state.fcDaily) || {})[today];
+  const questions = (rec && rec.quizTotal) || 0;
   const total = words + questions;
-  return { words, questions, total, cap: DAILY_LOAD_CAP, left: Math.max(0, DAILY_LOAD_CAP - total), full: total >= DAILY_LOAD_CAP };
+  return { words, newWords, reviewWords: Math.max(0, words - newWords), questions, total, cap: DAILY_LOAD_CAP, left: Math.max(0, DAILY_LOAD_CAP - total), full: total >= DAILY_LOAD_CAP };
 }
 window.getDailyLoad = getDailyLoad; window.DAILY_LOAD_CAP = DAILY_LOAD_CAP;
 // 改每日规模: 今天这组还没开始就立刻重编, 已经开始了明天生效
@@ -6111,11 +6110,10 @@ function buildDailyFlashcardGroup(state, size, exclude) {
   const pools = { new: [], lapsed: [], due: [] };
   _fcAllWords().forEach(w => { if (exclude && exclude.has(w)) return; const kind = _fcClassify(state, w); if (kind) pools[kind].push(w); });
   const srs = state.flashcardSRS || {};
-  pools.due.sort((x, y) => String(srs[x].nextReview || '').localeCompare(String(srs[y].nextReview || '')) || (srs[x].interval || 0) - (srs[y].interval || 0));
-  const ripe = pools.due.filter(w => (srs[w].interval || 0) >= FC_LEARNED_INTERVAL - 1), fresh = pools.due.filter(w => (srs[w].interval || 0) < FC_LEARNED_INTERVAL - 1);
-  const mixed = [];
-  for (let i = 0; i < Math.max(ripe.length, fresh.length); i++) { if (i < ripe.length) mixed.push(ripe[i]); if (i < fresh.length) mixed.push(fresh[i]); }
-  const review = pools.lapsed.concat(mixed);
+  // v24.5 (用户: "最不熟练的词"优先): 复习名额只有 20 个, 按 忘的次数多 → 间隔短 → 到期早 排, 刚忘的 (lapsed) 永远排最前
+  const unfam = (x, y) => ((srs[y].lapses || 0) - (srs[x].lapses || 0)) || ((srs[x].interval || 0) - (srs[y].interval || 0)) || String(srs[x].nextReview || '').localeCompare(String(srs[y].nextReview || ''));
+  pools.lapsed.sort(unfam); pools.due.sort(unfam);
+  const review = pools.lapsed.concat(pools.due);
   const nNew = Math.min(pools.new.length, size, FC_DAILY_MAX);
   const nRev = Math.min(review.length, FC_DAILY_MAX - nNew);
   const out = review.slice(0, nRev);

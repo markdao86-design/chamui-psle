@@ -1942,12 +1942,12 @@ assert(/const f2All = key => ALL\.map/.test(appSrc) && !/pct\(\[f2\(1, 'oe'\), f
   all.slice(0, 200).forEach(x => { s3.flashcardSRS[x] = { interval: 2, correctStreak: 2, lastReviewed: '2020-01-01', nextReview: '2020-01-04', mastered: false }; });
   const g3 = W.buildDailyFlashcardGroup(s3, 30);
   const nNew = g3.filter(x => !s3.flashcardSRS[x]).length;
-  assert(g3.length === 100 && nNew === 30, `v21.4: 每天新学 30 个 (不含复习) + 复习, 合计封顶 100 (实际新词 ${nNew}, 共 ${g3.length})`);
+  assert(g3.length === 50 && nNew === 30, `v21.4/v24.5: 每天新学 30 个 (不含复习) + 最不熟的复习 20 个, 合计封顶 50 (和 50 道考题合计 ≤100; 实际新词 ${nNew}, 共 ${g3.length})`);
   { // 复习不够多时不硬凑: 30 新词 + 实际到期的复习
     const s3b = mk(); all.slice(0, 12).forEach(x => { s3b.flashcardSRS[x] = { interval: 2, correctStreak: 2, lastReviewed: '2020-01-01', nextReview: '2020-01-04', mastered: false }; });
     const g = W.buildDailyFlashcardGroup(s3b, 30);
     assert(g.length === 42 && g.filter(x => !s3b.flashcardSRS[x]).length === 30, `v21.4: 到期复习只有 12 个时 = 30 新 + 12 复习, 不凑数 (实际 ${g.length})`);
-    assert(W.FC_DAILY_MAX === 100 && W.FC_GROUP_SIZE === 30 && W.FC_SIZE_OPTIONS.join() === '20,30,40' && W.DAILY_LOAD_CAP === 100, 'v21.4/v24.5: 新词 30 不变, 新+复习 ≤100, 可选 20/30/40; 新词+题 全天 ≤ 100 (复习不计)');
+    assert(W.FC_DAILY_MAX === 50 && W.FC_GROUP_SIZE === 30 && W.FC_SIZE_OPTIONS.join() === '20,30,40' && W.DAILY_LOAD_CAP === 100, 'v21.4/v24.5: 新词 30 不变, 新+复习 ≤50, 可选 20/30/40; 新词+复习+考题 ≤ 100');
   }
   // 每日记录: 家长看板的数据源
   const s4 = mk();
@@ -2351,16 +2351,20 @@ assert(/function _dictDeep\(\)/.test(appSrc) && /_dictDeep\(\)/.test(appSrc.repl
   assert(/_tqPickOpt\(-1\)">💡 不会, 看答案和解析/.test(appSrc), 'v24.3: 技巧题每题能看答案和解析');
 }
 
-// ===== v24.5: 全天 单词+题 ≤ 100 =====
+// ===== v24.5: 单词线总量: 新词 30 + 最不熟复习 ≤20 + 考题 ≤ 100 =====
 {
-  const st = { fcDailyGroup: { date: W._fcToday(), words: new Array(80).fill('w'), newCount: 55 }, engModules: { grammar: { ok: 0, total: 0, runs: [{ d: W._fcToday(), ok: 20, total: 30 }] } }, dailyFocus: { [W._fcToday()]: { ids: [], done: { a: {}, b: {} } } }, techQuiz: { 'eng:cloze': { last: W._fcToday(), total: 5 } } };
+  const today = W._fcToday();
+  const st = { fcDailyGroup: { date: today, words: new Array(50).fill('w'), newCount: 30 }, fcDaily: { [today]: { quizTotal: 50 } }, flashcardSRS: {} };
   const L = W.getDailyLoad(st);
-  assert(L.words === 55 && L.questions === 37 && L.total === 92 && !L.full && L.left === 8, `v24.5: 今日学习量 = 新词 55 (复习 25 不算) + 题 (30 模块 + 2 考点 + 5 技巧) = 92`);
-  st.engModules.grammar.runs[0].total = 40; assert(W.getDailyLoad(st).full, 'v24.5: 到 100 算满');
-  assert(/if \(L\.full\) \{ showToast\(`🌙 今天已经做了/.test(appSrc) && /function _checkGameDailyLock\(gameKey\) \{\n  \/\/ v24\.5/.test(appSrc), 'v24.5: 开练闸: 满 100 提示明天继续');
-  assert((appSrc.match(/window\.getDailyLoad\(state\)/g) || []).length >= 4, 'v24.5: 加组 / 加考点 / 开练 / 首页都查今日学习量');
-  assert(/今日 \$\{L\.total\}\/\$\{L\.cap\} \(新词 \$\{L\.words\} \+ 题 \$\{L\.questions\}\)/.test(appSrc), 'v24.5: 首页顶部显示 今日 n/100 (新词 + 题)');
-  
+  assert(L.words === 50 && L.newWords === 30 && L.reviewWords === 20 && L.questions === 50 && L.total === 100 && L.full, 'v24.5: 30 新 + 20 复习 + 50 考题 = 100 刚好满');
+  assert(!/function _checkGameDailyLock\(gameKey\) \{\n  \/\/ v24\.5/.test(appSrc), 'v24.5: 做题模块不受这个闸限制 (开练不查)');
+  assert(/size \* 2 > L\.cap/.test(appSrc) && /再加一组 \(\$\{size\} 词 \+ \$\{size\} 题\) 会超 100/.test(appSrc), 'v24.5: 再加一组前算 (词 + 题) 会不会超 100');
+  assert(/单词 \$\{L\.words \+ Math\.max\(L\.questions, L\.words\)\}\/\$\{L\.cap\} \(新 \$\{L\.newWords\} \+ 复习 \$\{L\.reviewWords\} \+ 考题 \$\{L\.words\}\)/.test(appSrc), 'v24.5: 首页顶部显示 单词 n/100 (新 + 复习 + 考题)');
+  // 最不熟优先: 忘的次数多的排前面
+  const s4 = { flashcardSRS: {} }; const all4 = W._fcAllWords().slice(0, 60);
+  all4.forEach((x, i) => { s4.flashcardSRS[x] = { interval: 1, correctStreak: 1, lastReviewed: '2020-01-01', nextReview: '2020-01-02', mastered: false, lapses: i % 5 }; });
+  const g4 = W.buildDailyFlashcardGroup(s4, 30); const rev = g4.filter(x => s4.flashcardSRS[x]);
+  assert(rev.length === 20 && rev.every(x => s4.flashcardSRS[x].lapses >= 3), `v24.5: 复习名额给最不熟的 (忘的次数最多的 20 个; 实际 ${rev.length} 个, 最少 lapses ${Math.min.apply(null, rev.map(x => s4.flashcardSRS[x].lapses))})`);
 }
 
 // ===== Output =====
