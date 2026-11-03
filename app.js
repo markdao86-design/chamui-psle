@@ -2703,7 +2703,7 @@ function _renderFcQuiz() {
     return `<button ${done ? 'disabled' : ''} onclick="answerFcQuiz(${i})" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-top:8px;border-radius:10px;font-size:15px;line-height:1.5;cursor:${done ? 'default' : 'pointer'};${st}">${'ABCD'[i]}. ${escapeHtml(o)}</button>`;
   }).join('');
   const ipa = window.getVocabIpa(q.word);
-  const fb = !done ? '' : `<div style="margin-top:12px;padding:12px 14px;border-radius:10px;background:${z.picked === q.ans ? '#F0FDF4' : '#FFF7ED'};border:1px solid ${z.picked === q.ans ? '#86EFAC' : '#FDBA74'}">
+  const fb = !done ? '' : `<div class="fc-quiz-fb" style="margin-top:12px;padding:12px 14px;border-radius:10px;background:${z.picked === q.ans ? '#F0FDF4' : '#FFF7ED'};border:1px solid ${z.picked === q.ans ? '#86EFAC' : '#FDBA74'}">
       <div style="font-size:15px;font-weight:800;color:${z.picked === q.ans ? '#16A34A' : '#C2410C'}">${z.picked === q.ans ? '✅ 答对了' : z.picked === -1 ? '💡 看了答案 — 这个词退两级, 明天这一组先补' : '❌ 答错了 — 这个词退两级, 明天这一组先补'}</div>
       <div style="font-size:15px;margin-top:6px;color:#1E293B"><b>${escapeHtml(q.word)}</b> ${ipa ? '<span style="color:#64748B">/' + escapeHtml(ipa) + '/</span>' : ''} ${_fcSpk(q.word, 18)}</div>
       <div style="font-size:14px;color:#1E293B;margin-top:4px;line-height:1.6">${escapeHtml(getVocabMeaning(q.word) === q.word ? '' : getVocabMeaning(q.word))}<br><span style="color:#475569">${escapeHtml(window.getVocabEn(q.word))}</span></div>
@@ -2717,8 +2717,8 @@ function _renderFcQuiz() {
     </div>
     <div class="card fc-quiz-card">
       <span style="display:inline-block;font-size:12px;font-weight:700;color:#7C3AED;background:rgba(124,58,237,0.10);border-radius:12px;padding:3px 12px">${escapeHtml(q.label)}</span>
-      <div style="font-size:13px;color:#64748B;margin:10px 0 6px">${escapeHtml(q.prompt)}</div>
-      <div style="font-size:19px;line-height:1.7;color:#1E293B;font-weight:600">${stemHtml} ${q.say && done ? _fcSpk(q.say, 18) : ''}</div>
+      <div class="fc-quiz-prompt" style="font-size:13px;color:#64748B;margin:10px 0 6px">${escapeHtml(q.prompt)}</div>
+      <div class="fc-quiz-stem" style="font-size:19px;line-height:1.7;color:#1E293B;font-weight:600">${stemHtml} ${q.say && done ? _fcSpk(q.say, 18) : ''}</div>
       ${opts}
       ${done ? '' : `<div style="text-align:center;margin-top:8px"><button class="ui-btn2" onclick="answerFcQuiz(-1)">💡 不会, 看答案和解析 ›</button></div>`}
       ${fb}
