@@ -2394,6 +2394,21 @@ assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾
   assert(W.getTenseDrillQuestions(999).every(q => !/^被动-(间接宾语|情态|be known)|^虚拟|^情态/.test(q.tag)), 'v26.0: 时态题源不含被动语序/虚拟/情态');
   { const fn = appSrc.slice(appSrc.indexOf('function _renderSciOe()'), appSrc.indexOf('function sciOeStart()')); assert(fn.indexOf('const weakOpener') < fn.indexOf('if (userAns) {'), 'v26.1: 科学 OE weakOpener 在函数作用域 (看答案那步不再 ReferenceError)'); }
   assert(/return \(s\.total > 0 \? 60 \+ \(TARGET - s\.pct\) \/ 10 : 60\) \+ diagBump;/.test(appSrc) && /\(now >= TARGET \? \(100 - now\) : 100 \+ \(TARGET - now\)\) \+ diagBump;/.test(appSrc), 'v26.2: 病根加急分加在 urgency 全部三条 return 上 (时态卡排第一)');
+  // v27.0: 判分页
+  assert(W.GRADING_TASKS && Object.keys(W.GRADING_TASKS).length === 5 && W.GRADING_TASKS.eng_cw.max === 36 && W.GRADING_TASKS.eng_sw.max === 14 && W.GRADING_TASKS.cn_compo.max === 40, 'v27.0: 五种判分任务, 满分按 SEAB (作文 36 / 情境 14 / 华文 40)');
+  { const p = W.buildGradingSystemPrompt('eng_cw'); assert(/Transcribe first/.test(p) && /Content 18 \+ Language & Organisation 18/.test(p) && /at least 150 words/.test(p) && /Output valid JSON only/.test(p), 'v27.0: 作文判分提示词含 转写优先 / 18+18 / 150 词 / JSON'); }
+  { const p = W.buildGradingSystemPrompt('eng_sw'); assert(/Never reconstruct the question/.test(p) && /Parent notes may supply/.test(p) && /different task or subject/.test(p) && /score\.total must equal the sum/.test(p) && !/A Misunderstanding/.test(p) && /不编要点/.test(p), 'v27.0 评审: 规则 7-9 (禁反推 / 家长备注不改标准 / 任务不符不出分) + 情境写作范文不编要点'); }
+  { const p = W.buildGradingSystemPrompt('sci_oe'); assert(/whole marks only/.test(p) && /do NOT invent a total/.test(p) && !/half marks\)/.test(p), 'v27.0 评审: 科学整分不给半分, 分值不可见不编总分'); }
+  { const p = W.buildGradingSystemPrompt('cn_compo'); assert(/½ 分/.test(p) && /封顶 4 分/.test(p) && /不是额外加分/.test(p), 'v27.0 评审: 华文错别字 ½ 分封顶 4, 成语不额外加分'); }
+  assert(/"word_count": 0/.test(dataSrc) && /"marks": -1, "impact"/.test(dataSrc) && !/\\"题目未拍到\\"/.test(dataSrc), 'v27.0 评审: schema 加 word_count / marks 数字 + impact / task_seen 示例合法');
+  assert(/不够 .*150 词/.test(appSrc) && /typeof l\.marks === 'number'/.test(appSrc) && /p\.score == null \? '—'/.test(appSrc), 'v27.0 评审: 前端渲染字数门槛 / 数字扣分 / 空值部分');
+  { const p = W.buildGradingSystemPrompt('sci_oe'); assert(/2, 3, 4 or 5 marks/.test(p) && /40 marks total/.test(p) && /cause-and-effect link/.test(p), 'v27.0: 科学判分提示词含官方 B 册格式 + 因果链'); }
+  { const p = W.buildGradingSystemPrompt('cn_compo'); assert(/不少过 100/.test(p) && /内容 20 分 \+ 语言 20 分/.test(p), 'v27.0: 华文判分提示词含官方字数 + 20/20'); }
+  assert(W._gradingParseJson('```json\n{"a":1}\n```').a === 1 && W._gradingParseJson('前言 {"a":{"b":2}} 后记').a.b === 2 && W._gradingParseJson('not json') === null, 'v27.0: JSON 解析容错 (代码围栏 / 前后杂文)');
+  { const st = { gradeLog: [] }; for (let i = 0; i < 65; i++) W.addGradeRecord(st, { task: 'eng_cw' }); assert(st.gradeLog.length === 60 && st.gradeLog[0].id, 'v27.0: 判分记录最多 60 条'); }
+  assert(/anthropic-dangerous-direct-browser-access/.test(dataSrc) && /localStorage\.getItem\(_GRADING_KEY_LS\)/.test(dataSrc) && !/apiKey.*state\./.test(dataSrc.slice(dataSrc.indexOf('v27.0'))), 'v27.0: 浏览器直连 Claude API, key 只在 localStorage 不进 state');
+  assert(/data-page="grading"/.test(idxSrc) && /id="page-grading"/.test(idxSrc) && /function renderGradingPage\(\)/.test(appSrc) && /if \(page === 'grading'\)/.test(appSrc) && /graded_sci_oe: \['科学'/.test(appSrc), 'v27.0: 导航 + 页面 + 钩子 + 错题本题型');
+  assert(/function _gdLoadImage/.test(appSrc) && /const MAX = 1600/.test(appSrc) && /image\/jpeg', 0\.85/.test(appSrc) && /capture="environment"/.test(appSrc), 'v27.0: 拍照上传 + 压图 1600/0.85');
   assert(W.MY_ERROR_BOOK.length >= 5 && W.MY_ERROR_BOOK.some(g => g.items.some(i => /Yours sincerely/.test(i.right))), 'v26.0: 我的常错本 (含 Yours sincerely)');
   assert(W.SCI_KEYWORD_BANK.length >= 12 && W.SCI_KEYWORD_BANK.every(u => u.keywords.length >= 2 && u.sentence), 'v26.0: 科学关键词库 ≥12 单元, 每条有关键词 + 得分句');
   { const ids = W.SCIENCE_OE_QUESTIONS.map(q => q.id); assert(ids.length >= 63 && new Set(ids).size === ids.length && ids.indexOf('oe_61') >= 0, 'v26.0: 科学开放题 +6 (oe_61-66), id 不重复'); }

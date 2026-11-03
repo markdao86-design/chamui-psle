@@ -12691,6 +12691,9 @@ function _runPageHook(page) {
       if (page === 'wrongbook') {
         renderWrongBookPage();   // v23.3: 错题集
       }
+      if (page === 'grading') {
+        renderGradingPage();   // v27.0: 判分
+      }
       if (page === 'schedule') {
         _schedViewDay = null;  // 每次进入回到今天
         renderSchedulePage();
@@ -13621,6 +13624,7 @@ const WB_TYPE = {
   editing: ['英语', 'Editing 改错', 'eng', 'editing'], cloze: ['英语', 'Comprehension Cloze 完形', 'eng', 'cloze'], sst: ['英语', 'Synthesis 句型转换', 'eng', 'synthesis'], grammar: ['英语', 'Grammar MCQ 语法', 'eng', 'gram_mcq'],
   vocab: ['英语', 'Vocabulary 词汇', 'eng', 'vocab_mcq'], listen: ['英语', 'Listening 听力', 'eng', 'listening'], comp_oe: ['英语', 'Comprehension OE 阅读问答', 'eng', 'comp_oe'],
   scimcq: ['科学', 'Science MCQ 选择题', 'sci', 'mcq'], scilab: ['科学', 'Science 实验题', 'sci', 'oe_exp'], sci_oe: ['科学', 'Science OE 开放题', 'sci', 'oe_explain'], sciclassify: ['科学', 'Science 分类', 'sci', 'oe_compare'],
+  graded_eng_cw: ['英语', '判分 · 英语作文', 'eng', 'compo'], graded_eng_sw: ['英语', '判分 · 情境写作', 'eng', 'sw'], graded_eng_comp: ['英语', '判分 · 阅读问答', 'eng', 'comp_oe'], graded_cn_compo: ['华文', '判分 · 华文作文', 'cn', 'compo'], graded_sci_oe: ['科学', '判分 · 科学开放题', 'sci', 'oe_explain'],
   math: ['数学', '数学', 'math', 'careless'], unit: ['数学', '数学 单位换算', 'math', 'careless'], chinese: ['华文', '华文', 'cn', 'reading'], chinese_oe: ['华文', '华文 阅读问答', 'cn', 'reading'],
 };
 function _wbSubjectOf(it) {
@@ -13783,3 +13787,158 @@ function _renderTechSummary(el, tb) {
       </div>
     </div>`;
 }
+
+// ============= v27.0: 📷 判分页 (拍照 → Claude 按 PSLE 标准批改 → 失分项 / 讲解 / 范文 → 可入错题本 / PDF) =============
+let _gdTask = 'eng_cw', _gdImages = [], _gdBusy = false, _gdResult = null, _gdView = 'new';   // view: new | result | history
+function _gdSetTask(k) { _gdTask = k; renderGradingPage(); }
+function _gdSetView(v) { _gdView = v; renderGradingPage(); }
+window._gdSetTask = _gdSetTask; window._gdSetView = _gdSetView;
+// 压图: 最长边 1600, JPEG 0.85 (够看清手写, 一张约 1500 token)
+function _gdLoadImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file); const img = new Image();
+    img.onload = () => {
+      const MAX = 1600; let w = img.naturalWidth, h = img.naturalHeight; const r = Math.min(1, MAX / Math.max(w, h)); w = Math.round(w * r); h = Math.round(h * r);
+      const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = c.toDataURL('image/jpeg', 0.85); URL.revokeObjectURL(url);
+      resolve({ media_type: 'image/jpeg', data: dataUrl.split(',')[1], preview: dataUrl, name: file.name, w, h });
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('图片读不出来: ' + file.name)); };
+    img.src = url;
+  });
+}
+async function _gdPick(input) {
+  const files = Array.from(input.files || []).slice(0, 6 - _gdImages.length);
+  for (const f of files) { try { _gdImages.push(await _gdLoadImage(f)); } catch (e) { showToast(e.message, 'warn'); } }
+  input.value = ''; renderGradingPage();
+}
+function _gdRemove(i) { _gdImages.splice(i, 1); renderGradingPage(); }
+window._gdPick = _gdPick; window._gdRemove = _gdRemove;
+function _gdSaveSettings() {
+  const k = document.getElementById('gdKey'), m = document.getElementById('gdModel');
+  if (k) window.setClaudeKey(k.value.trim()); if (m) window.setGradingModel(m.value);
+  showToast('已保存在这台设备上', 'success'); renderGradingPage();
+}
+window._gdSaveSettings = _gdSaveSettings;
+async function _gdRun() {
+  if (_gdBusy) return;
+  if (!_gdImages.length) { showToast('先拍照或选图片', 'warn'); return; }
+  const key = window.getClaudeKey(); if (!key) { showToast('先在下面「设置」填 API key', 'warn'); const s = document.getElementById('gdSettings'); if (s) s.open = true; return; }
+  const extra = (document.getElementById('gdExtra') || {}).value || '';
+  _gdBusy = true; _gdResult = null; renderGradingPage();
+  const t0 = Date.now();
+  try {
+    const r = await window.callClaudeGrader({ apiKey: key, model: window.getGradingModel(), taskKey: _gdTask, images: _gdImages, extra });
+    r.task = _gdTask; r.secs = Math.round((Date.now() - t0) / 1000); r.extra = extra; r.nImg = _gdImages.length;
+    _gdResult = window.addGradeRecord(state, r); saveState(state);
+    _gdView = 'result';
+    if (window.addStudySeconds) window.addStudySeconds(state, 60);
+  } catch (e) {
+    _gdResult = { error: e.message, rawText: e.rawText || '' };
+    showToast(e.message === 'NO_KEY' ? '先填 API key' : e.message, 'warn');
+    _gdView = 'result';
+  }
+  _gdBusy = false; renderGradingPage();
+}
+window._gdRun = _gdRun;
+function _gdOpenRecord(id) { const r = (state.gradeLog || []).find(x => x.id === id); if (!r) return; _gdResult = r; _gdView = 'result'; renderGradingPage(); }
+function _gdDeleteRecord(id) { state.gradeLog = (state.gradeLog || []).filter(x => x.id !== id); saveState(state); if (_gdResult && _gdResult.id === id) _gdResult = null; renderGradingPage(); }
+window._gdOpenRecord = _gdOpenRecord; window._gdDeleteRecord = _gdDeleteRecord;
+// 失分项 → 错题本 (科目按任务, 题型名 = 任务名)
+function _gdToWrongBook(id) {
+  const r = (state.gradeLog || []).find(x => x.id === id); if (!r || !window.addToErrorBank) return;
+  const t = window.GRADING_TASKS[r.task]; let n = 0;
+  (r.lost || []).forEach(l => {
+    const imp = l.impact || (typeof l.marks === 'string' ? l.marks : typeof l.marks === 'number' ? l.marks + ' 分' : '');
+    const ok = window.addToErrorBank(state, { gameKey: t.wb, type: 'graded', subj: t.subj, topic: t.label, q: `${l.where ? l.where + ': ' : ''}${l.what || ''}`, correctAns: l.fix || '', explain: `${l.why || ''}${imp ? ' (' + imp + ')' : ''}`, gradeId: r.id });
+    if (ok) n++;
+  });
+  r.inWrongBook = true; saveState(state);
+  showToast(n ? `✅ ${n} 条失分项已进错题本 (${t.subj})` : '这些失分项已经在错题本里了', 'success'); renderGradingPage();
+}
+window._gdToWrongBook = _gdToWrongBook;
+function _gdResultHtml(r) {
+  const esc = s => escapeHtml(String(s == null ? '' : s));
+  const t = window.GRADING_TASKS[r.task] || {};
+  const sc = r.score || {}; const pct = sc.max ? Math.round(sc.total / sc.max * 100) : null;
+  const col = pct == null ? '#64748B' : pct >= 90 ? '#16A34A' : pct >= 75 ? '#B45309' : '#DC2626';
+  const li = (arr, f) => (arr || []).map(f).join('');
+  return `
+    <div class="card">
+      <div class="ui-head" style="align-items:flex-start">
+        <div style="flex:1;min-width:0"><div class="ui-page-title">${t.icon || '📷'} ${esc(t.label)}</div><div class="ui-row-sub">${esc(r.date)} · ${r.nImg || 1} 张照片 · ${esc(r._model || '')}${r.secs ? ' · ' + r.secs + ' 秒' : ''}${sc.estimated ? ' · <b style="color:#B45309">估分 (题目/原文没拍全)</b>' : ''}${sc.word_count != null ? ` · ${sc.word_count} ${r.task === 'cn_compo' ? '字' : '词'}${(r.task === 'eng_cw' && sc.word_count < 150) || (r.task === 'cn_compo' && sc.word_count < 100) ? ' <b style="color:#DC2626">(不够 ' + (r.task === 'cn_compo' ? '100 字' : '150 词') + ')</b>' : ''}` : ''}</div></div>
+        <div class="ui-head-r" style="text-align:right"><span class="ui-num" style="color:${col}">${sc.max ? `${sc.total}/${sc.max}` : '—'}</span><span class="ui-num-label">${pct != null ? pct + '%' + (pct >= 90 ? ' · AL1 水平' : pct >= 85 ? ' · AL2' : pct >= 80 ? ' · AL3' : pct >= 75 ? ' · AL4' : '') : '未能判分'}</span></div>
+      </div>
+      ${r.readable === false ? '<div class="mod-diag">📷 照片看不清, 以下只能部分判断。重拍: 光线充足、正对纸面、一页一张。</div>' : ''}
+      ${(sc.parts || []).length ? `<div class="ui-panel" style="margin-top:8px">${li(sc.parts, p => `<div class="ui-row" style="padding:6px 0"><div class="ui-row-main"><div class="ui-row-title" style="font-size:15px">${esc(p.name)} <span style="color:#64748B;font-weight:600">${p.band ? esc(p.band) : ''}</span></div><div class="ui-row-sub">${esc(p.reason)}</div></div><div class="ui-row-act"><span class="ui-num" style="font-size:22px;color:${p.score == null ? '#94A3B8' : p.max && p.score / p.max >= 0.9 ? '#16A34A' : '#DC2626'}">${p.score == null ? '—' : p.score}/${p.max}</span></div></div>`)}</div>` : ''}
+      ${r.task_seen ? `<details class="ui-more" style="margin-top:8px"><summary>看到的题目</summary><div class="ui-more-body">${esc(r.task_seen)}</div></details>` : ''}
+      <details class="ui-more"><summary>孩子答案的转写 (核对有没有认错字)</summary><div class="ui-more-body gd-pre">${esc(r.transcription)}</div></details>
+    </div>
+    <div class="card">
+      <div class="ui-head"><div class="ui-page-title">❌ 失分项 <span style="color:#DC2626">${(r.lost || []).length}</span></div><div class="ui-head-r">${r.id ? `<button class="${r.inWrongBook ? 'ui-btn2' : 'ui-cta auto'}" onclick="_gdToWrongBook('${r.id}')">${r.inWrongBook ? '✓ 已进错题本' : '📕 全部入错题本 →'}</button>` : ''}</div></div>
+      ${(r.lost || []).length ? li(r.lost, l => `<div class="gd-lost"><div class="gd-lost-where">${esc(l.where)} <span class="gd-marks">${typeof l.marks === 'number' ? (l.marks > 0 ? '-' + l.marks : l.marks) + ' 分' : ''}${l.impact ? ' ' + esc(l.impact) : (typeof l.marks === 'string' ? ' ' + esc(l.marks) : '')}</span></div><div class="gd-lost-what">✗ ${esc(l.what)}</div><div class="gd-lost-why">${esc(l.why)}</div><div class="gd-lost-fix">✓ ${esc(l.fix)}</div></div>`) : '<div class="ui-hint">没有找到失分项</div>'}
+    </div>
+    ${(r.strengths || []).length ? `<div class="card"><div class="ui-page-title">✅ 做得好的</div>${li(r.strengths, s => `<div class="gd-line">• ${esc(s)}</div>`)}</div>` : ''}
+    ${(r.explain || []).length ? `<div class="card"><div class="ui-page-title">📘 详细讲解</div>${li(r.explain, e => `<div class="gd-exp"><div class="gd-exp-title">${esc(e.title)}</div><div class="gd-exp-body">${esc(e.body)}</div></div>`)}</div>` : ''}
+    ${r.model_answer ? `<div class="card"><div class="ui-head"><div class="ui-page-title">⭐ 范文 / 规范答案</div><div class="ui-head-r"><button class="ui-btn2" onclick="navigator.clipboard && navigator.clipboard.writeText(${JSON.stringify(String(r.model_answer)).replace(/"/g, '&quot;')}).then(() => showToast('已复制', 'success'))">复制</button></div></div><div class="gd-pre gd-model">${esc(r.model_answer)}</div></div>` : ''}
+    ${(r.next || []).length ? `<div class="card"><div class="ui-page-title">🎯 接下来练什么</div>${li(r.next, s => `<div class="gd-line">→ ${esc(s)}</div>`)}</div>` : ''}
+    ${(r.caveats || []).length ? `<div class="card" style="background:#F8FAFC"><div class="ui-row-sub" style="font-weight:800;color:#64748B">⚠️ 说明 / 不确定的地方</div>${li(r.caveats, s => `<div class="gd-line" style="color:#64748B;font-size:13px">• ${esc(s)}</div>`)}</div>` : ''}
+    <div class="ui-row" style="border:none;padding:8px 0;justify-content:flex-end;gap:8px;display:flex"><button class="ui-btn2" onclick="_gdDownloadPdf('${r.id || ''}')">⬇ PDF</button><button class="ui-btn2" onclick="_gdSetView('new')">再判一份 ›</button></div>`;
+}
+function _gdDownloadPdf(id) {
+  const r = (state.gradeLog || []).find(x => x.id === id) || _gdResult; if (!r) return;
+  const esc = s => escapeHtml(String(s == null ? '' : s)); const t = window.GRADING_TASKS[r.task] || {}; const sc = r.score || {};
+  const html = `<h1>判分 · ${esc(t.label)} · ${esc(r.date)}</h1><p><b>得分: ${sc.total}/${sc.max}</b>${sc.estimated ? ' (估分)' : ''}</p>${(sc.parts || []).map(p => `<p>${esc(p.name)} ${p.score}/${p.max} ${esc(p.band || '')} — ${esc(p.reason)}</p>`).join('')}
+    <h2>失分项</h2>${(r.lost || []).map(l => `<p><b>${esc(l.where)}</b> ${typeof l.marks === 'number' ? l.marks + ' 分' : ''} ${esc(l.impact || (typeof l.marks === 'string' ? l.marks : ''))}<br>✗ ${esc(l.what)}<br>${esc(l.why)}<br>✓ ${esc(l.fix)}</p>`).join('')}
+    <h2>讲解</h2>${(r.explain || []).map(e => `<p><b>${esc(e.title)}</b><br>${esc(e.body)}</p>`).join('')}
+    <h2>范文 / 规范答案</h2><p style="white-space:pre-wrap">${esc(r.model_answer)}</p>
+    <h2>转写</h2><p style="white-space:pre-wrap;color:#64748B">${esc(r.transcription)}</p>${(r.caveats || []).length ? `<h2>说明</h2>${r.caveats.map(c => `<p>${esc(c)}</p>`).join('')}` : ''}`;
+  downloadHtmlAsPdf(html, `grade-${r.task}-${r.date}.pdf`, '判分');
+}
+window._gdDownloadPdf = _gdDownloadPdf;
+function renderGradingPage() {
+  const el = document.getElementById('gradingContent'); if (!el) return;
+  const T = window.GRADING_TASKS; const key = window.getClaudeKey(); const model = window.getGradingModel();
+  const log = state.gradeLog || [];
+  const seg = `<div class="ui-seg">${[['new', '📷 判新的'], ['history', `📚 记录 (${log.length})`]].map(([v, l]) => `<button class="${_gdView === v || (_gdView === 'result' && v === 'new') ? 'on' : ''}" onclick="_gdSetView('${v}')">${l}</button>`).join('')}</div>`;
+  const settings = `<details class="ui-more" id="gdSettings" ${key ? '' : 'open'}><summary>⚙️ 设置 (API key 只存这台设备)</summary><div class="ui-more-body">
+      <div class="ui-row" style="border:none;padding:6px 0"><div class="ui-row-main"><div class="ui-row-title" style="font-size:14px">Claude API key</div><div class="ui-row-sub">在 console.anthropic.com 创建; 只保存在这台设备的浏览器里, 不会同步到云端。判一份约 ¥0.3-1。</div></div></div>
+      <input id="gdKey" class="ui-textarea" type="password" placeholder="sk-ant-…" value="${escapeHtml(key)}" style="width:100%;min-height:44px">
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><select id="gdModel" class="ui-textarea" style="flex:1;min-height:44px">${window.GRADING_MODELS.map(m => `<option value="${m.id}" ${m.id === model ? 'selected' : ''}>${m.label} · ${m.note}</option>`).join('')}</select><button class="ui-cta auto" onclick="_gdSaveSettings()">保存</button></div>
+    </div></details>`;
+  if (_gdView === 'history') {
+    el.innerHTML = `<div class="card"><div class="ui-page-title">📷 判分</div>${seg}
+      ${log.length ? log.map(r => { const t = T[r.task] || {}; const sc = r.score || {}; const pct = sc.max ? Math.round(sc.total / sc.max * 100) : null; return `<div class="ui-row clickable" onclick="_gdOpenRecord('${r.id}')"><div class="ui-row-ico">${t.icon || '📷'}</div><div class="ui-row-main"><div class="ui-row-title">${escapeHtml(t.label || r.task)}</div><div class="ui-row-sub">${r.date} · 失分项 ${(r.lost || []).length}${r.inWrongBook ? ' · 已入错题本' : ''}</div></div><div class="ui-row-act" style="display:flex;gap:6px;align-items:center"><span class="ui-num" style="font-size:20px;color:${pct == null ? '#64748B' : pct >= 90 ? '#16A34A' : '#DC2626'}">${sc.max ? sc.total + '/' + sc.max : '—'}</span><button class="ui-btn2" onclick="event.stopPropagation();if(confirm('删除这条判分记录?'))_gdDeleteRecord('${r.id}')">🗑</button></div></div>`; }).join('') : '<div class="ui-hint">还没有判分记录</div>'}
+    </div>`;
+    return;
+  }
+  if (_gdView === 'result' && _gdResult) {
+    if (_gdResult.error) {
+      el.innerHTML = `<div class="card"><div class="ui-page-title">📷 判分</div>${seg}<div class="mod-diag" style="margin-top:10px">❌ ${escapeHtml(_gdResult.error)}</div>${_gdResult.rawText ? `<details class="ui-more"><summary>模型原文</summary><div class="ui-more-body gd-pre">${escapeHtml(_gdResult.rawText.slice(0, 4000))}</div></details>` : ''}<div style="margin-top:10px"><button class="ui-cta auto" onclick="_gdSetView('new')">返回重试 →</button></div>${settings}</div>`;
+      return;
+    }
+    el.innerHTML = `<div class="card" style="padding-bottom:4px"><div class="ui-page-title">📷 判分</div>${seg}</div>` + _gdResultHtml(_gdResult);
+    return;
+  }
+  const t = T[_gdTask];
+  el.innerHTML = `<div class="card">
+      <div class="ui-page-title">📷 判分</div>${seg}
+      <div class="ui-hint"><span class="ui-hint-ico">📝</span><span>拍下孩子写好的作业 (作文 / 情境写作 / 阅读问答 / 华文作文 / 科学开放题), 按 <b>PSLE 官方格式 + 评分标准</b> 批改: 分数、失分项、讲解、范文。题目和原文也拍进去, 判得更准。</span></div>
+      <div class="lbl" style="margin-top:10px">1. 这是什么作业</div>
+      <div class="gd-tasks">${Object.keys(T).map(k => `<button class="gd-task ${k === _gdTask ? 'on' : ''}" onclick="_gdSetTask('${k}')">${T[k].icon} ${escapeHtml(T[k].label)}<span class="gd-task-max">${T[k].max ? '满分 ' + T[k].max : '按题分值'}</span></button>`).join('')}</div>
+      <div class="lbl" style="margin-top:12px">2. 拍照 / 选图 (最多 6 张, 一页一张, 正对纸面)</div>
+      <div class="gd-imgs">${_gdImages.map((im, i) => `<div class="gd-img"><img src="${im.preview}" alt=""><button class="gd-img-x" onclick="_gdRemove(${i})">✕</button></div>`).join('')}
+        ${_gdImages.length < 6 ? `<label class="gd-add"><input type="file" accept="image/*" capture="environment" multiple style="display:none" onchange="_gdPick(this)"><span>📷</span><span>拍照 / 选图</span></label>` : ''}</div>
+      <div class="lbl" style="margin-top:12px">3. 补充 (选填): 题目原文 / 每题分值 / 老师要求</div>
+      <textarea id="gdExtra" class="ui-textarea" style="width:100%;min-height:64px" placeholder="例: 题目 An Unforgettable Day, 三张图是 ... / 科学 35b 2 分, 36c 2 分">${escapeHtml((_gdResult && _gdResult.extra) || '')}</textarea>
+      <div class="ui-row" style="border:none;padding:12px 0 4px"><div class="ui-row-main"><div class="ui-row-sub">${_gdBusy ? '⏳ 正在判分, 作文一般 1-2 分钟, 别关页面…' : `用 ${escapeHtml((window.GRADING_MODELS.find(m => m.id === model) || {}).label || model)}`}</div></div><div class="ui-row-act"><button class="ui-cta auto" ${_gdBusy || !_gdImages.length ? 'disabled' : ''} onclick="_gdRun()">${_gdBusy ? '判分中…' : '开始判分 →'}</button></div></div>
+      ${settings}
+      <details class="ui-more"><summary>评分标准从哪来</summary><div class="ui-more-body" style="font-size:13px;line-height:1.7">
+        <div>• <b>官方 (SEAB)</b>: 英语 2025 起 情境写作 14 分 + 作文 36 分 (≥150 词, 三图至少用一张); 阅读问答 10 题 20 分。华文 试卷一 写作 40 分, 命题/看图二选一, 不少于 100 字, 可用规定词典。科学 2026 起 Booklet B 10–11 题, 每题 2–5 分, 共 40 分。</div>
+        <div>• <b>学校通行口径 (SEAB 不公布分项)</b>: 作文 内容 18 + 语言组织 18, 五个等级; 情境写作 内容 6 (每要点 1 分) + 语言组织 8; 华文作文 内容 20 + 语言 20 (错别字按 ½ 分封顶 4 分); 科学结构题按得分点 (关键词 + 因果链), 一律整分。</div>
+        <div>• 模型不许: 从孩子答案反推题目再判内容分 (题目没拍到 → 那部分记 "—" 并标估分); 家长备注只能补题目和分值, 不能改标准; 拍的和选的任务对不上 → 不出分。</div>
+        <div>• 模型被要求: 先逐字转写、只判照片里看得到的、不编造标准、每个失分项引用原文位置。拍不全的会标"估分"。</div>
+      </div></details>
+    </div>`;
+}
+window.renderGradingPage = renderGradingPage;

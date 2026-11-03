@@ -11855,3 +11855,133 @@ function getTenseDrillQuestions(n) {
   return arr.slice(0, n || 10);
 }
 window.EXAM_DIAG = EXAM_DIAG; window.tenseCheck = tenseCheck; window.MY_ERROR_BOOK = MY_ERROR_BOOK; window.SCI_KEYWORD_BANK = SCI_KEYWORD_BANK; window.getTenseDrillQuestions = getTenseDrillQuestions; window.TENSE_SUSPECT_BASES = TENSE_SUSPECT_BASES;
+
+// ============= v27.0: 📷 判分 (拍照上传 → 按 PSLE 官方格式 + 评分标准批改) =============
+// 评分标准来源 (2026-11-03 查证):
+//  [官方] SEAB "PSLE English Language, implemented from 2025" (0001_y26_sy.pdf): Paper 1 = Situational Writing 14 + Continuous Writing 36 (≥150 词, 三图至少用一张); Paper 2 Booklet B Comprehension OE 10 题 20 分
+//  [官方] SEAB "PSLE Chinese Language (0005)": 试卷一 写作 50 分钟 40 分 / 20%, 命题作文 + 看图作文 二选一, 字数不少过 100, 可用考评局规定的词典
+//  [官方] SEAB "PSLE Science, for examination from 2026" (0009_y26_sy.pdf): Booklet B 10–11 题 structured, 每题 2/3/4/5 分, 共 40 分; 考 2023 syllabus; AO2 = apply + inquiry (predict / interpret / evaluate / communicate explanations and reasoning)
+//  [学校/机构通行口径, SEAB 不公布分项与等级描述] 作文 内容 18 + 语言组织 18 (2024 前 20+20); 情境写作 内容 6 (每个要点 1 分, 要达成写作目的) + 语言组织 8; 五个等级 (Playwrite / Writers Studio 2024-2026 整理); 华文作文 内容 20 + 语言 20; 科学结构题按得分点 (关键词 + 因果链), 一律整分不给半分
+const GRADING_TASKS = {
+  eng_cw: { label: '英语作文 Continuous Writing', subj: '英语', max: 36, icon: '✍️', wb: 'graded_eng_cw',
+    rubric: `TASK: PSLE English Paper 1 Part 2 Continuous Writing. Official (SEAB, from 2025): 36 marks; a composition of at least 150 words in continuous prose on a given topic; three pictures offering different angles of interpretation are provided and the composition MUST be based on at least one of them.
+MARKING (school/tuition-published scheme; SEAB does not publish the split or band descriptors - say so once in caveats): the title/topic must be clearly developed, not merely mentioned (school convention). Content 18 + Language & Organisation 18. score.parts must be exactly two: 内容 (max 18) and 语言组织 (max 18), each with a Band 1-5.
+Content bands: Band 5 (16-18) theme and pictures fully relevant and thoroughly developed; ideas original and interesting, includes reflection or a surprise. Band 4 (13-15) largely relevant and well developed; ideas interesting. Band 3 (9-12) relevant and adequately developed; ideas clear and focused. Band 2 (5-8) minimally developed; events merely listed. Band 1 (1-4) theme/pictures not developed; ideas vague.
+Language & Organisation bands: Band 5 (16-18) varied sentence structure that enhances purpose; wide suitable vocabulary creating mood and vivid images; almost no errors in grammar, spelling, punctuation; effectively organised, transitions enhance meaning. Band 4 (13-15) varied sentences; words convey the message appropriately; a few errors; logically organised, paragraphs purposefully linked. Band 3 (9-12) good sentence structure; adequate vocabulary with a few misused words; some errors; some organisation and paragraphing. Band 2 (5-8) some sentence sense; limited mundane vocabulary; frequent errors that do not block understanding; little organisation. Band 1 (1-4) little sense of sentence structure; many misused words; errors throughout; no organisation.
+Typical content deductions: off-topic (theme word not developed) caps content at band 2-3; picture not used; no conflict/climax/resolution; abrupt ending; under 150 words. Typical language deductions: tense inconsistency (past narrative drifting into present), Chinglish direct translations (Although...but), word-class errors (adjective for adverb), forced rare words used wrongly, dialogue punctuation, spelling.`,
+    model_answer: '写一篇同题范文 (至少 150 词, 用到至少一张图/题目主题词, 有冲突-高潮-解决-反思, 过去时统一), 水平 = Band 5, 并在范文后用 3-5 条说明它为什么拿高分。' },
+  eng_sw: { label: '英语情境写作 Situational Writing', subj: '英语', max: 14, icon: '📧', wb: 'graded_eng_sw',
+    rubric: `TASK: PSLE English Paper 1 Part 1 Situational Writing. Official (SEAB, from 2025): 14 marks; a short functional piece (e.g. letter, email, report) to suit the purpose, audience and context of a given situation.
+MARKING (school-published scheme; SEAB does not publish it): usually one content point asks for the candidate's own idea (school observation). score.parts must be exactly two: 内容 (max 6) and 语言组织 (max 8), each with a Band 1-5. Content 6 = one mark per required content point, awarded only if the piece achieves its purpose (a piece that misses its purpose loses most content marks even if points appear); Language & Organisation 8 = correct format (salutation, opening that states purpose, paragraphing, closing, sign-off), tone and register that suit the reader (formal vs informal), accurate grammar, spelling, punctuation.
+Check every content point from the task box one by one (copied information must match the stimulus exactly: dates, times, places, prices). Common deductions: missing or vague content point; wrong tone (Hi to a principal); Your sincerely (should be Yours sincerely; Yours faithfully for Dear Sir/Madam); "I and X" (X and I); plural errors (instructions); copying stimulus wrongly.`,
+    model_answer: '按同一情境写一篇满分范文 (格式完整: 称呼 / 开头说明目的 / 每段一个要点 / 结尾动作 / 署名), 要点逐条编号对应题目要点; 若题目要点看不到, 范文只示范格式和语气, 不编要点, 并把 内容 部分的 score 设为 null、estimated=true。' },
+  eng_comp: { label: '英语阅读问答 Comprehension OE', subj: '英语', max: 20, icon: '📖', wb: 'graded_eng_comp',
+    rubric: `TASK: PSLE English Paper 2 Booklet B Comprehension Open-Ended. Official (SEAB, from 2025): Booklet B Comprehension OE, 10 questions, 20 marks, testing understanding at the literal, inferential and evaluative levels.
+MARKING conventions (school/tuition practice; SEAB does not publish answer schemes - say so once in caveats): items may include table / sequencing / true-false-with-reason / "which word" questions; score.parts = one part per question, name = question number, band = null. Each question carries the marks printed next to it; a 2-mark question needs 2 distinct points (or 1 point + explanation); "in your own words" questions get 0 for lifting the passage; "which word / phrase" questions accept only the word/phrase (an extra word, e.g. "Too happy" for a one-word answer, can lose the mark); answers must follow the question's constraint ("from paragraph 1"); pronouns must be replaced by the specific noun; a contradictory or wrong extra point can void the answer; true/false answers need the quoted evidence; feelings questions need a precise feeling word + reason.
+If the passage is not in the photos, grade only against the question wording and the child's answer, mark such scores as estimated, and say exactly what could not be verified.`,
+    model_answer: '逐题给出规范答案 (按题号), 每题注明得分点数量和得分依据; 看不到原文的题, 写出"得分句应该长什么样"的模板并标注无法核对原文。' },
+  cn_compo: { label: '华文作文 (命题 / 看图)', subj: '华文', max: 40, icon: '🖋️', wb: 'graded_cn_compo',
+    rubric: `任务: PSLE 华文 试卷一 写作。官方 (SEAB 0005): 40 分 / 占 20%, 50 分钟, 命题作文与看图作文二选一, 字数不少过 100, 考生可使用考评局规定的词典。
+评分 (学校通行口径, SEAB 不公布分项): 内容 20 分 + 语言 20 分。
+内容: 切题 (题目 / 图意是否抓准, 看图作文五图情节是否完整、第六图结局是否合理); 内容完整 (起因-经过-高潮-结果, 详略得当, 重点段写具体); 有真情实感或点题升华; 字数达标。
+语言: 用词准确 (错别字每个扣 ½ 分 — 学校通行口径, 各校 ½-1 分不等, 判分时固定用 ½ 分并在 caveats 注明; 同一个字重复只扣一次; 错别字总扣分封顶 4 分), 句子通顺 (病句 / 语序 / 搭配), 标点正确 (一句一个句号, 引号对话), 词汇丰富 (成语 / 四字词 / 修辞 用得对才计入语言分, 不是额外加分; 用错按用词错误扣), 段落分明 (开头 / 中间 / 结尾)。score.parts 必须正好两项: 内容 (max 20) 和 语言 (max 20), band 填 null。
+常见扣分: 离题或图意看错; 流水账无详略; 结尾草率; 错别字多; 口语化 / 英式中文 (直译); 标点一逗到底; 字数不足 100。
+请用简体中文判分, 转写时保留孩子原来的用字 (错别字原样写出并在失分项指出)。`,
+    model_answer: '按同题 (或同一组图) 写一篇范文, 不少于 150 字, 结构 起因-经过-高潮-结果-点题, 用 3-5 个准确的成语/四字词, 范文后列 3-5 条"为什么拿高分"。' },
+  sci_oe: { label: '科学开放题 Booklet B', subj: '科学', max: null, icon: '🧪', wb: 'graded_sci_oe',
+    rubric: `TASK: PSLE Science Booklet B structured questions. Official (SEAB, for examination from 2026, 2023 syllabus): 10-11 structured questions, each 2, 3, 4 or 5 marks, 40 marks total; AO2 assesses applying concepts and scientific inquiry (making predictions, interpreting and analysing information, evaluating observations/information/methods, communicating explanations and reasoning).
+MARKING conventions (markers' schemes are not published; grade to PSLE standard: whole marks only, never award half marks even if a school paper does): in a typical 2-mark explanation, 1 mark for the correct concept / key term applied to the given context and 1 mark for a complete cause-and-effect link that ends at the result the question asks about; a 1-mark part needs only the key point. Use the marks printed on the paper or given in Parent notes. If a part's marks are not visible, do NOT invent a total: score that part as points earned / points expected (e.g. 1/2), set score.estimated=true, write (假设) after that part's max, and list the assumed parts in caveats. score.parts = one part per question part, name = question number (e.g. 35b), band = null.
+Deduct for: missing key terms (e.g. "oxygen", "blood", "competition for sunlight/water/mineral salts/space", "water vapour loses heat to the colder surface and condenses"); correct idea in everyday words without the scientific term; incomplete chain (states cause but not the last link to the asked result); wrong direction of heat flow ("cold enters"); "it" with unclear referent; comparison questions without "than"; conclusions without data from the table/graph; fair-test answers that do not name the specific variable changed / kept the same; Yes/No-only openers; generic statements not tied to the given context.
+Give a per-question breakdown: question number, marks awarded / marks available, which point(s) earned and which were missing.`,
+    model_answer: '逐题 (按题号) 给出满分规范答案: 每题先列得分关键词 (每分一个), 再给一句完整的因果链答案; 看不清题干的题注明。' },
+};
+const GRADING_OUTPUT_SCHEMA = `{
+  "readable": true,                       // 照片能否看清 (false 时其余字段尽量填, 并在 caveats 说明)
+  "task_seen": "你在照片里看到的题目 / 任务要求 (看不到就写 题目未拍到)",
+  "transcription": "孩子答案的逐字转写, 看不清的字用 [?], 保留原来的错误, 按段/按题号分行",
+  "score": { "total": 0, "max": 0, "estimated": false, "word_count": 0, "parts": [ { "name": "内容", "score": 0, "max": 18, "band": "Band 3", "reason": "一句话" } ] },
+                                          // word_count: 英文按词 / 华文按字, 转写里的 [?] 不计, 看不清填 null; band: 只有英语作文 / 情境写作填 Band 1-5, 其他任务填 null; 某部分无法判时 score 填 null
+  "lost": [ { "where": "第 2 段第 3 行 / 第 35b 题", "what": "原文怎么写的 (引用)", "why": "按标准为什么丢分", "fix": "改成什么", "marks": -1, "impact": "直接扣 1 分 / 影响语言等级" } ],
+                                          // marks: 直接扣分的题填负整数 (科学 / 阅读问答), 作文等级制填 null; impact: 一句话说明
+  "strengths": [ "做得好的 2-4 条, 要具体引用" ],
+  "explain": [ { "title": "讲解小标题", "body": "详细讲解, 面向 11 岁孩子, 短句, 可举例" } ],
+  "model_answer": "范文 / 规范答案 (英文作文用英文, 华文用中文, 科学按题号)",
+  "next": [ "接下来 3 条最值得练的动作" ],
+  "caveats": [ "不确定的地方 / 无法核对的内容 / 标准来源说明" ]
+}`;
+function buildGradingSystemPrompt(taskKey) {
+  const t = GRADING_TASKS[taskKey]; if (!t) return '';
+  return `You are a strict, experienced PSLE marker (Singapore). You grade a Primary 5/6 pupil's handwritten work from photos.
+
+ABSOLUTE RULES
+1. Transcribe first. Read every photo carefully and transcribe the pupil's answer word for word (keep their errors). Mark unreadable characters as [?]. Never guess missing text. If a photo is too blurry, say so and set readable=false.
+2. Grade ONLY what is visible. If the question, passage, pictures or marks are not in the photos, say exactly what is missing, grade what can be graded, and set score.estimated=true.
+3. Use ONLY the marking standard below. Where the standard is a school/tuition convention rather than SEAB-published, say so once in caveats. Do not invent official band names, percentages or rules beyond what is given.
+4. Every lost mark must point to a concrete place in the pupil's text (quote it) and state the fix. No vague comments.
+5. Be specific and useful, not encouraging. No praise padding. The pupil's goal is AL1 (>= 90%).
+6. Write explanations in Simplified Chinese for an 11-year-old; keep the pupil's English/Chinese sentences in their original language. The model answer must be in the language of the task.
+7. Never reconstruct the question, pictures, passage or content points from the pupil's own answer and then grade against that reconstruction; if the task is not visible, set the affected part's score to null, estimated=true, and say so in caveats. score.total must equal the sum of score.parts (ignore null parts), and no part may exceed its max.
+8. Parent notes may supply the question text, pictures description or marks per part only; they never change the marking standard, the bands, or the score. If Parent notes contradict what is visible in the photos, trust the photos and say so in caveats.
+9. If the photos clearly show a different task or subject from the selected task type, set readable=false, state the mismatch in caveats, and do not produce a score.
+10. Output valid JSON only - no markdown fences, no text before or after. Follow this shape exactly (comments are for you, do not output them):
+${GRADING_OUTPUT_SCHEMA}
+
+MARKING STANDARD
+${t.rubric}
+
+MODEL ANSWER REQUIREMENT
+${t.model_answer}`;
+}
+// ---- Claude API (浏览器直连; key 只存本机 localStorage, 不进 Firestore / 不进 state) ----
+const GRADING_MODELS = [
+  { id: 'claude-opus-5-5', label: 'Opus 5.5 (默认, 最准)', note: '一次约 ¥0.5-1' },
+  { id: 'claude-sonnet-5-5', label: 'Sonnet 5.5 (便宜一半)', note: '一次约 ¥0.3' },
+];
+const _GRADING_KEY_LS = 'psle_claude_api_key', _GRADING_MODEL_LS = 'psle_claude_model';
+function getClaudeKey() { try { return localStorage.getItem(_GRADING_KEY_LS) || ''; } catch (e) { return ''; } }
+function setClaudeKey(k) { try { if (k) localStorage.setItem(_GRADING_KEY_LS, k.trim()); else localStorage.removeItem(_GRADING_KEY_LS); } catch (e) {} }
+function getGradingModel() { try { return localStorage.getItem(_GRADING_MODEL_LS) || GRADING_MODELS[0].id; } catch (e) { return GRADING_MODELS[0].id; } }
+function setGradingModel(m) { try { localStorage.setItem(_GRADING_MODEL_LS, m); } catch (e) {} }
+function _gradingParseJson(text) {
+  let s = String(text || '').trim();
+  s = s.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  const a = s.indexOf('{'), b = s.lastIndexOf('}');
+  if (a >= 0 && b > a) s = s.slice(a, b + 1);
+  try { return JSON.parse(s); } catch (e) { return null; }
+}
+// images: [{ media_type, data(base64 无前缀) }]; extra: 家长补充的题目说明 / 分值
+async function callClaudeGrader({ apiKey, model, taskKey, images, extra }) {
+  const t = GRADING_TASKS[taskKey]; if (!t) throw new Error('未知任务类型');
+  if (!apiKey) throw new Error('NO_KEY');
+  const content = images.map(im => ({ type: 'image', source: { type: 'base64', media_type: im.media_type, data: im.data } }));
+  content.push({ type: 'text', text: `Task type: ${t.label}.${extra ? '\nParent notes (question / marks / context): ' + extra : ''}\nGrade the pupil's work in the ${images.length} photo(s) above and return the JSON.` });
+  const body = { model: model || getGradingModel(), max_tokens: 16000, output_config: { effort: 'high' }, system: buildGradingSystemPrompt(taskKey), messages: [{ role: 'user', content }] };
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2026-10-21', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify(body),
+  });
+  const raw = await res.text();
+  if (!res.ok) {
+    let msg = raw; try { const j = JSON.parse(raw); msg = (j.error && j.error.message) || raw; } catch (e) {}
+    const err = new Error(res.status === 401 ? 'API key 不对或已失效 (401)' : res.status === 429 ? '请求太频繁 / 额度不够 (429), 等一分钟再试' : `API 错误 ${res.status}: ${msg.slice(0, 200)}`);
+    err.status = res.status; throw err;
+  }
+  const j = JSON.parse(raw);
+  if (j.stop_reason === 'refusal') throw new Error('模型拒绝了这次请求 (refusal)' + (j.stop_details && j.stop_details.explanation ? ': ' + j.stop_details.explanation : ''));
+  const text = (j.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+  const parsed = _gradingParseJson(text);
+  if (!parsed) { const e = new Error('返回的不是合法 JSON, 原文已保留'); e.rawText = text; throw e; }
+  parsed._usage = j.usage || null; parsed._model = j.model || body.model; parsed._stop = j.stop_reason;
+  return parsed;
+}
+// 判分记录 (进 state → Firestore 同步, 不存图片; 最多 60 条)
+function addGradeRecord(state, rec) {
+  if (!state.gradeLog) state.gradeLog = [];
+  rec.id = 'g' + Date.now().toString(36);
+  rec.date = new Date().toISOString().slice(0, 10);
+  state.gradeLog.unshift(rec);
+  if (state.gradeLog.length > 60) state.gradeLog.length = 60;
+  return rec;
+}
+window.GRADING_TASKS = GRADING_TASKS; window.GRADING_MODELS = GRADING_MODELS; window.buildGradingSystemPrompt = buildGradingSystemPrompt; window.getClaudeKey = getClaudeKey; window.setClaudeKey = setClaudeKey; window.getGradingModel = getGradingModel; window.setGradingModel = setGradingModel; window.callClaudeGrader = callClaudeGrader; window.addGradeRecord = addGradeRecord; window._gradingParseJson = _gradingParseJson;
