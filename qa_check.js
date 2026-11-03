@@ -2377,13 +2377,13 @@ assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾
 
 // ===== v25.2/v25.3: 校考差距 + 学习统计条 + 解析块/词典放大 =====
 {
-  assert(W.EXAM_RESULTS && W.EXAM_RESULTS.eng.total[0] === 88 && W.EXAM_RESULTS.eng.total[1] === 110, 'v25.2: 2026-11 校考成绩入库 (英 88/110)');
-  assert(W.EXAM_RESULTS.sci.total[0] === 86.5 && W.EXAM_RESULTS.sci.parts.length === 2 && !W.EXAM_RESULTS.sci.pending, 'v25.9: 科学 A 56/60 + B 30.5/40 = 86.5 入库, 不再待出');
+  assert(W.EXAM_RESULTS && W.EXAM_RESULTS.eng.total[0] === 154 && W.EXAM_RESULTS.eng.total[1] === 200 && W.EXAM_RESULTS.eng.parts.length === 4, 'v27.1: 2026-11 校考按分析稿 (英 154/200, 四部分含推算的写作+口试)');
+  assert(W.EXAM_RESULTS.sci.total[0] === 88 && W.EXAM_RESULTS.sci.parts.length === 2 && !W.EXAM_RESULTS.sci.pending, 'v27.1: 科学 A 56/60 + B 32/40 = 88 入库');
   assert(W.examGapSummary('sci').total.al === 2 && W.examGapSummary('sci').parts[0].name.indexOf('Booklet B') === 0, 'v25.9: 科学 AL2, 丢分最多的是 Booklet B');
   assert(W.examPartForModule('sci', 'sci:mcq').k === 'bktA' && W.examPartForModule('sci', 'sci:oe').k === 'bktB', 'v25.9: 科学模块 ↔ 卷子映射');
   assert(/本阶段重点抓/.test(appSrc) && /mod-focus/.test(appSrc), 'v25.9: 模块页置顶"重点抓"块');
   const g = W.examGapSummary('eng');
-  assert(g && g.total.al === 3 && g.total.need === 11 && g.parts[0].name.indexOf('Booklet A') === 0 && g.parts[0].lost === 9 && g.date === '2026-11', 'v25.2: 英语 AL3, 离 AL1 差 11 分, 丢分最多 Booklet A (-9)');
+  assert(g && g.total.al === 4 && g.total.need === 26 && g.parts[0].name.indexOf('写作') === 0 && g.parts[0].lost === 21 && g.parts[1].lost === 11 && g.date === '2026-11', 'v27.1: 英语 AL4, 离 AL1 差 26 分, 丢分最多 写作+口试 (-21) 其次 Booklet B (-11)');
   assert(W.examPartForModule('eng', 'grammar').k === 'bktA' && W.examPartForModule('eng', 'editing').k === 'bktB' && W.examPartForModule('sci', 'sci:oe').k === 'bktB' && !W.examPartForModule('eng', 'writing'), 'v25.2: 模块 → 校考卷子 映射');
   assert(/const exam = window\.examGapSummary \? window\.examGapSummary\(subj\) : null;/.test(appSrc) && /校考 \$\{escapeHtml\(ep\.name\)\}: <b style="color:\$\{c\}">\$\{ep\.s\}\/\$\{ep\.m\} = \$\{pct\}%<\/b>/.test(appSrc) && /tag = '⚠️ 校考没到'/.test(appSrc), 'v25.2: 模块页顶部校考差距卡 + 每卡校考行 + App够了但校考没到的标签');
   assert(/items\.sort\(\(x, y\) => urgency\(y\) - urgency\(x\)\)/.test(appSrc) && /if \(isWriting\(it\)\) return -1000 \+ diagBump;/.test(appSrc), 'v25.2/v26.0: 模块按急迫度排, 写作类垫底 (有病根的加急)');

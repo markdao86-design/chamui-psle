@@ -11635,14 +11635,16 @@ window.TECH_MOD_OF_MODULE = TECH_MOD_OF_MODULE; window.TECH_QUIZ_SKIP = TECH_QUI
 // 改成绩只改这里。parts[].mods = 这张卷子/这部分对应模块学习页的 key, 模块卡上会显示 "校考 Booklet A 16/25 = 64%"
 const EXAM_RESULTS = {
   date: '2026-11', name: 'P5 校考',
-  eng: { total: [88, 110], parts: [
+  // v27.1 (用户 2026-11-03 "按分析稿来"): 英 154/200 (77%, AL4), Booklet B 54/65, 科学开放题 32/40; 写作 + 口试 = 154 - 16 - 15 - 54 = 69/90 是推算的合计
+  eng: { total: [154, 200], parts: [
     { k: 'bktA', name: 'Booklet A 选择题', s: 16, m: 25, mods: ['grammar', 'vocab', 'visualtext'] },
     { k: 'listen', name: '听力', s: 15, m: 20, mods: ['listening'] },
-    { k: 'bktB', name: 'Booklet B', s: 57, m: 65, mods: ['gcloze', 'editing', 'compcloze', 'synthesis', 'comp_oe'] },
+    { k: 'bktB', name: 'Booklet B', s: 54, m: 65, mods: ['gcloze', 'editing', 'compcloze', 'synthesis', 'comp_oe'] },
+    { k: 'writeoral', name: '写作 + 口试 (推算合计)', s: 69, m: 90, mods: ['writing', 'sitwriting', 'oral'] },
   ] },
-  sci: { total: [86.5, 100], parts: [
+  sci: { total: [88, 100], parts: [
     { k: 'bktA', name: 'Booklet A 选择题', s: 56, m: 60, mods: ['sci:mcq', 'sci:terms'] },
-    { k: 'bktB', name: 'Booklet B 开放题', s: 30.5, m: 40, mods: ['sci:oe', 'sci:lab'] },
+    { k: 'bktB', name: 'Booklet B 开放题', s: 32, m: 40, mods: ['sci:oe', 'sci:lab'] },
   ] },
   math: { total: [94, 100], parts: [{ k: 'a', name: 'Booklet A', s: 49, m: 50, mods: [] }, { k: 'b', name: 'Booklet B', s: 45, m: 50, mods: [] }] },
   cn: { total: [155.5, 170], parts: [{ k: 'p2', name: '试卷二 A+B', s: 83.5, m: 90, mods: [] }, { k: 'compo', name: '作文', s: 32, m: 40, mods: [] }, { k: 'listen', name: '听力', s: 40, m: 40, mods: [] }] },
@@ -11685,7 +11687,7 @@ function getStudyStats(state) {
 // 到 AL1 还要多少天: 用两次校考的进步速度外推 (每科 90% 线), 取最慢的那科; 速度 ≤0 或没有两次数据 → null
 const EXAM_HISTORY = [
   { date: '2026-08-20', eng: 65, sci: 76, cn: 86, math: 92 },        // 2026.8 校考 (英 26/40, 科 30.5/40, 华 43/50)
-  { date: '2026-11-01', eng: 80, sci: 86.5, cn: 91.5, math: 94 },    // 2026.11 校考 (英 88/110, 科 86.5/100 = A 56/60 + B 30.5/40, 华 155.5/170, 数 94/100)
+  { date: '2026-11-01', eng: 77, sci: 88, cn: 91.5, math: 94 },    // 2026.11 校考 (按分析稿: 英 154/200, 科 88/100 = A 56/60 + B 32/40, 华 155.5/170, 数 94/100)
 ];
 function estimateDaysToAL1() {
   const h = EXAM_HISTORY; if (h.length < 2) return null;
@@ -11717,7 +11719,7 @@ const EXAM_DIAG = {
   grammar: '选择题丢 9 分里语法占 3 题 —— 题感问题, 每周限时 2 套 Booklet A',
   vocab: '选择题词汇错 3 题 —— 看搭配选词, 每周 2 套 Booklet A',
   visualtext: '看图理解错 3 题 —— 小字和脚注里的细节, 每周 2 套 Booklet A',
-  'sci:oe': '意思对但没有关键词: 35b 缺 oxygen / blood (写成 "不需要能量所以心跳变慢"); 36c 缺 competition + sunlight / water / mineral salts / space (写成 "太挤长不好"); ½ 分题因果链少最后一环 (没根 → 吸不到水; 凝结更多)',
+  'sci:oe': '开放题 32/40 丢 8 分, 意思对但没有关键词: 35b 缺 oxygen / blood (写成 "不需要能量所以心跳变慢"); 36c 缺 competition + sunlight / water / mineral salts / space (写成 "太挤长不好"); ½ 分题因果链少最后一环 (没根 → 吸不到水; 凝结更多)',
   'sci:lab': '公平测试要点名哪个变量变了 (38b 没说清); 结论要带数据',
 };
 // 2) 动词圈查: 过去时叙述里混进现在时动词是最大病根。把常见动词的现在时形式标出来, 让孩子逐个确认 (引号里的对话跳过, 因为对话可以用现在时)
