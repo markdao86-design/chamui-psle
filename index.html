@@ -299,8 +299,12 @@ body {
 .mod-card { margin:0 !important; display:flex; flex-direction:column; min-width:0; }
 .mod-card .ui-page-title { font-size:17px; line-height:1.35; }
 .mod-card .ui-num { font-size:34px; }
-.mod-card .mod-act { margin-top:auto; padding-top:12px; justify-content:flex-start; flex-wrap:wrap; gap:8px 14px; }
-.mod-card .mod-act .ui-cta.auto { width:100%; }
+.mod-card .mod-act { margin-top:auto; padding-top:12px; display:flex; flex-direction:column; gap:8px; }
+.mod-card .mod-act .ui-cta.auto { width:100%; min-height:48px; }
+.mod-card .mod-links { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:4px 16px; min-height:30px; align-items:center; }
+.mod-card .mod-links .ui-btn2 { padding:4px 0; }
+.mod-card .ui-head { min-height:112px; align-items:flex-start; }
+.mod-card .ui-bar { margin:8px 0 6px; }
 .home-grid-2col {
   display: grid;
   grid-template-columns: 1fr;
@@ -6294,9 +6298,9 @@ details.card.ui-more[open] > summary { margin-bottom:var(--sp-1); }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=25.4"></script>
-<script src="data.js?v=25.4"></script>
-<script src="app.js?v=25.4"></script>
+<script src="character.js?v=25.5"></script>
+<script src="data.js?v=25.5"></script>
+<script src="app.js?v=25.5"></script>
 
 </body>
 </html>
