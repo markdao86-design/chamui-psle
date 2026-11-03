@@ -2124,33 +2124,35 @@ body.shake { animation: screen-shake 0.45s ease-out; }
 
 /* v25.0 (用户 2026-11-03: "闪卡的内容和题所有文字太小, 放大到适合 13 寸屏幕"): ≥900px 宽时闪卡和单词考题整体放大一档 */
 @media (min-width: 900px) {
-  .fc-card { max-width: 900px; min-height: 620px; }
-  .fc-card-inner { min-height: 620px; }
-  .fc-card--3eg.flipped, .fc-card--3eg.flipped .fc-card-inner { min-height: 780px; }
+  .fc-card { max-width: 1000px; min-height: 680px; }
+  .fc-card-inner { min-height: 680px; }
+  .fc-card--3eg.flipped, .fc-card--3eg.flipped .fc-card-inner { min-height: 860px; }
   .fc-card-front, .fc-card-back { padding: 36px 40px; }
-  .fc-card-word { font-size: 60px; margin-bottom: 18px; }
-  .fc-card-ipa { font-size: 26px; margin: -8px 0 18px; }
-  .fc-card-hint { font-size: 19px; }
-  .fc-card-meaning { font-size: 44px; margin: 8px 0 18px; }
-  .fc-card--3eg .fc-card-meaning { font-size: 40px; }
-  .fc-card-endef, .fc-card--3eg .fc-card-endef { font-size: 23px; line-height: 1.6; padding: 14px 18px; }
-  .fc-card-sentence, .fc-card--3eg .fc-card-sentence { font-size: 22px; line-height: 1.6; padding: 14px 18px; }
-  .fc-card-backword { font-size: 24px; }
-  .fc-card-backword span { font-size: 20px; }
-  .fc-card-qtype { font-size: 21px; padding: 14px 18px; }
-  .fc-btn-know, .fc-btn-dont, .fc-btn-vague { font-size: 20px; padding: 18px 24px; max-width: 220px; min-width: 130px; }
+  .fc-card-word { font-size: 72px; margin-bottom: 20px; }
+  .fc-card-ipa { font-size: 30px; margin: -8px 0 20px; }
+  .fc-card-hint { font-size: 22px; }
+  .fc-card-meaning { font-size: 52px; margin: 8px 0 20px; }
+  .fc-card--3eg .fc-card-meaning { font-size: 48px; }
+  .fc-card-endef, .fc-card--3eg .fc-card-endef { font-size: 27px; line-height: 1.6; padding: 16px 20px; }
+  .fc-card-sentence, .fc-card--3eg .fc-card-sentence { font-size: 26px; line-height: 1.6; padding: 16px 20px; }
+  .fc-card-backword { font-size: 28px; }
+  .fc-card-backword span { font-size: 24px; }
+  .fc-card-qtype { font-size: 25px; padding: 16px 20px; }
+  .fc-btn-know, .fc-btn-dont, .fc-btn-vague { font-size: 24px; padding: 20px 28px; max-width: 260px; min-width: 150px; }
   .fc-btns { gap: 14px; margin-top: 24px; }
-  .fc-spk { font-size: 24px !important; }
+  .fc-spk { font-size: 28px !important; }
   /* 单词考题 */
-  .fc-quiz-card { max-width: 900px; padding: 28px 44px 28px 32px; }
-  .fc-quiz-card .fc-quiz-stem { font-size: 26px !important; line-height: 1.75 !important; }
-  .fc-quiz-card button[onclick^="answerFcQuiz("] { font-size: 21px !important; padding: 16px 20px !important; margin-top: 12px !important; }
-  .fc-quiz-card > span { font-size: 15px !important; }
-  .fc-quiz-card .fc-quiz-prompt { font-size: 16px !important; }
-  .fc-quiz-card .fc-quiz-fb { padding: 18px 20px !important; }
-  .fc-quiz-card .fc-quiz-fb div { font-size: 17px !important; line-height: 1.75 !important; }
-  .fc-quiz-card .fc-quiz-fb > div:first-child { font-size: 20px !important; }
-  .fc-quiz-card .fc-quiz-fb > div:nth-child(2) { font-size: 22px !important; }
+  .fc-quiz-card { max-width: 1000px; padding: 32px 48px 32px 36px; }
+  .fc-quiz-card .fc-quiz-stem { font-size: 32px !important; line-height: 1.7 !important; }
+  .fc-quiz-card button[onclick^="answerFcQuiz("] { font-size: 26px !important; padding: 18px 24px !important; margin-top: 14px !important; }
+  .fc-quiz-card > span { font-size: 17px !important; }
+  .fc-quiz-card .fc-quiz-prompt { font-size: 20px !important; }
+  .fc-quiz-card .fc-quiz-fb { padding: 22px 24px !important; }
+  .fc-quiz-card .fc-quiz-fb div { font-size: 22px !important; line-height: 1.75 !important; }
+  .fc-quiz-card .fc-quiz-fb > div:first-child { font-size: 25px !important; }
+  .fc-quiz-card .fc-quiz-fb > div:nth-child(2) { font-size: 28px !important; }
+  .fc-quiz-card .fc-quiz-fb mark, .fc-quiz-card .fc-quiz-fb b { font-size: inherit !important; }
+  .fc-quiz-card .fc-quiz-fb span { font-size: 20px !important; }
 }
 /* v19.87: 三档自评 (不认识 / 有点印象 / 认识) — 前两档都会把词排回本组队尾 */
 .fc-btns { display:flex; gap:10px; justify-content:center; margin-top:18px; flex-wrap:wrap; }
@@ -6234,9 +6236,9 @@ details.card.ui-more[open] > summary { margin-bottom:var(--sp-1); }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=25.0"></script>
-<script src="data.js?v=25.0"></script>
-<script src="app.js?v=25.0"></script>
+<script src="character.js?v=25.1"></script>
+<script src="data.js?v=25.1"></script>
+<script src="app.js?v=25.1"></script>
 
 </body>
 </html>
