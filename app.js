@@ -283,7 +283,23 @@ function todayDayKeyForWeek(weekNum) {
 }
 
 // ============ Header ============
+// v25.2 (用户 2026-11-03: "导航条统计本周学习时间、累计学习天数、每日平均学习时间, 提示不要断, 多少天后能达到 AL1")
+function _fmtMin(sec) { const m = Math.round(sec / 60); return m >= 60 ? `${Math.floor(m / 60)} 小时 ${m % 60} 分` : `${m} 分钟`; }
+function renderStudyStrip() {
+  const el = document.getElementById('studyStrip'); if (!el || !window.getStudyStats) return;
+  const st = window.getStudyStats(state), est = window.estimateDaysToAL1 ? window.estimateDaysToAL1() : null;
+  const SUBJ = { eng: '英语', sci: '科学', cn: '华文', math: '数学' };
+  const keep = st.todayOn ? `🔥 连续 ${st.streak} 天, 别断` : st.streak > 0 ? `🔥 已连续 ${st.streak} 天, 今天还没学, 别断在今天` : `今天开始, 一天都别断`;
+  let eta;
+  if (!est) eta = '';
+  else if (est.all === 0) eta = '四科都已到 AL1, 保持住';
+  else if (est.remaining == null) eta = `按现在的速度 ${SUBJ[est.worstSubj] || ''} 到不了 AL1, 要加速`;
+  else eta = `照这个速度 <b>约 ${est.remaining} 天</b>后四科都到 AL1 (最慢的是${SUBJ[est.worstSubj] || ''}${est.per[est.worstSubj] != null ? ' ' + est.latest[est.worstSubj] + '% → 90%' : ''})`;
+  el.innerHTML = `<span>📚 本周学了 <b>${_fmtMin(st.weekSec)}</b></span><span>📅 累计 <b>${st.totalDays}</b> 天</span><span>⏱ 近两周日均 <b>${_fmtMin(st.avgSec)}</b></span><span style="color:#B45309">${keep}</span>${eta ? `<span style="color:#1E40AF">🎯 ${eta}</span>` : ''}`;
+}
+window.renderStudyStrip = renderStudyStrip;
 function renderHeader() {
+  renderStudyStrip();
   document.getElementById('totalPoints').textContent = state.totalPoints;
   document.getElementById('currentLevel').textContent = CHAMUI.getLevelInfo(state.totalPoints).lv;
   document.getElementById('currentWeek').textContent = state.currentWeek;
@@ -2727,22 +2743,23 @@ function _renderFcQuiz() {
 }
 // v23.0: 考点详细解析 (用户 2026-10-03: "讲考点进行详细解析"): 语境线索 + 每个干扰项为什么不对 + 这个词 PSLE 怎么考
 function _fcQuizExplainHtml(q) {
-  const row = (ico, title, body) => body ? `<div style="margin-top:8px"><div style="font-size:12px;font-weight:900;color:#1E40AF">${ico} ${title}</div><div style="font-size:13px;color:#1E293B;line-height:1.7">${body}</div></div>` : '';
+  // v25.3 (用户: "文字太小不醒目, 密集了就不看"): 每块一个标题条, 每个干扰项一行一卡: 词 + 中文 大字, 英文释义小字灰色
+  const sec = (ico, title, body) => body ? `<div class="fcx-sec"><div class="fcx-title">${ico} ${title}</div>${body}</div>` : '';
   let clue = '';
   if (q.say && q.type !== 'hand') {
-    const sent = escapeHtml(q.pre || '') + `<mark style="background:#FEF08A;padding:0 3px;border-radius:3px;font-weight:700">${escapeHtml(q.type === 'cloze' ? q.opts[q.ans] : (q.target || q.word))}</mark>` + escapeHtml(q.post || '');
-    clue = sent + `<div style="font-size:12px;color:#64748B;margin-top:2px">${q.type === 'meaning' ? '词义题看划线词<b>前后的动作和情绪</b>: 它们限定了这个词只能是这个意思' : q.type === 'cloze' ? '选词题看空格<b>前后的搭配</b> (动词 + 介词 / 宾语是什么), 再看整句逻辑' : ''}</div>`;
+    const sent = escapeHtml(q.pre || '') + `<mark class="fcx-mark">${escapeHtml(q.type === 'cloze' ? q.opts[q.ans] : (q.target || q.word))}</mark>` + escapeHtml(q.post || '');
+    clue = `<div class="fcx-sent">${sent}</div><div class="fcx-hint">${q.type === 'meaning' ? '看划线词<b>前后的动作和情绪</b>, 它们限定了这个词只能是这个意思' : q.type === 'cloze' ? '看空格<b>前后的搭配</b> (动词 + 介词 / 宾语), 再看整句逻辑' : ''}</div>`;
   }
   let others = '';
   if (Array.isArray(q.optWords) && q.optWords.some(Boolean)) {
     others = q.optWords.map((w, i) => {
       if (!w || i === q.ans) return '';
       const zh = getVocabMeaning(w) === w ? '' : getVocabMeaning(w);
-      return `<div>✗ <b>${escapeHtml(q.type === 'meaning' ? w : q.opts[i])}</b>${q.type === 'meaning' ? '' : ''} = ${escapeHtml(zh || window.getVocabEn(w))}${zh ? ` <span style="color:#64748B">(${escapeHtml(window.getVocabEn(w))})</span>` : ''}</div>`;
+      return `<div class="fcx-opt"><div class="fcx-opt-top"><span class="fcx-x">✗</span><b class="fcx-word">${escapeHtml(q.type === 'meaning' ? w : q.opts[i])}</b>${zh ? `<span class="fcx-zh">${escapeHtml(zh)}</span>` : ''}</div>${window.getVocabEn(w) ? `<div class="fcx-en">${escapeHtml(window.getVocabEn(w))}</div>` : ''}</div>`;
     }).join('');
   }
   const tip = q.tip || (window.getVocabTip ? window.getVocabTip(q.word) : '');
-  return row('🔎', '语境线索', clue) + row('🚫', '其他选项为什么不对', others) + (tip ? `<div style="margin-top:8px;padding:8px 10px;background:#FEF3C7;border:1px solid #FCD34D;border-radius:8px;font-size:13px;color:#1E293B;line-height:1.6">📌 <b>考点</b>: ${escapeHtml(tip)}</div>` : '');
+  return sec('🔎', '语境线索', clue) + sec('🚫', '其他选项为什么不对', others) + (tip ? `<div class="fcx-tip">📌 <b>考点</b> ${escapeHtml(tip)}</div>` : '');
 }
 function answerFcQuiz(i) {
   const z = _fcQuiz; if (!z || z.picked != null) return;
@@ -2909,26 +2926,46 @@ function renderModulePage(cfg) {
   const al1 = scored.filter(it => stats[it.key].pct >= 90).length;
   const weakest = scored.slice().sort((a, b) => stats[a.key].pct - stats[b.key].pct)[0];
   const col = p => p >= 90 ? '#16A34A' : p >= 75 ? '#B45309' : '#DC2626';
-  let seq = 0;
-  const html = cfg.modules().map(sec => {
-    const rows = sec.items.map(it => {
-      seq++;
-      const s = stats[it.key], has = s.total > 0;
+  // v25.2 (用户 2026-11-03: "不要把写作放最前面, 一看没有练习动力; 按模块卡一个一个排, 急需提升的放最前, 给出目标和差距")
+  // 一个模块一张卡: 状态标签 + 大百分比 vs 目标 90% (AL1) + 进度条 + "再连对 N 题就到 90%"; 排序: 没达标的按差距大→小 → 没练过 → 已达标 → 写作类 (没有百分比) 垫底
+  const TARGET = 90, subj = TREE === '🔬 科学' ? 'sci' : 'eng';
+  // v25.2: 接最近一次校考 (EXAM_RESULTS): 这个模块所属卷子考了多少, 丢了几分; 没练过的模块就按校考那张卷子的 % 排急迫度
+  const exam = window.examGapSummary ? window.examGapSummary(subj) : null;
+  const examPart = it => window.examPartForModule ? window.examPartForModule(subj, it.key) : null;
+  const items = []; cfg.modules().forEach(sec => sec.items.forEach(it => items.push(Object.assign({ _sec: sec.title }, it))));
+  const isWriting = it => /去写/.test(it.btn || '');
+  const urgency = it => {
+    const s = stats[it.key], ep = examPart(it), epct = ep ? ep.s / ep.m * 100 : null;
+    if (isWriting(it)) return -1000;
+    // app 里的正确率 和 校考卷子 % 取更差的那个当"现在水平"; 两个都没有 → 排在没达标的后面
+    let now = null; if (s.total >= 10) now = s.pct; if (epct != null) now = now == null ? epct : Math.min(now, epct);
+    if (now == null) return s.total > 0 ? 60 + (TARGET - s.pct) / 10 : 60;
+    return now >= TARGET ? (100 - now) : 100 + (TARGET - now);
+  };
+  items.sort((x, y) => urgency(y) - urgency(x));
+  const html = items.map((it, i) => {
+      const s = stats[it.key], has = s.total > 0, enough = s.total >= 10;
       const idx = it.node ? nodes.findIndex(n => n.id === it.node) : -1;
       const stars = it.node ? (((state.knowledgeStars || {})[it.node] || {}).stars || 0) : 0;
-      // v24.1 设计层简化: 每行只留一个实底主按钮 (有考点题 → "练 10 题 →"; 没有 → 题库入口 "去写 / 开考 / 题库练 →"), 其他动作一律文字链接;
-      // 百分比 28px 左对齐统一宽 56px; 行用 1px 分隔线不再一行一个边框卡; 分组标题 12px 灰色大写字距
       const primary = (label, onclick) => `<button class="ui-cta auto" onclick="${onclick}">${label} →</button>`;
       const link = (label, onclick) => `<button class="ui-btn2" onclick="${onclick}">${label} ›</button>`;
       const nodeGo = idx >= 0 ? `openKnowledgePractice('${it.node}','${TREE}',${idx})` : '';
       let mainBtn = '', links = [];
-      const writing = /去写/.test(it.btn || '');   // 写作类: 主按钮是 "去写", 考点题退成文字链接
+      const writing = isWriting(it);
       if (idx >= 0 && !writing) { mainBtn = primary('练 10 题', nodeGo); if (it.open) links.push(link(it.btn || '题库练', it.open)); }
       else if (it.open) { mainBtn = primary(it.btn || '题库练', it.open); if (idx >= 0) links.push(link('考点 10 题', nodeGo)); }
       if (it.open2) links.push(link(it.open2[0], it.open2[1]));
-      // v24.3: 技巧测一测 (先把这类题的做法当考题测一遍再看总结)
-      { const subj = TREE === '🔬 科学' ? 'sci' : 'eng'; const tm = window.techModOfModule ? window.techModOfModule(it.key) : null;
-        if (tm && window.getTechniqueMod(subj, tm)) { const st = window.getTechniqueQuizStat(state, subj, tm); links.push(link(st ? `🧠 技巧 ${st.best}% · 再测` : '🧠 技巧测一测', `startTechQuiz('${subj}','${it.key}')`)); } }
+      const tm = window.techModOfModule ? window.techModOfModule(it.key) : null;
+      const tb = tm && window.getTechniqueMod(subj, tm);
+      if (tb) { const st = window.getTechniqueQuizStat(state, subj, tm); links.push(link(st ? `🧠 技巧 ${st.best}% · 再测` : '🧠 技巧测一测', `startTechQuiz('${subj}','${it.key}')`)); }
+      // 目标 / 差距
+      let tag, tagColor, numColor, gapLine, barPct = 0;
+      if (writing) { tag = '家长批'; tagColor = '#64748B'; numColor = '#94A3B8'; gapLine = '没有百分比, 由家长按 <b>内容 + 语言</b> 两项批 · 目标: 两项都拿高档'; }
+      else if (!has) { tag = '还没练'; tagColor = '#64748B'; numColor = '#CBD5E1'; gapLine = '先练 10 题看看水平, 练了才知道差多少'; }
+      else if (!enough) { tag = '题量还少'; tagColor = '#64748B'; numColor = '#64748B'; barPct = s.pct; gapLine = `才做了 ${s.total} 题, 再练 ${10 - s.total} 题算数`; }
+      else if (s.pct >= TARGET && (() => { const ep = examPart(it); return ep && ep.s / ep.m * 100 < TARGET; })()) { const ep = examPart(it), epct = Math.round(ep.s / ep.m * 100); tag = '⚠️ 校考没到'; tagColor = '#B45309'; numColor = '#B45309'; barPct = s.pct; gapLine = `App 里 ${s.pct}% 够了, 但校考 ${escapeHtml(ep.name)} 只有 <b style="color:#DC2626">${epct}%</b> → 考场上会丢分: 多做<b>限时整卷</b>, 做完回看错在哪类`; }
+      else if (s.pct >= TARGET) { tag = '✅ 已到 AL1'; tagColor = '#16A34A'; numColor = '#16A34A'; barPct = s.pct; gapLine = '保持住, 每周回炉一次别掉下去'; }
+      else { const gap = TARGET - s.pct, need = Math.ceil((TARGET / 100 * s.total - s.ok) / (1 - TARGET / 100)); tag = s.pct >= 75 ? '⚠️ 接近' : '❌ 急需'; tagColor = s.pct >= 75 ? '#B45309' : '#DC2626'; numColor = tagColor; barPct = s.pct; gapLine = need <= 30 ? `还差 <b style="color:${tagColor}">${gap}</b> 个百分点 → 再<b>连对 ${need} 题</b>就到 90%` : `还差 <b style="color:${tagColor}">${gap}</b> 个百分点 → 目标: <b>接下来 20 题对 18 题</b> (90%), 连续两次就算追上`; }
       const detail = [
         has ? `累计 ${s.ok}/${s.total} 题` : '',
         s.last ? `最近一次 ${s.last.ok}/${s.last.total} (${_fcFmtDate(s.last.d)})` : '',
@@ -2937,22 +2974,22 @@ function renderModulePage(cfg) {
         idx >= 0 ? `考点 ${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}` : '',
         it.bank ? escapeHtml(it.bank()) : '',
       ].filter(Boolean).join(' · ');
-      const status = !has ? '<span class="ui-mute">还没练</span>' : s.total < 10 ? '<span class="ui-mute">题量还少</span>' : s.pct >= 90 ? '<span class="ui-ok">✅ AL1</span>' : s.pct >= 75 ? `<span class="ui-warn">AL${window.scoreToAL(s.pct)}</span>` : `<span class="ui-bad">✗ AL${window.scoreToAL(s.pct)}</span>`;
-      return `<div class="ui-row" style="flex-wrap:wrap">
-        <div style="flex:0 0 56px;min-width:56px">
-          <div class="ui-num" style="color:${has ? col(s.pct) : '#CBD5E1'}">${has ? s.pct + '%' : '—'}</div>
-          <div style="font-size:12px;margin-top:2px">${status}</div>
+      return `<div class="card mod-card" style="margin-bottom:12px">
+        <div class="ui-head" style="align-items:flex-start">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="ui-tag" style="background:${tagColor}1A;color:${tagColor};font-weight:800">${tag}</span><span style="font-size:12px;color:#94A3B8">${escapeHtml(it._sec)}${tb ? ' · ' + escapeHtml(tb.paper.split('·')[1] || tb.paper) : ''}</span></div>
+            <div class="ui-page-title" style="margin-top:4px">${i + 1}. ${escapeHtml(it.name)}</div>
+            ${it.tip ? `<div class="ui-row-sub">${escapeHtml(it.tip)}</div>` : ''}
+          </div>
+          <div class="ui-head-r" style="text-align:right;flex:0 0 auto"><span class="ui-num" style="color:${numColor}">${writing ? '—' : has ? s.pct + '%' : '—'}</span><span class="ui-num-label">${writing ? '' : '目标 ' + TARGET + '% (AL1)'}</span></div>
         </div>
-        <div class="ui-row-main" style="flex:1 1 160px">
-          <div class="ui-row-title">${seq}. ${escapeHtml(it.name)}</div>
-          ${it.tip ? `<div class="ui-row-sub">${escapeHtml(it.tip)}</div>` : ''}
-          ${detail ? `<div style="font-size:12px;color:#94A3B8;margin-top:2px;line-height:1.6">${detail}</div>` : ''}
-        </div>
-        <div class="ui-row-act">${mainBtn}${links.join('')}</div>
+        ${writing ? '' : `<div class="ui-bar" style="margin:8px 0 6px;position:relative"><div style="width:${barPct}%;background:${numColor}"></div><div style="position:absolute;left:${TARGET}%;top:-3px;width:2px;height:calc(100% + 6px);background:#1E293B"></div></div>`}
+        <div style="font-size:15px;color:#1E293B;line-height:1.6">${gapLine}</div>
+        ${(() => { const ep = examPart(it); if (!ep) return ''; const pct = Math.round(ep.s / ep.m * 100), lost = +(ep.m - ep.s).toFixed(1), c = pct >= 90 ? '#16A34A' : pct >= 75 ? '#B45309' : '#DC2626'; return `<div style="font-size:14px;color:#1E293B;margin-top:4px">📝 ${escapeHtml(exam ? exam.date : '')} 校考 ${escapeHtml(ep.name)}: <b style="color:${c}">${ep.s}/${ep.m} = ${pct}%</b>${lost > 0 ? ` · 这张卷子丢了 <b style="color:${c}">${lost}</b> 分` : ' · 满分 ✅'}</div>`; })()}
+        ${detail ? `<div style="font-size:12px;color:#94A3B8;margin-top:2px;line-height:1.6">${detail}</div>` : ''}
+        <div class="ui-row-act" style="justify-content:flex-end;margin-top:10px">${mainBtn}${links.join('')}</div>
       </div>`;
     }).join('');
-    return `<div class="ui-section">${escapeHtml(sec.title)}</div><div class="ui-list">${rows}</div>`;
-  }).join('');
   // 最弱模块一键去练 (主按钮): 有题库入口走题库, 否则走考点 10 题
   let weakCta = '';
   if (weakest) {
@@ -2965,12 +3002,17 @@ function renderModulePage(cfg) {
     <div class="card">
       <div class="ui-head">
         <div class="ui-page-title">${cfg.title}</div>
-        <div class="ui-head-r"><span class="ui-num">${al1}</span><span class="ui-num-label">/ ${all.length} 个模块到 AL1</span></div>
+        <div class="ui-head-r"><span class="ui-num">${al1}</span><span class="ui-num-label">/ ${all.length} 个模块到 AL1 · 目标: 全部 ≥90%</span></div>
       </div>
+      ${exam ? `<div style="margin-top:8px;padding:10px 12px;background:#F8FAFC;border-radius:10px">
+        <div style="font-size:15px;font-weight:800;color:#1E293B">📝 ${escapeHtml(exam.date)} ${escapeHtml(exam.name)}${exam.total ? `: <span style="color:${exam.total.al === 1 ? '#16A34A' : '#DC2626'}">${exam.total.s}/${exam.total.m} = ${exam.total.pct}% · AL${exam.total.al}</span>${exam.total.need > 0 ? ` · 离 AL1 还差 <b style="color:#DC2626">${exam.total.need}</b> 分` : ' ✅ 已是 AL1'}` : ''}</div>
+        <div style="font-size:14px;color:#1E293B;margin-top:4px;line-height:1.7">丢分在哪: ${exam.parts.map(p => `${escapeHtml(p.name)} <b style="color:${p.pct >= 90 ? '#16A34A' : p.pct >= 75 ? '#B45309' : '#DC2626'}">${p.s}/${p.m}</b> (丢 ${p.lost})`).join(' · ')}${exam.pending ? ` · <span style="color:#94A3B8">${escapeHtml(exam.pending)}</span>` : ''}</div>
+        <div style="font-size:13px;color:#64748B;margin-top:2px">下面的模块按"这张卷子丢分 + App 里的正确率"排, 最急的在最上面</div>
+      </div>` : ''}
       ${weakCta || `<div class="ui-head-sub"><span class="grow">每个模块练满 10 题, 这里就会告诉你最弱的是哪个</span></div>`}
       <details class="ui-more"><summary>说明</summary><div class="ui-more-body">${cfg.intro}</div></details>
     </div>
-    <div class="card">${html}</div>`;
+    ${html}`;
 }
 // 从别的页进单词考题: 先切到词汇页 (考题画在那一页上) 再开考
 function startFcQuizFromPractice(deckId) {
@@ -6221,6 +6263,10 @@ function petSay(message, duration) {
 const _PET_EXPR_LIST = ['pet-nod', 'pet-think', 'pet-jump', 'pet-peek', 'pet-dance', 'pet-excited', 'pet-sleepy', 'pet-sad', 'pet-angry', 'pet-proud'];
 let _exprTimer = null;
 let _petLastActivity = Date.now();
+// v25.2: 学习时间心跳 —— 过去 60 秒有操作就算在学, 记 30 秒; 每 10 次 (5 分钟) 保存一次, 页面隐藏时也保存
+let _studyTick = 0;
+setInterval(() => { if (Date.now() - _petLastActivity < 60000 && document.visibilityState !== 'hidden' && window.addStudySeconds && typeof state !== 'undefined' && state) { window.addStudySeconds(state, 30); if (++_studyTick % 10 === 0) { saveState(state); renderStudyStrip(); } } }, 30000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && typeof state !== 'undefined' && state && state.studyLog) saveState(state); });
 let _petIdleTimer = null;
 function _petTrackActivity() {
   _petLastActivity = Date.now();
@@ -13235,7 +13281,7 @@ function _dictEnsurePop() {
   if (_dictPopEl) return _dictPopEl;
   const el = document.createElement('div');
   el.id = 'dictPop';
-  el.style.cssText = 'position:fixed;z-index:10050;max-width:300px;min-width:200px;background:#FFFFFF;border:1px solid #CBD5E1;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.18);padding:10px 12px;font-size:13px;color:#1E293B;line-height:1.55;display:none';
+  el.style.cssText = 'position:fixed;z-index:10050;background:#FFFFFF;border:1px solid #CBD5E1;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,0.18);color:#1E293B;display:none';
   el.addEventListener('mouseenter', () => { clearTimeout(_dictHideTimer); });
   el.addEventListener('mouseleave', () => { _dictScheduleHide(); });
   el.addEventListener('touchstart', (e) => { e.stopPropagation(); }, { passive: true });
@@ -13272,24 +13318,25 @@ function _dictRender(d, w, loading) {
   const el = _dictEnsurePop();
   const inBook = window.inWordBook(state, w.key);
   const zh = d && d.zh ? escapeHtml(d.zh) : '';
-  const ipa = d && d.ipa ? `<span style="color:#64748B;font-size:12px">/${escapeHtml(d.ipa)}/</span>` : '';
-  const pos = d && d.pos ? `<span style="font-size:11px;color:#7C3AED;background:#F5F3FF;border-radius:6px;padding:1px 6px;margin-left:4px">${escapeHtml(d.pos)}</span>` : '';
+  const ipa = d && d.ipa ? `<span class="dp-ipa">/${escapeHtml(d.ipa)}/</span>` : '';
+  const pos = d && d.pos ? `<span class="dp-pos">${escapeHtml(d.pos)}</span>` : '';
+  // v25.3: 词典弹层放大 + 分行 (词 / 音标 一行, 中文大字一行, 英文释义小字, 例句斜体, 考点黄底)
   el.innerHTML = `
-    <div style="display:flex;align-items:center;gap:6px">
-      <b style="font-size:16px">${escapeHtml(d && d.base ? d.base : w.key)}</b>${pos}${ipa}
-      <button onclick="event.stopPropagation();window._dictSay()" style="border:none;background:none;cursor:pointer;font-size:16px;padding:0 2px">🔊</button>
-      <button onclick="event.stopPropagation();hideDictPop(true)" style="margin-left:auto;border:none;background:none;cursor:pointer;color:#94A3B8;font-size:16px;padding:0 4px">✕</button>
+    <div class="dp-head">
+      <b class="dp-word">${escapeHtml(d && d.base ? d.base : w.key)}</b>${pos}${ipa}
+      <button onclick="event.stopPropagation();window._dictSay()" class="dp-icon" title="发音">🔊</button>
+      <button onclick="event.stopPropagation();hideDictPop(true)" class="dp-icon dp-close">✕</button>
     </div>
-    ${d && d.base && d.base !== w.key ? `<div style="font-size:11px;color:#64748B">${escapeHtml(w.key)} → 原形 ${escapeHtml(d.base)}</div>` : ''}
-    ${loading ? '<div style="color:#64748B;font-size:12px;margin-top:4px">本地词典没有, 联网查询中…</div>' : ''}
-    ${zh ? `<div style="font-size:15px;font-weight:700;margin-top:4px">${zh}</div>` : (!loading ? '<div style="color:#B45309;font-size:12px;margin-top:4px">没查到中文释义' + (navigator.onLine ? '' : ' (现在离线)') + '</div>' : '')}
-    ${d && d.en ? `<div style="color:#475569;font-size:12px;margin-top:2px">${escapeHtml(d.en)}</div>` : ''}
-    ${d && d.ex ? `<div style="color:#64748B;font-size:12px;margin-top:2px;font-style:italic">${escapeHtml(d.ex)}</div>` : ''}
-    ${d && d.tip ? `<div style="margin-top:6px;padding:5px 8px;background:#FEF3C7;border-radius:6px;font-size:12px">📌 ${escapeHtml(d.tip)}</div>` : ''}
-    ${d && !loading && d.src !== 'online' && !d.en ? `<div style="margin-top:4px"><a href="#" onclick="event.stopPropagation();window._dictDeep();return false" style="font-size:11px;color:#1E40AF">🔍 联网查英文释义 / 例句 / 更多义项</a></div>` : ''}
-    <div style="display:flex;gap:6px;margin-top:8px;align-items:center">
-      <button onclick="event.stopPropagation();window._dictToggleBook()" style="flex:1;padding:7px 10px;border-radius:8px;border:1px solid ${inBook ? '#CBD5E1' : '#F59E0B'};background:${inBook ? '#F1F5F9' : '#FEF3C7'};color:#1E293B;font-weight:700;font-size:12px;cursor:pointer">${inBook ? '✓ 已在单词本 (点一下移除)' : '⭐ 收藏到单词本'}</button>
-      <a href="#" onclick="event.stopPropagation();hideDictPop();gotoPage('vocab');return false" style="font-size:11px;color:#1E40AF;white-space:nowrap">单词本 ›</a>
+    ${d && d.base && d.base !== w.key ? `<div class="dp-sub">${escapeHtml(w.key)} → 原形 ${escapeHtml(d.base)}</div>` : ''}
+    ${loading ? '<div class="dp-sub">本地词典没有, 联网查询中…</div>' : ''}
+    ${zh ? `<div class="dp-zh">${zh}</div>` : (!loading ? '<div class="dp-sub" style="color:#B45309">没查到中文释义' + (navigator.onLine ? '' : ' (现在离线)') + '</div>' : '')}
+    ${d && d.en ? `<div class="dp-en">${escapeHtml(d.en)}</div>` : ''}
+    ${d && d.ex ? `<div class="dp-ex">${escapeHtml(d.ex)}</div>` : ''}
+    ${d && d.tip ? `<div class="dp-tip">📌 ${escapeHtml(d.tip)}</div>` : ''}
+    ${d && !loading && d.src !== 'online' && !d.en ? `<div><a href="#" onclick="event.stopPropagation();window._dictDeep();return false" class="dp-link">🔍 联网查英文释义 / 例句 / 更多义项</a></div>` : ''}
+    <div class="dp-actions">
+      <button onclick="event.stopPropagation();window._dictToggleBook()" class="dp-book ${inBook ? 'in' : ''}">${inBook ? '✓ 已在单词本 (点一下移除)' : '⭐ 收藏到单词本'}</button>
+      <a href="#" onclick="event.stopPropagation();hideDictPop();gotoPage('vocab');return false" class="dp-link">单词本 ›</a>
     </div>`;
   el.style.display = 'block';
   // 定位: 鼠标右下, 出屏则翻到左/上

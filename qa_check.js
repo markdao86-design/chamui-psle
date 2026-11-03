@@ -2375,6 +2375,23 @@ assert(/function _dictDeep\(\)/.test(appSrc) && /_dictDeep\(\)/.test(appSrc.repl
 // ===== v24.9: 口语打卡只勾不打分 =====
 assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾',\s+type: 'chk'/.test(appSrc) && /const scoreRows = rs\.filter\(r => r\.key !== 'hw'\);/.test(appSrc) && /'打卡 ' \+ listen \+ ' 天'/.test(appSrc), 'v24.9: 口语打卡是勾 (主页/课表/周表同一格), 计分卡按本周打卡天数');
 
+// ===== v25.2/v25.3: 校考差距 + 学习统计条 + 解析块/词典放大 =====
+{
+  assert(W.EXAM_RESULTS && W.EXAM_RESULTS.eng.total[0] === 88 && W.EXAM_RESULTS.eng.total[1] === 110, 'v25.2: 2026-11 校考成绩入库 (英 88/110)');
+  const g = W.examGapSummary('eng');
+  assert(g && g.total.al === 3 && g.total.need === 11 && g.parts[0].name.indexOf('Booklet A') === 0 && g.parts[0].lost === 9 && g.date === '2026-11', 'v25.2: 英语 AL3, 离 AL1 差 11 分, 丢分最多 Booklet A (-9)');
+  assert(W.examPartForModule('eng', 'grammar').k === 'bktA' && W.examPartForModule('eng', 'editing').k === 'bktB' && W.examPartForModule('sci', 'sci:oe').k === 'bktB' && !W.examPartForModule('eng', 'writing'), 'v25.2: 模块 → 校考卷子 映射');
+  assert(/const exam = window\.examGapSummary \? window\.examGapSummary\(subj\) : null;/.test(appSrc) && /校考 \$\{escapeHtml\(ep\.name\)\}: <b style="color:\$\{c\}">\$\{ep\.s\}\/\$\{ep\.m\} = \$\{pct\}%<\/b>/.test(appSrc) && /tag = '⚠️ 校考没到'/.test(appSrc), 'v25.2: 模块页顶部校考差距卡 + 每卡校考行 + App够了但校考没到的标签');
+  assert(/items\.sort\(\(x, y\) => urgency\(y\) - urgency\(x\)\)/.test(appSrc) && /if \(isWriting\(it\)\) return -1000;/.test(appSrc), 'v25.2: 模块按急迫度排, 写作类垫底');
+  const es = W.estimateDaysToAL1();
+  assert(es && es.worstSubj === 'eng' && es.all > 0 && es.per.math === 0, 'v25.2: 到 AL1 天数预估 (最慢英语; 数学已达)');
+  const st0 = { studyLog: {}, fcDaily: {}, dailyFocus: {}, scheduleScores: {} }; W.addStudySeconds(st0, 300);
+  const ss = W.getStudyStats(st0);
+  assert(ss.weekSec >= 300 && ss.totalDays === 1 && ss.streak === 1 && ss.todayOn, 'v25.2: 学习时间记进 studyLog, 今天算学习日');
+  assert(/id="studyStrip"/.test(idxSrc) && /function renderStudyStrip\(\)/.test(appSrc) && /window\.addStudySeconds\(state, 30\)/.test(appSrc) && /本周学了/.test(appSrc) && /别断/.test(appSrc) && /天<\/b>后四科都到 AL1/.test(appSrc), 'v25.2: 导航下统计条 (本周/累计/日均/别断/几天到 AL1), 30 秒心跳');
+  assert(/class="fcx-opt"/.test(appSrc) && /\.fcx-word \{ font-size:19px/.test(idxSrc) && /#dictPop \.dp-zh \{ font-size:22px/.test(idxSrc) && /class="dp-word"/.test(appSrc), 'v25.3: 考题解析块一项一卡 (词+中文大字), 词典弹层放大');
+}
+
 // ===== Output =====
 console.log('\n=== QA 检查结果 ===\n');
 ok.forEach(m => console.log('  ✓', m));

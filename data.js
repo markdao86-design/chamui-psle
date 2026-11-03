@@ -11630,3 +11630,74 @@ function recordTechniqueQuiz(state, subj, mod, ok, total) {
 }
 function getTechniqueQuizStat(state, subj, mod) { return ((state && state.techQuiz) || {})[subj + ':' + mod] || null; }
 window.TECH_MOD_OF_MODULE = TECH_MOD_OF_MODULE; window.TECH_QUIZ_SKIP = TECH_QUIZ_SKIP; window.techModOfModule = techModOfModule; window.buildTechniqueQuiz = buildTechniqueQuiz; window.recordTechniqueQuiz = recordTechniqueQuiz; window.getTechniqueQuizStat = getTechniqueQuizStat;
+
+// ============= v25.2: 最近一次校考成绩 (家长 2026-11-03 手写单, 用来算每个模块离 AL1 的真实差距) =============
+// 改成绩只改这里。parts[].mods = 这张卷子/这部分对应模块学习页的 key, 模块卡上会显示 "校考 Booklet A 16/25 = 64%"
+const EXAM_RESULTS = {
+  date: '2026-11', name: 'P5 校考',
+  eng: { total: [88, 110], parts: [
+    { k: 'bktA', name: 'Booklet A 选择题', s: 16, m: 25, mods: ['grammar', 'vocab', 'visualtext'] },
+    { k: 'listen', name: '听力', s: 15, m: 20, mods: ['listening'] },
+    { k: 'bktB', name: 'Booklet B', s: 57, m: 65, mods: ['gcloze', 'editing', 'compcloze', 'synthesis', 'comp_oe'] },
+  ] },
+  sci: { total: null, parts: [
+    { k: 'bktB', name: 'Booklet B 开放题', s: 37, m: 40, mods: ['sci:oe', 'sci:lab'] },
+  ], pending: 'Booklet A 选择题 (60 分) 成绩待出' },
+  math: { total: [94, 100], parts: [{ k: 'a', name: 'Booklet A', s: 49, m: 50, mods: [] }, { k: 'b', name: 'Booklet B', s: 45, m: 50, mods: [] }] },
+  cn: { total: [155.5, 170], parts: [{ k: 'p2', name: '试卷二 A+B', s: 83.5, m: 90, mods: [] }, { k: 'compo', name: '作文', s: 32, m: 40, mods: [] }, { k: 'listen', name: '听力', s: 40, m: 40, mods: [] }] },
+};
+function examPartForModule(subj, key) { const e = EXAM_RESULTS[subj]; if (!e) return null; return (e.parts || []).find(p => (p.mods || []).indexOf(key) >= 0) || null; }
+// 一科的差距: 到 AL1 (90%) 还差几分 + 各部分丢分, 按丢分多→少
+function examGapSummary(subj) {
+  const e = EXAM_RESULTS[subj]; if (!e) return null;
+  const parts = (e.parts || []).map(p => ({ name: p.name, s: p.s, m: p.m, pct: Math.round(p.s / p.m * 100), lost: +(p.m - p.s).toFixed(1) })).sort((a, b) => b.lost - a.lost);
+  const total = e.total ? { s: e.total[0], m: e.total[1], pct: Math.round(e.total[0] / e.total[1] * 1000) / 10, al: scoreToAL(e.total[0] / e.total[1] * 100), need: Math.max(0, Math.ceil(e.total[1] * 0.9 - e.total[0])) } : null;
+  return { date: EXAM_RESULTS.date, name: EXAM_RESULTS.name, total, parts, pending: e.pending || '' };
+}
+window.EXAM_RESULTS = EXAM_RESULTS; window.examPartForModule = examPartForModule; window.examGapSummary = examGapSummary;
+
+// ============= v25.2: 学习时间统计 + 到 AL1 的天数预估 =============
+// 学习时间: app 里有操作 (点/滑/按键) 的每 30 秒记 30 秒进 state.studyLog[date] (秒); 历史没记录的日子用闪卡用时 fcDaily.secs 兜底
+function addStudySeconds(state, sec) { if (!state) return; if (!state.studyLog) state.studyLog = {}; const k = _fcToday(); state.studyLog[k] = (state.studyLog[k] || 0) + sec; const keys = Object.keys(state.studyLog).sort(); while (keys.length > 400) delete state.studyLog[keys.shift()]; }
+function _studyDaySec(state, k) { const a = ((state && state.studyLog) || {})[k] || 0; const b = (((state && state.fcDaily) || {})[k] || {}).secs || 0; return Math.max(a, b); }
+// 这一天有没有学 (学习日): 有学习时间 / 背过词 / 做过题 / 学过考点 / 填过打分
+function _isStudyDay(state, k) {
+  if (_studyDaySec(state, k) >= 120) return true;
+  const f = ((state && state.fcDaily) || {})[k]; if (f && (f.total || f.quizTotal)) return true;
+  const df = ((state && state.dailyFocus) || {})[k]; if (df && df.done && Object.keys(df.done).length) return true;
+  const sc = ((state && state.scheduleScores) || {})[k]; if (sc && Object.keys(sc).length) return true;
+  const em = (state && state.engModules) || {}; for (const m of Object.keys(em)) if ((em[m].runs || []).some(r => r.d === k)) return true;
+  return false;
+}
+function getStudyStats(state) {
+  const today = new Date(); const dk = d => _fcLocalDate(d);
+  const mon = new Date(today); mon.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  let weekSec = 0; for (let i = 0; i < 7; i++) { const d = new Date(mon); d.setDate(mon.getDate() + i); if (d > today) break; weekSec += _studyDaySec(state, dk(d)); }
+  // 累计学习天数 + 连续天数 (从今天往回数, 今天没学不算断)
+  const seen = new Set(); let streak = 0, streakBroken = false, sum14 = 0, days14 = 0;
+  const allKeys = new Set(Object.keys(state.studyLog || {}).concat(Object.keys(state.fcDaily || {}), Object.keys(state.dailyFocus || {}), Object.keys(state.scheduleScores || {})));
+  allKeys.forEach(k => { if (_isStudyDay(state, k)) seen.add(k); });
+  for (let i = 0; i < 400; i++) { const d = new Date(today); d.setDate(today.getDate() - i); const k = dk(d); const on = seen.has(k); if (i < 14) { if (on) { days14++; sum14 += _studyDaySec(state, k); } } if (!streakBroken) { if (on) streak++; else if (i > 0) streakBroken = true; } }
+  const todayOn = seen.has(dk(today));
+  return { weekSec, totalDays: seen.size, streak, todayOn, avgSec: days14 ? Math.round(sum14 / days14) : 0, days14 };
+}
+// 到 AL1 还要多少天: 用两次校考的进步速度外推 (每科 90% 线), 取最慢的那科; 速度 ≤0 或没有两次数据 → null
+const EXAM_HISTORY = [
+  { date: '2026-08-20', eng: 65, sci: 76, cn: 86, math: 92 },        // 2026.8 校考 (英 26/40, 科 30.5/40, 华 43/50)
+  { date: '2026-11-01', eng: 80, sci: 92.5, cn: 91.5, math: 94 },    // 2026.11 校考 (英 88/110, 科 Booklet B 37/40, 华 155.5/170, 数 94/100)
+];
+function estimateDaysToAL1() {
+  const h = EXAM_HISTORY; if (h.length < 2) return null;
+  const a = h[h.length - 2], b = h[h.length - 1];
+  const days = Math.max(1, (new Date(b.date) - new Date(a.date)) / 86400000);
+  const out = {}; let worst = 0, worstSubj = null;
+  ['eng', 'sci', 'cn', 'math'].forEach(k => {
+    const now = b[k], rate = (b[k] - a[k]) / days;   // 每天涨几个百分点
+    if (now >= 90) { out[k] = 0; return; }
+    if (rate <= 0) { out[k] = null; if (worst !== null) { worst = null; worstSubj = k; } return; }
+    const n = Math.ceil((90 - now) / rate); out[k] = n; if (worst !== null && n > worst) { worst = n; worstSubj = k; }
+  });
+  const sinceLast = Math.floor((new Date() - new Date(b.date)) / 86400000);
+  return { per: out, all: worst, worstSubj, remaining: worst == null ? null : Math.max(0, worst - sinceLast), latest: b };
+}
+window.addStudySeconds = addStudySeconds; window.getStudyStats = getStudyStats; window.estimateDaysToAL1 = estimateDaysToAL1; window.EXAM_HISTORY = EXAM_HISTORY;

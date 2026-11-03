@@ -243,6 +243,54 @@ body {
 }
 /* v19.55: 亮色主题 — v19.20-21 自动转暗机制已整体移除, inline 浅色 hex 原生生效 */
 /* v19.19: 主页左右 2 栏布局 (iPad 横屏 ≥900px), 竖屏/手机 fallback 单栏 */
+/* v25.2 学习统计条 */
+.study-strip { display:flex; flex-wrap:wrap; gap:6px 20px; align-items:center; padding:8px 16px; font-size:15px; color:#1E293B; background:#FFFFFF; border-bottom:1px solid #EEF1F6; max-width:100%; box-sizing:border-box; }
+.study-strip span { white-space:normal; }
+.study-strip b { color:#1E40AF; font-size:1.1em; }
+@media (max-width:640px) { .study-strip { padding:6px 12px; gap:4px 12px; font-size:13px; } }
+@media (min-width:900px) { .study-strip { font-size:16px; padding:10px 20px; } }
+/* v25.3 考题解析块 (fcx-*) + 词典弹层 (dp-*): 字大、分块、不密集 */
+.fcx-sec { margin-top:14px; }
+.fcx-title { font-size:15px; font-weight:900; color:#1E40AF; background:#EFF6FF; border-radius:8px; padding:6px 10px; margin-bottom:8px; }
+.fcx-sent { font-size:18px; line-height:1.7; color:#1E293B; }
+.fcx-mark { background:#FEF08A; padding:0 4px; border-radius:4px; font-weight:800; }
+.fcx-hint { font-size:14px; color:#64748B; margin-top:4px; line-height:1.6; }
+.fcx-opt { background:#FFFFFF; border:1px solid #E2E8F0; border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+.fcx-opt-top { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.fcx-x { color:#DC2626; font-weight:900; font-size:18px; }
+.fcx-word { font-size:19px; color:#1E293B; }
+.fcx-zh { font-size:17px; color:#1E40AF; font-weight:700; }
+.fcx-en { font-size:14px; color:#64748B; line-height:1.6; margin-top:4px; }
+.fcx-tip { margin-top:14px; padding:12px 14px; background:#FEF3C7; border:1px solid #FCD34D; border-radius:10px; font-size:16px; color:#1E293B; line-height:1.7; }
+@media (min-width:900px) {
+  .fcx-title { font-size:19px; padding:8px 14px; }
+  .fcx-sent { font-size:24px; } .fcx-hint { font-size:17px; }
+  .fcx-opt { padding:14px 18px; margin-bottom:10px; }
+  .fcx-x { font-size:24px; } .fcx-word { font-size:26px; } .fcx-zh { font-size:23px; } .fcx-en { font-size:17px; }
+  .fcx-tip { font-size:20px; padding:16px 20px; }
+}
+#dictPop { width:min(92vw, 360px); padding:14px 16px; font-size:15px; line-height:1.6; }
+#dictPop .dp-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+#dictPop .dp-word { font-size:24px; color:#1E293B; }
+#dictPop .dp-pos { font-size:13px; color:#1E40AF; background:#EFF6FF; border-radius:6px; padding:2px 8px; }
+#dictPop .dp-ipa { font-size:16px; color:#64748B; }
+#dictPop .dp-icon { border:none; background:none; cursor:pointer; font-size:22px; padding:0 4px; }
+#dictPop .dp-close { margin-left:auto; color:#94A3B8; font-size:20px; }
+#dictPop .dp-sub { font-size:13px; color:#64748B; margin-top:2px; }
+#dictPop .dp-zh { font-size:22px; font-weight:800; color:#1E40AF; margin-top:8px; }
+#dictPop .dp-en { font-size:15px; color:#475569; margin-top:6px; line-height:1.6; }
+#dictPop .dp-ex { font-size:14px; color:#64748B; margin-top:6px; font-style:italic; }
+#dictPop .dp-tip { margin-top:10px; padding:8px 12px; background:#FEF3C7; border-radius:8px; font-size:15px; line-height:1.6; }
+#dictPop .dp-link { font-size:14px; color:#1E40AF; }
+#dictPop .dp-actions { display:flex; gap:10px; margin-top:12px; align-items:center; }
+#dictPop .dp-book { flex:1; min-height:44px; padding:8px 12px; border-radius:10px; border:1px solid #F59E0B; background:#FEF3C7; color:#1E293B; font-weight:800; font-size:15px; cursor:pointer; }
+#dictPop .dp-book.in { border-color:#CBD5E1; background:#F1F5F9; }
+@media (min-width:900px) {
+  #dictPop { width:460px; padding:18px 22px; }
+  #dictPop .dp-word { font-size:32px; } #dictPop .dp-ipa { font-size:20px; } #dictPop .dp-pos { font-size:15px; }
+  #dictPop .dp-zh { font-size:28px; } #dictPop .dp-en { font-size:18px; } #dictPop .dp-ex { font-size:17px; } #dictPop .dp-tip { font-size:18px; }
+  #dictPop .dp-book { font-size:18px; min-height:50px; } #dictPop .dp-link { font-size:16px; } #dictPop .dp-icon { font-size:26px; }
+}
 .home-grid-2col {
   display: grid;
   grid-template-columns: 1fr;
@@ -2148,11 +2196,9 @@ body.shake { animation: screen-shake 0.45s ease-out; }
   .fc-quiz-card > span { font-size: 17px !important; }
   .fc-quiz-card .fc-quiz-prompt { font-size: 20px !important; }
   .fc-quiz-card .fc-quiz-fb { padding: 22px 24px !important; }
-  .fc-quiz-card .fc-quiz-fb div { font-size: 22px !important; line-height: 1.75 !important; }
   .fc-quiz-card .fc-quiz-fb > div:first-child { font-size: 25px !important; }
   .fc-quiz-card .fc-quiz-fb > div:nth-child(2) { font-size: 28px !important; }
-  .fc-quiz-card .fc-quiz-fb mark, .fc-quiz-card .fc-quiz-fb b { font-size: inherit !important; }
-  .fc-quiz-card .fc-quiz-fb span { font-size: 20px !important; }
+  .fc-quiz-card .fc-quiz-fb > div:nth-child(3) { font-size: 22px !important; line-height: 1.75 !important; }
 }
 /* v19.87: 三档自评 (不认识 / 有点印象 / 认识) — 前两档都会把词排回本组队尾 */
 .fc-btns { display:flex; gap:10px; justify-content:center; margin-top:18px; flex-wrap:wrap; }
@@ -5384,6 +5430,8 @@ details.card.ui-more[open] > summary { margin-bottom:var(--sp-1); }
   </div>
 </header>
 
+<!-- v25.2: 学习统计条 (本周时间 / 累计天数 / 日均 / 别断 / 多少天到 AL1) -->
+<div id="studyStrip" class="study-strip"></div>
 <nav class="tabs">
   <!-- v19.14i (UI 专家累计 4 版未做项): 9 tab → 5 tab -->
   <!-- 合并 知识树/题库/词汇/作文 → 📚 练习 (内含 segmented control); 隐藏 ⚙️ 管理 (移到 👤 我的) -->
@@ -6236,9 +6284,9 @@ details.card.ui-more[open] > summary { margin-bottom:var(--sp-1); }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=25.1"></script>
-<script src="data.js?v=25.1"></script>
-<script src="app.js?v=25.1"></script>
+<script src="character.js?v=25.3"></script>
+<script src="data.js?v=25.3"></script>
+<script src="app.js?v=25.3"></script>
 
 </body>
 </html>
