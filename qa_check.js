@@ -2384,7 +2384,7 @@ assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾
   assert(/本阶段重点抓/.test(appSrc) && /mod-focus/.test(appSrc), 'v25.9: 模块页置顶"重点抓"块');
   const g = W.examGapSummary('eng');
   assert(g && g.total.al === 4 && g.total.need === 26 && g.parts[0].name.indexOf('写作') === 0 && g.parts[0].lost === 21 && g.parts[1].lost === 11 && g.date === '2026-11', 'v27.1: 英语 AL4, 离 AL1 差 26 分, 丢分最多 写作+口试 (-21) 其次 Booklet B (-11)');
-  assert(W.examPartForModule('eng', 'grammar').k === 'bktA' && W.examPartForModule('eng', 'editing').k === 'bktB' && W.examPartForModule('sci', 'sci:oe').k === 'bktB' && !W.examPartForModule('eng', 'writing'), 'v25.2: 模块 → 校考卷子 映射');
+  assert(W.examPartForModule('eng', 'grammar').k === 'bktA' && W.examPartForModule('eng', 'editing').k === 'bktB' && W.examPartForModule('sci', 'sci:oe').k === 'bktB' && W.examPartForModule('eng', 'writing').k === 'writeoral', 'v25.2/v27.1: 模块 → 校考卷子 映射 (写作 → 写作+口试 推算部分)');
   assert(/const exam = window\.examGapSummary \? window\.examGapSummary\(subj\) : null;/.test(appSrc) && /校考 \$\{escapeHtml\(ep\.name\)\}: <b style="color:\$\{c\}">\$\{ep\.s\}\/\$\{ep\.m\} = \$\{pct\}%<\/b>/.test(appSrc) && /tag = '⚠️ 校考没到'/.test(appSrc), 'v25.2: 模块页顶部校考差距卡 + 每卡校考行 + App够了但校考没到的标签');
   assert(/items\.sort\(\(x, y\) => urgency\(y\) - urgency\(x\)\)/.test(appSrc) && /if \(isWriting\(it\)\) return -1000 \+ diagBump;/.test(appSrc), 'v25.2/v26.0: 模块按急迫度排, 写作类垫底 (有病根的加急)');
   // v26.0: 2026-11 校考逐题分析落地
