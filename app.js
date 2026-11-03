@@ -1373,6 +1373,72 @@ window.recordRAPractice = recordRAPractice;
 
 // =========== v19.30: Situational Writing modal (P1 Section A 15 分, Expert 1) ===========
 let _swPrompt = null;
+// ============= v26.0: 动词圈查 + 我的常错本 + 科学关键词库 (2026-11 校考分析落地) =============
+function _v26Modal(id, inner, maxw) {
+  let m = document.getElementById(id);
+  if (!m) { m = document.createElement('div'); m.id = id; m.className = 'mb-result-modal'; document.body.appendChild(m); }
+  m.innerHTML = `<div class="mg-inner" style="max-width:${maxw || 640}px;text-align:left">${inner}</div>`;
+  m.classList.add('show');
+  return m;
+}
+function _v26Close(id) { const m = document.getElementById(id); if (m) m.classList.remove('show'); }
+function _v26Head(title, id, right) { return `<div class="ui-head" style="margin-bottom:8px"><div class="ui-page-title">${title}</div><div class="ui-head-r" style="display:flex;gap:8px;align-items:center">${right || ''}<button onclick="_v26Close('${id}')" class="ui-btn2" style="min-width:44px">✕</button></div></div>`; }
+// 动词圈查: 把孩子写的段落贴进来, 标出过去时叙述里可疑的现在时动词 (引号里的对话不算)
+function openTenseChecker(prefill) {
+  const inner = `${_v26Head('✍️ 动词圈查', 'tenseCheckModal')}
+    <div class="ui-hint">故事是过去的事, 叙述动词全用<b>过去式</b>。把写好的段落输进来 (或家长帮忙打), 点「圈查」, 黄底红线的词逐个问自己: 这句讲过去还是现在? 引号里的对话不算。</div>
+    <textarea id="tenseCheckInput" class="ui-textarea" placeholder="Last Saturday, we went to the beach. The sun is shining and everyone have fun…" style="width:100%;min-height:140px;margin-top:8px">${prefill ? escapeHtml(prefill) : ''}</textarea>
+    <div class="ui-row" style="border:none;padding:8px 0"><div class="ui-row-main"><div class="ui-row-sub">圈完后对着「我的常错本」再查一遍 although/but · 词性 · 拼写</div></div><div class="ui-row-act" style="display:flex;gap:8px"><button class="ui-btn2" onclick="openMyErrorBook()">📕 常错本</button><button class="ui-cta auto" onclick="_tenseCheckRun()">圈查 →</button></div></div>
+    <div id="tenseCheckOut"></div>`;
+  _v26Modal('tenseCheckModal', inner, 720);
+}
+function _tenseCheckRun() {
+  const inp = document.getElementById('tenseCheckInput'), out = document.getElementById('tenseCheckOut');
+  if (!inp || !out) return;
+  const r = window.tenseCheck(inp.value || '');
+  const words = (inp.value || '').trim().split(/\s+/).filter(Boolean).length;
+  if (!words) { out.innerHTML = '<div class="ui-hint">先把段落输进来</div>'; return; }
+  const list = {}; r.suspects.forEach(s => { list[s.word.toLowerCase()] = (list[s.word.toLowerCase()] || 0) + 1; });
+  out.innerHTML = `<div class="ui-panel" style="margin-top:8px">
+      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span class="ui-num" style="color:${r.count ? '#DC2626' : '#16A34A'}">${r.count}</span><span class="ui-num-label">个可疑的现在时动词 · 共 ${words} 词</span></div>
+      <div class="tense-out">${r.html}</div>
+      ${r.count ? `<div class="ui-row-sub" style="margin-top:8px">逐个确认: ${Object.keys(list).map(w => `<b>${escapeHtml(w)}</b>×${list[w]}`).join(' · ')} —— 在讲过去的事? 改成过去式。在引号对话里 / 讲一般事实 (The sun rises in the east)? 可以保留。</div>` : '<div class="ui-row-sub" style="margin-top:8px;color:#16A34A">✅ 没发现现在时动词。再查一遍不规则过去式拼写 (wore / led / kept / gave)。</div>'}
+    </div>`;
+  if (window.addStudySeconds) window.addStudySeconds(state, 30);
+}
+function _myErrorBookHtml(compact) {
+  const B = window.MY_ERROR_BOOK || [];
+  return B.map(g => `<div class="meb-group"><div class="lbl">${escapeHtml(g.type)}</div>${g.items.map(it => `<div class="meb-item">${it.wrong ? `<span class="meb-wrong">✗ ${escapeHtml(it.wrong)}</span> → ` : ''}<span class="meb-right">✓ ${escapeHtml(it.right)}</span>${it.note ? `<div class="meb-note">${escapeHtml(it.note)}</div>` : ''}</div>`).join('')}</div>`).join('');
+}
+function openMyErrorBook() {
+  const inner = `${_v26Head('📕 我的常错本', 'myErrorBookModal', `<button class="ui-btn2" onclick="downloadMyErrorBookPdf()">⬇ PDF</button>`)}
+    <div class="ui-hint">2026-11 校考两篇作文老师划的 30 多处, 归成 6 类。每两周写一篇, <b>写前看一遍, 写完对着查一遍</b>再交。</div>
+    <div class="ui-panel" style="margin-top:8px">${_myErrorBookHtml()}</div>`;
+  _v26Modal('myErrorBookModal', inner, 720);
+}
+function downloadMyErrorBookPdf() {
+  const html = `<h1>我的常错本 (2026-11 校考)</h1><style>.lbl{font-weight:900;color:#1E40AF;margin:12px 0 4px;font-size:14px}.meb-item{margin:4px 0;font-size:13px}.meb-wrong{color:#DC2626}.meb-right{color:#16A34A;font-weight:700}.meb-note{color:#64748B;font-size:12px;margin-left:16px}</style>${_myErrorBookHtml()}`;
+  downloadHtmlAsPdf(html, 'my-error-book-2026-11.pdf', '我的常错本');
+}
+// 科学关键词库: 精选 14 个单元 (含这次校考丢分的 6 题) + 题库里按主题归的关键词
+function _sciKwBankHtml(forPdf) {
+  const esc = escapeHtml;
+  const units = (window.SCI_KEYWORD_BANK || []).map(u => `<div class="kwb-unit"><div class="kwb-head"><b>${esc(u.unit)}</b> <span class="muted">· ${esc(u.ask)}</span></div><div class="kw-chips">${u.keywords.map(k => `<span class="kw-chip on">${esc(k)}</span>`).join('')}</div><div class="kwb-sent">${esc(u.sentence)}</div>${u.exam ? `<div class="mod-diag">📋 ${esc(u.exam)}</div>` : ''}</div>`).join('');
+  const byTopic = {}; (window.SCIENCE_OE_QUESTIONS || []).forEach(q => { (byTopic[q.topic] = byTopic[q.topic] || []).push(q); });
+  const topics = Object.keys(byTopic).sort().map(tp => `<div class="kwb-topic"><b>${esc(tp)}</b>: ${byTopic[tp].map(q => `<span class="kwb-q">${esc(q.q.slice(0, 60))}${q.q.length > 60 ? '…' : ''} → <i>${(q.keywords || []).map(esc).join(', ')}</i></span>`).join('')}</div>`).join('');
+  return `<div class="lbl">精选单元 (每 ½ 分一个关键词 → 得分句)</div>${units}${forPdf ? `<div class="lbl" style="margin-top:14px">题库 ${(window.SCIENCE_OE_QUESTIONS || []).length} 题的关键词 (按主题)</div>${topics}` : `<details class="ui-more" style="margin-top:10px"><summary>题库 ${(window.SCIENCE_OE_QUESTIONS || []).length} 题的关键词 (按主题)</summary><div class="ui-more-body">${topics}</div></details>`}`;
+}
+function openSciKeywordBank() {
+  const inner = `${_v26Head('🔑 科学关键词库', 'sciKwBankModal', `<button class="ui-btn2" onclick="downloadSciKwBankPdf()">⬇ PDF</button>`)}
+    <div class="ui-hint">答开放题的顺序: <b>先写 2-3 个关键词 → 连成因果链 → 链写到题目问的那个结果为止</b>。意思对但没关键词 = 0 分 (这次 35b / 36c 就是这样丢的 4 分)。</div>
+    <div class="ui-panel" style="margin-top:8px">${_sciKwBankHtml(false)}</div>`;
+  _v26Modal('sciKwBankModal', inner, 760);
+}
+function downloadSciKwBankPdf() {
+  const html = `<h1>PSLE 科学关键词库</h1><style>.lbl{font-weight:900;color:#1E40AF;margin:12px 0 6px;font-size:14px}.kwb-unit{margin:8px 0 12px;padding:8px 10px;border:1px solid #E2E8F0;border-radius:8px}.kwb-head{font-size:13px}.muted{color:#64748B}.kw-chip{display:inline-block;background:#FEF3C7;border:1px solid #F59E0B;border-radius:999px;padding:2px 8px;margin:4px 4px 0 0;font-size:12px;font-weight:700}.kwb-sent{margin-top:6px;font-size:13px}.mod-diag{color:#DC2626;font-size:12px;margin-top:4px}.kwb-topic{font-size:12px;margin:6px 0}.kwb-q{display:block;margin-left:12px;color:#334155}</style>${_sciKwBankHtml(true)}`;
+  downloadHtmlAsPdf(html, 'sci-keyword-bank.pdf', '科学关键词库');
+}
+window.openTenseChecker = openTenseChecker; window.openMyErrorBook = openMyErrorBook; window.openSciKeywordBank = openSciKeywordBank; window.openTenseDrill = openTenseDrill;
 function openSituationalWritingModal(type) {
   if (!window.getRandomSW) { showToast('SW 题库未加载', 'warn'); return; }
   const s = window.getRandomSW(type);
@@ -1426,6 +1492,7 @@ function openSituationalWritingModal(type) {
         4. 写好让家长检查 3 点齐全 + 格式对
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="openTenseChecker()" style="flex:1;min-width:120px;padding:12px;background:#FFFFFF;color:#1E40AF;border:1px solid #1E40AF;border-radius:8px;font-weight:700;cursor:pointer">✍️ 动词圈查</button>
         <button onclick="openSituationalWritingModal()" style="flex:1;min-width:120px;padding:12px;background:#FFA000;color:#FFF;border:none;border-radius:8px;font-weight:700;cursor:pointer">🔄 换一题</button>
         <button onclick="completeSWPractice()" style="flex:2;min-width:140px;padding:12px;background:linear-gradient(135deg,#0D9488,#26A69A);color:#FFF;border:none;border-radius:8px;font-weight:900;cursor:pointer">✅ 写完了 (+5 分)</button>
       </div>
@@ -2175,6 +2242,7 @@ function _renderSciOe() {
           <div style="font-size:18px;font-weight:900;color:${scoreColor};margin-bottom:6px">${scoreIcon} 自动评分: ${autoScore} / 2 分</div>
           <div style="font-size:11px;color:#555;line-height:1.5">
             <b>关键词命中</b>: ${matchedKw.length}/${q.keywords.length} (${matchedKw.length > 0 ? matchedKw.join(', ') : '无'})<br>
+            ${_sciOeKwPickResult(g, q)}
             <b>答案长度</b>: ${userAnsTrim.length} 字符 (≥50 才满分)<br>
             ${reasons.length ? '<b>扣分点</b>:<br>' + reasons.join('<br>') : '<b>✓ 无 opener / than / it 扣分</b>'}
           </div>
@@ -2182,13 +2250,44 @@ function _renderSciOe() {
         <button onclick="sciOeScore(${autoScore})" style="width:100%;padding:12px;background:linear-gradient(135deg,${scoreColor},${scoreColor});color:#FFF;border:none;border-radius:6px;font-weight:900;cursor:pointer;font-size:13px">${nextLabel}</button>
       `;
       })() : `
-        <textarea id="sciOeInput" placeholder="用 2-3 句答, 必含关键词, 不能 Yes/No 开头..." style="width:100%;min-height:90px;padding:8px;border:1px solid #DDD;border-radius:6px;font-size:13px;font-family:inherit;box-sizing:border-box;margin-bottom:6px"></textarea>
+        ${_sciOeKwChips(g, q)}
+        <textarea id="sciOeInput" placeholder="先圈上面的关键词, 再用 2-3 句连成因果链, 写到题目问的那个结果为止. 不能 Yes/No 开头..." style="width:100%;min-height:90px;padding:8px;border:1px solid #DDD;border-radius:6px;font-size:13px;font-family:inherit;box-sizing:border-box;margin-bottom:6px"></textarea>
         ${warnings.length ? `<div style="background:#FFF3E0;border-radius:4px;padding:6px;margin-bottom:8px;font-size:11px;color:#BF360C">${warnings.join('<br>')}</div>` : ''}
         <button onclick="sciOeCheck()" style="width:100%;padding:10px;background:#1E40AF;color:#FFF;border:none;border-radius:6px;font-weight:700;cursor:pointer">📋 提交 + 看 Model Answer</button>
       `}
     </div>
   `;
   modal.classList.add('show');
+}
+// v26.0 (校考分析: "会的东西没写成得分句, 每 ½ 分对应一个关键词"): 答前先从 chips 里圈出 2-3 个关键词 (真关键词 + 别题的干扰词), 再写
+function _sciOeKwOpts(g, q) {
+  g.kwOpts = g.kwOpts || {}; g.kwPick = g.kwPick || {};
+  if (g.kwOpts[g.qIdx]) return g.kwOpts[g.qIdx];
+  const mine = (q.keywords || []).slice();
+  const others = [];
+  (window.SCIENCE_OE_QUESTIONS || []).forEach(o => { if (o.topic !== q.topic) (o.keywords || []).forEach(k => { if (mine.indexOf(k) < 0 && others.indexOf(k) < 0) others.push(k); }); });
+  const dis = others.sort(() => Math.random() - 0.5).slice(0, Math.min(4, Math.max(2, mine.length - 1)));
+  const all = mine.concat(dis).sort(() => Math.random() - 0.5);
+  g.kwOpts[g.qIdx] = all; g.kwPick[g.qIdx] = g.kwPick[g.qIdx] || [];
+  return all;
+}
+function _sciOeKwChips(g, q) {
+  const opts = _sciOeKwOpts(g, q), pick = g.kwPick[g.qIdx] || [];
+  return `<div class="kw-box"><div class="kw-title">🔑 第 1 步: 圈出这题的得分关键词 (每 ½ 分一个, 一般 2-4 个)</div><div class="kw-chips">${opts.map((k, i) => `<button type="button" class="kw-chip ${pick.indexOf(k) >= 0 ? 'on' : ''}" onclick="_sciOeKwToggle(${i})">${escapeHtml(k)}</button>`).join('')}</div><div class="kw-sub">第 2 步: 把圈到的词连成因果链写在下面, 写到题目问的那个结果为止</div></div>`;
+}
+function _sciOeKwToggle(i) {
+  const g = _sciOeGame; if (!g) return;
+  const k = g.kwOpts[g.qIdx][i], arr = g.kwPick[g.qIdx] = g.kwPick[g.qIdx] || [];
+  const at = arr.indexOf(k); if (at >= 0) arr.splice(at, 1); else arr.push(k);
+  const inp = document.getElementById('sciOeInput'); const keep = inp ? inp.value : '';
+  _renderSciOe();
+  const inp2 = document.getElementById('sciOeInput'); if (inp2) inp2.value = keep;
+}
+function _sciOeKwPickResult(g, q) {
+  const pick = (g.kwPick || {})[g.qIdx] || [], kws = q.keywords || [];
+  if (!pick.length) return '<b>关键词圈选</b>: 没圈 (下次先圈再写)<br>';
+  const hit = pick.filter(k => kws.indexOf(k) >= 0), miss = kws.filter(k => pick.indexOf(k) < 0), extra = pick.filter(k => kws.indexOf(k) < 0);
+  return `<b>关键词圈选</b>: 圈对 ${hit.length}/${kws.length}${miss.length ? ` · 漏了 <span style="color:#DC2626">${miss.map(escapeHtml).join(', ')}</span>` : ''}${extra.length ? ` · 多圈 <span style="color:#B45309">${extra.map(escapeHtml).join(', ')}</span>` : ''}<br>`;
 }
 function sciOeStart() {
   if (!_sciOeGame) return;
@@ -2827,8 +2926,8 @@ window.addFcGroupUI = addFcGroupUI;
 // 不写每题分值和时长 —— 英语 2025 卷型改过, 以学校发的考试说明为准。
 const ENG_MODULES = [
   { title: 'Paper 1 · Writing 写作', items: [
-    { key: 'sitwriting', btn: '去写', name: 'Situational Writing 情境写作', tip: '逐个内容点打勾, 一个都不能漏', open: 'openSituationalWritingModal()', bank: () => (window.SITUATIONAL_WRITING || []).length + ' 篇', node: 'eng_sitwriting' },
-    { key: 'writing', btn: '去写', name: 'Continuous Writing 记叙作文', tip: '写完由家长按 内容 + 语言 批', open: "document.querySelector('[data-page=essay]').click()", bank: () => '73 周题目', node: 'eng_writing' },
+    { key: 'sitwriting', btn: '去写', name: 'Situational Writing 情境写作', tip: '逐个内容点打勾, 一个都不能漏', open: 'openSituationalWritingModal()', open2: ['✍️ 动词圈查', 'openTenseChecker()'], bank: () => (window.SITUATIONAL_WRITING || []).length + ' 篇', node: 'eng_sitwriting' },
+    { key: 'writing', btn: '去写', name: 'Continuous Writing 记叙作文', tip: '写完先 动词圈查 + 对常错本, 再由家长按 内容 + 语言 批', open: "document.querySelector('[data-page=essay]').click()", open2: ['📕 我的常错本', 'openMyErrorBook()'], bank: () => '73 周题目', node: 'eng_writing' },
   ] },
   { title: 'Paper 2 · Booklet A 选择题', items: [
     { key: 'grammar', name: 'Grammar MCQ 语法选择', tip: '先找时间信号词定时态', open: 'openGrammarGame()', bank: () => (window.GRAMMAR_QUESTIONS || []).length + ' 题', node: 'eng_basics' },
@@ -2836,6 +2935,7 @@ const ENG_MODULES = [
     { key: 'visualtext', name: 'Visual Text 看图理解', tip: '海报、传单里找细节, 注意小字', node: 'eng_visualtext' },
   ] },
   { title: 'Paper 2 · Booklet B 填写题', items: [
+    { key: 'tense', name: '时态专项 · 动词圈查', tip: '11 月校考三处都栽在时态 (综合填空 / 改错 / 作文), 至少丢 8-10 分 —— 两周专攻', open: 'openTenseDrill()', btn: '练 10 题', open2: ['✍️ 动词圈查', 'openTenseChecker()'], bank: () => (window.getTenseDrillQuestions ? window.getTenseDrillQuestions(999).length : 0) + ' 题时态' },
     { key: 'gcloze', name: 'Grammar Cloze 语法填空', tip: '先看空格前后的词性', node: 'eng_cloze' },
     { key: 'editing', name: 'Editing 改错', tip: '动词时态 · 拼写 · 介词 · 主谓一致', open: 'openEditingGame()', bank: () => (window.EDITING_PARAGRAPHS || []).length + ' 段', node: 'eng_editing' },
     { key: 'compcloze', name: 'Comprehension Cloze 完形填空', tip: '先通读全文再填, 答案在上下文', open: 'openClozeGame()', bank: () => (window.CLOZE_QUESTIONS || []).length + ' 题', node: 'eng_compcloze' },
@@ -2861,7 +2961,7 @@ const SCI_MODULES = [
     { key: 'sci:terms', name: '科学术语', tip: '按描述选术语; 拼错 = 0 分', open: "startFcQuizFromPractice('sci_life')", bank: () => '4 组术语' },
   ] },
   { title: 'Booklet B · 开放题', items: [
-    { key: 'sci:oe', name: '科学开放题', tip: '11 月校考 Booklet B 丢 9.5 分, 全科最大缺口 —— 用课本标准说法, 2 分题写 2 个点', open: 'openScienceOEGame()', bank: () => (window.SCIENCE_OE_QUESTIONS || []).length + ' 题' },
+    { key: 'sci:oe', name: '科学开放题', tip: '11 月校考 Booklet B 丢 9.5 分, 全科最大缺口 —— 先写 2-3 个关键词 (每 ½ 分一个), 再连成因果链', open: 'openScienceOEGame()', open2: ['🔑 关键词库', 'openSciKeywordBank()'], bank: () => (window.SCIENCE_OE_QUESTIONS || []).length + ' 题' },
     { key: 'sci:lab', name: '实验题 · 变量', tip: 'Booklet B 必考 —— 改变的 / 测量的 / 保持不变的, 结论要带数据', open: 'openSciClassifyGame()', bank: () => (window.SCIENCE_CLASSIFY || []).length + ' 组' },
   ] },
   { title: '主题 1 · Diversity 多样性', items: [
@@ -2936,7 +3036,9 @@ function renderModulePage(cfg) {
   const isWriting = it => /去写/.test(it.btn || '');
   const urgency = it => {
     const s = stats[it.key], ep = examPart(it), epct = ep ? ep.s / ep.m * 100 : null;
-    if (isWriting(it)) return -1000;
+    const diag = window.EXAM_DIAG && window.EXAM_DIAG[it.key];
+    const diagBump = diag ? ((it.key === 'tense' || it.key === 'sci:oe') ? 500 : 40) : 0;   // v26.0: 校考病根模块加急, 时态 / 科学开放题 永远第一
+    if (isWriting(it)) return -1000 + diagBump;
     // app 里的正确率 和 校考卷子 % 取更差的那个当"现在水平"; 两个都没有 → 排在没达标的后面
     let now = null; if (s.total >= 10) now = s.pct; if (epct != null) now = now == null ? epct : Math.min(now, epct);
     if (now == null) return s.total > 0 ? 60 + (TARGET - s.pct) / 10 : 60;
@@ -2985,6 +3087,7 @@ function renderModulePage(cfg) {
         </div>
         ${writing ? '' : `<div class="ui-bar" style="margin:8px 0 6px;position:relative"><div style="width:${barPct}%;background:${numColor}"></div><div style="position:absolute;left:${TARGET}%;top:-3px;width:2px;height:calc(100% + 6px);background:#1E293B"></div></div>`}
         <div style="font-size:15px;color:#1E293B;line-height:1.6">${gapLine}</div>
+        ${window.EXAM_DIAG && window.EXAM_DIAG[it.key] ? `<div class="mod-diag">📋 校考病根: ${escapeHtml(window.EXAM_DIAG[it.key])}</div>` : ''}
         ${(() => { const ep = examPart(it); if (!ep) return ''; const pct = Math.round(ep.s / ep.m * 100), lost = +(ep.m - ep.s).toFixed(1), c = pct >= 90 ? '#16A34A' : pct >= 75 ? '#B45309' : '#DC2626'; return `<div style="font-size:14px;color:#1E293B;margin-top:4px">📝 ${escapeHtml(exam ? exam.date : '')} 校考 ${escapeHtml(ep.name)}: <b style="color:${c}">${ep.s}/${ep.m} = ${pct}%</b>${lost > 0 ? ` · 这张卷子丢了 <b style="color:${c}">${lost}</b> 分` : ' · 满分 ✅'}</div>`; })()}
         ${detail ? `<div style="font-size:12px;color:#94A3B8;margin-top:2px;line-height:1.6">${detail}</div>` : ''}
         <div class="mod-act">${mainBtn || '<div style="min-height:48px"></div>'}<div class="mod-links">${links.join('')}</div></div>
@@ -2998,21 +3101,27 @@ function renderModulePage(cfg) {
     // v24.3 (用户: "大长条太丑"): 改成一行 —— 左边 "最弱: 名称 25%", 右边一个小按钮
     if (go) weakCta = `<div class="ui-row" style="padding:8px 0;border:none"><div class="ui-row-main"><div class="ui-row-title" style="font-size:15px">🎯 最弱: ${escapeHtml(weakest.name)} <span style="color:#DC2626;font-weight:900">${stats[weakest.key].pct}%</span></div><div class="ui-row-sub">先把这个补到 90%</div></div><div class="ui-row-act"><button class="ui-cta auto" onclick="${go}">去练 →</button></div></div>`;
   }
-  // v25.9 (用户: "科学要把重要的模块提出来重点抓"): 校考没到 90% 的卷子 → 它对应的模块就是本阶段重点, 置顶一块单独列, 每个一个"去练"按钮
+  // v25.9 → v26.0 (家长 2026-11-03 逐题分析): "本阶段重点抓" 改成按校考病根 (EXAM_DIAG) 列, 每行 = 模块 + 这次考试暴露的问题 + 去练; 没有病根标注时退回按卷子 %
   let focusHtml = '';
-  if (exam) {
-    const weakParts = exam.parts.filter(p => p.pct < TARGET);
-    const focusItems = [];
-    weakParts.forEach(p => items.forEach(it => { const ep = examPart(it); if (ep && ep.name === p.name && !isWriting(it) && focusItems.indexOf(it) < 0) focusItems.push(it); }));
+  {
+    const D = window.EXAM_DIAG || {};
+    let focusItems = items.filter(it => D[it.key]);
+    if (!focusItems.length && exam) {
+      const weakParts = exam.parts.filter(p => p.pct < TARGET);
+      weakParts.forEach(p => items.forEach(it => { const ep = examPart(it); if (ep && ep.name === p.name && !isWriting(it) && focusItems.indexOf(it) < 0) focusItems.push(it); }));
+    }
     if (focusItems.length) {
-      const rows = focusItems.slice(0, 5).map(it => {
-        const ep = examPart(it), pct = Math.round(ep.s / ep.m * 100), lost = +(ep.m - ep.s).toFixed(1);
+      const SHOW = 6;
+      const rows = focusItems.slice(0, SHOW).map(it => {
+        const ep = examPart(it), epTxt = ep ? `${escapeHtml(ep.name)} <b style="color:${ep.s / ep.m >= 0.9 ? '#16A34A' : '#DC2626'}">${ep.s}/${ep.m}</b> · ` : '';
         const idx = it.node ? nodes.findIndex(n => n.id === it.node) : -1;
         const go = it.open || (idx >= 0 ? `openKnowledgePractice('${it.node}','${TREE}',${idx})` : '');
         const s = stats[it.key];
-        return `<div class="ui-row" style="padding:8px 0"><div class="ui-row-main"><div class="ui-row-title" style="font-size:15px">${escapeHtml(it.name)}</div><div class="ui-row-sub">${escapeHtml(ep.name)} <b style="color:#DC2626">${ep.s}/${ep.m} = ${pct}%</b> · 丢 ${lost} 分${s.total >= 10 ? ` · App 里 ${s.pct}%` : ' · App 里还没练够 10 题'}</div></div>${go ? `<div class="ui-row-act"><button class="ui-cta auto" onclick="${go}">去练 →</button></div>` : ''}</div>`;
+        const dg = D[it.key] ? `<div class="mod-diag">${escapeHtml(D[it.key])}</div>` : '';
+        return `<div class="ui-row" style="padding:8px 0;align-items:flex-start"><div class="ui-row-main"><div class="ui-row-title" style="font-size:15px">${escapeHtml(it.name)}</div><div class="ui-row-sub">${epTxt}${s.total >= 10 ? `App 里 ${s.pct}%` : 'App 里还没练够 10 题'}</div>${dg}</div>${go ? `<div class="ui-row-act"><button class="ui-cta auto" onclick="${go}">${isWriting(it) ? '去写' : '去练'} →</button></div>` : ''}</div>`;
       }).join('');
-      focusHtml = `<div class="mod-focus" style="margin-top:10px;padding:10px 12px;background:#FEF2F2;border:1px solid #FECACA;border-radius:10px"><div style="font-size:15px;font-weight:900;color:#DC2626">🎯 本阶段重点抓 (校考没到 90% 的卷子)</div>${rows}</div>`;
+      const more = focusItems.length > SHOW ? `<div style="font-size:13px;color:#64748B;margin-top:6px">还有 ${focusItems.length - SHOW} 个病根标在下面的卡片上 (📋 红字)</div>` : '';
+      focusHtml = `<div class="mod-focus" style="margin-top:10px;padding:10px 12px;background:#FEF2F2;border:1px solid #FECACA;border-radius:10px"><div style="font-size:15px;font-weight:900;color:#DC2626">🎯 本阶段重点抓 (${exam ? escapeHtml(exam.date) + ' 校考' : '校考'}暴露的病根, 按急迫度排)</div>${rows}${more}</div>`;
     }
   }
   el.innerHTML = `
@@ -8222,7 +8331,9 @@ async function _buildEssayInnerHtml(forPage) {
 async function renderEssayPage() {
   const el = document.getElementById('essayPageContent');
   if (!el) return;
-  el.innerHTML = await _buildEssayInnerHtml(true);
+  // v26.0: 作文页顶部放 动词圈查 + 我的常错本 (校考分析: 时态 + 老师划的 30 处)
+  const tools = `<div class="card" style="margin-bottom:10px"><div class="ui-row" style="border:none;padding:4px 0"><div class="ui-row-main"><div class="ui-row-title">写完先自查, 再给家长批</div><div class="ui-row-sub">① 动词圈查: 叙述动词全是过去式? ② 对常错本: although/but · 词性 · 拼写 · 标题 An</div></div><div class="ui-row-act" style="display:flex;gap:8px;flex-wrap:wrap"><button class="ui-btn2" onclick="openMyErrorBook()">📕 常错本</button><button class="ui-cta auto" onclick="openTenseChecker()">✍️ 动词圈查 →</button></div></div></div>`;
+  el.innerHTML = tools + await _buildEssayInnerHtml(true);
 }
 // 旧 modal API 保留为转发: 切到 essay tab
 async function openEssayLibrary() {
@@ -9055,6 +9166,7 @@ function closeUnitGame() {
 // === 2/3. Grammar + Cloze (共用 MCQ 框架) ===
 let _mcqGameState = null;
 function openGrammarGame() { _openMcqGame('grammar', 'Grammar 选择题', 'q'); }
+function openTenseDrill() { _openMcqGame('tense', '时态专项', 'q'); }   // v26.0 校考最大病根
 function openClozeGame() { _openMcqGame('cloze', 'Cloze 单空填', 'sentence'); }
 // v19.14f (科学专家 P3): openSciMcqGame 加 chapter 参数, 按当前周对应章节过滤题库
 function openSciMcqGame(chapterFilter) {
@@ -9122,7 +9234,7 @@ window.openPaper2MockGame = openPaper2MockGame;
 function _openMcqGame(key, title, qField, chapter) {
   if (!_checkGameDailyLock(key)) return;
   const diff = window.getDifficulty ? window.getDifficulty(state, key) : 4;
-  const fn = key === 'grammar' ? window.getGrammarByDiff : key === 'cloze' ? window.getClozeByDiff : key === 'scimcq' ? window.getSciMcqByDiff : key === 'chinese' ? window.getChineseMcqByDiff : key === 'sst' ? window.getSstByDiff : window.getGrammarByDiff;
+  const fn = key === 'grammar' ? window.getGrammarByDiff : key === 'cloze' ? window.getClozeByDiff : key === 'scimcq' ? window.getSciMcqByDiff : key === 'chinese' ? window.getChineseMcqByDiff : key === 'sst' ? window.getSstByDiff : key === 'tense' ? ((d, n) => window.getTenseDrillQuestions(n)) : window.getGrammarByDiff;
   let rawQs = fn(diff, 10);
   // v19.14j: scimcq 章节 filter 升级 — 优先用 _chapterId tag (准确), fallback keyword 子串
   if (key === 'scimcq' && chapter && chapter.chapterId && window.SCIENCE_MCQ) {
@@ -13242,6 +13354,7 @@ function renderTipsPage() {
         ${box('答题模板 / 句式', m.template.length ? m.template.map(t => `<div>${t}</div>`).join('') : '')}
         ${box('最常丢分的坑', li(m.traps, '⚠️ '))}
         ${box('交卷前自查', li(m.check, '☐ '))}
+        ${key === 'compo' ? box('📕 我的常错本 (2026-11 校考老师划的)', _myErrorBookHtml(true) + `<div style="margin-top:6px"><button class="ui-btn2" onclick="event.stopPropagation();openTenseChecker()">✍️ 动词圈查</button></div>`) : ''}
         ${box('⭐ 我从每日考点学到的 (自动收藏)', mine.length ? mine.map(t => `<div>⭐ ${escapeHtml(t.text)} <span class="muted" style="font-size:12px">· ${escapeHtml(t.from || '')} · ${t.date}</span></div>`).join('') : '<div class="muted">还没有 · 主页"每日考点学习"学完会自动收进来</div>')}
       </div></div>` : ''}`;
   }).join('');
@@ -13493,7 +13606,7 @@ function _tipBookHtml() {
     const sb = book[s]; html += `<h1>${esc(sb.label)}</h1>`;
     sb.order.forEach(key => {
       const m = sb.mods[key], mine = window.getTipBookByMod(state, s, key);
-      html += `<section><h2>${m.icon || ''} ${esc(m.title)} <small>${esc(m.paper)}</small></h2><h3>做题方法</h3><ol>${m.steps.map(x => `<li>${x}</li>`).join('')}</ol>${m.template.length ? `<h3>答题模板</h3><ul class="tpl">${m.template.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}<h3>最常丢分的坑</h3><ul>${m.traps.map(x => `<li>${x}</li>`).join('')}</ul><h3>交卷前自查</h3><ul class="chk">${m.check.map(x => `<li>☐ ${x}</li>`).join('')}</ul>${mine.length ? `<h3>⭐ 我学到的</h3><ul>${mine.map(t => `<li>${esc(t.text)} <small>(${esc(t.from)} · ${t.date})</small></li>`).join('')}</ul>` : ''}</section>`;
+      html += `<section><h2>${m.icon || ''} ${esc(m.title)} <small>${esc(m.paper)}</small></h2><h3>做题方法</h3><ol>${m.steps.map(x => `<li>${x}</li>`).join('')}</ol>${m.template.length ? `<h3>答题模板</h3><ul class="tpl">${m.template.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}<h3>最常丢分的坑</h3><ul>${m.traps.map(x => `<li>${x}</li>`).join('')}</ul><h3>交卷前自查</h3><ul class="chk">${m.check.map(x => `<li>☐ ${x}</li>`).join('')}</ul>${key === 'compo' ? `<h3>📕 我的常错本 (2026-11 校考)</h3>${_myErrorBookHtml(true)}` : ''}${mine.length ? `<h3>⭐ 我学到的</h3><ul>${mine.map(t => `<li>${esc(t.text)} <small>(${esc(t.from)} · ${t.date})</small></li>`).join('')}</ul>` : ''}</section>`;
     });
   });
   return html;

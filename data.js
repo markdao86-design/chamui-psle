@@ -11702,3 +11702,156 @@ function estimateDaysToAL1() {
   return { per: out, all: worst, worstSubj, remaining: worst == null ? null : Math.max(0, worst - sinceLast), latest: b };
 }
 window.addStudySeconds = addStudySeconds; window.getStudyStats = getStudyStats; window.estimateDaysToAL1 = estimateDaysToAL1; window.EXAM_HISTORY = EXAM_HISTORY;
+
+// ============= v26.0: 2026-11 校考试卷分析落地 (家长 2026-11-03 给的逐题分析) =============
+// 结论: 知识底子够, 丢分在"技术活": 英语 = 时态 + 选择题 + 读题不准; 科学 = 会的东西没写成得分句 (缺关键词 / 因果链少最后一环)
+// 1) EXAM_DIAG: 每个模块这次考试暴露的病根, 模块卡上标红 + 排序加急; 改病根只改这里
+const EXAM_DIAG = {
+  tense: '综合填空 4 错 3 是时态 (selects→selected / have→had; to/did 后要原形 wore→wear); 改错 are→were 漏改; 作文过去时写着写着跳成现在时 (have / give / support / keep / leads / flows)。这一个毛病至少丢 8-10 分',
+  compcloze: '综合填空 (Comprehension Cloze) 4 个错里 3 个是时态 —— 填完每个动词都要问: 这句在讲过去还是现在?',
+  gcloze: '词框里有动词时先定整句时态再填, 过去的句子不要填 -s 形',
+  editing: '时态 are→were 漏改 (前句 was, 后句就该 were); 改错题一半是语法, 看到动词先查时态',
+  writing: '老师划了 30 多处: ① 过去时跳现在时 ② 中式直译 (Although…but / do planning / time flows fastly) ③ 词性混淆 (wonderful→wonderfully / pain→painful / hardly→hard / silence→silent / worry→worried) ④ 硬塞大词 (lugubrious) ⑤ 拼写 unforgettable / guidance / exercise / preparation, 标题 A→An',
+  sitwriting: '内容点齐全语气合适, 小错: I and Samad → Samad and I; Your sincerely → Yours sincerely; instruction → instructions',
+  comp_oe: '读题不准: 要 "一个词" 写了 Too happy; 要 "从第一段" 答却从别处推; 性格词选错。先圈题目限定词',
+  grammar: '选择题丢 9 分里语法占 3 题 —— 题感问题, 每周限时 2 套 Booklet A',
+  vocab: '选择题词汇错 3 题 —— 看搭配选词, 每周 2 套 Booklet A',
+  visualtext: '看图理解错 3 题 —— 小字和脚注里的细节, 每周 2 套 Booklet A',
+  'sci:oe': '意思对但没有关键词: 35b 缺 oxygen / blood (写成 "不需要能量所以心跳变慢"); 36c 缺 competition + sunlight / water / mineral salts / space (写成 "太挤长不好"); ½ 分题因果链少最后一环 (没根 → 吸不到水; 凝结更多)',
+  'sci:lab': '公平测试要点名哪个变量变了 (38b 没说清); 结论要带数据',
+};
+// 2) 动词圈查: 过去时叙述里混进现在时动词是最大病根。把常见动词的现在时形式标出来, 让孩子逐个确认 (引号里的对话跳过, 因为对话可以用现在时)
+const TENSE_SUSPECT_BASES = ['go','goes','come','comes','see','sees','run','runs','walk','walks','take','takes','make','makes','get','gets','give','gives','keep','keeps','lead','leads','flow','flows','support','supports','have','has','do','does','say','says','tell','tells','ask','asks','look','looks','feel','feels','think','thinks','know','knows','want','wants','start','starts','begin','begins','try','tries','puts','find','finds','hear','hears','shout','shouts','cry','cries','smile','smiles','laugh','laughs','open','opens','close','closes','turn','turns','sit','sits','stand','stands','fall','falls','hold','holds','bring','brings','buy','buys','eat','eats','drink','drinks','sleep','sleeps','wake','wakes','leave','leaves','reach','reaches','help','helps','play','plays','stop','stops','move','moves','jump','jumps','pick','picks','pull','pulls','push','pushes','throw','throws','catch','catches','win','wins','lose','loses','decide','decides','realise','realises','realize','realizes','remember','remembers','forget','forgets','learn','learns','teach','teaches','show','shows','watch','watches','wait','waits','call','calls','follow','follows','grab','grabs','rush','rushes','hurry','hurries','notice','notices','wonder','wonders','hope','hopes','need','needs','seem','seems','become','becomes','grow','grows','break','breaks','fly','flies','swim','swims','ride','rides','drive','drives','write','writes','reads','draw','draws','sing','sings','dance','dances','carry','carries','climb','climbs','wear','wears','meet','meets','send','sends','pay','pays','spend','spends','build','builds','stay','stays','live','lives','love','loves','like','likes','hate','hates','enjoy','enjoys','practise','practises','prepare','prepares','perform','performs','happen','happens','arrive','arrives','return','returns','enter','enters','reply','replies','answer','answers','nod','nods','sigh','sighs','scream','screams','stare','stares','whisper','whispers','shake','shakes','tremble','trembles','apologise','apologises','apologize','apologizes','scold','scolds','agree','agrees','finish','finishes','hide','hides','is','are','am','isn\'t','aren\'t','don\'t','doesn\'t','can','can\'t','cannot','will','won\'t','hasn\'t','haven\'t'];
+const _TENSE_SUSPECT_SET = new Set(TENSE_SUSPECT_BASES);
+// 返回 { suspects: [{ word, index }], count, html } ; html 里可疑词包成 <mark class="tense-mark">
+// 评审团规则: ① to / 情态 / did / not(did not) / let / help / make / made / watch / saw / heard / felt 后面接原形是对的, 不标 ② 限定词 (the / a / my / of …) 后面是名词 (the lives / his looks), 不标 ③ 引号 (双引号 / 成对弯单引号 / 独立的直单引号) 里的对话跳过 ④ 撇号不当分隔符 (isn't 整词匹配)
+const _TENSE_BASE_BEFORE = new Set(['to','can','could','will','would','shall','should','may','might','must','did',"didn't",'not','let','help','helps','helped','make','makes','made','watch','watched','saw','heard','felt','dare','need']);
+const _TENSE_DET_BEFORE = new Set(['the','a','an','my','his','her','their','our','its','your','these','those','this','that','some','many','few','several','two','three','four','five','of','no','every','each','both','all','such']);
+function tenseCheck(text) {
+  const src = String(text || '');
+  const suspects = []; let html = ''; let inQuote = false; let i = 0; let prev = '';
+  const tokens = src.split(/(\s+|[.,!?;:"“”‘’()]+)/);
+  tokens.forEach(tok => {
+    if (!tok) return;
+    if (/["“”‘’]/.test(tok)) { const n = (tok.match(/["“”‘’]/g) || []).length; if (n % 2 === 1) inQuote = !inQuote; html += escapeHtmlLite(tok); i += tok.length; return; }
+    if (tok === "'") { inQuote = !inQuote; html += tok; i += 1; return; }   // 独立的直单引号 (前后是空格/标点) 当引号
+    if (/^\s+$/.test(tok) || /^[.,!?;:()]+$/.test(tok)) { html += escapeHtmlLite(tok); i += tok.length; if (!/^\s+$/.test(tok)) prev = ''; return; }
+    // 直单引号贴在词上 ('I like it,' said Tom.): 词首的 ' 开引号, 词尾的 ' 关引号; 词中的 ' (isn't / Tom's) 是撇号
+    let lead = '', tail = '';
+    if (tok.length > 1 && tok[0] === "'") { lead = "'"; tok = tok.slice(1); inQuote = !inQuote; }
+    if (tok.length > 1 && tok[tok.length - 1] === "'" && !/[a-z]'$/i.test(tok.slice(-2)) === false && tok.slice(-2) !== "s'") { tail = "'"; tok = tok.slice(0, -1); }
+    const low = tok.toLowerCase().replace(/’/g, "'");
+    html += lead;
+    const skip = _TENSE_BASE_BEFORE.has(prev) || _TENSE_DET_BEFORE.has(prev);
+    if (!inQuote && !skip && _TENSE_SUSPECT_SET.has(low)) { suspects.push({ word: tok, index: i }); html += `<mark class="tense-mark">${escapeHtmlLite(tok)}</mark>`; }
+    else html += escapeHtmlLite(tok);
+    if (tail) { html += tail; inQuote = !inQuote; }
+    prev = low; i += tok.length + lead.length + tail.length;
+  });
+  return { suspects, count: suspects.length, html };
+}
+function escapeHtmlLite(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+// 3) 我的常错本 (2026-11 校考两篇作文老师划的, 按类归): 写完先对着它查一遍再交
+const MY_ERROR_BOOK = [
+  { type: '时态 (最大病根)', items: [
+    { wrong: 'selects / have (在过去的故事里)', right: 'selected / had', note: '综合填空: 过去叙述用过去式' },
+    { wrong: 'had to wore / did not wore', right: 'had to wear / did not wear', note: 'to / did / can / must 后面一律原形, 不管故事是不是过去' },
+    { wrong: 'The teacher was … and the students are …', right: 'The teacher was … and the students were …', note: '改错题印的 are 该改 were, 没改' },
+    { wrong: '前半篇 walked / saw, 后半篇 have / give / support / keep / leads / flows', right: 'had / gave / supported / kept / led / flowed', note: '写着写着跳成现在时。每个动词圈出来确认' },
+  ] },
+  { type: '中式英语直译', items: [
+    { wrong: 'Although it was raining, but we went on.', right: 'Although it was raining, we went on. / It was raining, but we went on.', note: 'although 和 but 只能留一个' },
+    { wrong: 'do planning', right: 'make plans / plan', note: '' },
+    { wrong: 'give out our performance', right: 'put up a performance / perform', note: '' },
+    { wrong: 'taken back to world', right: 'brought back to reality', note: '' },
+    { wrong: 'time flows fastly', right: 'time flew by / time passed quickly', note: 'fast 本身是副词, 没有 fastly' },
+  ] },
+  { type: '词性混淆', items: [
+    { wrong: 'sang wonderful', right: 'sang wonderfully', note: '修饰动词用副词' },
+    { wrong: 'my leg was pain', right: 'my leg was painful / my leg hurt', note: 'pain 是名词' },
+    { wrong: 'worked hardly', right: 'worked hard', note: 'hardly = 几乎不' },
+    { wrong: 'the room was silence', right: 'the room was silent', note: 'silence 是名词' },
+    { wrong: 'I was worry', right: 'I was worried', note: 'worry 是动词, be 后面要形容词 worried' },
+  ] },
+  { type: '硬塞大词', items: [
+    { wrong: 'lugubrious', right: 'sad / gloomy / downcast', note: '背了难词不会用, 不如用对简单词。改背搭配短语' },
+  ] },
+  { type: '格式 / 拼写', items: [
+    { wrong: 'I and Samad', right: 'Samad and I', note: '别人在前, 我在后' },
+    { wrong: 'Your sincerely', right: 'Yours sincerely', note: '信头有名字 (Dear Mr Tan) 用 Yours sincerely; 不知名字 (Dear Sir / Madam) 用 Yours faithfully; 写给朋友用 Your friend / Best regards。sincerely 前面的 Yours 一定带 s' },
+    { wrong: 'follow the instruction', right: 'follow the instructions', note: '' },
+    { wrong: 'unforgetable / guidence / excercise / preperation', right: 'unforgettable / guidance / exercise / preparation', note: '' },
+    { wrong: 'A Unforgettable Day', right: 'An Unforgettable Day', note: '按发音: 开头读元音就用 An (An Unforgettable Day / an hour), 读辅音用 A (a university / a one-day trip)' },
+  ] },
+  { type: '要背的搭配 (代替生僻词)', items: [
+    { wrong: '', right: 'put up a performance · hurry up · brought back to reality · make plans · time flew by · burst into tears · heave a sigh of relief · at the top of my voice', note: '每两周写一篇, 写前看一遍' },
+  ] },
+];
+// 4) 科学关键词库: 每 ½ 分对应一个关键词。先写 2-3 个关键词, 再连成因果链, 链写到题目问的那个结果为止
+const SCI_KEYWORD_BANK = [
+  { unit: '心率 / 运动与休息', ask: '为什么休息时心跳变慢', keywords: ['less oxygen', 'less blood', 'pump', 'muscles'], sentence: 'When resting, the muscles need less energy and so less oxygen. The heart pumps less blood to the muscles at a slower rate, so the heart rate is lower.', exam: '35b 丢 2 分: 写成 "不需要能量所以心跳变慢", 缺 oxygen 和 blood' },
+  { unit: '种子传播', ask: '种子为什么要传播到远处', keywords: ['competition', 'sunlight', 'water', 'mineral salts', 'space'], sentence: 'Dispersing the seeds far away reduces competition for sunlight, water, mineral salts and space between the young plants and the parent plant.', exam: '36c 丢 2 分: 写成 "太挤长不好", 关键词零个' },
+  { unit: '公平测试', ask: '为什么这不是公平测试 / 怎么改', keywords: ['only one variable changed', 'kept the same', '点名具体是哪个变量'], sentence: 'Only the <changed variable> should be changed. The <variable 1> and <variable 2> must be kept the same. In this set-up the <variable> was also changed, so it is not a fair test.', exam: '38b 丢 ½ 分: 没说清是哪个变量变了' },
+  { unit: '根与吸水', ask: '切掉根 / 根坏了植物会怎样', keywords: ['roots', 'absorb water', 'less water', 'leaves', 'wilt'], sentence: 'Without roots, the plant cannot absorb water from the soil. Less water reaches the leaves. The leaves lose water faster than the plant can take in water, so the leaves wilt.', exam: '31a 丢 ½ 分: 没说 "没根就吸不到水"' },
+  { unit: '凝结', ask: '哪个杯子外壁水珠多 / 为什么', keywords: ['water vapour', 'loses heat', 'colder surface', 'condenses', 'more water droplets'], sentence: 'The water vapour in the surrounding air loses heat to the colder outer surface of cup A and condenses into water droplets. Cup A is colder, so more water vapour condenses and more water droplets form.', exam: '39c 丢 ½ 分: 没说 "凝结更多"' },
+  { unit: '花与传粉', ask: '这种花为什么不易结果', keywords: ['pollination', 'insects', 'attract', 'pollen', 'fertilisation'], sentence: 'The flower is small and dull, so it does not attract many insects. Fewer insects carry pollen to it, so less pollination and fertilisation take place and fewer fruits form.', exam: '34b 被扣光: 写成 not attract too much insects / less pollens, 措辞含糊' },
+  { unit: '蒸发', ask: '哪个晾得快 / 为什么', keywords: ['gains heat', 'evaporates', 'faster', 'larger exposed surface area', 'warmer', 'windy'], sentence: 'The water gains heat from the surroundings and evaporates. With a larger exposed surface area, or in a warmer or windy place, the water evaporates faster.', exam: '' },
+  { unit: '热传递', ask: '为什么摸着冷 / 为什么会熔化', keywords: ['gains heat from', 'loses heat to', 'good conductor', 'faster', 'temperature rises'], sentence: 'The <cold object> gains heat from the <hot object>, its temperature rises to its melting point and it melts. / The hand loses heat to the metal spoon faster because metal is a good conductor of heat, so the spoon feels colder.', exam: '' },
+  { unit: '光与影', ask: '影子为什么变长 / 为什么看得见', keywords: ['light travels in a straight line', 'blocked', 'opaque', 'shadow', 'reflected into our eyes'], sentence: 'Light from the <source> is blocked by the opaque <object>, so a shadow forms. / Light is reflected off the <object> into our eyes, so we can see it.', exam: '' },
+  { unit: '消化', ask: '小肠 / 胃的功能', keywords: ['digests', 'absorbs', 'digested food', 'blood'], sentence: 'The small intestine digests the food further and absorbs the digested food into the blood, which carries it to all parts of the body.', exam: '' },
+  { unit: '光合作用', ask: '叶子为什么宽而扁', keywords: ['broad and flat', 'traps more sunlight', 'make more food', 'photosynthesis'], sentence: 'The leaf is broad and flat so that it can trap more sunlight to make more food by photosynthesis.', exam: '' },
+  { unit: '电路', ask: '灯为什么不亮 / 为什么更暗', keywords: ['closed circuit', 'open circuit', 'conductor', 'more bulbs in series', 'less current', 'dimmer'], sentence: 'The circuit is open because <gap>, so no current flows and the bulb does not light up. / More bulbs are connected in series, so less current flows and each bulb is dimmer.', exam: '' },
+  { unit: '磁铁', ask: '为什么吸不住 / 哪个磁力强', keywords: ['magnetic material', 'attracts', 'repels', 'like poles', 'unlike poles', 'more paper clips'], sentence: 'The <object> is made of a magnetic material (iron / steel / nickel / cobalt), so the magnet attracts it. Like poles repel, unlike poles attract. The magnet that attracts more paper clips is the stronger magnet.', exam: '' },
+  { unit: '实验结论', ask: '从表格得出结论', keywords: ['As X increases, Y increases / decreases', '引用两组数据'], sentence: 'As the <changed variable> increases from <a> to <b>, the <measured variable> increases from <c> to <d>.', exam: '结论不带数据只能拿一半' },
+];
+// 5) 这次校考丢分的题, 改写成 6 道新开放题 (题干是同类情境, 不是原题), 让他在 app 里再答一遍 —— 已过评审团
+SCIENCE_OE_QUESTIONS.push(
+  { id: 'oe_61', topic: 'Circulatory', q: 'Mei Ling measured her heart rate after running and again after resting for ten minutes. Her heart rate after resting was lower. Explain why.', keywords: ['less oxygen', 'muscles', 'blood', 'pump', 'slower'], model: 'After resting, her muscles need less energy and so less oxygen. Less blood needs to be pumped to carry oxygen to the muscles, so the heart pumps at a slower rate and her heart rate is lower.' },
+  { id: 'oe_62', topic: 'Plant Reproduction', q: 'The seeds of a plant are dispersed far away from the parent plant by wind. Explain how this helps the young plants to grow well.', keywords: ['competition', 'sunlight', 'water', 'mineral salts', 'space'], model: 'Dispersing the seeds far away reduces competition between the young plants and the parent plant for sunlight, water, mineral salts and space, so the young plants can grow well.' },
+  { id: 'oe_63', topic: 'Experiment', q: 'Ravi wanted to find out how the amount of water affects the growth of a plant. He put plant A in the sun with 50 ml of water daily and plant B in the shade with 100 ml of water daily. Explain why this is not a fair test.', keywords: ['two', 'light', 'changed', 'same'], model: 'Two variables were changed at the same time: the amount of water and the amount of light. Only the amount of water should be changed and the amount of light must be kept the same, so this is not a fair test.' },
+  { id: 'oe_64', topic: 'Plant Transport', q: 'A gardener cut off all the roots of a plant and planted it in moist soil. He watered the soil every day. A day later, the leaves wilted. Explain why.', keywords: ['absorb', 'less water', 'lose', 'wilt'], model: 'Without roots, the plant cannot absorb water from the soil. Less water is transported to the leaves, so the leaves lose more water than they receive and wilt.' },
+  { id: 'oe_65', topic: 'Water Cycle', q: 'Two identical cups were left in the same room. Cup A contained ice water and cup B contained tap water. More water droplets formed on the outside of cup A. Explain why.', keywords: ['water vapour', 'loses heat', 'colder', 'condenses', 'more water vapour'], model: 'The water vapour in the surrounding air loses heat to the colder outer surface of cup A and condenses into water droplets. Cup A is colder than cup B, so more water vapour condenses on cup A and more water droplets form.' },
+  { id: 'oe_66', topic: 'Plant Reproduction', q: 'Plant X has small, dull-coloured flowers without any scent. Explain why plant X produces fewer fruits than a plant with large, brightly-coloured flowers.', keywords: ['attract', 'insects', 'pollen', 'pollination', 'fertilisation'], model: 'The small, dull flowers of plant X do not attract many insects. Fewer insects carry pollen to the flowers, so less pollination and fertilisation take place and fewer fruits are formed.' }
+);
+// 6) 答题技巧本补充 (本次校考病根对应的坑 / 自查 / 模板) + 新模块「时态专项」
+(function () {
+  const E = TECHNIQUE_BOOK.eng.mods, S = TECHNIQUE_BOOK.sci.mods;
+  E.tense = { title: '时态专项 · 动词圈查', paper: '横跨 Paper 1 作文 + Paper 2 语法填空 / 改错 / 综合填空 · 本次校考三处都栽在这', icon: '⏱️',
+    steps: [
+      '先定<b>整篇 / 整句在讲什么时候</b>: 故事叙述 = 过去时 (walked / saw / had); 说明一般事实 = 现在时; 看<b>时间信号词</b>: yesterday / last week / ago / when I was … → 过去; every day / usually / always → 一般现在; since / already / just / by the time → 完成时: 故事里 (过去) 用 had + 过去分词, 讲到现在的事才用 have / has + 过去分词; for + 一段时间 两种都可以 (I waited for an hour / I had waited for an hour)',
+      '<b>动词圈查</b>: 写完任何东西, 把每个动词圈出来, 逐个问 "这句讲过去还是现在?" — 过去的故事里出现 have / give / keep / leads / flows 就是错',
+      '一句里<b>两个动作</b>: 先发生的用过去完成 (had + 过去分词), 后发生的用一般过去 (By the time we arrived, the show had started)',
+      '引号里的<b>对话可以用现在时</b> ("I am so happy!" she shouted.), 引号外的叙述继续用过去时',
+      '不规则动词表每周过一遍: go-went-gone / wear-wore-worn / lead-led-led / keep-kept-kept / give-gave-given / take-took-taken',
+    ],
+    traps: ['过去时叙述写着写着跳成现在时 (前面 walked, 后面 have / give / keep)', 'Booklet A 选择题选项有 selects / selected, 看见第三人称单数就选 -s, 忘了整句在讲过去', '两个过去动作不分先后, 该用 had done 的地方用了 did', '改错题里 was / are 混用: 主语单复数对了, 时态却和前句不一致'],
+    check: ['每个动词都圈过、确认过时态了吗?', '整篇故事的叙述动词全是过去式吗 (只有引号里的对话可以例外)?', '时间信号词 (yesterday / since / by the time) 和动词形式对得上吗?'],
+    template: ['叙述: Last Saturday, we <b>went</b> to the beach. The sun <b>was</b> shining and everyone <b>was</b> excited.', '先后: By the time I <b>reached</b> home, my mother <b>had</b> already <b>cooked</b> dinner.', '持续到现在: I <b>have lived</b> here <b>since</b> 2020. / We <b>have been</b> friends <b>for</b> five years.', '对话例外: "I <b>am</b> so proud of you!" Father <b>said</b>, patting my back.'],
+  };
+  const o = TECHNIQUE_BOOK.eng.order; if (o.indexOf('tense') < 0) o.splice(o.indexOf('editing') + 1, 0, 'tense');
+  const add = (m, f, arr) => { m[f] = m[f] || []; arr.forEach(x => { if (m[f].indexOf(x) < 0) m[f].push(x); }); };
+  add(E.compo, 'traps', ['中式直译: Although … but 连用 / do planning / give out our performance / time flows fastly (fast 本身是副词)', '词性混淆: sang wonderful (→ wonderfully) / was pain (→ painful) / worked hardly (→ hard) / was silence (→ silent) / was worry (→ worried)', '硬塞生僻大词 (lugubrious) 用得生硬, 不如用对 gloomy / downcast + 一个搭配短语']);
+  add(E.compo, 'check', ['动词圈查做了吗: 每个叙述动词都是过去式?', '对着「我的常错本」查了一遍: although/but · 词性 · 拼写 · 标题 An?']);
+  add(E.compo, 'template', ['搭配代替大词: put up a performance / hurry up / brought back to reality / make plans / time flew by / burst into tears / heave a sigh of relief']);
+  add(E.sw, 'traps', ['格式小错: Your sincerely (→ Yours sincerely) / I and Samad (→ Samad and I) / follow the instruction (→ instructions)']);
+  add(E.sw, 'check', ['Yours sincerely 的 s 写了吗? 别人在前我在后 (Samad and I)?']);
+  add(E.comp_oe, 'traps', ['题目限定词没圈: 要 "one word" 却写了两个词 (Too happy ✗ → overjoyed ✓); 要 "from paragraph 1" 却从别处推答案', '性格词题 (Which word describes …) 只看一件事就选, 没看人物整段做了什么']);
+  add(E.comp_oe, 'check', ['题目里的限定词 (one word / from paragraph X / in your own words) 圈出来并照做了吗?']);
+  add(E.gram_cloze, 'traps', ['词框里有动词时, 先定整句时态再填 (过去的句子不要填 -s 形)']);
+  add(E.gram_mcq, 'traps', ['选项里有同一动词的两种时态 (selects / selected) 时, 先定整句时态再选, 不要看见第三人称单数就选 -s']);
+  add(E.editing, 'traps', ['was / are: 主语单复数对了, 时态却和前一句不一致 (前句过去时, 这句就该 were)']);
+  add(S.oe_explain, 'steps', ['答前先写 <b>2-3 个关键词</b> (每 ½ 分对应一个: oxygen / blood / competition / absorb water …), 再连成因果链, <b>链写到题目问的那个结果为止</b>']);
+  add(S.oe_explain, 'traps', ['意思对了但没有关键词: "太挤长不好" ✗ → "reduces competition for sunlight, water, mineral salts and space" ✓; "不需要能量所以心跳变慢" ✗ → "muscles need less oxygen, heart pumps less blood" ✓', '因果链少最后一环: 说了 "没有根" 没说 "吸不到水 → 叶子失水 → 枯萎"; 说了 "杯子更冷" 没说 "凝结更多水珠"']);
+  add(S.oe_explain, 'check', ['每 ½ 分有一个关键词落在纸上了吗?', '因果链的最后一环 (题目问的那个结果) 写出来了吗?']);
+  add(S.oe_exp, 'traps', ['问 "为什么不公平" 没有点名是哪个变量多变了 (要写: the amount of light was also changed)']);
+  add(S.oe_exp, 'check', ['不公平 / 改进的题, 点名了具体是哪个变量吗?']);
+  TECH_MOD_OF_MODULE.tense = 'tense';
+  ENG_MODULE_OF_GAME.tense = 'tense';
+})();
+// 7) 时态专项练题: 语法题库里和时态有关的题 (完成 / 过去 / 将来 / 进行 / 间接引语 / 被动), 每次 10 题
+function getTenseDrillQuestions(n) {
+  const pool = (GRAMMAR_QUESTIONS || []).filter(q => /^(现在完成|过去完成|将来完成|将来进行|过去进行|一般过去|时态|完成时)|^被动-(一般现在|过去|将来|现在完成|过去进行)$|^间接引语-(am|will|have|can|saw|may|时间)|^易混词-lie/.test(q.tag || ''));   // 评审团: 只留真时态考点 (39 题), 被动语序 / 虚拟 / 情态推测 不算
+  const arr = pool.slice().sort(() => Math.random() - 0.5);
+  return arr.slice(0, n || 10);
+}
+window.EXAM_DIAG = EXAM_DIAG; window.tenseCheck = tenseCheck; window.MY_ERROR_BOOK = MY_ERROR_BOOK; window.SCI_KEYWORD_BANK = SCI_KEYWORD_BANK; window.getTenseDrillQuestions = getTenseDrillQuestions; window.TENSE_SUSPECT_BASES = TENSE_SUSPECT_BASES;

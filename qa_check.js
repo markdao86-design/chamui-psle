@@ -2231,7 +2231,7 @@ assert(/const TECHNIQUE_BOOK = \{/.test(dataSrc) && W.TECHNIQUE_BOOK && ['eng', 
   const B = W.TECHNIQUE_BOOK; let bad = [];
   Object.keys(B).forEach(s => B[s].order.forEach(m => { const x = B[s].mods[m]; if (!x.title || !x.paper || !(x.steps || []).length || !Array.isArray(x.template) || !(x.traps || []).length || !(x.check || []).length) bad.push(s + '/' + m); }));
   assert(bad.length === 0, `v23.0: 每个模块都有 方法/模板/坑/自查 四块 (缺: ${bad.join(',')})`);
-  assert(B.eng.order.length === 14 && B.sci.order.length === 6, `v23.0: 英语 14 模块 (2025 新卷) / 科学 6 类 (实际 ${B.eng.order.length}/${B.sci.order.length})`);
+  assert(B.eng.order.length === 15 && B.sci.order.length === 6 && B.eng.order.indexOf('tense') === B.eng.order.indexOf('editing') + 1, `v23.0/v26.0: 英语 14 模块 + 时态专项 = 15 (2025 新卷) / 科学 6 类 (实际 ${B.eng.order.length}/${B.sci.order.length})`);
   assert(/14 分/.test(B.eng.mods.sw.paper) && /36 分/.test(B.eng.mods.compo.paper) && /10 题 10 分/.test(B.eng.mods.editing.paper) && /15 分/.test(B.eng.mods.oral_read.paper) && /25 分/.test(B.eng.mods.oral_conv.paper), 'v23.0: 分值按 SEAB 2025 新卷 (SW14/CW36/Editing10/RA15/SBC25)');
 }
 assert(typeof W.getDailyFocus === 'function' && typeof W.addTipBookEntries === 'function' && typeof W.markDailyFocus === 'function', 'v23.0: 每日考点/技巧本 数据函数都导出');
@@ -2386,7 +2386,21 @@ assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾
   assert(g && g.total.al === 3 && g.total.need === 11 && g.parts[0].name.indexOf('Booklet A') === 0 && g.parts[0].lost === 9 && g.date === '2026-11', 'v25.2: 英语 AL3, 离 AL1 差 11 分, 丢分最多 Booklet A (-9)');
   assert(W.examPartForModule('eng', 'grammar').k === 'bktA' && W.examPartForModule('eng', 'editing').k === 'bktB' && W.examPartForModule('sci', 'sci:oe').k === 'bktB' && !W.examPartForModule('eng', 'writing'), 'v25.2: 模块 → 校考卷子 映射');
   assert(/const exam = window\.examGapSummary \? window\.examGapSummary\(subj\) : null;/.test(appSrc) && /校考 \$\{escapeHtml\(ep\.name\)\}: <b style="color:\$\{c\}">\$\{ep\.s\}\/\$\{ep\.m\} = \$\{pct\}%<\/b>/.test(appSrc) && /tag = '⚠️ 校考没到'/.test(appSrc), 'v25.2: 模块页顶部校考差距卡 + 每卡校考行 + App够了但校考没到的标签');
-  assert(/items\.sort\(\(x, y\) => urgency\(y\) - urgency\(x\)\)/.test(appSrc) && /if \(isWriting\(it\)\) return -1000;/.test(appSrc), 'v25.2: 模块按急迫度排, 写作类垫底');
+  assert(/items\.sort\(\(x, y\) => urgency\(y\) - urgency\(x\)\)/.test(appSrc) && /if \(isWriting\(it\)\) return -1000 \+ diagBump;/.test(appSrc), 'v25.2/v26.0: 模块按急迫度排, 写作类垫底 (有病根的加急)');
+  // v26.0: 2026-11 校考逐题分析落地
+  assert(W.EXAM_DIAG && W.EXAM_DIAG.tense && W.EXAM_DIAG['sci:oe'] && W.EXAM_DIAG.writing && W.EXAM_DIAG.comp_oe && W.EXAM_DIAG.compcloze && /are→were/.test(W.EXAM_DIAG.editing), 'v26.0: EXAM_DIAG 病根表 (时态/科学开放题/作文/阅读/综合填空=compcloze/改错 are→were)');
+  { const r = W.tenseCheck('Last week we went home. The sun is shining and everyone have fun. "I am happy!" she shouted. He keeps running.'); assert(r.suspects.map(s => s.word).join(',') === 'is,have,keeps', 'v26.0: tenseCheck 标出 is/have/keeps, 引号内 am 不算 (实际 ' + r.suspects.map(s => s.word).join(',') + ')'); }
+  { const r = W.tenseCheck("I decided to go home. He did not want to lose. The lives of people. Yesterday I put the book down and read it. It isn't fair. 'I like it,' said Tom."); assert(r.count === 1 && r.suspects[0].word === "isn't", 'v26.0: tenseCheck 评审规则: to/did not 后原形、限定词后名词、put/read、单引号对话 都不标; isn\'t 整词匹配 (实际 ' + r.suspects.map(s => s.word).join(',') + ')'); }
+  assert(W.getTenseDrillQuestions(999).every(q => !/^被动-(间接宾语|情态|be known)|^虚拟|^情态/.test(q.tag)), 'v26.0: 时态题源不含被动语序/虚拟/情态');
+  assert(W.MY_ERROR_BOOK.length >= 5 && W.MY_ERROR_BOOK.some(g => g.items.some(i => /Yours sincerely/.test(i.right))), 'v26.0: 我的常错本 (含 Yours sincerely)');
+  assert(W.SCI_KEYWORD_BANK.length >= 12 && W.SCI_KEYWORD_BANK.every(u => u.keywords.length >= 2 && u.sentence), 'v26.0: 科学关键词库 ≥12 单元, 每条有关键词 + 得分句');
+  { const ids = W.SCIENCE_OE_QUESTIONS.map(q => q.id); assert(ids.length >= 63 && new Set(ids).size === ids.length && ids.indexOf('oe_61') >= 0, 'v26.0: 科学开放题 +6 (oe_61-66), id 不重复'); }
+  assert(W.getTenseDrillQuestions(10).length === 10 && W.getTenseDrillQuestions(999).length >= 35, 'v26.0: 时态专项题源 ≥35, 每次 10 题');
+  assert(W.ENG_MODULE_OF_GAME.tense === 'tense' && W.TECH_MOD_OF_MODULE.tense === 'tense' && W.buildTechniqueQuiz('eng', 'tense', () => 0.3).length >= 3, 'v26.0: tense 模块记分 + 技巧测一测');
+  assert(/key: 'tense', name: '时态专项 · 动词圈查'/.test(appSrc) && /function openTenseDrill\(\)/.test(appSrc) && /key === 'tense' \? \(\(d, n\) => window\.getTenseDrillQuestions\(n\)\)/.test(appSrc), 'v26.0: 时态专项卡 + 题源接入 MCQ 引擎');
+  assert(/function openTenseChecker\(/.test(appSrc) && /function openMyErrorBook\(/.test(appSrc) && /function openSciKeywordBank\(/.test(appSrc) && /_sciOeKwChips\(g, q\)/.test(appSrc) && /_sciOeKwPickResult\(g, q\)/.test(appSrc), 'v26.0: 动词圈查 / 常错本 / 关键词库 弹层 + 科学 OE 先圈关键词');
+  assert(/📋 校考病根: \$\{escapeHtml\(window\.EXAM_DIAG\[it\.key\]\)\}/.test(appSrc) && /items\.filter\(it => D\[it\.key\]\)/.test(appSrc), 'v26.0: 模块卡标病根 + 重点抓按病根列');
+  assert(/\.tense-mark \{/.test(idxSrc) && /\.kw-chip\.on \{/.test(idxSrc) && /\.mod-diag \{/.test(idxSrc), 'v26.0: CSS 圈查高亮 / 关键词 chips / 病根条');
   const es = W.estimateDaysToAL1();
   assert(es && es.worstSubj === 'eng' && es.all > 0 && es.per.math === 0, 'v25.2: 到 AL1 天数预估 (最慢英语; 数学已达)');
   const st0 = { studyLog: {}, fcDaily: {}, dailyFocus: {}, scheduleScores: {} }; W.addStudySeconds(st0, 300);
