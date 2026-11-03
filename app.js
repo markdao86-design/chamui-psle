@@ -2169,10 +2169,10 @@ function _renderSciOe() {
   // 检查孩子答案
   const userAns = (g.answers[g.qIdx] || '').trim();
   let warnings = [];
+  // v19.14d: 加强弱 opener 检测 (含 I agree / It is / True / 反问); v26.1: 提到函数作用域 —— 原来声明在 if 块里, 下面看答案那段引用时 ReferenceError, 科学 OE "提交 + 看 Model Answer" 一直点不动
+  const weakOpener = /^(yes[\.,\s]|no[\.,\s]|yes$|no$|i\s+agree|it\s+is|true[\.,\s]|true$|false[\.,\s]|false$|sure[\.,\s])/i;
   if (userAns) {
     const lowerAns = userAns.toLowerCase();
-    // v19.14d: 加强弱 opener 检测 (含 I agree / It is / True / 反问)
-    const weakOpener = /^(yes[\.,\s]|no[\.,\s]|yes$|no$|i\s+agree|it\s+is|true[\.,\s]|true$|false[\.,\s]|false$|sure[\.,\s])/i;
     if (weakOpener.test(userAns)) warnings.push('❌ 不能用 Yes/No/I agree/It is/True 等弱 opener 开头 (PSLE 直接 0 分)');
     // v19.14f (科学专家新发现): 修子串匹配漏洞 — 用 word boundary + 词干, 防"heat"匹配"wheat"/"school"匹配"cool"
     const matchedKw = q.keywords.filter(k => {
