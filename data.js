@@ -11640,9 +11640,10 @@ const EXAM_RESULTS = {
     { k: 'listen', name: '听力', s: 15, m: 20, mods: ['listening'] },
     { k: 'bktB', name: 'Booklet B', s: 57, m: 65, mods: ['gcloze', 'editing', 'compcloze', 'synthesis', 'comp_oe'] },
   ] },
-  sci: { total: null, parts: [
-    { k: 'bktB', name: 'Booklet B 开放题', s: 37, m: 40, mods: ['sci:oe', 'sci:lab'] },
-  ], pending: 'Booklet A 选择题 (60 分) 成绩待出' },
+  sci: { total: [86.5, 100], parts: [
+    { k: 'bktA', name: 'Booklet A 选择题', s: 56, m: 60, mods: ['sci:mcq', 'sci:terms'] },
+    { k: 'bktB', name: 'Booklet B 开放题', s: 30.5, m: 40, mods: ['sci:oe', 'sci:lab'] },
+  ] },
   math: { total: [94, 100], parts: [{ k: 'a', name: 'Booklet A', s: 49, m: 50, mods: [] }, { k: 'b', name: 'Booklet B', s: 45, m: 50, mods: [] }] },
   cn: { total: [155.5, 170], parts: [{ k: 'p2', name: '试卷二 A+B', s: 83.5, m: 90, mods: [] }, { k: 'compo', name: '作文', s: 32, m: 40, mods: [] }, { k: 'listen', name: '听力', s: 40, m: 40, mods: [] }] },
 };
@@ -11684,7 +11685,7 @@ function getStudyStats(state) {
 // 到 AL1 还要多少天: 用两次校考的进步速度外推 (每科 90% 线), 取最慢的那科; 速度 ≤0 或没有两次数据 → null
 const EXAM_HISTORY = [
   { date: '2026-08-20', eng: 65, sci: 76, cn: 86, math: 92 },        // 2026.8 校考 (英 26/40, 科 30.5/40, 华 43/50)
-  { date: '2026-11-01', eng: 80, sci: 92.5, cn: 91.5, math: 94 },    // 2026.11 校考 (英 88/110, 科 Booklet B 37/40, 华 155.5/170, 数 94/100)
+  { date: '2026-11-01', eng: 80, sci: 86.5, cn: 91.5, math: 94 },    // 2026.11 校考 (英 88/110, 科 86.5/100 = A 56/60 + B 30.5/40, 华 155.5/170, 数 94/100)
 ];
 function estimateDaysToAL1() {
   const h = EXAM_HISTORY; if (h.length < 2) return null;

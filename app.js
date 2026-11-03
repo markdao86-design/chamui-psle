@@ -2857,12 +2857,12 @@ const ENG_MODULES = [
 // 每个考点自成一个模块记正确率; 有对应章节题库的考点, "题库练"直接按章节抽选择题。
 const SCI_MODULES = [
   { title: 'Booklet A · 选择题', items: [
-    { key: 'sci:mcq', name: '科学选择题 (全部主题混合)', tip: '8 月丢的 8 分全在这 —— 先排除, 再对课本概念', open: 'openSciMcqGame()', bank: () => (window.SCIENCE_MCQ || []).length + ' 题' },
+    { key: 'sci:mcq', name: '科学选择题 (全部主题混合)', tip: '11 月校考 56/60 已过线 —— 每周一套保持手感, 先排除再对课本概念', open: 'openSciMcqGame()', bank: () => (window.SCIENCE_MCQ || []).length + ' 题' },
     { key: 'sci:terms', name: '科学术语', tip: '按描述选术语; 拼错 = 0 分', open: "startFcQuizFromPractice('sci_life')", bank: () => '4 组术语' },
   ] },
   { title: 'Booklet B · 开放题', items: [
-    { key: 'sci:oe', name: '科学开放题', tip: '用课本标准说法, 2 分题写 2 个点', open: 'openScienceOEGame()', bank: () => (window.SCIENCE_OE_QUESTIONS || []).length + ' 题' },
-    { key: 'sci:lab', name: '实验题 · 变量', tip: '改变的 / 测量的 / 保持不变的', open: 'openSciClassifyGame()', bank: () => (window.SCIENCE_CLASSIFY || []).length + ' 组' },
+    { key: 'sci:oe', name: '科学开放题', tip: '11 月校考 Booklet B 丢 9.5 分, 全科最大缺口 —— 用课本标准说法, 2 分题写 2 个点', open: 'openScienceOEGame()', bank: () => (window.SCIENCE_OE_QUESTIONS || []).length + ' 题' },
+    { key: 'sci:lab', name: '实验题 · 变量', tip: 'Booklet B 必考 —— 改变的 / 测量的 / 保持不变的, 结论要带数据', open: 'openSciClassifyGame()', bank: () => (window.SCIENCE_CLASSIFY || []).length + ' 组' },
   ] },
   { title: '主题 1 · Diversity 多样性', items: [
     { key: 'sci:sci_diversity', name: 'Diversity 分类', node: 'sci_diversity', open: "openSciMcqGame('p3_diversity')", btn: '本章选择题' },
@@ -2998,6 +2998,23 @@ function renderModulePage(cfg) {
     // v24.3 (用户: "大长条太丑"): 改成一行 —— 左边 "最弱: 名称 25%", 右边一个小按钮
     if (go) weakCta = `<div class="ui-row" style="padding:8px 0;border:none"><div class="ui-row-main"><div class="ui-row-title" style="font-size:15px">🎯 最弱: ${escapeHtml(weakest.name)} <span style="color:#DC2626;font-weight:900">${stats[weakest.key].pct}%</span></div><div class="ui-row-sub">先把这个补到 90%</div></div><div class="ui-row-act"><button class="ui-cta auto" onclick="${go}">去练 →</button></div></div>`;
   }
+  // v25.9 (用户: "科学要把重要的模块提出来重点抓"): 校考没到 90% 的卷子 → 它对应的模块就是本阶段重点, 置顶一块单独列, 每个一个"去练"按钮
+  let focusHtml = '';
+  if (exam) {
+    const weakParts = exam.parts.filter(p => p.pct < TARGET);
+    const focusItems = [];
+    weakParts.forEach(p => items.forEach(it => { const ep = examPart(it); if (ep && ep.name === p.name && !isWriting(it) && focusItems.indexOf(it) < 0) focusItems.push(it); }));
+    if (focusItems.length) {
+      const rows = focusItems.slice(0, 5).map(it => {
+        const ep = examPart(it), pct = Math.round(ep.s / ep.m * 100), lost = +(ep.m - ep.s).toFixed(1);
+        const idx = it.node ? nodes.findIndex(n => n.id === it.node) : -1;
+        const go = it.open || (idx >= 0 ? `openKnowledgePractice('${it.node}','${TREE}',${idx})` : '');
+        const s = stats[it.key];
+        return `<div class="ui-row" style="padding:8px 0"><div class="ui-row-main"><div class="ui-row-title" style="font-size:15px">${escapeHtml(it.name)}</div><div class="ui-row-sub">${escapeHtml(ep.name)} <b style="color:#DC2626">${ep.s}/${ep.m} = ${pct}%</b> · 丢 ${lost} 分${s.total >= 10 ? ` · App 里 ${s.pct}%` : ' · App 里还没练够 10 题'}</div></div>${go ? `<div class="ui-row-act"><button class="ui-cta auto" onclick="${go}">去练 →</button></div>` : ''}</div>`;
+      }).join('');
+      focusHtml = `<div class="mod-focus" style="margin-top:10px;padding:10px 12px;background:#FEF2F2;border:1px solid #FECACA;border-radius:10px"><div style="font-size:15px;font-weight:900;color:#DC2626">🎯 本阶段重点抓 (校考没到 90% 的卷子)</div>${rows}</div>`;
+    }
+  }
   el.innerHTML = `
     <div class="card">
       <div class="ui-head">
@@ -3009,6 +3026,7 @@ function renderModulePage(cfg) {
         <div style="font-size:14px;color:#1E293B;margin-top:4px;line-height:1.7">丢分在哪: ${exam.parts.map(p => `${escapeHtml(p.name)} <b style="color:${p.pct >= 90 ? '#16A34A' : p.pct >= 75 ? '#B45309' : '#DC2626'}">${p.s}/${p.m}</b> (丢 ${p.lost})`).join(' · ')}${exam.pending ? ` · <span style="color:#94A3B8">${escapeHtml(exam.pending)}</span>` : ''}</div>
         <div style="font-size:13px;color:#64748B;margin-top:2px">下面的模块按"这张卷子丢分 + App 里的正确率"排, 最急的在最上面</div>
       </div>` : ''}
+      ${focusHtml}
       ${weakCta || `<div class="ui-head-sub"><span class="grow">每个模块练满 10 题, 这里就会告诉你最弱的是哪个</span></div>`}
       <details class="ui-more"><summary>说明</summary><div class="ui-more-body">${cfg.intro}</div></details>
     </div>
