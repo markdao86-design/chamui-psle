@@ -291,6 +291,16 @@ body {
   #dictPop .dp-zh { font-size:28px; } #dictPop .dp-en { font-size:18px; } #dictPop .dp-ex { font-size:17px; } #dictPop .dp-tip { font-size:18px; }
   #dictPop .dp-book { font-size:18px; min-height:50px; } #dictPop .dp-link { font-size:16px; } #dictPop .dp-icon { font-size:26px; }
 }
+/* v25.4 模块学习: 一张卡一个模块, 网格排列 (手机 1 列 / 平板 2 列 / 13 寸 3 列 / 大屏 4 列) */
+.mod-grid { display:grid; grid-template-columns:1fr; gap:14px; margin-top:4px; }
+@media (min-width:700px) { .mod-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
+@media (min-width:1100px) { .mod-grid { grid-template-columns:repeat(3, minmax(0, 1fr)); } }
+@media (min-width:1600px) { .mod-grid { grid-template-columns:repeat(4, minmax(0, 1fr)); } }
+.mod-card { margin:0 !important; display:flex; flex-direction:column; min-width:0; }
+.mod-card .ui-page-title { font-size:17px; line-height:1.35; }
+.mod-card .ui-num { font-size:34px; }
+.mod-card .mod-act { margin-top:auto; padding-top:12px; justify-content:flex-start; flex-wrap:wrap; gap:8px 14px; }
+.mod-card .mod-act .ui-cta.auto { width:100%; }
 .home-grid-2col {
   display: grid;
   grid-template-columns: 1fr;
@@ -6284,9 +6294,9 @@ details.card.ui-more[open] > summary { margin-bottom:var(--sp-1); }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=25.3"></script>
-<script src="data.js?v=25.3"></script>
-<script src="app.js?v=25.3"></script>
+<script src="character.js?v=25.4"></script>
+<script src="data.js?v=25.4"></script>
+<script src="app.js?v=25.4"></script>
 
 </body>
 </html>

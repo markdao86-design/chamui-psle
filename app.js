@@ -2974,7 +2974,7 @@ function renderModulePage(cfg) {
         idx >= 0 ? `考点 ${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}` : '',
         it.bank ? escapeHtml(it.bank()) : '',
       ].filter(Boolean).join(' · ');
-      return `<div class="card mod-card" style="margin-bottom:12px">
+      return `<div class="card mod-card">
         <div class="ui-head" style="align-items:flex-start">
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="ui-tag" style="background:${tagColor}1A;color:${tagColor};font-weight:800">${tag}</span><span style="font-size:12px;color:#94A3B8">${escapeHtml(it._sec)}${tb ? ' · ' + escapeHtml(tb.paper.split('·')[1] || tb.paper) : ''}</span></div>
@@ -2987,7 +2987,7 @@ function renderModulePage(cfg) {
         <div style="font-size:15px;color:#1E293B;line-height:1.6">${gapLine}</div>
         ${(() => { const ep = examPart(it); if (!ep) return ''; const pct = Math.round(ep.s / ep.m * 100), lost = +(ep.m - ep.s).toFixed(1), c = pct >= 90 ? '#16A34A' : pct >= 75 ? '#B45309' : '#DC2626'; return `<div style="font-size:14px;color:#1E293B;margin-top:4px">📝 ${escapeHtml(exam ? exam.date : '')} 校考 ${escapeHtml(ep.name)}: <b style="color:${c}">${ep.s}/${ep.m} = ${pct}%</b>${lost > 0 ? ` · 这张卷子丢了 <b style="color:${c}">${lost}</b> 分` : ' · 满分 ✅'}</div>`; })()}
         ${detail ? `<div style="font-size:12px;color:#94A3B8;margin-top:2px;line-height:1.6">${detail}</div>` : ''}
-        <div class="ui-row-act" style="justify-content:flex-end;margin-top:10px">${mainBtn}${links.join('')}</div>
+        <div class="ui-row-act mod-act">${mainBtn}${links.join('')}</div>
       </div>`;
     }).join('');
   // 最弱模块一键去练 (主按钮): 有题库入口走题库, 否则走考点 10 题
@@ -3012,7 +3012,7 @@ function renderModulePage(cfg) {
       ${weakCta || `<div class="ui-head-sub"><span class="grow">每个模块练满 10 题, 这里就会告诉你最弱的是哪个</span></div>`}
       <details class="ui-more"><summary>说明</summary><div class="ui-more-body">${cfg.intro}</div></details>
     </div>
-    ${html}`;
+    <div class="mod-grid">${html}</div>`;
 }
 // 从别的页进单词考题: 先切到词汇页 (考题画在那一页上) 再开考
 function startFcQuizFromPractice(deckId) {
