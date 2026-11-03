@@ -3041,8 +3041,8 @@ function renderModulePage(cfg) {
     if (isWriting(it)) return -1000 + diagBump;
     // app 里的正确率 和 校考卷子 % 取更差的那个当"现在水平"; 两个都没有 → 排在没达标的后面
     let now = null; if (s.total >= 10) now = s.pct; if (epct != null) now = now == null ? epct : Math.min(now, epct);
-    if (now == null) return s.total > 0 ? 60 + (TARGET - s.pct) / 10 : 60;
-    return now >= TARGET ? (100 - now) : 100 + (TARGET - now);
+    if (now == null) return (s.total > 0 ? 60 + (TARGET - s.pct) / 10 : 60) + diagBump;
+    return (now >= TARGET ? (100 - now) : 100 + (TARGET - now)) + diagBump;
   };
   items.sort((x, y) => urgency(y) - urgency(x));
   const html = items.map((it, i) => {
