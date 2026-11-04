@@ -14059,6 +14059,7 @@ async function _prRenderOne(n, box, W, myId) {
   } catch (e) { _prRendered.delete(n); console.warn('page', n, e); }
 }
 function _prTrackPage(host) {
+  if (!host || !host.clientHeight) return;   // v29.1: 还没排版 (弹层隐藏 / 刚创建) 时所有页位置都是 0, 会误算成最后一页
   const boxes = host.querySelectorAll('.pr-page'); const top = host.scrollTop + host.clientHeight * 0.3; let cur = 1;
   boxes.forEach(b => { if (b.offsetTop <= top) cur = +b.dataset.p; });
   if (cur === _prPage) return; _prPage = cur;
@@ -14079,7 +14080,7 @@ function _prGo(page) { _prScrollTo(page); }
 function _prStep(d) { _prScrollTo(Math.max(1, (_prPage || 1) + d)); }
 function _prZoomSet(z) { const keep = _prPage || 1; _prZoom = z; document.querySelectorAll('.pr-zoom .ui-btn2').forEach(b => b.classList.toggle('on', +b.dataset.z === z)); _prBuildAll(keep); }
 window._prGo = _prGo; window._prStep = _prStep; window._prZoomSet = _prZoomSet;
-function _prPickAns(q, a) { if (_prSubmitted) return; _prPick[q] = a; _renderPaperRunner(false); }
+function _prPickAns(q, a) { if (_prSubmitted) return; _prPick[q] = a; _renderPrSide(); }
 window._prPickAns = _prPickAns;
 // 英文 Booklet A 题号 → 模块 (记正确率用)
 function _prModuleOf(p, q) {
@@ -14102,11 +14103,11 @@ function _prSubmit() {
   _paperRuns()[p.id] = { score: ok, max: qs.length, wrong, picks: Object.assign({}, _prPick), date: new Date().toISOString().slice(0, 10) };
   state.totalPoints = (state.totalPoints || 0) + Math.round(ok / 2);
   if (window.addStudySeconds) window.addStudySeconds(state, 60 * 5);
-  saveState(state); _prSubmitted = true; _renderPaperRunner();
+  saveState(state); _prSubmitted = true; _renderPrSide();
   if (ok === qs.length) { showToast('🎉 全对!', 'happy'); } else showToast(`交卷: ${ok}/${qs.length}, 错 ${wrong.length} 题已进错题本`, 'success');
 }
 window._prSubmit = _prSubmit;
-function _prRedo() { if (!_prCur) return; if (!confirm('清掉这次的作答重做?')) return; delete _paperRuns()[_prCur.id]; saveState(state); _prPick = {}; _prSubmitted = false; _renderPaperRunner(); }
+function _prRedo() { if (!_prCur) return; if (!confirm('清掉这次的作答重做?')) return; delete _paperRuns()[_prCur.id]; saveState(state); _prPick = {}; _prSubmitted = false; _renderPrSide(); }
 window._prRedo = _prRedo;
 function _prPageOfQ(p, q) {
   // 估算题号所在页: 英文 Booklet A 按区段, 其他取选择题区起始页
@@ -14123,14 +14124,9 @@ function _prGrade() {
   if (window.openGradingPreset) window.openGradingPreset({ task: p.oeTask, extra, refImages: p.ans.imgs || [], paperId: p.id, label: `${p.school} ${p.year} ${PAPER_SUBJ_LABEL[p.subj]} 问答题` });
 }
 window._prGrade = _prGrade;
-function _renderPaperRunner(resetFrame) {
-  const p = _prCur; if (!p) return;
-  let m = document.getElementById('paperRunnerModal');
-  if (!m) { m = document.createElement('div'); m.id = 'paperRunnerModal'; m.className = 'mb-result-modal'; document.body.appendChild(m); }
+function _prSideHtml(p) {
   const key = p.mcq.key || {}; const qs = Object.keys(key).map(Number).sort((a, b) => a - b);
   const r = _paperRuns()[p.id];
-  const secBtns = (p.sections || []).map(s => `<button class="pr-sec ${_prPage === s.from ? 'on' : ''}" data-p="${s.from}" data-k="${s.k}" onclick="_prGo(${s.from})">${escapeHtml(s.label)}<span class="pr-sec-p">p${s.from}${s.to > s.from ? '-' + s.to : ''}</span></button>`).join('');
-  const firstPage = _prPage || ((p.sections || [])[0] || {}).from || 1;
   const grid = qs.length ? qs.map(q => {
     const pick = _prPick[q]; const right = key[q];
     const opts = [1, 2, 3, 4].map(a => { let cls = 'pr-opt'; if (pick === a) cls += ' on'; if (_prSubmitted) { if (a === right) cls += ' right'; else if (pick === a) cls += ' wrong'; } return `<button class="${cls}" onclick="_prPickAns(${q},${a})">${a}</button>`; }).join('');
@@ -14139,6 +14135,24 @@ function _renderPaperRunner(resetFrame) {
   const answered = qs.filter(q => _prPick[q]).length;
   const oeBtn = p.oeTask ? `<button class="ui-cta auto" onclick="_prGrade()">📷 问答题拍照判分 →</button>` : '';
   const scoreHtml = _prSubmitted && r ? `<div class="pr-score"><span class="ui-num" style="color:${r.score / r.max >= 0.9 ? '#16A34A' : '#DC2626'}">${r.score}/${r.max}</span><span class="ui-num-label">选择题 · ${Math.round(r.score / r.max * 100)}%${r.wrong.length ? ' · 错 ' + r.wrong.join(', ') : ' · 全对'}</span></div>` : '';
+  return `        <div class="pr-side-title">选择题答题卡 ${qs.length ? `<span class="muted">${answered}/${qs.length}</span>` : ''}</div>
+        ${scoreHtml}
+        <div class="pr-grid">${grid}</div>
+        <div class="pr-actions">${qs.length ? (_prSubmitted ? `<button class="ui-btn2" onclick="_prRedo()">重做</button><button class="ui-btn2" onclick="_prGo(${(p.ans.pages || [])[0] || 1})">看答案页 ›</button>` : `<button class="ui-cta auto" ${answered ? '' : 'disabled'} onclick="_prSubmit()">交卷 (${answered}/${qs.length}) →</button>`) : ''}${oeBtn}</div>
+        ${p.subj === 'eng' ? '<div class="ui-row-sub" style="margin-top:8px">Booklet B (26-75) 写在纸上或作答簿, 做完翻答案页自己对; 阅读问答 66-75 可拍照判分。</div>' : ''}
+      `;
+}
+// 只刷新右侧答题卡 (左边卷子画布保持不动)
+function _renderPrSide() { const p = _prCur; if (!p) return; const el = document.querySelector('#paperRunnerModal .pr-side'); if (!el) return _renderPaperRunner(); const st = el.scrollTop; el.innerHTML = _prSideHtml(p); el.scrollTop = st; }
+window._renderPrSide = _renderPrSide;
+function _renderPaperRunner(resetFrame) {
+  const p = _prCur; if (!p) return;
+  let m = document.getElementById('paperRunnerModal');
+  if (!m) { m = document.createElement('div'); m.id = 'paperRunnerModal'; m.className = 'mb-result-modal'; document.body.appendChild(m); }
+  const key = p.mcq.key || {}; const qs = Object.keys(key).map(Number).sort((a, b) => a - b);
+  const r = _paperRuns()[p.id];
+  const secBtns = (p.sections || []).map(s => `<button class="pr-sec ${_prPage === s.from ? 'on' : ''}" data-p="${s.from}" data-k="${s.k}" onclick="_prGo(${s.from})">${escapeHtml(s.label)}<span class="pr-sec-p">p${s.from}${s.to > s.from ? '-' + s.to : ''}</span></button>`).join('');
+  const firstPage = _prPage || ((p.sections || [])[0] || {}).from || 1;
   m.innerHTML = `<div class="pr-wrap">
     <div class="pr-head"><div><div class="ui-page-title">${p.local ? '🎯 ' + escapeHtml(p.school) : p.kind === 'psle' ? '🎯 PSLE ' + p.year + ' ' + PAPER_SUBJ_LABEL[p.subj] + ' (Paper 1 + 2)' : '🏫 ' + escapeHtml(p.school) + ' · ' + p.year + ' P6 ' + PAPER_SUBJ_LABEL[p.subj] + ' Prelim'}</div><div class="ui-row-sub">往下滑看完整份卷子, 点章节直接跳到那一节 · <a href="${p.url}" target="_blank" rel="noopener" style="color:#1E40AF">新窗口打开 / 打印 ↗</a></div></div><button class="ui-btn2" onclick="closePaperRunner()" style="min-width:44px">✕</button></div>
     <div class="pr-secs">${secBtns}</div>
@@ -14148,13 +14162,7 @@ function _renderPaperRunner(resetFrame) {
         <div id="prCanvasHost" class="pr-canvas-host"></div>
         <div class="pr-pdf-fallback">想打印或整本翻: <a href="${p.url}" target="_blank" rel="noopener">新窗口打开 PDF ↗</a></div>
       </div>
-      <div class="pr-side">
-        <div class="pr-side-title">选择题答题卡 ${qs.length ? `<span class="muted">${answered}/${qs.length}</span>` : ''}</div>
-        ${scoreHtml}
-        <div class="pr-grid">${grid}</div>
-        <div class="pr-actions">${qs.length ? (_prSubmitted ? `<button class="ui-btn2" onclick="_prRedo()">重做</button><button class="ui-btn2" onclick="_prGo(${(p.ans.pages || [])[0] || 1})">看答案页 ›</button>` : `<button class="ui-cta auto" ${answered ? '' : 'disabled'} onclick="_prSubmit()">交卷 (${answered}/${qs.length}) →</button>`) : ''}${oeBtn}</div>
-        ${p.subj === 'eng' ? '<div class="ui-row-sub" style="margin-top:8px">Booklet B (26-75) 写在纸上或作答簿, 做完翻答案页自己对; 阅读问答 66-75 可拍照判分。</div>' : ''}
-      </div>
+      <div class="pr-side">${_prSideHtml(p)}</div>
     </div></div>`;
   m.classList.add('show');
   if (_prPage == null) _prPage = firstPage;
