@@ -33,6 +33,14 @@ for p in papers:
     secs.sort(key=lambda s: s['from'])
     kr = keys.get(f"{p['slug']}|{p['subj']}" if p['year'] == 2025 else f"{p['slug']}|{p['subj']}|{p['year']}", {})
     if not info.get('pages'): continue   # 还没分章的先不上
+    # 老格式 (2023/2024 英文 Booklet A 28 题) 题号不同: 章节名按本卷选择题数改, 不写死 PSLE 2025 新格式的题号
+    if p['subj'] == 'eng' and kr.get('mcqMax') == 28:
+        OLD = {'bktA': 'Booklet A 选择题 1-28', 'gcloze': 'Grammar Cloze', 'editing': 'Editing', 'compcloze': 'Comprehension Cloze', 'synthesis': 'Synthesis', 'compoe': 'Comprehension OE'}
+        for s in secs: s['label'] = OLD.get(s['k'], s['label'])
+    if p['subj'] == 'cn':
+        for s in secs:
+            if s['k'] == 'mcq': s['label'] = '试卷二 选择题'
+            if s['k'] == 'oe': s['label'] = '阅读理解二'
     out.append({'id': f"{p['subj']}/{p['slug']}" if p['year'] == 2025 else f"{p['subj']}/{p['year']}-{p['slug']}", 'subj': p['subj'], 'school': p['school'], 'year': p['year'], 'top10': bool(p.get('top10')), 'url': p['url'], 'mb': round(p['bytes'] / 1048576, 1), 'pages': info.get('n', 0),
                 'sections': secs, 'pl': ''.join({'bktA': 'A', 'gcloze': 'g', 'editing': 'e', 'compcloze': 'c', 'synthesis': 's', 'compoe': 'o', 'writing': 'w', 'answers': 'z', 'bktB': 'B', 'compo': 'w', 'mcq': 'A', 'oe': 'o', 'ansbook': 'k', 'p1': '1', 'p2': '2'}.get(x, '.') for x in plab), 'ans': {'pages': kr.get('ansPages', []), 'imgs': kr.get('ansImgs', [])},
                 'mcq': {'max': kr.get('mcqMax', 0), 'key': kr.get('mcq', {}), 'ok': bool(kr.get('ok')), 'missing': kr.get('missing', [])}, 'oeTask': OE_TASK[p['subj']]})

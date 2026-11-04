@@ -44,3 +44,8 @@ npx firebase deploy --only hosting:chamui-papers
 - 2023 年 sgexam 链接是 `-prelim-<school>-pdf` (没有 `exam`)
 - 内置浏览器 / 安卓 iframe 显示不了 PDF → 自托管 pdf.js 画 canvas
 - 结束 python 进程别 `taskkill /IM python.exe` (会连本地预览服务器一起杀), 按 PID 结束
+- (v29.2) OCR 分章后**一定要查没答案页的卷**: `probe_ans3.py` 整页 OCR 最后 12 页找答案信号, `sheet.py <pdf> <from> <to> <out.jpg>` 出缩略联系表人工确认, 范围写进 `fix_ans3.py` 再重跑 `extract_keys.py`
+- (v29.2) 答案页第一页 (Booklet A 选择题表) 常被标成题目页: agent 报 "images are pages 2-3 only" 就往前找一页
+- (v29.2) 横扫的答案页 (南华科学 2024 / SCGS 科学 2023) 要转正, 两份方向不同, 转完看一眼
+- (v29.2) 老格式题数: 2023/2024 英文 Booklet A 28 题, 2026 数学 18 题; 华文 Q26-29 完成对话选项到 5-8, 不算选择题
+- (v29.2) extract_keys 对没答案页的卷也会记 done, 补标签前先从 keys.json 删掉那条

@@ -3,7 +3,27 @@
  "slug": "henrypark",
  "year": 2026,
  "school": "Henry Park",
- "mcq": {},
- "confidence": "low",
- "notes": "图中没有选择题键: ans1/ans2 只有 PAPER 2 Q1-Q15 解答, 无 Paper 1 Booklet A 表格; mcq 留空"
+ "mcqMax": 18,
+ "mcq": {
+  "1": 4,
+  "2": 3,
+  "3": 4,
+  "4": 3,
+  "5": 2,
+  "6": 3,
+  "7": 4,
+  "8": 3,
+  "9": 4,
+  "10": 4,
+  "11": 2,
+  "12": 3,
+  "13": 2,
+  "14": 3,
+  "15": 2,
+  "16": 1,
+  "17": 1,
+  "18": 3
+ },
+ "confidence": "high",
+ "notes": "主控自转录: ans1 页眉 2026 HENRY PARK MATHEMATICS, Booklet A Q1-18"
 }
