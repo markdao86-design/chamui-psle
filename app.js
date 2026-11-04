@@ -8537,6 +8537,7 @@ function _buildPaperBankInnerHtml(forPage) {
           </a>`).join('')}
       </div>
     </div>`).join('');
+  const papersHtml = window._papersListHtml ? window._papersListHtml(_paperBankSubj) : '';
   return `
     <div class="kt-inner pb-inner">
       <div class="kt-header">
@@ -8547,6 +8548,7 @@ function _buildPaperBankInnerHtml(forPage) {
         ${forPage ? '' : '<button class="vocab-modal-close" onclick="closePaperBank()">×</button>'}
       </div>
       <div class="pb-tabs">${tabs}</div>
+      ${papersHtml}
       ${sectionsHtml}
       <div class="pb-tip">💡 ⭐ 标记的源完全免费 + 直达对应学科 P6 专区 · 点开新窗口跳转</div>
     </div>`;
@@ -13624,7 +13626,7 @@ const WB_TYPE = {
   editing: ['英语', 'Editing 改错', 'eng', 'editing'], cloze: ['英语', 'Comprehension Cloze 完形', 'eng', 'cloze'], sst: ['英语', 'Synthesis 句型转换', 'eng', 'synthesis'], grammar: ['英语', 'Grammar MCQ 语法', 'eng', 'gram_mcq'],
   vocab: ['英语', 'Vocabulary 词汇', 'eng', 'vocab_mcq'], listen: ['英语', 'Listening 听力', 'eng', 'listening'], comp_oe: ['英语', 'Comprehension OE 阅读问答', 'eng', 'comp_oe'],
   scimcq: ['科学', 'Science MCQ 选择题', 'sci', 'mcq'], scilab: ['科学', 'Science 实验题', 'sci', 'oe_exp'], sci_oe: ['科学', 'Science OE 开放题', 'sci', 'oe_explain'], sciclassify: ['科学', 'Science 分类', 'sci', 'oe_compare'],
-  graded_eng_cw: ['英语', '判分 · 英语作文', 'eng', 'compo'], graded_eng_sw: ['英语', '判分 · 情境写作', 'eng', 'sw'], graded_eng_comp: ['英语', '判分 · 阅读问答', 'eng', 'comp_oe'], graded_cn_compo: ['华文', '判分 · 华文作文', 'cn', 'compo'], graded_sci_oe: ['科学', '判分 · 科学开放题', 'sci', 'oe_explain'],
+  paper_mcq: ['英语', '名校卷 选择题', 'eng', 'gram_mcq'], graded_eng_cw: ['英语', '判分 · 英语作文', 'eng', 'compo'], graded_eng_sw: ['英语', '判分 · 情境写作', 'eng', 'sw'], graded_eng_comp: ['英语', '判分 · 阅读问答', 'eng', 'comp_oe'], graded_cn_compo: ['华文', '判分 · 华文作文', 'cn', 'compo'], graded_sci_oe: ['科学', '判分 · 科学开放题', 'sci', 'oe_explain'],
   math: ['数学', '数学', 'math', 'careless'], unit: ['数学', '数学 单位换算', 'math', 'careless'], chinese: ['华文', '华文', 'cn', 'reading'], chinese_oe: ['华文', '华文 阅读问答', 'cn', 'reading'],
 };
 function _wbSubjectOf(it) {
@@ -13790,6 +13792,10 @@ function _renderTechSummary(el, tb) {
 
 // ============= v27.0: 📷 判分页 (拍照 → Claude 按 PSLE 标准批改 → 失分项 / 讲解 / 范文 → 可入错题本 / PDF) =============
 let _gdTask = 'eng_cw', _gdImages = [], _gdBusy = false, _gdResult = null, _gdView = 'new';   // view: new | result | history
+let _gdPreset = null;   // v28.0: 从名校卷进来: { task, extra, refImages[], paperId, label }
+function openGradingPreset(ps) { _gdPreset = ps || null; if (ps && ps.task) _gdTask = ps.task; _gdImages = []; _gdResult = null; _gdView = 'new'; gotoPage('grading'); }
+function _gdClearPreset() { _gdPreset = null; renderGradingPage(); }
+window.openGradingPreset = openGradingPreset; window._gdClearPreset = _gdClearPreset;
 function _gdSetTask(k) { _gdTask = k; renderGradingPage(); }
 function _gdSetView(v) { _gdView = v; renderGradingPage(); }
 window._gdSetTask = _gdSetTask; window._gdSetView = _gdSetView;
@@ -13828,8 +13834,14 @@ async function _gdRun() {
   _gdBusy = true; _gdResult = null; renderGradingPage();
   const t0 = Date.now();
   try {
-    const r = await window.callClaudeGrader({ apiKey: key, model: window.getGradingModel(), taskKey: _gdTask, images: _gdImages, extra });
-    r.task = _gdTask; r.secs = Math.round((Date.now() - t0) / 1000); r.extra = extra; r.nImg = _gdImages.length;
+    let refImages = [];
+    if (_gdPreset && (_gdPreset.refImages || []).length) {
+      for (const u of _gdPreset.refImages.slice(0, 4)) {
+        try { const b = await (await fetch(u)).blob(); const du = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); }); refImages.push({ media_type: 'image/jpeg', data: String(du).split(',')[1] }); } catch (e) { console.warn('ref image fail', u, e); }
+      }
+    }
+    const r = await window.callClaudeGrader({ apiKey: key, model: window.getGradingModel(), taskKey: _gdTask, images: _gdImages, extra, refImages });
+    r.task = _gdTask; r.secs = Math.round((Date.now() - t0) / 1000); r.extra = extra; r.nImg = _gdImages.length; if (_gdPreset) { r.paperId = _gdPreset.paperId; r.paperLabel = _gdPreset.label; r.nRef = refImages.length; }
     _gdResult = window.addGradeRecord(state, r); saveState(state);
     _gdView = 'result';
     if (window.addStudySeconds) window.addStudySeconds(state, 60);
@@ -13930,7 +13942,8 @@ function renderGradingPage() {
       <div class="gd-imgs">${_gdImages.map((im, i) => `<div class="gd-img"><img src="${im.preview}" alt=""><button class="gd-img-x" onclick="_gdRemove(${i})">✕</button></div>`).join('')}
         ${_gdImages.length < 6 ? `<label class="gd-add"><input type="file" accept="image/*" capture="environment" multiple style="display:none" onchange="_gdPick(this)"><span>📷</span><span>拍照 / 选图</span></label>` : ''}</div>
       <div class="lbl" style="margin-top:12px">3. 补充 (选填): 题目原文 / 每题分值 / 老师要求</div>
-      <textarea id="gdExtra" class="ui-textarea" style="width:100%;min-height:64px" placeholder="例: 题目 An Unforgettable Day, 三张图是 ... / 科学 35b 2 分, 36c 2 分">${escapeHtml((_gdResult && _gdResult.extra) || '')}</textarea>
+      ${_gdPreset ? `<div class="gd-preset"><div><b>🏫 ${escapeHtml(_gdPreset.label || '')}</b><div class="ui-row-sub">已自动附上这份卷的官方答案页 ${(_gdPreset.refImages || []).length} 张, 判分会严格按它对。</div></div><button class="ui-btn2" onclick="_gdClearPreset()">取消</button></div>${(_gdPreset.refImages || []).length ? `<div class="gd-imgs">${_gdPreset.refImages.slice(0, 4).map(u => `<div class="gd-img gd-ref"><img src="${u}" alt=""><span class="gd-ref-tag">官方答案</span></div>`).join('')}</div>` : ''}` : ''}
+      <textarea id="gdExtra" class="ui-textarea" style="width:100%;min-height:64px" placeholder="例: 题目 An Unforgettable Day, 三张图是 ... / 科学 35b 2 分, 36c 2 分">${escapeHtml((_gdPreset && _gdPreset.extra) || (_gdResult && _gdResult.extra) || '')}</textarea>
       <div class="ui-row" style="border:none;padding:12px 0 4px"><div class="ui-row-main"><div class="ui-row-sub">${_gdBusy ? '⏳ 正在判分, 作文一般 1-2 分钟, 别关页面…' : `用 ${escapeHtml((window.GRADING_MODELS.find(m => m.id === model) || {}).label || model)}`}</div></div><div class="ui-row-act"><button class="ui-cta auto" ${_gdBusy || !_gdImages.length ? 'disabled' : ''} onclick="_gdRun()">${_gdBusy ? '判分中…' : '开始判分 →'}</button></div></div>
       ${settings}
       <details class="ui-more"><summary>评分标准从哪来</summary><div class="ui-more-body" style="font-size:13px;line-height:1.7">
@@ -13942,3 +13955,154 @@ function renderGradingPage() {
     </div>`;
 }
 window.renderGradingPage = renderGradingPage;
+
+// ============= v28.0: 🏫 名校真题 2025 Prelim · 页内做卷 (PDF 页内打开 + 选择题填答自动判 + 问答题拍照判分) =============
+const PAPER_SUBJ_LABEL = { eng: '英文', math: '数学', sci: '科学', cn: '华文' };
+const PAPER_SUBJ_OF_BANK = { english: 'eng', maths: 'math', math: 'math', science: 'sci', chinese: 'cn' };
+let _prCur = null, _prPick = {}, _prSubmitted = false, _prPage = null;
+function _paperRuns() { if (!state.paperRuns) state.paperRuns = {}; return state.paperRuns; }
+// 题库页顶部: 该科 10 校一览 (已下载, 点开页内做)
+function _papersListHtml(subjBankKey) {
+  const s = PAPER_SUBJ_OF_BANK[subjBankKey]; const list = (window.PAPERS_2025 || []).filter(p => p.subj === s);
+  if (!list.length) return '';
+  const runs = _paperRuns();
+  const rows = list.map(p => {
+    const r = runs[p.id]; const mcq = p.mcq || {};
+    const sub = [`${p.pages} 页 · ${p.mb} MB`, mcq.ok ? `选择题 ${mcq.max} 题可页内判` : (mcq.max ? `选择题答案键缺 ${(mcq.missing || []).length} 题` : '选择题键待补'), r ? `上次 ${r.score}/${r.max} (${r.date})` : ''].filter(Boolean).join(' · ');
+    return `<div class="ui-row clickable" onclick="openPaperRunner('${p.id}')"><div class="ui-row-ico">🏫</div><div class="ui-row-main"><div class="ui-row-title">${escapeHtml(p.school)} 2025 Prelim</div><div class="ui-row-sub">${sub}</div></div><div class="ui-row-act">${r ? `<span class="ui-num" style="font-size:20px;color:${r.score / r.max >= 0.9 ? '#16A34A' : '#DC2626'}">${r.score}/${r.max}</span>` : '<button class="ui-cta auto">做卷 →</button>'}</div></div>`;
+  }).join('');
+  return `<div class="card" style="margin-bottom:12px"><div class="ui-head"><div class="ui-page-title">🏫 名校真题 2025 Prelim · ${PAPER_SUBJ_LABEL[s]}</div><div class="ui-head-r"><span class="ui-num">${list.length}</span><span class="ui-num-label">所学校 · 页内做</span></div></div><div class="ui-hint"><span class="ui-hint-ico">📝</span><span>点一所学校: 卷子直接在页面里打开。<b>选择题</b>在右边点答案, 交卷自动判; <b>问答题</b>写在纸上, 拍照用判分页批 (会自动带上这所学校的官方答案页)。</span></div>${rows}</div>`;
+}
+window._papersListHtml = _papersListHtml;
+function openPaperRunner(id) {
+  const p = (window.PAPERS_2025 || []).find(x => x.id === id); if (!p) { showToast('没有这份卷', 'warn'); return; }
+  _prCur = p; _prSubmitted = false; _prPage = null;
+  const r = _paperRuns()[id]; _prPick = r && r.picks ? Object.assign({}, r.picks) : {};
+  if (r) _prSubmitted = true;
+  _renderPaperRunner();
+}
+window.openPaperRunner = openPaperRunner;
+function closePaperRunner() { const m = document.getElementById('paperRunnerModal'); if (m) m.classList.remove('show'); _prCur = null; _prPending = null; if (typeof renderPaperBankPage === 'function') renderPaperBankPage(); }
+window.closePaperRunner = closePaperRunner;
+// ---- pdf.js 页内阅读器 (自托管 vendor/pdf.min.mjs, 按页画 canvas, 支持 range 请求不用整本下完) ----
+let _pdfjs = null, _prDoc = null, _prDocUrl = '', _prZoom = 1, _prRendering = false, _prPending = null;
+async function _prLib() {
+  if (_pdfjs) return _pdfjs;
+  const lib = await import('./vendor/pdf.min.mjs');
+  lib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.mjs';
+  _pdfjs = lib; return lib;
+}
+async function _prOpenDoc(url) {
+  if (_prDoc && _prDocUrl === url) return _prDoc;
+  const lib = await _prLib();
+  const task = lib.getDocument({ url, rangeChunkSize: 262144, disableAutoFetch: true });
+  _prDoc = await task.promise; _prDocUrl = url; return _prDoc;
+}
+async function _prRender(page) {
+  const host = document.getElementById('prCanvasHost'); const cv = document.getElementById('prCanvas'); const st = document.getElementById('prPdfStatus');
+  if (!host || !cv || !_prCur) return;
+  if (_prRendering) { _prPending = page; return; }
+  _prRendering = true;
+  try {
+    if (st) st.textContent = '加载中…';
+    const doc = await _prOpenDoc(_prCur.url);
+    page = Math.max(1, Math.min(doc.numPages, page || 1)); _prPage = page;
+    const pg = await doc.getPage(page);
+    const vp0 = pg.getViewport({ scale: 1 }); const w = host.clientWidth - 8; const scale = (w / vp0.width) * _prZoom; const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const vp = pg.getViewport({ scale });
+    cv.width = Math.floor(vp.width * dpr); cv.height = Math.floor(vp.height * dpr); cv.style.width = Math.floor(vp.width) + 'px'; cv.style.height = Math.floor(vp.height) + 'px';
+    const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    await pg.render({ canvasContext: ctx, viewport: vp }).promise;
+    if (st) st.textContent = `第 ${page} / ${doc.numPages} 页`;
+    const pi = document.getElementById('prPageInput'); if (pi) pi.value = page;
+    document.querySelectorAll('.pr-sec').forEach(b => { const s = (_prCur.sections || []).find(x => x.from === +b.dataset.p); b.classList.toggle('on', !!s && page >= s.from && page <= s.to); });
+    host.scrollTop = 0;
+  } catch (e) { if (st) st.textContent = '卷子加载失败: ' + (e && e.message || e) + ' (用下面链接直接打开)'; console.warn(e); }
+  _prRendering = false;
+  if (_prPending != null) { const n = _prPending; _prPending = null; _prRender(n); }
+}
+function _prGo(page) { _prRender(page); }
+function _prStep(d) { _prRender((_prPage || 1) + d); }
+function _prZoomSet(z) { _prZoom = z; _prRender(_prPage || 1); }
+window._prGo = _prGo; window._prStep = _prStep; window._prZoomSet = _prZoomSet;
+function _prPickAns(q, a) { if (_prSubmitted) return; _prPick[q] = a; _renderPaperRunner(false); }
+window._prPickAns = _prPickAns;
+// 英文 Booklet A 题号 → 模块 (记正确率用)
+function _prModuleOf(p, q) {
+  if (p.subj === 'eng') return q <= 10 ? 'grammar' : q <= 20 ? 'vocab' : 'visualtext';
+  if (p.subj === 'sci') return 'sci:mcq';
+  return null;
+}
+function _prSubmit() {
+  const p = _prCur; if (!p || _prSubmitted) return;
+  const key = p.mcq.key || {}; const qs = Object.keys(key).map(Number).sort((a, b) => a - b);
+  const unanswered = qs.filter(q => !_prPick[q]);
+  if (unanswered.length && !confirm(`还有 ${unanswered.length} 题没选 (${unanswered.slice(0, 8).join(', ')}${unanswered.length > 8 ? '…' : ''}), 空着算错, 交卷?`)) return;
+  let ok = 0; const wrong = []; const byMod = {};
+  qs.forEach(q => {
+    const right = _prPick[q] === key[q]; if (right) ok++; else wrong.push(q);
+    const m = _prModuleOf(p, q); if (m) { byMod[m] = byMod[m] || { ok: 0, n: 0 }; byMod[m].n++; if (right) byMod[m].ok++; }
+    if (!right && window.addToErrorBank) window.addToErrorBank(state, { gameKey: 'paper_mcq', type: 'paper', subj: PAPER_SUBJ_LABEL[p.subj], topic: `${p.school} 2025 Prelim 选择题`, q: `${p.school} 2025 ${PAPER_SUBJ_LABEL[p.subj]} Q${q} (卷子第 ${_prPageOfQ(p, q)} 页)`, correctAns: `正确选项 (${key[q]})${_prPick[q] ? ' · 你选 (' + _prPick[q] + ')' : ' · 没选'}`, explain: `翻到卷子答案页 (第 ${(p.ans.pages || [])[0] || '?'} 页) 对照`, paperId: p.id, qno: q });
+  });
+  Object.keys(byMod).forEach(m => { if (window.recordEngModule) window.recordEngModule(state, m, byMod[m].ok, byMod[m].n, 'paper'); });
+  _paperRuns()[p.id] = { score: ok, max: qs.length, wrong, picks: Object.assign({}, _prPick), date: new Date().toISOString().slice(0, 10) };
+  state.totalPoints = (state.totalPoints || 0) + Math.round(ok / 2);
+  if (window.addStudySeconds) window.addStudySeconds(state, 60 * 5);
+  saveState(state); _prSubmitted = true; _renderPaperRunner();
+  if (ok === qs.length) { showToast('🎉 全对!', 'happy'); } else showToast(`交卷: ${ok}/${qs.length}, 错 ${wrong.length} 题已进错题本`, 'success');
+}
+window._prSubmit = _prSubmit;
+function _prRedo() { if (!_prCur) return; if (!confirm('清掉这次的作答重做?')) return; delete _paperRuns()[_prCur.id]; saveState(state); _prPick = {}; _prSubmitted = false; _renderPaperRunner(); }
+window._prRedo = _prRedo;
+function _prPageOfQ(p, q) {
+  // 估算题号所在页: 英文 Booklet A 按区段, 其他取选择题区起始页
+  const sec = (k) => (p.sections || []).find(s => s.k === k);
+  if (p.subj === 'eng') { const s = sec('bktA'); return s ? s.from : '?'; }
+  const s = (p.sections || [])[0]; return s ? s.from : '?';
+}
+// 问答题 → 判分页 (预设任务 + 自动带官方答案页)
+function _prGrade() {
+  const p = _prCur; if (!p || !p.oeTask) { showToast('这科问答题不走判分页', 'warn'); return; }
+  const oeSec = (p.sections || []).find(s => ['bktB', 'compoe', 'oe', 'compo'].indexOf(s.k) >= 0);
+  const extra = `${p.school} 2025 P6 ${PAPER_SUBJ_LABEL[p.subj]} Prelim${oeSec ? ' · ' + oeSec.label + ' (卷子第 ' + oeSec.from + '-' + oeSec.to + ' 页)' : ''}。附图里的官方答案页是这份卷的学校参考答案, 请严格按它判, 分值以卷面为准。`;
+  closePaperRunner();
+  if (window.openGradingPreset) window.openGradingPreset({ task: p.oeTask, extra, refImages: p.ans.imgs || [], paperId: p.id, label: `${p.school} 2025 ${PAPER_SUBJ_LABEL[p.subj]} 问答题` });
+}
+window._prGrade = _prGrade;
+function _renderPaperRunner(resetFrame) {
+  const p = _prCur; if (!p) return;
+  let m = document.getElementById('paperRunnerModal');
+  if (!m) { m = document.createElement('div'); m.id = 'paperRunnerModal'; m.className = 'mb-result-modal'; document.body.appendChild(m); }
+  const key = p.mcq.key || {}; const qs = Object.keys(key).map(Number).sort((a, b) => a - b);
+  const r = _paperRuns()[p.id];
+  const secBtns = (p.sections || []).map(s => `<button class="pr-sec ${_prPage === s.from ? 'on' : ''}" data-p="${s.from}" onclick="_prGo(${s.from})">${escapeHtml(s.label)}<span class="pr-sec-p">p${s.from}${s.to > s.from ? '-' + s.to : ''}</span></button>`).join('');
+  const firstPage = _prPage || ((p.sections || [])[0] || {}).from || 1;
+  const grid = qs.length ? qs.map(q => {
+    const pick = _prPick[q]; const right = key[q];
+    const opts = [1, 2, 3, 4].map(a => { let cls = 'pr-opt'; if (pick === a) cls += ' on'; if (_prSubmitted) { if (a === right) cls += ' right'; else if (pick === a) cls += ' wrong'; } return `<button class="${cls}" onclick="_prPickAns(${q},${a})">${a}</button>`; }).join('');
+    return `<div class="pr-q ${_prSubmitted ? (pick === right ? 'ok' : 'bad') : ''}"><span class="pr-qn">${q}</span>${opts}</div>`;
+  }).join('') : `<div class="ui-hint">这份卷的选择题答案键还没识别出来 (${p.mcq.max ? '缺 ' + (p.mcq.missing || []).length + ' 题' : '没有答案页'}), 先在纸上做, 翻答案页对。</div>`;
+  const answered = qs.filter(q => _prPick[q]).length;
+  const oeBtn = p.oeTask ? `<button class="ui-cta auto" onclick="_prGrade()">📷 问答题拍照判分 →</button>` : '';
+  const scoreHtml = _prSubmitted && r ? `<div class="pr-score"><span class="ui-num" style="color:${r.score / r.max >= 0.9 ? '#16A34A' : '#DC2626'}">${r.score}/${r.max}</span><span class="ui-num-label">选择题 · ${Math.round(r.score / r.max * 100)}%${r.wrong.length ? ' · 错 ' + r.wrong.join(', ') : ' · 全对'}</span></div>` : '';
+  m.innerHTML = `<div class="pr-wrap">
+    <div class="pr-head"><div><div class="ui-page-title">🏫 ${escapeHtml(p.school)} · 2025 P6 ${PAPER_SUBJ_LABEL[p.subj]} Prelim</div><div class="ui-row-sub">${p.pages} 页 · 翻页用下面的章节按钮或 PDF 自带滚动 · <a href="${p.url}" target="_blank" rel="noopener" style="color:#1E40AF">新窗口打开 / 打印 ↗</a></div></div><button class="ui-btn2" onclick="closePaperRunner()" style="min-width:44px">✕</button></div>
+    <div class="pr-secs">${secBtns}</div>
+    <div class="pr-body">
+      <div class="pr-pdf">
+        <div class="pr-pdf-bar"><button class="ui-btn2" onclick="_prStep(-1)">‹ 上一页</button><span class="pr-pdf-pg">第 <input id="prPageInput" type="number" min="1" max="${p.pages}" value="${firstPage}" onchange="_prGo(+this.value)"> / ${p.pages} 页</span><button class="ui-btn2" onclick="_prStep(1)">下一页 ›</button><span class="pr-zoom"><button class="ui-btn2 ${_prZoom === 1 ? 'on' : ''}" onclick="_prZoomSet(1)">适宽</button><button class="ui-btn2 ${_prZoom === 1.5 ? 'on' : ''}" onclick="_prZoomSet(1.5)">1.5×</button><button class="ui-btn2 ${_prZoom === 2 ? 'on' : ''}" onclick="_prZoomSet(2)">2×</button></span><span id="prPdfStatus" class="pr-pdf-status"></span></div>
+        <div id="prCanvasHost" class="pr-canvas-host"><canvas id="prCanvas"></canvas></div>
+        <div class="pr-pdf-fallback">想打印或整本翻: <a href="${p.url}" target="_blank" rel="noopener">新窗口打开 PDF ↗</a></div>
+      </div>
+      <div class="pr-side">
+        <div class="pr-side-title">选择题答题卡 ${qs.length ? `<span class="muted">${answered}/${qs.length}</span>` : ''}</div>
+        ${scoreHtml}
+        <div class="pr-grid">${grid}</div>
+        <div class="pr-actions">${qs.length ? (_prSubmitted ? `<button class="ui-btn2" onclick="_prRedo()">重做</button><button class="ui-btn2" onclick="_prGo(${(p.ans.pages || [])[0] || 1})">看答案页 ›</button>` : `<button class="ui-cta auto" ${answered ? '' : 'disabled'} onclick="_prSubmit()">交卷 (${answered}/${qs.length}) →</button>`) : ''}${oeBtn}</div>
+        ${p.subj === 'eng' ? '<div class="ui-row-sub" style="margin-top:8px">Booklet B (26-75) 写在纸上或作答簿, 做完翻答案页自己对; 阅读问答 66-75 可拍照判分。</div>' : ''}
+      </div>
+    </div></div>`;
+  m.classList.add('show');
+  if (_prPage == null) _prPage = firstPage;
+  if (resetFrame !== false) _prRender(_prPage);
+}
