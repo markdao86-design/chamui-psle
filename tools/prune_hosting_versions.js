@@ -1,11 +1,11 @@
 // 清理 Firebase Hosting 旧版本 (Spark 计划 10GB 存储配额, 每次部署都存一版; 超了就 429 不能部署)
-// 用法: node tools/prune_hosting_versions.js [keep=5]   —— 保留最近 keep 个 FINALIZED 版本, 其余删除 (当前 live 版本永远不删)
+// 用法: node tools/prune_hosting_versions.js [keep=5] [site=chamui-psle]   —— 保留最近 keep 个 FINALIZED 版本, 其余删除 (当前 live 版本永远不删); 卷子站: node tools/prune_hosting_versions.js 1 chamui-papers
 const path = require('path');
 const ft = path.join(__dirname, '..', 'node_modules', 'firebase-tools');
 const auth = require(ft + '/lib/auth');
 const { setRefreshToken } = auth;
 const { Client } = require(ft + '/lib/apiv2');
-const SITE = 'chamui-psle', KEEP = Number(process.argv[2] || 5);
+const SITE = process.argv[3] || 'chamui-psle', KEEP = Number(process.argv[2] || 5);   // v29.0: 第 3 个参数 = 站点 (chamui-papers 卷子站)
 (async () => {
   const acct = auth.getGlobalDefaultAccount(); if (!acct) throw new Error('no account');
   setRefreshToken(acct.tokens.refresh_token);
