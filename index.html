@@ -5498,6 +5498,13 @@ details.card.ui-more[open] > summary { margin-bottom:var(--sp-1); }
   table.ui-table { font-size:12px; }
   .ui-row.now { padding-left:10px; }
 }
+
+/* v28.5 (用户: "按钮间距做宽一点, 做成一个一个明显的按钮, 现在挤成一行文字了"): 导航每项 = 独立胶囊 (浅底 + 边框 + 间距), 当前页深蓝 */
+nav.tabs { gap:10px !important; padding:10px 14px !important; flex-wrap:wrap; row-gap:8px !important; }
+nav.tabs .tab-btn { background:#F1F5F9 !important; border:1px solid #CBD5E1 !important; border-radius:12px !important; padding:9px 16px !important; min-height:44px; color:#1E293B !important; font-weight:700 !important; box-shadow:0 1px 2px rgba(15,23,42,0.06) !important; }
+nav.tabs .tab-btn:hover { background:#E2E8F0 !important; border-color:#94A3B8 !important; }
+nav.tabs .tab-btn.active { background:#1E40AF !important; border-color:#1E40AF !important; color:#FFFFFF !important; box-shadow:0 2px 6px rgba(30,64,175,0.30) !important; }
+@media (max-width:767px) { nav.tabs { gap:6px !important; padding:8px 10px !important; row-gap:6px !important; } nav.tabs .tab-btn { padding:7px 11px !important; min-height:40px; border-radius:10px !important; } }
 </style>
 </head>
 <body>
@@ -6369,9 +6376,9 @@ details.card.ui-more[open] > summary { margin-bottom:var(--sp-1); }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=28.4"></script>
-<script src="data.js?v=28.4"></script>
-<script src="app.js?v=28.4"></script>
+<script src="character.js?v=28.5"></script>
+<script src="data.js?v=28.5"></script>
+<script src="app.js?v=28.5"></script>
 
 </body>
 </html>

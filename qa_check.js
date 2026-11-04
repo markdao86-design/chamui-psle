@@ -2401,6 +2401,7 @@ assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾
   assert(/function _psleImportHtml\(s\)/.test(appSrc) && /indexedDB\.open\('psle_local_papers'/.test(appSrc) && /async function openLocalPaper\(id\)/.test(appSrc) && /URL\.createObjectURL\(x\.blob\)/.test(appSrc), 'v28.3: PSLE 真题本机导入 (IndexedDB) + 页内做');
   { const ps = W.PAPERS_2025.filter(p => p.kind === 'psle'); assert(ps.length === 4 && ps.every(p => p.subj === 'math' && p.mcq.ok && Object.keys(p.mcq.key).length === 15 && p.sections.length === 4 && /chamui-papers\.web\.app\/psle\/math\//.test(p.url)), 'v28.3: PSLE 数学 2022-2025 四份真题, 15 题答案键齐, 4 个章节'); }
   assert(/p\.subj === s && p\.kind !== 'psle'/.test(appSrc) && /p\.kind === 'psle'\)\.sort/.test(appSrc), 'v28.3: 真题区列 PSLE 卷, 名校区不混入');
+  assert(/nav\.tabs \{ gap:10px !important/.test(idxSrc) && /nav\.tabs \.tab-btn \{ background:#F1F5F9 !important; border:1px solid #CBD5E1/.test(idxSrc), 'v28.5: 导航胶囊按钮 (间距 10px / 浅底 + 边框)');
   // v28.0: 名校真题页内做卷
   assert(Array.isArray(W.PAPERS_2025) && W.PAPERS_2025.length >= 36 && W.PAPERS_2025.every(p => /^https:\/\/chamui-papers\.web\.app\/(2025|psle)\//.test(p.url) && p.sections), 'v28.0/v28.3: PAPERS_2025 ≥36 份 (名校 + PSLE), 都在 chamui-papers 站, 都有章节页码');
   { const okKeys = W.PAPERS_2025.filter(p => p.mcq && p.mcq.ok).length; assert(okKeys >= 44, 'v28.4: 44 份卷 (名校 40 + PSLE 数学 4) 选择题答案键全部完整 (实际 ' + okKeys + ')'); W.PAPERS_2025.forEach(p => { Object.values(p.mcq.key || {}).forEach(v => assert(v >= 1 && v <= 4, 'v28.0: 答案键只有 1-4 ' + p.id)); }); }
