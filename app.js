@@ -8539,6 +8539,7 @@ function _buildPaperBankInnerHtml(forPage) {
     </div>`).join('');
   const papersHtml = window._papersListHtml ? window._papersListHtml(_paperBankSubj) : '';
   const psleHtml = window._psleImportHtml ? window._psleImportHtml(PAPER_SUBJ_OF_BANK[_paperBankSubj]) : '';
+  const weakHtml = window._weakBookHtml ? window._weakBookHtml(PAPER_SUBJ_OF_BANK[_paperBankSubj]) : '';
   // v28.3 (用户: "整体改一下, 点进去直接做题, 但链接保留, 我想跳转过去自己下载是可以的; 把真题也放进去")
   return `
     <div class="kt-inner pb-inner">
@@ -8550,6 +8551,7 @@ function _buildPaperBankInnerHtml(forPage) {
         ${forPage ? '' : '<button class="vocab-modal-close" onclick="closePaperBank()">×</button>'}
       </div>
       <div class="pb-tabs">${tabs}</div>
+      ${weakHtml}
       ${psleHtml}
       ${papersHtml}
       <div class="pb-ext-title">🔗 外站下载 (新窗口打开, 下载的 PDF 可以在上面「导入」后页内做)</div>
@@ -13977,9 +13979,10 @@ function _papersListHtml(subjBankKey) {
   return `<div class="card" style="margin-bottom:12px"><div class="ui-head"><div class="ui-page-title">🏫 名校真题 2025 Prelim · ${PAPER_SUBJ_LABEL[s]}</div><div class="ui-head-r"><span class="ui-num">${list.length}</span><span class="ui-num-label">所学校 · 页内做</span></div></div><div class="ui-hint"><span class="ui-hint-ico">📝</span><span>点一所学校: 卷子直接在页面里打开。<b>选择题</b>在右边点答案, 交卷自动判; <b>问答题</b>写在纸上, 拍照用判分页批 (会自动带上这所学校的官方答案页)。</span></div>${rows}</div>`;
 }
 window._papersListHtml = _papersListHtml;
-function openPaperRunner(id) {
+function openPaperRunner(id, startPage, weakKey) {
   const p = (window.PAPERS_2025 || []).find(x => x.id === id); if (!p) { showToast('没有这份卷', 'warn'); return; }
-  _prCur = p; _prSubmitted = false; _prPage = null;
+  _prCur = p; _prSubmitted = false; _prPage = startPage || null;
+  if (weakKey) { if (!state.weakDone) state.weakDone = {}; const w = state.weakDone[weakKey] = state.weakDone[weakKey] || {}; w[id] = new Date().toISOString().slice(0, 10); saveState(state); }
   const r = _paperRuns()[id]; _prPick = r && r.picks ? Object.assign({}, r.picks) : {};
   if (r) _prSubmitted = true;
   _renderPaperRunner();
@@ -14183,3 +14186,48 @@ async function openLocalPaper(id) {
   _renderPaperRunner();
 }
 window._psleImportHtml = _psleImportHtml; window._lpImport = _lpImport; window._lpRemove = _lpRemove; window.openLocalPaper = openLocalPaper;
+
+// ============= v28.6: 📌 薄弱模块汇编 (真题库每科最上面; 与桌面「薄弱模块汇编_目录与用法_v1.docx」同一套目录) =============
+// 每个模块 = 一个病根 + 练法 + 10 校里对应的那一节 (sections.k), 点学校 = 打开原卷跳到那一节的第一页; 打开过的记 state.weakDone[模块][卷] 变灰打勾
+const WEAK_BOOK = {
+  eng: [
+    { k: 'eng_bktA', sec: ['bktA'], title: 'Booklet A 选择题 (语法 / 词汇 / 词汇填空 / 看图)', diag: '校考 16/25 (64%), 全卷最弱', how: '每周 2 套, 一套 25 题限时 25 分钟, 右边答题卡交卷自动判; 错题进错题集, 月底看 语法 / 词汇 / 看图 哪类还在错' },
+    { k: 'eng_gcloze', sec: ['gcloze'], title: '语法填空 Grammar Cloze', diag: '时态病根', how: '每天一篇, 做完对答案页, 每个错的动词问一句 "这句讲过去还是现在"' },
+    { k: 'eng_editing', sec: ['editing'], title: '改错 Editing', diag: '时态 are→were 漏改 / 拼写', how: '先判断是拼写还是语法, 看到动词先查时态' },
+    { k: 'eng_compcloze', sec: ['compcloze'], title: '综合填空 Comprehension Cloze', diag: '4 个错里 3 个是时态', how: '先通读全文定时态, 填完逐空回读' },
+    { k: 'eng_synthesis', sec: ['synthesis'], title: '句型转换 Synthesis', diag: '', how: '改写后意思必须和原句一样, 时态跟着原句' },
+    { k: 'eng_compoe', sec: ['compoe'], title: '阅读问答 Comprehension OE', diag: '读题不准 (一个词 / 从第一段)', how: '每周 2 篇, 先圈题目里的 one word / from paragraph X / in your own words 再答; 写完拍照判分' },
+    { k: 'eng_writing', sec: ['writing'], title: '写作题目 (情境写作 + 作文)', diag: '时态 / 中式英语 / 词性 / 硬塞大词', how: '每两周一篇, 写前看「我的常错本」, 写完「动词圈查」, 再拍照判分' },
+  ],
+  sci: [
+    { k: 'sci_bktB', sec: ['bktB'], title: 'Booklet B 开放题', diag: '校考 32/40 丢 8 分, 全科最大缺口', how: '每天 2 题, 答前先写 2-3 个关键词 (关键词库), 因果链写到题目问的结果; 写完拍照判分 (自动带学校答案)' },
+  ],
+  cn: [
+    { k: 'cn_compo', sec: ['compo'], title: '作文题 (命题 / 看图)', diag: '校考 32/40, 四项里相对最弱', how: '每两周一篇, 50 分钟限时, 150 字以上; 写完拍照判分' },
+    { k: 'cn_oe', sec: ['oe'], title: '阅读理解二 (开放题 + 书面互动)', diag: '', how: '每周 1 篇, 按分值写点, 用原文词' },
+  ],
+  math: [],
+};
+function _weakBookHtml(s) {
+  const mods = WEAK_BOOK[s] || [];
+  if (!mods.length) return s === 'math' ? `<div class="card" style="margin-bottom:12px"><div class="ui-page-title">📌 薄弱模块汇编 · 数学</div><div class="ui-row-sub" style="margin-top:4px">数学校考 94/100 已是 AL1, 不进汇编; 下面的真题和名校卷保持手感即可。</div></div>` : '';
+  const papers = (window.PAPERS_2025 || []).filter(p => p.subj === s && p.kind !== 'psle');
+  const done = state.weakDone || {};
+  const blocks = mods.map((m, i) => {
+    const items = [];
+    papers.forEach(p => { const sec = (p.sections || []).find(x => m.sec.indexOf(x.k) >= 0); if (sec) items.push({ p, sec }); });
+    const d = done[m.k] || {}; const nDone = items.filter(x => d[x.p.id]).length;
+    const chips = items.map(({ p, sec }) => { const did = d[p.id]; return `<button class="wk-chip ${did ? 'did' : ''}" onclick="openPaperRunner('${p.id}', ${sec.from}, '${m.k}')">${did ? '✅ ' : ''}${escapeHtml(p.school)}<span class="wk-p">p${sec.from}${sec.to > sec.from ? '-' + sec.to : ''}</span></button>`; }).join('');
+    return `<div class="wk-mod">
+      <div class="wk-head"><div class="wk-title">${i + 1}. ${escapeHtml(m.title)}</div><div class="wk-count ${nDone === items.length && items.length ? 'all' : ''}">${nDone}/${items.length} 校</div></div>
+      ${m.diag ? `<div class="mod-diag">📋 ${escapeHtml(m.diag)}</div>` : ''}
+      <div class="wk-how">练法: ${escapeHtml(m.how)}</div>
+      <div class="wk-chips">${chips || '<span class="ui-row-sub">这一节没有识别到</span>'}</div>
+    </div>`;
+  }).join('');
+  return `<div class="card wk-card" style="margin-bottom:12px">
+    <div class="ui-head"><div class="ui-page-title">📌 薄弱模块汇编 · ${PAPER_SUBJ_LABEL[s]}</div><div class="ui-head-r"><span class="ui-num-label">按 2026-11 校考病根排, 点学校直接跳到那一节做</span></div></div>
+    ${blocks}
+  </div>`;
+}
+window._weakBookHtml = _weakBookHtml; window.WEAK_BOOK = WEAK_BOOK;
