@@ -14224,13 +14224,15 @@ const WEAK_BOOK = {
 function _weakBookHtml(s) {
   const mods = WEAK_BOOK[s] || [];
   if (!mods.length) return s === 'math' ? `<div class="card" style="margin-bottom:12px"><div class="ui-page-title">📌 薄弱模块汇编 · 数学</div><div class="ui-row-sub" style="margin-top:4px">数学校考 94/100 已是 AL1, 不进汇编; 下面的真题和名校卷保持手感即可。</div></div>` : '';
-  const papers = (window.PAPERS_2025 || []).filter(p => p.subj === s && p.kind !== 'psle').sort((a, b) => ((b.top10 ? 1 : 0) - (a.top10 ? 1 : 0)) || (b.year - a.year) || 0);
+  // v28.9 (用户: "Henry Park 和 Henry Park 2026 有什么差别? 应该整体按年份排"): 按年份新→旧, 同年按校名; 每个年份一行, 行首写年份
+  const papers = (window.PAPERS_2025 || []).filter(p => p.subj === s && p.kind !== 'psle').sort((a, b) => (b.year - a.year) || a.school.localeCompare(b.school));
   const done = state.weakDone || {};
   const blocks = mods.map((m, i) => {
     const items = [];
     papers.forEach(p => { const sec = (p.sections || []).find(x => m.sec.indexOf(x.k) >= 0); if (sec) items.push({ p, sec }); });
     const d = done[m.k] || {}; const nDone = items.filter(x => d[x.p.id]).length;
-    const chips = items.map(({ p, sec }) => { const did = d[p.id]; return `<button class="wk-chip ${did ? 'did' : ''}" onclick="openPaperRunner('${p.id}', ${sec.from}, '${m.k}')">${did ? '✅ ' : ''}${escapeHtml(p.school)}${p.year !== 2025 ? ' ' + p.year : ''}<span class="wk-p">p${sec.from}${sec.to > sec.from ? '-' + sec.to : ''}</span></button>`; }).join('');
+    const byYear = {}; items.forEach(x => { (byYear[x.p.year] = byYear[x.p.year] || []).push(x); });
+    const chips = Object.keys(byYear).sort((a, b) => b - a).map(y => `<div class="wk-yrow"><span class="wk-y">${String(y).slice(2)}年</span>${byYear[y].map(({ p, sec }) => { const did = d[p.id]; return `<button class="wk-chip ${did ? 'did' : ''}" onclick="openPaperRunner('${p.id}', ${sec.from}, '${m.k}')">${did ? '✅ ' : ''}${escapeHtml(p.school)}<span class="wk-p">p${sec.from}${sec.to > sec.from ? '-' + sec.to : ''}</span></button>`; }).join('')}</div>`).join('');
     return `<div class="wk-mod">
       <div class="wk-head"><div class="wk-title">${i + 1}. ${escapeHtml(m.title)}</div><div class="wk-count ${nDone === items.length && items.length ? 'all' : ''}">${nDone}/${items.length} 份</div></div>
       ${m.diag ? `<div class="mod-diag">📋 ${escapeHtml(m.diag)}</div>` : ''}

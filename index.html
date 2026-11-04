@@ -299,7 +299,9 @@ body {
 .wk-head { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
 .wk-title { font-size:16px; font-weight:900; color:#1E293B; } .wk-count { font-size:13px; font-weight:800; color:#64748B; white-space:nowrap; } .wk-count.all { color:#16A34A; }
 .wk-how { font-size:13px; color:#475569; margin-top:4px; line-height:1.6; }
-.wk-chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.wk-chips { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+.wk-yrow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.wk-y { flex:0 0 44px; font-size:13px; font-weight:900; color:#64748B; }
 .wk-chip { border:1px solid #BFDBFE; background:#EFF6FF; color:#1E40AF; border-radius:10px; padding:7px 12px; font-size:14px; font-weight:800; cursor:pointer; min-height:40px; display:flex; align-items:center; gap:6px; }
 .wk-chip:hover { background:#DBEAFE; } .wk-chip .wk-p { font-size:11px; font-weight:600; color:#64748B; }
 .wk-chip.did { background:#F1F5F9; border-color:#CBD5E1; color:#94A3B8; }
@@ -6387,9 +6389,9 @@ nav.tabs .tab-btn.active { background:#1E40AF !important; border-color:#1E40AF !
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=28.8"></script>
-<script src="data.js?v=28.8"></script>
-<script src="app.js?v=28.8"></script>
+<script src="character.js?v=28.9"></script>
+<script src="data.js?v=28.9"></script>
+<script src="app.js?v=28.9"></script>
 
 </body>
 </html>
