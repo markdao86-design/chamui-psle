@@ -8538,19 +8538,22 @@ function _buildPaperBankInnerHtml(forPage) {
       </div>
     </div>`).join('');
   const papersHtml = window._papersListHtml ? window._papersListHtml(_paperBankSubj) : '';
+  const psleHtml = window._psleImportHtml ? window._psleImportHtml(PAPER_SUBJ_OF_BANK[_paperBankSubj]) : '';
+  // v28.3 (用户: "整体改一下, 点进去直接做题, 但链接保留, 我想跳转过去自己下载是可以的; 把真题也放进去")
   return `
     <div class="kt-inner pb-inner">
       <div class="kt-header">
         <div>
           <div class="kt-title">🏫 真题库</div>
-          <div class="kt-progress">4 学科 · 所有链接已验证 · 真题 + P5/P6 名校 prelim</div>
+          <div class="kt-progress">点卷子直接在页面里做 · 选择题自动判 · 问答题拍照判分 · 外站链接在最下面, 想自己下载也行</div>
         </div>
         ${forPage ? '' : '<button class="vocab-modal-close" onclick="closePaperBank()">×</button>'}
       </div>
       <div class="pb-tabs">${tabs}</div>
+      ${psleHtml}
       ${papersHtml}
+      <div class="pb-ext-title">🔗 外站下载 (新窗口打开, 下载的 PDF 可以在上面「导入」后页内做)</div>
       ${sectionsHtml}
-      <div class="pb-tip">💡 ⭐ 标记的源完全免费 + 直达对应学科 P6 专区 · 点开新窗口跳转</div>
     </div>`;
 }
 function renderPaperBankPage() {
@@ -13963,7 +13966,7 @@ let _prCur = null, _prPick = {}, _prSubmitted = false, _prPage = null;
 function _paperRuns() { if (!state.paperRuns) state.paperRuns = {}; return state.paperRuns; }
 // 题库页顶部: 该科 10 校一览 (已下载, 点开页内做)
 function _papersListHtml(subjBankKey) {
-  const s = PAPER_SUBJ_OF_BANK[subjBankKey]; const list = (window.PAPERS_2025 || []).filter(p => p.subj === s);
+  const s = PAPER_SUBJ_OF_BANK[subjBankKey]; const list = (window.PAPERS_2025 || []).filter(p => p.subj === s && p.kind !== 'psle');
   if (!list.length) return '';
   const runs = _paperRuns();
   const rows = list.map(p => {
@@ -14073,7 +14076,7 @@ function _prSubmit() {
   qs.forEach(q => {
     const right = _prPick[q] === key[q]; if (right) ok++; else wrong.push(q);
     const m = _prModuleOf(p, q); if (m) { byMod[m] = byMod[m] || { ok: 0, n: 0 }; byMod[m].n++; if (right) byMod[m].ok++; }
-    if (!right && window.addToErrorBank) window.addToErrorBank(state, { gameKey: 'paper_mcq', type: 'paper', subj: PAPER_SUBJ_LABEL[p.subj], topic: `${p.school} 2025 Prelim 选择题`, q: `${p.school} 2025 ${PAPER_SUBJ_LABEL[p.subj]} Q${q} (卷子第 ${_prPageOfQ(p, q)} 页)`, correctAns: `正确选项 (${key[q]})${_prPick[q] ? ' · 你选 (' + _prPick[q] + ')' : ' · 没选'}`, explain: `翻到卷子答案页 (第 ${(p.ans.pages || [])[0] || '?'} 页) 对照`, paperId: p.id, qno: q });
+    if (!right && window.addToErrorBank) window.addToErrorBank(state, { gameKey: 'paper_mcq', type: 'paper', subj: PAPER_SUBJ_LABEL[p.subj], topic: p.kind === 'psle' ? `PSLE ${p.year} 真题 选择题` : `${p.school} 2025 Prelim 选择题`, q: `${p.kind === 'psle' ? 'PSLE ' + p.year : p.school + ' 2025'} ${PAPER_SUBJ_LABEL[p.subj]} Q${q} (卷子第 ${_prPageOfQ(p, q)} 页)`, correctAns: `正确选项 (${key[q]})${_prPick[q] ? ' · 你选 (' + _prPick[q] + ')' : ' · 没选'}`, explain: `翻到卷子答案页 (第 ${(p.ans.pages || [])[0] || '?'} 页) 对照`, paperId: p.id, qno: q });
   });
   Object.keys(byMod).forEach(m => { if (window.recordEngModule) window.recordEngModule(state, m, byMod[m].ok, byMod[m].n, 'paper'); });
   _paperRuns()[p.id] = { score: ok, max: qs.length, wrong, picks: Object.assign({}, _prPick), date: new Date().toISOString().slice(0, 10) };
@@ -14095,7 +14098,7 @@ function _prPageOfQ(p, q) {
 function _prGrade() {
   const p = _prCur; if (!p || !p.oeTask) { showToast('这科问答题不走判分页', 'warn'); return; }
   const oeSec = (p.sections || []).find(s => ['bktB', 'compoe', 'oe', 'compo'].indexOf(s.k) >= 0);
-  const extra = `${p.school} 2025 P6 ${PAPER_SUBJ_LABEL[p.subj]} Prelim${oeSec ? ' · ' + oeSec.label + ' (卷子第 ' + oeSec.from + '-' + oeSec.to + ' 页)' : ''}。附图里的官方答案页是这份卷的学校参考答案, 请严格按它判, 分值以卷面为准。`;
+  const extra = p.local ? `${p.school} (家长导入的 PSLE 卷子)。如果照片里有答案页, 严格按答案页判。` : `${p.school} 2025 P6 ${PAPER_SUBJ_LABEL[p.subj]} Prelim${oeSec ? ' · ' + oeSec.label + ' (卷子第 ' + oeSec.from + '-' + oeSec.to + ' 页)' : ''}。附图里的官方答案页是这份卷的学校参考答案, 请严格按它判, 分值以卷面为准。`;
   closePaperRunner();
   if (window.openGradingPreset) window.openGradingPreset({ task: p.oeTask, extra, refImages: p.ans.imgs || [], paperId: p.id, label: `${p.school} 2025 ${PAPER_SUBJ_LABEL[p.subj]} 问答题` });
 }
@@ -14112,12 +14115,12 @@ function _renderPaperRunner(resetFrame) {
     const pick = _prPick[q]; const right = key[q];
     const opts = [1, 2, 3, 4].map(a => { let cls = 'pr-opt'; if (pick === a) cls += ' on'; if (_prSubmitted) { if (a === right) cls += ' right'; else if (pick === a) cls += ' wrong'; } return `<button class="${cls}" onclick="_prPickAns(${q},${a})">${a}</button>`; }).join('');
     return `<div class="pr-q ${_prSubmitted ? (pick === right ? 'ok' : 'bad') : ''}"><span class="pr-qn">${q}</span>${opts}</div>`;
-  }).join('') : `<div class="ui-hint">这份卷的选择题答案键还没识别出来 (${p.mcq.max ? '缺 ' + (p.mcq.missing || []).length + ' 题' : '没有答案页'}), 先在纸上做, 翻答案页对。</div>`;
+  }).join('') : p.local ? `<div class="ui-hint">自己导入的卷没有选择题答案键: 在纸上做, 滑到卷子后面的答案页对; 问答题可以拍照判分 (把答案页也拍进去会判得更准)。</div>` : `<div class="ui-hint">这份卷的选择题答案键还没识别出来 (${p.mcq.max ? '缺 ' + (p.mcq.missing || []).length + ' 题' : '没有答案页'}), 先在纸上做, 翻答案页对。</div>`;
   const answered = qs.filter(q => _prPick[q]).length;
   const oeBtn = p.oeTask ? `<button class="ui-cta auto" onclick="_prGrade()">📷 问答题拍照判分 →</button>` : '';
   const scoreHtml = _prSubmitted && r ? `<div class="pr-score"><span class="ui-num" style="color:${r.score / r.max >= 0.9 ? '#16A34A' : '#DC2626'}">${r.score}/${r.max}</span><span class="ui-num-label">选择题 · ${Math.round(r.score / r.max * 100)}%${r.wrong.length ? ' · 错 ' + r.wrong.join(', ') : ' · 全对'}</span></div>` : '';
   m.innerHTML = `<div class="pr-wrap">
-    <div class="pr-head"><div><div class="ui-page-title">🏫 ${escapeHtml(p.school)} · 2025 P6 ${PAPER_SUBJ_LABEL[p.subj]} Prelim</div><div class="ui-row-sub">往下滑看完整份卷子, 点章节直接跳到那一节 · <a href="${p.url}" target="_blank" rel="noopener" style="color:#1E40AF">新窗口打开 / 打印 ↗</a></div></div><button class="ui-btn2" onclick="closePaperRunner()" style="min-width:44px">✕</button></div>
+    <div class="pr-head"><div><div class="ui-page-title">${p.local ? '🎯 ' + escapeHtml(p.school) : p.kind === 'psle' ? '🎯 PSLE ' + p.year + ' ' + PAPER_SUBJ_LABEL[p.subj] + ' (Paper 1 + 2)' : '🏫 ' + escapeHtml(p.school) + ' · 2025 P6 ' + PAPER_SUBJ_LABEL[p.subj] + ' Prelim'}</div><div class="ui-row-sub">往下滑看完整份卷子, 点章节直接跳到那一节 · <a href="${p.url}" target="_blank" rel="noopener" style="color:#1E40AF">新窗口打开 / 打印 ↗</a></div></div><button class="ui-btn2" onclick="closePaperRunner()" style="min-width:44px">✕</button></div>
     <div class="pr-secs">${secBtns}</div>
     <div class="pr-body">
       <div class="pr-pdf">
@@ -14137,3 +14140,46 @@ function _renderPaperRunner(resetFrame) {
   if (_prPage == null) _prPage = firstPage;
   if (resetFrame !== false) _prBuildAll(_prPage);
 }
+
+// ============= v28.3: PSLE 真题 · 导入本机 PDF (存这台设备 IndexedDB, 不上传不同步) =============
+// PSLE 历年真题是考评局授权出版社 (Shing Lee / EPH) 正式出售的, 不转放到公开站点; 家长自己下载或买书扫描的 PDF 导入后与名校卷同一个页内阅读器
+let _lpCache = null;
+function _lpDb() { return new Promise((res, rej) => { try { const r = indexedDB.open('psle_local_papers', 1); r.onupgradeneeded = () => r.result.createObjectStore('papers', { keyPath: 'id' }); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }); }
+async function _lpAll() { try { const db = await _lpDb(); return await new Promise(res => { const q = db.transaction('papers').objectStore('papers').getAll(); q.onsuccess = () => res(q.result || []); q.onerror = () => res([]); }); } catch (e) { return []; } }
+async function _lpPut(rec) { const db = await _lpDb(); return new Promise((res, rej) => { const tx = db.transaction('papers', 'readwrite'); tx.objectStore('papers').put(rec); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); }
+async function _lpDelete(id) { try { const db = await _lpDb(); await new Promise(res => { const tx = db.transaction('papers', 'readwrite'); tx.objectStore('papers').delete(id); tx.oncomplete = res; tx.onerror = res; }); } catch (e) {} }
+async function _lpRefresh() { _lpCache = await _lpAll(); if (document.getElementById('paperBankPageContent') && document.getElementById('page-paperbank').classList.contains('active')) renderPaperBankPage(); }
+function _psleImportHtml(s) {
+  if (_lpCache === null) { _lpCache = []; _lpRefresh(); }
+  const mine = _lpCache.filter(x => x.subj === s).sort((a, b) => (b.added || '').localeCompare(a.added || ''));
+  const runs = (state.paperRuns || {});
+  // v28.3 (用户: "真题你直接帮我下载放上去, 跟名校卷一样"): 已放好的 PSLE 真题 (kind: psle) 列在最前
+  const hosted = (window.PAPERS_2025 || []).filter(p => p.subj === s && p.kind === 'psle').sort((x, y) => y.year - x.year);
+  const hostedRows = hosted.map(p => { const r = runs[p.id]; return `<div class="ui-row clickable" onclick="openPaperRunner('${p.id}')"><div class="ui-row-ico">🎯</div><div class="ui-row-main"><div class="ui-row-title">PSLE ${p.year} ${PAPER_SUBJ_LABEL[p.subj]} (Paper 1 + 2)</div><div class="ui-row-sub">${p.pages} 页 · 选择题 ${p.mcq.max} 题可页内判 · 含答案${r ? ' · 上次 ' + r.score + '/' + r.max + ' (' + r.date + ')' : ''}</div></div><div class="ui-row-act">${r ? `<span class="ui-num" style="font-size:20px;color:${r.score / r.max >= 0.9 ? '#16A34A' : '#DC2626'}">${r.score}/${r.max}</span>` : '<button class="ui-cta auto">做卷 →</button>'}</div></div>`; }).join('');
+  const rows = mine.map(x => { const r = runs['local/' + x.id]; return `<div class="ui-row clickable" onclick="openLocalPaper('${x.id}')"><div class="ui-row-ico">🎯</div><div class="ui-row-main"><div class="ui-row-title">${escapeHtml(x.name)}</div><div class="ui-row-sub">${(x.size / 1048576).toFixed(1)} MB · 导入于 ${x.added}${r ? ' · 上次 ' + r.score + '/' + r.max : ''}</div></div><div class="ui-row-act" style="display:flex;gap:6px"><button class="ui-cta auto">做卷 →</button><button class="ui-btn2" onclick="event.stopPropagation();_lpRemove('${x.id}')">🗑</button></div></div>`; }).join('');
+  return `<div class="card" style="margin-bottom:12px">
+    <div class="ui-head"><div class="ui-page-title">🎯 PSLE 真题 · ${PAPER_SUBJ_LABEL[s]}${hosted.length ? ` <span class="muted" style="font-size:14px">${hosted.length} 份</span>` : ''}</div><div class="ui-head-r"><label class="ui-cta auto" style="cursor:pointer">＋ 导入真题 PDF<input type="file" accept="application/pdf,.pdf" multiple style="display:none" onchange="_lpImport(this)"></label></div></div>
+    ${hostedRows}
+    <div class="ui-hint"><span class="ui-hint-ico">📥</span><span>${hosted.length ? `PSLE 数学 ${hosted.map(p => p.year).join(' / ')} 已放好, 点开直接做。` : ''}${s === 'math' ? '' : `${PAPER_SUBJ_LABEL[s]} PSLE 历年真题网上没有免费公开版 (只有授权出版社 Shing Lee / EPH 出售)。`}从最下面的外站链接下载、或买书扫描的 PDF, 点<b>导入</b>也能在页面里做 + 拍照判分 (只存这台设备)。</span></div>
+    ${rows || (hosted.length ? '' : '<div class="ui-row-sub" style="padding:6px 0">还没有导入的真题</div>')}
+  </div>`;
+}
+async function _lpImport(input) {
+  const files = Array.from(input.files || []); const s = PAPER_SUBJ_OF_BANK[_paperBankSubj]; let n = 0;
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i]; if (!/pdf$/i.test(f.type) && !/\.pdf$/i.test(f.name)) { showToast(f.name + ' 不是 PDF', 'warn'); continue; }
+    try { await _lpPut({ id: 'p' + Date.now().toString(36) + i, name: f.name.replace(/\.pdf$/i, ''), subj: s, size: f.size, added: new Date().toISOString().slice(0, 10), blob: f }); n++; }
+    catch (e) { showToast('导入失败 (浏览器存储满了或不允许): ' + (e && e.message || e), 'warn'); }
+  }
+  input.value = ''; if (n) showToast(`✅ 导入 ${n} 份`, 'success'); _lpRefresh();
+}
+async function _lpRemove(id) { if (!confirm('从这台设备删掉这份导入的卷子?')) return; await _lpDelete(id); _lpRefresh(); }
+async function openLocalPaper(id) {
+  if (!_lpCache) _lpCache = await _lpAll();
+  const x = _lpCache.find(r => r.id === id); if (!x) { showToast('找不到这份卷', 'warn'); return; }
+  const url = URL.createObjectURL(x.blob);
+  _prCur = { id: 'local/' + x.id, subj: x.subj, school: x.name, year: '', url, mb: +(x.size / 1048576).toFixed(1), pages: 0, sections: [], ans: { pages: [], imgs: [] }, mcq: { max: 0, key: {}, ok: false, missing: [] }, oeTask: { eng: 'eng_comp', sci: 'sci_oe', cn: 'cn_compo', math: null }[x.subj], local: true };
+  _prSubmitted = false; _prPage = null; _prPick = {};
+  _renderPaperRunner();
+}
+window._psleImportHtml = _psleImportHtml; window._lpImport = _lpImport; window._lpRemove = _lpRemove; window.openLocalPaper = openLocalPaper;

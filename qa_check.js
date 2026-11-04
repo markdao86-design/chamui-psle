@@ -2397,8 +2397,12 @@ assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾
   assert(/data-page="paperbank">🏫 真题库<\/button>/.test(idxSrc) && !/data-page="paperbank" style="display:none"/.test(idxSrc) && !/<div class="nm">题库<\/div>/.test(idxSrc), 'v28.1: 真题库独立导航标签 (不再收在学习中心里)');
   assert(idxSrc.indexOf('data-page="paperbank">') - idxSrc.indexOf('data-page="modules">') < 200, 'v28.1: 真题库紧跟专项练习');
   assert(/async function _prBuildAll\(scrollTo\)/.test(appSrc) && /new IntersectionObserver/.test(appSrc) && /id="prPageTotal"/.test(appSrc) && !/‹ 上一页<\/button>/.test(appSrc) && /\.pr-page \{/.test(idxSrc), 'v28.2: 做卷整卷连续下滑 (懒渲染), 总页数用 PDF 实际页数');
+  assert(/\$\{psleHtml\}\s*\$\{papersHtml\}\s*<div class="pb-ext-title">/.test(appSrc) && /pb-link-card/.test(appSrc), 'v28.3: 真题库顺序 = PSLE 真题导入 → 名校卷 → 外站链接 (链接保留)');
+  assert(/function _psleImportHtml\(s\)/.test(appSrc) && /indexedDB\.open\('psle_local_papers'/.test(appSrc) && /async function openLocalPaper\(id\)/.test(appSrc) && /URL\.createObjectURL\(x\.blob\)/.test(appSrc), 'v28.3: PSLE 真题本机导入 (IndexedDB) + 页内做');
+  { const ps = W.PAPERS_2025.filter(p => p.kind === 'psle'); assert(ps.length === 4 && ps.every(p => p.subj === 'math' && p.mcq.ok && Object.keys(p.mcq.key).length === 15 && p.sections.length === 4 && /chamui-papers\.web\.app\/psle\/math\//.test(p.url)), 'v28.3: PSLE 数学 2022-2025 四份真题, 15 题答案键齐, 4 个章节'); }
+  assert(/p\.subj === s && p\.kind !== 'psle'/.test(appSrc) && /p\.kind === 'psle'\)\.sort/.test(appSrc), 'v28.3: 真题区列 PSLE 卷, 名校区不混入');
   // v28.0: 名校真题页内做卷
-  assert(Array.isArray(W.PAPERS_2025) && W.PAPERS_2025.length >= 36 && W.PAPERS_2025.every(p => /^https:\/\/chamui-papers\.web\.app\/2025\//.test(p.url) && p.sections), 'v28.0: PAPERS_2025 ≥36 份, 都在 chamui-papers 站, 都有章节页码');
+  assert(Array.isArray(W.PAPERS_2025) && W.PAPERS_2025.length >= 36 && W.PAPERS_2025.every(p => /^https:\/\/chamui-papers\.web\.app\/(2025|psle)\//.test(p.url) && p.sections), 'v28.0/v28.3: PAPERS_2025 ≥36 份 (名校 + PSLE), 都在 chamui-papers 站, 都有章节页码');
   { const okKeys = W.PAPERS_2025.filter(p => p.mcq && p.mcq.ok).length; assert(okKeys >= 10, 'v28.0: ≥10 份卷的选择题答案键完整 (本版英文 10 校; 科学/华文/数学转录后收紧) (实际 ' + okKeys + ')'); W.PAPERS_2025.forEach(p => { Object.values(p.mcq.key || {}).forEach(v => assert(v >= 1 && v <= 4, 'v28.0: 答案键只有 1-4 ' + p.id)); }); }
   assert(/function openPaperRunner\(id\)/.test(appSrc) && /function _prSubmit\(\)/.test(appSrc) && /_papersListHtml\(_paperBankSubj\)/.test(appSrc) && /function openGradingPreset\(ps\)/.test(appSrc) && /refImages/.test(appSrc), 'v28.0: 做卷弹层 / 交卷 / 题库页列表 / 判分预设 + 官方答案页');
   assert(/OFFICIAL ANSWER KEY/.test(dataSrc) && /refImages \|\| \[\]/.test(dataSrc), 'v28.0: 判分调用把官方答案页放在孩子作答前');

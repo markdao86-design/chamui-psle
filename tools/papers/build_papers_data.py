@@ -23,6 +23,8 @@ for p in papers:
     out.append({'id': f"{p['subj']}/{p['slug']}", 'subj': p['subj'], 'school': p['school'], 'year': 2025, 'url': p['url'], 'mb': round(p['bytes'] / 1048576, 1), 'pages': info.get('n', 0),
                 'sections': secs, 'ans': {'pages': kr.get('ansPages', []), 'imgs': kr.get('ansImgs', [])},
                 'mcq': {'max': kr.get('mcqMax', 0), 'key': kr.get('mcq', {}), 'ok': bool(kr.get('ok')), 'missing': kr.get('missing', [])}, 'oeTask': OE_TASK[p['subj']]})
+ps = r'C:\claude\chamui-papers\psle_papers.json'
+if os.path.exists(ps): out = json.load(open(ps, encoding='utf-8')) + out   # v28.3 PSLE 真题 (kind: psle) 排在前面
 js = "// PAPERS_2025_BEGIN (由 build_papers_data.py 生成, 别手改)\nconst PAPERS_2025 = " + json.dumps(out, ensure_ascii=False) + ";\nwindow.PAPERS_2025 = PAPERS_2025;\n// PAPERS_2025_END\n"
 d = io.open(r'C:\claude\chamui-psle\data.js', encoding='utf-8').read()
 if '// PAPERS_2025_BEGIN' in d:
