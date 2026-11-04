@@ -2407,6 +2407,9 @@ assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾
   assert(/function _plSetYear\(y\)/.test(appSrc) && /class="ui-seg pl-years"/.test(appSrc) && /String\(yy\)\.slice\(2\)\}年/.test(appSrc) && !/2025 Prelim 选择题/.test(appSrc), 'v28.7: 名校卷按年份切换 (26年/25年/24年…), 年份不再写死');
   assert(/const subjects = \['english', 'science', 'chinese', 'math'\]/.test(appSrc) && /let _paperBankSubj = 'english';/.test(appSrc), 'v28.7: 真题库科目顺序 英语 科学 华文 数学, 默认英语');
   assert(/class="wk-yrow"><span class="wk-y">/.test(appSrc) && /\.wk-yrow \{/.test(idxSrc) && !/p\.year !== 2025 \? ' ' \+ p\.year/.test(appSrc), 'v28.9: 薄弱模块汇编按年份分行 (26年/25年…), 不再只给非 2025 标年份');
+  { let bad = 0; W.PAPERS_2025.forEach(p => { const ss = p.sections; for (let i = 0; i < ss.length; i++) for (let j = i + 1; j < ss.length; j++) if (ss[i].from <= ss[j].to && ss[j].from <= ss[i].to) bad++; }); assert(bad === 0, 'v29.0: 所有卷子章节起止页互不重叠 (实际重叠 ' + bad + ' 对)'); }
+  assert(W.PAPERS_2025.filter(p => p.kind !== 'psle').every(p => typeof p.pl === 'string' && p.pl.length === p.pages), 'v29.0: 每份名校卷有逐页章节标签 pl, 长度 = 页数');
+  assert(/data-k="\$\{s\.k\}"/.test(appSrc) && /const ch = \(_prCur && _prCur\.pl \|\| ''\)\[cur - 1\]/.test(appSrc), 'v29.0: 章节高亮按当前页标签, 一页只亮一节');
   // v28.0: 名校真题页内做卷
   assert(Array.isArray(W.PAPERS_2025) && W.PAPERS_2025.length >= 36 && W.PAPERS_2025.every(p => /^https:\/\/chamui-papers\.web\.app\/(20\d\d|psle)\//.test(p.url) && p.sections), 'v28.0/v28.3: PAPERS_2025 ≥36 份 (名校 + PSLE), 都在 chamui-papers 站, 都有章节页码');
   { const okKeys = W.PAPERS_2025.filter(p => p.mcq && p.mcq.ok).length; assert(okKeys >= 90, 'v28.8: ≥90 份卷选择题答案键完整 (实际 ' + okKeys + ')'); W.PAPERS_2025.forEach(p => { Object.values(p.mcq.key || {}).forEach(v => assert(v >= 1 && v <= 4, 'v28.0: 答案键只有 1-4 ' + p.id)); }); }

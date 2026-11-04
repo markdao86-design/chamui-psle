@@ -14063,12 +14063,16 @@ function _prTrackPage(host) {
   boxes.forEach(b => { if (b.offsetTop <= top) cur = +b.dataset.p; });
   if (cur === _prPage) return; _prPage = cur;
   const pi = document.getElementById('prPageInput'); if (pi && document.activeElement !== pi) pi.value = cur;
-  document.querySelectorAll('.pr-sec').forEach(b => { const s = (_prCur && _prCur.sections || []).find(x => x.from === +b.dataset.p); b.classList.toggle('on', !!s && cur >= s.from && cur <= s.to); });
+  // v29.0 修 (用户: "点 editing 跳到了 comprehension"): 只亮当前页自己所属的那一节 (按 pl 逐页标签), 不再按起止范围判断 (范围会重叠)
+  const PLK = { A: ['bktA', 'mcq'], g: ['gcloze'], e: ['editing'], c: ['compcloze'], s: ['synthesis'], o: ['compoe', 'oe'], w: ['writing', 'compo'], z: ['answers'], B: ['bktB'], k: ['ansbook'], '1': ['p1'], '2': ['p2'] };
+  const ch = (_prCur && _prCur.pl || '')[cur - 1]; const ks = PLK[ch] || [];
+  document.querySelectorAll('.pr-sec').forEach(b => { const s = (_prCur && _prCur.sections || []).find(x => x.k === b.dataset.k); b.classList.toggle('on', ks.length ? ks.indexOf(b.dataset.k) >= 0 : !!s && cur >= s.from && cur <= s.to); });
 }
 function _prScrollTo(n, smooth) {
   const host = document.getElementById('prCanvasHost'); if (!host) return;
   const box = host.querySelector(`.pr-page[data-p="${n}"]`); if (!box) return;
-  host.scrollTo({ top: box.offsetTop - 4, behavior: smooth === false ? 'auto' : 'smooth' });
+  host.scrollTop = box.offsetTop - 4;   // v29.0: 立即跳 (平滑滚动在后台标签 / 部分平板上不执行, 页码和高亮会停在原处)
+  _prPage = null; _prTrackPage(host);
 }
 function _prRender(page) { _prScrollTo(page); }
 function _prGo(page) { _prScrollTo(page); }
@@ -14125,7 +14129,7 @@ function _renderPaperRunner(resetFrame) {
   if (!m) { m = document.createElement('div'); m.id = 'paperRunnerModal'; m.className = 'mb-result-modal'; document.body.appendChild(m); }
   const key = p.mcq.key || {}; const qs = Object.keys(key).map(Number).sort((a, b) => a - b);
   const r = _paperRuns()[p.id];
-  const secBtns = (p.sections || []).map(s => `<button class="pr-sec ${_prPage === s.from ? 'on' : ''}" data-p="${s.from}" onclick="_prGo(${s.from})">${escapeHtml(s.label)}<span class="pr-sec-p">p${s.from}${s.to > s.from ? '-' + s.to : ''}</span></button>`).join('');
+  const secBtns = (p.sections || []).map(s => `<button class="pr-sec ${_prPage === s.from ? 'on' : ''}" data-p="${s.from}" data-k="${s.k}" onclick="_prGo(${s.from})">${escapeHtml(s.label)}<span class="pr-sec-p">p${s.from}${s.to > s.from ? '-' + s.to : ''}</span></button>`).join('');
   const firstPage = _prPage || ((p.sections || [])[0] || {}).from || 1;
   const grid = qs.length ? qs.map(q => {
     const pick = _prPick[q]; const right = key[q];
