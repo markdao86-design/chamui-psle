@@ -1,8 +1,8 @@
-﻿# chamui-psle — Claude Code 必读 (项目最高优先 context)
+# chamui-psle — Claude Code 必读 (项目最高优先 context)
 
 > 这个文件是 Claude Code 自动加载的项目背景。**任何账号 git clone 后第一件事就是读这里。** 然后再看 `HANDOFF.md` (详细) 和 `CHANGELOG.md` (改造历史)。
 
-> ⚡ **2026-10-05 状态: v24.9**。本文件第 4/7/8 节是 v19 时代写的, 文件架构/规模/TODO 已过时, **以 `DEV_SESSION_NOTES.md` (接手指南) 和 `~/.claude/skills/psle-app-dev/SKILL.md` (项目手册, 用 claude-brain-sync 恢复) 为准**; 第 1/2/3/6/7.6/9 节的画像、红线、部署铁律、配色、协作风格仍然有效。
+> ⚡ **2026-11-04 状态: v28.x** (真题库 / 判分 / pdf.js 页内做卷, 卷子在独立站点 chamui-papers.web.app, 流水线 `tools/papers/README.md`)。本文件第 4/7/8 节是 v19 时代写的, 文件架构/规模/TODO 已过时, **以 `DEV_SESSION_NOTES.md` (接手指南) 和 `~/.claude/skills/psle-app-dev/SKILL.md` (项目手册, 用 claude-brain-sync 恢复) 为准**; 第 1/2/3/6/7.6/9 节的画像、红线、部署铁律、配色、协作风格仍然有效。
 > 设计规范 (一个主色 / 五档字号 / 一卡一按钮 / 做完 ✅ 变灰 / 说明折叠 / 每题可看答案) 在 skill 7.z; 单词线 140/天 口径在 skill 7.w; 出题必过 agent 审在 skill 第 6 节。
 
 ---

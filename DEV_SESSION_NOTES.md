@@ -1,6 +1,6 @@
 # chamui-psle 开发笔记 — 换电脑 / 新 session 接手指南
 
-> 更新: 2026-11-03 · 当前版本 **v27.0** · 线上 https://chamui-psle.web.app · QA **1149 项全过**
+> 更新: 2026-11-04 · 当前版本 **v28.x** · 线上 https://chamui-psle.web.app (+ 卷子站 https://chamui-papers.web.app) · QA **2160+ 项全过**
 > 2026-10-02 ~ 10-05 四天连发 v20.1 → v24.9 (约 40 版); 2026-11-03 v25.0 → v27.0 (13 寸屏字号 / 模块急迫度卡 / 2026-11 校考入库 + 逐题分析落地 / 📷 判分页)。全部已 push GitHub master 并 firebase deploy。
 
 ---
@@ -18,7 +18,7 @@ curl -fsSL https://raw.githubusercontent.com/markdao86-design/claude-brain-sync/
 #    → 恢复 ~/.claude/skills/psle-app-dev/SKILL.md (开发手册) 和 ~/.claude/projects/.../memory/
 
 # 3) 开 Claude Code, 说 "继续开发 chamui-psle", 它会自动加载 psle-app-dev skill + CLAUDE.md
-node qa_check.js       # 1149 项必须全过, 过了再动手
+node qa_check.js       # 全部必须过 (2160+ 项), 过了再动手
 ```
 
 本地预览: `.claude/launch.json` 配了 `python -m http.server 8766`; 浏览器测试前先 `window.saveState=()=>{}` 防污染孩子云端数据。
@@ -34,9 +34,9 @@ node qa_check.js       # 1149 项必须全过, 过了再动手
 
 ---
 
-## 2. 现在的产品形态 (v27.0)
+## 2. 现在的产品形态 (v28.x)
 
-导航: 🏠 主页 · 📆 课表 · 📖 模块学习 (英语/科学) · 📇 词汇 · 📘 答题技巧 · 📕 错题集 · 📷 判分 · 📚 学习中心 · ⋯其他 (能力/目标校/我的/打卡/家长看板/管理); 导航上方一条学习统计 (本周/累计天数/日均/连续/几天到 AL1)
+导航 (胶囊按钮): 🏠 主页 · 📆 课表 · 📖 专项练习 (原 模块学习, 英语/科学) · 🏫 真题库 · 📇 词汇 · 📘 答题技巧 · 📕 错题集 · 📷 判分 · 📚 学习中心 · ⋯其他; 导航上方一条学习统计 (本周/累计天数/日均/连续/几天到 AL1)
 
 | 页面 | 关键函数 (app.js) | 数据 (data.js) |
 |---|---|---|
@@ -44,6 +44,7 @@ node qa_check.js       # 1149 项必须全过, 过了再动手
 | 课表 (课表行右侧直接打分, 四科计分卡, 整周表折叠) | `renderSchedulePage` `renderSchedDayScore` `computeSchedWeekSummary` | `schedKeysOf(name)` 课表块→打分行 |
 | 模块学习 (网格卡按急迫度排; 顶部 校考成绩 + 🎯 本阶段重点抓; 卡上 📋 校考病根; 每卡 练题 + 🧠 技巧测一测) | `renderModulesPage` `renderModulePage` `startTechQuiz` | `ENG_MODULES/SCI_MODULES` · `EXAM_RESULTS` (改成绩只改这里) · `EXAM_DIAG` (改病根只改这里) · `buildTechniqueQuiz` |
 | 时态专项 / ✍️ 动词圈查 / 📕 我的常错本 / 🔑 科学关键词库 (v26.0 校考分析落地) | `openTenseDrill` `openTenseChecker` `openMyErrorBook` `openSciKeywordBank` · 科学 OE 答前圈关键词 `_sciOeKwChips` | `getTenseDrillQuestions` (39 题) · `tenseCheck` · `MY_ERROR_BOOK` · `SCI_KEYWORD_BANK` · `TECHNIQUE_BOOK.eng.mods.tense` |
+| 🏫 真题库 (每科顺序 英语/科学/华文/数学; 页内 ① 📌 薄弱模块汇编 ② 🎯 PSLE 真题 ③ 🏫 名校 Prelim (年份胶囊 26/25/24/23 年) ④ 🔗 外站下载) | `_buildPaperBankInnerHtml` `_weakBookHtml` `_psleImportHtml` `_papersListHtml` · 做卷弹层 `openPaperRunner(id, startPage, weakKey)` (pdf.js 连续下滑 + 右侧答题卡 `_prSubmit` + 问答题 `_prGrade` → 判分页预设) | `PAPERS_2025` (data.js 标记块, `tools/papers/build_papers_data.py` 生成; 每份 id/subj/school/year/url/sections/ans.imgs/mcq.key) · `WEAK_BOOK` · `state.paperRuns` `state.weakDone` · 本机导入 IndexedDB `psle_local_papers` · 卷子 PDF 在独立站点, 流水线见 `tools/papers/README.md` |
 | 📷 判分 (拍照 → Claude 按 PSLE 标准批改 → 分数/失分项/讲解/范文 → 入错题本/PDF) | `renderGradingPage` `_gdRun` `_gdResultHtml` `_gdToWrongBook` | `GRADING_TASKS` (五种任务的 rubric, 官方/非官方分开标) · `buildGradingSystemPrompt` · `callClaudeGrader` (浏览器直连 api.anthropic.com, key 只在 localStorage) · `state.gradeLog` (≤60 条, 不存图) |
 | 词汇 (背今天这一组 / 考今天这一组 / 单词本 / 卡组) | `renderVocabPage` `_renderFlashcardSession` `_renderFcQuiz` | 闪卡引擎 `buildDailyFlashcardGroup` (30 新 + 40 最不熟复习) · `buildVocabQuestion` · `VOCAB_FIXES/VOCAB_TIPS/FC_BAN_PAIRS` 覆盖层 · `getDailyLoad` (≤140) |
 | 答题技巧 (四科 31 模块 + 收藏 + PDF) | `renderTipsPage` `downloadTipBookPdf` | `TECHNIQUE_BOOK` |
@@ -78,7 +79,8 @@ node qa_check.js       # 1149 项必须全过, 过了再动手
 6. 主页"班课"勾存 `todayManual`, 课表页同一块存周表 `hw` 格, 两边不互通
 7. 390px 下 7 个日期胶囊会折行
 8. 旧数据 `fcDailySize` 若曾设 40, 现在仍可选 (选项 20/30/40)
-9. 判分页的真实 API 调用没在开发机实测 (没有 key, 只 mock 过), 第一次用请看浏览器 console; 若 Claude 的 JSON 偶尔不合法, 页面会显示模型原文
+9. 判分页: 线路已用假 key 实测 (401 正常返回), 真 key 只在孩子设备 localStorage; 若 Claude 的 JSON 偶尔不合法, 页面会显示模型原文
+11. 真题库卷子 PDF / 答案页图不在仓库 (版权 + 体积), 在 `chamui-papers` 站; 换电脑按 `tools/papers/README.md` 重建; 英/科/华 PSLE 历年真题网上无免费公开版, 页面提供本机导入
 10. 课表没有按校考分析改 (铁律: 课表照抄用户截图); 分析里的 "假期每天 40 分钟 / Booklet A 每周 2 套 / 假期末模拟卷" 等家长发课表再加
 
 ---

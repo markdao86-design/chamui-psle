@@ -1,0 +1,304 @@
+[
+ {
+  "id": "psle/math/2022",
+  "kind": "psle",
+  "subj": "math",
+  "school": "PSLE 2022",
+  "year": 2022,
+  "url": "https://chamui-papers.web.app/psle/math/2022.pdf",
+  "mb": 0.2,
+  "pages": 31,
+  "sections": [
+   {
+    "k": "p1a",
+    "label": "Paper 1 Booklet A 选择题 1-15",
+    "from": 1,
+    "to": 6
+   },
+   {
+    "k": "p1b",
+    "label": "Paper 1 Booklet B 16-30",
+    "from": 7,
+    "to": 13
+   },
+   {
+    "k": "p2",
+    "label": "Paper 2 1-17",
+    "from": 14,
+    "to": 26
+   },
+   {
+    "k": "answers",
+    "label": "答案",
+    "from": 27,
+    "to": 31
+   }
+  ],
+  "ans": {
+   "pages": [
+    27,
+    28,
+    29,
+    30,
+    31
+   ],
+   "imgs": [
+    "https://chamui-papers.web.app/psle/math/2022_ans1.jpg",
+    "https://chamui-papers.web.app/psle/math/2022_ans2.jpg",
+    "https://chamui-papers.web.app/psle/math/2022_ans3.jpg",
+    "https://chamui-papers.web.app/psle/math/2022_ans4.jpg"
+   ]
+  },
+  "mcq": {
+   "max": 15,
+   "key": {
+    "1": 4,
+    "6": 1,
+    "11": 1,
+    "2": 3,
+    "7": 2,
+    "12": 4,
+    "3": 3,
+    "8": 1,
+    "13": 2,
+    "4": 1,
+    "9": 4,
+    "14": 1,
+    "5": 1,
+    "10": 3,
+    "15": 3
+   },
+   "ok": true,
+   "missing": []
+  },
+  "oeTask": null,
+  "src": "clubmath.sg"
+ },
+ {
+  "id": "psle/math/2023",
+  "kind": "psle",
+  "subj": "math",
+  "school": "PSLE 2023",
+  "year": 2023,
+  "url": "https://chamui-papers.web.app/psle/math/2023.pdf",
+  "mb": 0.7,
+  "pages": 31,
+  "sections": [
+   {
+    "k": "p1a",
+    "label": "Paper 1 Booklet A 选择题 1-15",
+    "from": 1,
+    "to": 5
+   },
+   {
+    "k": "p1b",
+    "label": "Paper 1 Booklet B 16-30",
+    "from": 6,
+    "to": 12
+   },
+   {
+    "k": "p2",
+    "label": "Paper 2 1-17",
+    "from": 13,
+    "to": 23
+   },
+   {
+    "k": "answers",
+    "label": "答案",
+    "from": 24,
+    "to": 31
+   }
+  ],
+  "ans": {
+   "pages": [
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31
+   ],
+   "imgs": [
+    "https://chamui-papers.web.app/psle/math/2023_ans1.jpg",
+    "https://chamui-papers.web.app/psle/math/2023_ans2.jpg",
+    "https://chamui-papers.web.app/psle/math/2023_ans3.jpg",
+    "https://chamui-papers.web.app/psle/math/2023_ans4.jpg"
+   ]
+  },
+  "mcq": {
+   "max": 15,
+   "key": {
+    "1": 4,
+    "6": 3,
+    "11": 4,
+    "2": 3,
+    "7": 2,
+    "12": 2,
+    "3": 3,
+    "8": 4,
+    "13": 3,
+    "4": 4,
+    "9": 1,
+    "14": 1,
+    "5": 1,
+    "10": 4,
+    "15": 3
+   },
+   "ok": true,
+   "missing": []
+  },
+  "oeTask": null,
+  "src": "clubmath.sg"
+ },
+ {
+  "id": "psle/math/2024",
+  "kind": "psle",
+  "subj": "math",
+  "school": "PSLE 2024",
+  "year": 2024,
+  "url": "https://chamui-papers.web.app/psle/math/2024.pdf",
+  "mb": 0.6,
+  "pages": 31,
+  "sections": [
+   {
+    "k": "p1a",
+    "label": "Paper 1 Booklet A 选择题 1-15",
+    "from": 1,
+    "to": 6
+   },
+   {
+    "k": "p1b",
+    "label": "Paper 1 Booklet B 16-30",
+    "from": 7,
+    "to": 13
+   },
+   {
+    "k": "p2",
+    "label": "Paper 2 1-17",
+    "from": 14,
+    "to": 27
+   },
+   {
+    "k": "answers",
+    "label": "答案",
+    "from": 28,
+    "to": 31
+   }
+  ],
+  "ans": {
+   "pages": [
+    28,
+    29,
+    30,
+    31
+   ],
+   "imgs": [
+    "https://chamui-papers.web.app/psle/math/2024_ans1.jpg",
+    "https://chamui-papers.web.app/psle/math/2024_ans2.jpg",
+    "https://chamui-papers.web.app/psle/math/2024_ans3.jpg",
+    "https://chamui-papers.web.app/psle/math/2024_ans4.jpg"
+   ]
+  },
+  "mcq": {
+   "max": 15,
+   "key": {
+    "1": 4,
+    "6": 2,
+    "11": 3,
+    "2": 4,
+    "7": 2,
+    "12": 3,
+    "3": 4,
+    "8": 4,
+    "13": 3,
+    "4": 2,
+    "9": 1,
+    "14": 1,
+    "5": 1,
+    "10": 1,
+    "15": 1
+   },
+   "ok": true,
+   "missing": []
+  },
+  "oeTask": null,
+  "src": "clubmath.sg"
+ },
+ {
+  "id": "psle/math/2025",
+  "kind": "psle",
+  "subj": "math",
+  "school": "PSLE 2025",
+  "year": 2025,
+  "url": "https://chamui-papers.web.app/psle/math/2025.pdf",
+  "mb": 0.9,
+  "pages": 32,
+  "sections": [
+   {
+    "k": "p1a",
+    "label": "Paper 1 Booklet A 选择题 1-15",
+    "from": 1,
+    "to": 6
+   },
+   {
+    "k": "p1b",
+    "label": "Paper 1 Booklet B 16-30",
+    "from": 7,
+    "to": 13
+   },
+   {
+    "k": "p2",
+    "label": "Paper 2 1-17",
+    "from": 14,
+    "to": 27
+   },
+   {
+    "k": "answers",
+    "label": "答案",
+    "from": 28,
+    "to": 32
+   }
+  ],
+  "ans": {
+   "pages": [
+    28,
+    29,
+    30,
+    31,
+    32
+   ],
+   "imgs": [
+    "https://chamui-papers.web.app/psle/math/2025_ans1.jpg",
+    "https://chamui-papers.web.app/psle/math/2025_ans2.jpg",
+    "https://chamui-papers.web.app/psle/math/2025_ans3.jpg",
+    "https://chamui-papers.web.app/psle/math/2025_ans4.jpg"
+   ]
+  },
+  "mcq": {
+   "max": 15,
+   "key": {
+    "1": 4,
+    "6": 4,
+    "11": 4,
+    "2": 4,
+    "7": 1,
+    "12": 3,
+    "3": 4,
+    "8": 2,
+    "13": 2,
+    "4": 3,
+    "9": 2,
+    "14": 1,
+    "5": 3,
+    "10": 2,
+    "15": 4
+   },
+   "ok": true,
+   "missing": []
+  },
+  "oeTask": null,
+  "src": "clubmath.sg"
+ }
+]
