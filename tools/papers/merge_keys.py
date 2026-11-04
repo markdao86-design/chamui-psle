@@ -8,7 +8,7 @@ report = []
 for f in sorted(glob.glob(os.path.join(SP, 'keys_manual', '*.json'))):
     try: m = json.load(open(f, encoding='utf-8'))
     except Exception as e: report.append(f'BAD JSON {os.path.basename(f)}: {e}'); continue
-    subj, slug = m.get('subj'), m.get('slug'); k = f'{slug}|{subj}'
+    subj, slug, year = m.get('subj'), m.get('slug'), int(m.get('year') or 2025); k = f'{slug}|{subj}' if year == 2025 else f'{slug}|{subj}|{year}'
     if k not in keys: report.append(f'UNKNOWN paper {k}'); continue
     mcq = {}
     for q, a in (m.get('mcq') or {}).items():

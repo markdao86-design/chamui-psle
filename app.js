@@ -8511,14 +8511,14 @@ window.openChineseReadingBank = openChineseReadingBank;
 
 // ============ v18.46: PSLE 4 学科真题 + 名校 prelim 题库 (所有链接 WebFetch 验证过) ============
 // v18.50: 改为 page 形态 (不再 modal)
-let _paperBankSubj = 'math';
+let _paperBankSubj = 'english';
 function switchPaperBankSubj(subj) {
   _paperBankSubj = subj;
   renderPaperBankPage();
 }
 function _buildPaperBankInnerHtml(forPage) {
   const PB = window.PSLE_PAPER_BANK || {};
-  const subjects = ['math', 'english', 'science', 'chinese'];
+  const subjects = ['english', 'science', 'chinese', 'math'];   // v28.7 (用户: 顺序按 英语 科学 华文 数学)
   const tabs = subjects.map(s => {
     const data = PB[s];
     const isActive = s === _paperBankSubj;
@@ -13967,16 +13967,29 @@ const PAPER_SUBJ_OF_BANK = { english: 'eng', maths: 'math', math: 'math', scienc
 let _prCur = null, _prPick = {}, _prSubmitted = false, _prPage = null;
 function _paperRuns() { if (!state.paperRuns) state.paperRuns = {}; return state.paperRuns; }
 // 题库页顶部: 该科 10 校一览 (已下载, 点开页内做)
+let _plYear = null;   // 名校卷当前年份 (null = 最新一年)
+function _plSetYear(y) { _plYear = y; if (typeof renderPaperBankPage === 'function') renderPaperBankPage(); }
+window._plSetYear = _plSetYear;
 function _papersListHtml(subjBankKey) {
-  const s = PAPER_SUBJ_OF_BANK[subjBankKey]; const list = (window.PAPERS_2025 || []).filter(p => p.subj === s && p.kind !== 'psle');
-  if (!list.length) return '';
+  // v28.7 (用户: "不要固定 10 份, 找到多少放多少"; "这个页面要区分年份, 如 26年、25年、24年"): 年份胶囊切换, 默认最新一年; 25 年里现有 10 校排前面
+  const s = PAPER_SUBJ_OF_BANK[subjBankKey];
+  const all = (window.PAPERS_2025 || []).filter(p => p.subj === s && p.kind !== 'psle');
+  if (!all.length) return '';
+  const years = [...new Set(all.map(p => p.year))].sort((a, b) => b - a);
+  const y = years.indexOf(_plYear) >= 0 ? _plYear : years[0];
+  const list = all.filter(p => p.year === y).sort((a, b) => ((b.top10 ? 1 : 0) - (a.top10 ? 1 : 0)) || a.school.localeCompare(b.school));
   const runs = _paperRuns();
-  const rows = list.map(p => {
+  const row = p => {
     const r = runs[p.id]; const mcq = p.mcq || {};
     const sub = [p.pages ? `${p.pages} 页 · ${p.mb} MB` : `${p.mb} MB`, mcq.ok ? `选择题 ${mcq.max} 题可页内判` : (mcq.max ? `选择题答案键缺 ${(mcq.missing || []).length} 题` : '选择题键待补'), r ? `上次 ${r.score}/${r.max} (${r.date})` : ''].filter(Boolean).join(' · ');
-    return `<div class="ui-row clickable" onclick="openPaperRunner('${p.id}')"><div class="ui-row-ico">🏫</div><div class="ui-row-main"><div class="ui-row-title">${escapeHtml(p.school)} 2025 Prelim</div><div class="ui-row-sub">${sub}</div></div><div class="ui-row-act">${r ? `<span class="ui-num" style="font-size:20px;color:${r.score / r.max >= 0.9 ? '#16A34A' : '#DC2626'}">${r.score}/${r.max}</span>` : '<button class="ui-cta auto">做卷 →</button>'}</div></div>`;
-  }).join('');
-  return `<div class="card" style="margin-bottom:12px"><div class="ui-head"><div class="ui-page-title">🏫 名校真题 2025 Prelim · ${PAPER_SUBJ_LABEL[s]}</div><div class="ui-head-r"><span class="ui-num">${list.length}</span><span class="ui-num-label">所学校 · 页内做</span></div></div><div class="ui-hint"><span class="ui-hint-ico">📝</span><span>点一所学校: 卷子直接在页面里打开。<b>选择题</b>在右边点答案, 交卷自动判; <b>问答题</b>写在纸上, 拍照用判分页批 (会自动带上这所学校的官方答案页)。</span></div>${rows}</div>`;
+    return `<div class="ui-row clickable" onclick="openPaperRunner('${p.id}')"><div class="ui-row-ico">🏫</div><div class="ui-row-main"><div class="ui-row-title">${escapeHtml(p.school)}</div><div class="ui-row-sub">${sub}</div></div><div class="ui-row-act">${r ? `<span class="ui-num" style="font-size:20px;color:${r.score / r.max >= 0.9 ? '#16A34A' : '#DC2626'}">${r.score}/${r.max}</span>` : '<button class="ui-cta auto">做卷 →</button>'}</div></div>`;
+  };
+  const tabs = years.map(yy => { const n = all.filter(p => p.year === yy).length; const done = all.filter(p => p.year === yy && runs[p.id]).length; return `<button class="${yy === y ? 'on' : ''}" onclick="_plSetYear(${yy})">${String(yy).slice(2)}年<span class="n">${done ? done + '/' : ''}${n}</span></button>`; }).join('');
+  return `<div class="card" style="margin-bottom:12px"><div class="ui-head"><div class="ui-page-title">🏫 名校真题 Prelim · ${PAPER_SUBJ_LABEL[s]}</div><div class="ui-head-r"><span class="ui-num">${all.length}</span><span class="ui-num-label">份 · ${years.length} 个年份</span></div></div>
+    <div class="ui-seg pl-years">${tabs}</div>
+    <div class="ui-hint"><span class="ui-hint-ico">📝</span><span>点一所学校: 卷子直接在页面里打开。<b>选择题</b>在右边点答案, 交卷自动判; <b>问答题</b>写在纸上, 拍照用判分页批 (会自动带上这所学校的官方答案页)。</span></div>
+    <div class="pl-year">20${String(y).slice(2)} 年 Prelim · ${list.length} 所学校</div>
+    ${list.map(row).join('')}</div>`;
 }
 window._papersListHtml = _papersListHtml;
 function openPaperRunner(id, startPage, weakKey) {
@@ -14079,7 +14092,7 @@ function _prSubmit() {
   qs.forEach(q => {
     const right = _prPick[q] === key[q]; if (right) ok++; else wrong.push(q);
     const m = _prModuleOf(p, q); if (m) { byMod[m] = byMod[m] || { ok: 0, n: 0 }; byMod[m].n++; if (right) byMod[m].ok++; }
-    if (!right && window.addToErrorBank) window.addToErrorBank(state, { gameKey: 'paper_mcq', type: 'paper', subj: PAPER_SUBJ_LABEL[p.subj], topic: p.kind === 'psle' ? `PSLE ${p.year} 真题 选择题` : `${p.school} 2025 Prelim 选择题`, q: `${p.kind === 'psle' ? 'PSLE ' + p.year : p.school + ' 2025'} ${PAPER_SUBJ_LABEL[p.subj]} Q${q} (卷子第 ${_prPageOfQ(p, q)} 页)`, correctAns: `正确选项 (${key[q]})${_prPick[q] ? ' · 你选 (' + _prPick[q] + ')' : ' · 没选'}`, explain: `翻到卷子答案页 (第 ${(p.ans.pages || [])[0] || '?'} 页) 对照`, paperId: p.id, qno: q });
+    if (!right && window.addToErrorBank) window.addToErrorBank(state, { gameKey: 'paper_mcq', type: 'paper', subj: PAPER_SUBJ_LABEL[p.subj], topic: p.kind === 'psle' ? `PSLE ${p.year} 真题 选择题` : `${p.school} ${p.year} Prelim 选择题`, q: `${p.kind === 'psle' ? 'PSLE ' + p.year : p.school + ' ' + p.year} ${PAPER_SUBJ_LABEL[p.subj]} Q${q} (卷子第 ${_prPageOfQ(p, q)} 页)`, correctAns: `正确选项 (${key[q]})${_prPick[q] ? ' · 你选 (' + _prPick[q] + ')' : ' · 没选'}`, explain: `翻到卷子答案页 (第 ${(p.ans.pages || [])[0] || '?'} 页) 对照`, paperId: p.id, qno: q });
   });
   Object.keys(byMod).forEach(m => { if (window.recordEngModule) window.recordEngModule(state, m, byMod[m].ok, byMod[m].n, 'paper'); });
   _paperRuns()[p.id] = { score: ok, max: qs.length, wrong, picks: Object.assign({}, _prPick), date: new Date().toISOString().slice(0, 10) };
@@ -14101,9 +14114,9 @@ function _prPageOfQ(p, q) {
 function _prGrade() {
   const p = _prCur; if (!p || !p.oeTask) { showToast('这科问答题不走判分页', 'warn'); return; }
   const oeSec = (p.sections || []).find(s => ['bktB', 'compoe', 'oe', 'compo'].indexOf(s.k) >= 0);
-  const extra = p.local ? `${p.school} (家长导入的 PSLE 卷子)。如果照片里有答案页, 严格按答案页判。` : `${p.school} 2025 P6 ${PAPER_SUBJ_LABEL[p.subj]} Prelim${oeSec ? ' · ' + oeSec.label + ' (卷子第 ' + oeSec.from + '-' + oeSec.to + ' 页)' : ''}。附图里的官方答案页是这份卷的学校参考答案, 请严格按它判, 分值以卷面为准。`;
+  const extra = p.local ? `${p.school} (家长导入的 PSLE 卷子)。如果照片里有答案页, 严格按答案页判。` : `${p.school} ${p.year} P6 ${PAPER_SUBJ_LABEL[p.subj]} Prelim${oeSec ? ' · ' + oeSec.label + ' (卷子第 ' + oeSec.from + '-' + oeSec.to + ' 页)' : ''}。附图里的官方答案页是这份卷的学校参考答案, 请严格按它判, 分值以卷面为准。`;
   closePaperRunner();
-  if (window.openGradingPreset) window.openGradingPreset({ task: p.oeTask, extra, refImages: p.ans.imgs || [], paperId: p.id, label: `${p.school} 2025 ${PAPER_SUBJ_LABEL[p.subj]} 问答题` });
+  if (window.openGradingPreset) window.openGradingPreset({ task: p.oeTask, extra, refImages: p.ans.imgs || [], paperId: p.id, label: `${p.school} ${p.year} ${PAPER_SUBJ_LABEL[p.subj]} 问答题` });
 }
 window._prGrade = _prGrade;
 function _renderPaperRunner(resetFrame) {
@@ -14123,7 +14136,7 @@ function _renderPaperRunner(resetFrame) {
   const oeBtn = p.oeTask ? `<button class="ui-cta auto" onclick="_prGrade()">📷 问答题拍照判分 →</button>` : '';
   const scoreHtml = _prSubmitted && r ? `<div class="pr-score"><span class="ui-num" style="color:${r.score / r.max >= 0.9 ? '#16A34A' : '#DC2626'}">${r.score}/${r.max}</span><span class="ui-num-label">选择题 · ${Math.round(r.score / r.max * 100)}%${r.wrong.length ? ' · 错 ' + r.wrong.join(', ') : ' · 全对'}</span></div>` : '';
   m.innerHTML = `<div class="pr-wrap">
-    <div class="pr-head"><div><div class="ui-page-title">${p.local ? '🎯 ' + escapeHtml(p.school) : p.kind === 'psle' ? '🎯 PSLE ' + p.year + ' ' + PAPER_SUBJ_LABEL[p.subj] + ' (Paper 1 + 2)' : '🏫 ' + escapeHtml(p.school) + ' · 2025 P6 ' + PAPER_SUBJ_LABEL[p.subj] + ' Prelim'}</div><div class="ui-row-sub">往下滑看完整份卷子, 点章节直接跳到那一节 · <a href="${p.url}" target="_blank" rel="noopener" style="color:#1E40AF">新窗口打开 / 打印 ↗</a></div></div><button class="ui-btn2" onclick="closePaperRunner()" style="min-width:44px">✕</button></div>
+    <div class="pr-head"><div><div class="ui-page-title">${p.local ? '🎯 ' + escapeHtml(p.school) : p.kind === 'psle' ? '🎯 PSLE ' + p.year + ' ' + PAPER_SUBJ_LABEL[p.subj] + ' (Paper 1 + 2)' : '🏫 ' + escapeHtml(p.school) + ' · ' + p.year + ' P6 ' + PAPER_SUBJ_LABEL[p.subj] + ' Prelim'}</div><div class="ui-row-sub">往下滑看完整份卷子, 点章节直接跳到那一节 · <a href="${p.url}" target="_blank" rel="noopener" style="color:#1E40AF">新窗口打开 / 打印 ↗</a></div></div><button class="ui-btn2" onclick="closePaperRunner()" style="min-width:44px">✕</button></div>
     <div class="pr-secs">${secBtns}</div>
     <div class="pr-body">
       <div class="pr-pdf">
@@ -14211,15 +14224,15 @@ const WEAK_BOOK = {
 function _weakBookHtml(s) {
   const mods = WEAK_BOOK[s] || [];
   if (!mods.length) return s === 'math' ? `<div class="card" style="margin-bottom:12px"><div class="ui-page-title">📌 薄弱模块汇编 · 数学</div><div class="ui-row-sub" style="margin-top:4px">数学校考 94/100 已是 AL1, 不进汇编; 下面的真题和名校卷保持手感即可。</div></div>` : '';
-  const papers = (window.PAPERS_2025 || []).filter(p => p.subj === s && p.kind !== 'psle');
+  const papers = (window.PAPERS_2025 || []).filter(p => p.subj === s && p.kind !== 'psle').sort((a, b) => ((b.top10 ? 1 : 0) - (a.top10 ? 1 : 0)) || (b.year - a.year) || 0);
   const done = state.weakDone || {};
   const blocks = mods.map((m, i) => {
     const items = [];
     papers.forEach(p => { const sec = (p.sections || []).find(x => m.sec.indexOf(x.k) >= 0); if (sec) items.push({ p, sec }); });
     const d = done[m.k] || {}; const nDone = items.filter(x => d[x.p.id]).length;
-    const chips = items.map(({ p, sec }) => { const did = d[p.id]; return `<button class="wk-chip ${did ? 'did' : ''}" onclick="openPaperRunner('${p.id}', ${sec.from}, '${m.k}')">${did ? '✅ ' : ''}${escapeHtml(p.school)}<span class="wk-p">p${sec.from}${sec.to > sec.from ? '-' + sec.to : ''}</span></button>`; }).join('');
+    const chips = items.map(({ p, sec }) => { const did = d[p.id]; return `<button class="wk-chip ${did ? 'did' : ''}" onclick="openPaperRunner('${p.id}', ${sec.from}, '${m.k}')">${did ? '✅ ' : ''}${escapeHtml(p.school)}${p.year !== 2025 ? ' ' + p.year : ''}<span class="wk-p">p${sec.from}${sec.to > sec.from ? '-' + sec.to : ''}</span></button>`; }).join('');
     return `<div class="wk-mod">
-      <div class="wk-head"><div class="wk-title">${i + 1}. ${escapeHtml(m.title)}</div><div class="wk-count ${nDone === items.length && items.length ? 'all' : ''}">${nDone}/${items.length} 校</div></div>
+      <div class="wk-head"><div class="wk-title">${i + 1}. ${escapeHtml(m.title)}</div><div class="wk-count ${nDone === items.length && items.length ? 'all' : ''}">${nDone}/${items.length} 份</div></div>
       ${m.diag ? `<div class="mod-diag">📋 ${escapeHtml(m.diag)}</div>` : ''}
       <div class="wk-how">练法: ${escapeHtml(m.how)}</div>
       <div class="wk-chips">${chips || '<span class="ui-row-sub">这一节没有识别到</span>'}</div>

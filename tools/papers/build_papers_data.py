@@ -2,7 +2,8 @@
 # papers_2025.json + pages.json + keys.json → data.js 里的 PAPERS_2025 (标记块可重复生成)
 import os, json, io, re
 SP = os.path.dirname(os.path.abspath(__file__))
-papers = json.load(open(r'C:\claude\chamui-papers\papers_2025.json', encoding='utf-8'))
+papers = [dict(p, year=2025, top10=True) for p in json.load(open(r'C:\claude\chamui-papers\papers_2025.json', encoding='utf-8'))]
+if os.path.exists(r'C:\claude\chamui-papers\papers_more.json'): papers += [p for p in json.load(open(r'C:\claude\chamui-papers\papers_more.json', encoding='utf-8')) if p.get('status') == 'ok']
 pages = json.load(open(os.path.join(SP, 'pages.json'), encoding='utf-8'))
 keys = json.load(open(os.path.join(SP, 'keys.json'), encoding='utf-8')) if os.path.exists(os.path.join(SP, 'keys.json')) else {}
 SEC = {
@@ -19,8 +20,9 @@ for p in papers:
     for k, label, labs in SEC[p['subj']]:
         ps = [x['p'] for x in pg if x['label'] in labs]
         if ps: secs.append({'k': k, 'label': label, 'from': min(ps), 'to': max(ps), 'n': len(ps)})
-    kr = keys.get(p['slug'] + '|' + p['subj'], {})
-    out.append({'id': f"{p['subj']}/{p['slug']}", 'subj': p['subj'], 'school': p['school'], 'year': 2025, 'url': p['url'], 'mb': round(p['bytes'] / 1048576, 1), 'pages': info.get('n', 0),
+    kr = keys.get(f"{p['slug']}|{p['subj']}" if p['year'] == 2025 else f"{p['slug']}|{p['subj']}|{p['year']}", {})
+    if not info.get('pages'): continue   # 还没分章的先不上
+    out.append({'id': f"{p['subj']}/{p['slug']}" if p['year'] == 2025 else f"{p['subj']}/{p['year']}-{p['slug']}", 'subj': p['subj'], 'school': p['school'], 'year': p['year'], 'top10': bool(p.get('top10')), 'url': p['url'], 'mb': round(p['bytes'] / 1048576, 1), 'pages': info.get('n', 0),
                 'sections': secs, 'ans': {'pages': kr.get('ansPages', []), 'imgs': kr.get('ansImgs', [])},
                 'mcq': {'max': kr.get('mcqMax', 0), 'key': kr.get('mcq', {}), 'ok': bool(kr.get('ok')), 'missing': kr.get('missing', [])}, 'oeTask': OE_TASK[p['subj']]})
 ps = r'C:\claude\chamui-papers\psle_papers.json'
