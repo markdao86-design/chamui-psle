@@ -13968,7 +13968,7 @@ function _papersListHtml(subjBankKey) {
   const runs = _paperRuns();
   const rows = list.map(p => {
     const r = runs[p.id]; const mcq = p.mcq || {};
-    const sub = [`${p.pages} 页 · ${p.mb} MB`, mcq.ok ? `选择题 ${mcq.max} 题可页内判` : (mcq.max ? `选择题答案键缺 ${(mcq.missing || []).length} 题` : '选择题键待补'), r ? `上次 ${r.score}/${r.max} (${r.date})` : ''].filter(Boolean).join(' · ');
+    const sub = [p.pages ? `${p.pages} 页 · ${p.mb} MB` : `${p.mb} MB`, mcq.ok ? `选择题 ${mcq.max} 题可页内判` : (mcq.max ? `选择题答案键缺 ${(mcq.missing || []).length} 题` : '选择题键待补'), r ? `上次 ${r.score}/${r.max} (${r.date})` : ''].filter(Boolean).join(' · ');
     return `<div class="ui-row clickable" onclick="openPaperRunner('${p.id}')"><div class="ui-row-ico">🏫</div><div class="ui-row-main"><div class="ui-row-title">${escapeHtml(p.school)} 2025 Prelim</div><div class="ui-row-sub">${sub}</div></div><div class="ui-row-act">${r ? `<span class="ui-num" style="font-size:20px;color:${r.score / r.max >= 0.9 ? '#16A34A' : '#DC2626'}">${r.score}/${r.max}</span>` : '<button class="ui-cta auto">做卷 →</button>'}</div></div>`;
   }).join('');
   return `<div class="card" style="margin-bottom:12px"><div class="ui-head"><div class="ui-page-title">🏫 名校真题 2025 Prelim · ${PAPER_SUBJ_LABEL[s]}</div><div class="ui-head-r"><span class="ui-num">${list.length}</span><span class="ui-num-label">所学校 · 页内做</span></div></div><div class="ui-hint"><span class="ui-hint-ico">📝</span><span>点一所学校: 卷子直接在页面里打开。<b>选择题</b>在右边点答案, 交卷自动判; <b>问答题</b>写在纸上, 拍照用判分页批 (会自动带上这所学校的官方答案页)。</span></div>${rows}</div>`;
@@ -13982,7 +13982,7 @@ function openPaperRunner(id) {
   _renderPaperRunner();
 }
 window.openPaperRunner = openPaperRunner;
-function closePaperRunner() { const m = document.getElementById('paperRunnerModal'); if (m) m.classList.remove('show'); _prCur = null; _prPending = null; if (typeof renderPaperBankPage === 'function') renderPaperBankPage(); }
+function closePaperRunner() { const m = document.getElementById('paperRunnerModal'); if (m) m.classList.remove('show'); _prCur = null; _prPending = null; _prBuildId++; if (_prObs) { _prObs.disconnect(); _prObs = null; } if (typeof renderPaperBankPage === 'function') renderPaperBankPage(); }
 window.closePaperRunner = closePaperRunner;
 // ---- pdf.js 页内阅读器 (自托管 vendor/pdf.min.mjs, 按页画 canvas, 支持 range 请求不用整本下完) ----
 let _pdfjs = null, _prDoc = null, _prDocUrl = '', _prZoom = 1, _prRendering = false, _prPending = null;
@@ -13998,32 +13998,63 @@ async function _prOpenDoc(url) {
   const task = lib.getDocument({ url, rangeChunkSize: 262144, disableAutoFetch: true });
   _prDoc = await task.promise; _prDocUrl = url; return _prDoc;
 }
-async function _prRender(page) {
-  const host = document.getElementById('prCanvasHost'); const cv = document.getElementById('prCanvas'); const st = document.getElementById('prPdfStatus');
-  if (!host || !cv || !_prCur) return;
-  if (_prRendering) { _prPending = page; return; }
-  _prRendering = true;
+// v28.2 (用户: "别一页一页点, 直接下滑看完所有卷子"): 整卷所有页竖排, IntersectionObserver 进入视口 (前后各留 1 屏) 才渲染, 离开很远的页释放 canvas 省内存
+let _prObs = null, _prRendered = new Set(), _prBuildId = 0;
+async function _prBuildAll(scrollTo) {
+  const host = document.getElementById('prCanvasHost'); const st = document.getElementById('prPdfStatus');
+  if (!host || !_prCur) return;
+  const myId = ++_prBuildId;
   try {
     if (st) st.textContent = '加载中…';
-    const doc = await _prOpenDoc(_prCur.url);
-    page = Math.max(1, Math.min(doc.numPages, page || 1)); _prPage = page;
-    const pg = await doc.getPage(page);
-    const vp0 = pg.getViewport({ scale: 1 }); const w = host.clientWidth - 8; const scale = (w / vp0.width) * _prZoom; const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const vp = pg.getViewport({ scale });
-    cv.width = Math.floor(vp.width * dpr); cv.height = Math.floor(vp.height * dpr); cv.style.width = Math.floor(vp.width) + 'px'; cv.style.height = Math.floor(vp.height) + 'px';
-    const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    await pg.render({ canvasContext: ctx, viewport: vp }).promise;
-    if (st) st.textContent = `第 ${page} / ${doc.numPages} 页`;
-    const pi = document.getElementById('prPageInput'); if (pi) pi.value = page;
-    document.querySelectorAll('.pr-sec').forEach(b => { const s = (_prCur.sections || []).find(x => x.from === +b.dataset.p); b.classList.toggle('on', !!s && page >= s.from && page <= s.to); });
-    host.scrollTop = 0;
+    const doc = await _prOpenDoc(_prCur.url); if (myId !== _prBuildId) return;
+    const first = await doc.getPage(1); const vp1 = first.getViewport({ scale: 1 });
+    const W = Math.max(200, (host.clientWidth - 16)) * _prZoom; const H = Math.round(W * vp1.height / vp1.width);
+    host.innerHTML = ''; _prRendered = new Set();
+    if (_prObs) _prObs.disconnect();
+    for (let i = 1; i <= doc.numPages; i++) {
+      const box = document.createElement('div'); box.className = 'pr-page'; box.dataset.p = i; box.style.width = W + 'px'; box.style.height = H + 'px';
+      box.innerHTML = `<div class="pr-page-no">${i}</div>`; host.appendChild(box);
+    }
+    const tot = document.getElementById('prPageTotal'); if (tot) tot.textContent = doc.numPages;
+    const pi = document.getElementById('prPageInput'); if (pi) pi.max = doc.numPages;
+    _prObs = new IntersectionObserver(ents => ents.forEach(en => {
+      const n = +en.target.dataset.p;
+      if (en.isIntersecting) _prRenderOne(n, en.target, W, myId);
+    }), { root: host, rootMargin: '100% 0px 100% 0px' });
+    host.querySelectorAll('.pr-page').forEach(b => _prObs.observe(b));
+    host.onscroll = () => _prTrackPage(host);
+    if (st) st.textContent = `共 ${doc.numPages} 页 · 往下滑就能看完整份卷子`;
+    if (scrollTo && scrollTo > 1) _prScrollTo(scrollTo, false); else _prTrackPage(host);
   } catch (e) { if (st) st.textContent = '卷子加载失败: ' + (e && e.message || e) + ' (用下面链接直接打开)'; console.warn(e); }
-  _prRendering = false;
-  if (_prPending != null) { const n = _prPending; _prPending = null; _prRender(n); }
 }
-function _prGo(page) { _prRender(page); }
-function _prStep(d) { _prRender((_prPage || 1) + d); }
-function _prZoomSet(z) { _prZoom = z; _prRender(_prPage || 1); }
+async function _prRenderOne(n, box, W, myId) {
+  if (_prRendered.has(n)) return; _prRendered.add(n);
+  try {
+    const pg = await _prDoc.getPage(n); if (myId !== _prBuildId) return;
+    const vp0 = pg.getViewport({ scale: 1 }); const scale = W / vp0.width; const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const vp = pg.getViewport({ scale });
+    const cv = document.createElement('canvas'); cv.width = Math.floor(vp.width * dpr); cv.height = Math.floor(vp.height * dpr); cv.style.width = Math.floor(vp.width) + 'px'; cv.style.height = Math.floor(vp.height) + 'px';
+    const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    await pg.render({ canvasContext: ctx, viewport: vp }).promise; if (myId !== _prBuildId) return;
+    box.style.height = Math.floor(vp.height) + 'px'; box.appendChild(cv);
+  } catch (e) { _prRendered.delete(n); console.warn('page', n, e); }
+}
+function _prTrackPage(host) {
+  const boxes = host.querySelectorAll('.pr-page'); const top = host.scrollTop + host.clientHeight * 0.3; let cur = 1;
+  boxes.forEach(b => { if (b.offsetTop <= top) cur = +b.dataset.p; });
+  if (cur === _prPage) return; _prPage = cur;
+  const pi = document.getElementById('prPageInput'); if (pi && document.activeElement !== pi) pi.value = cur;
+  document.querySelectorAll('.pr-sec').forEach(b => { const s = (_prCur && _prCur.sections || []).find(x => x.from === +b.dataset.p); b.classList.toggle('on', !!s && cur >= s.from && cur <= s.to); });
+}
+function _prScrollTo(n, smooth) {
+  const host = document.getElementById('prCanvasHost'); if (!host) return;
+  const box = host.querySelector(`.pr-page[data-p="${n}"]`); if (!box) return;
+  host.scrollTo({ top: box.offsetTop - 4, behavior: smooth === false ? 'auto' : 'smooth' });
+}
+function _prRender(page) { _prScrollTo(page); }
+function _prGo(page) { _prScrollTo(page); }
+function _prStep(d) { _prScrollTo(Math.max(1, (_prPage || 1) + d)); }
+function _prZoomSet(z) { const keep = _prPage || 1; _prZoom = z; document.querySelectorAll('.pr-zoom .ui-btn2').forEach(b => b.classList.toggle('on', +b.dataset.z === z)); _prBuildAll(keep); }
 window._prGo = _prGo; window._prStep = _prStep; window._prZoomSet = _prZoomSet;
 function _prPickAns(q, a) { if (_prSubmitted) return; _prPick[q] = a; _renderPaperRunner(false); }
 window._prPickAns = _prPickAns;
@@ -14086,12 +14117,12 @@ function _renderPaperRunner(resetFrame) {
   const oeBtn = p.oeTask ? `<button class="ui-cta auto" onclick="_prGrade()">📷 问答题拍照判分 →</button>` : '';
   const scoreHtml = _prSubmitted && r ? `<div class="pr-score"><span class="ui-num" style="color:${r.score / r.max >= 0.9 ? '#16A34A' : '#DC2626'}">${r.score}/${r.max}</span><span class="ui-num-label">选择题 · ${Math.round(r.score / r.max * 100)}%${r.wrong.length ? ' · 错 ' + r.wrong.join(', ') : ' · 全对'}</span></div>` : '';
   m.innerHTML = `<div class="pr-wrap">
-    <div class="pr-head"><div><div class="ui-page-title">🏫 ${escapeHtml(p.school)} · 2025 P6 ${PAPER_SUBJ_LABEL[p.subj]} Prelim</div><div class="ui-row-sub">${p.pages} 页 · 翻页用下面的章节按钮或 PDF 自带滚动 · <a href="${p.url}" target="_blank" rel="noopener" style="color:#1E40AF">新窗口打开 / 打印 ↗</a></div></div><button class="ui-btn2" onclick="closePaperRunner()" style="min-width:44px">✕</button></div>
+    <div class="pr-head"><div><div class="ui-page-title">🏫 ${escapeHtml(p.school)} · 2025 P6 ${PAPER_SUBJ_LABEL[p.subj]} Prelim</div><div class="ui-row-sub">往下滑看完整份卷子, 点章节直接跳到那一节 · <a href="${p.url}" target="_blank" rel="noopener" style="color:#1E40AF">新窗口打开 / 打印 ↗</a></div></div><button class="ui-btn2" onclick="closePaperRunner()" style="min-width:44px">✕</button></div>
     <div class="pr-secs">${secBtns}</div>
     <div class="pr-body">
       <div class="pr-pdf">
-        <div class="pr-pdf-bar"><button class="ui-btn2" onclick="_prStep(-1)">‹ 上一页</button><span class="pr-pdf-pg">第 <input id="prPageInput" type="number" min="1" max="${p.pages}" value="${firstPage}" onchange="_prGo(+this.value)"> / ${p.pages} 页</span><button class="ui-btn2" onclick="_prStep(1)">下一页 ›</button><span class="pr-zoom"><button class="ui-btn2 ${_prZoom === 1 ? 'on' : ''}" onclick="_prZoomSet(1)">适宽</button><button class="ui-btn2 ${_prZoom === 1.5 ? 'on' : ''}" onclick="_prZoomSet(1.5)">1.5×</button><button class="ui-btn2 ${_prZoom === 2 ? 'on' : ''}" onclick="_prZoomSet(2)">2×</button></span><span id="prPdfStatus" class="pr-pdf-status"></span></div>
-        <div id="prCanvasHost" class="pr-canvas-host"><canvas id="prCanvas"></canvas></div>
+        <div class="pr-pdf-bar"><span class="pr-pdf-pg">跳到第 <input id="prPageInput" type="number" min="1" value="${firstPage}" onchange="_prGo(+this.value)"> / <span id="prPageTotal">${p.pages || '…'}</span> 页</span><span class="pr-zoom"><button class="ui-btn2 ${_prZoom === 1 ? 'on' : ''}" data-z="1" onclick="_prZoomSet(1)">适宽</button><button class="ui-btn2 ${_prZoom === 1.5 ? 'on' : ''}" data-z="1.5" onclick="_prZoomSet(1.5)">1.5×</button><button class="ui-btn2 ${_prZoom === 2 ? 'on' : ''}" data-z="2" onclick="_prZoomSet(2)">2×</button></span><span id="prPdfStatus" class="pr-pdf-status"></span></div>
+        <div id="prCanvasHost" class="pr-canvas-host"></div>
         <div class="pr-pdf-fallback">想打印或整本翻: <a href="${p.url}" target="_blank" rel="noopener">新窗口打开 PDF ↗</a></div>
       </div>
       <div class="pr-side">
@@ -14104,5 +14135,5 @@ function _renderPaperRunner(resetFrame) {
     </div></div>`;
   m.classList.add('show');
   if (_prPage == null) _prPage = firstPage;
-  if (resetFrame !== false) _prRender(_prPage);
+  if (resetFrame !== false) _prBuildAll(_prPage);
 }

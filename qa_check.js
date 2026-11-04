@@ -2396,6 +2396,7 @@ assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾
   assert(/return \(s\.total > 0 \? 60 \+ \(TARGET - s\.pct\) \/ 10 : 60\) \+ diagBump;/.test(appSrc) && /\(now >= TARGET \? \(100 - now\) : 100 \+ \(TARGET - now\)\) \+ diagBump;/.test(appSrc), 'v26.2: 病根加急分加在 urgency 全部三条 return 上 (时态卡排第一)');
   assert(/data-page="paperbank">🏫 真题库<\/button>/.test(idxSrc) && !/data-page="paperbank" style="display:none"/.test(idxSrc) && !/<div class="nm">题库<\/div>/.test(idxSrc), 'v28.1: 真题库独立导航标签 (不再收在学习中心里)');
   assert(idxSrc.indexOf('data-page="paperbank">') - idxSrc.indexOf('data-page="modules">') < 200, 'v28.1: 真题库紧跟专项练习');
+  assert(/async function _prBuildAll\(scrollTo\)/.test(appSrc) && /new IntersectionObserver/.test(appSrc) && /id="prPageTotal"/.test(appSrc) && !/‹ 上一页<\/button>/.test(appSrc) && /\.pr-page \{/.test(idxSrc), 'v28.2: 做卷整卷连续下滑 (懒渲染), 总页数用 PDF 实际页数');
   // v28.0: 名校真题页内做卷
   assert(Array.isArray(W.PAPERS_2025) && W.PAPERS_2025.length >= 36 && W.PAPERS_2025.every(p => /^https:\/\/chamui-papers\.web\.app\/2025\//.test(p.url) && p.sections), 'v28.0: PAPERS_2025 ≥36 份, 都在 chamui-papers 站, 都有章节页码');
   { const okKeys = W.PAPERS_2025.filter(p => p.mcq && p.mcq.ok).length; assert(okKeys >= 10, 'v28.0: ≥10 份卷的选择题答案键完整 (本版英文 10 校; 科学/华文/数学转录后收紧) (实际 ' + okKeys + ')'); W.PAPERS_2025.forEach(p => { Object.values(p.mcq.key || {}).forEach(v => assert(v >= 1 && v <= 4, 'v28.0: 答案键只有 1-4 ' + p.id)); }); }

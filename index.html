@@ -306,7 +306,10 @@ body {
 .pr-pdf-pg input { width:52px; min-height:32px; border:1px solid #CBD5E1; border-radius:8px; padding:2px 6px; font-size:14px; text-align:center; }
 .pr-zoom { display:flex; gap:4px; margin-left:auto; } .pr-pdf-status { font-size:12px; color:#64748B; width:100%; }
 .pr-canvas-host { flex:1; overflow:auto; background:#F1F5F9; padding:4px; text-align:center; }
-.pr-canvas-host canvas { background:#FFFFFF; box-shadow:0 1px 4px rgba(0,0,0,0.15); display:inline-block; }
+.pr-canvas-host { scroll-behavior:auto; }
+.pr-page { position:relative; margin:0 auto 10px; background:#FFFFFF; box-shadow:0 1px 4px rgba(0,0,0,0.15); }
+.pr-page canvas { display:block; }
+.pr-page-no { position:absolute; top:6px; right:8px; font-size:12px; font-weight:800; color:#94A3B8; background:rgba(255,255,255,0.85); border-radius:6px; padding:1px 6px; z-index:1; }
 .pr-pdf-fallback { font-size:12px; color:#64748B; padding:4px 10px; }
 .pr-side { width:300px; flex:0 0 300px; border-left:1px solid #E2E8F0; border-top:1px solid #E2E8F0; padding:10px 12px; overflow:auto; }
 .pr-side-title { font-size:15px; font-weight:900; color:#1E293B; } .pr-side-title .muted { font-weight:600; }
@@ -6364,9 +6367,9 @@ details.card.ui-more[open] > summary { margin-bottom:var(--sp-1); }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=28.1"></script>
-<script src="data.js?v=28.1"></script>
-<script src="app.js?v=28.1"></script>
+<script src="character.js?v=28.2"></script>
+<script src="data.js?v=28.2"></script>
+<script src="app.js?v=28.2"></script>
 
 </body>
 </html>
