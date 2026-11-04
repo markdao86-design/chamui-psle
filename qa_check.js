@@ -2403,7 +2403,7 @@ assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾
   assert(/p\.subj === s && p\.kind !== 'psle'/.test(appSrc) && /p\.kind === 'psle'\)\.sort/.test(appSrc), 'v28.3: 真题区列 PSLE 卷, 名校区不混入');
   // v28.0: 名校真题页内做卷
   assert(Array.isArray(W.PAPERS_2025) && W.PAPERS_2025.length >= 36 && W.PAPERS_2025.every(p => /^https:\/\/chamui-papers\.web\.app\/(2025|psle)\//.test(p.url) && p.sections), 'v28.0/v28.3: PAPERS_2025 ≥36 份 (名校 + PSLE), 都在 chamui-papers 站, 都有章节页码');
-  { const okKeys = W.PAPERS_2025.filter(p => p.mcq && p.mcq.ok).length; assert(okKeys >= 10, 'v28.0: ≥10 份卷的选择题答案键完整 (本版英文 10 校; 科学/华文/数学转录后收紧) (实际 ' + okKeys + ')'); W.PAPERS_2025.forEach(p => { Object.values(p.mcq.key || {}).forEach(v => assert(v >= 1 && v <= 4, 'v28.0: 答案键只有 1-4 ' + p.id)); }); }
+  { const okKeys = W.PAPERS_2025.filter(p => p.mcq && p.mcq.ok).length; assert(okKeys >= 44, 'v28.4: 44 份卷 (名校 40 + PSLE 数学 4) 选择题答案键全部完整 (实际 ' + okKeys + ')'); W.PAPERS_2025.forEach(p => { Object.values(p.mcq.key || {}).forEach(v => assert(v >= 1 && v <= 4, 'v28.0: 答案键只有 1-4 ' + p.id)); }); }
   assert(/function openPaperRunner\(id\)/.test(appSrc) && /function _prSubmit\(\)/.test(appSrc) && /_papersListHtml\(_paperBankSubj\)/.test(appSrc) && /function openGradingPreset\(ps\)/.test(appSrc) && /refImages/.test(appSrc), 'v28.0: 做卷弹层 / 交卷 / 题库页列表 / 判分预设 + 官方答案页');
   assert(/OFFICIAL ANSWER KEY/.test(dataSrc) && /refImages \|\| \[\]/.test(dataSrc), 'v28.0: 判分调用把官方答案页放在孩子作答前');
   assert(/paper_mcq: \['英语', '名校卷 选择题'/.test(appSrc) && /\.pr-opt\.wrong \{/.test(idxSrc) && /import\('\.\/vendor\/pdf\.min\.mjs'\)/.test(appSrc) && fs.existsSync(path.join(__dirname, 'vendor', 'pdf.worker.min.mjs')), 'v28.0: 错题本题型 + 答题卡样式 + 自托管 pdf.js 阅读器');

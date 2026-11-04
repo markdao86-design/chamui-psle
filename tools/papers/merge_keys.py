@@ -3,7 +3,7 @@
 import os, json, glob
 SP = os.path.dirname(os.path.abspath(__file__))
 keys = json.load(open(os.path.join(SP, 'keys.json'), encoding='utf-8'))
-EXPECT = {'eng': 25, 'sci': (28, 30), 'math': 15, 'cn': 29}
+EXPECT = {'eng': 25, 'sci': (28, 30), 'math': 15, 'cn': 25}
 report = []
 for f in sorted(glob.glob(os.path.join(SP, 'keys_manual', '*.json'))):
     try: m = json.load(open(f, encoding='utf-8'))
