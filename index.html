@@ -5518,7 +5518,9 @@ details.card.ui-more[open] > summary { margin-bottom:var(--sp-1); }
   <button class="tab-btn active" data-page="dashboard">🏠 主页</button>
   <button class="tab-btn" data-page="schedule">📆 课表</button>
   <!-- v23.8: 英语/科学模块学习合并成一个"模块学习"页 (页内分英语/科学两类, 和错题集一样); 旧按钮隐藏留给 gotoPage 别名 -->
-  <button class="tab-btn" data-page="modules">📖 模块学习</button>
+  <!-- v28.1 (用户: "模块学习改成专项练习, 题库从学习中心拿出来, 名字改为真题库, 不要收进去") -->
+  <button class="tab-btn" data-page="modules">📖 专项练习</button>
+  <button class="tab-btn" data-page="paperbank">🏫 真题库</button>
   <button class="tab-btn" data-page="engmod" style="display:none">📖 英语模块学习</button>
   <button class="tab-btn" data-page="scimod" style="display:none">🔬 科学模块学习</button>
   <!-- v19.61: 打卡收纳进 "⋯其他" (按钮仍在, JS click 可达) -->
@@ -5537,7 +5539,6 @@ details.card.ui-more[open] > summary { margin-bottom:var(--sp-1); }
   <!-- 旧 3 个英语类 tab + 管理 tab 隐藏 (page 容器仍存在, JS 跳转可访问) -->
   <button class="tab-btn" data-page="knowledge" style="display:none">🌳 知识树</button>
   <button class="tab-btn" data-page="essay" style="display:none">📝 作文</button>
-  <button class="tab-btn paper-bank-tab" data-page="paperbank" style="display:none">📚 题库</button>
   <button class="tab-btn" data-page="admin" style="display:none">⚙️ 管理</button>
 </nav>
 
@@ -5900,11 +5901,6 @@ details.card.ui-more[open] > summary { margin-bottom:var(--sp-1); }
             <div class="ico">🌳</div>
             <div class="nm">知识树</div>
             <div class="ds">一个考点一个考点过, 拿满 3 星</div>
-          </button>
-          <button class="practice-hub-btn" data-accent="orange" onclick="document.querySelector('[data-page=paperbank]').click()">
-            <div class="ico">📚</div>
-            <div class="nm">题库</div>
-            <div class="ds">按卷子题型刷题</div>
           </button>
           <button class="practice-hub-btn" data-accent="cyan" onclick="document.querySelector('[data-page=vocab]').click()">
             <div class="ico">📇</div>
@@ -6368,9 +6364,9 @@ details.card.ui-more[open] > summary { margin-bottom:var(--sp-1); }
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=28.0"></script>
-<script src="data.js?v=28.0"></script>
-<script src="app.js?v=28.0"></script>
+<script src="character.js?v=28.1"></script>
+<script src="data.js?v=28.1"></script>
+<script src="app.js?v=28.1"></script>
 
 </body>
 </html>

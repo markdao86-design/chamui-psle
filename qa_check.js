@@ -817,7 +817,7 @@ assert(/v19\.15h: 整张卡改暗调/.test(appSrc), 'v19.15h: 画像卡注释说
 assert(/起步 Lv 4, 最近 3 次 ≥80% 升级/.test(appSrc), 'v19.15h: 加难度规则说明');
 // v19.15g: 练习中心 4 卡改暗调
 assert(/class="practice-hub-btn" data-accent="green"/.test(idxSrc), 'v19.15g: 知识树 卡 data-accent=green');
-assert(/class="practice-hub-btn" data-accent="orange"/.test(idxSrc), 'v19.15g: 题库 卡 data-accent=orange');
+assert(!/practice-hub-btn" data-accent="orange" onclick="document.querySelector('[data-page=paperbank]')/.test(idxSrc), 'v19.15g→v28.1: 题库卡已从学习中心移出 (改为独立导航 真题库)');
 assert(/class="practice-hub-btn" data-accent="cyan"/.test(idxSrc), 'v19.15g: 词汇 卡 data-accent=cyan');
 assert(/class="practice-hub-btn" data-accent="pink"/.test(idxSrc), 'v19.15g: 作文 卡 data-accent=pink');
 // 防回归: 仅在 hub 4 卡 (5258-5286 范围) 不能有旧亮浅底
@@ -2157,7 +2157,7 @@ assert(!/nNewToday/.test(appSrc), 'v21.5: 页面不再事后数新词 (背完后
   assert(nodeIds.length >= 11 && nodeIds.every(id => tree.indexOf(id) >= 0 && (W.getNodePractice(id) || []).length >= 10), 'v22.0: 每个模块挂的考点都真的存在且有 10 道题');
   assert(nodeIds.every(id => W.ENG_MODULE_OF_NODE[id]), 'v22.0: 每个考点练完都知道该记到哪个模块');
 }
-assert(/data-page="modules">[^<]*模块学习/.test(idxSrc) && /id="page-modules"/.test(idxSrc) && /page === 'engmod' \|\| page === 'scimod'/.test(appSrc), 'v22.0→v23.8: 导航上是合并后的"模块学习"切页, engmod/scimod 当别名');
+assert(/data-page="modules">[^<]*专项练习/.test(idxSrc) && /id="page-modules"/.test(idxSrc) && /page === 'engmod' \|\| page === 'scimod'/.test(appSrc), 'v22.0→v23.8: 导航上是合并后的"模块学习"切页, engmod/scimod 当别名');
 assert(/if \(page === 'engmod'\)[\s\S]{0,40}renderEngModulePage\(\)/.test(appSrc), 'v22.0: 切到这一页会渲染 (不是空页)');
 assert(/window\.recordEngModule\(state, window\.ENG_MODULE_OF_NODE\[g\.nodeId\], score, total, 'node'\)/.test(appSrc), 'v22.0: 考点 10 题的对错记进模块');
 assert(/recordEngModule\(state, 'listening'/.test(appSrc) && /recordEngModule\(state, 'paper2'/.test(appSrc), 'v22.0: 听力选择题和 Paper 2 模拟也记');
@@ -2394,6 +2394,8 @@ assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾
   assert(W.getTenseDrillQuestions(999).every(q => !/^被动-(间接宾语|情态|be known)|^虚拟|^情态/.test(q.tag)), 'v26.0: 时态题源不含被动语序/虚拟/情态');
   { const fn = appSrc.slice(appSrc.indexOf('function _renderSciOe()'), appSrc.indexOf('function sciOeStart()')); assert(fn.indexOf('const weakOpener') < fn.indexOf('if (userAns) {'), 'v26.1: 科学 OE weakOpener 在函数作用域 (看答案那步不再 ReferenceError)'); }
   assert(/return \(s\.total > 0 \? 60 \+ \(TARGET - s\.pct\) \/ 10 : 60\) \+ diagBump;/.test(appSrc) && /\(now >= TARGET \? \(100 - now\) : 100 \+ \(TARGET - now\)\) \+ diagBump;/.test(appSrc), 'v26.2: 病根加急分加在 urgency 全部三条 return 上 (时态卡排第一)');
+  assert(/data-page="paperbank">🏫 真题库<\/button>/.test(idxSrc) && !/data-page="paperbank" style="display:none"/.test(idxSrc) && !/<div class="nm">题库<\/div>/.test(idxSrc), 'v28.1: 真题库独立导航标签 (不再收在学习中心里)');
+  assert(idxSrc.indexOf('data-page="paperbank">') - idxSrc.indexOf('data-page="modules">') < 200, 'v28.1: 真题库紧跟专项练习');
   // v28.0: 名校真题页内做卷
   assert(Array.isArray(W.PAPERS_2025) && W.PAPERS_2025.length >= 36 && W.PAPERS_2025.every(p => /^https:\/\/chamui-papers\.web\.app\/2025\//.test(p.url) && p.sections), 'v28.0: PAPERS_2025 ≥36 份, 都在 chamui-papers 站, 都有章节页码');
   { const okKeys = W.PAPERS_2025.filter(p => p.mcq && p.mcq.ok).length; assert(okKeys >= 10, 'v28.0: ≥10 份卷的选择题答案键完整 (本版英文 10 校; 科学/华文/数学转录后收紧) (实际 ' + okKeys + ')'); W.PAPERS_2025.forEach(p => { Object.values(p.mcq.key || {}).forEach(v => assert(v >= 1 && v <= 4, 'v28.0: 答案键只有 1-4 ' + p.id)); }); }

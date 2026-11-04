@@ -2997,9 +2997,9 @@ const SCI_MODULES = [
   ] },
 ];
 const MODULE_PAGE_CFG = {
-  eng: { el: 'engModuleContent', tree: '📖 英语', modules: () => ENG_MODULES, title: '📖 英语模块学习',
+  eng: { el: 'engModuleContent', tree: '📖 英语', modules: () => ENG_MODULES, title: '📖 英语专项练习',
     intro: '按 PSLE 四张卷的顺序, 一个模块一个模块练。每个模块都记正确率, <b>AL1 线是 90%</b>。<br>题库是按 PSLE 题型出的模拟题 (难度 Lv4 起); 历年真题有版权不在 app 里 —— 纸上做《English Yearly》, 分数填进课表打分表, 这里一起显示 (纸笔近 4 周)。' },
-  sci: { el: 'sciModuleContent', tree: '🔬 科学', modules: () => SCI_MODULES, title: '🔬 科学模块学习',
+  sci: { el: 'sciModuleContent', tree: '🔬 科学', modules: () => SCI_MODULES, title: '🔬 科学专项练习',
     intro: '先按卷子两本小册子 (Booklet A 选择题 / Booklet B 开放题) 练题型, 再按 MOE 五大主题一个考点一个考点过。每个考点都记正确率, <b>AL1 线是 90%</b>。<br>题库是按 PSLE 题型出的模拟题; 纸上做的《PSLE Science 选择题》《Science For Primary Levels》分数填进课表打分表, 这里一起显示 (纸笔近 4 周)。' },
 };
 // v23.8: 合并成一个"模块学习"页: 顶部 英语 / 科学 两个分类 (和错题集一样), 下面是原来各自的模块列表 (渲染器不变)
@@ -8542,7 +8542,7 @@ function _buildPaperBankInnerHtml(forPage) {
     <div class="kt-inner pb-inner">
       <div class="kt-header">
         <div>
-          <div class="kt-title">📚 PSLE 真题题库</div>
+          <div class="kt-title">🏫 真题库</div>
           <div class="kt-progress">4 学科 · 所有链接已验证 · 真题 + P5/P6 名校 prelim</div>
         </div>
         ${forPage ? '' : '<button class="vocab-modal-close" onclick="closePaperBank()">×</button>'}
@@ -13743,7 +13743,7 @@ function _renderTechQuiz() {
       </div>`;
   el.innerHTML = `
     <div class="ui-head" style="margin-bottom:8px">
-      <button class="ui-btn2" onclick="renderModulesPage()">← 返回模块学习</button>
+      <button class="ui-btn2" onclick="renderModulesPage()">← 返回专项练习</button>
       <div class="ui-head-r" style="font-size:13px;color:#64748B">${escapeHtml(tb.title)} · 技巧测一测 · 第 ${z.idx + 1} / ${z.qs.length} 题 · ✅ ${z.ok}</div>
     </div>
     <div class="card">
@@ -13774,7 +13774,7 @@ function _renderTechSummary(el, tb) {
   const box = (title, inner) => inner ? `<div style="margin-top:12px"><div style="font-size:13px;font-weight:900;color:#1E40AF;margin-bottom:4px">${title}</div><div style="padding:10px 12px;background:#F8FAFC;border-radius:10px">${inner}</div></div>` : '';
   const pct = Math.round(z.ok / z.qs.length * 100);
   el.innerHTML = `
-    <div class="ui-head" style="margin-bottom:8px"><button class="ui-btn2" onclick="renderModulesPage()">← 返回模块学习</button></div>
+    <div class="ui-head" style="margin-bottom:8px"><button class="ui-btn2" onclick="renderModulesPage()">← 返回专项练习</button></div>
     <div class="card">
       <div class="ui-head"><div class="ui-page-title">📘 ${escapeHtml(tb.title)} · 技巧总结</div><div class="ui-head-r"><span class="ui-num" style="color:${pct >= 80 ? '#16A34A' : '#1E40AF'}">${z.ok}</span><span class="ui-num-label">/ ${z.qs.length} 题${z.peeked ? ' · 看了 ' + z.peeked + ' 题答案' : ''}</span></div></div>
       <div style="font-size:13px;color:#64748B">${escapeHtml(tb.paper)} · ${pct >= 80 ? '方法记住了, 去练题吧' : '有几步没记牢, 看完总结再测一次'}</div>
