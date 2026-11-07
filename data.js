@@ -6166,7 +6166,7 @@ function addExtraFlashcardGroup(state) {
   g.queue = extra.slice();
   g.done = false;
   g.extra = (g.extra || 0) + 1;
-  if (state.fcDaily && state.fcDaily[g.date]) { state.fcDaily[g.date].done = false; state.fcDaily[g.date].size = g.words.length; }
+  if (state.fcDaily && state.fcDaily[g.date]) state.fcDaily[g.date].size = g.words.length;   // v29.4: 今天这组已完成就算打卡, 加的组没背完也不倒扣连续天数
   return { added: extra.length, extra: g.extra };
 }
 
@@ -6210,7 +6210,7 @@ function answerDailyFlashcard(state, word, level, secs) {
     else if (rec.missed.indexOf(word) < 0) rec.missed.push(word);
   }
   if (secs > 0) rec.secs = (rec.secs || 0) + Math.min(60, Math.round(secs));
-  rec.done = !!g.done;
+  rec.done = rec.done || !!g.done;
   const keys = Object.keys(state.fcDaily).sort();
   while (keys.length > 120) delete state.fcDaily[keys.shift()];
   return {

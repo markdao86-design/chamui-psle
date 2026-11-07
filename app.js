@@ -984,7 +984,7 @@ function renderTodayThreeCard() {
       const wrongN = (state.wrongAnswers || []).length;
       const step = doneCount < blocks.length ? `<b>先填打卡表</b> (${doneCount}/${blocks.length} 完成) → 复习错题 → 学考点` : wrongN ? `打卡表填好了 ✅ → <b>去复习错题</b> (${wrongN} 题) → 学考点` : `打卡表填好了 ✅ → <b>往下学今天的考点</b>`;
       const L = window.getDailyLoad ? window.getDailyLoad(state) : null;   // v24.5 今日学习量 (单词+题 ≤ 100)
-      hintEl.innerHTML = `<span class="ui-hint-ico">${doneCount < blocks.length ? '👋' : '👍'}</span><span>${step}</span>${L ? `<span style="margin-left:auto;white-space:nowrap;color:${L.full ? '#B45309' : '#64748B'}">单词 ${L.words + Math.max(L.questions, L.words)}/${L.cap} (新 ${L.newWords} + 复习 ${L.reviewWords} + 考题 ${L.words})</span>` : ''}`;
+      hintEl.innerHTML = `<span class="ui-hint-ico">${doneCount < blocks.length ? '👋' : '👍'}</span><span>${step}</span>${L ? `<span style="margin-left:auto;white-space:nowrap;color:#64748B">单词 ${L.words + Math.max(L.questions, L.words)} (新 ${L.newWords} + 复习 ${L.reviewWords} + 考题 ${L.words})</span>` : ''}`;
     }
   }
   card.innerHTML = `
@@ -2837,7 +2837,7 @@ function _fcQuizExplainHtml(q) {
   let clue = '';
   if (q.say && q.type !== 'hand') {
     const sent = escapeHtml(q.pre || '') + `<mark class="fcx-mark">${escapeHtml(q.type === 'cloze' ? q.opts[q.ans] : (q.target || q.word))}</mark>` + escapeHtml(q.post || '');
-    clue = `<div class="fcx-sent">${sent}</div><div class="fcx-hint">${q.type === 'meaning' ? '看划线词<b>前后的动作和情绪</b>, 它们限定了这个词只能是这个意思' : q.type === 'cloze' ? '看空格<b>前后的搭配</b> (动词 + 介词 / 宾语), 再看整句逻辑' : ''}</div>`;
+    clue = `<div class="fc-eg-row"><div class="fcx-sent" style="flex:1;min-width:0">${sent}</div>${_fcSpkS(q.say)}</div><div class="fcx-hint">${q.type === 'meaning' ? '看划线词<b>前后的动作和情绪</b>, 它们限定了这个词只能是这个意思' : q.type === 'cloze' ? '看空格<b>前后的搭配</b> (动词 + 介词 / 宾语), 再看整句逻辑' : ''}</div>`;
   }
   let others = '';
   if (Array.isArray(q.optWords) && q.optWords.some(Boolean)) {
@@ -2897,7 +2897,7 @@ window.startFcQuiz = startFcQuiz; window.answerFcQuiz = answerFcQuiz; window.nex
 
 // v21.5: 今天这一组背完后手动再加一组, 想加几次加几次
 function addFcGroupUI() {
-  if (window.getDailyLoad) { const L = window.getDailyLoad(state); const size = window.getFcDailySize(state); if (L.words + Math.max(L.questions, L.words) + size * 2 > L.cap) { showToast(`🌙 今天 新词 ${L.newWords} + 复习 ${L.reviewWords} + 考题 ${Math.max(L.questions, L.words)} 已经 ${L.words + Math.max(L.questions, L.words)}, 再加一组 (${size} 词 + ${size} 题) 会超 ${L.cap}, 明天再加`, 'warn'); return; } }   // v24.5: 新词+复习+考题 ≤ 100
+  // v29.4 (用户: "不要限制我的上限, 时间多, 孩子希望多背"): 手动加组不设上限, 想加几组加几组
   const r = window.addExtraFlashcardGroup(state);
   if (!r.added) { showToast(r.why === 'not_done' ? '先把现在这一组背完再加' : '词库里的词今天都排过了, 没有可加的了', 'info'); renderVocabPage(); return; }
   saveState(state);
@@ -3241,6 +3241,9 @@ window.appSpeak = appSpeak; window.stopSpeak = stopSpeak;
 function _fcSpk(text, size) {
   return `<button class="fc-spk" data-say="${escapeAttr(String(text))}" onclick="fcSpeak(event, this)" aria-label="听发音" style="font-size:${size || 18}px">🔊</button>`;
 }
+// v29.4 (用户: "单词查询和闪卡中的例句, 都加小喇叭, 可朗读"): 例句专用喇叭, 圆底 40px 放行尾, 原来 21px 灰图标夹在斜体字里看不见
+function _fcSpkS(text) { return `<button class="fc-spk fc-spk-s" data-say="${escapeAttr(String(text))}" onclick="fcSpeak(event, this)" aria-label="朗读例句">🔊</button>`; }
+function _fcEgRow(label, text) { return `<div class="fc-eg-row"><span>${escapeHtml(label)}</span>${_fcSpkS(text)}</div>`; }
 function fcSpeak(ev, btn) {
   if (ev) { ev.stopPropagation(); ev.preventDefault(); }
   if (!('speechSynthesis' in window)) { showToast('这个浏览器不支持朗读', 'warn'); return; }
@@ -3302,8 +3305,8 @@ function _renderFlashcardSession() {
           <div class="fc-card-meaning">${meaning}</div>
           ${enDef ? `<div class="fc-card-endef">📖 英文解释: ${escapeHtml(enDef)}</div>` : ''}
           ${eg3
-            ? `<div class="fc-card-sentence">💬 例句${eg3.map((x, i) => `<span style="display:block;margin-top:6px">${_fcSpk(x, 17)} ${eg3.length > 1 ? (i + 1) + '. ' : ''}${escapeHtml(x)}</span>`).join('')}</div>`
-            : (sentence ? `<div class="fc-card-sentence">${_fcSpk(sentence, 17)} 💬 例句: ${escapeHtml(sentence)}</div>` : '')}
+            ? `<div class="fc-card-sentence">💬 例句${eg3.map((x, i) => _fcEgRow((eg3.length > 1 ? (i + 1) + '. ' : '') + x, x)).join('')}</div>`
+            : (sentence ? `<div class="fc-card-sentence">💬 例句${_fcEgRow(sentence, sentence)}</div>` : '')}
           ${eg3
             ? (iwRoot ? `<div class="fc-card-qtype">✍️ 用它替换 <b>${escapeHtml(iwRoot)}</b> — 作文里写这个词, 别再写 ${escapeHtml(iwRoot)}</div>` : '')
             : (quiz ? `<div class="fc-card-qtype">📝 ${escapeHtml(quiz)}</div>` : '')}
@@ -13451,7 +13454,7 @@ function _dictEnsurePop() {
   return el;
 }
 function _dictScheduleHide(ms) { clearTimeout(_dictHideTimer); _dictHideTimer = setTimeout(hideDictPop, ms || 350); }
-function hideDictPop(manual) { if (_dictPopEl) _dictPopEl.style.display = 'none'; if (manual && _dictCur) _dictSuppress = _dictCur.key; _dictCur = null; }
+function hideDictPop(manual) { if (manual) { clearTimeout(_dictHoverTimer); clearTimeout(_dictTouchTimer); clearTimeout(_dictHideTimer); } if (_dictPopEl) _dictPopEl.style.display = 'none'; if (manual && _dictCur) _dictSuppress = _dictCur.key; _dictCur = null; }
 window.hideDictPop = hideDictPop;
 // 从坐标拿到鼠标下面的那个英文词 + 它所在的句子 (给单词本当例句)
 function _dictWordAt(x, y) {
@@ -13475,12 +13478,20 @@ function _dictWordAt(x, y) {
   const ctx = sents.find(s2 => s2.indexOf(raw) >= 0) || '';
   return { raw, key: window.dictKey(raw), ctx: ctx.length > 160 ? '' : ctx, rect: { x, y } };
 }
+// v29.4: 本地词典条目不带例句, 用闪卡例句; 词库外的词退到它所在的原句
+function _dictExample(d, w) {
+  const base = (d && (d.base || d.word)) || w.key;
+  const eg = window.getVocabEg3 ? window.getVocabEg3(base) : null;
+  const ctx = w.ctx && !/[\u3400-\u9fff]/.test(w.ctx) ? w.ctx : '';
+  return (d && d.ex) || (eg && eg[0]) || (window.getVocabSent ? window.getVocabSent(base) : '') || ctx;
+}
 function _dictRender(d, w, loading) {
   const el = _dictEnsurePop();
   const inBook = window.inWordBook(state, w.key);
   const zh = d && d.zh ? escapeHtml(d.zh) : '';
   const ipa = d && d.ipa ? `<span class="dp-ipa">/${escapeHtml(d.ipa)}/</span>` : '';
   const pos = d && d.pos ? `<span class="dp-pos">${escapeHtml(d.pos)}</span>` : '';
+  const ex = _dictExample(d, w);
   // v25.3: 词典弹层放大 + 分行 (词 / 音标 一行, 中文大字一行, 英文释义小字, 例句斜体, 考点黄底)
   el.innerHTML = `
     <div class="dp-head">
@@ -13492,7 +13503,7 @@ function _dictRender(d, w, loading) {
     ${loading ? '<div class="dp-sub">本地词典没有, 联网查询中…</div>' : ''}
     ${zh ? `<div class="dp-zh">${zh}</div>` : (!loading ? '<div class="dp-sub" style="color:#B45309">没查到中文释义' + (navigator.onLine ? '' : ' (现在离线)') + '</div>' : '')}
     ${d && d.en ? `<div class="dp-en">${escapeHtml(d.en)}</div>` : ''}
-    ${d && d.ex ? `<div class="dp-ex">${escapeHtml(d.ex)}</div>` : ''}
+    ${ex ? `<div class="fc-eg-row dp-ex-row"><div class="dp-ex">${escapeHtml(ex)}</div>${_fcSpkS(ex)}</div>` : ''}
     ${d && d.tip ? `<div class="dp-tip">📌 ${escapeHtml(d.tip)}</div>` : ''}
     ${d && !loading && d.src !== 'online' && !d.en ? `<div><a href="#" onclick="event.stopPropagation();window._dictDeep();return false" class="dp-link">🔍 联网查英文释义 / 例句 / 更多义项</a></div>` : ''}
     <div class="dp-actions">
@@ -13546,34 +13557,50 @@ async function _dictDeep() {
 }
 window._dictSay = _dictSay; window._dictToggleBook = _dictToggleBook; window._dictDeep = _dictDeep;
 function _dictBind() {
-  // 桌面悬浮
-  document.addEventListener('mousemove', (e) => {
+  // v29.4 (用户: "有的时候弹窗自动弹出, 且关不掉"): iPad 单击会补发一次 mousemove, 当成悬浮 0.4 秒后自动弹; 点外面关掉后同样又弹回来。
+  // 悬浮只认真鼠标 / 触控板 (pointerType mouse), 手指只认长按。
+  let lastX = -9, lastY = -9;
+  document.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    if (Math.abs(e.clientX - lastX) < 3 && Math.abs(e.clientY - lastY) < 3) return;   // 页面重排时浏览器会补发原地移动, 鼠标没动不算
+    lastX = e.clientX; lastY = e.clientY;
+    clearTimeout(_dictHoverTimer);   // 先清再判断: 鼠标移进弹层后不许被之前排的计时换词
     if (e.target && e.target.closest && e.target.closest('#dictPop')) return;
-    clearTimeout(_dictHoverTimer);
     _dictHoverTimer = setTimeout(() => {
       const w = _dictWordAt(e.clientX, e.clientY);
       if (w && w.key !== _dictSuppress) { _dictSuppress = null; clearTimeout(_dictHideTimer); showDictPop(w); }
       else if (!w) { _dictSuppress = null; if (_dictPopEl && _dictPopEl.style.display === 'block') _dictScheduleHide(500); }
     }, 400);
   }, { passive: true });
-  // 触屏长按
+  // 触屏长按: 手指抬起 / 滑动 / 系统接管滚动 (touchcancel) / 两指 都取消; 按钮和链接上按久了不算查词
+  const cancelTouch = () => { clearTimeout(_dictTouchTimer); _dictTouchXY = null; };
   document.addEventListener('touchstart', (e) => {
-    if (!e.touches[0] || (e.target && e.target.closest && e.target.closest('#dictPop'))) return;
+    if (e.touches.length !== 1 || (e.target && e.target.closest && e.target.closest('#dictPop'))) { cancelTouch(); return; }
     _dictTouchXY = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     clearTimeout(_dictTouchTimer);
-    _dictTouchTimer = setTimeout(() => { const w = _dictWordAt(_dictTouchXY.x, _dictTouchXY.y); if (w) showDictPop(w); }, 500);
+    _dictTouchTimer = setTimeout(() => {
+      const p = _dictTouchXY; if (!p) return;
+      const hit = document.elementFromPoint(p.x, p.y);
+      if (hit && hit.closest && hit.closest('button, a')) return;
+      const w = _dictWordAt(p.x, p.y); if (w) showDictPop(w);
+    }, 600);
   }, { passive: true });
-  document.addEventListener('touchmove', (e) => { if (_dictTouchXY && e.touches[0] && (Math.abs(e.touches[0].clientX - _dictTouchXY.x) > 8 || Math.abs(e.touches[0].clientY - _dictTouchXY.y) > 8)) clearTimeout(_dictTouchTimer); }, { passive: true });
-  document.addEventListener('touchend', () => { clearTimeout(_dictTouchTimer); }, { passive: true });
-  document.addEventListener('touchstart', (e) => { if (_dictPopEl && _dictPopEl.style.display === 'block' && !(e.target.closest && e.target.closest('#dictPop'))) hideDictPop(); }, { passive: true });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideDictPop(); });
+  document.addEventListener('touchmove', (e) => { if (_dictTouchXY && e.touches[0] && (Math.abs(e.touches[0].clientX - _dictTouchXY.x) > 8 || Math.abs(e.touches[0].clientY - _dictTouchXY.y) > 8)) cancelTouch(); }, { passive: true });
+  document.addEventListener('touchend', cancelTouch, { passive: true });
+  document.addEventListener('touchcancel', cancelTouch, { passive: true });
+  document.addEventListener('scroll', cancelTouch, { passive: true, capture: true });
+  // 点弹层外面就关 (捕获阶段, 别的控件拦不住)
+  const closeOutside = (e) => { if (_dictPopEl && _dictPopEl.style.display === 'block' && !(e.target && e.target.closest && e.target.closest('#dictPop'))) hideDictPop(true); };
+  document.addEventListener('pointerdown', closeOutside, true);
+  document.addEventListener('touchstart', closeOutside, { passive: true, capture: true });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideDictPop(true); });
 }
 // 词汇页顶部的单词本卡
 function renderWordBookCard() {
   const list = window.getWordBookList ? window.getWordBookList(state) : [];
   const n = list.length;
   const rows = list.slice(0, 30).map(x => `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #EEF1F6">
-      <div style="flex:1;min-width:0"><b style="font-size:15px">${escapeHtml(x.word)}</b> ${x.ipa ? `<span style="color:#64748B;font-size:12px">/${escapeHtml(x.ipa)}/</span>` : ''} ${_fcSpk(x.word, 14)}<div style="font-size:13px;color:#1E293B">${escapeHtml(x.zh || x.en || '')}</div>${x.ctx ? `<div style="font-size:12px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(x.ctx)}</div>` : ''}</div>
+      <div style="flex:1;min-width:0"><b style="font-size:15px">${escapeHtml(x.word)}</b> ${x.ipa ? `<span style="color:#64748B;font-size:12px">/${escapeHtml(x.ipa)}/</span>` : ''} ${_fcSpk(x.word, 14)}<div style="font-size:13px;color:#1E293B">${escapeHtml(x.zh || x.en || '')}</div>${x.ctx ? `<div style="font-size:12px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_fcSpk(x.ctx, 14)}${escapeHtml(x.ctx)}</div>` : ''}</div>
       <div style="font-size:12px;color:#94A3B8;white-space:nowrap;text-align:right">${x.inDeck ? '闪卡复习中' : '词库已有'}<br>${escapeHtml(x.date || '')}</div>
       <button onclick="window.removeFromWordBook(state,'${escapeHtml(x.word)}');saveState(state);renderVocabPage()" style="border:none;background:none;color:#94A3B8;cursor:pointer;font-size:15px">✕</button>
     </div>`).join('');

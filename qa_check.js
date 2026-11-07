@@ -2031,7 +2031,7 @@ assert(/已学会 \$\{pr\.done\}\/\$\{pr\.total\}/.test(appSrc), 'v21.0: 主页�
   assert(W.pickQuizWords(s5, 'psle_verbs', 20).length === 20, 'v21.1: 按卡组每次考 20 题');
 }
 assert(/function fcSpeak\(ev, btn\)[\s\S]{0,200}stopPropagation/.test(appSrc), 'v21.1: 点小喇叭不会把卡片翻走 (拦冒泡)');
-assert(/_fcSpk\(x, 17\)/.test(appSrc) && /_fcSpk\(word, 22\)/.test(appSrc), 'v21.1: 单词和每句例句旁都有小喇叭');
+assert(appSrc.includes('_fcEgRow((eg3.length > 1') && appSrc.includes('_fcSpk(word, 22)'), 'v21.1/v29.4: 单词和每句例句旁都有小喇叭');
 assert(/getVocabIpa\(word\)/.test(appSrc) && /fc-card-ipa/.test(idxSrc), 'v21.1: 卡片正面显示音标');
 assert(/function startFcQuiz\(/.test(appSrc) && /startFcQuiz\('today'\)/.test(appSrc) && /startFcQuiz\('\$\{deck\.id\}'\)/.test(appSrc), 'v21.1: 考题入口: 考今天这一组 + 每个卡组考 20 题');
 assert(/recordVocabQuiz\(state, q\.word, ok\)/.test(appSrc), 'v21.1: 考题结果真的写回了 (不是死代码)');
@@ -2117,7 +2117,7 @@ assert(/type: points > 0 \? 'admin_award' : 'admin_deduct'/.test(appSrc), 'v21.2
   const g2 = st.fcDailyGroup;
   assert(r1.added === 30 && g2.queue.length === 30 && g2.words.length === 60 && !g2.done, `v21.5/v24.5: 再加一组 = 又 30 个新词进队 (加了 ${r1.added})`);
   assert(g2.queue.every(w => first.indexOf(w) < 0), 'v21.5: 加的这组不含今天已经背过的词 (今天答错的词也不重复进)');
-  assert(g2.newCount === 60 && st.fcDaily[W._fcToday()].done === false && st.fcDaily[W._fcToday()].size === 60, 'v21.5/v24.5: 新词数和当天记录跟着更新, 家长看板看得到今天变成 60 个');
+  assert(g2.newCount === 60 && st.fcDaily[W._fcToday()].done === true && st.fcDaily[W._fcToday()].size === 60, 'v21.5/v24.5: 新词数和当天记录跟着更新, 家长看板看得到今天变成 60 个');
   guard = 0; while (st.fcDailyGroup.queue.length && guard++ < 500) W.answerDailyFlashcard(st, st.fcDailyGroup.queue[0], 'know', 5);
   const r2 = W.addExtraFlashcardGroup(st);
   assert(r2.added === 30 && r2.extra === 2 && st.fcDailyGroup.words.length === 90, 'v21.5/v24.5: 可以一直加 (第 3 组; 全天 单词+题 ≤100 的闸在 UI 层 addFcGroupUI)');
@@ -2316,7 +2316,7 @@ assert(W.CORE_DICT && Object.keys(W.CORE_DICT).length >= 1200 && typeof W.lookup
   W.removeFromWordBook(st, 'snarled');
 }
 assert(/function _dictWordAt\(x, y\)/.test(appSrc) && /caretPositionFromPoint/.test(appSrc) && /function showDictPop\(w\)/.test(appSrc) && /_dictBind\(\);/.test(appSrc), 'v23.2: 悬浮取词 + 弹层 + 启动时绑定');
-assert(/'mousemove'/.test(appSrc.slice(appSrc.indexOf('function _dictBind'))) && /_dictTouchTimer = setTimeout/.test(appSrc), 'v23.2: 桌面悬浮 0.4s / 触屏长按 0.5s 两种触发');
+  { const fn = appSrc.slice(appSrc.indexOf('function _dictBind()'), appSrc.indexOf('// 词汇页顶部的单词本卡')); assert(fn.includes("e.pointerType !== 'mouse'") && !fn.includes("'mousemove'") && fn.includes("'touchcancel'") && fn.includes("addEventListener('pointerdown', closeOutside, true)") && fn.includes('_dictTouchTimer = setTimeout') && appSrc.includes('function hideDictPop(manual) { if (manual) { clearTimeout(_dictHoverTimer)'), 'v29.4: 悬浮只认真鼠标, 单击不弹; touchcancel 取消长按; 点外面捕获阶段关闭且清计时'); }
 assert(/closest\('#dictPop, input, textarea, select, nav/.test(appSrc), 'v23.2: 输入框/导航/弹层自身不触发查词');
 assert(/function _dictToggleBook\(\)/.test(appSrc) && /window\.addToWordBook\(state, k, d, _dictCur\.ctx\)/.test(appSrc), 'v23.2: 弹层里 ⭐ 收藏/移除');
 assert(/function renderWordBookCard\(\)/.test(appSrc) && /\$\{renderWordBookCard\(\)\}/.test(appSrc), 'v23.2: 词汇页顶部有单词本卡');
@@ -2358,8 +2358,8 @@ assert(/function _dictDeep\(\)/.test(appSrc) && /_dictDeep\(\)/.test(appSrc.repl
   const L = W.getDailyLoad(st);
   assert(L.words === 70 && L.newWords === 30 && L.reviewWords === 40 && L.questions === 70 && L.total === 140 && L.full, 'v24.7: 30 新 + 40 复习 + 70 考题 = 140 刚好满');
   assert(!/function _checkGameDailyLock\(gameKey\) \{\n  \/\/ v24\.5/.test(appSrc), 'v24.5: 做题模块不受这个闸限制 (开练不查)');
-  assert(/size \* 2 > L\.cap/.test(appSrc) && /再加一组 \(\$\{size\} 词 \+ \$\{size\} 题\) 会超 \$\{L\.cap\}/.test(appSrc), 'v24.7: 再加一组前算 (词 + 题) 会不会超上限');
-  assert(/单词 \$\{L\.words \+ Math\.max\(L\.questions, L\.words\)\}\/\$\{L\.cap\} \(新 \$\{L\.newWords\} \+ 复习 \$\{L\.reviewWords\} \+ 考题 \$\{L\.words\}\)/.test(appSrc), 'v24.5: 首页顶部显示 单词 n/100 (新 + 复习 + 考题)');
+  { const fn = appSrc.slice(appSrc.indexOf('function addFcGroupUI()'), appSrc.indexOf('window.addExtraFlashcardGroup(state)')); assert(!fn.includes('L.cap') && !fn.includes('getDailyLoad'), 'v29.4: 手动再加一组不设上限'); }
+  assert(appSrc.includes('单词 ${L.words + Math.max(L.questions, L.words)} (新') && !appSrc.includes('}/${L.cap} (新'), 'v29.4: 首页只报今天单词量, 不再显示上限');
   // 最不熟优先: 忘的次数多的排前面
   const s4 = { flashcardSRS: {} }; const all4 = W._fcAllWords().slice(0, 60);
   all4.forEach((x, i) => { s4.flashcardSRS[x] = { interval: 1, correctStreak: 1, lastReviewed: '2020-01-01', nextReview: '2020-01-02', mastered: false, lapses: i % 5 }; });
@@ -2415,6 +2415,7 @@ assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾
   assert(/\.pr-body, \.pr-pdf, \.pr-canvas-host \{ min-height:0; \}/.test(idxSrc) && /\.pr-secs \{ flex-wrap:nowrap; overflow-x:auto;/.test(idxSrc), 'v29.1: 手机上卷子区和答题卡各自滚动, 章节按钮横向一行');
   { const old = W.PAPERS_2025.filter(p => p.subj === 'eng' && p.mcq && p.mcq.max === 28); assert(old.length >= 15 && old.every(p => !(p.sections || []).some(s => /26-35|1-25/.test(s.label))), 'v29.2: 老格式英文 (Booklet A 28 题) 章节名不套 2025 新格式题号 (' + old.length + ' 份)'); }
   { const m18 = W.PAPERS_2025.filter(p => p.subj === 'math' && p.year === 2026 && p.mcq && p.mcq.max === 18); assert(m18.length >= 8, 'v29.2: 2026 数学 Booklet A 18 题答案键 (' + m18.length + ' 份)'); }
+  assert(appSrc.includes('_fcEgRow((eg3.length > 1') && appSrc.includes('_fcEgRow(sentence, sentence)') && appSrc.includes('${_fcSpkS(ex)}') && appSrc.includes('${_fcSpkS(q.say)}') && idxSrc.includes('.fc-spk.fc-spk-s { flex:none; width:40px'), 'v29.4: 闪卡 / 查词 / 考题解析 例句都有 40px 喇叭');
   { const nU = appSrc.split('new SpeechSynthesisUtterance').length - 1, nV = appSrc.split('u.voice = ').length - 1; const speakFn = appSrc.slice(appSrc.indexOf('function appSpeak('), appSrc.indexOf('window.appSpeak = appSpeak')); assert(nU === 1 && nV === 1 && speakFn.includes('new SpeechSynthesisUtterance') && speakFn.includes('if (voice) u.voice = voice;') && !appSrc.includes("'en-GB'") && !appSrc.includes('_fcVoice'), 'v29.3: 全软件发音只走 appSpeak, 默认不指定声音跟随 iPad 设置, 不再写死 en-GB (实例 ' + nU + ')'); assert(['_raPassage.passage', 'item.audio', 'g.item.text'].every(x => appSrc.includes('appSpeak(' + x)) && appSrc.includes('appSpeak(t, { rate: 0.85 })') && appSrc.includes('appSpeak(text, { rate: text.split'), 'v29.3: 朗读 / 听力 / 单词卡 / 听写 / 词典 5 个入口都接 appSpeak'); assert(appSrc.split('speechSynthesis.cancel()').length - 1 === 2, 'v29.3: 停止也走 stopSpeak, 不会被换声音重念'); }
   // v28.0: 名校真题页内做卷
   assert(Array.isArray(W.PAPERS_2025) && W.PAPERS_2025.length >= 36 && W.PAPERS_2025.every(p => /^https:\/\/chamui-papers\.web\.app\/(20\d\d|psle)\//.test(p.url) && p.sections), 'v28.0/v28.3: PAPERS_2025 ≥36 份 (名校 + PSLE), 都在 chamui-papers 站, 都有章节页码');
