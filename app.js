@@ -869,7 +869,18 @@ window.renderAdmissionForecastCard = renderAdmissionForecastCard;
 // ============================================================
 
 // A1: 今日 3 件事 sticky 卡 — v19.14b 加平日/周末分化
-// v29.8: 手动打勾函数已删 —— 打卡全部按 App 实际做题自动记录, 孩子不能手改
+// v29.9: 保留手填 (用户 2026-11-07 第二次: "还是保留一栏他能手填的, App 以外课表上安排的任务需要记录正确率, 历史填的数据都保留")
+// 手填只针对课表上 App 测不到的块 (补习老师 Editing/Cloze/Synthesis、班课、作业); App 能测到的一律自动, 不给手填
+function toggleTodayManual(dk, i) {
+  if (!state.todayManual) state.todayManual = {};
+  const keys = Object.keys(state.todayManual).sort();
+  while (keys.length > 60) delete state.todayManual[keys.shift()];
+  const m = state.todayManual[dk] = state.todayManual[dk] || {};
+  m[i] = !m[i];
+  saveState(state);
+  renderTodayThreeCard(); if (document.getElementById('page-schedule') && document.getElementById('page-schedule').classList.contains('active')) renderSchedulePage();
+}
+window.toggleTodayManual = toggleTodayManual;
 function renderTodayThreeCard() {
   const card = document.getElementById('todayThreeCard');
   if (!card) return;
@@ -922,7 +933,7 @@ function renderTodayThreeCard() {
     headerTitle = `📊 今日学习记录 · ${day.label || ''}`;
     counterFn = () => `${rec.n}`; counterLabel = '题';
     headerSub = '';
-    itemsHtml = _dayRecordHtml(todayKey) + _dayAnalysisHtml(todayKey);
+    itemsHtml = _dayRecordHtml(todayKey) + _manualRowsHtml(todayKey, dow) + _dayAnalysisHtml(todayKey);   // v29.9: 中间一栏手填 (App 外的课表任务)
     tipHtml = `<details class="ui-more dl-week"><summary>📈 本周分析 · 下周重点加强</summary>${_weekAnalysisHtml(schedMonday(new Date()))}</details>
     <div class="ui-links">
       <button class="ui-btn2" onclick="gotoPage('schedule')">📆 看整周课表 ›</button>
@@ -11859,7 +11870,50 @@ function schedMonday(d) { // 所在周的周一 Date
   d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1)); d.setHours(12, 0, 0, 0); return d;
 }
 function getSchedScores() { state.scheduleScores = state.scheduleScores || {}; return state.scheduleScores; }
-// v29.8: 手填存分 / 手填版周汇总 已删 (state.scheduleScores 只读历史, 不再写)
+// v29.9: 手填存分恢复 (纸上做的 对/共), 写 state.scheduleScores (历史数据原样保留, 和 v23 同一份)
+function saveDailyScore(dateKey, field, value) {
+  const all = getSchedScores();
+  all[dateKey] = all[dateKey] || {};
+  if (value === '' || value == null) { delete all[dateKey][field]; }
+  else if (field === 'note') { all[dateKey][field] = String(value).slice(0, 200); }
+  else { all[dateKey][field] = Number(value); }
+  saveState(state);
+  renderTodayThreeCard();
+  if (document.getElementById('schedWeekSummary')) { renderSchedWeekSummary(); renderSchedGrid(); }
+}
+// 一格手填控件 (对 / 共 两格, 勾, 数, 文本)
+function _sgCtrl(row, dk, sc) {
+  const inpS = 'width:40px;padding:5px 2px;border-radius:8px;border:1px solid #CBD5E1;background:#FFFFFF;color:#1E293B;font-size:15px;text-align:center';
+  if (row.type === 'text') return `<input type="text" maxlength="200" placeholder="如: 读书20页" value="${escapeHtml(String(sc[row.key] ?? ''))}" style="width:96px;padding:5px 6px;border-radius:8px;border:1px solid #CBD5E1;background:#FFFFFF;color:#1E293B;font-size:13px" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
+  if (row.type === 'chk') return `<input type="checkbox" class="ui-check" ${sc[row.key] ? 'checked' : ''} onchange="window.saveDailyScore('${dk}','${row.key}',this.checked?1:'')">`;
+  if (row.type === 'frac' || row.type === 'pair') return `<input type="number" class="sg-num" min="0" inputmode="numeric" placeholder="对" value="${sc[row.key + '_a'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_a',this.value)"><span class="slash" style="color:#94A3B8;font-size:13px">/</span><input type="number" class="sg-num" min="0" inputmode="numeric" placeholder="共" value="${sc[row.key + '_b'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_b',this.value)">`;
+  return `<input type="number" class="sg-num" min="0" inputmode="numeric" placeholder="数" value="${sc[row.key] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
+}
+// App 测不到的课表块 → 手填行 (时间 | 名称 | 右侧 对/共 或 勾)。App 能测的块 (背单词 / 口语打卡 / 语法 / 科学 自学) 不出现在这里
+const _SG_AUTO_KEYS = { vt: 1, listen: 1 };
+function _manualRowsHtml(dk, dow) {
+  const day = SCHED_DAYS[dow] || { blocks: [] }, sc = getSchedScores()[dk] || {}, manual = ((state.todayManual || {})[dk]) || {};
+  const blocks = (day.blocks || []).map((b, i) => ({ i, t: b[0], name: b[1], note: b[2], kind: b[3] })).filter(b => b.kind !== 'r' && !/睡觉|洗漱|吃饭|休息|午休|上学/.test(b.name));
+  const rows = blocks.map(b => {
+    const rs = schedKeysOf(b.name).filter(k => !_SG_AUTO_KEYS[k]).map(k => SCHED_GRID.find(x => x.key === k)).filter(Boolean);
+    const scoreRows = rs.filter(r => r.key !== 'hw');
+    if (!scoreRows.length && b.kind !== 'c' && !/作业|补习|班/.test(b.name)) return '';   // 自学且 App 能测的块, 不手填
+    let ctrl, done;
+    if (scoreRows.length) {
+      done = scoreRows.every(r => (r.type === 'frac' || r.type === 'pair') ? (sc[r.key + '_a'] != null || sc[r.key + '_b'] != null) : (sc[r.key] != null && sc[r.key] !== ''));
+      ctrl = scoreRows.map(r => `<div class="ui-ctrl-line">${scoreRows.length > 1 ? `<span class="ui-ctrl-lbl">${escapeHtml(r.label.replace(/:\s*[^:]*[_＿].*$/, '').replace(/\s*\d+篇|\s*\d+题/g, ''))}</span>` : ''}${_sgCtrl(r, dk, sc)}</div>`).join('');
+    } else {
+      done = !!manual['b' + b.i];
+      ctrl = `<input type="checkbox" class="ui-check" ${done ? 'checked' : ''} onchange="toggleTodayManual('${dk}','b${b.i}')" title="做完点一下">`;
+    }
+    const targets = scoreRows.map(r => escapeHtml(r.target)).filter((v, i, a) => a.indexOf(v) === i).join(' / ');
+    const sub = [b.note ? escapeHtml(b.note) : '', targets ? `目标 ${targets}` : ''].filter(Boolean).join(' · ');
+    return `<div class="ui-row${done ? ' done' : ''}"><div class="ui-row-main"><div class="ui-row-time">${escapeHtml(b.t)}</div><div class="ui-row-title">${done ? '✅ ' : ''}${escapeHtml(b.name)}</div>${sub ? `<div class="ui-row-sub">${sub}</div>` : ''}</div><div class="ui-row-act">${ctrl}</div></div>`;
+  }).filter(Boolean);
+  if (!rows.length) return '';
+  return `<div class="dl-h">✍️ App 外的任务 <span style="font-weight:400;color:#64748B">纸上做的, 填 对/共</span></div><div class="ui-list">${rows.join('')}</div>`;
+}
+window.saveDailyScore = saveDailyScore; window._manualRowsHtml = _manualRowsHtml;
 // ============ v19.79: 9月假期课表 (2026-09-05 ~ 09-13, 按日期匹配, 9/14 自动恢复常规) ============
 // 数据源: 桌面《PSLE_2027_假期课表_v2.docx》· 班课=上午Paper2突破班(9/7-10)+下午口语班(9/10-13)
 // 行类型: c=班课(蓝) s=自学 r=休息; three=[icon, 标题, 说明, 点击(可空=去课表页)] × 3 供主页今日卡
@@ -12162,7 +12216,7 @@ function renderSchedulePage() {
   const isToday = viewDow === todayDow;
   const studyN = (day.blocks || []).filter(b => (b[3] === 's' || b[3] === 'c') && !/睡觉|洗漱|吃饭|休息|午休/.test(b[1])).length;
   el.innerHTML = `
-    <div class="ui-hint"><span class="ui-hint-ico">📆</span><span>${isToday ? '这是<b>今天的课表</b>, 做了题 App <b>自动记录</b>, 不用填' : `正在看<b>${SCHED_DAYS[viewDow].label}</b>的课表, 点"${SCHED_DAYS[todayDow].label} · 今"回到今天`}</span></div>
+    <div class="ui-hint"><span class="ui-hint-ico">📆</span><span>${isToday ? '这是<b>今天的课表</b>, App 里做的题<b>自动记录</b>, 纸上做的在下面<b>手填 对/共</b>' : `正在看<b>${SCHED_DAYS[viewDow].label}</b>的课表, 点"${SCHED_DAYS[todayDow].label} · 今"回到今天`}</span></div>
     <div class="card">
       <div class="ui-head">
         <div class="ui-page-title">📆 课表 · ${SCHED_DAYS[viewDow].label}</div>
@@ -12214,7 +12268,7 @@ function _dayRecordHtml(k, opts) {
   if (rows.length) return `<div class="ui-list">${rows.join('')}</div>`;
   const dow = new Date(k + 'T12:00:00').getDay(), day = SCHED_DAYS[dow] || { blocks: [] };
   const plan = (day.blocks || []).filter(b => b[3] !== 'r' && !/睡觉|洗漱|吃饭|休息|午休|上学/.test(b[1])).map(b => `<div class="ui-row rest"><div class="ui-row-main"><div class="ui-row-time">${escapeHtml(b[0])}</div><div class="ui-row-title">${escapeHtml(b[1])}</div></div></div>`).join('');
-  return `<div class="ui-empty">${isToday ? '今天还没开始 · 做了题这里自动出现, 不用手填' : k > schedLocalDate() ? '还没到这天' : '这天没在 App 里学'}</div>${opts.plan !== false && plan ? `<div class="dl-plan-title">${isToday ? '今天' : '这天'}课表</div><div class="ui-list">${plan}</div>` : ''}`;
+  return `<div class="ui-empty">${isToday ? '今天还没开始 · App 里做了题这里自动出现' : k > schedLocalDate() ? '还没到这天' : '这天没在 App 里学'}</div>${opts.plan !== false && plan ? `<div class="dl-plan-title">${isToday ? '今天' : '这天'}课表</div><div class="ui-list">${plan}</div>` : ''}`;
 }
 function _dayAnalysisHtml(k) {
   const a = window.analyzeDay(state, k);
@@ -12244,8 +12298,8 @@ function renderSchedDayScore(dow) {
   const kindTag = k => k === 'c' ? '<span class="ui-tag primary">班课</span>' : k === 's' ? '<span class="ui-tag">自学</span>' : '';
   const blockRows = (day.blocks || []).map(b => `<div class="ui-row${isRest(b) ? ' rest' : ''}"><div class="ui-row-main"><div class="ui-row-time">${escapeHtml(b[0])}</div><div class="ui-row-title">${escapeHtml(b[1])}${isRest(b) ? '' : ' ' + kindTag(b[3])}</div>${b[2] ? `<div class="ui-row-sub">${escapeHtml(b[2])}</div>` : ''}</div></div>`).join('');
   el.innerHTML = `<div class="ui-list">${blockRows || '<div class="ui-empty">这天课表上没有学习安排</div>'}</div>
-    <div class="dl-h">📊 这天 App 里的记录 <span style="font-weight:400;color:#64748B">自动, 不用填</span></div>
-    ${_dayRecordHtml(dk, { plan: false })}${_dayAnalysisHtml(dk)}`;
+    <div class="dl-h">📊 这天 App 里的记录 <span style="font-weight:400;color:#64748B">做题自动记 · 纸上做的手填</span></div>
+    ${_dayRecordHtml(dk, { plan: false })}${_manualRowsHtml(dk, dow)}${_dayAnalysisHtml(dk)}`;
 }
 window.renderSchedDayScore = renderSchedDayScore;
 function _schedShiftWeek(n) { _schedWeekOffset += n; if (_schedWeekOffset > 0) _schedWeekOffset = 0; renderSchedGrid(); renderSchedWeekSummary(); }
@@ -12269,7 +12323,7 @@ function renderSchedGrid() {
     <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
       <thead><tr style="background:#F8FAFC"><th style="padding:6px 4px;font-size:12px;color:#64748B;font-weight:600;text-align:left">模块</th>${heads}</tr></thead>
       <tbody>${fcRow}${modRows || ''}${totRow}</tbody></table></div>
-    <div style="font-size:12px;color:#64748B;margin-top:6px">全部由 App 按实际做题自动记录 · 纸上做的 (补习老师 / 作业) 这里看不到</div>`;
+    <div style="font-size:12px;color:#64748B;margin-top:6px">App 里做的自动记录 · 标"纸上"的是手填的 (补习老师 / 作业), 历史填的都在</div>`;
 }
 function renderSchedWeekSummary() {
   const el = document.getElementById('schedWeekSummary');

@@ -6599,8 +6599,24 @@ const MOD_ACTION = {
   review: '错题本每天清一轮, 连对 3 次毕业',
 };
 const SCHED_KEY2MOD = { ed: 'editing', cloze: 'compcloze', syn: 'synthesis', gr: 'grammar', oe: 'comp_oe', sci_mcq: 'sci:mcq', sci_oe: 'sci:oe', cn: 'cn:oe', vt: 'fc', listen: 'oral' };
-function _modMeta(mod) { if (MOD_META[mod]) return MOD_META[mod]; if (/^sci:/.test(mod)) return MOD_META['sci:node']; return { label: mod, subj: 'eng', target: 80 }; }
+function _modMeta(mod) {
+  if (/^paper:/.test(mod)) { const b = _modMeta(mod.slice(6)); return Object.assign({}, b, { label: b.label + ' · 纸上' }); }   // v29.9: 纸上手填的同一模块, 标"纸上"
+  if (MOD_META[mod]) return MOD_META[mod]; if (/^sci:/.test(mod)) return MOD_META['sci:node']; return { label: mod, subj: 'eng', target: 80 };
+}
 function _modKey(mod) { return MOD_META[mod] ? mod : /^sci:/.test(mod) ? 'sci:node' : mod; }
+function _modBase(mod) { return mod.replace(/^paper:/, ''); }
+// v29.9 (用户: "保留一栏他能手填的, App 以外课表上安排的任务需要记录正确率, 历史填的数据都保留"): 课表打分格 (state.scheduleScores, 手填 对/共) → 模块行, 和 App 自动记录并排, 一起进每日/每周分析
+const PAPER_KEY2MOD = { ed: 'editing', gr: 'grammar', oe: 'comp_oe', cloze: 'compcloze', vw: 'vocab', syn: 'synthesis', sci_mcq: 'sci:mcq', sci_oe: 'sci:oe', cn: 'cn:oe', vt: 'vocab', wkt: 'vocab', paper: 'paper2' };
+function _paperRows(state, k) {
+  const sc = ((state && state.scheduleScores) || {})[k] || {}; const out = {};
+  Object.keys(PAPER_KEY2MOD).forEach(key => {
+    const a = sc[key + '_a'], b = sc[key + '_b'];
+    if (a == null || !(b > 0)) return;
+    const mod = 'paper:' + PAPER_KEY2MOD[key]; const x = out[mod] = out[mod] || { ok: 0, n: 0, runs: 0 };
+    x.ok += Math.max(0, Math.min(b, Number(a) || 0)); x.n += Number(b); x.runs++;
+  });
+  return out;
+}
 // 一天的记录: 各模块 对/共/正确率 + 背单词 + 口语时长 + 学习时间
 // 第一次用: 把以前模块记录 (engModules.runs 带日期, 最近 30 条/模块) 和小游戏最近 5 局 (gameStats.recent) 搬进流水, 周分析不至于从 0 开始
 function _seedDayLog(state) {
@@ -6615,7 +6631,7 @@ function _seedDayLog(state) {
 }
 function getDayRecord(state, k) {
   _seedDayLog(state);
-  const raw = ((state && state.dayLog) || {})[k] || {};
+  const raw = Object.assign({}, ((state && state.dayLog) || {})[k] || {}, _paperRows(state, k));   // v29.9: App 自动 + 纸上手填
   const mods = {};
   Object.keys(raw).forEach(m => { const key = _modKey(m), x = raw[m] || {}; const t = mods[key] = mods[key] || { ok: 0, n: 0, runs: 0 }; t.ok += x.ok || 0; t.n += x.n || 0; t.runs += x.runs || 1; });
   const rows = Object.keys(mods).map(m => {
@@ -6689,18 +6705,18 @@ function analyzeWeek(state, mon) {
   const fast = cur.days.filter(d => d.rows && d.n === 0 && d.fcReviewed >= 10 && d.sec && d.sec / d.fcReviewed <= 2);
   if (fast.length) notes.push({ lvl: 'bad', text: `有 ${fast.length} 天背单词**每词不到 2 秒**, 像在乱点` });
   if (cur.pastDays >= 5 && cur.n < 150) notes.push({ lvl: 'warn', text: `本周共做 **${cur.n} 题**, 量偏少 (建议每周 200 题以上)` });
-  const sched = _scheduledMods(); const did = new Set(cur.mods.map(m => m.mod));
+  const sched = _scheduledMods(); const did = new Set(cur.mods.map(m => _modBase(m.mod)));   // v29.9: 纸上填了也算练过
   const miss = [...sched].filter(m => m !== 'fc' && m !== 'oral' && !did.has(m));
-  if (cur.pastDays >= 3 && miss.length) notes.push({ lvl: 'info', text: `课表上有 ${miss.map(m => '**' + _modMeta(m).label + '**').join('、')}, 本周 App 里没记录 (纸上做的 App 看不到)` });
+  if (cur.pastDays >= 3 && miss.length) notes.push({ lvl: 'info', text: `课表上有 ${miss.map(m => '**' + _modMeta(m).label + '**').join('、')}, 本周没记录 (纸上做的要在打卡表手填 对/共)` });
   if (!notes.length && cur.n >= 50) notes.push({ lvl: 'ok', text: '本周各模块**都达标**, 保持' });
   // 下周重点: 低于目标的 (按差距 × 科目权重) → 退步的 → 课表有但没练的
-  low.forEach(m => { if (focus.length < 3) focus.push({ mod: m.mod, label: m.label, why: `${m.pct}% 没到 ${m.target}%`, action: MOD_ACTION[m.mod] || '每天练 1 局, 正确率到目标线再换' }); });
-  drop.forEach(m => { if (focus.length < 3 && !focus.some(f => f.mod === m.mod)) focus.push({ mod: m.mod, label: m.label, why: `比上周掉了 ${-m.delta} 个点`, action: MOD_ACTION[m.mod] || '每天练 1 局' }); });
+  low.forEach(m => { if (focus.length < 3) focus.push({ mod: m.mod, label: m.label, why: `${m.pct}% 没到 ${m.target}%`, action: MOD_ACTION[_modBase(m.mod)] || '每天练 1 局, 正确率到目标线再换' }); });
+  drop.forEach(m => { if (focus.length < 3 && !focus.some(f => f.mod === m.mod)) focus.push({ mod: m.mod, label: m.label, why: `比上周掉了 ${-m.delta} 个点`, action: MOD_ACTION[_modBase(m.mod)] || '每天练 1 局' }); });
   if (cur.pastDays >= 5) miss.forEach(m => { if (focus.length < 3 && !focus.some(f => f.mod === m)) focus.push({ mod: m, label: _modMeta(m).label, why: '课表有但 App 里没练过', action: MOD_ACTION[m] || '每天练 1 局' }); });
   const subj = SUBJ_ORDER.filter(s => s !== 'rev').map(s => { const ms = cur.mods.filter(m => m.subj === s && !m.count && m.n >= 5); return { subj: s, label: SUBJ_LABEL[s], n: cur.mods.filter(m => m.subj === s).reduce((a, m) => a + m.n, 0), graded: ms.length, pass: ms.filter(m => m.pass).length, miss: ms.filter(m => !m.pass).map(m => m.label) }; });
   return Object.assign(cur, { notes, focus, subj, prev: { n: prev.n, pct: prev.pct, studyDays: prev.studyDays } });
 }
-window._dayLogAdd = _dayLogAdd; window._seedDayLog = _seedDayLog; window.getDayRecord = getDayRecord; window.analyzeDay = analyzeDay; window.analyzeWeek = analyzeWeek; window.MOD_META = MOD_META; window.MOD_ACTION = MOD_ACTION; window.DAYLOG_MOD_OF_GAME = DAYLOG_MOD_OF_GAME; window._weekRaw = _weekRaw;
+window._paperRows = _paperRows; window.PAPER_KEY2MOD = PAPER_KEY2MOD; window._dayLogAdd = _dayLogAdd; window._seedDayLog = _seedDayLog; window.getDayRecord = getDayRecord; window.analyzeDay = analyzeDay; window.analyzeWeek = analyzeWeek; window.MOD_META = MOD_META; window.MOD_ACTION = MOD_ACTION; window.DAYLOG_MOD_OF_GAME = DAYLOG_MOD_OF_GAME; window._weekRaw = _weekRaw;
 
 function getFlashcardStats(state) {
   if (!state.flashcardSRS) state.flashcardSRS = {};

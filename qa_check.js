@@ -1164,15 +1164,14 @@ assert(/_schedShiftWeek/.test(appSrc) && /window\._schedShiftWeek = _schedShiftW
 assert(/'家长已核对'/.test(appSrc), 'v19.51: 家长核对行存在');
 // (v22.1 删: 今日必做改成按课表生成, 旧写死文案不再存在) void(/21:30准时收工/.test(appSrc), 'v19.51: 收工勾选行存在');
 // v29.8: math_b / essay_a 手填格子已随手填周汇总删除 (打卡全自动)
-assert(!/math_b|essay_a/.test(appSrc), 'v29.8: 手填格子 (math_b / essay_a) 不再出现在 app.js');
+assert(/PAPER_KEY2MOD = \{ ed: 'editing'/.test(dataSrc), 'v29.9: 手填格子 key → 模块映射在 data.js');
 assert((appSrc.match(/SCHED_GRID/g) || []).length >= 3, 'v19.51: SCHED_GRID 被渲染使用');
 assert(/overflow-x:auto/.test(appSrc), 'v19.51: 打分表横向滚动容器(手机不撑破)');
 assert(/v19\.53: 家长停在课表页/.test(appSrc), 'v19.53: 远程更新即时刷新课表页(多设备查看)');
 // v19.59: 打分表全周7天 + 自学记录文本行
 assert(/w\.days\.map\(d => \{ const dd = new Date\(d\.k/.test(appSrc), 'v19.59→v29.8: 整周记录表含全周 7 列 (从 _weekRaw.days 生成)');
 // (v23.10 删: 自学记录文本行不在课表上, 用户要求周表和课表全对上) assert(/key: 'note'/.test(appSrc) && /type: 'text'/.test(appSrc), 'v19.59: 自学记录文本行存在');
-assert(!/field === 'note'/.test(appSrc), 'v19.59→v29.8: 自学记录文本框已删 (全自动)');
-assert(!/row\.type === 'text'/.test(appSrc), 'v19.59→v29.8: 手填文本分支已删');
+assert(/field === 'note'/.test(appSrc) && /row\.type === 'text'/.test(appSrc), 'v19.59/v29.9: 手填 note / text 分支保留');
 // v19.62: 能力页按计分卡维度评估
 assert(/id="schedAbilityCard"/.test(idxSrc), 'v19.62: 能力评估卡容器在能力页首屏');
 assert(/function renderSchedAbilityCard\(/.test(appSrc), 'v19.62: renderSchedAbilityCard 已定义');
@@ -1236,7 +1235,7 @@ assert(/page === 'schedule'/.test(appSrc), 'v19.50: tab 切换 hook 已接入 (�
 assert(/function computeSchedWeekSummary\(/.test(appSrc), 'v19.50: 周汇总函数已定义');
 assert(/renderSchedWeekSummary\(\)/.test(appSrc), 'v19.50: 周汇总被调用');
 assert(/renderSchedMonthTrend\(\)/.test(appSrc), 'v19.50: 月趋势被调用');
-assert(!/\bsaveDailyScore\b/.test(appSrc) && !/\b_sgCtrl\b/.test(appSrc) && !/\btoggleTodayManual\b|\btoggleManualFor\b/.test(appSrc), 'v29.8: 手填打分 / 手动打勾 全部删除 (孩子不能手改)');
+assert(/function saveDailyScore\(dateKey, field, value\)/.test(appSrc) && /function _sgCtrl\(row, dk, sc\)/.test(appSrc) && /function _manualRowsHtml\(dk, dow\)/.test(appSrc) && /_manualRowsHtml\(todayKey, dow\)/.test(appSrc) && /_manualRowsHtml\(dk, dow\)/.test(appSrc), 'v29.9: 手填栏保留 (App 外课表任务 对/共), 首页 + 课表页按天 都有');
 assert(/Conquer Comprehension/.test(appSrc), 'v19.50: 课表含实书名(阅读OE)');
 assert(/21:00–21:30/.test(appSrc) && /睡前单词/.test(appSrc), 'v19.50: 睡前单词档在课表中');
 assert(/state\.dayLog\[k\] = state\.dayLog\[k\] \|\| \{\}/.test(dataSrc) && /_dayLogAdd\(state, modKey, ok, total\)/.test(dataSrc) && /else if \(DAYLOG_MOD_OF_GAME\[gameKey\]\) _dayLogAdd/.test(dataSrc), 'v29.8: 学习流水挂 state.dayLog (随 Firebase 同步); recordEngModule / recordGameRun 都写它');
@@ -1894,7 +1893,7 @@ assert(/window\._schedToggleNormal/.test(appSrc), 'v20.2: 切换函数已导出 
 
 // ===== v20.7: 周打分表 "成绩根本不对" (孩子实报) =====
 assert(!/width:26px/.test(appSrc), 'v20.7: 打分格不再 26px (两位数被截成一位: 云端存 20/30, 屏幕显示 2/3)');
-assert(!/class="sg-num"/.test(appSrc) && !/type="number"[^>]*onchange="window\.saveDailyScore/.test(appSrc), 'v20.7→v29.8: 打分数字框已全部删除');
+assert(/class="sg-num"/.test(appSrc) && /\.sg-num::-webkit-inner-spin-button/.test(idxSrc) && !/width:26px/.test(appSrc), 'v20.7/v29.9: 手填数字框 40px 去箭头');
 assert(/function _weekRaw\(state, mon\)/.test(dataSrc) && /_weekKeys\(mon\)\.map/.test(dataSrc), 'v20.7→v29.8: 周汇总全周 7 天聚合 (dayLog 按日期取, 不按固定星期)');
 {
   // v29.8: 周汇总从 dayLog 自动算 (手填 scheduleScores 不再参与)
@@ -1919,8 +1918,13 @@ assert(/function _weekRaw\(state, mon\)/.test(dataSrc) && /_weekKeys\(mon\)\.map
   const d2 = W.getDayRecord(st2, '2026-09-08');
   assert(d2.n === 20 && d2.ok === 17 && st2.dayLogSeeded && W.getDayRecord(st2, '2026-09-08').n === 20, 'v29.8: 第一次用把 engModules.runs (带日期) 和 gameStats.recent 搬进流水, 只搬一次不重复');
   assert(/_dayLogAdd\(state, 'review', isCorrect \? 1 : 0, 1\)/.test(appSrc) && /_dayLogAdd\(state, 'focus'/.test(appSrc) && /_dayLogAdd\(state, 'oral', 1, 1\)/.test(appSrc), 'v29.8: 错题复习 / 每日考点 / 朗读 三个非游戏入口也进流水');
-  assert(/function _dayRecordHtml\(k, opts\)/.test(appSrc) && /_dayRecordHtml\(todayKey\) \+ _dayAnalysisHtml\(todayKey\)/.test(appSrc) && /_weekAnalysisHtml\(schedMonday\(new Date\(\)\)\)/.test(appSrc) && /_dayRecordHtml\(dk, \{ plan: false \}\)/.test(appSrc) && /el\.innerHTML = _weekAnalysisHtml\(_schedGridMonday\(\)\)/.test(appSrc), 'v29.8: 首页今日卡 = 自动记录 + 当日分析 + 折叠周分析; 课表页按天 / 本周分析 同一套渲染器 (死代码警钟)');
-  assert(!/<input type="checkbox"[^>]*todayManual|onchange="toggleTodayManual/.test(appSrc) && !/<input type="number"/.test(appSrc.slice(appSrc.indexOf('function renderTodayThreeCard'), appSrc.indexOf('function renderTargetSchoolMini'))), 'v29.8: 首页今日卡没有任何输入框 / 勾选框 (孩子不能手改)');
+  assert(/function _dayRecordHtml\(k, opts\)/.test(appSrc) && /_dayRecordHtml\(todayKey\) \+ _manualRowsHtml\(todayKey, dow\) \+ _dayAnalysisHtml\(todayKey\)/.test(appSrc) && /_weekAnalysisHtml\(schedMonday\(new Date\(\)\)\)/.test(appSrc) && /_dayRecordHtml\(dk, \{ plan: false \}\)\}\$\{_manualRowsHtml\(dk, dow\)/.test(appSrc) && /el\.innerHTML = _weekAnalysisHtml\(_schedGridMonday\(\)\)/.test(appSrc), 'v29.8: 首页今日卡 = 自动记录 + 当日分析 + 折叠周分析; 课表页按天 / 本周分析 同一套渲染器 (死代码警钟)');
+  assert(!/<input/.test(appSrc.slice(appSrc.indexOf('function _dayRecordHtml'), appSrc.indexOf('function _dayAnalysisHtml'))) && /_SG_AUTO_KEYS = \{ vt: 1, listen: 1 \}/.test(appSrc), 'v29.8/v29.9: App 自动记录的行没有输入框; 手填只给 App 测不到的块 (背单词 / 口语打卡 不手填)');
+  const st3 = { dayLog: { '2026-09-08': { editing: { ok: 9, n: 10, runs: 1 } } }, scheduleScores: { '2026-09-08': { ed_a: 18, ed_b: 20, cloze_a: 10, cloze_b: 15, sci_mcq_a: 16, sci_mcq_b: 20 }, '2026-09-09': { hw: 1 } } };
+  const d3 = W.getDayRecord(st3, '2026-09-08');
+  assert(d3.rows.length === 4 && d3.rows.find(r => r.mod === 'paper:editing').label === 'Editing 改错 · 纸上' && d3.rows.find(r => r.mod === 'editing').n === 10 && d3.n === 65, `v29.9: 历史手填 (scheduleScores) 照常显示: 纸上 Editing 18/20 和 App Editing 9/10 分两行, 合计 65 题 (实际 ${d3.rows.length}/${d3.n})`);
+  const w3 = W.analyzeWeek(st3, new Date(2026, 8, 7, 12));
+  assert(w3.mods.some(m => m.mod === 'paper:compcloze' && !m.pass) && w3.focus.some(f => f.mod === 'paper:compcloze' && /完形/.test(f.action)), 'v29.9: 纸上完形 10/15 = 67% < 70% 进注意事项和下周重点, 做法按完形给');
 }
 
 // ===== v21.0: 单词闪卡重做 (孩子实报: 没有已学会的记录/没进度/不知道多久学完/每天多少没规划; 家长要每天看到情况) =====
