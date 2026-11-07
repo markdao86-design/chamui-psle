@@ -1909,7 +1909,7 @@ assert(/function _weekRaw\(state, mon\)/.test(dataSrc) && /_weekKeys\(mon\)\.map
   assert(wk.focus.length === 3 && wk.focus[0].mod === 'grammar' && wk.focus.every(f => f.action), `v29.8: 下周重点最多 3 项, 差距 × 科目权重最大的 (语法 50% vs 90%) 排第一, 每项带做法 (实际 ${wk.focus.map(f => f.mod).join(',')})`);
   assert(wk.notes.some(x => /没在 App 里学/.test(x.text)) && wk.notes.some(x => /单词只背完/.test(x.text)), 'v29.8: 注意事项: 没学的天 + 单词没背完的天');
   const sj = wk.subj.find(s => s.subj === 'sci');
-  assert(sj && sj.graded === 2 && sj.pass === 2, 'v29.8: 四科达标格: 科学选择 80% + 科学考点 90% 两项都达标');
+  assert(sj && sj.graded === 2 && sj.pass === 1, 'v29.8/v30.0: 四科达标格: 科学考点 90% 达标, 科学选择 80% 按 AL1 线 90% 不达标');
   const st1 = { dayLog: {}, gameStats: {}, flashcardSRS: {}, logs: [], scheduleScores: {} };
   W.recordGameRun(st1, 'grammar', 9, 10); W.recordGameRun(st1, 'math', 8, 10); W.recordGameRun(st1, 'cn_oe', 4, 5);
   const tk = W._fcToday();
@@ -1917,6 +1917,17 @@ assert(/function _weekRaw\(state, mon\)/.test(dataSrc) && /_weekKeys\(mon\)\.map
   const st2 = { engModules: { grammar: { ok: 9, total: 10, runs: [{ d: '2026-09-08', ok: 9, total: 10, src: 'grammar' }] } }, gameStats: { math: { recent: [{ date: '2026-09-08', correct: 8, total: 10 }] } } };
   const d2 = W.getDayRecord(st2, '2026-09-08');
   assert(d2.n === 20 && d2.ok === 17 && st2.dayLogSeeded && W.getDayRecord(st2, '2026-09-08').n === 20, 'v29.8: 第一次用把 engModules.runs (带日期) 和 gameStats.recent 搬进流水, 只搬一次不重复');
+  { // v30.0: 目标线一律 AL1=90; 模块明细可点开; 没答的题不记 0 分
+    assert(Object.keys(W.MOD_META).every(k => W.MOD_META[k].count || W.MOD_META[k].target === 90) && W.AL1_TARGET === 90, 'v30.0: 所有计分模块目标线 = 90% (四科全 AL1)');
+    const st5 = { dayLog: { '2026-09-08': { grammar: { ok: 5, n: 10, runs: 1 } }, '2026-09-09': { grammar: { ok: 9, n: 10, runs: 1 } } }, scheduleScores: { '2026-09-09': { ed_a: 18, ed_b: 20 } }, wrongAnswers: [{ gameKey: 'grammar', q: 'She ___ to school every day.', correctAns: 'goes', explain: '一般现在时第三人称', addedDate: '2026-09-08' }, { gameKey: 'grammar', q: 'old one', addedDate: '2026-08-01' }, { gameKey: 'knowledge', nodeId: 'sci_cells', q: 'cell q', addedDate: '2026-09-09' }, { gameKey: 'paper_mcq', subj: '英文', q: 'PSLE 2024 英文 Q23 (卷子第 5 页)', addedDate: '2026-09-09' }] };
+    const dg = W.getModDetail(st5, 'grammar', '2026-09-07', '2026-09-13');
+    assert(dg.days.length === 2 && dg.ok === 14 && dg.n === 20 && dg.pct === 70 && dg.target === 90 && dg.wrong.length === 1 && dg.wrong[0].ans === 'goes' && /语法/.test(dg.action), `v30.0: 模块明细 = 这周每天对/共 + 这周错题本里该模块的题 (旧错题不算) (实际 days ${dg.days.length} wrong ${dg.wrong.length})`);
+    assert(W._wrongModOf({ gameKey: 'knowledge', nodeId: 'sci_cells' }) === 'sci:node' && W._wrongModOf({ gameKey: 'paper_mcq', subj: '英文', q: 'Q23' }) === 'visualtext' && W._wrongModOf({ gameKey: 'listen_mcq' }) === 'listening', 'v30.0: 错题 gameKey → 模块 (知识树科学考点 / 真题题号段 / 听力)');
+    const dp = W.getModDetail(st5, 'paper:editing', '2026-09-07', '2026-09-13');
+    assert(dp.paper && dp.days.length === 1 && dp.pct === 90 && dp.wrong.length === 0, 'v30.0: 纸上手填的模块明细只有按天分数, 没有错题');
+    assert(/function _openModDetail\(mod, from, to\)/.test(appSrc) && /_notesHtml\(a\.notes, k, k\)/.test(appSrc) && /_notesHtml\(w\.notes, from, to\)/.test(appSrc) && /class="dl-lnk" onclick="_openModDetail\(/.test(appSrc) && /li class="clk" onclick="_openModDetail\('\$\{f\.mod\}'/.test(appSrc) && /id="modDetailModal" class="kt-modal"/.test(idxSrc), 'v30.0: 注意事项 / 四科格没达标模块 / 下周重点 都能点开明细弹层 (死代码警钟)');
+    assert(/const answeredN = \(g\.correct \|\| 0\) \+ \(g\.wrong \|\| 0\);/.test(appSrc) && /answeredN > 0\) diffR = window\.recordGameRun\(state, g\.key, g\.correct, answeredN\)/.test(appSrc), 'v30.0: MCQ 收卷只记答过的题, 时间到没答的不算 0 分');
+  }
   assert(/_dayLogAdd\(state, 'review', isCorrect \? 1 : 0, 1\)/.test(appSrc) && /_dayLogAdd\(state, 'focus'/.test(appSrc) && /_dayLogAdd\(state, 'oral', 1, 1\)/.test(appSrc), 'v29.8: 错题复习 / 每日考点 / 朗读 三个非游戏入口也进流水');
   assert(/function _dayRecordHtml\(k, opts\)/.test(appSrc) && /_dayRecordHtml\(todayKey\) \+ _manualRowsHtml\(todayKey, dow\) \+ _dayAnalysisHtml\(todayKey\)/.test(appSrc) && /_weekAnalysisHtml\(schedMonday\(new Date\(\)\)\)/.test(appSrc) && /_dayRecordHtml\(dk, \{ plan: false \}\)\}\$\{_manualRowsHtml\(dk, dow\)/.test(appSrc) && /el\.innerHTML = _weekAnalysisHtml\(_schedGridMonday\(\)\)/.test(appSrc), 'v29.8: 首页今日卡 = 自动记录 + 当日分析 + 折叠周分析; 课表页按天 / 本周分析 同一套渲染器 (死代码警钟)');
   assert(!/<input/.test(appSrc.slice(appSrc.indexOf('function _dayRecordHtml'), appSrc.indexOf('function _dayAnalysisHtml'))) && /_SG_AUTO_KEYS = \{ vt: 1, listen: 1 \}/.test(appSrc), 'v29.8/v29.9: App 自动记录的行没有输入框; 手填只给 App 测不到的块 (背单词 / 口语打卡 不手填)');

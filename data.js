@@ -6543,32 +6543,34 @@ function _dayLogAdd(state, mod, ok, n) {
   m.ok += Math.max(0, Math.min(n, ok || 0)); m.n += n; m.runs++;
   const keys = Object.keys(state.dayLog).sort(); while (keys.length > 120) delete state.dayLog[keys.shift()];
 }
+// v30.0 用户: "按总分 AL4 的水平来要求" = 四科全 AL1 = 每科 90 分 → 所有模块目标线一律 90%, 不再按模块放水 (完形 70 / 阅读 75 都撤)
+const AL1_TARGET = 90;
 const MOD_META = {
-  grammar:     { label: 'Grammar 语法选择', subj: 'eng', target: 90 },
-  vocab:       { label: 'Vocabulary 词汇考题', subj: 'eng', target: 80 },
-  visualtext:  { label: 'Visual Text 看图理解', subj: 'eng', target: 85 },
-  tense:       { label: '时态专项', subj: 'eng', target: 90 },
-  gcloze:      { label: 'Grammar Cloze 语法填空', subj: 'eng', target: 85 },
-  editing:     { label: 'Editing 改错', subj: 'eng', target: 90 },
-  compcloze:   { label: 'Cloze 完形填空', subj: 'eng', target: 70 },
-  synthesis:   { label: 'Synthesis 句型转换', subj: 'eng', target: 90 },
-  comp_oe:     { label: '阅读问答 OE', subj: 'eng', target: 75 },
-  listening:   { label: 'Listening 听力', subj: 'eng', target: 80 },
-  paper2:      { label: 'Paper 2 模拟卷', subj: 'eng', target: 85 },
+  grammar:     { label: 'Grammar 语法选择', subj: 'eng', target: AL1_TARGET },
+  vocab:       { label: 'Vocabulary 词汇考题', subj: 'eng', target: AL1_TARGET },
+  visualtext:  { label: 'Visual Text 看图理解', subj: 'eng', target: AL1_TARGET },
+  tense:       { label: '时态专项', subj: 'eng', target: AL1_TARGET },
+  gcloze:      { label: 'Grammar Cloze 语法填空', subj: 'eng', target: AL1_TARGET },
+  editing:     { label: 'Editing 改错', subj: 'eng', target: AL1_TARGET },
+  compcloze:   { label: 'Cloze 完形填空', subj: 'eng', target: AL1_TARGET },
+  synthesis:   { label: 'Synthesis 句型转换', subj: 'eng', target: AL1_TARGET },
+  comp_oe:     { label: '阅读问答 OE', subj: 'eng', target: AL1_TARGET },
+  listening:   { label: 'Listening 听力', subj: 'eng', target: AL1_TARGET },
+  paper2:      { label: 'Paper 2 模拟卷', subj: 'eng', target: AL1_TARGET },
   sitwriting:  { label: '情境写作', subj: 'eng', count: true, unit: '篇' },
   writing:     { label: '作文', subj: 'eng', count: true, unit: '篇' },
   oral:        { label: '口语朗读', subj: 'eng', count: true, unit: '段' },
-  'sci:mcq':   { label: '科学选择题', subj: 'sci', target: 80 },
-  'sci:oe':    { label: '科学开放题', subj: 'sci', target: 80 },
-  'sci:lab':   { label: '科学实验题', subj: 'sci', target: 80 },
-  'sci:terms': { label: '科学术语考题', subj: 'sci', target: 80 },
-  'sci:node':  { label: '科学考点练习', subj: 'sci', target: 80 },
-  'math:terms':{ label: '数学术语考题', subj: 'math', target: 80 },
-  math:        { label: '数学速算', subj: 'math', target: 90 },
-  'math:unit': { label: '单位换算', subj: 'math', target: 90 },
-  'cn:oe':     { label: '华文阅读', subj: 'cn', target: 80 },
-  'cn:mcq':    { label: '华文选择', subj: 'cn', target: 85 },
-  review:      { label: '错题复习', subj: 'rev', target: 70 },
+  'sci:mcq':   { label: '科学选择题', subj: 'sci', target: AL1_TARGET },
+  'sci:oe':    { label: '科学开放题', subj: 'sci', target: AL1_TARGET },
+  'sci:lab':   { label: '科学实验题', subj: 'sci', target: AL1_TARGET },
+  'sci:terms': { label: '科学术语考题', subj: 'sci', target: AL1_TARGET },
+  'sci:node':  { label: '科学考点练习', subj: 'sci', target: AL1_TARGET },
+  'math:terms':{ label: '数学术语考题', subj: 'math', target: AL1_TARGET },
+  math:        { label: '数学速算', subj: 'math', target: AL1_TARGET },
+  'math:unit': { label: '单位换算', subj: 'math', target: AL1_TARGET },
+  'cn:oe':     { label: '华文阅读', subj: 'cn', target: AL1_TARGET },
+  'cn:mcq':    { label: '华文选择', subj: 'cn', target: AL1_TARGET },
+  review:      { label: '错题复习', subj: 'rev', target: AL1_TARGET },
   focus:       { label: '每日考点', subj: 'rev', count: true, unit: '个' },
 };
 const SUBJ_LABEL = { eng: '英语', sci: '科学', math: '数学', cn: '华文', rev: '复习' };
@@ -6601,7 +6603,7 @@ const MOD_ACTION = {
 const SCHED_KEY2MOD = { ed: 'editing', cloze: 'compcloze', syn: 'synthesis', gr: 'grammar', oe: 'comp_oe', sci_mcq: 'sci:mcq', sci_oe: 'sci:oe', cn: 'cn:oe', vt: 'fc', listen: 'oral' };
 function _modMeta(mod) {
   if (/^paper:/.test(mod)) { const b = _modMeta(mod.slice(6)); return Object.assign({}, b, { label: b.label + ' · 纸上' }); }   // v29.9: 纸上手填的同一模块, 标"纸上"
-  if (MOD_META[mod]) return MOD_META[mod]; if (/^sci:/.test(mod)) return MOD_META['sci:node']; return { label: mod, subj: 'eng', target: 80 };
+  if (MOD_META[mod]) return MOD_META[mod]; if (/^sci:/.test(mod)) return MOD_META['sci:node']; return { label: mod, subj: 'eng', target: AL1_TARGET };
 }
 function _modKey(mod) { return MOD_META[mod] ? mod : /^sci:/.test(mod) ? 'sci:node' : mod; }
 function _modBase(mod) { return mod.replace(/^paper:/, ''); }
@@ -6652,7 +6654,7 @@ function analyzeDay(state, k) {
   const notes = [];
   if (!r.any) return Object.assign(r, { summary: '今天还没开始', notes });
   const low = r.rows.filter(x => !x.count && x.n >= 5 && !x.pass);
-  low.forEach(x => notes.push({ lvl: 'warn', text: `**${x.label}** ${x.ok}/${x.n} = **${x.pct}%**, 低于目标 ${x.target}%` }));
+  low.forEach(x => notes.push({ lvl: 'warn', mod: x.mod, text: `**${x.label}** ${x.ok}/${x.n} = **${x.pct}%**, 低于 AL1 线 ${x.target}%` }));
   if (r.fc && r.fc.fast) notes.push({ lvl: 'bad', text: '背单词平均**每词不到 2 秒**, 太快了, 像在乱点' });
   if (r.fc && !r.fc.done && r.fc.size) notes.push({ lvl: 'warn', text: `今天这组单词还没背完 (**${r.fc.reviewed}/${r.fc.size}**)` });
   if (!r.fc) notes.push({ lvl: 'warn', text: '今天还**没背单词**' });
@@ -6697,11 +6699,11 @@ function analyzeWeek(state, mon) {
   if (fcNeed >= 2 && cur.fcDays < fcNeed) notes.push({ lvl: 'warn', text: `单词只背完 **${cur.fcDays}/${fcNeed}** 天, 每天那一组要背完` });
   const gap = m => (m.target - m.pct) * (SUBJ_WEIGHT[m.subj] || 1);
   const low = cur.mods.filter(m => !m.count && m.n >= 5 && !m.pass).sort((a, b) => gap(b) - gap(a));
-  low.forEach(m => notes.push({ lvl: 'warn', text: `**${m.label}** ${m.ok}/${m.n} = **${m.pct}%**, 低于目标 ${m.target}%` }));
+  low.forEach(m => notes.push({ lvl: 'warn', mod: m.mod, text: `**${m.label}** ${m.ok}/${m.n} = **${m.pct}%**, 低于 AL1 线 ${m.target}%` }));
   const drop = cur.mods.filter(m => !m.count && m.n >= 5 && m.delta != null && m.delta <= -10);
-  drop.forEach(m => notes.push({ lvl: 'warn', text: `**${m.label}** 比上周掉了 **${-m.delta} 个点** (${m.prevPct}% → ${m.pct}%)` }));
+  drop.forEach(m => notes.push({ lvl: 'warn', mod: m.mod, text: `**${m.label}** 比上周掉了 **${-m.delta} 个点** (${m.prevPct}% → ${m.pct}%)` }));
   const up = cur.mods.filter(m => !m.count && m.n >= 5 && m.delta != null && m.delta >= 10);
-  up.forEach(m => notes.push({ lvl: 'ok', text: `**${m.label}** 比上周进步 **${m.delta} 个点** (${m.prevPct}% → ${m.pct}%)` }));
+  up.forEach(m => notes.push({ lvl: 'ok', mod: m.mod, text: `**${m.label}** 比上周进步 **${m.delta} 个点** (${m.prevPct}% → ${m.pct}%)` }));
   const fast = cur.days.filter(d => d.rows && d.n === 0 && d.fcReviewed >= 10 && d.sec && d.sec / d.fcReviewed <= 2);
   if (fast.length) notes.push({ lvl: 'bad', text: `有 ${fast.length} 天背单词**每词不到 2 秒**, 像在乱点` });
   if (cur.pastDays >= 5 && cur.n < 150) notes.push({ lvl: 'warn', text: `本周共做 **${cur.n} 题**, 量偏少 (建议每周 200 题以上)` });
@@ -6713,9 +6715,31 @@ function analyzeWeek(state, mon) {
   low.forEach(m => { if (focus.length < 3) focus.push({ mod: m.mod, label: m.label, why: `${m.pct}% 没到 ${m.target}%`, action: MOD_ACTION[_modBase(m.mod)] || '每天练 1 局, 正确率到目标线再换' }); });
   drop.forEach(m => { if (focus.length < 3 && !focus.some(f => f.mod === m.mod)) focus.push({ mod: m.mod, label: m.label, why: `比上周掉了 ${-m.delta} 个点`, action: MOD_ACTION[_modBase(m.mod)] || '每天练 1 局' }); });
   if (cur.pastDays >= 5) miss.forEach(m => { if (focus.length < 3 && !focus.some(f => f.mod === m)) focus.push({ mod: m, label: _modMeta(m).label, why: '课表有但 App 里没练过', action: MOD_ACTION[m] || '每天练 1 局' }); });
-  const subj = SUBJ_ORDER.filter(s => s !== 'rev').map(s => { const ms = cur.mods.filter(m => m.subj === s && !m.count && m.n >= 5); return { subj: s, label: SUBJ_LABEL[s], n: cur.mods.filter(m => m.subj === s).reduce((a, m) => a + m.n, 0), graded: ms.length, pass: ms.filter(m => m.pass).length, miss: ms.filter(m => !m.pass).map(m => m.label) }; });
+  const subj = SUBJ_ORDER.filter(s => s !== 'rev').map(s => { const ms = cur.mods.filter(m => m.subj === s && !m.count && m.n >= 5); return { subj: s, label: SUBJ_LABEL[s], n: cur.mods.filter(m => m.subj === s).reduce((a, m) => a + m.n, 0), graded: ms.length, pass: ms.filter(m => m.pass).length, miss: ms.filter(m => !m.pass).map(m => m.label), missMods: ms.filter(m => !m.pass).map(m => ({ mod: m.mod, label: m.label })) }; });
   return Object.assign(cur, { notes, focus, subj, prev: { n: prev.n, pct: prev.pct, studyDays: prev.studyDays } });
 }
+// v30.0 用户: "能点击查看详细具体哪里不达标么" → 每条注意事项 / 四科格里的模块 可点开: 这段时间每天 对/共 + 错题本里这个模块错的题 (题面 / 正确答案 / 解析)
+const WRONG_MOD_OF_GAME = { grammar: 'grammar', tense: 'tense', cloze: 'compcloze', sst: 'synthesis', editing: 'editing', comp_oe: 'comp_oe', listen_mcq: 'listening', listen: 'listening', scimcq: 'sci:mcq', sci_oe: 'sci:oe', scilab: 'sci:lab', vocab: 'vocab', math: 'math', unit: 'math:unit', cn_oe: 'cn:oe', chinese: 'cn:mcq' };
+function _wrongModOf(w) {
+  const g = (w && w.gameKey) || '';
+  if (WRONG_MOD_OF_GAME[g]) return WRONG_MOD_OF_GAME[g];
+  if (g === 'subject_vocab') return /数学|math/i.test((w.deck || '') + (w.subj || '') + (w.topic || '')) ? 'math:terms' : 'sci:terms';
+  if (g === 'knowledge') { const m = ENG_MODULE_OF_NODE[w.nodeId]; return m ? _modKey(m) : null; }
+  if (g === 'paper_mcq') { if (/科学/.test(w.subj || '')) return 'sci:mcq'; const q = +((String(w.q || '').match(/Q(\d+)/) || [])[1] || 0); return q <= 10 ? 'grammar' : q <= 20 ? 'vocab' : 'visualtext'; }
+  return null;
+}
+function getModDetail(state, mod, fromKey, toKey) {
+  const base = _modBase(mod), meta = _modMeta(mod);
+  const days = [];
+  for (let d = new Date(fromKey + 'T12:00:00'); _fcLocalDate(d) <= toKey; d.setDate(d.getDate() + 1)) {
+    const k = _fcLocalDate(d); const r = getDayRecord(state, k).rows.find(x => x.mod === mod);
+    if (r) days.push({ k, ok: r.ok, n: r.n, pct: r.pct, runs: r.runs });
+  }
+  const wrong = /^paper:/.test(mod) ? [] : (state.wrongAnswers || []).filter(w => w && _wrongModOf(w) === base && w.addedDate >= fromKey && w.addedDate <= toKey).map(w => ({ q: w.q || '', ans: w.correctAns != null ? String(w.correctAns) : (w.opts && w.ans != null ? String(w.opts[w.ans]) : ''), explain: w.explain || '', date: w.addedDate, topic: w.topic || w.nodeId || '', retries: w.retries || 0, streak: w.correctStreak || 0 }));
+  const ok = days.reduce((a, x) => a + x.ok, 0), n = days.reduce((a, x) => a + x.n, 0);
+  return { mod, base, label: meta.label, subj: meta.subj, target: meta.target || AL1_TARGET, count: !!meta.count, paper: /^paper:/.test(mod), days, wrong, ok, n, pct: n ? Math.round(ok / n * 100) : null, action: MOD_ACTION[base] || '' };
+}
+window.getModDetail = getModDetail; window._wrongModOf = _wrongModOf; window.AL1_TARGET = AL1_TARGET;
 window._paperRows = _paperRows; window.PAPER_KEY2MOD = PAPER_KEY2MOD; window._dayLogAdd = _dayLogAdd; window._seedDayLog = _seedDayLog; window.getDayRecord = getDayRecord; window.analyzeDay = analyzeDay; window.analyzeWeek = analyzeWeek; window.MOD_META = MOD_META; window.MOD_ACTION = MOD_ACTION; window.DAYLOG_MOD_OF_GAME = DAYLOG_MOD_OF_GAME; window._weekRaw = _weekRaw;
 
 function getFlashcardStats(state) {

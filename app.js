@@ -9564,7 +9564,9 @@ function _finishMcqGame() {
   const g = _mcqGameState;
   if (!g) return;
   let diffR = null;
-  if (window.recordGameRun) diffR = window.recordGameRun(state, g.key, g.correct, g.qs.length);
+  // v30.0: 只记答过的题 (时间到自动收卷时没答的题不算错, 不然周分析里出现 听力 0/10 这种假 0 分); 一题没答就不记
+  const answeredN = (g.correct || 0) + (g.wrong || 0);
+  if (window.recordGameRun && answeredN > 0) diffR = window.recordGameRun(state, g.key, g.correct, answeredN);
   // v19.7: Paper 2 突击进度 (Cloze + SST)
   if (window.bumpPaper2Sprint && (g.key === 'cloze' || g.key === 'sst')) {
     window.bumpPaper2Sprint(state, g.key, g.correct, g.qs.length);
@@ -12247,11 +12249,34 @@ function _schedDateOfDow(dow) { const mon = _schedGridMonday(); const d = new Da
 // ===== v29.8 自动打卡渲染 (首页每日记录 / 课表页按天记录 / 整周记录表 / 每周分析) =====
 // 用户 2026-11-07: 打卡不再手填 (孩子能改刷分数), 全按 App 里实际做题轨迹自动记; 每日分析 + 每周分析 (注意事项 / 下周重点加强)
 function _mdB(s) { return escapeHtml(String(s || '')).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); }
-function _notesHtml(notes) {
+function _notesHtml(notes, from, to) {
   if (!notes || !notes.length) return '';
   const C = { bad: '#DC2626', warn: '#B45309', ok: '#16A34A', info: '#64748B' };
-  return `<ol class="dl-notes">${notes.map(n => `<li style="color:${C[n.lvl] || '#1E293B'}">${_mdB(n.text)}</li>`).join('')}</ol>`;
+  // v30.0: 带模块的条目可点开看明细 (按天 对/共 + 错的题)
+  return `<ol class="dl-notes">${notes.map(n => `<li style="color:${C[n.lvl] || '#1E293B'}"${n.mod && from ? ` class="clk" onclick="_openModDetail('${n.mod}','${from}','${to || from}')"` : ''}>${_mdB(n.text)}</li>`).join('')}</ol>`;
 }
+// v30.0 用户: "这个能点击查看详细具体哪里不达标么" → 模块明细弹层
+function _modOpenCode(base) {
+  const M = { grammar: 'openGrammarGame()', tense: 'openTenseDrill()', compcloze: 'openClozeGame()', synthesis: 'openSstGame()', editing: 'openEditingGame()', comp_oe: 'openCompOeGame()', listening: 'openListenMcqGame()', vocab: "startFcQuizFromPractice('psle_verbs')", 'sci:mcq': 'openSciMcqGame()', 'sci:oe': 'openScienceOEGame()', math: 'openMathGame()', 'math:unit': 'openUnitGame()', review: 'openErrorBank()' };
+  return M[base] || "gotoPage('modules')";
+}
+function _openModDetail(mod, from, to) {
+  const d = window.getModDetail(state, mod, from, to);
+  const el = document.getElementById('modDetailBody'), m = document.getElementById('modDetailModal'); if (!el || !m) return;
+  const DOW = '日一二三四五六';
+  const dayRows = d.days.map(x => { const dd = new Date(x.k + 'T12:00:00'); const col = d.count ? '#1E40AF' : x.pct >= d.target ? '#16A34A' : '#DC2626'; return `<div class="ui-row"><div class="ui-row-main"><div class="ui-row-title">${dd.getMonth() + 1}/${dd.getDate()} 周${DOW[dd.getDay()]}</div><div class="ui-row-sub">${d.count ? x.n + ' 次' : x.ok + '/' + x.n + ' 题' + (x.runs > 1 ? ' · ' + x.runs + ' 局' : '')}</div></div><div class="ui-row-act"><span class="ui-num sm" style="color:${col}">${d.count ? '✓' : x.pct + '%'}</span></div></div>`; }).join('');
+  const wrongRows = d.wrong.map(w => `<div class="ui-row"><div class="ui-row-main"><div class="ui-row-time">${w.date.slice(5).replace('-', '/')}${w.topic ? ' · ' + escapeHtml(String(w.topic).slice(0, 30)) : ''}${w.streak ? ' · 复习已连对 ' + w.streak : ''}</div><div class="ui-row-title" style="font-weight:500">${escapeHtml(String(w.q).slice(0, 220))}</div>${w.ans ? `<div class="ui-row-sub">✅ ${escapeHtml(String(w.ans).slice(0, 120))}</div>` : ''}${w.explain ? `<div class="ui-row-sub">${escapeHtml(String(w.explain).slice(0, 160))}</div>` : ''}</div></div>`).join('');
+  const range = from === to ? from.slice(5).replace('-', '/') : from.slice(5).replace('-', '/') + ' – ' + to.slice(5).replace('-', '/');
+  el.innerHTML = `<div class="ui-head"><div class="ui-page-title">${escapeHtml(d.label)}</div><div class="ui-head-r"><span class="ui-num sm" style="color:${d.count ? '#1E40AF' : d.pct == null ? '#94A3B8' : d.pct >= d.target ? '#16A34A' : '#DC2626'}">${d.count ? d.n + ' 次' : d.pct == null ? '—' : d.pct + '%'}</span></div></div>
+    <div class="ui-head-sub">${range} · ${d.count ? '' : 'AL1 线 ' + d.target + '% · 共 ' + d.ok + '/' + d.n + ' 题'}${d.paper ? ' · 纸上做的 (手填), 具体错题看卷子' : ''}</div>
+    <div class="dl-h">📅 每天</div><div class="ui-list">${dayRows || '<div class="ui-empty">这段时间没练</div>'}</div>
+    ${d.paper || d.count ? '' : `<div class="dl-h">❌ 这段时间错的题 <span style="font-weight:400;color:#64748B">${d.wrong.length} 道 · 都在错题本里</span></div><div class="ui-list">${wrongRows || '<div class="ui-empty">错题本里没有这个模块这段时间的错题 (可能已复习毕业, 或是时间到没答的题)</div>'}</div>`}
+    ${d.action ? `<div class="dl-sum">👉 ${escapeHtml(d.action)}</div>` : ''}
+    <div class="ui-links" style="margin-top:12px"><button class="ui-cta auto" onclick="closeModDetail();${_modOpenCode(d.base)}">🎯 去练这个模块</button>${d.wrong.length ? '<button class="ui-btn2" onclick="closeModDetail();openErrorBank()">📓 去错题本复习</button>' : ''}<button class="ui-btn2" onclick="closeModDetail()">关闭</button></div>`;
+  m.classList.add('show');
+}
+function closeModDetail() { const m = document.getElementById('modDetailModal'); if (m) m.classList.remove('show'); }
+window._openModDetail = _openModDetail; window.closeModDetail = closeModDetail;
 // 一天的自动记录: 背单词 / 各模块 对·共·正确率 / 口语时长; 没记录时列今天课表当参照 (灰字, 不可勾)
 function _dayRecordHtml(k, opts) {
   opts = opts || {};
@@ -12273,20 +12298,21 @@ function _dayRecordHtml(k, opts) {
 function _dayAnalysisHtml(k) {
   const a = window.analyzeDay(state, k);
   if (!a.any) return '';
-  return `<div class="dl-sum"><span class="dl-sum-t">📋 ${k === schedLocalDate() ? '今日' : '当日'}分析</span> ${_mdB(a.summary)}</div>${_notesHtml(a.notes)}`;
+  return `<div class="dl-sum"><span class="dl-sum-t">📋 ${k === schedLocalDate() ? '今日' : '当日'}分析</span> ${_mdB(a.summary)}</div>${_notesHtml(a.notes, k, k)}`;
 }
 // 每周分析: 一句总结 + 七天条 + 四科达标格 + 注意事项 + 下周重点加强
 function _weekAnalysisHtml(mon) {
   const w = window.analyzeWeek(state, mon);
   const DOW = '日一二三四五六';
-  const tiles = w.subj.map(s => { const color = !s.graded ? '#94A3B8' : s.pass === s.graded ? '#16A34A' : s.graded - s.pass >= 2 ? '#DC2626' : '#B45309'; return `<div class="dl-tile" style="border-top-color:${color}"><div class="dl-tile-n">${escapeHtml(s.label)}</div><div class="dl-tile-v" style="color:${color}">${s.graded ? s.pass + ' / ' + s.graded : s.n ? s.n + ' 题' : '—'}</div><div class="dl-tile-s">${s.graded ? (s.pass === s.graded ? '模块全达标' : '没达标: ' + s.miss.map(escapeHtml).join('、')) : s.n ? '题量不够评' : '这周没练'}</div></div>`; }).join('');
+  const from = w.days[0].k, to = w.days[6].k;
+  const tiles = w.subj.map(s => { const color = !s.graded ? '#94A3B8' : s.pass === s.graded ? '#16A34A' : s.graded - s.pass >= 2 ? '#DC2626' : '#B45309'; return `<div class="dl-tile" style="border-top-color:${color}"><div class="dl-tile-n">${escapeHtml(s.label)}</div><div class="dl-tile-v" style="color:${color}">${s.graded ? s.pass + ' / ' + s.graded : s.n ? s.n + ' 题' : '—'}</div><div class="dl-tile-s">${s.graded ? (s.pass === s.graded ? '模块全达标 (AL1 线 90%)' : '没达标: ' + (s.missMods || []).map(x => `<span class="dl-lnk" onclick="_openModDetail('${x.mod}','${from}','${to}')">${escapeHtml(x.label)}</span>`).join('、')) : s.n ? '题量不够评' : '这周没练'}</div></div>`; }).join('');
   const days = w.days.map(d => { const col = d.future ? '#CBD5E1' : d.any ? '#16A34A' : d.dow === 0 ? '#94A3B8' : '#DC2626'; return `<div class="dl-day" style="color:${col}"><div class="dl-day-l">${DOW[d.dow]}</div><div class="dl-day-v">${d.future ? '·' : d.any ? (d.n || (d.fcReviewed ? '词' : '✓')) : d.dow === 0 ? '休' : '✗'}</div></div>`; }).join('');
   const head = `学了 **${w.studyDays}/${w.pastDays}** 天 · 做题 **${w.n}** 题${w.pct != null ? ' · 正确 **' + w.pct + '%**' : ''}${w.sec >= 60 ? ' · 共 **' + Math.round(w.sec / 60) + '** 分钟' : ''}${w.prev.n ? ` · 上周 ${w.prev.n} 题${w.prev.pct != null ? ' ' + w.prev.pct + '%' : ''}` : ''}`;
-  const focus = w.focus.length ? `<ol class="dl-notes dl-focus">${w.focus.map(f => `<li><b>${escapeHtml(f.label)}</b> — ${escapeHtml(f.why)}<div class="dl-act">${escapeHtml(f.action)}</div></li>`).join('')}</ol>` : `<div class="ui-empty">${w.n ? '没有明显短板, 下周按课表继续' : '这周还没做题, 做了题才有分析'}</div>`;
+  const focus = w.focus.length ? `<ol class="dl-notes dl-focus">${w.focus.map(f => `<li class="clk" onclick="_openModDetail('${f.mod}','${from}','${to}')"><b>${escapeHtml(f.label)}</b> — ${escapeHtml(f.why)}<div class="dl-act">${escapeHtml(f.action)}</div></li>`).join('')}</ol>` : `<div class="ui-empty">${w.n ? '没有明显短板, 下周按课表继续' : '这周还没做题, 做了题才有分析'}</div>`;
   return `<div class="dl-sum">${_mdB(head)}</div>
     <div class="dl-days">${days}</div>
     <div class="dl-tiles">${tiles}</div>
-    <div class="dl-h">⚠️ 注意事项</div>${w.notes.length ? _notesHtml(w.notes) : '<div class="ui-empty">暂无</div>'}
+    <div class="dl-h">⚠️ 注意事项 <span style="font-weight:400;color:#64748B">点一条看具体哪里错</span></div>${w.notes.length ? _notesHtml(w.notes, from, to) : '<div class="ui-empty">暂无</div>'}
     <div class="dl-h">🎯 下周重点加强</div>${focus}`;
 }
 // 课表页 · 按天: 上半是这天的课表 (时间 | 内容 | 班课/自学 标签, 休息行灰字), 下半是这天 App 自动记录 + 当日分析

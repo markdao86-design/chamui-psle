@@ -5560,6 +5560,10 @@ body.fc-focus .fc-btn-know, body.fc-focus .fc-btn-dont, body.fc-focus .fc-btn-va
 .dl-tile-s { font-size:var(--fs-tag); color:var(--c-text-2); }
 .dl-plan-title { font-size:var(--fs-tag); color:var(--c-text-2); margin-top:8px; }
 .dl-week { margin-top:10px; }
+.dl-notes li.clk { cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px; }
+.dl-notes li.clk::after { content:' ›'; color:var(--c-text-3); }
+.dl-lnk { cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px; color:var(--c-primary); }
+#modDetailBody { max-height:85vh; overflow:auto; }
 </style>
 </head>
 <body>
@@ -5725,6 +5729,8 @@ body.fc-focus .fc-btn-know, body.fc-focus .fc-btn-dont, body.fc-focus .fc-btn-va
         <!-- v23.0 (用户 2026-10-03 "首页太杂"): 左栏只留 每日分数打卡表 + 错题本 -->
         <div class="ui-section">📊 每日学习记录 <span style="font-weight:400;color:#64748B">自动</span></div>
         <div class="card" id="todayThreeCard"></div>
+        <!-- v30.0: 模块明细弹层 (周分析/日分析每条可点开) -->
+        <div id="modDetailModal" class="kt-modal" onclick="if(event.target===this)closeModDetail()"><div class="kt-inner" style="max-width:640px" id="modDetailBody"></div></div>
         <div class="card" id="errorBankCard"></div>
         <!-- v19.35: 自动对齐 filler — 长栏时被挤为 0 不留痕 -->
         <div class="col-balance-filler" id="leftColFiller"></div>
@@ -6430,9 +6436,9 @@ body.fc-focus .fc-btn-know, body.fc-focus .fc-btn-dont, body.fc-focus .fc-btn-va
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=29.9"></script>
-<script src="data.js?v=29.9"></script>
-<script src="app.js?v=29.9"></script>
+<script src="character.js?v=30.0"></script>
+<script src="data.js?v=30.0"></script>
+<script src="app.js?v=30.0"></script>
 
 </body>
 </html>
