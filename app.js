@@ -2167,14 +2167,9 @@ function _renderSciOe() {
     const lowerAns = userAns.toLowerCase();
     if (weakOpener.test(userAns)) warnings.push('❌ 不能用 Yes/No/I agree/It is/True 等弱 opener 开头 (PSLE 直接 0 分)');
     // v19.14f (科学专家新发现): 修子串匹配漏洞 — 用 word boundary + 词干, 防"heat"匹配"wheat"/"school"匹配"cool"
-    const matchedKw = q.keywords.filter(k => {
-      const stem = k.toLowerCase().replace(/(s|ed|ing|es|ies|ied|er|est)$/, '');
-      const safeStem = stem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');  // 转义特殊字符
-      const re = new RegExp('\\b' + safeStem + '(s|ed|ing|es|ies|ied|er|est)?\\b', 'i');
-      return re.test(userAns);
-    });
+    const matchedKw = q.keywords.filter(k => _oeKwHit(k, userAns));
     if (matchedKw.length < q.keywords.length / 2) {
-      warnings.push(`⚠️ 关键词不够 (用了 ${matchedKw.length}/${q.keywords.length}: ${q.keywords.join(', ')})`);
+      warnings.push(`⚠️ 关键词不够 (用了 ${matchedKw.length}/${q.keywords.length}: ${_oeKwShow(q.keywords)})`);
     }
     if (lowerAns.length < 30) warnings.push('⚠️ 答案太短, OE 通常需 2-3 句');
   }
@@ -2193,12 +2188,7 @@ function _renderSciOe() {
         const userAnsTrim = userAns.trim();
         const lowerAns = userAnsTrim.toLowerCase();
         // v19.14f: 同上, word boundary + stem 词干, 防误判
-        const matchedKw = q.keywords.filter(k => {
-          const stem = k.toLowerCase().replace(/(s|ed|ing|es|ies|ied|er|est)$/, '');
-          const safeStem = stem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const re = new RegExp('\\b' + safeStem + '(s|ed|ing|es|ies|ied|er|est)?\\b', 'i');
-          return re.test(userAnsTrim);
-        });
+        const matchedKw = q.keywords.filter(k => _oeKwHit(k, userAnsTrim));
         const half = Math.ceil(q.keywords.length / 2);
         let autoScore = matchedKw.length >= q.keywords.length ? 2 : matchedKw.length >= half ? 1 : 0;
         const reasons = [];
@@ -2227,13 +2217,13 @@ function _renderSciOe() {
         const nextLabel = (g.qIdx + 1 >= g.questions.length) ? '完成 →' : '下一题 →';
         return `
         <div style="background:#E8F5E9;border-left:3px solid #2E7D32;padding:10px;margin-bottom:10px">
-          <div style="font-size:11px;color:#1B5E20;font-weight:900;margin-bottom:4px">✅ Model Answer (关键词: ${q.keywords.join(', ')})</div>
+          <div style="font-size:11px;color:#1B5E20;font-weight:900;margin-bottom:4px">✅ Model Answer (关键词: ${_oeKwShow(q.keywords)})</div>
           <div style="font-size:12px;color:#1B5E20;line-height:1.6">${escapeHtml(q.model)}</div>
         </div>
         <div style="background:${autoScore === 0 ? '#FFEBEE' : autoScore === 1 ? '#FFF3E0' : '#E8F5E9'};border-left:4px solid ${scoreColor};border-radius:6px;padding:12px;margin-bottom:10px">
           <div style="font-size:18px;font-weight:900;color:${scoreColor};margin-bottom:6px">${scoreIcon} 自动评分: ${autoScore} / 2 分</div>
           <div style="font-size:11px;color:#555;line-height:1.5">
-            <b>关键词命中</b>: ${matchedKw.length}/${q.keywords.length} (${matchedKw.length > 0 ? matchedKw.join(', ') : '无'})<br>
+            <b>关键词命中</b>: ${matchedKw.length}/${q.keywords.length} (${matchedKw.length > 0 ? _oeKwShow(matchedKw) : '无'})<br>
             ${_sciOeKwPickResult(g, q)}
             <b>答案长度</b>: ${userAnsTrim.length} 字符 (≥50 才满分)<br>
             ${reasons.length ? '<b>扣分点</b>:<br>' + reasons.join('<br>') : '<b>✓ 无 opener / than / it 扣分</b>'}
@@ -2255,9 +2245,9 @@ function _renderSciOe() {
 function _sciOeKwOpts(g, q) {
   g.kwOpts = g.kwOpts || {}; g.kwPick = g.kwPick || {};
   if (g.kwOpts[g.qIdx]) return g.kwOpts[g.qIdx];
-  const mine = (q.keywords || []).slice();
+  const mine = (q.keywords || []).map(k => String(k).split('|')[0]);
   const others = [];
-  (window.SCIENCE_OE_QUESTIONS || []).forEach(o => { if (o.topic !== q.topic) (o.keywords || []).forEach(k => { if (mine.indexOf(k) < 0 && others.indexOf(k) < 0) others.push(k); }); });
+  (window.SCIENCE_OE_QUESTIONS || []).forEach(o => { if (o.topic !== q.topic) (o.keywords || []).map(k => String(k).split('|')[0]).forEach(k => { if (mine.indexOf(k) < 0 && others.indexOf(k) < 0) others.push(k); }); });
   const dis = others.sort(() => Math.random() - 0.5).slice(0, Math.min(4, Math.max(2, mine.length - 1)));
   const all = mine.concat(dis).sort(() => Math.random() - 0.5);
   g.kwOpts[g.qIdx] = all; g.kwPick[g.qIdx] = g.kwPick[g.qIdx] || [];
@@ -3193,6 +3183,15 @@ function startFlashcardSession(deckId) {
   _renderFlashcardSession();
 }
 
+// v29.5 复审发现: gullet / oesophagus、glucose / sugar 这类同义词原来算两个关键词, 孩子用对一个也拿不到满分。关键词写 a|b, 命中任一个就算
+function _oeKwHit(k, text) {
+  return String(k).split('|').some(x => {
+    const stem = x.toLowerCase().replace(/(s|ed|ing|es|ies|ied|er|est)$/, '');
+    const safeStem = stem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp('\\b' + safeStem + '(s|ed|ing|es|ies|ied|er|est)?\\b', 'i').test(text);
+  });
+}
+function _oeKwShow(list) { return list.map(k => String(k).replace(/\|/g, ' / ')).join(', '); }
 // v29.3 (用户: "让整个软件的发音跟随 ipad 系统设置声音"): 全软件唯一发音入口, 别处一律调它, 不要自己造朗读对象。
 // 不指定 voice, iOS 就用「设置 → 辅助功能 → 朗读内容 → 声音」里选的声音; 语言 en-US 和口语软件同一口径 (写 en-GB 会落到英国口音那一档, 不是他选的声音)。
 // 网页读不到系统语速滑块, 这里的 rate 是学习用的慢速, 不算系统设置。
@@ -3259,7 +3258,8 @@ window.fcSpeak = fcSpeak;
 function _renderFlashcardSession() {
   const el = document.getElementById('vocabPageContent');
   if (!el || !_fcSession) return;
-  if (window.scrollY > 0) window.scrollTo(0, 0);   // v29.5: 卡片一屏放下, 不留滚动位置
+  document.body.classList.add('fc-focus');   // v29.5: 背卡时收起顶栏和导航
+  if (window.scrollY > 0) window.scrollTo(0, 0);
   const s = _fcSession;
   let word, headerRight, progressPct, retakeBadge = '';
   if (s.mode === 'daily') {
@@ -3366,6 +3366,7 @@ function answerFlashcard(level) {
 }
 
 function _endFlashcardSession() {
+  document.body.classList.remove('fc-focus');
   const el = document.getElementById('vocabPageContent');
   if (!el || !_fcSession) return;
   const s = _fcSession;
@@ -3410,6 +3411,7 @@ function _endFlashcardSession() {
 
 function exitFlashcardSession() {
   _fcSession = null;
+  document.body.classList.remove('fc-focus');
   renderVocabPage();
 }
 
@@ -12548,6 +12550,7 @@ window.renderRoadmapCard = renderRoadmapCard;
 const MORE_MENU_PAGES = ['checkin', 'character', 'summer', 'admin', 'history'];   // v23.7: 能力收进其他  // v19.61: 收纳进"⋯其他"的页面(+打卡)
 function gotoPage(page) {
   if (!page) return;  // "其他"按钮无 data-page, 防炸
+  document.body.classList.remove('fc-focus');
   if (page === 'engmod' || page === 'scimod') { _modSubj = page === 'engmod' ? 'eng' : 'sci'; page = 'modules'; }   // v23.8: 两个模块页合并, 旧名当别名
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));

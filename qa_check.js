@@ -2417,6 +2417,21 @@ assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾
   { const m18 = W.PAPERS_2025.filter(p => p.subj === 'math' && p.year === 2026 && p.mcq && p.mcq.max === 18); assert(m18.length >= 8, 'v29.2: 2026 数学 Booklet A 18 题答案键 (' + m18.length + ' 份)'); }
   assert(appSrc.includes('_fcEgRow((eg3.length > 1') && appSrc.includes('_fcEgRow(sentence, sentence)') && appSrc.includes('${_fcSpkS(ex)}') && appSrc.includes('${_fcSpkS(q.say)}') && idxSrc.includes('.fc-spk.fc-spk-s { flex:none; width:40px'), 'v29.4: 闪卡 / 查词 / 考题解析 例句都有 40px 喇叭');
   { const nU = appSrc.split('new SpeechSynthesisUtterance').length - 1, nV = appSrc.split('u.voice = ').length - 1; const speakFn = appSrc.slice(appSrc.indexOf('function appSpeak('), appSrc.indexOf('window.appSpeak = appSpeak')); assert(nU === 1 && nV === 1 && speakFn.includes('new SpeechSynthesisUtterance') && speakFn.includes('if (voice) u.voice = voice;') && !appSrc.includes("'en-GB'") && !appSrc.includes('_fcVoice'), 'v29.3: 全软件发音只走 appSpeak, 默认不指定声音跟随 iPad 设置, 不再写死 en-GB (实例 ' + nU + ')'); assert(['_raPassage.passage', 'item.audio'].every(x => appSrc.includes('appSpeak(' + x)) && appSrc.includes('appSpeak(t, { rate: 0.85 })') && appSrc.includes('appSpeak(text, { rate: text.split'), 'v29.3: 朗读 / 听力 / 单词卡 / 词典 入口都接 appSpeak'); assert(appSrc.split('speechSynthesis.cancel()').length - 1 === 2, 'v29.3: 停止也走 stopSpeak, 不会被换声音重念'); }
+  { // v29.6 事故防线: 云端写入三道闸
+    const dj = fs.readFileSync(path.join(__dirname, 'data.js'), 'utf8'); const ix = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    assert(!ix.includes('body:has('), 'v29.6: index.html 不用 body:has (iPad Safari 卡死嫌疑)');
+    assert(dj.includes("_fbDoc.get({ source: 'server' })") && dj.includes('else if (!_cloudLoaded && !options.force)') && dj.includes('else if (_isCloudRegression(state) && !options.force)'), 'v29.6: 只认服务器读取; 没读到云端不写; 缩水拒写');
+    const b = { window: null, localStorage: { getItem() { return null; }, setItem() {} }, navigator: { onLine: true }, document: { addEventListener() {}, getElementById() { return null; } }, console: { log() {}, warn() {}, error() {} } }; b.window = b;
+    const vm2 = require('vm'); vm2.createContext(b); vm2.runInContext(dj, b);
+    vm2.runInContext("var __w=0; _fbReady=true; _fbDoc={set(){__w++;return Promise.resolve()}}; _fbDb={collection(){return{doc(){return{set(){return Promise.resolve()}}}}}};", b);
+    const big = { totalPoints: 1746, logs: new Array(1000).fill({}), flashcardSRS: Object.fromEntries(new Array(699).fill(0).map((_, i) => ['w' + i, {}])), fcDaily: Object.fromEntries(new Array(24).fill(0).map((_, i) => ['d' + i, {}])) };
+    const blank = { totalPoints: 5, logs: [{}], flashcardSRS: {}, fcDaily: {} };
+    b.__blank = blank; b.__big = big;
+    vm2.runInContext('saveState(__blank)', b); assert(vm2.runInContext('__w', b) === 0, 'v29.6: 事故场景: 没读到云端时 5 分空数据不写云端');
+    vm2.runInContext('_cloudLoaded=true; _cloudBase=_stateSize(__big); saveState(__blank)', b); assert(vm2.runInContext('__w', b) === 0, 'v29.6: 读到云端后, 比云端缩水的数据也不写');
+    vm2.runInContext('saveState(__big)', b); assert(vm2.runInContext('__w', b) === 1, 'v29.6: 正常数据照常写');
+    vm2.runInContext('saveState(__blank,{force:true})', b); assert(vm2.runInContext('__w', b) === 2, 'v29.6: 手动重置 (force) 仍可写');
+  }
   // v28.0: 名校真题页内做卷
   assert(Array.isArray(W.PAPERS_2025) && W.PAPERS_2025.length >= 36 && W.PAPERS_2025.every(p => /^https:\/\/chamui-papers\.web\.app\/(20\d\d|psle)\//.test(p.url) && p.sections), 'v28.0/v28.3: PAPERS_2025 ≥36 份 (名校 + PSLE), 都在 chamui-papers 站, 都有章节页码');
   { const okKeys = W.PAPERS_2025.filter(p => p.mcq && p.mcq.ok).length; assert(okKeys >= 214, 'v29.2: ≥214 份卷选择题答案键完整 (实际 ' + okKeys + ')'); W.PAPERS_2025.forEach(p => { Object.values(p.mcq.key || {}).forEach(v => assert(v >= 1 && v <= 4, 'v28.0: 答案键只有 1-4 ' + p.id)); }); }
