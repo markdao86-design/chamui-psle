@@ -1341,15 +1341,10 @@ function playRATTS() {
     showToast('此设备不支持语音合成, 请家长示范朗读', 'warn');
     return;
   }
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(_raPassage.passage);
-  u.lang = 'en-GB';  // 英式英语更接近 PSLE 标准
-  u.rate = 0.85;     // 略慢便于跟读
-  u.pitch = 1.0;
-  speechSynthesis.speak(u);
+  appSpeak(_raPassage.passage, { rate: 0.85 });   // 略慢便于跟读
 }
 function stopRATTS() {
-  if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+  stopSpeak();
 }
 function recordRAPractice() {
   if (!_raPassage) { closeOralRAModal(); return; }
@@ -1587,18 +1582,13 @@ function playLmAudio() {
     return;
   }
   const item = g.items[g.idx];
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(item.audio);
-  u.lang = 'en-GB';
-  u.rate = 0.95;
-  u.pitch = 1.0;
-  speechSynthesis.speak(u);
+  appSpeak(item.audio, { rate: 0.95 });
   g.playCount++;
   const info = document.getElementById('lmPlayInfo');
   if (info) info.textContent = `已播 ${g.playCount}/3 次 · ${g.playCount >= 2 ? '⚠️ PSLE 真考最多 2 次' : '可再听 ' + (3 - g.playCount) + ' 次'}`;
 }
 function stopLmAudio() {
-  if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+  stopSpeak();
 }
 function submitLmAnswer(optIdx) {
   const g = _lmState;
@@ -3201,29 +3191,63 @@ function startFlashcardSession(deckId) {
   _renderFlashcardSession();
 }
 
-// v21.1: 小喇叭 —— 单词和每句例句都能点着听 (用户要求)。用浏览器自带语音, 英式发音, 不用联网下载音频。
+// v29.3 (用户: "让整个软件的发音跟随 ipad 系统设置声音"): 全软件唯一发音入口, 别处一律调它, 不要自己造朗读对象。
+// 不指定 voice, iOS 就用「设置 → 辅助功能 → 朗读内容 → 声音」里选的声音; 语言 en-US 和口语软件同一口径 (写 en-GB 会落到英国口音那一档, 不是他选的声音)。
+// 网页读不到系统语速滑块, 这里的 rate 是学习用的慢速, 不算系统设置。
+const SPEAK_LANG = 'en-US';
+let _speakSeq = 0, _speakNoSys = false;   // _speakNoSys: 这台设备不指定声音就不出声, 本次打开改用它报上来的英语声音
+const _speakKeep = [];                    // iOS 会回收没人引用的朗读对象, 念到一半断掉或收不到结束回调
+function _speakFallbackVoice() {
+  const vs = speechSynthesis.getVoices() || [];
+  return vs.find(v => v.lang === SPEAK_LANG) || vs.find(v => /^en/i.test(v.lang)) || null;
+}
+function stopSpeak() {
+  _speakSeq++;
+  try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch (e) {}
+}
+function appSpeak(text, opts) {
+  opts = opts || {};
+  if (!('speechSynthesis' in window) || !text) return false;
+  const my = ++_speakSeq;
+  const busy = () => { try { return !!(speechSynthesis.speaking || speechSynthesis.pending); } catch (e) { return false; } };
+  const say = voice => {
+    if (my !== _speakSeq) return;
+    const u = new SpeechSynthesisUtterance(String(text));
+    u.lang = SPEAK_LANG;
+    if (voice) u.voice = voice;
+    u.rate = opts.rate || 1;
+    let started = false, ended = false;
+    u.onstart = () => { started = true; };
+    u.onend = u.onerror = () => { ended = true; if (opts.onend) opts.onend(); };
+    _speakKeep.push(u); if (_speakKeep.length > 20) _speakKeep.shift();
+    try { speechSynthesis.resume(); speechSynthesis.speak(u); } catch (e) { if (opts.onend) opts.onend(); return; }
+    // 第一句加载系统声音可能要 1-2 秒, 排队中也算活着; 4 秒还没动静才换声音重念一次
+    if (!voice) setTimeout(() => {
+      if (my !== _speakSeq || started || ended || busy()) return;
+      const v = _speakFallbackVoice(); if (!v) return;
+      _speakNoSys = true; say(v);
+    }, 4000);
+  };
+  try { speechSynthesis.resume(); speechSynthesis.cancel(); } catch (e) {}
+  const first = _speakNoSys ? _speakFallbackVoice() : null;
+  // 刚 cancel 时 iOS 常常还没停, 马上 speak 这一句会被丢: 等它真停, 最多 0.5 秒
+  const kick = n => { if (busy() && n < 8) setTimeout(() => kick(n + 1), 60); else say(first); };
+  kick(0);
+  return true;
+}
+window.appSpeak = appSpeak; window.stopSpeak = stopSpeak;
+// v21.1: 小喇叭 —— 单词和每句例句都能点着听 (用户要求)。用设备自带语音 (跟随 iPad 朗读内容设置), 不用联网下载音频。
 // 喇叭在卡片里面, 卡片点一下会翻面, 所以这里必须拦住冒泡, 不然一点喇叭卡就翻走了。
 function _fcSpk(text, size) {
   return `<button class="fc-spk" data-say="${escapeAttr(String(text))}" onclick="fcSpeak(event, this)" aria-label="听发音" style="font-size:${size || 18}px">🔊</button>`;
 }
-let _fcVoice = null;
 function fcSpeak(ev, btn) {
   if (ev) { ev.stopPropagation(); ev.preventDefault(); }
   if (!('speechSynthesis' in window)) { showToast('这个浏览器不支持朗读', 'warn'); return; }
   const text = String(btn.getAttribute('data-say') || '').replace(/[“”]/g, '"');
   if (!text) return;
-  if (!_fcVoice) {
-    const vs = speechSynthesis.getVoices() || [];
-    _fcVoice = vs.find(v => /en[-_]GB/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null;
-  }
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'en-GB';
-  if (_fcVoice) u.voice = _fcVoice;
-  u.rate = text.split(' ').length > 3 ? 0.88 : 0.8;   // 单词念慢一点
-  speechSynthesis.cancel();
-  speechSynthesis.speak(u);
   btn.classList.add('fc-spk-on');
-  u.onend = u.onerror = () => btn.classList.remove('fc-spk-on');
+  appSpeak(text, { rate: text.split(' ').length > 3 ? 0.88 : 0.8, onend: () => btn.classList.remove('fc-spk-on') });   // 单词念慢一点
 }
 window.fcSpeak = fcSpeak;
 
@@ -10123,11 +10147,7 @@ function speakListenText() {
   const g = _listenGameState;
   if (!g) return;
   if ('speechSynthesis' in window) {
-    const u = new SpeechSynthesisUtterance(g.item.text);
-    u.lang = g.item.voice || 'en-GB';
-    u.rate = 0.9;
-    speechSynthesis.cancel();
-    speechSynthesis.speak(u);
+    appSpeak(g.item.text, { rate: 0.9 });
     g.played = true;
     _renderListenGame();
   } else {
@@ -10180,7 +10200,7 @@ function submitListenAnswers() {
 function closeListenGame() {
   document.getElementById('listenGameModal').classList.remove('show');
   _listenGameState = null;
-  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  stopSpeak();
   renderAll();
 }
 
@@ -13504,7 +13524,7 @@ async function showDictPop(w) {
   }
 }
 window.showDictPop = showDictPop;
-function _dictSay() { if (!_dictCur) return; const t = (_dictCur.d && _dictCur.d.base) || _dictCur.key; if (window.fcSpeak) { try { const u = new SpeechSynthesisUtterance(t); u.lang = 'en-GB'; u.rate = 0.85; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {} } }
+function _dictSay() { if (!_dictCur) return; const t = (_dictCur.d && _dictCur.d.base) || _dictCur.key; appSpeak(t, { rate: 0.85 }); }
 function _dictToggleBook() {
   if (!_dictCur) return;
   const k = _dictCur.key, d = _dictCur.d || {};

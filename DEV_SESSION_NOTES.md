@@ -1,6 +1,6 @@
 # chamui-psle 开发笔记 — 换电脑 / 新 session 接手指南
 
-> 更新: 2026-11-04 · 当前版本 **v29.2** (真题库 216 份, 选择题全可页内判) · 线上 https://chamui-psle.web.app (+ 卷子站 https://chamui-papers.web.app) · QA **2160+ 项全过**
+> 更新: 2026-11-04 · 当前版本 **v29.3** (发音全走 appSpeak, 跟随 iPad 朗读内容; 真题库 216 份) · 线上 https://chamui-psle.web.app (+ 卷子站 https://chamui-papers.web.app) · QA **2160+ 项全过**
 > 2026-10-02 ~ 10-05 四天连发 v20.1 → v24.9 (约 40 版); 2026-11-03 v25.0 → v27.0 (13 寸屏字号 / 模块急迫度卡 / 2026-11 校考入库 + 逐题分析落地 / 📷 判分页)。全部已 push GitHub master 并 firebase deploy。
 
 ---
