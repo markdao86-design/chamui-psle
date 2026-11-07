@@ -2423,6 +2423,7 @@ function recordGameRun(state, gameKey, correct, total) {
   const s = state.gameStats[gameKey];
   if (s.difficulty < minFloor) s.difficulty = minFloor;
   if (ENG_MODULE_OF_GAME[gameKey]) recordEngModule(state, ENG_MODULE_OF_GAME[gameKey], correct, total, gameKey);   // v22.0
+  else if (DAYLOG_MOD_OF_GAME[gameKey]) _dayLogAdd(state, DAYLOG_MOD_OF_GAME[gameKey], correct, total);   // v29.8: 数学 / 华文也进每日流水
   const acc = total > 0 ? correct / total : 0;
   s.recent.push({ date: new Date().toISOString().slice(0,10), correct, total, accuracy: acc });
   if (s.recent.length > 5) s.recent.shift();
@@ -6497,6 +6498,7 @@ function recordEngModule(state, modKey, ok, total, src) {
   if (last && last.d === today && last.src === (src || '')) { last.ok += ok; last.total += total; }
   else m.runs.push({ d: today, ok, total, src: src || '' });
   if (m.runs.length > 30) m.runs = m.runs.slice(-30);
+  _dayLogAdd(state, modKey, ok, total);   // v29.8: 每日流水 (自动打卡 / 每日每周分析)
 }
 // 第一次用: 把以前小游戏累计的对错搬过来, 页面不至于从 0 开始
 function _seedEngModules(state) {
@@ -6527,6 +6529,178 @@ function getEngModuleStats(state, modKey) {
   return out;
 }
 window.recordEngModule = recordEngModule; window.getEngModuleStats = getEngModuleStats; window.ENG_MODULE_OF_NODE = ENG_MODULE_OF_NODE; window.ENG_MODULE_OF_GAME = ENG_MODULE_OF_GAME; window.SCI_NODE_IDS = SCI_NODE_IDS;
+
+// ===== v29.8 学习流水 (自动打卡) =====
+// 用户 2026-11-07: "每日打卡自动记录孩子做的题和正确率, 不手动打卡 (孩子能改刷分数), 完全按实际操作轨迹记录; 每日分析 + 每周分析提示注意事项和下周重点加强项"
+// state.dayLog[日期][模块] = { ok, n, runs }: 所有做题入口都写这里 (recordEngModule 覆盖英语/科学/术语/知识树/真题; recordGameRun 补数学/华文; 错题复习/每日考点/朗读单独记)
+// 背单词走 fcDaily (v21.0 起每天一条), 口语时长走 oralPractice.byDate, 学习时间走 studyLog —— 读的时候拼在一起, 不重复存
+const DAYLOG_MOD_OF_GAME = { math: 'math', unit: 'math:unit', cn_oe: 'cn:oe', chinese: 'cn:mcq' };
+function _dayLogAdd(state, mod, ok, n) {
+  if (!state || !mod || !(n > 0)) return;
+  if (!state.dayLog) state.dayLog = {};
+  const k = _fcToday(); const d = state.dayLog[k] = state.dayLog[k] || {};
+  const m = d[mod] = d[mod] || { ok: 0, n: 0, runs: 0 };
+  m.ok += Math.max(0, Math.min(n, ok || 0)); m.n += n; m.runs++;
+  const keys = Object.keys(state.dayLog).sort(); while (keys.length > 120) delete state.dayLog[keys.shift()];
+}
+const MOD_META = {
+  grammar:     { label: 'Grammar 语法选择', subj: 'eng', target: 90 },
+  vocab:       { label: 'Vocabulary 词汇考题', subj: 'eng', target: 80 },
+  visualtext:  { label: 'Visual Text 看图理解', subj: 'eng', target: 85 },
+  tense:       { label: '时态专项', subj: 'eng', target: 90 },
+  gcloze:      { label: 'Grammar Cloze 语法填空', subj: 'eng', target: 85 },
+  editing:     { label: 'Editing 改错', subj: 'eng', target: 90 },
+  compcloze:   { label: 'Cloze 完形填空', subj: 'eng', target: 70 },
+  synthesis:   { label: 'Synthesis 句型转换', subj: 'eng', target: 90 },
+  comp_oe:     { label: '阅读问答 OE', subj: 'eng', target: 75 },
+  listening:   { label: 'Listening 听力', subj: 'eng', target: 80 },
+  paper2:      { label: 'Paper 2 模拟卷', subj: 'eng', target: 85 },
+  sitwriting:  { label: '情境写作', subj: 'eng', count: true, unit: '篇' },
+  writing:     { label: '作文', subj: 'eng', count: true, unit: '篇' },
+  oral:        { label: '口语朗读', subj: 'eng', count: true, unit: '段' },
+  'sci:mcq':   { label: '科学选择题', subj: 'sci', target: 80 },
+  'sci:oe':    { label: '科学开放题', subj: 'sci', target: 80 },
+  'sci:lab':   { label: '科学实验题', subj: 'sci', target: 80 },
+  'sci:terms': { label: '科学术语考题', subj: 'sci', target: 80 },
+  'sci:node':  { label: '科学考点练习', subj: 'sci', target: 80 },
+  'math:terms':{ label: '数学术语考题', subj: 'math', target: 80 },
+  math:        { label: '数学速算', subj: 'math', target: 90 },
+  'math:unit': { label: '单位换算', subj: 'math', target: 90 },
+  'cn:oe':     { label: '华文阅读', subj: 'cn', target: 80 },
+  'cn:mcq':    { label: '华文选择', subj: 'cn', target: 85 },
+  review:      { label: '错题复习', subj: 'rev', target: 70 },
+  focus:       { label: '每日考点', subj: 'rev', count: true, unit: '个' },
+};
+const SUBJ_LABEL = { eng: '英语', sci: '科学', math: '数学', cn: '华文', rev: '复习' };
+const SUBJ_ORDER = ['eng', 'sci', 'cn', 'math', 'rev'];
+const SUBJ_WEIGHT = { eng: 1.5, sci: 1.2, cn: 1.0, math: 0.8, rev: 0.9 };   // 业务优先级: 英语最弱最重
+const MOD_ACTION = {
+  grammar: '每天 1 局语法 10 题, 先找时间信号词定时态, 错的当天进错题本',
+  vocab: '考题答错的词第二天闪卡优先复习, 看搭配选词不靠翻译',
+  visualtext: '看图理解每天 1 篇, 海报小字逐条看',
+  tense: '两周时态专攻: 每天动词圈查 1 篇',
+  gcloze: '语法填空每天 1 篇, 先看空格前后词性',
+  editing: '每天 1 段 Editing, 每个错标错因: 时态 / 拼写 / 介词 / 主谓',
+  compcloze: '每天 1 局完形, 先通读再填; 错题本里的完形题重做一遍',
+  synthesis: '每天 1 局句型转换, 改完回读: 意思和原句一样吗',
+  comp_oe: '每天 1 篇阅读问答, 几分写几个点, 答案从原文里找',
+  listening: '每天 1 局听力选择题, 先读题再听, 转折词后是重点',
+  paper2: '周末限时做一套 Paper 2, 看预测 AL',
+  'sci:mcq': '每天 10 题科学选择题, 错题看解析里的概念词',
+  'sci:oe': '科学开放题每天 2 道, 关键词写全 (术语 + 因果)',
+  'sci:lab': '实验题每天 1 道, 先找变量: 改什么 / 测什么 / 不变什么',
+  'sci:terms': '科学术语卡每天过一组, 考题错的词当天再看',
+  'sci:node': '科学考点练习每天 1 个考点 10 题, 不到 90% 不换下一个',
+  'math:terms': '数学术语卡每天过一组',
+  math: '数学速算每天 1 局, 错的都是粗心题, 记进错题本',
+  'math:unit': '单位换算每天 1 局, 换算前先写单位关系',
+  'cn:oe': '华文阅读每天 1 篇, 答题多写一点, 踩点要全',
+  'cn:mcq': '华文选择每天 1 局',
+  review: '错题本每天清一轮, 连对 3 次毕业',
+};
+const SCHED_KEY2MOD = { ed: 'editing', cloze: 'compcloze', syn: 'synthesis', gr: 'grammar', oe: 'comp_oe', sci_mcq: 'sci:mcq', sci_oe: 'sci:oe', cn: 'cn:oe', vt: 'fc', listen: 'oral' };
+function _modMeta(mod) { if (MOD_META[mod]) return MOD_META[mod]; if (/^sci:/.test(mod)) return MOD_META['sci:node']; return { label: mod, subj: 'eng', target: 80 }; }
+function _modKey(mod) { return MOD_META[mod] ? mod : /^sci:/.test(mod) ? 'sci:node' : mod; }
+// 一天的记录: 各模块 对/共/正确率 + 背单词 + 口语时长 + 学习时间
+// 第一次用: 把以前模块记录 (engModules.runs 带日期, 最近 30 条/模块) 和小游戏最近 5 局 (gameStats.recent) 搬进流水, 周分析不至于从 0 开始
+function _seedDayLog(state) {
+  if (!state || state.dayLogSeeded) return;
+  state.dayLogSeeded = true;
+  if (!state.dayLog) state.dayLog = {};
+  const add = (k, mod, ok, n) => { if (!k || !(n > 0)) return; const d = state.dayLog[k] = state.dayLog[k] || {}; const m = d[mod] = d[mod] || { ok: 0, n: 0, runs: 0 }; m.ok += Math.max(0, Math.min(n, ok || 0)); m.n += n; m.runs++; };
+  const em = state.engModules || {};
+  Object.keys(em).forEach(mod => (em[mod].runs || []).forEach(r => add(r.d, mod, r.ok, r.total)));
+  const gs = state.gameStats || {};
+  Object.keys(DAYLOG_MOD_OF_GAME).forEach(g => ((gs[g] || {}).recent || []).forEach(r => add(r.date, DAYLOG_MOD_OF_GAME[g], r.correct, r.total)));
+}
+function getDayRecord(state, k) {
+  _seedDayLog(state);
+  const raw = ((state && state.dayLog) || {})[k] || {};
+  const mods = {};
+  Object.keys(raw).forEach(m => { const key = _modKey(m), x = raw[m] || {}; const t = mods[key] = mods[key] || { ok: 0, n: 0, runs: 0 }; t.ok += x.ok || 0; t.n += x.n || 0; t.runs += x.runs || 1; });
+  const rows = Object.keys(mods).map(m => {
+    const meta = _modMeta(m), x = mods[m]; const pct = x.n ? Math.round(x.ok / x.n * 100) : 0;
+    return { mod: m, label: meta.label, subj: meta.subj, ok: x.ok, n: x.n, runs: x.runs, pct, target: meta.target || null, count: !!meta.count, unit: meta.unit || '题', pass: meta.count ? true : pct >= meta.target };
+  }).filter(r => r.n > 0);
+  rows.sort((a, b) => SUBJ_ORDER.indexOf(a.subj) - SUBJ_ORDER.indexOf(b.subj) || b.n - a.n);
+  const f = ((state && state.fcDaily) || {})[k] || null;
+  const fc = f && (f.total || f.quizTotal) ? { reviewed: f.total || 0, size: f.size || 0, done: !!f.done, firstKnow: f.firstKnow || 0, revPct: f.revTotal ? Math.round((f.revKnow || 0) / f.revTotal * 100) : null, quizOk: f.quizOk || 0, quizN: f.quizTotal || 0, secs: f.secs || 0, fast: (f.total || 0) >= 10 && (f.secs || 0) / f.total <= 2 } : null;
+  const oralSec = ((((state || {}).oralPractice || {}).byDate) || {})[k] || 0;
+  const scored = rows.filter(r => !r.count);
+  const n = scored.reduce((a, r) => a + r.n, 0), ok = scored.reduce((a, r) => a + r.ok, 0);
+  return { k, rows, fc, oralSec, n, ok, pct: n ? Math.round(ok / n * 100) : null, sec: _studyDaySec(state, k), any: !!(rows.length || fc || oralSec) };
+}
+// 每日分析: 一句总结 + 注意事项
+function analyzeDay(state, k) {
+  const r = getDayRecord(state, k);
+  const notes = [];
+  if (!r.any) return Object.assign(r, { summary: '今天还没开始', notes });
+  const low = r.rows.filter(x => !x.count && x.n >= 5 && !x.pass);
+  low.forEach(x => notes.push({ lvl: 'warn', text: `**${x.label}** ${x.ok}/${x.n} = **${x.pct}%**, 低于目标 ${x.target}%` }));
+  if (r.fc && r.fc.fast) notes.push({ lvl: 'bad', text: '背单词平均**每词不到 2 秒**, 太快了, 像在乱点' });
+  if (r.fc && !r.fc.done && r.fc.size) notes.push({ lvl: 'warn', text: `今天这组单词还没背完 (**${r.fc.reviewed}/${r.fc.size}**)` });
+  if (!r.fc) notes.push({ lvl: 'warn', text: '今天还**没背单词**' });
+  if (r.n > 0 && r.n < 30) notes.push({ lvl: 'warn', text: `今天只做了 **${r.n} 题**, 量偏少` });
+  if (r.n >= 20 && !low.length) notes.push({ lvl: 'ok', text: '今天做过的模块**都达标** 👍' });
+  const parts = [];
+  if (r.n) parts.push(`做题 **${r.n}** 题 · 正确 **${r.pct}%**`);
+  if (r.fc) parts.push(`背单词 **${r.fc.reviewed}** 词${r.fc.revPct != null ? ' · 复习词一遍过 ' + r.fc.revPct + '%' : ''}`);
+  if (r.sec >= 60) parts.push(`学了 **${Math.round(r.sec / 60)}** 分钟`);
+  return Object.assign(r, { summary: parts.join(' · '), notes });
+}
+function _weekKeys(mon) { const out = []; for (let i = 0; i < 7; i++) { const d = new Date(mon.getTime()); d.setDate(d.getDate() + i); out.push(_fcLocalDate(d)); } return out; }
+function _weekRaw(state, mon) {
+  const today = _fcToday();
+  const days = _weekKeys(mon).map((k, i) => { const r = getDayRecord(state, k); return { k, dow: [1, 2, 3, 4, 5, 6, 0][i], n: r.n, ok: r.ok, sec: r.sec, fcDone: !!(r.fc && r.fc.done), fcReviewed: r.fc ? r.fc.reviewed : 0, any: r.any, future: k > today, rows: r.rows }; });
+  const mods = {};
+  days.forEach(d => d.rows.forEach(r => { const t = mods[r.mod] = mods[r.mod] || { mod: r.mod, label: r.label, subj: r.subj, ok: 0, n: 0, days: 0, count: r.count, target: r.target, unit: r.unit, byDay: {} }; t.ok += r.ok; t.n += r.n; t.days++; t.byDay[d.k] = { ok: r.ok, n: r.n }; }));
+  const list = Object.keys(mods).map(m => { const x = mods[m]; x.pct = x.n ? Math.round(x.ok / x.n * 100) : 0; x.pass = x.count ? true : x.pct >= x.target; return x; });
+  list.sort((a, b) => SUBJ_ORDER.indexOf(a.subj) - SUBJ_ORDER.indexOf(b.subj) || b.n - a.n);
+  const past = days.filter(d => !d.future);
+  const sum = f => past.reduce((a, d) => a + (d[f] || 0), 0);
+  return { mon, days, mods: list, pastDays: past.length, studyDays: past.filter(d => d.any).length, fcDays: past.filter(d => d.fcDone).length, n: sum('n'), ok: sum('ok'), sec: sum('sec'), pct: sum('n') ? Math.round(sum('ok') / sum('n') * 100) : null };
+}
+// 课表这周安排了哪些 App 能记到的模块 (读 app.js 的 SCHED_DAYS, 没加载时为空)
+function _scheduledMods() {
+  const out = new Set(); const SD = (typeof window !== 'undefined' && window.SCHED_DAYS) || null, kf = (typeof window !== 'undefined' && window.schedKeysOf) || null;
+  if (!SD || !kf) return out;
+  Object.keys(SD).forEach(d => (SD[d].blocks || []).forEach(b => { if (b[3] === 'r') return; kf(b[1]).forEach(key => { if (SCHED_KEY2MOD[key]) out.add(SCHED_KEY2MOD[key]); }); }));
+  return out;
+}
+// 每周分析: 四科达标 + 注意事项 + 下周重点加强项 (和上周比)
+function analyzeWeek(state, mon) {
+  const cur = _weekRaw(state, mon);
+  const pm = new Date(mon.getTime()); pm.setDate(pm.getDate() - 7);
+  const prev = _weekRaw(state, pm);
+  cur.mods.forEach(m => { const p = prev.mods.find(x => x.mod === m.mod); m.prevPct = p && p.n >= 5 ? p.pct : null; m.delta = m.prevPct == null ? null : m.pct - m.prevPct; });
+  const notes = [], focus = [];
+  const DOW = '日一二三四五六';
+  const off = cur.days.filter(d => !d.future && !d.any && d.dow !== 0);
+  if (off.length) notes.push({ lvl: 'bad', text: `有 **${off.length} 天**没在 App 里学 (${off.map(d => '周' + DOW[d.dow]).join('、')})` });
+  const fcNeed = cur.days.filter(d => !d.future && d.dow !== 0).length;
+  if (fcNeed >= 2 && cur.fcDays < fcNeed) notes.push({ lvl: 'warn', text: `单词只背完 **${cur.fcDays}/${fcNeed}** 天, 每天那一组要背完` });
+  const gap = m => (m.target - m.pct) * (SUBJ_WEIGHT[m.subj] || 1);
+  const low = cur.mods.filter(m => !m.count && m.n >= 5 && !m.pass).sort((a, b) => gap(b) - gap(a));
+  low.forEach(m => notes.push({ lvl: 'warn', text: `**${m.label}** ${m.ok}/${m.n} = **${m.pct}%**, 低于目标 ${m.target}%` }));
+  const drop = cur.mods.filter(m => !m.count && m.n >= 5 && m.delta != null && m.delta <= -10);
+  drop.forEach(m => notes.push({ lvl: 'warn', text: `**${m.label}** 比上周掉了 **${-m.delta} 个点** (${m.prevPct}% → ${m.pct}%)` }));
+  const up = cur.mods.filter(m => !m.count && m.n >= 5 && m.delta != null && m.delta >= 10);
+  up.forEach(m => notes.push({ lvl: 'ok', text: `**${m.label}** 比上周进步 **${m.delta} 个点** (${m.prevPct}% → ${m.pct}%)` }));
+  const fast = cur.days.filter(d => d.rows && d.n === 0 && d.fcReviewed >= 10 && d.sec && d.sec / d.fcReviewed <= 2);
+  if (fast.length) notes.push({ lvl: 'bad', text: `有 ${fast.length} 天背单词**每词不到 2 秒**, 像在乱点` });
+  if (cur.pastDays >= 5 && cur.n < 150) notes.push({ lvl: 'warn', text: `本周共做 **${cur.n} 题**, 量偏少 (建议每周 200 题以上)` });
+  const sched = _scheduledMods(); const did = new Set(cur.mods.map(m => m.mod));
+  const miss = [...sched].filter(m => m !== 'fc' && m !== 'oral' && !did.has(m));
+  if (cur.pastDays >= 3 && miss.length) notes.push({ lvl: 'info', text: `课表上有 ${miss.map(m => '**' + _modMeta(m).label + '**').join('、')}, 本周 App 里没记录 (纸上做的 App 看不到)` });
+  if (!notes.length && cur.n >= 50) notes.push({ lvl: 'ok', text: '本周各模块**都达标**, 保持' });
+  // 下周重点: 低于目标的 (按差距 × 科目权重) → 退步的 → 课表有但没练的
+  low.forEach(m => { if (focus.length < 3) focus.push({ mod: m.mod, label: m.label, why: `${m.pct}% 没到 ${m.target}%`, action: MOD_ACTION[m.mod] || '每天练 1 局, 正确率到目标线再换' }); });
+  drop.forEach(m => { if (focus.length < 3 && !focus.some(f => f.mod === m.mod)) focus.push({ mod: m.mod, label: m.label, why: `比上周掉了 ${-m.delta} 个点`, action: MOD_ACTION[m.mod] || '每天练 1 局' }); });
+  if (cur.pastDays >= 5) miss.forEach(m => { if (focus.length < 3 && !focus.some(f => f.mod === m)) focus.push({ mod: m, label: _modMeta(m).label, why: '课表有但 App 里没练过', action: MOD_ACTION[m] || '每天练 1 局' }); });
+  const subj = SUBJ_ORDER.filter(s => s !== 'rev').map(s => { const ms = cur.mods.filter(m => m.subj === s && !m.count && m.n >= 5); return { subj: s, label: SUBJ_LABEL[s], n: cur.mods.filter(m => m.subj === s).reduce((a, m) => a + m.n, 0), graded: ms.length, pass: ms.filter(m => m.pass).length, miss: ms.filter(m => !m.pass).map(m => m.label) }; });
+  return Object.assign(cur, { notes, focus, subj, prev: { n: prev.n, pct: prev.pct, studyDays: prev.studyDays } });
+}
+window._dayLogAdd = _dayLogAdd; window._seedDayLog = _seedDayLog; window.getDayRecord = getDayRecord; window.analyzeDay = analyzeDay; window.analyzeWeek = analyzeWeek; window.MOD_META = MOD_META; window.MOD_ACTION = MOD_ACTION; window.DAYLOG_MOD_OF_GAME = DAYLOG_MOD_OF_GAME; window._weekRaw = _weekRaw;
 
 function getFlashcardStats(state) {
   if (!state.flashcardSRS) state.flashcardSRS = {};

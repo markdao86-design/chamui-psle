@@ -705,7 +705,7 @@ assert(/linear-gradient\(90deg,#B45309,#16A34A\)/.test(appSrc), 'v19.21: 进度�
 assert(/class="home-grid-2col"/.test(idxSrc), 'v19.19: home-grid-2col 容器');
 assert(/class="home-col-left"/.test(idxSrc), 'v19.19: home-col-left');
 assert(/class="home-col-right"/.test(idxSrc), 'v19.19: home-col-right');
-assert(/📝 每日分数打卡/.test(idxSrc), 'v19.19→v23.0: 左栏标题 每日分数打卡');
+assert(/📊 每日学习记录/.test(idxSrc) && !/📝 每日分数打卡/.test(idxSrc), 'v19.19→v23.0→v29.8: 左栏标题 每日学习记录 (自动, 不再手填)');
 // v19.23 右栏标题改 "🎓 教学 + 信息 + 复盘" (上面已断言)
 assert(/🎓 每日考点学习/.test(idxSrc), 'v19.19+23→v23.0: 右栏标题');
 assert(/@media \(min-width:\s*900px\)[\s\S]{0,200}grid-template-columns:\s*1fr 1fr/.test(idxSrc), 'v19.19: 响应式 ≥900px 2 栏 / 其他 1 栏');
@@ -1163,16 +1163,16 @@ assert(/renderSchedGrid\(\)/.test(appSrc), 'v19.51: renderSchedGrid 被调用');
 assert(/_schedShiftWeek/.test(appSrc) && /window\._schedShiftWeek = _schedShiftWeek/.test(appSrc), 'v19.51: 周切换已接入+导出');
 assert(/'家长已核对'/.test(appSrc), 'v19.51: 家长核对行存在');
 // (v22.1 删: 今日必做改成按课表生成, 旧写死文案不再存在) void(/21:30准时收工/.test(appSrc), 'v19.51: 收工勾选行存在');
-assert(/math_b/.test(appSrc), 'v19.51: 数学pair(错/粗心)计入汇总');
-assert(/essay_a/.test(appSrc) && /essay_b/.test(appSrc), 'v19.51: 作文内容+语言两栏');
+// v29.8: math_b / essay_a 手填格子已随手填周汇总删除 (打卡全自动)
+assert(!/math_b|essay_a/.test(appSrc), 'v29.8: 手填格子 (math_b / essay_a) 不再出现在 app.js');
 assert((appSrc.match(/SCHED_GRID/g) || []).length >= 3, 'v19.51: SCHED_GRID 被渲染使用');
 assert(/overflow-x:auto/.test(appSrc), 'v19.51: 打分表横向滚动容器(手机不撑破)');
 assert(/v19\.53: 家长停在课表页/.test(appSrc), 'v19.53: 远程更新即时刷新课表页(多设备查看)');
 // v19.59: 打分表全周7天 + 自学记录文本行
-assert(/const COLS = \[1, 2, 3, 4, 5, 6, 0\]/.test(appSrc), 'v19.59: 打分表含周四/周六列');
+assert(/w\.days\.map\(d => \{ const dd = new Date\(d\.k/.test(appSrc), 'v19.59→v29.8: 整周记录表含全周 7 列 (从 _weekRaw.days 生成)');
 // (v23.10 删: 自学记录文本行不在课表上, 用户要求周表和课表全对上) assert(/key: 'note'/.test(appSrc) && /type: 'text'/.test(appSrc), 'v19.59: 自学记录文本行存在');
-assert(/field === 'note'/.test(appSrc), 'v19.59: note 存文本不转数字');
-assert(/row\.type === 'text'/.test(appSrc), 'v19.59: text 输入渲染分支');
+assert(!/field === 'note'/.test(appSrc), 'v19.59→v29.8: 自学记录文本框已删 (全自动)');
+assert(!/row\.type === 'text'/.test(appSrc), 'v19.59→v29.8: 手填文本分支已删');
 // v19.62: 能力页按计分卡维度评估
 assert(/id="schedAbilityCard"/.test(idxSrc), 'v19.62: 能力评估卡容器在能力页首屏');
 assert(/function renderSchedAbilityCard\(/.test(appSrc), 'v19.62: renderSchedAbilityCard 已定义');
@@ -1196,7 +1196,7 @@ assert(/_ebApplyResult\(optIdx === item\.ans\)/.test(appSrc), 'v19.65: mcq提交
 assert(/item\.ans \?\? item\.correctAns/.test(appSrc), 'v19.65: 答错反馈兜底correctAns(修undefined)');
 // v19.66: 做题类统一 对/总 两格填写
 assert(/label: 'Editing: 对_\/共_题'/.test(appSrc), 'v19.66/v23.10: Editing行改对/总格式');
-assert(/const wrongOf = /.test(appSrc) && /wrongAll\('ed'\)/.test(appSrc), 'v19.66: 错数从对/总推导 (v20.7 起全周聚合 wrongAll)');
+assert(!/wrongAll\('ed'\)/.test(appSrc) && /m\.target - m\.pct/.test(dataSrc), 'v19.66→v29.8: 周汇总不再从手填格推错数, 按 dayLog 模块正确率和目标线比');
 assert(!/label: '[^']*: 错_题'/.test(appSrc), 'v19.66: 无残留单格错题行');
 // v19.67: 答案详解+PSLE考点技巧
 assert(/const EB_TYPE_TIPS = \{/.test(appSrc) && /_ebTipsHtml\(item\.gameKey\)/.test(appSrc), 'v19.67: 题型考点技巧库+渲染接入');
@@ -1236,11 +1236,10 @@ assert(/page === 'schedule'/.test(appSrc), 'v19.50: tab 切换 hook 已接入 (�
 assert(/function computeSchedWeekSummary\(/.test(appSrc), 'v19.50: 周汇总函数已定义');
 assert(/renderSchedWeekSummary\(\)/.test(appSrc), 'v19.50: 周汇总被调用');
 assert(/renderSchedMonthTrend\(\)/.test(appSrc), 'v19.50: 月趋势被调用');
-assert(/window\.saveDailyScore = saveDailyScore/.test(appSrc), 'v19.50: saveDailyScore window 导出');
-assert(/saveState\(state\);\s*renderSchedWeekSummary/.test(appSrc), 'v19.50: 打分即存 state + 刷新汇总');
+assert(!/\bsaveDailyScore\b/.test(appSrc) && !/\b_sgCtrl\b/.test(appSrc) && !/\btoggleTodayManual\b|\btoggleManualFor\b/.test(appSrc), 'v29.8: 手填打分 / 手动打勾 全部删除 (孩子不能手改)');
 assert(/Conquer Comprehension/.test(appSrc), 'v19.50: 课表含实书名(阅读OE)');
 assert(/21:00–21:30/.test(appSrc) && /睡前单词/.test(appSrc), 'v19.50: 睡前单词档在课表中');
-assert(/scheduleScores/.test(appSrc), 'v19.50: 打分数据挂 state.scheduleScores (随 Firebase 同步)');
+assert(/state\.dayLog\[k\] = state\.dayLog\[k\] \|\| \{\}/.test(dataSrc) && /_dayLogAdd\(state, modKey, ok, total\)/.test(dataSrc) && /else if \(DAYLOG_MOD_OF_GAME\[gameKey\]\) _dayLogAdd/.test(dataSrc), 'v29.8: 学习流水挂 state.dayLog (随 Firebase 同步); recordEngModule / recordGameRun 都写它');
 
 // ===== v19.55: 亮色主题 (对齐挖矿系统配色) =====
 assert(/--color-bg: #F1F5F9/.test(idxSrc), 'v19.55: 页面底色浅灰蓝');
@@ -1895,22 +1894,33 @@ assert(/window\._schedToggleNormal/.test(appSrc), 'v20.2: 切换函数已导出 
 
 // ===== v20.7: 周打分表 "成绩根本不对" (孩子实报) =====
 assert(!/width:26px/.test(appSrc), 'v20.7: 打分格不再 26px (两位数被截成一位: 云端存 20/30, 屏幕显示 2/3)');
-assert(/class="sg-num"/.test(appSrc) && /\.sg-num::-webkit-inner-spin-button/.test(idxSrc), 'v20.7: 数字框去掉上下箭头 (悬停时箭头占宽)');
-assert(/!row\.days\.includes\(d\) && !HOLIDAY_SCHED\[dk\]/.test(appSrc), 'v20.7: 假期日期所有打分行全开 (假期任务和平日课表不同, 按平日锁格子没地方填)');
-assert(/const f2All = key => ALL\.map/.test(appSrc) && !/pct\(\[f2\(1, 'oe'\), f2\(3, 'oe'\)\]\)/.test(appSrc), 'v20.7: 周汇总全周 7 天聚合, 不再按固定星期取数');
+assert(!/class="sg-num"/.test(appSrc) && !/type="number"[^>]*onchange="window\.saveDailyScore/.test(appSrc), 'v20.7→v29.8: 打分数字框已全部删除');
+assert(/function _weekRaw\(state, mon\)/.test(dataSrc) && /_weekKeys\(mon\)\.map/.test(dataSrc), 'v20.7→v29.8: 周汇总全周 7 天聚合 (dayLog 按日期取, 不按固定星期)');
 {
-  const st0 = { scheduleScores: { '2026-09-08': { oe_a: 3, oe_b: 4, sci_mcq_a: 16, sci_mcq_b: 20 } } };
-  // app.js 不进 vm, 把周汇总用到的 4 个函数按源码抠出来单独跑
-  // 用 indexOf 抠函数源码, 不走 RegExp (heredoc 反斜杠总被吃掉)
-  const grab = (n, oneLine) => { const i = appSrc.indexOf('function ' + n + '('); if (i < 0) return ''; const j = oneLine ? appSrc.indexOf('\n', i) + 1 : appSrc.indexOf('\n}\n', i) + 3; return appSrc.slice(i, j); };
-  const one = n => grab(n, true), multi = n => grab(n, false);
-  const ctx2 = vm.createContext({ state: st0, window: {}, console });
-  { const i0 = appSrc.indexOf('const SCHED_DAYS = {'); const j0 = appSrc.indexOf('window.SCHED_GRID = SCHED_GRID; window.schedKeysOf = schedKeysOf;'); vm.runInContext(appSrc.slice(i0, j0), ctx2); }   // v23.10: 周表从课表生成, 汇总要用 SCHED_GRID
-  vm.runInContext(multi('schedLocalDate') + one('getSchedScores') + one('_sv') + multi('computeSchedWeekSummary'), ctx2);
-  const r = vm.runInContext('computeSchedWeekSummary(new Date(2026, 8, 7, 12))', ctx2);
-  const oe = r.rows.find(x => /阅读OE/.test(x[0])), sci = r.rows.find(x => /科BktA/.test(x[0]));
-  assert(oe && oe[1] === '75%', `v20.7: 阅读OE 填在周二也算进周汇总 (实际 ${oe && oe[1]})`);
-  assert(sci && /16\/20/.test(sci[1]), `v20.7: 科学选择题按 对/共 显示, 不写死 /15 (实际 ${sci && sci[1]})`);
+  // v29.8: 周汇总从 dayLog 自动算 (手填 scheduleScores 不再参与)
+  const st0 = { dayLog: { '2026-09-08': { comp_oe: { ok: 3, n: 4, runs: 1 }, 'sci:mcq': { ok: 16, n: 20, runs: 2 }, grammar: { ok: 5, n: 10, runs: 1 } }, '2026-09-10': { compcloze: { ok: 6, n: 10, runs: 1 }, 'sci:sci_cells': { ok: 9, n: 10, runs: 1 }, review: { ok: 4, n: 6, runs: 6 }, focus: { ok: 2, n: 2, runs: 2 } } }, fcDaily: { '2026-09-08': { total: 40, size: 40, firstKnow: 30, revTotal: 20, revKnow: 16, secs: 600, done: true } }, oralPractice: { byDate: { '2026-09-09': 300 } }, studyLog: {} };
+  const d8 = W.getDayRecord(st0, '2026-09-08');
+  assert(d8.n === 34 && d8.ok === 24 && d8.pct === 71 && d8.fc && d8.fc.done && d8.fc.revPct === 80 && d8.rows[0].subj === 'eng' && d8.rows[d8.rows.length - 1].mod === 'sci:mcq', `v29.8: 一天的记录 = 各模块对/共加总 (34 题 71%) + 背单词 (复习词一遍过 80%), 英语排前科学排后 (实际 ${d8.n}/${d8.pct}/${d8.rows[0] && d8.rows[0].mod})`);
+  const a8 = W.analyzeDay(st0, '2026-09-08');
+  assert(a8.notes.some(x => /Grammar.*50%/.test(x.text)) && !a8.notes.some(x => /阅读问答/.test(x.text)), 'v29.8: 每日分析: 语法 5/10 低于 90% 要提; 阅读问答 3/4 没到 5 题不评');
+  const d10 = W.getDayRecord(st0, '2026-09-10');
+  assert(d10.rows.some(r => r.mod === 'sci:node' && r.label === '科学考点练习') && d10.rows.find(r => r.mod === 'focus').count && d10.n === 26, 'v29.8: 知识树科学考点合成一行; 每日考点只记次数不算正确率; 错题复习算题');
+  const wk = W.analyzeWeek(st0, new Date(2026, 8, 7, 12));
+  assert(wk.n === 60 && wk.studyDays === 3 && wk.fcDays === 1, `v29.8: 周汇总: 做题 60 题, 学了 3 天 (含只练口语的周三), 单词背完 1 天 (实际 ${wk.n}/${wk.studyDays}/${wk.fcDays})`);
+  assert(wk.focus.length === 3 && wk.focus[0].mod === 'grammar' && wk.focus.every(f => f.action), `v29.8: 下周重点最多 3 项, 差距 × 科目权重最大的 (语法 50% vs 90%) 排第一, 每项带做法 (实际 ${wk.focus.map(f => f.mod).join(',')})`);
+  assert(wk.notes.some(x => /没在 App 里学/.test(x.text)) && wk.notes.some(x => /单词只背完/.test(x.text)), 'v29.8: 注意事项: 没学的天 + 单词没背完的天');
+  const sj = wk.subj.find(s => s.subj === 'sci');
+  assert(sj && sj.graded === 2 && sj.pass === 2, 'v29.8: 四科达标格: 科学选择 80% + 科学考点 90% 两项都达标');
+  const st1 = { dayLog: {}, gameStats: {}, flashcardSRS: {}, logs: [], scheduleScores: {} };
+  W.recordGameRun(st1, 'grammar', 9, 10); W.recordGameRun(st1, 'math', 8, 10); W.recordGameRun(st1, 'cn_oe', 4, 5);
+  const tk = W._fcToday();
+  assert(st1.dayLog[tk].grammar.n === 10 && st1.dayLog[tk].math.ok === 8 && st1.dayLog[tk]['cn:oe'].n === 5 && !st1.engModules.math, 'v29.8: 小游戏做完自动进当天流水 (英语经模块表, 数学/华文直接记), 数学不混进英语模块');
+  const st2 = { engModules: { grammar: { ok: 9, total: 10, runs: [{ d: '2026-09-08', ok: 9, total: 10, src: 'grammar' }] } }, gameStats: { math: { recent: [{ date: '2026-09-08', correct: 8, total: 10 }] } } };
+  const d2 = W.getDayRecord(st2, '2026-09-08');
+  assert(d2.n === 20 && d2.ok === 17 && st2.dayLogSeeded && W.getDayRecord(st2, '2026-09-08').n === 20, 'v29.8: 第一次用把 engModules.runs (带日期) 和 gameStats.recent 搬进流水, 只搬一次不重复');
+  assert(/_dayLogAdd\(state, 'review', isCorrect \? 1 : 0, 1\)/.test(appSrc) && /_dayLogAdd\(state, 'focus'/.test(appSrc) && /_dayLogAdd\(state, 'oral', 1, 1\)/.test(appSrc), 'v29.8: 错题复习 / 每日考点 / 朗读 三个非游戏入口也进流水');
+  assert(/function _dayRecordHtml\(k, opts\)/.test(appSrc) && /_dayRecordHtml\(todayKey\) \+ _dayAnalysisHtml\(todayKey\)/.test(appSrc) && /_weekAnalysisHtml\(schedMonday\(new Date\(\)\)\)/.test(appSrc) && /_dayRecordHtml\(dk, \{ plan: false \}\)/.test(appSrc) && /el\.innerHTML = _weekAnalysisHtml\(_schedGridMonday\(\)\)/.test(appSrc), 'v29.8: 首页今日卡 = 自动记录 + 当日分析 + 折叠周分析; 课表页按天 / 本周分析 同一套渲染器 (死代码警钟)');
+  assert(!/<input type="checkbox"[^>]*todayManual|onchange="toggleTodayManual/.test(appSrc) && !/<input type="number"/.test(appSrc.slice(appSrc.indexOf('function renderTodayThreeCard'), appSrc.indexOf('function renderTargetSchoolMini'))), 'v29.8: 首页今日卡没有任何输入框 / 勾选框 (孩子不能手改)');
 }
 
 // ===== v21.0: 单词闪卡重做 (孩子实报: 没有已学会的记录/没进度/不知道多久学完/每天多少没规划; 家长要每天看到情况) =====
@@ -2165,8 +2175,8 @@ assert(/AL1 线是 90%/.test(appSrc) && /历年真题有版权不在 app 里/.te
 
 // ===== v22.1: 今日必做按课表生成 =====
 assert(/const day = SCHED_DAYS\[dow\] \|\| \{ three: \[\] \};/.test(appSrc) && /day\.three/.test(appSrc), 'v22.1: 今日必做从 SCHED_DAYS[今天].three 生成, 不再写死 Oral/Cloze/科学');
-assert(/function toggleTodayManual\(i\)/.test(appSrc) && /toggleTodayManual\('b\$\{b\.i\}'\)/.test(appSrc), 'v22.1/v23.1: 作业/班课这类 App 测不到的项能点一下自己打勾 (按课表块编号)');
-assert(/s === 'vocab' \? !!\(fcRec && fcRec\.done\)/.test(appSrc), 'v22.1: "背单词"按 App 今天这一组背完自动勾');
+// v22.1 手动打勾 / 信号勾 已被 v29.8 全自动记录取代
+assert(/r\.fc\.done \? '✅ ' : ''/.test(appSrc) && /背单词 · 今天这一组/.test(appSrc), 'v22.1→v29.8: 背单词按 fcDaily 当天那一组背完自动 ✅');
 {
   const SD = (appSrc.match(/const SCHED_DAYS = \{[\s\S]*?\n\};/) || [''])[0];
   const sig = (SD.match(/'(manual|none|vocab|oral|vocab\+oral|editing|cloze|sst|grammar|scimcq)', "/g) || []).length;
@@ -2224,8 +2234,7 @@ assert(/_dashboardLegacy[\s\S]{0,600}id="paper2SprintCard"[\s\S]{0,300}id="think
   const cards = (home.match(/id="[A-Za-z0-9_]+Card"/g) || []);
   assert(cards.length === 3 && /todayThreeCard/.test(cards[0]) && /errorBankCard/.test(cards[1]) && /dailyFocusCard/.test(cards[2]), `v23.0: 首页两栏只剩 3 张卡 (打分/错题本/每日考点), 实际 ${cards.join(',')}`);
 }
-assert(/function _sgCtrl\(row, dk, sc\)/.test(appSrc) && /_sgCtrl\(r, todayKey, sc\)/.test(appSrc) && /schedKeysOf\(b\.name\)/.test(appSrc) && /day\.blocks \|\| \[\]/.test(appSrc), 'v23.0/v23.1/v23.10: 主页每日分数打卡 = 今天课表的学习块 (严格按课表, 不加练习), 打分格复用课表页控件写同一份 scheduleScores');
-assert((appSrc.match(/_sgCtrl\(/g) || []).length >= 3, 'v23.0: 课表页周表也改走 _sgCtrl (不留两份控件代码)');
+assert(/window\.getDayRecord\(state, todayKey\)/.test(appSrc) && /day\.blocks \|\| \[\]/.test(appSrc) && /window\._weekRaw\(state, mon\)/.test(appSrc), 'v23.0→v29.8: 主页今日卡读 dayLog 自动记录; 没记录时列今天课表当参照; 整周记录表从 _weekRaw 生成');
 assert(/const TECHNIQUE_BOOK = \{/.test(dataSrc) && W.TECHNIQUE_BOOK && ['eng', 'sci', 'math', 'cn'].every(s => W.TECHNIQUE_BOOK[s] && W.TECHNIQUE_BOOK[s].order.every(m => W.TECHNIQUE_BOOK[s].mods[m])), 'v23.0: 答题技巧本四科齐, order 里每个模块都有内容');
 {
   const B = W.TECHNIQUE_BOOK; let bad = [];
@@ -2373,7 +2382,7 @@ assert(/function _dictDeep\(\)/.test(appSrc) && /_dictDeep\(\)/.test(appSrc.repl
 }
 
 // ===== v24.9: 口语打卡只勾不打分 =====
-assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾',\s+type: 'chk'/.test(appSrc) && /const scoreRows = rs\.filter\(r => r\.key !== 'hw'\);/.test(appSrc) && /'打卡 ' \+ listen \+ ' 天'/.test(appSrc), 'v24.9: 口语打卡是勾 (主页/课表/周表同一格), 计分卡按本周打卡天数');
+assert(/listen:  \{ sec: '英语', label: '口语打卡: 完成',\s+target: '勾',\s+type: 'chk'/.test(appSrc) && /r\.oralSec > 0/.test(appSrc), 'v24.9→v29.8: 口语不打分; 口语时长 (oralPractice) 有就自动算一行');
 
 // ===== v25.2/v25.3: 校考差距 + 学习统计条 + 解析块/词典放大 =====
 {

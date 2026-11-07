@@ -869,18 +869,7 @@ window.renderAdmissionForecastCard = renderAdmissionForecastCard;
 // ============================================================
 
 // A1: 今日 3 件事 sticky 卡 — v19.14b 加平日/周末分化
-// v22.1: 作业/班课这类 App 测不到的项, 点一下自己打勾 (只记当天, 不给分)
-function toggleTodayManual(i) {
-  const k = schedLocalDate();
-  if (!state.todayManual) state.todayManual = {};
-  const keys = Object.keys(state.todayManual).sort();
-  while (keys.length > 30) delete state.todayManual[keys.shift()];
-  const m = state.todayManual[k] = state.todayManual[k] || {};
-  m[i] = !m[i];
-  saveState(state);
-  renderTodayThreeCard();
-}
-window.toggleTodayManual = toggleTodayManual;
+// v29.8: 手动打勾函数已删 —— 打卡全部按 App 实际做题自动记录, 孩子不能手改
 function renderTodayThreeCard() {
   const card = document.getElementById('todayThreeCard');
   if (!card) return;
@@ -888,6 +877,7 @@ function renderTodayThreeCard() {
   // v19.15 P0-3: 卡片标题/计数器按平日 vs 周末分化 (周末改"自选推荐", 心理上从义务→自主)
   let headerTitle = '🎯 今日要做的 3 件事';
   let counterFn = (done) => `${done} / 3 完成`;
+  let counterLabel = '完成';   // v29.8: 计数右边的小字 (完成 / 题)
 
   // v19.15e: 暗调 + 青色发光风格, 匹配打卡页 .checkin-item (未做高亮 / 已做灰掉) → v24.1 只剩假期分支在用, 改成 token 行 (做完 = ✅ + 变灰, 不用删除线)
   const item = (icon, label, sub, done, onclick, color) => `
@@ -913,7 +903,7 @@ function renderTodayThreeCard() {
     const treeToday = Object.values(state.knowledgeStars || {}).some(r => r && r.lastDate === todayIso);
     const appDone = treeToday || (todayCounts.vocab || 0) >= 1 || (todayCounts.scimcq || 0) >= 1 || (todayCounts.listen || 0) >= 1;
     headerTitle = '🏖️ 假期任务 · ' + holiday.label;
-    counterFn = () => '照课表走';
+    counterFn = () => '照课表走'; counterLabel = '';
     doneCount = 0;
     headerSub = '假期特别安排 · 详情看📆课表页 · 9/14(周一)恢复常规';
     itemsHtml = holiday.three.map((t, i) => {
@@ -922,59 +912,19 @@ function renderTodayThreeCard() {
     }).join('');
     tipHtml = `<div style="margin-top:8px;font-size:13px;color:#64748B;line-height:1.6;text-align:center">🏫 <b>班课优先 · 错题当天清</b> · 8:00 起床 21:30 熄灯 · 每晚填每日成绩单</div>`;
   } else {
-    // v22.1: 按课表逐日生成 (用户 2026-10-03 的新表)。完成信号: App 里能测到的自动勾, 测不到的 (作业/班课) 点一下自己勾
+    // v29.8 (用户: "自动记录孩子做的题和正确率, 不手动打卡, 孩子还能修改刷分数; 按实际操作轨迹记录"): 这张卡不再有任何输入框 / 勾选框,
+    // 全部读 state.dayLog (每日流水, 所有做题入口自动写) + fcDaily (背单词) + oralPractice (口语时长); 下面折叠一块 每周分析 (注意事项 / 下周重点)
+    const todayKey = schedLocalDate();
     const dow = new Date().getDay();
     const day = SCHED_DAYS[dow] || { three: [] };
-    const todayKey = schedLocalDate();
-    const manual = ((state.todayManual || {})[todayKey]) || {};
-    const oral = window.getOralStatus ? window.getOralStatus(state) : { todaySec: 0, done: false };
-    const fcRec = ((state.fcDaily || {})[todayKey]) || null;
-    const sig = (k) => {
-      if (k === 'none') return false;
-      if (k === 'manual') return false;
-      return k.split('+').every(s => s === 'vocab' ? !!(fcRec && fcRec.done) : s === 'oral' ? (oral.done || (oral.todaySec || 0) >= 600) : (todayCounts[s] || 0) >= 1);
-    };
-    const three = day.three || [];
-    // v23.1 (用户 2026-10-03: "严格按课表来打卡, 不加多练习"): 打卡行 = 今天课表上的学习块 (c 班课 / s 自学), 不再把周表里所有格子都列出来
-    // 每块一行: 时间 | 内容 | 打卡控件。能对上周表格子的 (Editing/Cloze/Synthesis/语法/科学/语文/范文/口语) 用同一个格子 (周表自动同步); 对不上的 (班课/作业/补习老师) 点一下打勾
-    const scores = getSchedScores(), sc = scores[todayKey] || {};
-    const sigOf = (name) => /单词/.test(name) ? 'vocab' : /口语/.test(name) ? 'oral' : /editing/i.test(name) ? 'editing' : /cloze/i.test(name) ? 'cloze' : /synthesis/i.test(name) ? 'sst' : /语法/.test(name) ? 'grammar' : null;
-    const blocks = (day.blocks || []).map((b, i) => ({ i, t: b[0], name: b[1], note: b[2], kind: b[3] })).filter(b => b.kind !== 'r' && !/睡觉|洗漱|吃饭|休息|午休/.test(b.name));
-    const gridFilled = (key) => { const r = SCHED_GRID.find(x => x.key === key); if (!r) return false; return (r.type === 'frac' || r.type === 'pair') ? (sc[key + '_a'] != null || sc[key + '_b'] != null) : (sc[key] != null && sc[key] !== ''); };
-    const flags = blocks.map(b => { const ks = schedKeysOf(b.name).filter(x => x !== 'hw'), sg = sigOf(b.name); return !!manual['b' + b.i] || (sg ? sig(sg) : false) || (ks.length ? ks.every(k => gridFilled(k)) : false); });
-    doneCount = flags.filter(Boolean).length;
-    headerTitle = `📝 每日分数打卡 · ${day.label || ''}`;
-    counterFn = () => `${doneCount} / ${blocks.length}`;
-    // v24.1 设计层简化: 每行 = 时间 (12px 灰) + 名称 (15px) 左 | 右 一个控件 (32px 原生勾 或 "对/共" 两格, 格子里有占位不再另起说明行);
-    // 做完 = ✅ + 整行变灰 (不用删除线); 当前该做的那一行 = 左侧 3px 品蓝条; "怎么填" 折叠删掉
+    const rec = window.getDayRecord(state, todayKey);
+    doneCount = rec.n;
+    headerTitle = `📊 今日学习记录 · ${day.label || ''}`;
+    counterFn = () => `${rec.n}`; counterLabel = '题';
     headerSub = '';
-    const nowIdx = flags.indexOf(false);
-    const rowHtml = (b, idx) => {
-      const sg = sigOf(b.name);
-      const done = flags[idx];
-      const auto = sg && sig(sg) ? `<span class="ui-ok" style="font-size:12px">✅ App 已完成</span>` : '';
-      let ctrl, hint;
-      const keys = schedKeysOf(b.name).filter(x => x !== 'hw').map(x => SCHED_GRID.find(r => r.key === x)).filter(Boolean);
-      if (keys.length) {
-        // 一块对应多个格子 (如 Editing + Cloze + Synthesis) 时行内两行小格, 每格前面带短名; 只一格就不带
-        ctrl = keys.map(r => `<div class="ui-ctrl-line">${keys.length > 1 ? `<span class="ui-ctrl-lbl">${escapeHtml(r.label.replace(/:\s*[^:]*[_＿].*$/, '').replace(/\s*\d+篇|\s*\d+题/g, ''))}</span>` : ''}${_sgCtrl(r, todayKey, sc)}</div>`).join('');
-        hint = `目标 ${keys.map(r => escapeHtml(r.target)).filter((v, i, a) => a.indexOf(v) === i).join(' / ')}`;
-      } else {
-        ctrl = `<input type="checkbox" class="ui-check" ${manual['b' + b.i] ? 'checked' : ''} onchange="toggleTodayManual('b${b.i}')" title="做完点一下">`;
-        hint = '';
-      }
-      const sub = [b.note ? escapeHtml(b.note) : '', hint].filter(Boolean).join(' · ');
-      return `<div class="ui-row${done ? ' done' : ''}${idx === nowIdx ? ' now' : ''}">
-        <div class="ui-row-main">
-          <div class="ui-row-time">${escapeHtml(b.t)}</div>
-          <div class="ui-row-title">${done ? '✅ ' : ''}${escapeHtml(b.name)}</div>
-          ${sub ? `<div class="ui-row-sub">${sub}</div>` : ''}${auto}
-        </div>
-        <div class="ui-row-act">${ctrl}</div>
-      </div>`;
-    };
-    itemsHtml = blocks.length ? `<div class="ui-list">${blocks.map(rowHtml).join('')}</div>` : '<div class="ui-empty">🏖️ 今天课表上没有学习安排, 休息日</div>';
-    tipHtml = `<div class="ui-links">
+    itemsHtml = _dayRecordHtml(todayKey) + _dayAnalysisHtml(todayKey);
+    tipHtml = `<details class="ui-more dl-week"><summary>📈 本周分析 · 下周重点加强</summary>${_weekAnalysisHtml(schedMonday(new Date()))}</details>
+    <div class="ui-links">
       <button class="ui-btn2" onclick="gotoPage('schedule')">📆 看整周课表 ›</button>
       <span style="font-size:13px;color:#64748B">🌙 21:30 戴 OK 镜睡觉</span>
     </div>`;
@@ -982,15 +932,16 @@ function renderTodayThreeCard() {
     const hintEl = document.getElementById('homeHint');
     if (hintEl) {
       const wrongN = (state.wrongAnswers || []).length;
-      const step = doneCount < blocks.length ? `<b>先填打卡表</b> (${doneCount}/${blocks.length} 完成) → 复习错题 → 学考点` : wrongN ? `打卡表填好了 ✅ → <b>去复习错题</b> (${wrongN} 题) → 学考点` : `打卡表填好了 ✅ → <b>往下学今天的考点</b>`;
+      const did = `今天已做 <b>${rec.n} 题</b>${rec.pct != null ? ' · 正确 ' + rec.pct + '%' : ''}`;
+      const step = !rec.any ? `<b>今天还没开始</b> → 背单词 → 做题 → 学考点 (做了自动记录, 不用手填)` : wrongN ? `${did} → <b>去复习错题</b> (${wrongN} 题) → 学考点` : `${did} → <b>往下学今天的考点</b>`;
       const L = window.getDailyLoad ? window.getDailyLoad(state) : null;   // v24.5 今日学习量 (单词+题 ≤ 100)
-      hintEl.innerHTML = `<span class="ui-hint-ico">${doneCount < blocks.length ? '👋' : '👍'}</span><span>${step}</span>${L ? `<span style="margin-left:auto;white-space:nowrap;color:#64748B">单词 ${L.words + Math.max(L.questions, L.words)} (新 ${L.newWords} + 复习 ${L.reviewWords} + 考题 ${L.words})</span>` : ''}`;
+      hintEl.innerHTML = `<span class="ui-hint-ico">${rec.any ? '👍' : '👋'}</span><span>${step}</span>${L ? `<span style="margin-left:auto;white-space:nowrap;color:#64748B">单词 ${L.words + Math.max(L.questions, L.words)} (新 ${L.newWords} + 复习 ${L.reviewWords} + 考题 ${L.words})</span>` : ''}`;
     }
   }
   card.innerHTML = `
     <div class="ui-head">
       <div class="ui-page-title">${headerTitle}</div>
-      <div class="ui-head-r"><span class="ui-num sm">${counterFn(doneCount)}</span>${/\//.test(counterFn(doneCount)) ? '<span class="ui-num-label">完成</span>' : ''}</div>
+      <div class="ui-head-r"><span class="ui-num sm">${counterFn(doneCount)}</span>${counterLabel ? `<span class="ui-num-label">${counterLabel}</span>` : ''}</div>
     </div>
     ${headerSub ? `<div class="ui-head-sub">${headerSub}</div>` : ''}
     ${itemsHtml}
@@ -1353,6 +1304,7 @@ function recordRAPractice() {
   state.oralRAStats.lastIds = [_raPassage.id, ...(state.oralRAStats.lastIds || [])].slice(0, 10);
   const today = (window.todayKey ? window.todayKey() : new Date().toISOString().slice(0,10));
   state.oralRAStats.byDate[today] = (state.oralRAStats.byDate[today] || 0) + 1;
+  if (window._dayLogAdd) window._dayLogAdd(state, 'oral', 1, 1);   // v29.8: 朗读进流水
   state.totalPoints = (state.totalPoints || 0) + 5;
   state.logs.push({ reason: `🎤 RA 朗读练习 (${_raPassage.title}) +5`, points: 5, week: state.currentWeek, timestamp: Date.now() });
   saveState(state);
@@ -7725,6 +7677,7 @@ function submitErrorBankMath() {
 // v19.22: 答错时停留, 加"下一题 →" 按钮手动控制, 不自动跳
 let _ebPendingNext = null;
 function _handleErrorBankResult(isCorrect, item, next) {
+  if (window._dayLogAdd) window._dayLogAdd(state, 'review', isCorrect ? 1 : 0, 1);   // v29.8: 错题复习进每日流水
   const fb = document.getElementById('ebFeedback');
   if (fb) {
     if (isCorrect) {
@@ -11906,72 +11859,7 @@ function schedMonday(d) { // 所在周的周一 Date
   d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1)); d.setHours(12, 0, 0, 0); return d;
 }
 function getSchedScores() { state.scheduleScores = state.scheduleScores || {}; return state.scheduleScores; }
-function saveDailyScore(dateKey, field, value) {
-  const all = getSchedScores();
-  all[dateKey] = all[dateKey] || {};
-  if (value === '' || value == null) { delete all[dateKey][field]; }
-  else if (field === 'note') { all[dateKey][field] = String(value).slice(0, 200); }  // v19.59: 自学记录存文本
-  else { all[dateKey][field] = Number(value); }
-  saveState(state);
-  renderSchedWeekSummary();
-}
-function _sv(scores, dk, f) { const v = (scores[dk] || {})[f]; return (v == null ? null : v); }
-// 周汇总: PSLE模块计分卡 (从周打分矩阵自动算)
-function computeSchedWeekSummary(mondayDate) {
-  const scores = getSchedScores();
-  const dk = {};
-  for (let i = 0; i < 7; i++) { const d = new Date(mondayDate.getTime()); d.setDate(d.getDate() + i); dk[[1, 2, 3, 4, 5, 6, 0][i]] = schedLocalDate(d); }
-  const g = (day, f) => _sv(scores, dk[day], f);
-  const pct = (pairs) => {
-    let ok = 0, tot = 0;
-    pairs.forEach(([a, b]) => { if (a != null && b) { ok += a; tot += b; } });
-    return tot ? Math.round(ok / tot * 100) : null;
-  };
-  const sum = (vals) => { const xs = vals.filter(v => v != null); return xs.length ? xs.reduce((a, b) => a + b, 0) : null; };
-  // v20.7: 不再按固定星期取数 (原来阅读OE只看周一周三, 假期填在周二就统计不到) —— 每个指标全周 7 天聚合
-  const ALL = [1, 2, 3, 4, 5, 6, 0];
-  const f2All = key => ALL.map(d => [g(d, key + '_a'), g(d, key + '_b')]);
-  const oePct = pct(f2All('oe'));
-  const clozePct = pct(f2All('cloze'));
-  const vtPct = pct(f2All('vt'));
-  const wktPct = pct(f2All('wkt'));
-  const wrongOf = (day, key) => { const a = g(day, key + '_a'), b = g(day, key + '_b'); return (a == null || b == null) ? null : Math.max(0, b - a); };
-  const wrongAll = key => sum(ALL.map(d => wrongOf(d, key)));
-  const edW = wrongAll('ed'), grW = wrongAll('gr'), vwW = wrongAll('vw'), synW = wrongAll('syn');
-  const sciMcqPct = pct(f2All('sci_mcq'));
-  const sciMcqA = sum(ALL.map(d => g(d, 'sci_mcq_a'))), sciMcqB = sum(ALL.map(d => g(d, 'sci_mcq_b')));
-  const sciOe = sum(ALL.map(d => g(d, 'sci_oe_a')));
-  const sciOeB = sum(ALL.map(d => g(d, 'sci_oe_b')));
-  const cnMiss = wrongAll('cn');
-  const firstOf = key => { for (const d of ALL) { const v = g(d, key); if (v != null) return v; } return null; };
-  const mathC = firstOf('math_b'); // pair: a=错 b=粗心
-  const listen = sum(ALL.map(d => g(d, 'listen') ? 1 : null));   // v24.9: 口语打卡改成勾, 本周勾了几天
-  const oralStar = firstOf('oral');
-  const essayA = firstOf('essay_a'), essayB = firstOf('essay_b');
-  const essay = (essayA == null && essayB == null) ? null : (essayA || 0) + (essayB || 0);
-  const paperA = firstOf('paper_a'), paperB = firstOf('paper_b');
-  const rows = [ // [PSLE模块, 本周值, 达标线, pass(null=没数据)]
-    ['英P2·阅读OE (20分)', oePct == null ? '—' : oePct + '%', '≥75%', oePct == null ? null : oePct >= 75],
-    ['英P2·Editing (10分)', edW == null ? '—' : '错' + edW, '≤3', edW == null ? null : edW <= 3],
-    ['英P2·Grammar+词汇MCQ', (grW == null ? '—' : '错' + grW) + '/' + (vwW == null ? '—' : '错' + vwW), '≤4/≤10', (grW == null && vwW == null) ? null : ((grW == null || grW <= 4) && (vwW == null || vwW <= 10))],
-    ['英P2·完形 (15分)', clozePct == null ? '—' : clozePct + '%', '≥70%', clozePct == null ? null : clozePct >= 70],
-    ['英P2·句型转换 (10分)', synW == null ? '—' : '错' + synW, '≤4', synW == null ? null : synW <= 4],
-    ['英P1·作文 (36分)', essay == null ? '—' : essay + '/40', '≥上篇', essay == null ? null : true],
-    ['英P3/P4·口语', (listen == null ? '—' : '打卡 ' + listen + ' 天') + ' · ' + (oralStar == null ? '—' : oralStar + '星'), '≥4天·≥3星', (listen == null && oralStar == null) ? null : ((listen || 0) >= 4 && (oralStar || 0) >= 3)],
-    ['科BktA·选择 (60分)', sciMcqPct == null ? '—' : '对' + sciMcqA + '/' + sciMcqB + ' (' + sciMcqPct + '%)', '≥80%', sciMcqPct == null ? null : sciMcqPct >= 80],
-    ['科BktB·开放题 (40分)', sciOe == null ? '—' : sciOe + '/' + (sciOeB || 2), '全对', sciOe == null ? null : sciOe >= (sciOeB || 2)],
-    ['华P2·阅读漏点', cnMiss == null ? '—' : '漏' + cnMiss, '≤2', cnMiss == null ? null : cnMiss <= 2],
-    ['数·粗心新增', mathC == null ? '—' : mathC + '题', '≤2', mathC == null ? null : mathC <= 2],
-    ['背单词 (考题正确率)', (wktPct == null ? '—' : wktPct + '%') + '/' + (vtPct == null ? '—' : vtPct + '%'), '≥80%', (wktPct == null && vtPct == null) ? null : ((wktPct == null || wktPct >= 80) && (vtPct == null || vtPct >= 80))],
-    ['周日整卷', paperA == null ? '—' : paperA + '/' + (paperB || '?'), '记录', paperA == null ? null : true],
-  ];
-  // v23.10: 只留课表里真有的项 (周表从课表生成后, 没有的 key 永远是 '—', 不该出现在计分卡里)
-  const have = new Set(SCHED_GRID.filter(r => r.key).map(r => r.key));
-  const needs = { '英P2·阅读OE (20分)': ['oe'], '英P2·Editing (10分)': ['ed'], '英P2·Grammar+词汇MCQ': ['gr'], '英P2·完形 (15分)': ['cloze'], '英P2·句型转换 (10分)': ['syn'], '英P1·作文 (36分)': ['essay'], '英P3/P4·听说口语': ['listen', 'oral'], '科BktA·选择 (60分)': ['sci_mcq'], '科BktB·开放题 (40分)': ['sci_oe'], '华P2·阅读漏点': ['cn'], '数·粗心新增': ['math'], '背单词 (考题正确率)': ['vt', 'wkt'], '周日整卷': ['paper'] };
-  const kept = rows.filter(r => !needs[r[0]] || needs[r[0]].some(k => have.has(k)));
-  const graded = kept.filter(r => r[3] !== null);
-  return { rows: kept, passN: graded.filter(r => r[3]).length, gradedN: graded.length };
-}
+// v29.8: 手填存分 / 手填版周汇总 已删 (state.scheduleScores 只读历史, 不再写)
 // ============ v19.79: 9月假期课表 (2026-09-05 ~ 09-13, 按日期匹配, 9/14 自动恢复常规) ============
 // 数据源: 桌面《PSLE_2027_假期课表_v2.docx》· 班课=上午Paper2突破班(9/7-10)+下午口语班(9/10-13)
 // 行类型: c=班课(蓝) s=自学 r=休息; three=[icon, 标题, 说明, 点击(可空=去课表页)] × 3 供主页今日卡
@@ -12274,7 +12162,7 @@ function renderSchedulePage() {
   const isToday = viewDow === todayDow;
   const studyN = (day.blocks || []).filter(b => (b[3] === 's' || b[3] === 'c') && !/睡觉|洗漱|吃饭|休息|午休/.test(b[1])).length;
   el.innerHTML = `
-    <div class="ui-hint"><span class="ui-hint-ico">📆</span><span>${isToday ? '这是<b>今天的课表</b>, 做完一项就在右边<b>填分 / 打勾</b>' : `正在看<b>${SCHED_DAYS[viewDow].label}</b>的课表, 点"${SCHED_DAYS[todayDow].label} · 今"回到今天`}</span></div>
+    <div class="ui-hint"><span class="ui-hint-ico">📆</span><span>${isToday ? '这是<b>今天的课表</b>, 做了题 App <b>自动记录</b>, 不用填' : `正在看<b>${SCHED_DAYS[viewDow].label}</b>的课表, 点"${SCHED_DAYS[todayDow].label} · 今"回到今天`}</span></div>
     <div class="card">
       <div class="ui-head">
         <div class="ui-page-title">📆 课表 · ${SCHED_DAYS[viewDow].label}</div>
@@ -12283,10 +12171,10 @@ function renderSchedulePage() {
       <div class="ui-head-sub"><span class="grow">${day.start ? '⏰ ' + day.start + ' 开始 · 🌙 21:30 戴 OK 镜睡觉' : '🏖️ 全天无任务'}${getHolidayPlan() ? ' · 现在是假期, 这是开学后的常规课表' : ''}</span>${getHolidayPlan() ? `<button class="ui-btn2" onclick="window._schedToggleNormal(false)">🏖️ 回今天的假期课表 ›</button>` : ''}</div>
       <div class="ui-chips">${chips}</div>
       <div id="schedDayScore"></div>
-      <details class="ui-more"><summary>整周表格 (家长核对用)</summary><div id="schedGridWrap"></div></details>
+      <details class="ui-more"><summary>整周记录表 (自动, 家长核对用)</summary><div id="schedGridWrap"></div></details>
     </div>
     <div class="card">
-      <div class="ui-head"><div class="ui-page-title">📊 本周四科 <span class="sub">自动从打分汇总</span></div></div>
+      <div class="ui-head"><div class="ui-page-title">📈 本周分析 <span class="sub">自动汇总 · 注意事项 · 下周重点</span></div></div>
       <div id="schedWeekSummary"></div>
     </div>
     <details class="card ui-more">
@@ -12301,91 +12189,76 @@ function renderSchedulePage() {
 function _schedSetDay(d) { _schedViewDay = d; renderSchedulePage(); }
 // v23.8 (用户: "简化周打分表和周计分卡, 设计太复杂"): 打分按天填 —— 这一天课表上的学习块 + 每天必查 (错题/睡前单词/睡觉/家长核对/自学记录), 一行一格
 function _schedDateOfDow(dow) { const mon = _schedGridMonday(); const d = new Date(mon.getTime()); d.setDate(d.getDate() + (dow === 0 ? 6 : dow - 1)); return schedLocalDate(d); }
-function toggleManualFor(dk, key) { if (!state.todayManual) state.todayManual = {}; const m = state.todayManual[dk] = state.todayManual[dk] || {}; m[key] = !m[key]; saveState(state); renderSchedulePage(); }
-window.toggleManualFor = toggleManualFor;
+// v29.8: 手填版 按天打分 / 一格打分控件 / 手填周表 已删, 见下方 v29.8 自动版
+// ===== v29.8 自动打卡渲染 (首页每日记录 / 课表页按天记录 / 整周记录表 / 每周分析) =====
+// 用户 2026-11-07: 打卡不再手填 (孩子能改刷分数), 全按 App 里实际做题轨迹自动记; 每日分析 + 每周分析 (注意事项 / 下周重点加强)
+function _mdB(s) { return escapeHtml(String(s || '')).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); }
+function _notesHtml(notes) {
+  if (!notes || !notes.length) return '';
+  const C = { bad: '#DC2626', warn: '#B45309', ok: '#16A34A', info: '#64748B' };
+  return `<ol class="dl-notes">${notes.map(n => `<li style="color:${C[n.lvl] || '#1E293B'}">${_mdB(n.text)}</li>`).join('')}</ol>`;
+}
+// 一天的自动记录: 背单词 / 各模块 对·共·正确率 / 口语时长; 没记录时列今天课表当参照 (灰字, 不可勾)
+function _dayRecordHtml(k, opts) {
+  opts = opts || {};
+  const r = window.getDayRecord(state, k);
+  const isToday = k === schedLocalDate();
+  const rows = [];
+  if (r.fc) rows.push(`<div class="ui-row${r.fc.done ? ' done' : ''}"><div class="ui-row-main"><div class="ui-row-title">${r.fc.done ? '✅ ' : ''}背单词 · 今天这一组</div><div class="ui-row-sub">复习 ${r.fc.reviewed}${r.fc.size ? '/' + r.fc.size : ''} 词${r.fc.revPct != null ? ' · 复习词一遍过 ' + r.fc.revPct + '%' : ''}${r.fc.secs ? ' · ' + Math.max(1, Math.round(r.fc.secs / 60)) + ' 分' : ''}${r.fc.fast ? ' · <span style="color:#DC2626">⚠️ 太快</span>' : ''}</div></div><div class="ui-row-act"><span class="ui-num sm" style="color:${r.fc.done ? '#16A34A' : '#B45309'}">${r.fc.done ? '完成' : r.fc.reviewed + (r.fc.size ? '/' + r.fc.size : '')}</span></div></div>`);
+  r.rows.forEach(x => {
+    const col = x.count ? '#1E40AF' : x.pass ? '#16A34A' : x.n >= 5 ? '#DC2626' : '#B45309';
+    const main = x.count ? `${x.n} ${x.unit}` : `${x.ok}/${x.n} ${x.unit}${x.runs > 1 ? ' · ' + x.runs + ' 局' : ''}${x.target ? ' · 目标 ' + x.target + '%' : ''}`;
+    rows.push(`<div class="ui-row${x.pass && !x.count ? ' done' : ''}"><div class="ui-row-main"><div class="ui-row-title">${x.count ? '' : x.pass ? '✅ ' : '⚠️ '}${escapeHtml(x.label)}</div><div class="ui-row-sub">${main}</div></div><div class="ui-row-act"><span class="ui-num sm" style="color:${col}">${x.count ? '✓' : x.pct + '%'}</span></div></div>`);
+  });
+  if (r.oralSec > 0) rows.push(`<div class="ui-row done"><div class="ui-row-main"><div class="ui-row-title">✅ 口语练习</div><div class="ui-row-sub">${Math.max(1, Math.round(r.oralSec / 60))} 分钟</div></div></div>`);
+  if (rows.length) return `<div class="ui-list">${rows.join('')}</div>`;
+  const dow = new Date(k + 'T12:00:00').getDay(), day = SCHED_DAYS[dow] || { blocks: [] };
+  const plan = (day.blocks || []).filter(b => b[3] !== 'r' && !/睡觉|洗漱|吃饭|休息|午休|上学/.test(b[1])).map(b => `<div class="ui-row rest"><div class="ui-row-main"><div class="ui-row-time">${escapeHtml(b[0])}</div><div class="ui-row-title">${escapeHtml(b[1])}</div></div></div>`).join('');
+  return `<div class="ui-empty">${isToday ? '今天还没开始 · 做了题这里自动出现, 不用手填' : k > schedLocalDate() ? '还没到这天' : '这天没在 App 里学'}</div>${opts.plan !== false && plan ? `<div class="dl-plan-title">${isToday ? '今天' : '这天'}课表</div><div class="ui-list">${plan}</div>` : ''}`;
+}
+function _dayAnalysisHtml(k) {
+  const a = window.analyzeDay(state, k);
+  if (!a.any) return '';
+  return `<div class="dl-sum"><span class="dl-sum-t">📋 ${k === schedLocalDate() ? '今日' : '当日'}分析</span> ${_mdB(a.summary)}</div>${_notesHtml(a.notes)}`;
+}
+// 每周分析: 一句总结 + 七天条 + 四科达标格 + 注意事项 + 下周重点加强
+function _weekAnalysisHtml(mon) {
+  const w = window.analyzeWeek(state, mon);
+  const DOW = '日一二三四五六';
+  const tiles = w.subj.map(s => { const color = !s.graded ? '#94A3B8' : s.pass === s.graded ? '#16A34A' : s.graded - s.pass >= 2 ? '#DC2626' : '#B45309'; return `<div class="dl-tile" style="border-top-color:${color}"><div class="dl-tile-n">${escapeHtml(s.label)}</div><div class="dl-tile-v" style="color:${color}">${s.graded ? s.pass + ' / ' + s.graded : s.n ? s.n + ' 题' : '—'}</div><div class="dl-tile-s">${s.graded ? (s.pass === s.graded ? '模块全达标' : '没达标: ' + s.miss.map(escapeHtml).join('、')) : s.n ? '题量不够评' : '这周没练'}</div></div>`; }).join('');
+  const days = w.days.map(d => { const col = d.future ? '#CBD5E1' : d.any ? '#16A34A' : d.dow === 0 ? '#94A3B8' : '#DC2626'; return `<div class="dl-day" style="color:${col}"><div class="dl-day-l">${DOW[d.dow]}</div><div class="dl-day-v">${d.future ? '·' : d.any ? (d.n || (d.fcReviewed ? '词' : '✓')) : d.dow === 0 ? '休' : '✗'}</div></div>`; }).join('');
+  const head = `学了 **${w.studyDays}/${w.pastDays}** 天 · 做题 **${w.n}** 题${w.pct != null ? ' · 正确 **' + w.pct + '%**' : ''}${w.sec >= 60 ? ' · 共 **' + Math.round(w.sec / 60) + '** 分钟' : ''}${w.prev.n ? ` · 上周 ${w.prev.n} 题${w.prev.pct != null ? ' ' + w.prev.pct + '%' : ''}` : ''}`;
+  const focus = w.focus.length ? `<ol class="dl-notes dl-focus">${w.focus.map(f => `<li><b>${escapeHtml(f.label)}</b> — ${escapeHtml(f.why)}<div class="dl-act">${escapeHtml(f.action)}</div></li>`).join('')}</ol>` : `<div class="ui-empty">${w.n ? '没有明显短板, 下周按课表继续' : '这周还没做题, 做了题才有分析'}</div>`;
+  return `<div class="dl-sum">${_mdB(head)}</div>
+    <div class="dl-days">${days}</div>
+    <div class="dl-tiles">${tiles}</div>
+    <div class="dl-h">⚠️ 注意事项</div>${w.notes.length ? _notesHtml(w.notes) : '<div class="ui-empty">暂无</div>'}
+    <div class="dl-h">🎯 下周重点加强</div>${focus}`;
+}
+// 课表页 · 按天: 上半是这天的课表 (时间 | 内容 | 班课/自学 标签, 休息行灰字), 下半是这天 App 自动记录 + 当日分析
 function renderSchedDayScore(dow) {
   const el = document.getElementById('schedDayScore'); if (!el) return;
-  const dk = _schedDateOfDow(dow), scores = getSchedScores(), sc = scores[dk] || {}, manual = ((state.todayManual || {})[dk]) || {};
+  const dk = _schedDateOfDow(dow);
   const day = SCHED_DAYS[dow] || { blocks: [] };
-  // v24.0 傻瓜式: 行 ≥56px, 左 标题+一行说明, 右 一个控件
-  // v24.1 设计层简化: 这里渲染整张课表 (含休息行, 灰字无控件) —— 每行 = 时间 (12px 灰) + 名称 (15px) + 12px 标签 班课/自学 | 右 一个控件 (32px 原生勾 / 对·共两格);
-  //   做完 = ✅ + 整行变灰; 今天第一条没做完的 = 左侧 3px 品蓝条; 最后接 "每天必查" (睡觉 / 家长核对)
   const isRest = b => b[3] === 'r' || /睡觉|洗漱|吃饭|休息|午休/.test(b[1]);
-  const isToday = dk === schedLocalDate();
   const kindTag = k => k === 'c' ? '<span class="ui-tag primary">班课</span>' : k === 's' ? '<span class="ui-tag">自学</span>' : '';
-  const chkCtrl = (checked, onchange) => `<input type="checkbox" class="ui-check" ${checked ? 'checked' : ''} onchange="${onchange}" title="做完点一下">`;
-  const shortLabel = r => escapeHtml(r.label.replace(/:\s*[^:]*[_＿].*$/, ''));
-  let firstTodo = isToday;
-  const row = (t, title, sub, ctrl, done, rest) => {
-    const now = !rest && !done && !!ctrl && firstTodo; if (now) firstTodo = false;
-    return `<div class="ui-row${done ? ' done' : ''}${now ? ' now' : ''}${rest ? ' rest' : ''}"><div class="ui-row-main">${t ? `<div class="ui-row-time">${t}</div>` : ''}<div class="ui-row-title">${done ? '✅ ' : ''}${title}</div>${sub ? `<div class="ui-row-sub">${sub}</div>` : ''}</div>${ctrl ? `<div class="ui-row-act">${ctrl}</div>` : ''}</div>`;
-  };
-  const blockRows = (day.blocks || []).map((b, i) => {
-    const t = escapeHtml(b[0]), name = escapeHtml(b[1]), note = b[2] ? escapeHtml(b[2]) : '';
-    if (isRest(b)) return row(t, name, note, '', false, true);
-    const rs = schedKeysOf(b[1]).map(k => SCHED_GRID.find(x => x.key === k)).filter(Boolean);
-    const scoreRows = rs.filter(r => r.key !== 'hw');   // v24.9: 勾类格子 (口语打卡) 也走周表同一格, 只有作业/班课用 hw
-    const hwRow = rs.find(r => r.key === 'hw');
-    const title = `${name} ${kindTag(b[3])}`;
-    if (!scoreRows.length) {
-      const checked = hwRow ? !!sc[hwRow.key] : !!manual['b' + i];
-      const onchange = hwRow ? `window.saveDailyScore('${dk}','${hwRow.key}',this.checked?1:'')` : `toggleManualFor('${dk}','b${i}')`;
-      return row(t, title, note, chkCtrl(checked, onchange), checked, false);
-    }
-    const filled = scoreRows.every(r => (r.type === 'frac' || r.type === 'pair') ? (sc[r.key + '_a'] != null || sc[r.key + '_b'] != null) : (sc[r.key] != null && sc[r.key] !== ''));
-    const ctrl = scoreRows.map(r => `<div class="ui-ctrl-line">${scoreRows.length > 1 ? `<span class="ui-ctrl-lbl">${shortLabel(r).replace(/\s*\d+篇|\s*\d+题/g, '')}</span>` : ''}${_sgCtrl(r, dk, sc)}</div>`).join('');
-    const targets = scoreRows.map(r => escapeHtml(r.target)).filter((v, k, a) => a.indexOf(v) === k).join(' / ');
-    const sub = [note, scoreRows.length === 1 && scoreRows[0].type === 'text' ? '写一句' : '', targets ? `目标 ${targets}` : ''].filter(Boolean).join(' · ');
-    return row(t, title, sub, ctrl, filled, false);
-  }).join('');
-  const dailyKeys = ['sleep', 'parent'];
-  const dailyRows = dailyKeys.map(k => SCHED_GRID.find(x => x.key === k)).filter(r => r && (r.days.includes(dow) || HOLIDAY_SCHED[dk])).map(r => row('每天必查', shortLabel(r), `目标 ${escapeHtml(r.target)}`, r.type === 'chk' ? chkCtrl(!!sc[r.key], `window.saveDailyScore('${dk}','${r.key}',this.checked?1:'')`) : _sgCtrl(r, dk, sc), r.type === 'chk' && !!sc[r.key], false)).join('');
-  el.innerHTML = `<div class="ui-list">
-    ${blockRows || '<div class="ui-empty">这天课表上没有学习安排</div>'}
-    ${dailyRows}
-  </div>`;
+  const blockRows = (day.blocks || []).map(b => `<div class="ui-row${isRest(b) ? ' rest' : ''}"><div class="ui-row-main"><div class="ui-row-time">${escapeHtml(b[0])}</div><div class="ui-row-title">${escapeHtml(b[1])}${isRest(b) ? '' : ' ' + kindTag(b[3])}</div>${b[2] ? `<div class="ui-row-sub">${escapeHtml(b[2])}</div>` : ''}</div></div>`).join('');
+  el.innerHTML = `<div class="ui-list">${blockRows || '<div class="ui-empty">这天课表上没有学习安排</div>'}</div>
+    <div class="dl-h">📊 这天 App 里的记录 <span style="font-weight:400;color:#64748B">自动, 不用填</span></div>
+    ${_dayRecordHtml(dk, { plan: false })}${_dayAnalysisHtml(dk)}`;
 }
 window.renderSchedDayScore = renderSchedDayScore;
 function _schedShiftWeek(n) { _schedWeekOffset += n; if (_schedWeekOffset > 0) _schedWeekOffset = 0; renderSchedGrid(); renderSchedWeekSummary(); }
-// 完整周打分网格 (行=检查项, 列=一/二/三/五/日)
-// v23.0: 一格打分控件 (课表页周表 + 主页每日分数打卡共用, 写同一份 state.scheduleScores)
-function _sgCtrl(row, dk, sc) {
-  // v24.1: 格子 40px 白底圆角 8 字 15; "对 / 共" 两格用占位字说明, 不再另起说明行; 勾选项 32px 原生 checkbox
-  const inpS = 'width:40px;padding:5px 2px;border-radius:8px;border:1px solid #CBD5E1;background:#FFFFFF;color:#1E293B;font-size:15px;text-align:center';  // v20.7: 26px 会把两位数截成一位 (20/30 显示成 2/3)
-  if (row.type === 'text') return `<input type="text" maxlength="200" placeholder="如: 读书20页" value="${escapeHtml(String(sc[row.key] ?? ''))}" style="width:96px;padding:5px 6px;border-radius:8px;border:1px solid #CBD5E1;background:#FFFFFF;color:#1E293B;font-size:13px" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
-  if (row.type === 'chk') return `<input type="checkbox" class="ui-check" ${sc[row.key] ? 'checked' : ''} onchange="window.saveDailyScore('${dk}','${row.key}',this.checked?1:'')">`;
-  if (row.type === 'frac' || row.type === 'pair') return `<input type="number" class="sg-num" min="0" inputmode="numeric" placeholder="对" value="${sc[row.key + '_a'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_a',this.value)"><span class="slash" style="color:#94A3B8;font-size:13px">/</span><input type="number" class="sg-num" min="0" inputmode="numeric" placeholder="共" value="${sc[row.key + '_b'] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}_b',this.value)">`;
-  return `<input type="number" class="sg-num" min="0" inputmode="numeric" placeholder="数" value="${sc[row.key] ?? ''}" style="${inpS}" onchange="window.saveDailyScore('${dk}','${row.key}',this.value)">`;
-}
+// 整周记录表 (行=模块, 列=一..日), 全自动
 function renderSchedGrid() {
   const wrap = document.getElementById('schedGridWrap');
   if (!wrap) return;
-  const mon = _schedGridMonday();
-  const scores = getSchedScores();
-  const todayKey = schedLocalDate();
-  const COLS = [1, 2, 3, 4, 5, 6, 0]; // v19.59: 全周7天 (周四/周六自由安排日可填自学记录)
-  const dks = {}, heads = [];
-  COLS.forEach(d => {
-    const offset = d === 0 ? 6 : d - 1;
-    const dd = new Date(mon.getTime()); dd.setDate(dd.getDate() + offset);
-    dks[d] = schedLocalDate(dd);
-    heads.push(`<th style="padding:6px 2px;font-size:12px;color:${dks[d] === todayKey ? '#1E40AF' : '#64748B'};font-weight:${dks[d] === todayKey ? '700' : '500'};text-align:center;min-width:58px">${SCHED_DAYS[d].label}<br>${dd.getMonth() + 1}/${dd.getDate()}${dks[d] === todayKey ? '·今' : ''}</th>`);
-  });
-  const inpS = 'width:40px;padding:3px 2px;border-radius:5px;border:1px solid #CBD5E1;background:#F1F5F9;color:#1E293B;font-size:13px;text-align:center';  // v20.7: 26px 会把两位数截成一位 (20/30 显示成 2/3)
-  const inpW = 'width:40px;padding:3px 2px;border-radius:5px;border:1px solid #CBD5E1;background:#F1F5F9;color:#1E293B;font-size:13px;text-align:center';
-  const bodyRows = SCHED_GRID.map(row => {
-    if (row.sec) return `<tr><td colspan="${COLS.length + 1}" style="padding:8px 4px 2px;font-size:12px;font-weight:700;color:#64748B;letter-spacing:1px">${escapeHtml(row.sec)}</td></tr>`;
-    const cells = COLS.map(d => {
-      const dk = dks[d];
-      // v20.7: 假期周任务和平日课表不一样 (假期周一做的是科学选择题/完形/数学), 按平日锁格子就没地方填 → 假期日期全开
-      if (!row.days.includes(d) && !HOLIDAY_SCHED[dk]) return `<td style="padding:4px 2px;text-align:center;color:#4A5568;font-size:12px">—</td>`;
-      const sc = scores[dk] || {};
-      const ctrl = _sgCtrl(row, dk, sc);
-      return `<td style="padding:4px 2px;text-align:center;white-space:nowrap">${ctrl}</td>`;
-    }).join('');
-    return `<tr style="border-bottom:1px solid #EEF1F6">
-      <td style="padding:6px 4px;font-size:13px;color:#1E293B;min-width:128px">${escapeHtml(row.label)}<br><span style="font-size:12px;color:#64748B">目标 ${escapeHtml(row.target)}</span></td>${cells}</tr>`;
-  }).join('');
+  const mon = _schedGridMonday(), w = window._weekRaw(state, mon), todayKey = schedLocalDate();
+  const heads = w.days.map(d => { const dd = new Date(d.k + 'T12:00:00'); const on = d.k === todayKey; return `<th style="padding:6px 2px;font-size:12px;color:${on ? '#1E40AF' : '#64748B'};font-weight:${on ? '700' : '500'};text-align:center;min-width:52px">${SCHED_DAYS[d.dow].label}<br>${dd.getMonth() + 1}/${dd.getDate()}${on ? '·今' : ''}</th>`; }).join('');
+  const td = (html, color) => `<td style="padding:5px 2px;text-align:center;font-size:13px;white-space:nowrap;color:${color || '#1E293B'}">${html}</td>`;
+  const fcRow = `<tr style="border-bottom:1px solid #EEF1F6"><td style="padding:6px 4px;font-size:13px;color:#1E293B;min-width:120px">背单词<br><span style="font-size:12px;color:#64748B">当天那一组</span></td>${w.days.map(d => td(d.fcReviewed ? (d.fcDone ? '✓ ' : '') + d.fcReviewed + ' 词' : '—', d.fcReviewed ? (d.fcDone ? '#16A34A' : '#B45309') : '#94A3B8')).join('')}</tr>`;
+  const modRows = w.mods.map(m => `<tr style="border-bottom:1px solid #EEF1F6"><td style="padding:6px 4px;font-size:13px;color:#1E293B;min-width:120px">${escapeHtml(m.label)}<br><span style="font-size:12px;color:#64748B">${m.count ? '次数' : '目标 ≥' + m.target + '%'} · 本周 ${m.count ? m.n + ' ' + m.unit : m.ok + '/' + m.n + ' (' + m.pct + '%)'}</span></td>${w.days.map(d => { const c = m.byDay[d.k]; if (!c) return td('—', '#94A3B8'); if (m.count) return td(c.n, '#1E40AF'); const p = Math.round(c.ok / c.n * 100); return td(`${c.ok}/${c.n}`, p >= m.target ? '#16A34A' : '#DC2626'); }).join('')}</tr>`).join('');
+  const totRow = `<tr style="background:#F8FAFC"><td style="padding:6px 4px;font-size:13px;font-weight:700;color:#1E293B">合计做题</td>${w.days.map(d => td(d.n || '—', d.n ? '#1E293B' : '#94A3B8')).join('')}</tr>`;
   const weekLabel = `${mon.getMonth() + 1}/${mon.getDate()} 那一周`;
   wrap.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 6px">
@@ -12394,71 +12267,50 @@ function renderSchedGrid() {
       <button class="ui-btn2" onclick="window._schedShiftWeek(1)" ${_schedWeekOffset >= 0 ? 'disabled style="opacity:0.3"' : ''}>下周 ›</button>
     </div>
     <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
-      <thead><tr style="background:#F8FAFC"><th style="padding:6px 4px;font-size:12px;color:#64748B;font-weight:600;text-align:left">检查项</th>${heads.join('')}</tr></thead>
-      <tbody>${bodyRows}</tbody></table></div>
-    <div style="font-size:12px;color:#64748B;margin-top:6px">连续3天某项低于目标 → 不等周五, 当晚按手册响应规则调整</div>
-    ${Object.values(dks).some(k => HOLIDAY_SCHED[k]) ? '<div style="font-size:12px;color:#64748B;margin-top:4px">🏖️ 假期周: 哪天做了什么就填哪天, 所有格子都开着; 科学选择题填"科学选择题"行, 对几题/共几题</div>' : ''}`;
+      <thead><tr style="background:#F8FAFC"><th style="padding:6px 4px;font-size:12px;color:#64748B;font-weight:600;text-align:left">模块</th>${heads}</tr></thead>
+      <tbody>${fcRow}${modRows || ''}${totRow}</tbody></table></div>
+    <div style="font-size:12px;color:#64748B;margin-top:6px">全部由 App 按实际做题自动记录 · 纸上做的 (补习老师 / 作业) 这里看不到</div>`;
 }
 function renderSchedWeekSummary() {
   const el = document.getElementById('schedWeekSummary');
   if (!el) return;
-  const { rows, passN, gradedN } = computeSchedWeekSummary(_schedGridMonday());
-  const rowsHtml = rows.map(r => {
-    const [mod, val, target, pass] = r;
-    const badge = pass === null ? '<span style="color:#1E293B">待填</span>' : pass ? '<span style="color:#16A34A">✓ 达标</span>' : '<span style="color:#DC2626;font-weight:700">✗</span>';
-    return `<tr style="border-bottom:1px solid #F1F5F9">
-      <td style="padding:6px 4px;font-size:12px;color:#1E293B">${escapeHtml(mod)}</td>
-      <td style="padding:6px 4px;font-size:13px;font-weight:700;color:${pass === false ? '#DC2626' : '#1E40AF'};text-align:center">${escapeHtml(String(val))}</td>
-      <td style="padding:6px 4px;font-size:11px;color:#1E293B;text-align:center">${escapeHtml(target)}</td>
-      <td style="padding:6px 4px;font-size:12px;text-align:center">${badge}</td></tr>`;
-  }).join('');
-  // v23.8: 先给四科大格 (一眼看哪科没达标), 13 行明细折叠
-  const subjOf = (name) => /^英/.test(name) ? '英语' : /^科/.test(name) ? '科学' : /^华/.test(name) ? '华文' : /^数/.test(name) ? '数学' : '其他';
-  const tiles = ['英语', '科学', '华文', '数学'].map(sj => {
-    const rs = rows.filter(r => subjOf(r[0]) === sj && r[3] !== null), ok = rs.filter(r => r[3]).length, miss = rs.filter(r => !r[3]);
-    const color = !rs.length ? '#94A3B8' : ok === rs.length ? '#16A34A' : miss.length >= 2 ? '#DC2626' : '#B45309';
-    return `<div style="flex:1;min-width:120px;padding:10px 12px;border-radius:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-top:4px solid ${color}">
-      <div style="font-size:13px;font-weight:900;color:#1E293B">${sj}</div>
-      <div style="font-size:22px;font-weight:900;color:${color};line-height:1.2">${rs.length ? ok + ' / ' + rs.length : '—'}</div>
-      <div style="font-size:11px;color:#64748B">${rs.length ? (ok === rs.length ? '全部达标' : '没达标: ' + miss.map(r => r[0].replace(/^[^·]*·/, '').replace(/\s*\(.*\)$/, '')).join('、')) : '这周还没填'}</div>
-    </div>`;
-  }).join('');
-  el.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap">${tiles}</div>
-  <div style="font-size:12px;color:${passN === gradedN && gradedN > 0 ? '#16A34A' : '#B45309'};margin:8px 0 4px">${_schedWeekOffset === 0 ? '本周' : '该周'}已评 ${gradedN} 项 · 达标 ${passN} 项</div>
-  <details><summary style="cursor:pointer;font-size:12px;color:#1E40AF;font-weight:700">按 PSLE 模块看明细 (13 项) ▾</summary>
-  <table style="width:100%;border-collapse:collapse;margin-top:6px"><thead><tr style="background:#F1F5F9">
-  <th style="padding:5px 4px;font-size:11px;color:#1E293B;text-align:left">PSLE模块</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">本周</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">达标线</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">结果</th></tr></thead>
-  <tbody>${rowsHtml}</tbody></table></details>`;
+  el.innerHTML = _weekAnalysisHtml(_schedGridMonday());
+}
+// 周汇总 (月度跟踪用): 每个有量的模块一行 [模块, 对/共 (正确率), 目标, 是否达标]
+function computeSchedWeekSummary(mondayDate) {
+  const w = window.analyzeWeek(state, mondayDate);
+  const rows = w.mods.filter(m => !m.count && m.n >= 5).map(m => [m.label, `${m.ok}/${m.n} (${m.pct}%)`, `≥${m.target}%`, m.pass]);
+  return { rows, passN: rows.filter(r => r[3]).length, gradedN: rows.length, w };
 }
 function renderSchedMonthTrend() {
   const el = document.getElementById('schedMonthTrend');
   if (!el) return;
   const thisMon = schedMonday(new Date());
   const weeks = [];
+  const subjPct = (w, s) => { const ms = w.mods.filter(m => m.subj === s && !m.count); const n = ms.reduce((a, m) => a + m.n, 0), ok = ms.reduce((a, m) => a + m.ok, 0); return n ? Math.round(ok / n * 100) + '%' : '—'; };
   for (let i = 7; i >= 0; i--) {
     const mon = new Date(thisMon.getTime()); mon.setDate(mon.getDate() - i * 7);
-    const s = computeSchedWeekSummary(mon);
-    if (s.gradedN === 0 && i !== 0) continue;
+    const s = computeSchedWeekSummary(mon), w = s.w;
+    if (!w.n && !w.studyDays && i !== 0) continue;
     const md = (mon.getMonth() + 1) + '/' + mon.getDate();
-    const pick = (idx) => s.rows[idx][1];
     weeks.push(`<tr style="border-bottom:1px solid #F1F5F9">
       <td style="padding:5px 4px;font-size:12px;color:#1E293B;font-weight:${i === 0 ? '700' : '400'}">${md}${i === 0 ? '·本周' : ''}</td>
-      <td style="padding:5px 4px;font-size:12px;text-align:center;color:#1E40AF">${pick(0)}</td>
-      <td style="padding:5px 4px;font-size:12px;text-align:center;color:#1E40AF">${pick(1)}</td>
-      <td style="padding:5px 4px;font-size:12px;text-align:center;color:#1E40AF">${pick(3)}</td>
-      <td style="padding:5px 4px;font-size:12px;text-align:center;color:#B45309">${pick(7)}</td>
-      <td style="padding:5px 4px;font-size:12px;text-align:center;color:#16A34A">${pick(9)}</td>
+      <td style="padding:5px 4px;font-size:12px;text-align:center;color:#1E293B">${w.studyDays}</td>
+      <td style="padding:5px 4px;font-size:12px;text-align:center;color:#1E293B">${w.n}</td>
+      <td style="padding:5px 4px;font-size:12px;text-align:center;color:#1E40AF">${subjPct(w, 'eng')}</td>
+      <td style="padding:5px 4px;font-size:12px;text-align:center;color:#B45309">${subjPct(w, 'sci')}</td>
+      <td style="padding:5px 4px;font-size:12px;text-align:center;color:#16A34A">${subjPct(w, 'cn')}</td>
+      <td style="padding:5px 4px;font-size:12px;text-align:center;color:#7C3AED">${subjPct(w, 'math')}</td>
       <td style="padding:5px 4px;font-size:12px;text-align:center;color:#1E293B">${s.passN}/${s.gradedN}</td></tr>`);
   }
-  el.innerHTML = weeks.length === 0 ? '<div style="font-size:12px;color:#1E293B;padding:6px 0">开始打分后, 这里按周累积成绩趋势</div>'
+  el.innerHTML = weeks.length === 0 ? '<div style="font-size:12px;color:#1E293B;padding:6px 0">做题后, 这里按周累积趋势</div>'
     : `<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#F1F5F9">
-    <th style="padding:5px 4px;font-size:11px;color:#1E293B;text-align:left">周</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">阅读OE</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">Editing</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">完形</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">科诊断</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">华漏点</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">达标</th></tr></thead><tbody>${weeks.join('')}</tbody></table>
-    <div style="font-size:11px;color:#1E293B;margin-top:6px">连续2个月同一指标不降 = 方法有问题, 调方法不加时长</div>`;
+    <th style="padding:5px 4px;font-size:11px;color:#1E293B;text-align:left">周</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">学习天</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">题数</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">英语</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">科学</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">华文</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">数学</th><th style="padding:5px 4px;font-size:11px;color:#1E293B">达标</th></tr></thead><tbody>${weeks.join('')}</tbody></table>
+    <div style="font-size:11px;color:#1E293B;margin-top:6px">连续 2 个月同一模块不升 = 方法有问题, 调方法不加时长</div>`;
 }
 window.renderSchedulePage = renderSchedulePage;
 window._schedSetDay = _schedSetDay;
 window._schedShiftWeek = _schedShiftWeek;
-window.saveDailyScore = saveDailyScore;
 window.computeSchedWeekSummary = computeSchedWeekSummary;
 window.SCHED_GRID = SCHED_GRID;
 
@@ -13218,6 +13070,7 @@ function _dfComplete(entry, patch) {
   const today = schedLocalDate();
   const first = !((state.dfDone || {})[entry.id]);
   window.markDailyFocus(state, entry.id, patch || {});
+  if (window._dayLogAdd) window._dayLogAdd(state, 'focus', patch && patch.correct === false ? 0 : 1, 1);   // v29.8: 每日考点进流水
   const n = window.addTipBookEntries(state, entry.takeaways.map((t, i) => ({ key: entry.id + '#' + i, subj: entry.subj, mod: entry.mod, text: t, from: entry.title })));
   if (first) {
     state.totalPoints = (state.totalPoints || 0) + 5;

@@ -41,7 +41,7 @@ button{background:#1E40AF;color:#fff;border:none;font-weight:700;margin-top:10px
 </head>
 <body>
 <div class="wrap" id="root"><h1>📋 家长看板</h1><div class="sub">加载中…</div></div>
-<script src="data.js?v=29.7"></script>
+<script src="data.js?v=29.8"></script>
 <script>
 (function () {
   'use strict';
@@ -100,15 +100,11 @@ button{background:#1E40AF;color:#fff;border:none;font-weight:700;margin-top:10px
     var qwrong = t && (t.quizWrong || []).length ? '<div class="words">今天考题答错: ' + t.quizWrong.map(esc).join(' · ') + '</div>' : '';
     var hard = window.getFcHardWords(st, 12);
 
-    var sc = st.scheduleScores || {};
+    // v29.8: 打分表改读 dayLog (App 自动记录, 不再手填)
+    var dl = st.dayLog || {}, MODL = { grammar: '语法', vocab: '词汇考题', visualtext: '看图', tense: '时态', gcloze: '语法填空', editing: 'Editing', compcloze: '完形', synthesis: '句型', comp_oe: '阅读问答', listening: '听力', paper2: 'Paper2', 'sci:mcq': '科学选择', 'sci:oe': '科学开放', 'sci:lab': '科学实验', 'sci:terms': '科学术语', 'math:terms': '数学术语', math: '数学', 'math:unit': '单位', 'cn:oe': '华文阅读', 'cn:mcq': '华文选择', review: '错题复习', focus: '每日考点', oral: '朗读' };
     var scoreRows = days.slice(0, 7).map(function (k) {
-      var s = sc[k]; if (!s) return '';
-      var parts = [];
-      SCORE.forEach(function (x) {
-        if (x[2] === 'f' && s[x[0] + '_a'] != null && s[x[0] + '_b'] != null) parts.push(esc(x[1] + ' ' + s[x[0] + '_a'] + '/' + s[x[0] + '_b']));
-        else if (x[2] === 'c' && s[x[0]]) parts.push(esc(x[1]) + ' ✓');
-      });
-      if (s.note) parts.push('自学: ' + esc(s.note));
+      var s = dl[k]; if (!s) return '';
+      var parts = Object.keys(s).map(function (m) { var x = s[m] || {}; var lb = MODL[m] || (m.indexOf('sci:') === 0 ? '科学考点' : m); return esc(lb + ' ' + (x.ok || 0) + '/' + (x.n || 0)); });
       return parts.length ? '<tr><td>' + md(k) + ' 周' + dow(k) + '</td><td style="text-align:left">' + parts.join(' · ') + '</td></tr>' : '';
     }).join('');
 
@@ -137,7 +133,7 @@ button{background:#1E40AF;color:#fff;border:none;font-weight:700;margin-top:10px
       + '<div class="sub" style="margin-top:8px">近 7 天背完了 <b class="' + (done7 >= 6 ? 'ok' : 'bad') + '">' + done7 + '</b> 天</div>'
       + (hard.length ? '<div class="words">老是记不住: ' + hard.map(function (h) { return esc(h.w) + '×' + h.lapses; }).join(' · ') + '</div>' : '') + '</div>'
       + '<div class="card"><h2>最近 14 天</h2><div class="scroll"><table><thead><tr><th>日期</th><th>完成</th><th>一遍过</th><th>没记住</th><th>新学会</th><th>用时</th><th>考题</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>'
-      + '<div class="card"><h2>✏️ 课表打分 · 最近 7 天</h2>' + (scoreRows ? '<div class="scroll"><table><tbody>' + scoreRows + '</tbody></table></div>' : '<div class="warn">这 7 天一格都没填</div>') + '</div>'
+      + '<div class="card"><h2>📊 做题记录 · 最近 7 天 (App 自动)</h2>' + (scoreRows ? '<div class="scroll"><table><tbody>' + scoreRows + '</tbody></table></div>' : '<div class="warn">这 7 天没在 App 里做题</div>') + '</div>'
       + '<div class="card"><h2>⭐ 积分</h2><div><span class="big">' + Number(st.totalPoints || 0) + '</span> 分 · 今天 +' + (pos[today] || 0) + ' · 知识树 ' + stars + '⭐</div>'
       + (Object.keys(byReason).length ? '<div class="sub" style="margin-top:6px">今天进账: ' + Object.keys(byReason).map(function (k) { return esc(k) + ' ' + (byReason[k] > 0 ? '+' : '') + byReason[k]; }).join(' · ') + '</div>' : '')
       + (adminToday.length ? '<div class="sub" style="margin-top:6px">今天家长页加分: ' + adminToday.map(function (l) { return esc(l.reason) + ' +' + l.points; }).join(' · ') + '</div>' : '')

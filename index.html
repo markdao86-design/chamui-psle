@@ -5540,6 +5540,26 @@ body.fc-focus .fc-eg-row { margin-top:3px; gap:8px; }
 body.fc-focus .fc-spk.fc-spk-s { width:clamp(30px, 4.4vh, 40px); height:clamp(30px, 4.4vh, 40px); font-size:clamp(14px, 2vh, 18px) !important; }
 body.fc-focus .fc-btns { margin-top:8px; }
 body.fc-focus .fc-btn-know, body.fc-focus .fc-btn-dont, body.fc-focus .fc-btn-vague { font-size:clamp(15px, 2.3vh, 22px); padding:clamp(9px, 1.5vh, 16px) 16px; }
+/* v29.8 自动打卡: 每日记录 / 每周分析 */
+.dl-sum { font-size:var(--fs-sub); color:var(--c-text-2); line-height:1.6; margin-top:10px; padding:8px 10px; background:var(--c-card-2); border-radius:8px; }
+.dl-sum b { color:var(--c-text); }
+.dl-sum-t { font-weight:700; color:var(--c-text); margin-right:4px; }
+.dl-notes { margin:8px 0 0; padding-left:22px; font-size:var(--fs-sub); line-height:1.6; }
+.dl-notes li { margin:2px 0; }
+.dl-focus li { color:var(--c-text); }
+.dl-act { font-size:var(--fs-tag); color:var(--c-text-2); }
+.dl-h { font-size:var(--fs-sub); font-weight:700; color:var(--c-text); margin-top:12px; }
+.dl-days { display:flex; gap:4px; margin-top:10px; }
+.dl-day { flex:1; text-align:center; background:var(--c-card-2); border-radius:8px; padding:6px 0; }
+.dl-day-l { font-size:var(--fs-tag); color:var(--c-text-2); }
+.dl-day-v { font-size:var(--fs-body); font-weight:700; }
+.dl-tiles { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.dl-tile { flex:1; min-width:110px; padding:8px 10px; border-radius:10px; background:var(--c-card-2); border:1px solid var(--c-line); border-top:4px solid #94A3B8; }
+.dl-tile-n { font-size:var(--fs-sub); font-weight:700; color:var(--c-text); }
+.dl-tile-v { font-size:20px; font-weight:900; line-height:1.2; }
+.dl-tile-s { font-size:var(--fs-tag); color:var(--c-text-2); }
+.dl-plan-title { font-size:var(--fs-tag); color:var(--c-text-2); margin-top:8px; }
+.dl-week { margin-top:10px; }
 </style>
 </head>
 <body>
@@ -5697,13 +5717,13 @@ body.fc-focus .fc-btn-know, body.fc-focus .fc-btn-dont, body.fc-focus .fc-btn-va
     <div class="card" id="errorBankCardNew" style="border-left:4px solid #607D8B;display:none"></div>
 
     <!-- v24.0 傻瓜式: 首页顶一句话说清今天干什么 (内容由 renderTodayThreeCard 填) -->
-    <div class="ui-hint" id="homeHint"><span class="ui-hint-ico">👋</span><span>今天就 3 件事: <b>① 填打卡表</b> → <b>② 复习错题</b> → <b>③ 学考点</b></span></div>
+    <div class="ui-hint" id="homeHint"><span class="ui-hint-ico">👋</span><span>今天就 3 件事: <b>① 背单词</b> → <b>② 做题</b> → <b>③ 学考点</b> (做了自动记录)</span></div>
     <!-- v19.19: 主页 2 栏布局 (左行动 / 右信息教学), hero 上方已全宽 -->
     <div class="home-grid-2col">
       <!-- 左栏: 今日必做 行动驱动 (v19.22: gradReviewCard 移到右栏减拥挤) -->
       <div class="home-col-left">
         <!-- v23.0 (用户 2026-10-03 "首页太杂"): 左栏只留 每日分数打卡表 + 错题本 -->
-        <div class="ui-section">📝 每日分数打卡</div>
+        <div class="ui-section">📊 每日学习记录 <span style="font-weight:400;color:#64748B">自动</span></div>
         <div class="card" id="todayThreeCard"></div>
         <div class="card" id="errorBankCard"></div>
         <!-- v19.35: 自动对齐 filler — 长栏时被挤为 0 不留痕 -->
@@ -6410,9 +6430,9 @@ body.fc-focus .fc-btn-know, body.fc-focus .fc-btn-dont, body.fc-focus .fc-btn-va
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=29.7"></script>
-<script src="data.js?v=29.7"></script>
-<script src="app.js?v=29.7"></script>
+<script src="character.js?v=29.8"></script>
+<script src="data.js?v=29.8"></script>
+<script src="app.js?v=29.8"></script>
 
 </body>
 </html>
