@@ -1637,6 +1637,8 @@ function _finishLmGame() {
   const acc = g.items.length ? Math.round(g.correct / g.items.length * 100) : 0;
   const bonus = acc >= 80 ? 5 : 0;
   if (bonus) state.totalPoints = (state.totalPoints || 0) + bonus;
+  _bumpDailyGameCount('listen');   // v29.5: 听力只有选择题, 做完算今天的听力
+  state.listenGameRuns = (state.listenGameRuns || 0) + 1;
   saveState(state);
   if (modal) {
     modal.innerHTML = `
@@ -3257,6 +3259,7 @@ window.fcSpeak = fcSpeak;
 function _renderFlashcardSession() {
   const el = document.getElementById('vocabPageContent');
   if (!el || !_fcSession) return;
+  if (window.scrollY > 0) window.scrollTo(0, 0);   // v29.5: 卡片一屏放下, 不留滚动位置
   const s = _fcSession;
   let word, headerRight, progressPct, retakeBadge = '';
   if (s.mode === 'daily') {
@@ -5593,7 +5596,7 @@ const SLOT_TO_GAME = {
   '华文': ['chinese'], 'Vocabulary': ['vocab'], 'vocab': ['vocab']
 };
 const GAME_WEIGHT = { grammar:5, cloze:5, editing:5, vocab:4, listen:4, scimcq:3, scilab:2, math:2, unit:1, chinese:1 };
-const GAME_NAMES = { grammar:'Grammar MCQ', cloze:'Cloze 完形', editing:'Editing 找错', vocab:'词汇连连看', listen:'听写练习', scimcq:'科学 MCQ', scilab:'科学分类', math:'数学速算', unit:'单位换算', chinese:'华文 MCQ' };
+const GAME_NAMES = { grammar:'Grammar MCQ', cloze:'Cloze 完形', editing:'Editing 找错', vocab:'词汇连连看', listen:'听力选择题', scimcq:'科学 MCQ', scilab:'科学分类', math:'数学速算', unit:'单位换算', chinese:'华文 MCQ' };
 
 function _triggerGameReward(week, day, slot) {
   if (!state._gameTriggersToday) state._gameTriggersToday = { date: new Date().toISOString().slice(0,10), count: 0, bossUsed: false };
@@ -5661,7 +5664,7 @@ function _triggerGameReward(week, day, slot) {
 }
 
 function _startTriggeredGame(gameKey, isBoss) {
-  const openers = { grammar: 'openGrammarGame', cloze: 'openClozeGame', editing: 'openEditingGame', vocab: 'openVocabGame', listen: 'openListeningGame', scimcq: 'openScimcqGame', scilab: 'openScilabGame', math: 'openMathGame', unit: 'openUnitGame', chinese: 'openChineseGame' };
+  const openers = { grammar: 'openGrammarGame', cloze: 'openClozeGame', editing: 'openEditingGame', vocab: 'openVocabGame', listen: 'openListenMcqGame', scimcq: 'openScimcqGame', scilab: 'openScilabGame', math: 'openMathGame', unit: 'openUnitGame', chinese: 'openChineseGame' };
   const fn = openers[gameKey];
   if (fn && typeof window[fn] === 'function') window[fn](state.currentWeek);
   else if (fn && typeof eval(fn) === 'function') eval(fn + '(' + state.currentWeek + ')');
@@ -7006,7 +7009,7 @@ function openKnowledgeNodeDetail(subj, idx) {
     cloze:   { name: '🧩 Cloze 填空', open: 'openClozeGame()' },
     editing: { name: '🔍 Editing 找错', open: 'openEditingGame()' },
     vocab:   { name: '📚 词汇连连看', open: `openVocabGame(${state.currentWeek})` },
-    listen:  { name: '🎧 听写练习', open: 'openListenGame()' },
+    listen:  { name: '🎧 听力选择题', open: 'openListenMcqGame()' },
     scilab:  { name: '🔬 科学快分类', open: 'openSciClassifyGame()' },
     sst:     { name: '🔄 SST 句型转换', open: 'openSstGame()' },
     comp_oe: { name: '📖 阅读理解 OE', open: 'openCompOeGame()' },
@@ -9038,8 +9041,8 @@ function openMiniGameHub() {
         <button class="mgh-game" onclick="closeMiniGameHub(); openEditingGame()">
           ✏️<br><b>Editing 找错</b><br><small>50 词找 5 错</small>${status('editing')}
         </button>
-        <button class="mgh-game" onclick="closeMiniGameHub(); openListenGame()">
-          🎧<br><b>听写练习</b><br><small>听 1 段填 5 词</small>${status('listen')}
+        <button class="mgh-game" onclick="closeMiniGameHub(); openListenMcqGame()" style="border:2px solid rgba(30,64,175,0.40)">
+          🎧<br><b>听力选择题</b><br><small>PSLE 题型 · 10 题/局</small>${status('listen')}
         </button>
         <button class="mgh-game" style="${lockStyle('unit')}" onclick="${lockClick('unit', 'closeMiniGameHub(); openUnitGame()')}">
           ⚗️<br><b>单位换算</b><br><small>10 题限时</small>${status('unit')}
@@ -9068,10 +9071,6 @@ function openMiniGameHub() {
         </button>
         <button class="mgh-game" onclick="closeMiniGameHub(); openSituationalWritingModal()" style="border:2px solid rgba(30,64,175,0.40)">
           📧<br><b>情境写作 SW</b><br><small>P1·15 分</small><div class="mgh-status" style="color:#1E40AF">🆕 +5/篇</div>
-        </button>
-        <!-- v19.31: Paper 3 Listening MCQ (Expert 1+6 P0 — 13.5% 裸考修复) -->
-        <button class="mgh-game" onclick="closeMiniGameHub(); openListenMcqGame()" style="border:2px solid rgba(30,64,175,0.40)">
-          🎧<br><b>听力 MCQ</b><br><small>P3·10 题/局</small><div class="mgh-status" style="color:#1E40AF">🆕 +2/题</div>
         </button>
       </div>
     </div>
@@ -10107,106 +10106,6 @@ function closeEditingGame() {
   renderAll();
 }
 
-// 听写
-let _listenGameState = null;
-function openListenGame() {
-  if (!_checkGameDailyLock('listen')) return;  // v18.38
-  // v18.25: 按当前难度采样
-  const diff = window.getDifficulty ? window.getDifficulty(state, 'listen') : 1;
-  const item = window.getListenByDiff ? window.getListenByDiff(diff)
-             : (window.getDailyListenDictation ? window.getDailyListenDictation() : window.LISTEN_DICTATIONS[0]);
-  const numBlanks = (item.blanks || []).length;
-  _listenGameState = { item, answers: new Array(numBlanks).fill(''), played: false, diff };
-  _renderListenGame();
-}
-function _renderListenGame() {
-  const modal = document.getElementById('listenGameModal');
-  if (!modal || !_listenGameState) return;
-  const g = _listenGameState;
-  modal.innerHTML = `
-    <div class="lg-inner">
-      <div class="lg-header">
-        <span class="lg-title">🎧 听写练习</span>
-        <button class="vocab-modal-close" onclick="closeListenGame()">×</button>
-      </div>
-      <div class="lg-instr">📋 点 ▶ 播放 1 段英语 (可重听), 然后填 5 个关键词</div>
-      <button class="btn btn-primary lg-play" onclick="speakListenText()">▶ ${g.played ? '重听' : '播放'}</button>
-      ${g.played ? `
-        <div class="lg-blanks">
-          ${g.item.blanks.map((b, i) => `
-            <div class="lg-blank">
-              <span class="lg-blank-label">${i + 1}.</span>
-              <input type="text" class="lg-input" id="lgInput${i}" oninput="_listenGameState.answers[${i}]=this.value" value="${g.answers[i] || ''}" placeholder="...">
-            </div>
-          `).join('')}
-        </div>
-        <button class="btn btn-success lg-submit" onclick="submitListenAnswers()">提交</button>
-      ` : `<div class="lg-tip">先播放, 听完再填空</div>`}
-    </div>
-  `;
-  modal.classList.add('show');
-}
-function speakListenText() {
-  const g = _listenGameState;
-  if (!g) return;
-  if ('speechSynthesis' in window) {
-    appSpeak(g.item.text, { rate: 0.9 });
-    g.played = true;
-    _renderListenGame();
-  } else {
-    showToast('浏览器不支持语音合成', 'sad');
-  }
-}
-function submitListenAnswers() {
-  const g = _listenGameState;
-  if (!g) return;
-  let correct = 0;
-  for (let i = 0; i < g.item.blanks.length; i++) {
-    const expected = g.item.blanks[i].toLowerCase().trim();
-    const got = (g.answers[i] || '').toLowerCase().trim();
-    if (expected === got) correct++;
-  }
-  // v18.25: 记录难度
-  let diffResult = null;
-  if (window.recordGameRun) diffResult = window.recordGameRun(state, 'listen', correct, g.item.blanks.length);
-  // v18.24: 递减奖励
-  const playNum = _bumpDailyGameCount('listen');
-  const mult = _getGameMultiplier(playNum);
-  const listenDiff = (state.gameStats && state.gameStats.listen && state.gameStats.listen.difficulty) || 4;
-  const listenRewardMap = { 3: 4, 4: 6, 5: 10, 6: 15 };
-  let baseReward = 0;
-  if (correct >= 5) baseReward = listenRewardMap[listenDiff] || 2;
-  else if (correct >= 3) baseReward = Math.max(1, (listenRewardMap[listenDiff] || 2) - 1);
-  const reward = Math.floor(baseReward * mult * (window.getDragonBuff ? window.getDragonBuff(state) : 1.0));
-  if (reward > 0) {
-    state.totalPoints += reward;
-    if (correct >= 5 && playNum === 1 && state.mysteryBoxes) state.mysteryBoxes.available += 1;
-    state.logs.push({ reason: `🎮 听写 ${correct}/5 (第 ${playNum} 次)`, points: reward, week: state.currentWeek, timestamp: Date.now() });
-  }
-  state.listenGameRuns = (state.listenGameRuns || 0) + 1;
-  saveState(state);
-  const modal = document.getElementById('listenGameModal');
-  modal.innerHTML = `
-    <div class="lg-inner">
-      <div class="lg-result-icon">${correct >= 5 ? '🎉' : correct >= 3 ? '👍' : '🤔'}</div>
-      <div class="lg-result-title">${correct}/5 对 (今日第 ${playNum} 次)</div>
-      <div class="lg-result-text">原文: ${escapeHtml(g.item.text)}</div>
-      <div class="lg-result-reward">+${reward} 分${correct >= 5 && playNum === 1 ? ' + 1 宝箱' : ''} · ${_getMultiplierLabel(playNum)}</div>
-      <button class="btn btn-primary" onclick="closeListenGame()">知道了!</button>
-    </div>
-  `;
-  if (correct >= 5 && mult > 0) { spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 40); playSound('tada'); }
-  if (diffResult && diffResult.levelChanged === 'up') { showToast(`🆙 听写难度升到 Lv ${diffResult.newDiff}!`, 'happy'); playSound('tada'); }
-  if (diffResult && diffResult.levelChanged === 'down') showToast(`📉 听写难度降到 Lv ${diffResult.newDiff}`, 'sad');
-  _listenGameState = null;
-}
-function closeListenGame() {
-  document.getElementById('listenGameModal').classList.remove('show');
-  _listenGameState = null;
-  stopSpeak();
-  renderAll();
-}
-
 // ============ v16.3: 听力资源 modal (CNA938 直播 + 推荐播客 + BBC 外链) ============
 // v16.10: 防沉迷 — 听力 modal 计时器(模块级)
 let _listeningTickInterval = null;
@@ -10586,7 +10485,7 @@ function renderProgressStatsCard() {
         <div class="ps-icon">🧪</div>
         <div class="ps-val">${mathRuns + editingRuns + listenRuns}</div>
         <div class="ps-label">Mini-game 总次数</div>
-        <div class="ps-sub">数学 <b>${mathRuns}</b> · Editing <b>${editingRuns}</b> · 听写 <b>${listenRuns}</b></div>
+        <div class="ps-sub">数学 <b>${mathRuns}</b> · Editing <b>${editingRuns}</b> · 听力 <b>${listenRuns}</b></div>
       </div>
     </div>
     <div class="card-title" style="margin-top:18px;font-size:16px">🎧 7 天听力时长趋势 (累计 ${Math.floor(totalListen / 60)} 分钟)</div>
@@ -12837,10 +12736,6 @@ window.closeMathGame = closeMathGame;
 window.openEditingGame = openEditingGame;
 window.clickEditingWord = clickEditingWord;
 window.closeEditingGame = closeEditingGame;
-window.openListenGame = openListenGame;
-window.speakListenText = speakListenText;
-window.submitListenAnswers = submitListenAnswers;
-window.closeListenGame = closeListenGame;
 // v17.6: Streak rules modal
 window.showStreakRulesModal = function() {
   const m = document.getElementById('streakRulesModal');

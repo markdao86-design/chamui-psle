@@ -4555,8 +4555,8 @@ p { font-size: 14px; line-height: 1.6; }
 .mgh-title { font-size: 16px; font-weight: 900; }
 .mgh-sub { font-size: 12px; color: var(--color-text-light); margin-top: 2px; }
 
-.mgh-inner, .mg-inner, .lg-inner, .eg-inner { background: var(--color-card); border: 4px solid var(--color-border); border-radius: var(--radius-bubble); max-width: 600px; padding: 20px; box-shadow: var(--shadow-pop); width: 100%; }
-.mgh-header, .lg-header, .eg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.mgh-inner, .mg-inner, .eg-inner { background: var(--color-card); border: 4px solid var(--color-border); border-radius: var(--radius-bubble); max-width: 600px; padding: 20px; box-shadow: var(--shadow-pop); width: 100%; }
+.mgh-header, .eg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .mgh-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 @media (min-width: 720px) { .mgh-grid { grid-template-columns: 1fr 1fr 1fr 1fr; } }
 .mgh-game small { display: block; font-size: 11px; color: var(--color-text-light); margin: 2px 0; }
@@ -4692,20 +4692,6 @@ p { font-size: 14px; line-height: 1.6; }
 .eg-word:hover { background: var(--color-accent); }
 .eg-word.eg-found { background: #6BCB77; color: white; font-weight: 700; }
 .eg-victory { background: linear-gradient(135deg, #FFE066 0%, #6BCB77 100%); padding: 20px; border-radius: 14px; text-align: center; font-size: 18px; font-weight: 900; margin-top: 12px; border: 1px solid #CBD5E1; }
-
-/* 听写 */
-.lg-instr { background: rgba(255,183,0,0.08); padding: 8px 12px; border-radius: 8px; font-size: 12px; margin-bottom: 12px; }
-.lg-play { width: 100%; padding: 14px !important; font-size: 18px !important; margin-bottom: 12px; }
-.lg-blanks { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
-.lg-blank { display: flex; align-items: center; gap: 8px; }
-.lg-blank-label { font-weight: 900; min-width: 24px; }
-.lg-input { flex: 1; padding: 8px 10px; font-size: 15px; border: 2px solid var(--color-text); border-radius: 8px; }
-.lg-submit { width: 100%; padding: 12px !important; font-size: 16px !important; }
-.lg-tip { text-align: center; color: var(--color-text-light); font-size: 13px; padding: 20px; }
-.lg-result-icon { font-size: 60px; text-align: center; }
-.lg-result-title { font-size: 24px; font-weight: 900; text-align: center; margin: 8px 0; }
-.lg-result-text { background: rgba(255,183,0,0.08); padding: 10px; border-radius: 8px; font-size: 13px; margin: 12px 0; line-height: 1.6; }
-.lg-result-reward { font-size: 18px; font-weight: 900; color: var(--color-success, #0D9488); text-align: center; margin: 12px 0; }
 
 /* ===== v17.7 Phase 3: 每日特别任务卡 ===== */
 .daily-quest-card {
@@ -5534,6 +5520,26 @@ nav.tabs .tab-btn { background:#F1F5F9 !important; border:1px solid #CBD5E1 !imp
 nav.tabs .tab-btn:hover { background:#E2E8F0 !important; border-color:#94A3B8 !important; }
 nav.tabs .tab-btn.active { background:#1E40AF !important; border-color:#1E40AF !important; color:#FFFFFF !important; box-shadow:0 2px 6px rgba(30,64,175,0.30) !important; }
 @media (max-width:767px) { nav.tabs { gap:6px !important; padding:8px 10px !important; row-gap:6px !important; } nav.tabs .tab-btn { padding:7px 11px !important; min-height:40px; border-radius:10px !important; } }
+/* v29.5 (用户: "闪卡单词卡片缩小, 让认识、不认识这些按钮和整个卡片内容在一屏内全部显示"): 背卡时收起顶栏和导航 (左上"返回卡组"退出),
+   卡高跟屏幕高度走, 字号用 vh 缩放, 大屏小屏都是 卡片 + 三个按钮 一屏放下。用 :has 判断, 不用记状态, 离开闪卡自动恢复 */
+body:has(#page-vocab.active .fc-card) .app-header, body:has(#page-vocab.active .fc-card) #studyStrip, body:has(#page-vocab.active .fc-card) nav.tabs { display:none !important; }
+body:has(#page-vocab.active .fc-card) .fc-card, body:has(#page-vocab.active .fc-card) .fc-card-inner { min-height:0; height:min(calc(100vh - 170px), 460px); height:min(calc(100dvh - 170px), 460px); }
+body:has(#page-vocab.active .fc-card) .fc-card--3eg.flipped, body:has(#page-vocab.active .fc-card) .fc-card--3eg.flipped .fc-card-inner { min-height:0; height:min(calc(100vh - 170px), 600px); height:min(calc(100dvh - 170px), 600px); }
+body:has(#page-vocab.active .fc-card) .fc-card { margin:6px auto; max-width:760px; }
+body:has(#page-vocab.active .fc-card) .fc-card-front, body:has(#page-vocab.active .fc-card) .fc-card-back { padding:clamp(10px, 2vh, 28px) clamp(14px, 3vw, 36px); }
+body:has(#page-vocab.active .fc-card) .fc-card-word { font-size:clamp(36px, 6.5vh, 60px); margin-bottom:8px; }
+body:has(#page-vocab.active .fc-card) .fc-card-ipa { font-size:clamp(17px, 2.8vh, 28px); margin:-2px 0 10px; }
+body:has(#page-vocab.active .fc-card) .fc-card-hint { font-size:clamp(14px, 2vh, 20px); }
+body:has(#page-vocab.active .fc-card) .fc-card-meaning, body:has(#page-vocab.active .fc-card) .fc-card--3eg .fc-card-meaning { font-size:clamp(24px, 3.8vh, 40px); margin:2px 0 8px; }
+body:has(#page-vocab.active .fc-card) .fc-card-endef, body:has(#page-vocab.active .fc-card) .fc-card--3eg .fc-card-endef { font-size:clamp(15px, 2.1vh, 21px); line-height:1.4; padding:clamp(6px, 1vh, 14px) 12px; margin-bottom:6px; }
+body:has(#page-vocab.active .fc-card) .fc-card-sentence, body:has(#page-vocab.active .fc-card) .fc-card--3eg .fc-card-sentence { font-size:clamp(14px, 2vh, 20px); line-height:1.4; padding:clamp(6px, 1vh, 14px) 12px; margin-bottom:6px; }
+body:has(#page-vocab.active .fc-card) .fc-card-backword { font-size:clamp(17px, 2.6vh, 26px); margin-bottom:0; }
+body:has(#page-vocab.active .fc-card) .fc-card-backword span { font-size:clamp(14px, 2.2vh, 22px); }
+body:has(#page-vocab.active .fc-card) .fc-card-qtype { font-size:clamp(13px, 2vh, 22px); padding:clamp(6px, 1vh, 14px) 12px; margin-top:0; }
+body:has(#page-vocab.active .fc-card) .fc-eg-row { margin-top:3px; gap:8px; }
+body:has(#page-vocab.active .fc-card) .fc-spk.fc-spk-s { width:clamp(30px, 4.4vh, 40px); height:clamp(30px, 4.4vh, 40px); font-size:clamp(14px, 2vh, 18px) !important; }
+body:has(#page-vocab.active .fc-card) .fc-btns { margin-top:8px; }
+body:has(#page-vocab.active .fc-card) .fc-btn-know, body:has(#page-vocab.active .fc-card) .fc-btn-dont, body:has(#page-vocab.active .fc-card) .fc-btn-vague { font-size:clamp(15px, 2.3vh, 22px); padding:clamp(9px, 1.5vh, 16px) 16px; }
 </style>
 </head>
 <body>
@@ -6369,7 +6375,6 @@ nav.tabs .tab-btn.active { background:#1E40AF !important; border-color:#1E40AF !
 <div id="miniGameHubModal" class="vocab-modal" onclick="if(event.target===this) closeMiniGameHub()"></div>
 <div id="mathGameModal" class="vocab-modal" onclick="if(event.target===this) closeMathGame()"></div>
 <div id="editingGameModal" class="vocab-modal" onclick="if(event.target===this) closeEditingGame()"></div>
-<div id="listenGameModal" class="vocab-modal" onclick="if(event.target===this) closeListenGame()"></div>
 
 <!-- v17.6: Streak 规则 modal (点 streak 块时显示) -->
 <div id="streakRulesModal" class="mb-result-modal" onclick="if(event.target===this) closeStreakRulesModal()">
@@ -6405,9 +6410,9 @@ nav.tabs .tab-btn.active { background:#1E40AF !important; border-color:#1E40AF !
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=29.4"></script>
-<script src="data.js?v=29.4"></script>
-<script src="app.js?v=29.4"></script>
+<script src="character.js?v=29.5"></script>
+<script src="data.js?v=29.5"></script>
+<script src="app.js?v=29.5"></script>
 
 </body>
 </html>
