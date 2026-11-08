@@ -5564,6 +5564,12 @@ body.fc-focus .fc-btn-know, body.fc-focus .fc-btn-dont, body.fc-focus .fc-btn-va
 .dl-notes li.clk::after { content:' ›'; color:var(--c-text-3); }
 .dl-lnk { cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px; color:var(--c-primary); }
 #modDetailBody { max-height:85vh; overflow:auto; }
+.dl-peer { margin-top:10px; padding:10px 12px; border-radius:10px; background:rgba(30,64,175,0.06); border:1px solid rgba(30,64,175,0.18); }
+.dl-peer-main { font-size:var(--fs-body); font-weight:700; color:var(--c-text); }
+.dl-peer-n { font-size:22px; color:var(--c-primary); }
+.dl-peer-sub { font-size:var(--fs-sub); color:var(--c-text); margin-top:4px; line-height:1.5; }
+.dl-peer-sub b { color:var(--c-primary); }
+.dl-peer-note { font-size:var(--fs-tag); color:var(--c-text-3); margin-top:4px; }
 </style>
 </head>
 <body>
@@ -6434,9 +6440,9 @@ body.fc-focus .fc-btn-know, body.fc-focus .fc-btn-dont, body.fc-focus .fc-btn-va
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 
-<script src="character.js?v=30.1"></script>
-<script src="data.js?v=30.1"></script>
-<script src="app.js?v=30.1"></script>
+<script src="character.js?v=30.2"></script>
+<script src="data.js?v=30.2"></script>
+<script src="app.js?v=30.2"></script>
 
 <!-- v30.1: 模块明细弹层放 body 层 (v30.0 放在首页左栏里, position:fixed 被栏容器截住 + iPad 整页卡死) -->
 <div id="modDetailModal" class="kt-modal" onclick="if(event.target===this)closeModDetail()"><div class="kt-inner" style="max-width:640px" id="modDetailBody"></div></div>

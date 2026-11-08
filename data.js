@@ -6739,6 +6739,43 @@ function getModDetail(state, mod, fromKey, toKey) {
   const ok = days.reduce((a, x) => a + x.ok, 0), n = days.reduce((a, x) => a + x.n, 0);
   return { mod, base, label: meta.label, subj: meta.subj, target: meta.target || AL1_TARGET, count: !!meta.count, paper: /^paper:/.test(mod), days, wrong, ok, n, pct: n ? Math.round(ok / n * 100) : null, action: MOD_ACTION[base] || '' };
 }
+// ===== v30.2 用户: "在今日学习记录后面打败了多少小学生, 然后总结一句今日还差什么能超过多少人, 提示每周做总排名" =====
+// 没有真实联网排名, 用一条写死的参考基线 (P5 学生每天自主练习量的估计分布) 把"今天的量"换算成百分位:
+//   当天量 E = 做题数 + 背单词数×0.5 + 学习分钟×0.5, 再按正确率折一下 (90% → ×0.95, 60% → ×0.8, 没正确率不折)。
+//   基线表 PEER_CURVE: [量, 打败百分比], 线性插值。周排名 = 本周累计量 对 周基线 (日基线 ×6, 周日休息)。
+//   界面上写明"按参考基线估算", 不冒充真实排名。
+const PEER_CURVE = [[0, 0], [5, 10], [15, 25], [30, 50], [50, 65], [80, 80], [120, 90], [180, 95], [250, 98], [400, 99]];
+const PEER_TIERS = [50, 65, 80, 90, 95, 98];
+function _peerPct(E, scale) {
+  scale = scale || 1; const x = E / scale;
+  for (let i = 1; i < PEER_CURVE.length; i++) { const [a, pa] = PEER_CURVE[i - 1], [b, pb] = PEER_CURVE[i]; if (x <= b) return Math.round(pa + (pb - pa) * (x - a) / (b - a)); }
+  return 99;
+}
+function _peerNeed(E, targetPct, scale) {   // 要到 targetPct 还差多少量
+  scale = scale || 1;
+  for (let i = 1; i < PEER_CURVE.length; i++) { const [a, pa] = PEER_CURVE[i - 1], [b, pb] = PEER_CURVE[i]; if (targetPct <= pb) { const x = a + (b - a) * (targetPct - pa) / (pb - pa); return Math.max(0, Math.ceil(x * scale - E)); } }
+  return 0;
+}
+function _peerE(r) {
+  const words = r.fc ? r.fc.reviewed : 0, mins = Math.round((r.sec || 0) / 60);
+  let E = r.n + words * 0.5 + mins * 0.5;
+  if (r.pct != null && r.n >= 10) E *= (0.5 + r.pct / 200);
+  return Math.round(E);
+}
+function peerRank(state, k) {
+  const r = getDayRecord(state, k);
+  const E = _peerE(r), beat = r.any ? _peerPct(E) : 0;
+  const next = PEER_TIERS.find(p => p > beat) || null;
+  const need = next ? _peerNeed(E, next) : 0;
+  // 周: 周一到今天累计
+  const d = new Date(k + 'T12:00:00'); const mon = new Date(d); mon.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  let wE = 0, wDays = 0;
+  for (let i = 0; i < 7; i++) { const dd = new Date(mon); dd.setDate(mon.getDate() + i); const kk = _fcLocalDate(dd); if (kk > k) break; const rr = getDayRecord(state, kk); if (rr.any) wDays++; wE += _peerE(rr); }
+  const wBeat = wE ? _peerPct(wE, 6) : 0, wNext = PEER_TIERS.find(p => p > wBeat) || null, wNeed = wNext ? _peerNeed(wE, wNext, 6) : 0;
+  const isSunday = d.getDay() === 0;
+  return { E, beat, next, needQ: need, needWords: need * 2, needMins: need * 2, week: { E: wE, beat: wBeat, next: wNext, need: wNeed, days: wDays, final: isSunday }, any: r.any };
+}
+window.peerRank = peerRank; window.PEER_CURVE = PEER_CURVE; window._peerPct = _peerPct;
 window.getModDetail = getModDetail; window._wrongModOf = _wrongModOf; window.AL1_TARGET = AL1_TARGET;
 window._paperRows = _paperRows; window.PAPER_KEY2MOD = PAPER_KEY2MOD; window._dayLogAdd = _dayLogAdd; window._seedDayLog = _seedDayLog; window.getDayRecord = getDayRecord; window.analyzeDay = analyzeDay; window.analyzeWeek = analyzeWeek; window.MOD_META = MOD_META; window.MOD_ACTION = MOD_ACTION; window.DAYLOG_MOD_OF_GAME = DAYLOG_MOD_OF_GAME; window._weekRaw = _weekRaw;
 

@@ -933,7 +933,7 @@ function renderTodayThreeCard() {
     headerTitle = `📊 今日学习记录 · ${day.label || ''}`;
     counterFn = () => `${rec.n}`; counterLabel = '题';
     headerSub = '';
-    itemsHtml = _dayRecordHtml(todayKey) + _manualRowsHtml(todayKey, dow) + _dayAnalysisHtml(todayKey);   // v29.9: 中间一栏手填 (App 外的课表任务)
+    itemsHtml = _dayRecordHtml(todayKey) + _peerHtml(todayKey) + _manualRowsHtml(todayKey, dow) + _dayAnalysisHtml(todayKey);   // v29.9: 中间一栏手填 (App 外的课表任务); v30.2: 记录后面接"打败了 x% 小学生"
     tipHtml = `<details class="ui-more dl-week"><summary>📈 本周分析 · 下周重点加强</summary>${_weekAnalysisHtml(schedMonday(new Date()))}</details>
     <div class="ui-links">
       <button class="ui-btn2" onclick="gotoPage('schedule')">📆 看整周课表 ›</button>
@@ -12295,6 +12295,16 @@ function _dayRecordHtml(k, opts) {
   const plan = (day.blocks || []).filter(b => b[3] !== 'r' && !/睡觉|洗漱|吃饭|休息|午休|上学/.test(b[1])).map(b => `<div class="ui-row rest"><div class="ui-row-main"><div class="ui-row-time">${escapeHtml(b[0])}</div><div class="ui-row-title">${escapeHtml(b[1])}</div></div></div>`).join('');
   return `<div class="ui-empty">${isToday ? '今天还没开始 · App 里做了题这里自动出现' : k > schedLocalDate() ? '还没到这天' : '这天没在 App 里学'}</div>${opts.plan !== false && plan ? `<div class="dl-plan-title">${isToday ? '今天' : '这天'}课表</div><div class="ui-list">${plan}</div>` : ''}`;
 }
+// v30.2: 今天打败了 x% 小学生 + 还差什么能超过下一档 + 本周总排名提示 (按参考基线估算, 不是真实联网排名)
+function _peerHtml(k) {
+  const p = window.peerRank(state, k);
+  const isToday = k === schedLocalDate();
+  if (!p.any) return `<div class="dl-peer"><div class="dl-peer-main">🏃 ${isToday ? '今天' : '这天'}还没开始 · 做 30 题就能打败 <b>50%</b> 的小学生</div></div>`;
+  const need = p.next ? `再做 <b>${p.needQ} 题</b>, 或再背 <b>${p.needWords} 词</b>, 就能超过 <b>${p.next}%</b> 的人` : '今天已经是最前面的那一小撮了, 收工休息';
+  const wk = p.week.final ? `📊 本周总排名已出炉: 打败 <b>${p.week.beat}%</b> 的小学生 (学了 ${p.week.days} 天)` : `📊 本周总排名周日出炉 · 目前累计约打败 <b>${p.week.beat}%</b>${p.week.next ? ' · 周日前再加 ' + p.week.need + ' 题量能到 ' + p.week.next + '%' : ''}`;
+  return `<div class="dl-peer"><div class="dl-peer-main">🏃 ${isToday ? '今天' : '这天'}打败了 <span class="dl-peer-n">${p.beat}%</span> 的小学生</div><div class="dl-peer-sub">${need}</div><div class="dl-peer-sub">${wk}</div><div class="dl-peer-note">按 P5 学生每天自主练习量的参考基线估算 (题数 + 单词 + 分钟, 按正确率折算), 不是真实联网排名</div></div>`;
+}
+window._peerHtml = _peerHtml;
 function _dayAnalysisHtml(k) {
   const a = window.analyzeDay(state, k);
   if (!a.any) return '';

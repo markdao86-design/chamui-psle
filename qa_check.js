@@ -1917,6 +1917,16 @@ assert(/function _weekRaw\(state, mon\)/.test(dataSrc) && /_weekKeys\(mon\)\.map
   const st2 = { engModules: { grammar: { ok: 9, total: 10, runs: [{ d: '2026-09-08', ok: 9, total: 10, src: 'grammar' }] } }, gameStats: { math: { recent: [{ date: '2026-09-08', correct: 8, total: 10 }] } } };
   const d2 = W.getDayRecord(st2, '2026-09-08');
   assert(d2.n === 20 && d2.ok === 17 && st2.dayLogSeeded && W.getDayRecord(st2, '2026-09-08').n === 20, 'v29.8: 第一次用把 engModules.runs (带日期) 和 gameStats.recent 搬进流水, 只搬一次不重复');
+  { // v30.2: 打败了 x% 小学生 (参考基线) + 还差多少到下一档 + 周排名
+    assert(W._peerPct(0) === 0 && W._peerPct(30) === 50 && W._peerPct(80) === 80 && W._peerPct(1000) === 99 && W._peerPct(180, 6) === 50, 'v30.2: 基线曲线: 30 题量 = 50%, 80 = 80%, 封顶 99; 周基线 = 日 ×6');
+    const st6 = { dayLog: { '2026-09-09': { grammar: { ok: 18, n: 20, runs: 2 } } }, fcDaily: { '2026-09-09': { total: 40, size: 40, secs: 600, done: true } }, studyLog: { '2026-09-09': 1200 } };
+    const pr = W.peerRank(st6, '2026-09-09');
+    assert(pr.any && pr.E === 48 && pr.beat === 64 && pr.next === 65 && pr.needQ === 2 && pr.needWords === 4, `v30.2: 20 题 90% + 40 词 + 20 分钟 → 量 48 → 打败 64%, 再 2 题到 65% (实际 E ${pr.E} beat ${pr.beat} need ${pr.needQ})`);
+    assert(pr.week.E === 48 && pr.week.days === 1 && !pr.week.final && pr.week.beat === _wk(48), 'v30.2: 周排名按周一到当天累计, 周日才出炉');
+    function _wk(E) { return W._peerPct(E, 6); }
+    assert(!W.peerRank({ dayLog: {} }, '2026-09-09').any, 'v30.2: 没学的天 any=false (界面写"还没开始, 做 30 题就能打败 50%")');
+    assert(/function _peerHtml\(k\)/.test(appSrc) && /_dayRecordHtml\(todayKey\) \+ _peerHtml\(todayKey\) \+ _manualRowsHtml/.test(appSrc) && /本周总排名周日出炉/.test(appSrc) && /不是真实联网排名/.test(appSrc) && /\.dl-peer \{/.test(idxSrc), 'v30.2: 首页今日记录后面接 打败 x% + 还差 + 周排名提示, 写明是参考基线 (死代码警钟)');
+  }
   { // v30.0: 目标线一律 AL1=90; 模块明细可点开; 没答的题不记 0 分
     assert(Object.keys(W.MOD_META).every(k => W.MOD_META[k].count || W.MOD_META[k].target === 90) && W.AL1_TARGET === 90, 'v30.0: 所有计分模块目标线 = 90% (四科全 AL1)');
     const st5 = { dayLog: { '2026-09-08': { grammar: { ok: 5, n: 10, runs: 1 } }, '2026-09-09': { grammar: { ok: 9, n: 10, runs: 1 } } }, scheduleScores: { '2026-09-09': { ed_a: 18, ed_b: 20 } }, wrongAnswers: [{ gameKey: 'grammar', q: 'She ___ to school every day.', correctAns: 'goes', explain: '一般现在时第三人称', addedDate: '2026-09-08' }, { gameKey: 'grammar', q: 'old one', addedDate: '2026-08-01' }, { gameKey: 'knowledge', nodeId: 'sci_cells', q: 'cell q', addedDate: '2026-09-09' }, { gameKey: 'paper_mcq', subj: '英文', q: 'PSLE 2024 英文 Q23 (卷子第 5 页)', addedDate: '2026-09-09' }] };
@@ -1929,7 +1939,7 @@ assert(/function _weekRaw\(state, mon\)/.test(dataSrc) && /_weekKeys\(mon\)\.map
     assert(/const answeredN = \(g\.correct \|\| 0\) \+ \(g\.wrong \|\| 0\);/.test(appSrc) && /answeredN > 0\) diffR = window\.recordGameRun\(state, g\.key, g\.correct, answeredN\)/.test(appSrc), 'v30.0: MCQ 收卷只记答过的题, 时间到没答的不算 0 分');
   }
   assert(/_dayLogAdd\(state, 'review', isCorrect \? 1 : 0, 1\)/.test(appSrc) && /_dayLogAdd\(state, 'focus'/.test(appSrc) && /_dayLogAdd\(state, 'oral', 1, 1\)/.test(appSrc), 'v29.8: 错题复习 / 每日考点 / 朗读 三个非游戏入口也进流水');
-  assert(/function _dayRecordHtml\(k, opts\)/.test(appSrc) && /_dayRecordHtml\(todayKey\) \+ _manualRowsHtml\(todayKey, dow\) \+ _dayAnalysisHtml\(todayKey\)/.test(appSrc) && /_weekAnalysisHtml\(schedMonday\(new Date\(\)\)\)/.test(appSrc) && /_dayRecordHtml\(dk, \{ plan: false \}\)\}\$\{_manualRowsHtml\(dk, dow\)/.test(appSrc) && /el\.innerHTML = _weekAnalysisHtml\(_schedGridMonday\(\)\)/.test(appSrc), 'v29.8: 首页今日卡 = 自动记录 + 当日分析 + 折叠周分析; 课表页按天 / 本周分析 同一套渲染器 (死代码警钟)');
+  assert(/function _dayRecordHtml\(k, opts\)/.test(appSrc) && /_dayRecordHtml\(todayKey\) \+ _peerHtml\(todayKey\) \+ _manualRowsHtml\(todayKey, dow\) \+ _dayAnalysisHtml\(todayKey\)/.test(appSrc) && /_weekAnalysisHtml\(schedMonday\(new Date\(\)\)\)/.test(appSrc) && /_dayRecordHtml\(dk, \{ plan: false \}\)\}\$\{_manualRowsHtml\(dk, dow\)/.test(appSrc) && /el\.innerHTML = _weekAnalysisHtml\(_schedGridMonday\(\)\)/.test(appSrc), 'v29.8: 首页今日卡 = 自动记录 + 当日分析 + 折叠周分析; 课表页按天 / 本周分析 同一套渲染器 (死代码警钟)');
   assert(!/<input/.test(appSrc.slice(appSrc.indexOf('function _dayRecordHtml'), appSrc.indexOf('function _dayAnalysisHtml'))) && /_SG_AUTO_KEYS = \{ vt: 1, listen: 1 \}/.test(appSrc), 'v29.8/v29.9: App 自动记录的行没有输入框; 手填只给 App 测不到的块 (背单词 / 口语打卡 不手填)');
   const st3 = { dayLog: { '2026-09-08': { editing: { ok: 9, n: 10, runs: 1 } } }, scheduleScores: { '2026-09-08': { ed_a: 18, ed_b: 20, cloze_a: 10, cloze_b: 15, sci_mcq_a: 16, sci_mcq_b: 20 }, '2026-09-09': { hw: 1 } } };
   const d3 = W.getDayRecord(st3, '2026-09-08');
