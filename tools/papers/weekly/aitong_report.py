@@ -66,23 +66,14 @@ table(['部分', '题号', '满分', '得分', '丢分', '说明'], [
 
 doc.add_heading('三、错题逐题解析', 2)
 from aitong_v3_expl import EXPL
-from aitong_v8_expl import EXPL as BRIEF
-BR = {q[:7]: paras for _, items in BRIEF for q, _, paras in items}
 for sec_title, items in EXPL:
     doc.add_heading(sec_title, 2)
     for q, ans, paras in items:
         para(q, b=True)
         para(ans, b=True, size=10)
-        for bp in BR.get(q[:7], []):
-            pp = doc.add_paragraph(); r = pp.add_run(bp); r.bold = True; r.font.color.rgb = RGBColor(0xC0, 0x00, 0x00)
+        # v6 定稿 (老板 2026-11-22): 只要完整解析, 不加红色重点行 / 考点方法论 / 名校同类题
         for k, p in enumerate(paras, 1):
             para(f'{k}. {p}')
-        from method_items import METHOD
-        key = next((kk for kk in METHOD if q.startswith(kk)), None)
-        if key:
-            para('考点与通用做法', b=True, size=10)
-            for s in METHOD[key]:
-                para('· ' + s)
         doc.add_paragraph().paragraph_format.space_after = Pt(2)
 
 doc.add_heading('一处给了分、但要留意', 2)
