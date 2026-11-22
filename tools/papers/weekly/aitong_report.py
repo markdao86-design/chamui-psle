@@ -5,7 +5,7 @@ from docx.shared import Pt, Cm, RGBColor
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
-OUT = r'C:\Users\Eric\Desktop\佑子_爱同2024P5英文年终考_判分与解析_v5.docx'
+OUT = r'C:\Users\Eric\Desktop\佑子_爱同2024P5英文年终考_判分与解析_v7.docx'
 doc = Document()
 sec = doc.sections[0]
 sec.left_margin = sec.right_margin = Cm(1.8); sec.top_margin = sec.bottom_margin = Cm(1.5)
@@ -13,7 +13,7 @@ st = doc.styles['Normal']; st.font.name = '微软雅黑'; st.element.rPr.rFonts.
 st.paragraph_format.space_after = Pt(3)
 for h, sz in (('Heading 1', 16), ('Heading 2', 13)):
     hs = doc.styles[h]; hs.font.name = '微软雅黑'; hs.element.rPr.rFonts.set(qn('w:eastAsia'), '微软雅黑'); hs.font.color.rgb = RGBColor(0x1E, 0x40, 0xAF); hs.font.size = Pt(sz)
-sec.header.paragraphs[0].add_run('佑子 · 爱同 2024 P5 英文年终考 Paper 2 · 判分与解析 v5').font.size = Pt(8)
+sec.header.paragraphs[0].add_run('佑子 · 爱同 2024 P5 英文年终考 Paper 2 · 判分与解析 v7').font.size = Pt(8)
 
 
 def para(t, b=False, size=None):
@@ -43,8 +43,8 @@ def table(head, rows, widths, fs=9.5):
     return t
 
 
-doc.add_heading('佑子 · 爱同 2024 P5 英文年终考 Paper 2 判分与解析 v5', 1)
-para('做卷日期：2026 年 11 月第 1 周（清单第 1 周）。同类题来源：桌面 2024–2026 年十所名校英文预考 28 份，逐页识别后按考点检索，答案按各校卷末答案页核对。判分依据：严格按 PSLE 考官评分标准。选择题、语法填空、改错按爱同官方答案判；综合填空只接受语法和语境都成立的词；句式转换要求意思不变且语法正确，否则 0 分；阅读问答按采分点给分，少一个采分点不给分，答案里出现原文没有的内容扣分，不给半分，不扣语法分。', size=9.5)
+doc.add_heading('佑子 · 爱同 2024 P5 英文年终考 Paper 2 判分与解析 v7', 1)
+para('做卷日期：2026 年 11 月第 1 周（清单第 1 周）。判分依据：严格按 PSLE 考官评分标准。选择题、语法填空、改错按爱同官方答案判；综合填空只接受语法和语境都成立的词；句式转换要求意思不变且语法正确，否则 0 分；阅读问答按采分点给分，少一个采分点不给分，答案里出现原文没有的内容扣分，不给半分，不扣语法分。', size=9.5)
 
 doc.add_heading('一、结论', 2)
 para('Paper 2 得分 67 / 90，折合 74.4%，AL5（对比学校期末 70 / 90，77.8%）。离 AL1 线（90%，81 分）差 14 分；离老师给的 Paper 2 目标 80 分差 13 分。', b=True)
@@ -73,11 +73,11 @@ for sec_title, items in EXPL:
         para(ans, b=True, size=10)
         for k, p in enumerate(paras, 1):
             para(f'{k}. {p}')
-        from sim_items import SIM
-        key = next((kk for kk in SIM if q.startswith(kk)), None)
+        from method_items import METHOD
+        key = next((kk for kk in METHOD if q.startswith(kk)), None)
         if key:
-            para('名校预考里考过的同类题', b=True, size=10)
-            for s in SIM[key]:
+            para('考点与通用做法', b=True, size=10)
+            for s in METHOD[key]:
                 para('· ' + s)
         doc.add_paragraph().paragraph_format.space_after = Pt(2)
 
