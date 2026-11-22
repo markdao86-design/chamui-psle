@@ -5,7 +5,7 @@ from docx.shared import Pt, Cm, RGBColor
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
-OUT = r'C:\Users\Eric\Desktop\佑子_爱同2024P5英文年终考_判分与解析_v8.docx'
+OUT = r'C:\Users\Eric\Desktop\佑子_爱同2024P5英文年终考_判分与解析_v9.docx'
 doc = Document()
 sec = doc.sections[0]
 sec.left_margin = sec.right_margin = Cm(1.8); sec.top_margin = sec.bottom_margin = Cm(1.5)
@@ -13,7 +13,7 @@ st = doc.styles['Normal']; st.font.name = '微软雅黑'; st.element.rPr.rFonts.
 st.paragraph_format.space_after = Pt(3)
 for h, sz in (('Heading 1', 16), ('Heading 2', 13)):
     hs = doc.styles[h]; hs.font.name = '微软雅黑'; hs.element.rPr.rFonts.set(qn('w:eastAsia'), '微软雅黑'); hs.font.color.rgb = RGBColor(0x1E, 0x40, 0xAF); hs.font.size = Pt(sz)
-sec.header.paragraphs[0].add_run('佑子 · 爱同 2024 P5 英文年终考 Paper 2 · 判分与解析 v8').font.size = Pt(8)
+sec.header.paragraphs[0].add_run('佑子 · 爱同 2024 P5 英文年终考 Paper 2 · 判分与解析 v9').font.size = Pt(8)
 
 
 def para(t, b=False, size=None):
@@ -43,7 +43,7 @@ def table(head, rows, widths, fs=9.5):
     return t
 
 
-doc.add_heading('佑子 · 爱同 2024 P5 英文年终考 Paper 2 判分与解析 v8', 1)
+doc.add_heading('佑子 · 爱同 2024 P5 英文年终考 Paper 2 判分与解析 v9', 1)
 para('做卷日期：2026 年 11 月第 1 周（清单第 1 周）。判分依据：严格按 PSLE 考官评分标准。选择题、语法填空、改错按爱同官方答案判；综合填空只接受语法和语境都成立的词；句式转换要求意思不变且语法正确，否则 0 分；阅读问答按采分点给分，少一个采分点不给分，答案里出现原文没有的内容扣分，不给半分，不扣语法分。', size=9.5)
 
 doc.add_heading('一、结论', 2)
@@ -65,14 +65,24 @@ table(['部分', '题号', '满分', '得分', '丢分', '说明'], [
 ], [4.2, 1.4, 1.1, 1.1, 1.1, 7.6])
 
 doc.add_heading('三、错题逐题解析', 2)
-from aitong_v8_expl import EXPL
+from aitong_v3_expl import EXPL
+from aitong_v8_expl import EXPL as BRIEF
+BR = {q[:7]: paras for _, items in BRIEF for q, _, paras in items}
 for sec_title, items in EXPL:
     doc.add_heading(sec_title, 2)
     for q, ans, paras in items:
         para(q, b=True)
         para(ans, b=True, size=10)
-        for p in paras:
-            para(p)
+        for bp in BR.get(q[:7], []):
+            pp = doc.add_paragraph(); r = pp.add_run(bp); r.bold = True; r.font.color.rgb = RGBColor(0xC0, 0x00, 0x00)
+        for k, p in enumerate(paras, 1):
+            para(f'{k}. {p}')
+        from method_items import METHOD
+        key = next((kk for kk in METHOD if q.startswith(kk)), None)
+        if key:
+            para('考点与通用做法', b=True, size=10)
+            for s in METHOD[key]:
+                para('· ' + s)
         doc.add_paragraph().paragraph_format.space_after = Pt(2)
 
 doc.add_heading('一处给了分、但要留意', 2)
